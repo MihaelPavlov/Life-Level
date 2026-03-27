@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Adventure Map Flow</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:48px 32px; gap:56px; }
+
+.row { display:flex; justify-content:center; gap:32px; flex-wrap:wrap; width:100%; max-width:1300px; }
+
+.phone-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; }
+.phone-label { text-align:center; max-width:340px; }
+.step-badge { display:inline-block; border-radius:10px; padding:3px 12px; font-size:10px; font-weight:700; letter-spacing:0.07em; margin-bottom:5px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+
+.phone { width:360px; height:780px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 28px 70px rgba(0,0,0,0.9); flex-shrink:0; }
+
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:200; }
+.st { font-size:12px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+
+.nav { position:absolute; bottom:0; left:0; right:0; height:80px; background:#161b22; border-top:1px solid #30363d; display:flex; align-items:center; padding:0 8px 10px; z-index:200; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:18px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+
+.map-container { position:absolute; top:0; left:0; right:0; bottom:0; }
+
+/* Animations */
+@keyframes playerPulse {
+  0%,100% { r:10; opacity:0.4; }
+  50% { r:16; opacity:0.1; }
+}
+@keyframes playerCore {
+  0%,100% { transform:scale(1); }
+  50% { transform:scale(1.15); }
+}
+@keyframes zonePulse {
+  0%,100% { opacity:0.3; transform:scale(1); }
+  50% { opacity:0.7; transform:scale(1.1); }
+}
+@keyframes fogDrift {
+  0%,100% { transform:translateX(0) translateY(0); opacity:0.88; }
+  50% { transform:translateX(6px) translateY(-4px); opacity:0.82; }
+}
+@keyframes fogLift {
+  0% { opacity:0.92; }
+  30% { opacity:0.7; }
+  70% { opacity:0.25; }
+  100% { opacity:0; }
+}
+@keyframes discoveryRing1 {
+  0% { r:18; opacity:0.9; stroke-width:3; }
+  100% { r:70; opacity:0; stroke-width:1; }
+}
+@keyframes discoveryRing2 {
+  0% { r:18; opacity:0.7; stroke-width:2; }
+  100% { r:55; opacity:0; stroke-width:1; }
+}
+@keyframes zoneReveal {
+  0% { opacity:0; transform:scale(0.2); }
+  60% { opacity:1; transform:scale(1.25); }
+  100% { opacity:1; transform:scale(1); }
+}
+@keyframes slideUp {
+  0% { transform:translateY(100%); }
+  100% { transform:translateY(0); }
+}
+@keyframes shimmerPath {
+  0% { stroke-dashoffset:200; }
+  100% { stroke-dashoffset:0; }
+}
+@keyframes bossRing {
+  0%,100% { r:22; opacity:0.4; }
+  50% { r:28; opacity:0.8; }
+}
+@keyframes floatCard {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-3px); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ROW 1: Base Map + Zone Tap                 -->
+<!-- ══════════════════════════════════════════ -->
+<div style="width:100%;max-width:1300px;text-align:center;margin-bottom:-20px">
+  <div style="display:inline-block;background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.3);border-radius:12px;padding:4px 20px;font-size:11px;font-weight:700;color:#4f9eff;letter-spacing:0.08em;margin-bottom:10px">ADVENTURE MAP — STEP BY STEP FLOW</div>
+  <div style="font-size:22px;font-weight:700;color:#e6edf3;margin-bottom:6px">From opening the map to discovering a new zone</div>
+  <div style="font-size:13px;color:#8b949e">5 states showing every frontend interaction</div>
+</div>
+
+<div class="row">
+
+<!-- ─────────────────────────────── -->
+<!-- PHONE 1: Default Map View       -->
+<!-- ─────────────────────────────── -->
+<div class="phone-wrap">
+  <div class="phone-label">
+    <div class="step-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">STEP 1</div>
+    <div class="step-title">Default Map View</div>
+    <div class="step-desc">Full SVG map — player dot, traveled path (green), fog covering undiscovered zones, mini-cards at bottom</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Map fills whole phone -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 360 780" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Fog gradient — covers top of map -->
+        <radialGradient id="p1-fog1" cx="40%" cy="20%" r="45%">
+          <stop offset="0%" stop-color="#040810" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#040810" stop-opacity="0.0"/>
+        </radialGradient>
+        <radialGradient id="p1-fog2" cx="75%" cy="15%" r="40%">
+          <stop offset="0%" stop-color="#040810" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#040810" stop-opacity="0.0"/>
+        </radialGradient>
+        <linearGradient id="p1-topFog" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#040810" stop-opacity="1"/>
+          <stop offset="40%" stop-color="#040810" stop-opacity="0.7"/>
+          <stop offset="70%" stop-color="#040810" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="p1-glow-green">
+          <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="p1-glow-blue">
+          <feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="p1-glow-red">
+          <feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Base terrain -->
+      <rect width="360" height="780" fill="#080e14"/>
+      <!-- Forest patches -->
+      <circle cx="100" cy="380" r="65" fill="#0a1c0a" opacity="0.9"/>
+      <circle cx="180" cy="340" r="50" fill="#0b1e0b" opacity="0.8"/>
+      <circle cx="80" cy="450" r="40" fill="#091708" opacity="0.7"/>
+      <!-- Mountain shapes (upper area) -->
+      <polygon points="250,120 290,190 210,190" fill="#1a1422" opacity="0.9"/>
+      <polygon points="275,100 325,185 225,185" fill="#16102a" opacity="0.7"/>
+      <polygon points="120,150 155,210 85,210" fill="#1a1422" opacity="0.8"/>
+      <!-- Ocean area (left) -->
+      <ellipse cx="55" cy="530" rx="70" ry="50" fill="#060e18" opacity="0.9"/>
+      <!-- Desert area (right-upper, fog) -->
+      <rect x="260" y="200" width="100" height="120" rx="20" fill="#1a130a" opacity="0.5"/>
+      <!-- River -->
+      <path d="M55 540 Q100 500 145 460 Q170 440 180 410" stroke="#0a2030" stroke-width="18" fill="none" opacity="0.6"/>
+
+      <!-- ── PATHS ── -->
+      <!-- Traveled: Start → Ocean → Forest (solid green) -->
+      <path d="M180 680 Q100 620 65 570" stroke="#3fb950" stroke-width="2.5" fill="none" opacity="0.8"/>
+      <path d="M65 570 Q90 510 140 460 Q160 440 180 410" stroke="#3fb950" stroke-width="2.5" fill="none" opacity="0.8"/>
+      <!-- Next: Forest → Mountains (dashed orange, partially visible) -->
+      <path d="M180 410 Q215 360 250 300 Q265 255 258 210" stroke="#f5a623" stroke-width="2" fill="none" stroke-dasharray="7,5" opacity="0.6"/>
+      <!-- Fog paths (hidden zones) -->
+      <path d="M180 410 Q170 340 165 270 Q162 220 168 175" stroke="#30363d" stroke-width="1.5" fill="none" stroke-dasharray="5,6" opacity="0.25"/>
+      <path d="M258 210 Q285 170 300 130" stroke="#30363d" stroke-width="1.5" fill="none" stroke-dasharray="5,6" opacity="0.2"/>
+
+      <!-- ── ZONES ── -->
+
+      <!-- Zone 1: Ashfield/Start (VISITED - bottom center) -->
+      <circle cx="180" cy="690" r="22" fill="rgba(63,185,80,0.08)" stroke="rgba(63,185,80,0.4)" stroke-width="1.5"/>
+      <text x="180" y="685" text-anchor="middle" font-size="14">🏘️</text>
+      <text x="180" y="700" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="600">START</text>
+
+      <!-- Zone 2: Ocean of Whispers (VISITED - left) -->
+      <circle cx="60" cy="545" r="26" fill="rgba(79,158,255,0.06)" stroke="rgba(79,158,255,0.35)" stroke-width="1.5"/>
+      <text x="60" y="539" text-anchor="middle" font-size="16">🌊</text>
+      <text x="60" y="555" text-anchor="middle" fill="#4f9eff" font-size="7" font-weight="600">VISITED</text>
+
+      <!-- Zone 3: Forest of Endurance — CURRENT (center, player here) -->
+      <circle cx="180" cy="400" r="30" fill="rgba(63,185,80,0.12)" stroke="rgba(63,185,80,0.7)" stroke-width="2" filter="url(#p1-glow-green)"/>
+      <text x="180" y="394" text-anchor="middle" font-size="20">🌲</text>
+      <text x="180" y="410" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="700">CURRENT</text>
+
+      <!-- Zone 4: Mountains of Strength (NEXT - upper right) -->
+      <circle cx="255" cy="200" r="26" fill="rgba(245,166,35,0.06)" stroke="rgba(245,166,35,0.45)" stroke-width="1.5">
+        <animate attributeName="stroke-opacity" values="0.25;0.7;0.25" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <text x="255" y="194" text-anchor="middle" font-size="16">⛰️</text>
+      <text x="255" y="210" text-anchor="middle" fill="#f5a623" font-size="7" font-weight="600">NEXT</text>
+
+      <!-- Zone 5: Boss — Iron Peak (visible, locked) -->
+      <circle cx="298" cy="125" r="22" fill="rgba(248,81,73,0.06)" stroke="rgba(248,81,73,0.5)" stroke-width="1.5">
+        <animate attributeName="r" values="20;25;20" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="298" y="119" text-anchor="middle" font-size="13">💀</text>
+      <text x="298" y="133" text-anchor="middle" fill="#f85149" font-size="7" font-weight="700">BOSS</text>
+
+      <!-- Zone 6: Snow Peaks (FOG — hidden) -->
+      <circle cx="160" cy="155" r="20" fill="rgba(48,54,61,0.3)" stroke="#30363d" stroke-width="1" opacity="0.4"/>
+      <text x="160" y="160" text-anchor="middle" fill="#586070" font-size="12" opacity="0.3">❄️</text>
+
+      <!-- Zone 7: Desert (FOG — hidden) -->
+      <circle cx="305" cy="270" r="18" fill="rgba(48,54,61,0.3)" stroke="#30363d" stroke-width="1" opacity="0.3"/>
+      <text x="305" y="275" text-anchor="middle" fill="#586070" font-size="11" opacity="0.25">🏜️</text>
+
+      <!-- FOG OF WAR layers -->
+      <rect x="0" y="0" width="360" height="260" fill="url(#p1-topFog)" style="animation:fogDrift 8s ease-in-out infinite"/>
+      <rect x="0" y="0" width="200" height="240" fill="url(#p1-fog1)" opacity="0.7"/>
+      <rect x="210" y="0" width="160" height="220" fill="url(#p1-fog2)" opacity="0.6"/>
+      <!-- Fog texture dots -->
+      <circle cx="80" cy="180" r="40" fill="#040810" opacity="0.5"/>
+      <circle cx="150" cy="120" r="35" fill="#040810" opacity="0.45"/>
+      <circle cx="290" cy="220" r="30" fill="#040810" opacity="0.35"/>
+
+      <!-- ── PLAYER DOT (on Forest) ── -->
+      <circle cx="180" cy="400" r="16" fill="rgba(79,158,255,0.15)" stroke="none">
+        <animate attributeName="r" values="12;20;12" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="180" cy="400" r="9" fill="#4f9eff" stroke="white" stroke-width="2"/>
+      <text x="180" y="404" text-anchor="middle" fill="white" font-size="8" font-weight="700">⚔</text>
+
+      <!-- Distance label to Mountains -->
+      <rect x="196" y="298" width="55" height="15" rx="7" fill="rgba(8,14,20,0.85)" stroke="rgba(245,166,35,0.4)" stroke-width="1"/>
+      <text x="223" y="309" text-anchor="middle" fill="#f5a623" font-size="8" font-weight="600">4.2 km →</text>
+    </svg>
+
+    <!-- Top zone bar -->
+    <div style="position:absolute;top:50px;left:0;right:0;padding:0 16px;z-index:100">
+      <div style="background:rgba(8,14,20,0.88);backdrop-filter:blur(8px);border:1px solid rgba(63,185,80,0.35);border-radius:12px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#3fb950">🌲 Forest of Endurance</div>
+          <div style="font-size:10px;color:#8b949e;margin-top:1px">Zone 3 of 7 · Level 8+</div>
+        </div>
+        <div style="font-size:11px;color:#3fb950;font-weight:700;background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:3px 8px">Traveling ●</div>
+      </div>
+    </div>
+
+    <!-- Bottom stats mini-cards + movement button -->
+    <div style="position:absolute;bottom:80px;left:0;right:0;padding:0 14px;z-index:100">
+      <!-- Mini stat cards -->
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1;background:rgba(8,14,20,0.88);backdrop-filter:blur(8px);border:1px solid #30363d;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:6px;animation:floatCard 4s ease-in-out infinite">
+          <span style="font-size:16px">🔥</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#f5a623">12</div>
+            <div style="font-size:9px;color:#8b949e">day streak</div>
+          </div>
+        </div>
+        <div style="flex:1;background:rgba(8,14,20,0.88);backdrop-filter:blur(8px);border:1px solid #30363d;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:6px;animation:floatCard 4s ease-in-out infinite 1s">
+          <span style="font-size:16px">🏃</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#4f9eff">24.3km</div>
+            <div style="font-size:9px;color:#8b949e">this week</div>
+          </div>
+        </div>
+        <div style="flex:1;background:rgba(8,14,20,0.88);backdrop-filter:blur(8px);border:1px solid #30363d;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:6px;animation:floatCard 4s ease-in-out infinite 2s">
+          <span style="font-size:16px">⚡</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#a371f7">2,840</div>
+            <div style="font-size:9px;color:#8b949e">XP week</div>
+          </div>
+        </div>
+      </div>
+      <!-- Movement button -->
+      <button style="width:100%;background:rgba(8,14,20,0.88);backdrop-filter:blur(8px);border:1px solid rgba(79,158,255,0.3);border-radius:10px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <div style="font-size:12px;font-weight:600;color:#4f9eff">🏃 Real World → Game World</div>
+        <div style="font-size:11px;color:#8b949e">Tap to see ↑</div>
+      </button>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────── -->
+<!-- PHONE 2: Zone Tap → Info Panel  -->
+<!-- ─────────────────────────────── -->
+<div class="phone-wrap">
+  <div class="phone-label">
+    <div class="step-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">STEP 2</div>
+    <div class="step-title">Zone Tapped — Info Panel</div>
+    <div class="step-desc">Player taps ⛰️ Mountains of Strength. A slide-up panel appears with zone details, enemies and rewards</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- MAP (same but dimmed) -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 360 780" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="p2-topFog" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#040810" stop-opacity="1"/>
+          <stop offset="45%" stop-color="#040810" stop-opacity="0.65"/>
+          <stop offset="75%" stop-color="#040810" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="p2-glow-gold">
+          <feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Dimmed base -->
+      <rect width="360" height="780" fill="#060b10"/>
+      <circle cx="100" cy="380" r="65" fill="#080f08" opacity="0.9"/>
+      <circle cx="180" cy="340" r="50" fill="#09100a" opacity="0.8"/>
+      <polygon points="250,120 290,190 210,190" fill="#150f1e" opacity="0.9"/>
+      <polygon points="275,100 325,185 225,185" fill="#120e22" opacity="0.7"/>
+      <ellipse cx="55" cy="530" rx="70" ry="50" fill="#04080e" opacity="0.9"/>
+
+      <!-- paths dimmed -->
+      <path d="M180 680 Q100 620 65 570" stroke="#3fb950" stroke-width="2" fill="none" opacity="0.4"/>
+      <path d="M65 570 Q90 510 140 460 Q160 440 180 410" stroke="#3fb950" stroke-width="2" fill="none" opacity="0.4"/>
+      <path d="M180 410 Q215 360 250 300 Q265 255 258 210" stroke="#f5a623" stroke-width="2" fill="none" stroke-dasharray="7,5" opacity="0.4"/>
+
+      <!-- zones dimmed -->
+      <circle cx="180" cy="690" r="22" fill="rgba(63,185,80,0.05)" stroke="rgba(63,185,80,0.2)" stroke-width="1" opacity="0.5"/>
+      <text x="180" y="695" text-anchor="middle" font-size="14" opacity="0.4">🏘️</text>
+      <circle cx="60" cy="545" r="26" fill="rgba(79,158,255,0.04)" stroke="rgba(79,158,255,0.2)" stroke-width="1" opacity="0.5"/>
+      <text x="60" y="550" text-anchor="middle" font-size="16" opacity="0.4">🌊</text>
+      <circle cx="180" cy="400" r="28" fill="rgba(63,185,80,0.08)" stroke="rgba(63,185,80,0.4)" stroke-width="1.5" opacity="0.6"/>
+      <text x="180" y="404" text-anchor="middle" font-size="18" opacity="0.5">🌲</text>
+      <!-- Player dot dimmed -->
+      <circle cx="180" cy="400" r="8" fill="#4f9eff" stroke="white" stroke-width="1.5" opacity="0.5"/>
+
+      <!-- MOUNTAINS — HIGHLIGHTED / SELECTED -->
+      <circle cx="255" cy="200" r="40" fill="rgba(245,166,35,0.08)" stroke="rgba(245,166,35,0.0)" stroke-width="0" filter="url(#p2-glow-gold)"/>
+      <circle cx="255" cy="200" r="32" fill="rgba(245,166,35,0.12)" stroke="rgba(245,166,35,0.8)" stroke-width="2.5"/>
+      <text x="255" y="194" text-anchor="middle" font-size="22">⛰️</text>
+      <text x="255" y="212" text-anchor="middle" fill="#f5a623" font-size="8" font-weight="700">SELECTED</text>
+
+      <!-- Selection pulse rings -->
+      <circle cx="255" cy="200" r="45" fill="none" stroke="rgba(245,166,35,0.4)" stroke-width="1.5">
+        <animate attributeName="r" values="32;55;32" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- Boss dimmed -->
+      <circle cx="298" cy="125" r="20" fill="rgba(248,81,73,0.04)" stroke="rgba(248,81,73,0.25)" stroke-width="1" opacity="0.5"/>
+      <text x="298" y="130" text-anchor="middle" font-size="12" opacity="0.4">💀</text>
+
+      <!-- Fog -->
+      <rect x="0" y="0" width="360" height="270" fill="url(#p2-topFog)"/>
+    </svg>
+
+    <!-- Dim overlay on map -->
+    <div style="position:absolute;inset:0;background:rgba(4,8,16,0.45);z-index:10"></div>
+
+    <!-- SLIDE-UP PANEL -->
+    <div style="position:absolute;bottom:80px;left:0;right:0;z-index:150;animation:slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both">
+      <div style="background:#161b22;border-radius:24px 24px 0 0;border-top:1px solid rgba(245,166,35,0.4);padding:0 0 0 0;max-height:560px">
+
+        <!-- Drag handle -->
+        <div style="padding:12px;text-align:center">
+          <div style="width:36px;height:4px;background:#30363d;border-radius:2px;margin:0 auto"></div>
+        </div>
+
+        <!-- Zone header -->
+        <div style="padding:0 18px 16px">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:56px;height:56px;background:rgba(245,166,35,0.1);border:2px solid rgba(245,166,35,0.4);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px">⛰️</div>
+            <div style="flex:1">
+              <div style="font-size:19px;font-weight:700;color:#e6edf3;margin-bottom:3px">Mountains of Strength</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.35);border-radius:6px;padding:2px 7px;font-size:10px;color:#f5a623;font-weight:600">Level 12+</span>
+                <span style="font-size:11px;color:#8b949e">4.2 km away</span>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;color:#8b949e">Distance</div>
+              <div style="font-size:18px;font-weight:700;color:#f5a623">4.2 km</div>
+            </div>
+          </div>
+
+          <!-- Zone bonus banner -->
+          <div style="background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.25);border-radius:10px;padding:9px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">✨</span>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#f5a623">Zone Bonus</div>
+              <div style="font-size:11px;color:#8b949e">+25% STR XP · Gym &amp; Hiking boost movement ×1.2</div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div style="display:flex;gap:6px;margin-bottom:14px">
+            <button style="flex:1;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.5);border-radius:8px;padding:7px;font-size:11px;font-weight:700;color:#f5a623;cursor:pointer">Overview</button>
+            <button style="flex:1;background:#1e2632;border:1px solid #30363d;border-radius:8px;padding:7px;font-size:11px;font-weight:600;color:#8b949e;cursor:pointer">Enemies</button>
+            <button style="flex:1;background:#1e2632;border:1px solid #30363d;border-radius:8px;padding:7px;font-size:11px;font-weight:600;color:#8b949e;cursor:pointer">Rewards</button>
+          </div>
+
+          <!-- Overview content -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+            <div style="background:#1e2632;border-radius:10px;padding:10px">
+              <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Best activities</div>
+              <div style="font-size:12px;color:#e6edf3">🏋️ Gym · 🏔 Hiking</div>
+            </div>
+            <div style="background:#1e2632;border-radius:10px;padding:10px">
+              <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Stat focus</div>
+              <div style="font-size:12px;color:#e6edf3">💪 STR · 🏋 STA</div>
+            </div>
+            <div style="background:#1e2632;border-radius:10px;padding:10px">
+              <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Boss here</div>
+              <div style="font-size:12px;color:#f85149">⚔ Iron Peak</div>
+            </div>
+            <div style="background:#1e2632;border-radius:10px;padding:10px">
+              <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Discovery XP</div>
+              <div style="font-size:12px;color:#f5a623">+800 XP</div>
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <button style="width:100%;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.5);border-radius:12px;padding:13px;font-size:14px;font-weight:700;color:#f5a623;cursor:pointer">Travel Here — 4.2 km →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end row 1 -->
+
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ROW 2: Movement Card + Zone Discovery       -->
+<!-- ══════════════════════════════════════════ -->
+<div class="row">
+
+<!-- ─────────────────────────────────── -->
+<!-- PHONE 3: Movement Card Expanded     -->
+<!-- ─────────────────────────────────── -->
+<div class="phone-wrap">
+  <div class="phone-label">
+    <div class="step-badge" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);color:#3fb950">STEP 3</div>
+    <div class="step-title">Movement Card Expanded</div>
+    <div class="step-desc">Player taps "Real World → Game World". Full conversion table slides up showing how each activity type maps to map distance</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Compressed map bg -->
+    <svg style="position:absolute;top:0;left:0;right:0;height:340px;width:100%" viewBox="0 0 360 340" xmlns="http://www.w3.org/2000/svg">
+      <rect width="360" height="340" fill="#080e14"/>
+      <circle cx="100" cy="200" r="65" fill="#0a1c0a" opacity="0.6"/>
+      <circle cx="180" cy="170" r="50" fill="#0b1e0b" opacity="0.6"/>
+      <polygon points="250,40 290,100 210,100" fill="#1a1422" opacity="0.6"/>
+      <ellipse cx="55" cy="270" rx="60" ry="40" fill="#060e18" opacity="0.7"/>
+      <!-- paths -->
+      <path d="M180 320 Q100 280 65 255" stroke="#3fb950" stroke-width="2" fill="none" opacity="0.6"/>
+      <path d="M65 255 Q90 220 140 190 Q160 175 180 165" stroke="#3fb950" stroke-width="2" fill="none" opacity="0.6"/>
+      <path d="M180 165 Q215 130 250 90 Q265 65 258 40" stroke="#f5a623" stroke-width="2" fill="none" stroke-dasharray="7,5" opacity="0.5"/>
+      <!-- zones small -->
+      <circle cx="180" cy="315" r="14" fill="rgba(63,185,80,0.08)" stroke="rgba(63,185,80,0.3)" stroke-width="1.5"/>
+      <text x="180" y="320" text-anchor="middle" font-size="10">🏘️</text>
+      <circle cx="60" cy="256" r="18" fill="rgba(79,158,255,0.06)" stroke="rgba(79,158,255,0.3)" stroke-width="1.5"/>
+      <text x="60" y="261" text-anchor="middle" font-size="12">🌊</text>
+      <circle cx="180" cy="162" r="20" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.5)" stroke-width="2"/>
+      <text x="180" y="167" text-anchor="middle" font-size="14">🌲</text>
+      <circle cx="255" cy="40" r="16" fill="rgba(245,166,35,0.06)" stroke="rgba(245,166,35,0.35)" stroke-width="1.5"/>
+      <text x="255" y="45" text-anchor="middle" font-size="11">⛰️</text>
+      <!-- Player -->
+      <circle cx="180" cy="162" r="12" fill="rgba(79,158,255,0.2)" stroke="none"><animate attributeName="r" values="9;14;9" dur="2.5s" repeatCount="indefinite"/></circle>
+      <circle cx="180" cy="162" r="6" fill="#4f9eff" stroke="white" stroke-width="1.5"/>
+      <!-- Fog -->
+      <rect x="0" y="0" width="360" height="340" fill="linear-gradient(to bottom, #040810, transparent)" opacity="0.3"/>
+    </svg>
+
+    <!-- Gradient overlay fading to panel -->
+    <div style="position:absolute;top:260px;left:0;right:0;height:80px;background:linear-gradient(to bottom,transparent,#0d1117);z-index:50"></div>
+
+    <!-- MOVEMENT CARD PANEL -->
+    <div style="position:absolute;bottom:80px;left:0;right:0;z-index:100;background:#0d1117;border-top:1px solid rgba(79,158,255,0.3);border-radius:24px 24px 0 0;animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) both">
+
+      <!-- Handle + header -->
+      <div style="padding:12px 18px 0;text-align:center">
+        <div style="width:36px;height:4px;background:#30363d;border-radius:2px;margin:0 auto 14px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:15px;font-weight:700;color:#e6edf3">🏃 Real World → 🗺️ Game World</div>
+        </div>
+        <div style="font-size:11px;color:#8b949e;margin-bottom:14px">Every workout moves your character on the map</div>
+      </div>
+
+      <!-- Today's progress bar -->
+      <div style="padding:0 18px 14px">
+        <div style="background:#161b22;border:1px solid rgba(79,158,255,0.25);border-radius:12px;padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:700;color:#4f9eff">Today's Movement</div>
+            <div style="font-size:12px;font-weight:700;color:#e6edf3">3.2 / 5.0 km</div>
+          </div>
+          <div style="height:6px;background:#1e2632;border-radius:3px;overflow:hidden;margin-bottom:6px">
+            <div style="height:100%;width:64%;background:linear-gradient(to right,#4f9eff,#56d4ff);border-radius:3px"></div>
+          </div>
+          <div style="font-size:10px;color:#8b949e">Log 1.8 more km today to reach next map checkpoint</div>
+        </div>
+      </div>
+
+      <!-- Conversion table -->
+      <div style="padding:0 18px">
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">CONVERSION TABLE</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+
+          <div style="background:#161b22;border:1px solid rgba(63,185,80,0.25);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;width:28px;text-align:center">🏃</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Running</div><div style="font-size:10px;color:#8b949e">1 km real</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#3fb950">= 1.0 km</div><div style="font-size:9px;color:#8b949e">map</div></div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;width:28px;text-align:center">🏔</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Hiking</div><div style="font-size:10px;color:#8b949e">1 km real</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#4f9eff">= 0.8 km</div><div style="font-size:9px;color:#8b949e">map</div></div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;width:28px;text-align:center">🚴</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Cycling</div><div style="font-size:10px;color:#8b949e">1 km real</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#4f9eff">= 0.7 km</div><div style="font-size:9px;color:#8b949e">map</div></div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;width:28px;text-align:center">🏊</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Swimming</div><div style="font-size:10px;color:#8b949e">1 km real</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#4f9eff">= 0.5 km</div><div style="font-size:9px;color:#8b949e">map</div></div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;width:28px;text-align:center">🏋️</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Gym / Strength</div><div style="font-size:10px;color:#8b949e">1 session</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#a371f7">= 0.2 km</div><div style="font-size:9px;color:#8b949e">map</div></div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;width:28px;text-align:center">🧘</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Yoga</div><div style="font-size:10px;color:#8b949e">30 min session</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#a371f7">= 0.1 km</div><div style="font-size:9px;color:#8b949e">map</div></div>
+          </div>
+
+        </div>
+        <div style="background:rgba(79,158,255,0.07);border:1px solid rgba(79,158,255,0.2);border-radius:10px;padding:9px 12px;text-align:center;margin-bottom:14px">
+          <div style="font-size:11px;color:#4f9eff">Zone bonuses can increase these multipliers by up to ×1.5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────── -->
+<!-- PHONE 4: Zone Discovery Animation   -->
+<!-- ─────────────────────────────────── -->
+<div class="phone-wrap">
+  <div class="phone-label">
+    <div class="step-badge" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);color:#a371f7">STEP 4</div>
+    <div class="step-title">Zone Discovery Animation</div>
+    <div class="step-desc">Player reaches Mountains of Strength for the first time. Fog lifts with an animated burst, zone revealed with glowing rings and a discovery banner</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar" style="z-index:200"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- MAP with discovery effect -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 360 780" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="p4-discGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(245,166,35,0.6)"/>
+          <stop offset="60%" stop-color="rgba(245,166,35,0.1)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <radialGradient id="p4-fog1" cx="35%" cy="20%" r="50%">
+          <stop offset="0%" stop-color="#040810" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#040810" stop-opacity="0.0"/>
+        </radialGradient>
+        <filter id="p4-glow-gold">
+          <feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="p4-sparkle">
+          <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Base terrain — Mountains area now visible and lit up -->
+      <rect width="360" height="780" fill="#080e14"/>
+      <circle cx="100" cy="380" r="65" fill="#0a1c0a" opacity="0.8"/>
+      <circle cx="180" cy="340" r="50" fill="#0b1e0b" opacity="0.7"/>
+
+      <!-- Mountains terrain now revealed -->
+      <polygon points="230,100 275,190 185,190" fill="#1e1630" opacity="0.9"/>
+      <polygon points="260,80 315,175 205,175" fill="#1a1228" opacity="0.8"/>
+      <polygon points="240,120 270,180 210,180" fill="#231840" opacity="0.7"/>
+      <!-- Glowing mountain rock face -->
+      <polygon points="250,110 280,180 220,180" fill="#281e45" opacity="0.5"/>
+
+      <!-- Discovery glow aura on mountains -->
+      <circle cx="252" cy="165" r="80" fill="url(#p4-discGlow)" opacity="0.8">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="70;90;70" dur="2s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- Paths -->
+      <path d="M180 680 Q100 620 65 570" stroke="#3fb950" stroke-width="2.5" fill="none" opacity="0.7"/>
+      <path d="M65 570 Q90 510 140 460 Q160 440 180 410" stroke="#3fb950" stroke-width="2.5" fill="none" opacity="0.7"/>
+      <!-- Just-traveled path to mountains — bright animated -->
+      <path d="M180 410 Q215 360 248 298 Q258 245 252 190" stroke="#f5a623" stroke-width="3" fill="none" opacity="0.9">
+        <animate attributeName="stroke-dashoffset" from="300" to="0" dur="1.5s" fill="freeze"/>
+        <animate attributeName="opacity" values="0.6;1;0.9" dur="1.5s" repeatCount="1"/>
+      </path>
+
+      <!-- Start, Ocean, Forest zones -->
+      <circle cx="180" cy="690" r="20" fill="rgba(63,185,80,0.08)" stroke="rgba(63,185,80,0.35)" stroke-width="1.5"/>
+      <text x="180" y="695" text-anchor="middle" font-size="12">🏘️</text>
+      <circle cx="60" cy="545" r="22" fill="rgba(79,158,255,0.06)" stroke="rgba(79,158,255,0.3)" stroke-width="1.5"/>
+      <text x="60" y="550" text-anchor="middle" font-size="14">🌊</text>
+      <circle cx="180" cy="408" r="26" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.5)" stroke-width="1.5"/>
+      <text x="180" y="403" text-anchor="middle" font-size="16">🌲</text>
+
+      <!-- MOUNTAINS — NEWLY DISCOVERED, big reveal -->
+      <!-- Outer discovery rings -->
+      <circle cx="252" cy="165" r="60" fill="none" stroke="rgba(245,166,35,0.6)" stroke-width="2">
+        <animate attributeName="r" values="18;75;18" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.8;0;0.8" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="252" cy="165" r="45" fill="none" stroke="rgba(245,166,35,0.5)" stroke-width="1.5">
+        <animate attributeName="r" values="18;55;18" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+        <animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+      </circle>
+      <!-- Zone circle -->
+      <circle cx="252" cy="165" r="36" fill="rgba(245,166,35,0.12)" stroke="rgba(245,166,35,0.9)" stroke-width="2.5" filter="url(#p4-glow-gold)"/>
+      <text x="252" y="158" text-anchor="middle" font-size="26">⛰️</text>
+      <text x="252" y="176" text-anchor="middle" fill="#f5a623" font-size="8" font-weight="700">DISCOVERED!</text>
+
+      <!-- Sparkle particles -->
+      <circle cx="225" cy="135" r="3" fill="#f5a623" filter="url(#p4-sparkle)"><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="0s"/></circle>
+      <circle cx="280" cy="128" r="2.5" fill="#f5dc3c" filter="url(#p4-sparkle)"><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="0.4s"/></circle>
+      <circle cx="218" cy="175" r="2" fill="#fff" filter="url(#p4-sparkle)"><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="0.8s"/></circle>
+      <circle cx="290" cy="158" r="3" fill="#f5a623" filter="url(#p4-sparkle)"><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="0.2s"/></circle>
+      <circle cx="240" cy="120" r="2" fill="#fff" filter="url(#p4-sparkle)"><animate attributeName="opacity" values="0;1;0" dur="1.2s" repeatCount="indefinite" begin="0.6s"/></circle>
+
+      <!-- Player now AT Mountains -->
+      <circle cx="252" cy="165" r="0"/>
+      <circle cx="252" cy="200" r="13" fill="rgba(79,158,255,0.25)" stroke="#4f9eff" stroke-width="2"/>
+      <circle cx="252" cy="200" r="7" fill="#4f9eff" stroke="white" stroke-width="2"/>
+      <text x="252" y="204" text-anchor="middle" fill="white" font-size="8" font-weight="700">⚔</text>
+
+      <!-- Boss node (now visible since we're in the zone) -->
+      <circle cx="300" cy="110" r="20" fill="rgba(248,81,73,0.08)" stroke="rgba(248,81,73,0.6)" stroke-width="1.5">
+        <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="300" y="115" text-anchor="middle" font-size="13">💀</text>
+      <text x="300" y="126" text-anchor="middle" fill="#f85149" font-size="7" font-weight="600">BOSS NEARBY</text>
+
+      <!-- Remnant fog (partially lifted) -->
+      <rect x="0" y="0" width="160" height="200" fill="#040810" opacity="0.45" style="animation:fogLift 3s ease-out both"/>
+      <circle cx="70" cy="140" r="55" fill="#040810" opacity="0.35" style="animation:fogLift 3s ease-out 0.5s both"/>
+    </svg>
+
+    <!-- Discovery notification banner -->
+    <div style="position:absolute;top:54px;left:14px;right:14px;z-index:150;animation:slideUp 0.5s cubic-bezier(0.16,1,0.3,1) both">
+      <div style="background:linear-gradient(135deg,rgba(35,25,5,0.97),rgba(30,18,3,0.97));border:2px solid rgba(245,166,35,0.7);border-radius:14px;padding:14px 16px;box-shadow:0 0 30px rgba(245,166,35,0.2)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:36px;filter:drop-shadow(0 0 10px rgba(245,166,35,0.7))">⛰️</div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:#f5a623;font-weight:700;letter-spacing:0.08em;margin-bottom:3px">🌟 NEW ZONE DISCOVERED!</div>
+            <div style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:2px">Mountains of Strength</div>
+            <div style="font-size:11px;color:#8b949e">Zone bonus active · Boss raid available</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:16px;font-weight:700;color:#f5a623">+800</div>
+            <div style="font-size:9px;color:#8b949e">XP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat gained popup -->
+    <div style="position:absolute;top:166px;left:14px;right:14px;z-index:150">
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:rgba(8,14,20,0.9);border:1px solid rgba(245,166,35,0.35);border-radius:10px;padding:8px 10px;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#f5a623">+25%</div>
+          <div style="font-size:9px;color:#8b949e">STR XP here</div>
+        </div>
+        <div style="flex:1;background:rgba(8,14,20,0.9);border:1px solid rgba(79,158,255,0.3);border-radius:10px;padding:8px 10px;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#4f9eff">×1.2</div>
+          <div style="font-size:9px;color:#8b949e">Gym movement</div>
+        </div>
+        <div style="flex:1;background:rgba(8,14,20,0.9);border:1px solid rgba(248,81,73,0.3);border-radius:10px;padding:8px 10px;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#f85149">⚔ Boss</div>
+          <div style="font-size:9px;color:#8b949e">Iron Peak</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom CTA -->
+    <div style="position:absolute;bottom:80px;left:0;right:0;padding:0 14px;z-index:100">
+      <button style="width:100%;background:rgba(245,166,35,0.15);border:2px solid rgba(245,166,35,0.5);border-radius:12px;padding:13px;font-size:14px;font-weight:700;color:#f5a623;cursor:pointer;box-shadow:0 0 20px rgba(245,166,35,0.1)">Explore This Zone ↓</button>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end row 2 -->
+
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ROW 3: Weekly Progress Cards               -->
+<!-- ══════════════════════════════════════════ -->
+<div class="row">
+
+<!-- ─────────────────────────────────────── -->
+<!-- PHONE 5: Weekly Progress + Streak Cards -->
+<!-- ─────────────────────────────────────── -->
+<div class="phone-wrap">
+  <div class="phone-label">
+    <div class="step-badge" style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.4);color:#f85149">STEP 5</div>
+    <div class="step-title">Weekly Progress & Streak Cards</div>
+    <div class="step-desc">Swipe up on the bottom mini-cards to expand the full weekly progress panel — shows daily activity, streak calendar, km toward next zone</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar" style="z-index:200"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Compressed map -->
+    <svg style="position:absolute;top:0;left:0;right:0;height:320px;width:100%" viewBox="0 0 360 320" xmlns="http://www.w3.org/2000/svg">
+      <rect width="360" height="320" fill="#080e14"/>
+      <circle cx="100" cy="180" r="60" fill="#0a1c0a" opacity="0.7"/>
+      <circle cx="180" cy="155" r="45" fill="#0b1e0b" opacity="0.6"/>
+      <polygon points="250,35 285,95 215,95" fill="#1a1422" opacity="0.7"/>
+      <ellipse cx="55" cy="255" rx="60" ry="40" fill="#060e18" opacity="0.7"/>
+      <path d="M180 305 Q100 270 65 245" stroke="#3fb950" stroke-width="2" fill="none" opacity="0.6"/>
+      <path d="M65 245 Q90 208 140 178 Q160 162 180 152" stroke="#3fb950" stroke-width="2" fill="none" opacity="0.6"/>
+      <path d="M180 152 Q215 118 248 70 Q258 45 252 25" stroke="#f5a623" stroke-width="2" fill="none" stroke-dasharray="6,4" opacity="0.5"/>
+      <circle cx="180" cy="305" r="14" fill="rgba(63,185,80,0.08)" stroke="rgba(63,185,80,0.3)" stroke-width="1.5"/>
+      <text x="180" y="310" text-anchor="middle" font-size="10">🏘️</text>
+      <circle cx="58" cy="246" r="17" fill="rgba(79,158,255,0.06)" stroke="rgba(79,158,255,0.3)" stroke-width="1.5"/>
+      <text x="58" y="251" text-anchor="middle" font-size="12">🌊</text>
+      <circle cx="180" cy="150" r="22" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.6)" stroke-width="2"/>
+      <text x="180" y="155" text-anchor="middle" font-size="14">🌲</text>
+      <circle cx="250" cy="25" r="16" fill="rgba(245,166,35,0.06)" stroke="rgba(245,166,35,0.35)" stroke-width="1.5"/>
+      <text x="250" y="30" text-anchor="middle" font-size="11">⛰️</text>
+      <!-- Player -->
+      <circle cx="180" cy="150" r="11" fill="rgba(79,158,255,0.2)" stroke="none"><animate attributeName="r" values="8;13;8" dur="2.5s" repeatCount="indefinite"/></circle>
+      <circle cx="180" cy="150" r="6" fill="#4f9eff" stroke="white" stroke-width="1.5"/>
+    </svg>
+
+    <!-- Gradient fade -->
+    <div style="position:absolute;top:240px;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,#0d1117);z-index:50"></div>
+
+    <!-- WEEKLY PANEL -->
+    <div style="position:absolute;bottom:80px;left:0;right:0;z-index:100;background:#0d1117;border-top:1px solid rgba(248,81,73,0.25);border-radius:24px 24px 0 0">
+      <div style="padding:12px 18px 0;text-align:center">
+        <div style="width:36px;height:4px;background:#30363d;border-radius:2px;margin:0 auto 14px"></div>
+      </div>
+
+      <!-- Top stats row -->
+      <div style="padding:0 16px 14px">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <div style="flex:1;background:#161b22;border:1px solid rgba(248,81,73,0.3);border-radius:12px;padding:12px;text-align:center;animation:floatCard 4s ease-in-out infinite">
+            <div style="font-size:26px;margin-bottom:4px">🔥</div>
+            <div style="font-size:20px;font-weight:700;color:#f85149">12</div>
+            <div style="font-size:10px;color:#8b949e">day streak</div>
+            <div style="font-size:9px;color:#f85149;margin-top:2px">Personal best: 24</div>
+          </div>
+          <div style="flex:1;background:#161b22;border:1px solid rgba(79,158,255,0.25);border-radius:12px;padding:12px;text-align:center;animation:floatCard 4s ease-in-out infinite 1.3s">
+            <div style="font-size:26px;margin-bottom:4px">🏃</div>
+            <div style="font-size:20px;font-weight:700;color:#4f9eff">24.3</div>
+            <div style="font-size:10px;color:#8b949e">km this week</div>
+            <div style="font-size:9px;color:#4f9eff;margin-top:2px">Goal: 50 km</div>
+          </div>
+          <div style="flex:1;background:#161b22;border:1px solid rgba(163,113,247,0.25);border-radius:12px;padding:12px;text-align:center;animation:floatCard 4s ease-in-out infinite 2.6s">
+            <div style="font-size:26px;margin-bottom:4px">⚡</div>
+            <div style="font-size:20px;font-weight:700;color:#a371f7">2,840</div>
+            <div style="font-size:10px;color:#8b949e">XP this week</div>
+            <div style="font-size:9px;color:#a371f7;margin-top:2px">Rank: Veteran</div>
+          </div>
+        </div>
+
+        <!-- Weekly day calendar -->
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:#e6edf3">This Week</div>
+            <div style="font-size:11px;color:#8b949e">4 / 7 days active</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <!-- Mon -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Mon</div>
+              <div style="width:100%;aspect-ratio:1;background:rgba(63,185,80,0.2);border:1.5px solid rgba(63,185,80,0.6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">🏃</div>
+              <div style="font-size:8px;color:#3fb950;margin-top:3px">8.4km</div>
+            </div>
+            <!-- Tue -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Tue</div>
+              <div style="width:100%;aspect-ratio:1;background:rgba(63,185,80,0.2);border:1.5px solid rgba(63,185,80,0.6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">🏋️</div>
+              <div style="font-size:8px;color:#3fb950;margin-top:3px">gym</div>
+            </div>
+            <!-- Wed -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Wed</div>
+              <div style="width:100%;aspect-ratio:1;background:#1e2632;border:1.5px solid #30363d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0.4">—</div>
+              <div style="font-size:8px;color:#586070;margin-top:3px">rest</div>
+            </div>
+            <!-- Thu -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Thu</div>
+              <div style="width:100%;aspect-ratio:1;background:rgba(63,185,80,0.2);border:1.5px solid rgba(63,185,80,0.6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">🚴</div>
+              <div style="font-size:8px;color:#3fb950;margin-top:3px">15.9km</div>
+            </div>
+            <!-- Fri -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Fri</div>
+              <div style="width:100%;aspect-ratio:1;background:rgba(79,158,255,0.15);border:2px solid rgba(79,158,255,0.6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">🏃</div>
+              <div style="font-size:8px;color:#4f9eff;margin-top:3px">today</div>
+            </div>
+            <!-- Sat -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Sat</div>
+              <div style="width:100%;aspect-ratio:1;background:#1e2632;border:1.5px solid #30363d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:0.4">?</div>
+              <div style="font-size:8px;color:#586070;margin-top:3px">—</div>
+            </div>
+            <!-- Sun -->
+            <div style="flex:1;text-align:center">
+              <div style="font-size:9px;color:#8b949e;margin-bottom:4px">Sun</div>
+              <div style="width:100%;aspect-ratio:1;background:#1e2632;border:1.5px solid #30363d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:0.4">?</div>
+              <div style="font-size:8px;color:#586070;margin-top:3px">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map km progress this week -->
+        <div style="background:#161b22;border:1px solid rgba(245,166,35,0.25);border-radius:12px;padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:700;color:#e6edf3">Map Progress This Week</div>
+            <div style="font-size:11px;color:#f5a623;font-weight:600">3.2 km</div>
+          </div>
+          <div style="height:6px;background:#1e2632;border-radius:3px;overflow:hidden;margin-bottom:8px">
+            <div style="height:100%;width:64%;background:linear-gradient(to right,#f5a623,#f5dc3c);border-radius:3px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:10px;color:#8b949e">🌲 Forest of Endurance</div>
+            <div style="font-size:10px;color:#f5a623">⛰️ Mountains: 1.0 km left →</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary box -->
+<div style="max-width:340px;display:flex;flex-direction:column;gap:14px;justify-content:center">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:18px">
+    <div style="font-size:11px;font-weight:700;color:#8b949e;letter-spacing:0.07em;margin-bottom:12px">INTERACTION SUMMARY</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:24px;height:24px;background:rgba(79,158,255,0.15);border:1px solid rgba(79,158,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#4f9eff;flex-shrink:0">1</div>
+        <div style="font-size:12px;color:#c9d1d9;line-height:1.5"><strong style="color:#e6edf3">Open map</strong> — see player position, fog of war, mini stat cards at bottom</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:24px;height:24px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f5a623;flex-shrink:0">2</div>
+        <div style="font-size:12px;color:#c9d1d9;line-height:1.5"><strong style="color:#e6edf3">Tap a zone</strong> — slide-up panel with details, bonus, enemies, rewards, Travel CTA</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:24px;height:24px;background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#3fb950;flex-shrink:0">3</div>
+        <div style="font-size:12px;color:#c9d1d9;line-height:1.5"><strong style="color:#e6edf3">Tap conversion button</strong> — full movement table slides up, shows today's progress</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:24px;height:24px;background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#a371f7;flex-shrink:0">4</div>
+        <div style="font-size:12px;color:#c9d1d9;line-height:1.5"><strong style="color:#e6edf3">Reach new zone</strong> — fog lifts with animation, discovery banner, sparkles, +XP popup</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:24px;height:24px;background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f85149;flex-shrink:0">5</div>
+        <div style="font-size:12px;color:#c9d1d9;line-height:1.5"><strong style="color:#e6edf3">Swipe up mini-cards</strong> — weekly calendar, streak count, map km progress expanded</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:18px">
+    <div style="font-size:11px;font-weight:700;color:#8b949e;letter-spacing:0.07em;margin-bottom:12px">KEY UI PATTERNS</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12px;color:#c9d1d9;line-height:1.5">📌 <strong style="color:#e6edf3">Bottom sheet</strong> for zone info, movement card, weekly stats — slides up, dismissible</div>
+      <div style="font-size:12px;color:#c9d1d9;line-height:1.5">🌫 <strong style="color:#e6edf3">Fog of war</strong> via layered SVG gradient rects + radial gradients over undiscovered areas</div>
+      <div style="font-size:12px;color:#c9d1d9;line-height:1.5">📍 <strong style="color:#e6edf3">Player dot</strong> with animated pulse rings, always rendered above everything else</div>
+      <div style="font-size:12px;color:#c9d1d9;line-height:1.5">🎯 <strong style="color:#e6edf3">Zone tap target</strong> is larger than the visual circle (touch area = 2× radius)</div>
+      <div style="font-size:12px;color:#c9d1d9;line-height:1.5">✨ <strong style="color:#e6edf3">Discovery burst</strong> = radial glow + expanding SVG rings + CSS sparkle particles</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end row 3 -->
+
+</body>
+</html>

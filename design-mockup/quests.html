@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Quests</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(79,158,255,0.12); border:1px solid rgba(79,158,255,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#4f9eff; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:100; }
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+.nav { position:absolute; bottom:0; left:0; right:0; height:82px; background:#161b22; border-top:1px solid #30363d; display:flex; align-items:center; padding:0 8px 12px; z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; } .nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+.screen-scroll { position:absolute; inset:0; overflow-y:auto; padding-bottom:90px; scrollbar-width:none; }
+.screen-scroll::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+
+<!-- DAILY QUESTS -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">DAILY QUESTS</div>
+    <div class="step-title">Refreshes every 24h</div>
+    <div class="step-desc">Simple tasks, always achievable</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0;background:#080e14;min-height:100%">
+        <div style="background:linear-gradient(to bottom,rgba(79,158,255,0.07),transparent);position:absolute;top:0;left:0;right:0;height:200px;pointer-events:none"></div>
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div>
+            <div style="font-size:22px;font-weight:700;color:#e6edf3">Quests</div>
+            <div style="font-size:12px;color:#8b949e;margin-top:2px">March 27, 2026</div>
+          </div>
+          <div style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+            <div style="font-size:16px;font-weight:700;color:#f5a623">🔥 7</div>
+            <div style="font-size:9px;color:#8b949e">day streak</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:6px;margin:14px 0 16px;background:#161b22;border-radius:12px;padding:4px">
+          <div style="flex:1;background:#4f9eff;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#fff">Daily</div>
+          <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Weekly</div>
+          <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Story</div>
+          <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Special</div>
+        </div>
+
+        <!-- Daily progress summary -->
+        <div style="background:#161b22;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #30363d;display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div style="font-size:11px;color:#8b949e;margin-bottom:5px">Today's Progress</div>
+            <div style="height:6px;background:#1e2632;border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:40%;background:linear-gradient(to right,#4f9eff,#a371f7);border-radius:3px"></div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px;font-weight:700;color:#4f9eff">2/5</div>
+            <div style="font-size:9px;color:#8b949e">completed</div>
+          </div>
+        </div>
+
+        <!-- Daily Quests list -->
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+
+        <!-- Quest 1: completed -->
+        <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(63,185,80,0.3);position:relative;overflow:hidden;opacity:0.8">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#3fb950;border-radius:2px 0 0 2px"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">🏃</span>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#e6edf3">Morning Run</div>
+                <div style="font-size:11px;color:#8b949e">Run 3km  •  +90 XP  •  +1 END</div>
+              </div>
+            </div>
+            <div style="background:rgba(63,185,80,0.15);border:1px solid #3fb950;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#3fb950;flex-shrink:0">✓</div>
+          </div>
+          <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:100%;background:#3fb950;border-radius:2px"></div>
+          </div>
+          <div style="font-size:9px;color:#3fb950;margin-top:4px">Completed! 3.2 km / 3 km</div>
+        </div>
+
+        <!-- Quest 2: completed -->
+        <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(63,185,80,0.3);position:relative;overflow:hidden;opacity:0.8">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#3fb950;border-radius:2px 0 0 2px"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">💧</span>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#e6edf3">Burn 300 Calories</div>
+                <div style="font-size:11px;color:#8b949e">Any activity  •  +60 XP</div>
+              </div>
+            </div>
+            <div style="background:rgba(63,185,80,0.15);border:1px solid #3fb950;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#3fb950;flex-shrink:0">✓</div>
+          </div>
+          <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:100%;background:#3fb950;border-radius:2px"></div>
+          </div>
+        </div>
+
+        <!-- Quest 3: in progress -->
+        <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(79,158,255,0.3);position:relative;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#4f9eff;border-radius:2px 0 0 2px"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">🏋</span>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#e6edf3">Strength Session</div>
+                <div style="font-size:11px;color:#8b949e">30 min workout  •  +150 XP  •  +2 STR</div>
+              </div>
+            </div>
+            <div style="background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.4);border-radius:10px;padding:3px 9px;font-size:11px;color:#4f9eff;font-weight:700;flex-shrink:0">IN PROGRESS</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:5px;background:#1e2632;border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:60%;background:#4f9eff;border-radius:3px"></div>
+            </div>
+            <span style="font-size:10px;color:#4f9eff;font-weight:600">18 / 30 min</span>
+          </div>
+        </div>
+
+        <!-- Quest 4: not started -->
+        <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #30363d;position:relative;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#a371f7;border-radius:2px 0 0 2px"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:22px">🧘</span>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700;color:#e6edf3">Flexibility Flow</div>
+              <div style="font-size:11px;color:#8b949e">15 min yoga  •  +80 XP  •  +1 FLX</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:5px;background:#1e2632;border-radius:3px"></div>
+            <span style="font-size:10px;color:#8b949e">0 / 15 min</span>
+          </div>
+        </div>
+
+        <!-- Quest 5: not started -->
+        <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #30363d;position:relative;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#f5a623;border-radius:2px 0 0 2px"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:22px">🚴</span>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700;color:#e6edf3">Evening Ride</div>
+              <div style="font-size:11px;color:#8b949e">Cycle 10km  •  +120 XP  •  +1 AGI</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:5px;background:#1e2632;border-radius:3px"></div>
+            <span style="font-size:10px;color:#8b949e">0 / 10 km</span>
+          </div>
+        </div>
+
+        <!-- Complete all bonus -->
+        <div style="background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">🏆</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#f5a623">Complete All Daily Quests</div>
+            <div style="font-size:11px;color:#8b949e">+300 XP bonus reward</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#f5a623">3/5</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STORY QUESTS -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">STORY QUESTS</div>
+    <div class="step-title">Zone-based narrative</div>
+    <div class="step-desc">Unlock lore by exploring regions</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0;background:#080e14;min-height:100%">
+        <div style="background:linear-gradient(to bottom,rgba(163,113,247,0.08),transparent);position:absolute;top:0;left:0;right:0;height:200px;pointer-events:none"></div>
+
+        <div style="font-size:22px;font-weight:700;color:#e6edf3;margin-bottom:4px">Quests</div>
+
+        <div style="display:flex;gap:6px;margin:14px 0 16px;background:#161b22;border-radius:12px;padding:4px">
+          <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Daily</div>
+          <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Weekly</div>
+          <div style="flex:1;background:#a371f7;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#fff">Story</div>
+          <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Special</div>
+        </div>
+
+        <!-- Active story arc -->
+        <div style="font-size:10px;color:#a371f7;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">ACTIVE STORY ARC</div>
+        <div style="background:rgba(22,27,34,0.95);border:1px solid rgba(163,113,247,0.5);border-radius:16px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;left:0;right:0;height:60px;background:linear-gradient(to bottom,rgba(163,113,247,0.08),transparent);pointer-events:none"></div>
+          <div style="font-size:10px;color:#a371f7;font-weight:700;letter-spacing:0.06em;margin-bottom:6px">CHAPTER 2 — THE ELDER'S TRIAL</div>
+          <div style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:6px">The Endurance Forest Calls</div>
+          <div style="font-size:12px;color:#8b949e;margin-bottom:14px;line-height:1.6">"The Elder speaks of a warrior who once crossed the forest in 3 days. Prove yourself worthy of the Mountains..."</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-size:10px;color:#8b949e;white-space:nowrap">Quest 3 / 5</div>
+            <div style="flex:1;height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:60%;background:linear-gradient(to right,#a371f7,#4f9eff);border-radius:2px"></div>
+            </div>
+            <div style="font-size:10px;color:#a371f7;font-weight:700">60%</div>
+          </div>
+        </div>
+
+        <!-- Current story quest -->
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">CURRENT OBJECTIVE</div>
+        <div style="background:#161b22;border-radius:12px;padding:16px;margin-bottom:8px;border:1px solid rgba(163,113,247,0.4);position:relative;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#a371f7;border-radius:2px 0 0 2px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-size:10px;color:#a371f7;font-weight:600;letter-spacing:0.05em;margin-bottom:4px">STORY QUEST 3</div>
+              <div style="font-size:16px;font-weight:700;color:#e6edf3">Cross the Great River</div>
+            </div>
+            <span style="font-size:28px">🌊</span>
+          </div>
+          <div style="font-size:12px;color:#8b949e;margin-bottom:12px;line-height:1.6">Run along the riverside path for 25km total. The Elder says water carries strength to those who follow it.</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:14px;font-weight:700;color:#4f9eff">14.2 km</div>
+              <div style="font-size:9px;color:#8b949e">completed</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:14px;font-weight:700;color:#8b949e">10.8 km</div>
+              <div style="font-size:9px;color:#8b949e">remaining</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:14px;font-weight:700;color:#f5a623">No limit</div>
+              <div style="font-size:9px;color:#8b949e">time</div>
+            </div>
+          </div>
+          <div style="height:5px;background:#1e2632;border-radius:3px;overflow:hidden;margin-bottom:6px">
+            <div style="height:100%;width:57%;background:#a371f7;border-radius:3px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#8b949e">
+            <span>14.2 / 25 km</span>
+            <span style="color:#a371f7">57%</span>
+          </div>
+        </div>
+
+        <!-- Reward preview -->
+        <div style="background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+          <div style="font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.05em;margin-bottom:8px">COMPLETION REWARD</div>
+          <div style="display:flex;gap:8px">
+            <div style="background:#1e2632;border-radius:8px;padding:8px 10px;text-align:center;flex:1">
+              <div style="font-size:18px">⚡</div>
+              <div style="font-size:12px;font-weight:700;color:#4f9eff">+500 XP</div>
+            </div>
+            <div style="background:#1e2632;border-radius:8px;padding:8px 10px;text-align:center;flex:1">
+              <div style="font-size:18px">🗝️</div>
+              <div style="font-size:12px;font-weight:700;color:#f5a623">Elder's Key</div>
+            </div>
+            <div style="background:#1e2632;border-radius:8px;padding:8px 10px;text-align:center;flex:1">
+              <div style="font-size:18px">🗺️</div>
+              <div style="font-size:12px;font-weight:700;color:#a371f7">New Quest</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completed quests -->
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">COMPLETED</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="background:#161b22;border-radius:10px;padding:12px 14px;border:1px solid #30363d;opacity:0.6;display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">✓</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Enter the Forest</div><div style="font-size:10px;color:#8b949e">Travel 5km into the region</div></div>
+            <span style="font-size:10px;color:#3fb950">+200 XP</span>
+          </div>
+          <div style="background:#161b22;border-radius:10px;padding:12px 14px;border:1px solid #30363d;opacity:0.6;display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">✓</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e6edf3">Meet the Forest Elder</div><div style="font-size:10px;color:#8b949e">Complete your first zone quest</div></div>
+            <span style="font-size:10px;color:#3fb950">+350 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

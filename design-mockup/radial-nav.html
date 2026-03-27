@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Radial Nav</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#06080f;
+  font-family:'Inter',-apple-system,sans-serif;
+  padding:48px 40px 80px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+.page-title { text-align:center; margin-bottom:48px; }
+.page-title h1 { font-size:26px; color:#fff; font-weight:800; margin-bottom:6px; }
+.page-title p { font-size:13px; color:#555; }
+
+.states-row {
+  display:flex;
+  gap:52px;
+  justify-content:center;
+  align-items:flex-start;
+}
+.state-col {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:18px;
+}
+.state-label {
+  text-align:center;
+  max-width:390px;
+}
+.state-tag {
+  display:inline-block;
+  border-radius:12px;
+  padding:4px 14px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  margin-bottom:8px;
+}
+.state-name { font-size:17px; font-weight:800; margin-bottom:5px; }
+.state-desc { font-size:12px; line-height:1.65; }
+
+/* phone */
+.phone {
+  width:390px;
+  height:844px;
+  background:#090d1a;
+  border-radius:44px;
+  overflow:hidden;
+  position:relative;
+  flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(100,180,255,0.07),0 32px 80px rgba(0,0,0,0.95);
+}
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+}
+/* bottom nav bar */
+.nav-bar {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#111830;
+  border-top:1px solid #1e2d4a;
+  display:flex; align-items:flex-start; padding-top:10px;
+  z-index:100;
+}
+.nav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  gap:4px;
+}
+.nav-icon { font-size:20px; }
+.nav-lbl { font-size:9px; }
+
+/* the FAB boss button */
+.fab {
+  position:absolute;
+  width:62px; height:62px;
+  border-radius:20px;
+  left:50%; transform:translateX(-50%);
+  bottom:84px; /* sits above nav bar */
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:200;
+  cursor:pointer;
+}
+
+/* radial menu items — positioned around FAB center */
+/* FAB center is at left:195px, bottom:115px from phone bottom */
+.radial-item {
+  position:absolute;
+  width:56px; height:56px;
+  border-radius:18px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px;
+  z-index:190;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.radial-item .ri-icon { font-size:20px; }
+.radial-item .ri-lbl { font-size:8px; font-weight:700; letter-spacing:0.04em; }
+
+/* ring guide */
+.radial-ring {
+  position:absolute;
+  border-radius:50%;
+  border:1px dashed rgba(79,158,255,0.2);
+  z-index:150;
+  pointer-events:none;
+}
+
+/* backdrop when open */
+.radial-backdrop {
+  position:absolute; inset:0;
+  background:rgba(6,8,15,0.75);
+  backdrop-filter:blur(4px);
+  z-index:140;
+}
+
+/* content scroll */
+.content {
+  position:absolute;
+  top:44px; left:0; right:0; bottom:82px;
+  overflow-y:auto; scrollbar-width:none;
+  padding:12px 20px 16px;
+}
+.content::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>Life Level — Radial Navigation</h1>
+  <p>Boss FAB expands into a customisable radial menu · hold any item to reorder</p>
+</div>
+
+<div class="states-row">
+
+  <!-- ═══════════════════════════════
+       STATE 1 — CLOSED (default)
+  ═══════════════════════════════ -->
+  <div class="state-col">
+    <div class="state-label">
+      <div class="state-tag" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">STATE 1</div>
+      <div class="state-name" style="color:#dde8ff">Default — Closed</div>
+      <div class="state-desc" style="color:#6e84b0">4 primary tabs always visible. Boss FAB elevated above the nav bar, glowing to signal an active boss encounter.</div>
+    </div>
+
+    <div class="phone">
+      <div class="status-bar">
+        <span style="font-size:13px;font-weight:600;color:#dde8ff">9:41</span>
+        <span style="font-size:11px;color:#6e84b0">●●● 🔋</span>
+      </div>
+
+      <!-- page content -->
+      <div class="content">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:22px;font-weight:700;color:#dde8ff">Good Morning 👋</div>
+            <div style="font-size:12px;color:#6e84b0;margin-top:2px">ArthurBlaze · Lv14</div>
+          </div>
+          <div style="background:rgba(232,184,109,0.1);border:1px solid rgba(232,184,109,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+            <div style="font-size:16px;font-weight:700;color:#e8b86d">🔥 7</div>
+            <div style="font-size:9px;color:#6e84b0">streak</div>
+          </div>
+        </div>
+
+        <!-- xp bar -->
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:14px;padding:14px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:700;color:#dde8ff">Level 14</span>
+            <span style="font-size:12px;color:#4f9eff">68%</span>
+          </div>
+          <div style="height:8px;background:#162040;border-radius:4px;overflow:hidden;margin-bottom:6px">
+            <div style="height:100%;width:68%;background:linear-gradient(to right,#4f9eff,#b08ce8)"></div>
+          </div>
+          <div style="font-size:10px;color:#6e84b0">3,420 / 5,000 XP to next level</div>
+        </div>
+
+        <!-- boss card -->
+        <div style="background:rgba(255,60,60,0.06);border:1px solid rgba(255,80,80,0.3);border-radius:16px;padding:16px;margin-bottom:12px">
+          <div style="font-size:10px;color:#ff8080;font-weight:700;letter-spacing:0.07em;margin-bottom:8px">⚔️ ACTIVE BOSS ENCOUNTER</div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="width:60px;height:60px;background:rgba(255,50,50,0.12);border:1px solid rgba(255,80,80,0.3);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0">🐉</div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:700;color:#dde8ff;margin-bottom:4px">Forest Wyvern</div>
+              <div style="height:6px;background:#162040;border-radius:3px;overflow:hidden;margin-bottom:4px">
+                <div style="height:100%;width:48%;background:linear-gradient(to right,#ff5555,#ff9040)"></div>
+              </div>
+              <div style="font-size:10px;color:#ff8080">48% HP · 3 days remaining</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- quests preview -->
+        <div style="font-size:10px;color:#6e84b0;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+          <div style="background:#111830;border:1px solid rgba(82,224,160,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🏃</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Morning Run</div><div style="font-size:10px;color:#6e84b0">+90 XP · 3km</div></div>
+            <span style="font-size:11px;font-weight:700;color:#52e0a0">✓ DONE</span>
+          </div>
+          <div style="background:#111830;border:1px solid rgba(56,217,200,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🏋</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Strength Session</div><div style="font-size:10px;color:#6e84b0">18 / 30 min</div></div>
+            <span style="font-size:11px;font-weight:700;color:#38d9c8">60%</span>
+          </div>
+          <div style="background:#111830;border:1px solid #1e2d4a;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🧘</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Flexibility Flow</div><div style="font-size:10px;color:#6e84b0">0 / 15 min</div></div>
+            <span style="font-size:11px;color:#6e84b0">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boss FAB — closed -->
+      <div class="fab" style="background:linear-gradient(135deg,#ff4040,#ff8040);box-shadow:0 0 0 4px rgba(255,60,60,0.15),0 0 28px rgba(255,80,60,0.5);border:1.5px solid rgba(255,120,80,0.6)">
+        <span style="font-size:26px">⚔️</span>
+        <span style="font-size:8px;color:rgba(255,255,255,0.85);font-weight:700;letter-spacing:0.05em;margin-top:-2px">BOSS</span>
+      </div>
+
+      <!-- nav bar -->
+      <div class="nav-bar">
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#4f9eff">🏠</span>
+          <span class="nav-lbl" style="color:#4f9eff;font-weight:700">Home</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">📜</span>
+          <span class="nav-lbl" style="color:#6e84b0">Quests</span>
+        </div>
+        <!-- spacer for FAB -->
+        <div style="flex:1"></div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">🗺️</span>
+          <span class="nav-lbl" style="color:#6e84b0">Map</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">👤</span>
+          <span class="nav-lbl" style="color:#6e84b0">Profile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════
+       STATE 2 — OPEN (radial expanded)
+  ═══════════════════════════════ -->
+  <div class="state-col">
+    <div class="state-label">
+      <div class="state-tag" style="background:rgba(255,80,60,0.12);border:1px solid rgba(255,80,60,0.5);color:#ff6040">STATE 2</div>
+      <div class="state-name" style="color:#dde8ff">Tap — Radial Opens</div>
+      <div class="state-desc" style="color:#6e84b0">Tap the FAB → 6 items burst out in a circle. Backdrop blurs the content behind. Each slot shows icon + label.</div>
+    </div>
+
+    <div class="phone">
+      <div class="status-bar" style="z-index:300">
+        <span style="font-size:13px;font-weight:600;color:#dde8ff">9:41</span>
+        <span style="font-size:11px;color:#6e84b0">●●● 🔋</span>
+      </div>
+
+      <!-- blurred content behind -->
+      <div class="content" style="filter:blur(2px);pointer-events:none;opacity:0.5">
+        <div style="font-size:22px;font-weight:700;color:#dde8ff;margin-bottom:14px">Good Morning 👋</div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:14px;padding:14px;margin-bottom:12px;height:70px"></div>
+        <div style="background:rgba(255,60,60,0.06);border:1px solid rgba(255,80,80,0.3);border-radius:16px;padding:16px;margin-bottom:12px;height:90px"></div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:12px;padding:12px 14px;height:48px;margin-bottom:8px"></div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:12px;padding:12px 14px;height:48px;margin-bottom:8px"></div>
+      </div>
+
+      <!-- backdrop -->
+      <div class="radial-backdrop"></div>
+
+      <!-- dashed ring guide — centered on FAB -->
+      <!-- FAB center: left=195, bottom=115 → from top: 844-115=729 -->
+      <div class="radial-ring" style="
+        width:300px; height:300px;
+        left:calc(50% - 150px);
+        bottom:calc(115px - 150px);
+      "></div>
+
+      <!-- ── RADIAL ITEMS ──
+           FAB center: left=195px, bottom=115px
+           Radius=138px. 6 items at angles (from right, CCW):
+           item1: 120° → x=cos120*138=-69, y=sin120*138=120  → left=195-69-28=98,  bottom=115+120-28=207
+           item2:  90° → x=0,              y=138              → left=195-28=167,     bottom=115+138-28=225
+           item3:  60° → x=cos60*138=69,   y=sin60*138=120    → left=195+69-28=236,  bottom=115+120-28=207
+           item4: 150° → x=cos150*138=-120,y=sin150*138=69    → left=195-120-28=47,  bottom=115+69-28=156
+           item5:  30° → x=cos30*138=120,  y=sin30*138=69     → left=195+120-28=287, bottom=115+69-28=156
+           item6: 180° → no, skip. Do 6 items at 150,120,90,60,30 and add one at 10°...
+
+           Actually let's do 6 items spread 150° to 30° evenly → step=24°
+           150, 126, 102, 78, 54, 30
+      -->
+
+      <!-- item: Guild (150°) left=195+cos150*138-28=195-120-28=47, bottom=115+sin150*138-28=115+69-28=156 -->
+      <div class="radial-item" style="left:47px;bottom:156px;background:#1a2848;border:1.5px solid rgba(176,140,232,0.5);box-shadow:0 4px 20px rgba(176,140,232,0.2)">
+        <span class="ri-icon">🛡️</span>
+        <span class="ri-lbl" style="color:#b08ce8">Guild</span>
+      </div>
+
+      <!-- item: Stats (126°) cos126=-0.588,sin126=0.809 → x=-81,y=112 → left=195-81-28=86, bottom=115+112-28=199 -->
+      <div class="radial-item" style="left:86px;bottom:199px;background:#1a2848;border:1.5px solid rgba(56,217,200,0.5);box-shadow:0 4px 20px rgba(56,217,200,0.2)">
+        <span class="ri-icon">📊</span>
+        <span class="ri-lbl" style="color:#38d9c8">Stats</span>
+      </div>
+
+      <!-- item: Boss Battle (102°) cos102=-0.208,sin102=0.978 → x=-29,y=135 → left=195-29-28=138, bottom=115+135-28=222 -->
+      <div class="radial-item" style="left:138px;bottom:222px;background:linear-gradient(135deg,rgba(255,50,50,0.2),rgba(255,100,40,0.15));border:1.5px solid rgba(255,80,60,0.7);box-shadow:0 4px 28px rgba(255,80,60,0.35);width:62px;height:62px;border-radius:20px">
+        <span class="ri-icon" style="font-size:24px">⚔️</span>
+        <span class="ri-lbl" style="color:#ff8060;font-size:7px">BATTLE</span>
+      </div>
+
+      <!-- item: Map (78°) cos78=0.208,sin78=0.978 → x=29,y=135 → left=195+29-28=196, bottom=115+135-28=222 -->
+      <div class="radial-item" style="left:196px;bottom:222px;background:#1a2848;border:1.5px solid rgba(82,224,160,0.5);box-shadow:0 4px 20px rgba(82,224,160,0.2)">
+        <span class="ri-icon">🗺️</span>
+        <span class="ri-lbl" style="color:#52e0a0">Map</span>
+      </div>
+
+      <!-- item: Titles (54°) cos54=0.588,sin54=0.809 → x=81,y=112 → left=195+81-28=248, bottom=115+112-28=199 -->
+      <div class="radial-item" style="left:248px;bottom:199px;background:#1a2848;border:1.5px solid rgba(232,184,109,0.5);box-shadow:0 4px 20px rgba(232,184,109,0.2)">
+        <span class="ri-icon">🏅</span>
+        <span class="ri-lbl" style="color:#e8b86d">Titles</span>
+      </div>
+
+      <!-- item: Profile (30°) cos30=0.866,sin30=0.5 → x=119,y=69 → left=195+119-28=286, bottom=115+69-28=156 -->
+      <div class="radial-item" style="left:286px;bottom:156px;background:#1a2848;border:1.5px solid rgba(79,158,255,0.5);box-shadow:0 4px 20px rgba(79,158,255,0.2)">
+        <span class="ri-icon">👤</span>
+        <span class="ri-lbl" style="color:#4f9eff">Profile</span>
+      </div>
+
+      <!-- FAB — open (rotated to ✕) -->
+      <div class="fab" style="background:linear-gradient(135deg,#1a2848,#1e3060);box-shadow:0 0 0 4px rgba(255,60,60,0.12),0 0 28px rgba(79,158,255,0.3);border:1.5px solid rgba(79,158,255,0.5);z-index:250">
+        <span style="font-size:22px;transform:rotate(45deg);display:inline-block;color:#fff">✕</span>
+        <span style="font-size:8px;color:rgba(255,255,255,0.6);font-weight:700;letter-spacing:0.05em;margin-top:1px">CLOSE</span>
+      </div>
+
+      <!-- connecting lines from FAB center to items (subtle) -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:145;pointer-events:none" overflow="visible">
+        <!-- FAB center: 195, 844-115=729 -->
+        <!-- Guild: 47+28=75, 844-156-28=660 -->
+        <line x1="195" y1="729" x2="75" y2="660" stroke="rgba(176,140,232,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Stats: 86+28=114, 844-199-28=617 -->
+        <line x1="195" y1="729" x2="114" y2="617" stroke="rgba(56,217,200,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Battle: 138+31=169, 844-222-31=591 -->
+        <line x1="195" y1="729" x2="169" y2="591" stroke="rgba(255,80,60,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Map: 196+28=224, 844-222-28=594 -->
+        <line x1="195" y1="729" x2="224" y2="594" stroke="rgba(82,224,160,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Titles: 248+28=276, 844-199-28=617 -->
+        <line x1="195" y1="729" x2="276" y2="617" stroke="rgba(232,184,109,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Profile: 286+28=314, 844-156-28=660 -->
+        <line x1="195" y1="729" x2="314" y2="660" stroke="rgba(79,158,255,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+      </svg>
+
+      <!-- nav bar (visible behind backdrop) -->
+      <div class="nav-bar" style="z-index:110;opacity:0.4">
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#4f9eff">🏠</span>
+          <span class="nav-lbl" style="color:#4f9eff">Home</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">📜</span>
+          <span class="nav-lbl" style="color:#6e84b0">Quests</span>
+        </div>
+        <div style="flex:1"></div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">🗺️</span>
+          <span class="nav-lbl" style="color:#6e84b0">Map</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">👤</span>
+          <span class="nav-lbl" style="color:#6e84b0">Profile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════
+       STATE 3 — HOLD TO REORDER
+  ═══════════════════════════════ -->
+  <div class="state-col">
+    <div class="state-label">
+      <div class="state-tag" style="background:rgba(232,184,109,0.12);border:1px solid rgba(232,184,109,0.5);color:#e8b86d">STATE 3</div>
+      <div class="state-name" style="color:#dde8ff">Hold — Reorder Mode</div>
+      <div class="state-desc" style="color:#6e84b0">Long-press any slot to enter reorder mode. Drag to a new position on the ring. Other slots dim and show empty slot targets.</div>
+    </div>
+
+    <div class="phone">
+      <div class="status-bar" style="z-index:300">
+        <span style="font-size:13px;font-weight:600;color:#dde8ff">9:41</span>
+        <span style="font-size:11px;color:#6e84b0">●●● 🔋</span>
+      </div>
+
+      <!-- blurred bg -->
+      <div class="content" style="filter:blur(2px);pointer-events:none;opacity:0.4">
+        <div style="font-size:22px;font-weight:700;color:#dde8ff;margin-bottom:14px">Good Morning 👋</div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:14px;height:70px;margin-bottom:12px"></div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:14px;height:90px;margin-bottom:12px"></div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:12px;height:48px;margin-bottom:8px"></div>
+      </div>
+      <div class="radial-backdrop"></div>
+
+      <!-- reorder mode toast -->
+      <div style="position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:350;background:#1e2d4a;border:1px solid rgba(232,184,109,0.5);border-radius:20px;padding:8px 20px;white-space:nowrap">
+        <span style="font-size:11px;font-weight:700;color:#e8b86d">✦ Drag to reorder slots</span>
+      </div>
+
+      <!-- ring guide — more visible in reorder mode -->
+      <div class="radial-ring" style="
+        width:300px; height:300px;
+        left:calc(50% - 150px);
+        bottom:calc(115px - 150px);
+        border-color:rgba(232,184,109,0.25);
+        border-width:1.5px;
+      "></div>
+
+      <!-- empty target slot at 150° — slot where dragged item came from -->
+      <div style="position:absolute;left:47px;bottom:156px;width:56px;height:56px;border-radius:18px;border:2px dashed rgba(232,184,109,0.4);background:rgba(232,184,109,0.04);z-index:185;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:18px;opacity:0.3">+</span>
+      </div>
+
+      <!-- Stats — dimmed (not being dragged) -->
+      <div class="radial-item" style="left:86px;bottom:199px;background:#1a2848;border:1.5px solid rgba(56,217,200,0.25);opacity:0.45">
+        <span class="ri-icon">📊</span>
+        <span class="ri-lbl" style="color:#38d9c8">Stats</span>
+      </div>
+
+      <!-- Boss Battle — dimmed -->
+      <div class="radial-item" style="left:138px;bottom:222px;background:rgba(255,50,50,0.1);border:1.5px solid rgba(255,80,60,0.3);width:62px;height:62px;border-radius:20px;opacity:0.45">
+        <span class="ri-icon" style="font-size:24px">⚔️</span>
+        <span class="ri-lbl" style="color:#ff8060;font-size:7px">BATTLE</span>
+      </div>
+
+      <!-- Map — dimmed -->
+      <div class="radial-item" style="left:196px;bottom:222px;background:#1a2848;border:1.5px solid rgba(82,224,160,0.25);opacity:0.45">
+        <span class="ri-icon">🗺️</span>
+        <span class="ri-lbl" style="color:#52e0a0">Map</span>
+      </div>
+
+      <!-- Titles — dimmed -->
+      <div class="radial-item" style="left:248px;bottom:199px;background:#1a2848;border:1.5px solid rgba(232,184,109,0.25);opacity:0.45">
+        <span class="ri-icon">🏅</span>
+        <span class="ri-lbl" style="color:#e8b86d">Titles</span>
+      </div>
+
+      <!-- Profile — dimmed -->
+      <div class="radial-item" style="left:286px;bottom:156px;background:#1a2848;border:1.5px solid rgba(79,158,255,0.25);opacity:0.45">
+        <span class="ri-icon">👤</span>
+        <span class="ri-lbl" style="color:#4f9eff">Profile</span>
+      </div>
+
+      <!-- GUILD — being dragged (elevated, scaled up, bright, with drag shadow) -->
+      <!-- dragged to a new position — between Titles and Profile, slightly off ring -->
+      <div style="position:absolute;left:270px;bottom:185px;width:66px;height:66px;border-radius:20px;
+           background:linear-gradient(135deg,#22204a,#1e2d4a);
+           border:2px solid rgba(176,140,232,0.9);
+           box-shadow:0 12px 40px rgba(176,140,232,0.5),0 4px 16px rgba(0,0,0,0.6);
+           z-index:300;
+           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+           transform:scale(1.12)">
+        <span style="font-size:24px">🛡️</span>
+        <span style="font-size:8px;font-weight:800;color:#b08ce8;letter-spacing:0.04em">Guild</span>
+      </div>
+
+      <!-- empty target slot — where Guild would snap to (30° position, slightly highlighted) -->
+      <div style="position:absolute;left:286px;bottom:156px;width:56px;height:56px;border-radius:18px;border:2px dashed rgba(176,140,232,0.6);background:rgba(176,140,232,0.08);z-index:184;display:flex;align-items:center;justify-content:center;animation:none">
+        <div style="width:16px;height:16px;border-radius:50%;background:rgba(176,140,232,0.3)"></div>
+      </div>
+
+      <!-- drag trail / ghost -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:145;pointer-events:none" overflow="visible">
+        <!-- from FAB to dragged guild item -->
+        <line x1="195" y1="729" x2="303" y2="666" stroke="rgba(176,140,232,0.3)" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <!-- faint lines to dimmed items -->
+        <line x1="195" y1="729" x2="114" y2="617" stroke="rgba(56,217,200,0.1)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="195" y1="729" x2="169" y2="591" stroke="rgba(255,80,60,0.1)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="195" y1="729" x2="224" y2="594" stroke="rgba(82,224,160,0.1)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="195" y1="729" x2="276" y2="617" stroke="rgba(232,184,109,0.1)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="195" y1="729" x2="314" y2="660" stroke="rgba(79,158,255,0.1)" stroke-width="1" stroke-dasharray="4,4"/>
+      </svg>
+
+      <!-- FAB — open -->
+      <div class="fab" style="background:linear-gradient(135deg,#1a2848,#1e3060);box-shadow:0 0 0 4px rgba(176,140,232,0.1),0 0 24px rgba(79,158,255,0.25);border:1.5px solid rgba(79,158,255,0.4);z-index:250">
+        <span style="font-size:22px;transform:rotate(45deg);display:inline-block;color:#fff">✕</span>
+        <span style="font-size:8px;color:rgba(255,255,255,0.5);font-weight:700;letter-spacing:0.05em;margin-top:1px">CLOSE</span>
+      </div>
+
+      <!-- nav bar -->
+      <div class="nav-bar" style="z-index:110;opacity:0.3">
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">🏠</span>
+          <span class="nav-lbl" style="color:#6e84b0">Home</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">📜</span>
+          <span class="nav-lbl" style="color:#6e84b0">Quests</span>
+        </div>
+        <div style="flex:1"></div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">🗺️</span>
+          <span class="nav-lbl" style="color:#6e84b0">Map</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">👤</span>
+          <span class="nav-lbl" style="color:#6e84b0">Profile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════
+       STATE 4 — CUSTOMISE SCREEN
+       (what you get after finishing reorder)
+  ═══════════════════════════════ -->
+  <div class="state-col">
+    <div class="state-label">
+      <div class="state-tag" style="background:rgba(82,224,160,0.12);border:1px solid rgba(82,224,160,0.45);color:#52e0a0">STATE 4</div>
+      <div class="state-name" style="color:#dde8ff">Customize Sheet</div>
+      <div class="state-desc" style="color:#6e84b0">Hold → release opens a full customise panel: add/remove items from the ring. Drag from a list of all available destinations.</div>
+    </div>
+
+    <div class="phone">
+      <div class="status-bar" style="z-index:300">
+        <span style="font-size:13px;font-weight:600;color:#dde8ff">9:41</span>
+        <span style="font-size:11px;color:#6e84b0">●●● 🔋</span>
+      </div>
+
+      <!-- blurred bg -->
+      <div class="content" style="filter:blur(3px);pointer-events:none;opacity:0.3">
+        <div style="font-size:22px;font-weight:700;color:#dde8ff;margin-bottom:14px">Good Morning 👋</div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:14px;height:70px;margin-bottom:12px"></div>
+        <div style="background:#111830;border:1px solid #1e2d4a;border-radius:14px;height:90px;margin-bottom:12px"></div>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(6,8,15,0.85);z-index:140"></div>
+
+      <!-- customize bottom sheet -->
+      <div style="position:absolute;bottom:0;left:0;right:0;top:100px;background:#0f1828;border-radius:28px 28px 0 0;border-top:1px solid #1e2d4a;z-index:200;display:flex;flex-direction:column">
+
+        <!-- handle -->
+        <div style="width:36px;height:4px;background:#2a3a5a;border-radius:2px;margin:12px auto 0"></div>
+
+        <!-- sheet header -->
+        <div style="padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#dde8ff">Customize Ring</div>
+            <div style="font-size:11px;color:#6e84b0;margin-top:2px">Drag items to rearrange · 6 slots available</div>
+          </div>
+          <div style="background:#38d9c8;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;color:#090d1a">Done</div>
+        </div>
+
+        <!-- ring preview (mini) -->
+        <div style="margin:16px 20px;background:#111830;border:1px solid #1e2d4a;border-radius:16px;padding:16px;position:relative;height:140px;display:flex;align-items:center;justify-content:center">
+          <div style="font-size:9px;color:#6e84b0;position:absolute;top:10px;left:14px;font-weight:600;letter-spacing:0.06em">PREVIEW</div>
+          <!-- mini ring -->
+          <div style="position:relative;width:100px;height:100px">
+            <!-- center -->
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;background:linear-gradient(135deg,#ff4040,#ff8040);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:10">⚔️</div>
+            <!-- mini items (radius 46px) -->
+            <!-- 150°: cos150=-0.866,sin150=0.5 → x=-40,y=23 → left=50-40-12=−2, top=50-23-12=15 -->
+            <div style="position:absolute;left:-2px;top:15px;width:24px;height:24px;background:#1a2848;border:1px solid rgba(176,140,232,0.5);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">🛡️</div>
+            <!-- 126°: cos126=-0.588,sin126=0.809 → x=-27,y=37 → left=50-27-12=11, top=50-37-12=1 -->
+            <div style="position:absolute;left:11px;top:1px;width:24px;height:24px;background:#1a2848;border:1px solid rgba(56,217,200,0.5);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">📊</div>
+            <!-- 90°: x=0,y=46 → left=38,top=50-46-12=−8 -->
+            <div style="position:absolute;left:38px;top:-8px;width:24px;height:24px;background:#1a2848;border:1px solid rgba(255,80,60,0.5);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">⚔️</div>
+            <!-- 54°: cos54=0.588,sin54=0.809 → x=27,y=37 → left=77-12=65,top=1 -->
+            <div style="position:absolute;left:65px;top:1px;width:24px;height:24px;background:#1a2848;border:1px solid rgba(82,224,160,0.5);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">🗺️</div>
+            <!-- 30°: cos30=0.866,sin30=0.5 → x=40,y=23 → left=90-12=78, top=50-23-12=15 -->
+            <div style="position:absolute;left:78px;top:15px;width:24px;height:24px;background:#1a2848;border:1px solid rgba(232,184,109,0.5);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">🏅</div>
+            <!-- empty slot at 6°: add + -->
+            <div style="position:absolute;left:82px;top:40px;width:24px;height:24px;background:rgba(255,255,255,0.03);border:1px dashed rgba(100,120,160,0.4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#3a5070">+</div>
+          </div>
+          <div style="position:absolute;right:14px;bottom:10px;font-size:9px;color:#6e84b0">5 / 6 slots used</div>
+        </div>
+
+        <!-- available items to add -->
+        <div style="padding:0 20px;flex:1;overflow:hidden">
+          <div style="font-size:10px;color:#6e84b0;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">ALL DESTINATIONS</div>
+          <div style="display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:290px;scrollbar-width:none">
+
+            <!-- in ring items -->
+            <div style="background:#1a2848;border:1px solid rgba(176,140,232,0.4);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;background:rgba(176,140,232,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🛡️</div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Guild</div><div style="font-size:10px;color:#6e84b0">In ring · slot 1</div></div>
+              <div style="width:20px;height:20px;background:rgba(176,140,232,0.2);border:1px solid rgba(176,140,232,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#b08ce8">✓</div>
+            </div>
+            <div style="background:#1a2848;border:1px solid rgba(56,217,200,0.4);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;background:rgba(56,217,200,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">📊</div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Stats</div><div style="font-size:10px;color:#6e84b0">In ring · slot 2</div></div>
+              <div style="width:20px;height:20px;background:rgba(56,217,200,0.2);border:1px solid rgba(56,217,200,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#38d9c8">✓</div>
+            </div>
+            <div style="background:#1a2848;border:1px solid rgba(232,184,109,0.4);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;background:rgba(232,184,109,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🏅</div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Titles</div><div style="font-size:10px;color:#6e84b0">In ring · slot 4</div></div>
+              <div style="width:20px;height:20px;background:rgba(232,184,109,0.2);border:1px solid rgba(232,184,109,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#e8b86d">✓</div>
+            </div>
+
+            <!-- not in ring -->
+            <div style="background:#111830;border:1px solid #1e2d4a;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;background:#162040;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Profile</div><div style="font-size:10px;color:#6e84b0">Not in ring — tap to add</div></div>
+              <div style="width:20px;height:20px;background:#162040;border:1px solid #2a3a5a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3a5070">+</div>
+            </div>
+            <div style="background:#111830;border:1px solid #1e2d4a;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;background:#162040;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🏆</div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#dde8ff">Leaderboard</div><div style="font-size:10px;color:#6e84b0">Not in ring — tap to add</div></div>
+              <div style="width:20px;height:20px;background:#162040;border:1px solid #2a3a5a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3a5070">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- nav bar -->
+      <div class="nav-bar" style="z-index:110;opacity:0.2">
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">🏠</span>
+          <span class="nav-lbl" style="color:#6e84b0">Home</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">📜</span>
+          <span class="nav-lbl" style="color:#6e84b0">Quests</span>
+        </div>
+        <div style="flex:1"></div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">🗺️</span>
+          <span class="nav-lbl" style="color:#6e84b0">Map</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon" style="color:#6e84b0">👤</span>
+          <span class="nav-lbl" style="color:#6e84b0">Profile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

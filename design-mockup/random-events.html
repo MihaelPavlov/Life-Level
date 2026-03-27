@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Random Events</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#f5a623; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:100; }
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+.nav { position:absolute; bottom:0; left:0; right:0; height:82px; background:#161b22; border-top:1px solid #30363d; display:flex; align-items:center; padding:0 8px 12px; z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; } .nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.06)} }
+@keyframes chestGlow { 0%,100%{box-shadow:0 0 20px rgba(245,166,35,0.3)} 50%{box-shadow:0 0 40px rgba(245,166,35,0.6),0 0 60px rgba(245,166,35,0.2)} }
+@keyframes xpStorm { 0%,100%{opacity:0.6} 50%{opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- TREASURE CHEST EVENT -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">RANDOM EVENT</div>
+    <div class="step-title">Treasure Chest Found!</div>
+    <div class="step-desc">Complete today's workout to unlock it</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- MAP BACKGROUND -->
+    <div style="position:absolute;top:0;left:0;right:0;height:500px;overflow:hidden;background:#080e14">
+      <svg width="390" height="500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="fg" cx="35%" cy="65%" r="60%"><stop offset="0%" stop-color="#3fb950" stop-opacity="0.12"/><stop offset="100%" stop-color="#0a1c12" stop-opacity="0"/></radialGradient>
+          <radialGradient id="cg" cx="55%" cy="45%" r="30%"><stop offset="0%" stop-color="#f5a623" stop-opacity="0.2"/><stop offset="100%" stop-color="#080e14" stop-opacity="0"/></radialGradient>
+          <linearGradient id="ft" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#080e14" stop-opacity="1"/><stop offset="100%" stop-color="#080e14" stop-opacity="0"/></linearGradient>
+        </defs>
+        <rect width="390" height="500" fill="#080e14"/>
+        <ellipse cx="130" cy="340" rx="160" ry="130" fill="#0a1c12" opacity="0.8"/>
+        <ellipse cx="130" cy="340" rx="160" ry="130" fill="url(#fg)"/>
+        <!-- chest glow -->
+        <ellipse cx="210" cy="290" rx="80" ry="60" fill="url(#cg)"/>
+        <!-- grid -->
+        <g stroke="rgba(48,54,61,0.12)" stroke-width="1">
+          <line x1="0" y1="160" x2="390" y2="160"/><line x1="0" y1="200" x2="390" y2="200"/>
+          <line x1="0" y1="240" x2="390" y2="240"/><line x1="0" y1="280" x2="390" y2="280"/>
+          <line x1="0" y1="320" x2="390" y2="320"/><line x1="0" y1="360" x2="390" y2="360"/>
+          <line x1="0" y1="400" x2="390" y2="400"/><line x1="0" y1="440" x2="390" y2="440"/>
+          <line x1="60" y1="140" x2="60" y2="500"/><line x1="120" y1="140" x2="120" y2="500"/>
+          <line x1="180" y1="140" x2="180" y2="500"/><line x1="240" y1="140" x2="240" y2="500"/>
+          <line x1="300" y1="140" x2="300" y2="500"/><line x1="360" y1="140" x2="360" y2="500"/>
+        </g>
+        <!-- player -->
+        <circle cx="150" cy="360" r="5" fill="#3fb950"/>
+        <circle cx="150" cy="360" r="12" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.4"/>
+        <!-- dotted line to chest -->
+        <path d="M 155 358 Q 175 330 200 305" stroke="rgba(245,166,35,0.5)" stroke-width="2" stroke-dasharray="5 4" fill="none"/>
+        <!-- chest node -->
+        <circle cx="210" cy="290" r="24" fill="rgba(245,166,35,0.08)" stroke="rgba(245,166,35,0.4)" stroke-width="1" opacity="0.6">
+          <animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="210" cy="290" r="18" fill="rgba(40,30,5,0.9)" stroke="#f5a623" stroke-width="2.5"/>
+        <text x="210" y="295" font-size="18" text-anchor="middle" dominant-baseline="central">📦</text>
+        <!-- distance label -->
+        <rect x="176" y="310" width="68" height="15" rx="7" fill="rgba(8,14,20,0.9)" stroke="#30363d" stroke-width="1"/>
+        <text x="210" y="318" font-size="8" text-anchor="middle" dominant-baseline="central" fill="#8b949e" font-family="Inter,sans-serif">2.4 km away</text>
+        <!-- fog -->
+        <rect x="0" y="0" width="390" height="90" fill="url(#ft)"/>
+        <rect x="0" y="0" width="390" height="60" fill="#080e14"/>
+      </svg>
+    </div>
+
+    <!-- HUD -->
+    <div style="position:absolute;top:44px;left:0;right:0;padding:10px 18px;background:linear-gradient(to bottom,rgba(8,14,20,0.95) 65%,transparent);z-index:20">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:17px;font-weight:700;color:#e6edf3">Adventure Map</div>
+        <div style="background:rgba(22,27,34,0.9);border:1px solid rgba(245,166,35,0.4);border-radius:10px;padding:4px 12px;font-size:11px;font-weight:700;color:#f5a623">📦 Event Nearby!</div>
+      </div>
+    </div>
+
+    <!-- CHEST EVENT POPUP -->
+    <div style="position:absolute;bottom:300px;left:16px;right:16px;z-index:30;background:rgba(22,27,34,0.98);border:2px solid rgba(245,166,35,0.6);border-radius:20px;padding:20px;box-shadow:0 0 40px rgba(245,166,35,0.15);animation:chestGlow 2s ease-in-out infinite">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="display:inline-block;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.5);border-radius:10px;padding:3px 14px;font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">🎲 RANDOM EVENT</div>
+        <div style="font-size:40px;margin-bottom:8px">📦</div>
+        <div style="font-size:20px;font-weight:700;color:#e6edf3;margin-bottom:4px">Treasure Chest Found!</div>
+        <div style="font-size:12px;color:#8b949e;line-height:1.5">A mysterious chest appeared 2.4km ahead.<br>Reach it and complete today's workout to unlock it.</div>
+      </div>
+      <div style="background:#1e2632;border-radius:12px;padding:12px;margin-bottom:14px">
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.06em;margin-bottom:8px">POSSIBLE REWARDS</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:#161b22;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:18px">⚡</div>
+            <div style="font-size:11px;font-weight:700;color:#4f9eff">+200-500 XP</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:18px">⚔️</div>
+            <div style="font-size:11px;font-weight:700;color:#f5a623">Rare Item</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:18px">💎</div>
+            <div style="font-size:11px;font-weight:700;color:#a371f7">Cosmetic</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:11px;color:#8b949e">Expires in</div>
+        <div style="font-size:14px;font-weight:700;color:#f85149">23:45:12</div>
+      </div>
+      <button style="width:100%;background:linear-gradient(135deg,#f5a623,#e8920f);border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#000;cursor:pointer">🗺️ Navigate to Chest</button>
+    </div>
+
+    <!-- bottom filler -->
+    <div style="position:absolute;bottom:82px;left:0;right:0;height:218px;background:#0d1117">
+      <div style="padding:16px 20px">
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:8px">ACTIVE EVENTS NEARBY</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:10px;border:1px solid rgba(245,166,35,0.3)">
+            <div style="font-size:16px">📦</div>
+            <div style="font-size:11px;font-weight:700;color:#f5a623;margin-top:4px">Treasure Chest</div>
+            <div style="font-size:9px;color:#8b949e">2.4 km away</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:10px;border:1px solid #30363d;opacity:0.5">
+            <div style="font-size:16px">👥</div>
+            <div style="font-size:11px;font-weight:700;color:#8b949e;margin-top:4px">Merchant</div>
+            <div style="font-size:9px;color:#586070">8.1 km away</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:10px;border:1px solid #30363d;opacity:0.5">
+            <div style="font-size:16px">⚡</div>
+            <div style="font-size:11px;font-weight:700;color:#8b949e;margin-top:4px">XP Storm</div>
+            <div style="font-size:9px;color:#586070">Inactive</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- XP STORM EVENT -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">RANDOM EVENT</div>
+    <div class="step-title">⚡ XP Storm Active!</div>
+    <div class="step-desc">2-hour window — all XP doubled</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Full screen XP storm overlay on home screen -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(79,158,255,0.2) 0%,#080e14 70%);z-index:5"></div>
+
+    <div style="position:absolute;inset:0;z-index:10;overflow:hidden">
+      <!-- Notification bar -->
+      <div style="position:absolute;top:0;left:0;right:0;background:linear-gradient(to bottom,rgba(8,14,20,0.98),rgba(8,14,20,0.8));padding:56px 20px 16px;z-index:20">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:11px;color:#4f9eff;font-weight:700;letter-spacing:0.07em;margin-bottom:3px">⚡ XP STORM ACTIVE</div>
+            <div style="font-size:22px;font-weight:700;color:#e6edf3">Double XP!</div>
+          </div>
+          <div style="text-align:center;background:rgba(79,158,255,0.12);border:2px solid rgba(79,158,255,0.5);border-radius:14px;padding:10px 14px;box-shadow:0 0 20px rgba(79,158,255,0.3)">
+            <div style="font-size:20px;font-weight:700;color:#4f9eff">01:42:18</div>
+            <div style="font-size:9px;color:#8b949e">remaining</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storm visual -->
+      <div style="position:absolute;top:150px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-size:64px;animation:xpStorm 1.5s ease-in-out infinite">⚡</div>
+        <div style="font-size:32px;font-weight:700;color:#4f9eff;text-shadow:0 0 20px rgba(79,158,255,0.8)">×2 XP</div>
+        <div style="font-size:13px;color:#8b949e;margin-top:4px">All activities earn double XP</div>
+        <div style="font-size:13px;color:#8b949e">Log a workout NOW to capitalize!</div>
+      </div>
+
+      <!-- Active multiplier card -->
+      <div style="position:absolute;bottom:300px;left:16px;right:16px;background:rgba(22,27,34,0.97);border:2px solid rgba(79,158,255,0.5);border-radius:20px;padding:18px;box-shadow:0 0 30px rgba(79,158,255,0.15)">
+        <div style="font-size:11px;color:#4f9eff;font-weight:700;letter-spacing:0.06em;margin-bottom:12px">STORM MULTIPLIERS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#1e2632;border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🏃</span><span style="font-size:13px;color:#e6edf3;font-weight:600">Running</span></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:#8b949e;text-decoration:line-through">+120 XP</span>
+              <span style="font-size:13px;font-weight:700;color:#4f9eff">+240 XP ⚡</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#1e2632;border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🏋</span><span style="font-size:13px;color:#e6edf3;font-weight:600">Gym Session</span></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:#8b949e;text-decoration:line-through">+180 XP</span>
+              <span style="font-size:13px;font-weight:700;color:#4f9eff">+360 XP ⚡</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#1e2632;border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🚴</span><span style="font-size:13px;color:#e6edf3;font-weight:600">Cycling</span></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:#8b949e;text-decoration:line-through">+150 XP</span>
+              <span style="font-size:13px;font-weight:700;color:#4f9eff">+300 XP ⚡</span>
+            </div>
+          </div>
+        </div>
+        <button style="width:100%;background:linear-gradient(135deg,#4f9eff,#2d7dd2);border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(79,158,255,0.4)">🏃 Log Workout Now!</button>
+      </div>
+
+      <!-- bottom filler -->
+      <div style="position:absolute;bottom:82px;left:0;right:0;height:218px;background:#0d1117;padding:14px 20px">
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:8px">HOW XP STORMS WORK</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:10px;background:#161b22;border-radius:8px;padding:8px 12px">
+            <span style="font-size:16px">🎲</span>
+            <span style="font-size:11px;color:#8b949e">Appear randomly 2-3x per week</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#161b22;border-radius:8px;padding:8px 12px">
+            <span style="font-size:16px">⏳</span>
+            <span style="font-size:11px;color:#8b949e">Last 2 hours — push notification sent</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#161b22;border-radius:8px;padding:8px 12px">
+            <span style="font-size:16px">⚡</span>
+            <span style="font-size:11px;color:#8b949e">Stack with streak bonus for ×3 XP total</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item active"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- WANDERING MERCHANT -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">RANDOM EVENT</div>
+    <div class="step-title">Wandering Merchant</div>
+    <div class="step-desc">Special offer for a limited activity</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,rgba(163,113,247,0.15) 0%,#080e14 70%)"></div>
+    <div style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;padding:56px 20px 90px;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+        <div>
+          <div style="font-size:11px;color:#a371f7;font-weight:700;letter-spacing:0.07em;margin-bottom:4px">🎲 RANDOM EVENT</div>
+          <div style="font-size:22px;font-weight:700;color:#e6edf3">Wandering Merchant</div>
+        </div>
+        <div style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.4);border-radius:10px;padding:5px 12px;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#f85149">05:22:44</div>
+          <div style="font-size:9px;color:#8b949e">left</div>
+        </div>
+      </div>
+
+      <!-- Merchant card -->
+      <div style="background:rgba(22,27,34,0.96);border:2px solid rgba(163,113,247,0.5);border-radius:20px;padding:20px;margin-bottom:14px;box-shadow:0 0 30px rgba(163,113,247,0.12)">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <div style="width:64px;height:64px;background:rgba(40,20,60,0.8);border:2px solid #a371f7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 20px rgba(163,113,247,0.3)">🧙</div>
+          <div>
+            <div style="font-size:17px;font-weight:700;color:#e6edf3">Arkenor the Trader</div>
+            <div style="font-size:12px;color:#a371f7">Rare goods for the worthy</div>
+            <div style="font-size:11px;color:#8b949e;margin-top:2px">Appears every 10-14 days</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#8b949e;margin-bottom:14px;line-height:1.6;background:#1e2632;border-radius:10px;padding:10px 12px">"Complete a 10km run today and I'll trade you something rare from the Mountains of Strength..."</div>
+        <div style="font-size:10px;color:#a371f7;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">UNLOCK REQUIREMENT</div>
+        <div style="background:#1e2632;border-radius:10px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:24px">🏃</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#e6edf3">Run 10km today</div>
+            <div style="font-size:11px;color:#8b949e">Must be completed within time limit</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <div style="flex:1;height:4px;background:#161b22;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:52%;background:#a371f7;border-radius:2px"></div>
+              </div>
+              <span style="font-size:10px;color:#a371f7;font-weight:600">5.2 / 10 km</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#a371f7;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">MYSTERY REWARD</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center;border:1px solid rgba(163,113,247,0.3)">
+            <div style="font-size:24px">❓</div>
+            <div style="font-size:11px;font-weight:700;color:#a371f7;margin-top:4px">Mystery Item</div>
+            <div style="font-size:9px;color:#8b949e">RARE or higher</div>
+          </div>
+          <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center;border:1px solid rgba(79,158,255,0.3)">
+            <div style="font-size:24px">⚡</div>
+            <div style="font-size:11px;font-weight:700;color:#4f9eff;margin-top:4px">+800 XP</div>
+            <div style="font-size:9px;color:#8b949e">Guaranteed</div>
+          </div>
+          <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center;border:1px solid rgba(245,166,35,0.3)">
+            <div style="font-size:24px">🗺️</div>
+            <div style="font-size:11px;font-weight:700;color:#f5a623;margin-top:4px">Map Hint</div>
+            <div style="font-size:9px;color:#8b949e">Secret zone</div>
+          </div>
+        </div>
+        <button style="width:100%;background:linear-gradient(135deg,#a371f7,#7c3aed);border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(163,113,247,0.4)">⚔️ Accept the Challenge</button>
+      </div>
+
+      <div style="background:#161b22;border-radius:10px;padding:10px 14px;border:1px solid #30363d;display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px">💡</span>
+        <span style="font-size:11px;color:#8b949e">Merchants appear in zones you've already unlocked. The further you explore, the better their offers.</span>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

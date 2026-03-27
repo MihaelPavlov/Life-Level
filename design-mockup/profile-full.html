@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Full Profile</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#040810;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  display:flex; align-items:flex-start; justify-content:center;
+  min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap;
+}
+
+/* ── Phone shell ── */
+.phone {
+  width:390px; height:844px; background:#080e14;
+  border-radius:44px; overflow:hidden; position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink:0;
+}
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-badge {
+  display:inline-block; border-radius:12px; padding:3px 14px;
+  font-size:10px; font-weight:700; letter-spacing:0.06em; margin-bottom:6px;
+}
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+
+/* ── Shared ── */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+}
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#161b22; border-top:1px solid #30363d;
+  display:flex; align-items:center; padding:0 8px 12px; z-index:100;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color:#8b949e; }
+
+.scroll { position:absolute; inset:0; overflow-y:auto; padding-bottom:90px; scrollbar-width:none; }
+.scroll::-webkit-scrollbar { display:none; }
+
+/* ── Profile tabs ── */
+.profile-tabs {
+  display:flex; gap:2px;
+  background:#0d1117; padding:0 20px;
+  border-bottom:1px solid #1e2632;
+  position:sticky; top:0; z-index:50;
+}
+.ptab {
+  flex:1; padding:10px 0; text-align:center;
+  font-size:11px; font-weight:600; color:#8b949e;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+  cursor:pointer;
+}
+.ptab.active { color:#4f9eff; border-bottom-color:#4f9eff; }
+
+/* ── Profile header (shared) ── */
+.profile-header {
+  padding:56px 20px 0;
+  background:linear-gradient(to bottom, rgba(79,158,255,0.06), transparent);
+}
+.ph-row { display:flex; align-items:center; gap:14px; padding-bottom:14px; }
+.ph-avatar {
+  width:64px; height:64px; border-radius:50%;
+  background:linear-gradient(135deg,#4f9eff,#a371f7);
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; flex-shrink:0;
+  box-shadow:0 0 20px rgba(79,158,255,0.3);
+}
+.ph-name { font-size:20px; font-weight:700; color:#e6edf3; }
+.ph-title {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(245,166,35,0.1); border:1px solid rgba(245,166,35,0.4);
+  border-radius:8px; padding:2px 9px; margin-top:4px;
+  font-size:11px; font-weight:700; color:#f5a623;
+}
+.ph-sub { font-size:11px; color:#8b949e; margin-top:3px; }
+
+/* ══════════════════════════════════
+   TAB 1 — OVERVIEW
+══════════════════════════════════ */
+.xp-bar-section { padding:0 20px 14px; }
+.xp-row { display:flex; justify-content:space-between; font-size:10px; color:#8b949e; margin-bottom:5px; }
+.xp-track { height:6px; background:#161b22; border-radius:3px; overflow:hidden; }
+.xp-fill { height:100%; border-radius:3px; background:linear-gradient(to right,#4f9eff,#a371f7); }
+
+.section-label {
+  font-size:10px; color:#8b949e; font-weight:600;
+  letter-spacing:0.07em; padding:0 20px; margin-bottom:10px;
+}
+
+.stat-card {
+  margin:0 20px 6px;
+  background:#161b22; border-radius:10px; padding:11px 14px;
+  display:flex; align-items:center; gap:10px; border:1px solid #1e2632;
+}
+.sc-icon { font-size:18px; width:32px; text-align:center; flex-shrink:0; }
+.sc-name { font-size:13px; font-weight:600; color:#e6edf3; flex:1; }
+.sc-val { font-size:13px; font-weight:700; }
+.sc-track { flex:2; height:5px; background:#1e2632; border-radius:3px; overflow:hidden; }
+.sc-fill { height:100%; border-radius:3px; }
+
+/* ══════════════════════════════════
+   TAB 2 — EQUIPMENT
+══════════════════════════════════ */
+.equip-arena {
+  margin:0 20px 14px;
+  background:#161b22; border:1px solid #30363d;
+  border-radius:20px; padding:16px;
+  position:relative; overflow:hidden; min-height:280px;
+}
+.equip-arena::before {
+  content:'';
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 50%, rgba(79,158,255,0.04), transparent 70%);
+  pointer-events:none;
+}
+
+/* Character silhouette */
+.char-silhouette {
+  width:100px; height:180px;
+  margin:0 auto 10px;
+  position:relative;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center;
+}
+.char-body {
+  width:80px; height:140px;
+  background:rgba(30,38,50,0.8);
+  border:2px solid rgba(79,158,255,0.3);
+  border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:48px;
+  position:relative;
+  box-shadow:0 0 20px rgba(79,158,255,0.1);
+}
+
+/* Equipment grid around char */
+.equip-grid {
+  display:grid;
+  grid-template-columns:60px 1fr 60px;
+  grid-template-rows:auto;
+  gap:8px; align-items:center;
+}
+.equip-slot {
+  width:56px; height:56px;
+  background:#1e2632;
+  border-radius:12px;
+  border:1.5px solid #30363d;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:2px; cursor:pointer;
+  position:relative; overflow:hidden;
+  transition:border-color 0.2s;
+}
+.equip-slot.equipped { border-color:rgba(79,158,255,0.5); }
+.equip-slot.equipped.rare { border-color:rgba(79,158,255,0.7); background:rgba(79,158,255,0.06); }
+.equip-slot.equipped.epic { border-color:rgba(163,113,247,0.7); background:rgba(163,113,247,0.06); }
+.equip-slot.equipped.legendary { border-color:rgba(245,166,35,0.7); background:rgba(245,166,35,0.06); }
+.equip-slot.empty { border-style:dashed; opacity:0.5; }
+.es-icon { font-size:22px; }
+.es-label { font-size:8px; color:#8b949e; font-weight:600; letter-spacing:0.03em; }
+.es-rarity {
+  position:absolute; bottom:2px; left:0; right:0;
+  height:2px; border-radius:0 0 10px 10px;
+}
+
+/* Stat bonuses from gear */
+.gear-bonuses {
+  margin:0 20px 12px;
+  background:#161b22; border-radius:12px; padding:12px 14px;
+  border:1px solid rgba(79,158,255,0.2);
+}
+.gb-title { font-size:10px; color:#4f9eff; font-weight:600; letter-spacing:0.06em; margin-bottom:8px; }
+.gb-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; }
+.gb-label { color:#8b949e; }
+.gb-val { font-weight:700; }
+
+.compare-btn {
+  margin:0 20px; width:calc(100% - 40px);
+  background:#1e2632; border:1px solid #30363d;
+  border-radius:12px; padding:12px;
+  font-size:13px; font-weight:600; color:#8b949e; cursor:pointer;
+}
+
+/* ══════════════════════════════════
+   TAB 3 — INVENTORY
+══════════════════════════════════ */
+.inv-filter {
+  display:flex; gap:6px; padding:10px 20px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.inv-filter::-webkit-scrollbar { display:none; }
+.if-chip {
+  background:#161b22; border:1px solid #30363d;
+  border-radius:8px; padding:5px 12px;
+  font-size:11px; font-weight:600; color:#8b949e;
+  white-space:nowrap; cursor:pointer;
+}
+.if-chip.active { background:rgba(79,158,255,0.1); border-color:rgba(79,158,255,0.5); color:#4f9eff; }
+
+.inv-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:8px; padding:0 20px 14px;
+}
+.inv-item {
+  aspect-ratio:1;
+  background:#161b22; border-radius:12px;
+  border:1.5px solid #30363d;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:3px; cursor:pointer; position:relative;
+  overflow:hidden;
+}
+.inv-item.common { border-color:#30363d; }
+.inv-item.uncommon { border-color:rgba(63,185,80,0.5); background:rgba(63,185,80,0.04); }
+.inv-item.rare { border-color:rgba(79,158,255,0.6); background:rgba(79,158,255,0.05); }
+.inv-item.epic { border-color:rgba(163,113,247,0.6); background:rgba(163,113,247,0.05); }
+.inv-item.legendary { border-color:rgba(245,166,35,0.7); background:rgba(245,166,35,0.06); box-shadow:0 0 10px rgba(245,166,35,0.1); }
+.inv-item.equipped-badge::after {
+  content:'E';
+  position:absolute; top:3px; right:3px;
+  background:#4f9eff; border-radius:4px;
+  width:14px; height:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:8px; font-weight:700; color:#000; line-height:14px; text-align:center;
+}
+.ii-icon { font-size:24px; }
+.ii-name { font-size:8px; color:#8b949e; font-weight:600; text-align:center; padding:0 3px; line-height:1.2; }
+.ii-rarity-bar { position:absolute; bottom:0; left:0; right:0; height:2px; }
+
+/* Item detail panel */
+.item-detail {
+  margin:0 20px 10px;
+  background:rgba(22,27,34,0.95);
+  border:1px solid rgba(79,158,255,0.4);
+  border-radius:14px; padding:14px;
+}
+.id-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.id-icon {
+  width:56px; height:56px; border-radius:12px;
+  background:rgba(79,158,255,0.08); border:2px solid rgba(79,158,255,0.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; flex-shrink:0;
+}
+.id-name { font-size:16px; font-weight:700; color:#e6edf3; }
+.id-tier { display:inline-block; background:rgba(79,158,255,0.1); border:1px solid rgba(79,158,255,0.4); border-radius:6px; padding:1px 8px; font-size:9px; font-weight:700; color:#4f9eff; margin-top:3px; }
+.id-desc { font-size:11px; color:#8b949e; margin-top:4px; }
+.id-stats { display:flex; gap:6px; margin-bottom:10px; }
+.id-stat { flex:1; background:#1e2632; border-radius:8px; padding:7px 6px; text-align:center; }
+.ids-v { font-size:13px; font-weight:700; }
+.ids-l { font-size:9px; color:#8b949e; margin-top:1px; }
+.id-btns { display:flex; gap:8px; }
+.id-btn-equip { flex:2; background:linear-gradient(135deg,#4f9eff,#2d7dd2); border:none; border-radius:10px; padding:10px; font-size:13px; font-weight:700; color:#fff; cursor:pointer; }
+.id-btn-drop { flex:1; background:#1e2632; border:1px solid #30363d; border-radius:10px; padding:10px; font-size:13px; color:#8b949e; cursor:pointer; }
+
+/* ══════════════════════════════════
+   TAB 4 — MOUNTS
+══════════════════════════════════ */
+.mount-active-card {
+  margin:10px 20px 14px;
+  background:rgba(22,27,34,0.95);
+  border:2px solid rgba(245,166,35,0.5);
+  border-radius:20px; padding:16px;
+  position:relative; overflow:hidden;
+  box-shadow:0 0 30px rgba(245,166,35,0.1);
+}
+.mac-glow {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 30%, rgba(245,166,35,0.08), transparent 70%);
+  pointer-events:none;
+}
+.mac-tag { font-size:10px; color:#f5a623; font-weight:700; letter-spacing:0.06em; margin-bottom:10px; }
+.mac-body { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+.mac-icon {
+  width:80px; height:80px;
+  background:rgba(245,166,35,0.08);
+  border:2px solid rgba(245,166,35,0.5);
+  border-radius:20px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:44px;
+  box-shadow:0 0 20px rgba(245,166,35,0.2);
+  flex-shrink:0;
+}
+.mac-name { font-size:20px; font-weight:700; color:#e6edf3; }
+.mac-tier { display:inline-block; background:rgba(245,166,35,0.1); border:1px solid rgba(245,166,35,0.5); border-radius:8px; padding:2px 10px; font-size:10px; font-weight:700; color:#f5a623; margin-top:4px; }
+.mac-source { font-size:11px; color:#8b949e; margin-top:4px; }
+.mac-bonuses { display:flex; gap:8px; margin-bottom:12px; }
+.mac-bonus { flex:1; background:#1e2632; border-radius:10px; padding:8px 6px; text-align:center; }
+.mb-v { font-size:13px; font-weight:700; }
+.mb-l { font-size:9px; color:#8b949e; margin-top:2px; }
+.mac-unequip { width:100%; background:#1e2632; border:1px solid #30363d; border-radius:12px; padding:10px; font-size:13px; font-weight:600; color:#8b949e; cursor:pointer; }
+
+/* Mount grid */
+.mount-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 20px 14px; }
+.mount-card {
+  background:#161b22; border-radius:16px;
+  border:1.5px solid #30363d; padding:14px;
+  display:flex; flex-direction:column; align-items:center;
+  gap:6px; cursor:pointer; position:relative;
+  overflow:hidden;
+}
+.mount-card.active-mount { border-color:rgba(245,166,35,0.6); background:rgba(245,166,35,0.04); }
+.mount-card.locked { opacity:0.45; }
+.mount-card-icon { font-size:36px; }
+.mount-card-name { font-size:12px; font-weight:700; color:#e6edf3; text-align:center; }
+.mount-card-bonus { font-size:10px; font-weight:600; text-align:center; }
+.mount-card-tier {
+  font-size:8px; font-weight:700; letter-spacing:0.04em;
+  border-radius:6px; padding:2px 8px; border:1px solid;
+}
+.mount-equipped-badge {
+  position:absolute; top:8px; right:8px;
+  background:#f5a623; border-radius:6px;
+  padding:2px 6px; font-size:8px; font-weight:700; color:#000;
+}
+.mount-lock { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(8,14,20,0.6); border-radius:14px; gap:4px; }
+.mount-lock-icon { font-size:20px; }
+.mount-lock-text { font-size:9px; color:#8b949e; font-weight:600; text-align:center; padding:0 8px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     TAB 1 — OVERVIEW
+════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">TAB 1 — OVERVIEW</div>
+    <div class="step-title">Character stats & rank</div>
+    <div class="step-desc">Your hero at a glance</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+      <!-- Profile header -->
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">⚔️</div>
+          <div>
+            <div class="ph-name">Alex</div>
+            <div class="ph-title">🏃 The Marathoner</div>
+            <div class="ph-sub">Warrior  •  Level 12  •  Rank: Veteran</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="profile-tabs">
+        <div class="ptab active">Overview</div>
+        <div class="ptab">Equipment</div>
+        <div class="ptab">Inventory</div>
+        <div class="ptab">Mounts</div>
+      </div>
+
+      <!-- XP -->
+      <div class="xp-bar-section" style="margin-top:14px">
+        <div class="xp-row"><span>Experience</span><span>12,400 / 15,000 XP</span></div>
+        <div class="xp-track"><div class="xp-fill" style="width:83%"></div></div>
+        <div style="font-size:10px;color:#8b949e;margin-top:4px">2,600 XP to Level 13</div>
+      </div>
+
+      <!-- Rank progress -->
+      <div style="margin:0 20px 14px;background:#161b22;border-radius:12px;padding:12px 14px;border:1px solid #30363d">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:#e6edf3">Veteran Rank</span>
+          <span style="font-size:11px;color:#8b949e">3 / 5 bosses to Champion</span>
+        </div>
+        <div style="display:flex;gap:4px">
+          <div style="flex:1;height:6px;background:#3fb950;border-radius:3px"></div>
+          <div style="flex:1;height:6px;background:#4f9eff;border-radius:3px"></div>
+          <div style="flex:1;height:6px;background:#4f9eff;border-radius:3px"></div>
+          <div style="flex:1;height:6px;background:#4f9eff;border-radius:3px"></div>
+          <div style="flex:1;height:6px;background:#1e2632;border-radius:3px"></div>
+          <div style="flex:1;height:6px;background:#1e2632;border-radius:3px"></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section-label">CHARACTER STATS</div>
+
+      <div class="stat-card">
+        <div class="sc-icon">💪</div>
+        <div class="sc-name">Strength</div>
+        <div class="sc-track"><div class="sc-fill" style="width:84%;background:#f85149"></div></div>
+        <div class="sc-val" style="color:#f85149">84</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon">🫀</div>
+        <div class="sc-name">Endurance</div>
+        <div class="sc-track"><div class="sc-fill" style="width:71%;background:#3fb950"></div></div>
+        <div class="sc-val" style="color:#3fb950">71</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon">⚡</div>
+        <div class="sc-name">Agility</div>
+        <div class="sc-track"><div class="sc-fill" style="width:92%;background:#4f9eff"></div></div>
+        <div class="sc-val" style="color:#4f9eff">92</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon">🧘</div>
+        <div class="sc-name">Flexibility</div>
+        <div class="sc-track"><div class="sc-fill" style="width:65%;background:#a371f7"></div></div>
+        <div class="sc-val" style="color:#a371f7">65</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon">🔥</div>
+        <div class="sc-name">Stamina</div>
+        <div class="sc-track"><div class="sc-fill" style="width:78%;background:#f5a623"></div></div>
+        <div class="sc-val" style="color:#f5a623">78</div>
+      </div>
+
+      <!-- Gear bonus summary -->
+      <div style="margin:14px 20px 0;background:rgba(79,158,255,0.06);border:1px solid rgba(79,158,255,0.25);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:12px;color:#8b949e">Gear bonus active:</div>
+        <div style="display:flex;gap:10px">
+          <span style="font-size:12px;font-weight:700;color:#4f9eff">+20% XP</span>
+          <span style="font-size:12px;font-weight:700;color:#3fb950">+6 Stats</span>
+          <span style="font-size:12px;font-weight:700;color:#f5a623">+15% Speed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     TAB 2 — EQUIPMENT
+════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">TAB 2 — EQUIPMENT</div>
+    <div class="step-title">What your hero is wearing</div>
+    <div class="step-desc">6 slots — drag from inventory to equip</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+      <!-- Profile header compact -->
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">⚔️</div>
+          <div>
+            <div class="ph-name">Alex</div>
+            <div class="ph-title">🏃 The Marathoner</div>
+            <div class="ph-sub">Level 12  •  Warrior</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="profile-tabs">
+        <div class="ptab">Overview</div>
+        <div class="ptab active">Equipment</div>
+        <div class="ptab">Inventory</div>
+        <div class="ptab">Mounts</div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <!-- Equipment arena -->
+      <div class="equip-arena">
+        <div class="equip-grid">
+
+          <!-- Left column: Helmet, Armor, Boots -->
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <!-- Helmet: EPIC -->
+            <div class="equip-slot equipped epic" style="width:60px;height:60px">
+              <div class="es-icon">⛑️</div>
+              <div class="es-label">Helm</div>
+              <div class="es-rarity" style="background:#a371f7"></div>
+            </div>
+            <!-- Armor: RARE -->
+            <div class="equip-slot equipped rare" style="width:60px;height:60px">
+              <div class="es-icon">🥋</div>
+              <div class="es-label">Armor</div>
+              <div class="es-rarity" style="background:#4f9eff"></div>
+            </div>
+            <!-- Boots: UNCOMMON -->
+            <div class="equip-slot equipped" style="width:60px;height:60px;border-color:rgba(63,185,80,0.5);background:rgba(63,185,80,0.04)">
+              <div class="es-icon">👟</div>
+              <div class="es-label">Boots</div>
+              <div class="es-rarity" style="background:#3fb950"></div>
+            </div>
+          </div>
+
+          <!-- Center: Character -->
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div class="char-body">⚔️</div>
+            <!-- Mount badge below character -->
+            <div style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:5px">
+              <span style="font-size:14px">🐉</span>
+              <span style="font-size:10px;font-weight:700;color:#f5a623">Winter Dragon</span>
+            </div>
+          </div>
+
+          <!-- Right column: Weapon, Gloves, Accessory -->
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+            <!-- Weapon: LEGENDARY -->
+            <div class="equip-slot equipped legendary" style="width:60px;height:60px">
+              <div class="es-icon">⚔️</div>
+              <div class="es-label">Weapon</div>
+              <div class="es-rarity" style="background:#f5a623"></div>
+            </div>
+            <!-- Gloves: RARE -->
+            <div class="equip-slot equipped rare" style="width:60px;height:60px">
+              <div class="es-icon">🧤</div>
+              <div class="es-label">Gloves</div>
+              <div class="es-rarity" style="background:#4f9eff"></div>
+            </div>
+            <!-- Accessory: EMPTY -->
+            <div class="equip-slot empty" style="width:60px;height:60px">
+              <div style="font-size:18px;color:#30363d">＋</div>
+              <div class="es-label">Ring</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Selected item detail -->
+      <div class="section-label">SELECTED — IRON BLADE (LEGENDARY)</div>
+      <div style="margin:0 20px 12px;background:rgba(22,27,34,0.95);border:2px solid rgba(245,166,35,0.5);border-radius:14px;padding:14px;box-shadow:0 0 20px rgba(245,166,35,0.08)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:56px;height:56px;background:rgba(245,166,35,0.08);border:2px solid rgba(245,166,35,0.6);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">⚔️</div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:#e6edf3">Iron Blade</div>
+            <div style="display:inline-block;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:6px;padding:1px 8px;font-size:9px;font-weight:700;color:#f5a623;margin-top:3px">LEGENDARY</div>
+            <div style="font-size:11px;color:#8b949e;margin-top:3px">Dropped from Iron Peak Boss</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#f5a623">+12% XP</div>
+            <div style="font-size:9px;color:#8b949e">all activities</div>
+          </div>
+          <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#f85149">+4 STR</div>
+            <div style="font-size:9px;color:#8b949e">strength</div>
+          </div>
+          <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#f9751f">+180</div>
+            <div style="font-size:9px;color:#8b949e">boss dmg</div>
+          </div>
+        </div>
+        <button style="width:100%;background:#1e2632;border:1px solid #30363d;border-radius:10px;padding:10px;font-size:13px;font-weight:600;color:#8b949e;cursor:pointer">📦 Move to Inventory</button>
+      </div>
+
+      <!-- Total gear bonuses -->
+      <div class="gear-bonuses">
+        <div class="gb-title">TOTAL GEAR BONUSES</div>
+        <div class="gb-row"><span class="gb-label">XP Multiplier</span><span class="gb-val" style="color:#4f9eff">+20%</span></div>
+        <div class="gb-row"><span class="gb-label">Strength bonus</span><span class="gb-val" style="color:#f85149">+6 STR</span></div>
+        <div class="gb-row"><span class="gb-label">Boss damage</span><span class="gb-val" style="color:#f9751f">+280 dmg/session</span></div>
+        <div class="gb-row"><span class="gb-label">Map travel speed</span><span class="gb-val" style="color:#3fb950">+8%</span></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     TAB 3 — INVENTORY
+════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);color:#a371f7">TAB 3 — INVENTORY</div>
+    <div class="step-title">Your item bag</div>
+    <div class="step-desc">Everything you've earned — equip from here</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">⚔️</div>
+          <div>
+            <div class="ph-name">Alex</div>
+            <div class="ph-title">🏃 The Marathoner</div>
+            <div class="ph-sub">Level 12  •  34 items</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="ptab">Overview</div>
+        <div class="ptab">Equipment</div>
+        <div class="ptab active">Inventory</div>
+        <div class="ptab">Mounts</div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="inv-filter">
+        <div class="if-chip active">All (34)</div>
+        <div class="if-chip">Weapons ⚔️</div>
+        <div class="if-chip">Armor 🛡️</div>
+        <div class="if-chip">Accessories 💍</div>
+        <div class="if-chip">Consumables 💊</div>
+      </div>
+
+      <!-- Selected item detail (tapped item) -->
+      <div class="item-detail">
+        <div class="id-row">
+          <div class="id-icon" style="border-color:rgba(245,166,35,0.7);background:rgba(245,166,35,0.08)">⚔️</div>
+          <div>
+            <div class="id-name">Iron Blade</div>
+            <div class="id-tier" style="background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.4);color:#f5a623">LEGENDARY • Weapon</div>
+            <div class="id-desc">Forged in the Iron Peak. Rewards those who push hardest.</div>
+          </div>
+        </div>
+        <div class="id-stats">
+          <div class="id-stat"><div class="ids-v" style="color:#f5a623">+12% XP</div><div class="ids-l">Multiplier</div></div>
+          <div class="id-stat"><div class="ids-v" style="color:#f85149">+4 STR</div><div class="ids-l">Strength</div></div>
+          <div class="id-stat"><div class="ids-v" style="color:#f9751f">+180</div><div class="ids-l">Boss dmg</div></div>
+        </div>
+        <div class="id-btns">
+          <div class="id-btn-equip">✓ Equipped</div>
+          <div class="id-btn-drop">🗑 Drop</div>
+        </div>
+      </div>
+
+      <!-- Item grid -->
+      <div class="inv-grid">
+        <!-- Row 1 -->
+        <div class="inv-item legendary equipped-badge">
+          <div class="ii-icon">⚔️</div>
+          <div class="ii-name">Iron Blade</div>
+          <div class="ii-rarity-bar" style="background:#f5a623"></div>
+        </div>
+        <div class="inv-item epic equipped-badge">
+          <div class="ii-icon">⛑️</div>
+          <div class="ii-name">Storm Helm</div>
+          <div class="ii-rarity-bar" style="background:#a371f7"></div>
+        </div>
+        <div class="inv-item rare equipped-badge">
+          <div class="ii-icon">🥋</div>
+          <div class="ii-name">Frost Armor</div>
+          <div class="ii-rarity-bar" style="background:#4f9eff"></div>
+        </div>
+        <div class="inv-item rare equipped-badge">
+          <div class="ii-icon">🧤</div>
+          <div class="ii-name">Iron Gloves</div>
+          <div class="ii-rarity-bar" style="background:#4f9eff"></div>
+        </div>
+        <!-- Row 2 -->
+        <div class="inv-item uncommon equipped-badge">
+          <div class="ii-icon">👟</div>
+          <div class="ii-name">Speed Boots</div>
+          <div class="ii-rarity-bar" style="background:#3fb950"></div>
+        </div>
+        <div class="inv-item rare">
+          <div class="ii-icon">💍</div>
+          <div class="ii-name">Endure Ring</div>
+          <div class="ii-rarity-bar" style="background:#4f9eff"></div>
+        </div>
+        <div class="inv-item epic">
+          <div class="ii-icon">🛡️</div>
+          <div class="ii-name">Wyrm Scale</div>
+          <div class="ii-rarity-bar" style="background:#a371f7"></div>
+        </div>
+        <div class="inv-item uncommon">
+          <div class="ii-icon">🗡️</div>
+          <div class="ii-name">Enchant Blade</div>
+          <div class="ii-rarity-bar" style="background:#3fb950"></div>
+        </div>
+        <!-- Row 3 -->
+        <div class="inv-item common">
+          <div class="ii-icon">💊</div>
+          <div class="ii-name">XP Potion</div>
+          <div class="ii-rarity-bar" style="background:#8b949e"></div>
+        </div>
+        <div class="inv-item common">
+          <div class="ii-icon">💊</div>
+          <div class="ii-name">XP Potion</div>
+          <div class="ii-rarity-bar" style="background:#8b949e"></div>
+        </div>
+        <div class="inv-item uncommon">
+          <div class="ii-icon">🧪</div>
+          <div class="ii-name">Sprint Flask</div>
+          <div class="ii-rarity-bar" style="background:#3fb950"></div>
+        </div>
+        <div class="inv-item rare">
+          <div class="ii-icon">🎭</div>
+          <div class="ii-name">Forest Mask</div>
+          <div class="ii-rarity-bar" style="background:#4f9eff"></div>
+        </div>
+        <!-- Row 4 -->
+        <div class="inv-item common">
+          <div class="ii-icon">🧦</div>
+          <div class="ii-name">Basic Wrap</div>
+          <div class="ii-rarity-bar" style="background:#8b949e"></div>
+        </div>
+        <div class="inv-item uncommon">
+          <div class="ii-icon">🎒</div>
+          <div class="ii-name">Trail Pack</div>
+          <div class="ii-rarity-bar" style="background:#3fb950"></div>
+        </div>
+        <div class="inv-item epic">
+          <div class="ii-icon">🌟</div>
+          <div class="ii-name">Aura Stone</div>
+          <div class="ii-rarity-bar" style="background:#a371f7"></div>
+        </div>
+        <div class="inv-item" style="border-style:dashed;opacity:0.3;justify-content:center">
+          <div style="font-size:24px;color:#30363d">＋</div>
+          <div class="ii-name" style="color:#30363d">Empty</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:11px;color:#586070;padding-bottom:10px">34 / 50 slots used</div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     TAB 4 — MOUNTS
+════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">TAB 4 — MOUNTS</div>
+    <div class="step-title">Your stable</div>
+    <div class="step-desc">Mounts appear on the map as you travel — each gives bonuses</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">⚔️</div>
+          <div>
+            <div class="ph-name">Alex</div>
+            <div class="ph-title">🏃 The Marathoner</div>
+            <div class="ph-sub">Level 12  •  3 mounts owned</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="ptab">Overview</div>
+        <div class="ptab">Equipment</div>
+        <div class="ptab">Inventory</div>
+        <div class="ptab active">Mounts</div>
+      </div>
+
+      <!-- Active mount -->
+      <div class="mount-active-card" style="margin-top:14px">
+        <div class="mac-glow"></div>
+        <div class="mac-tag">🐉 ACTIVE MOUNT — ON MAP NOW</div>
+        <div class="mac-body">
+          <div class="mac-icon">🐉</div>
+          <div>
+            <div class="mac-name">Winter Dragon</div>
+            <div class="mac-tier">LEGENDARY</div>
+            <div class="mac-source">🎄 Winter Endurance Event — Dec 2026</div>
+          </div>
+        </div>
+        <div class="mac-bonuses">
+          <div class="mac-bonus">
+            <div class="mb-v" style="color:#4f9eff">+20%</div>
+            <div class="mb-l">Snow zone speed</div>
+          </div>
+          <div class="mac-bonus">
+            <div class="mb-v" style="color:#f5a623">+8% XP</div>
+            <div class="mb-l">All activities</div>
+          </div>
+          <div class="mac-bonus">
+            <div class="mb-v" style="color:#a371f7">Fly</div>
+            <div class="mb-l">Visual effect</div>
+          </div>
+        </div>
+        <div style="background:rgba(8,14,20,0.4);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px">
+          <span style="font-size:16px">💡</span>
+          <span style="font-size:11px;color:#8b949e;line-height:1.5">Your character <strong style="color:#e6edf3">flies</strong> on this dragon as it moves across the adventure map. Other players see your mount in the leaderboard.</span>
+        </div>
+        <button class="mac-unequip">Change Mount</button>
+      </div>
+
+      <!-- Mount grid -->
+      <div class="section-label">YOUR STABLE (3 / 12)</div>
+      <div class="mount-grid">
+
+        <!-- Winter Dragon — active -->
+        <div class="mount-card active-mount">
+          <div class="mount-equipped-badge">Active</div>
+          <div class="mount-card-icon">🐉</div>
+          <div class="mount-card-name">Winter Dragon</div>
+          <div class="mount-card-bonus" style="color:#4f9eff">+20% Snow speed</div>
+          <div class="mount-card-tier" style="color:#f5a623;border-color:rgba(245,166,35,0.5);background:rgba(245,166,35,0.08)">LEGENDARY</div>
+        </div>
+
+        <!-- Forest Wolf — owned -->
+        <div class="mount-card">
+          <div class="mount-card-icon">🐺</div>
+          <div class="mount-card-name">Forest Wolf</div>
+          <div class="mount-card-bonus" style="color:#3fb950">+15% Forest speed</div>
+          <div class="mount-card-tier" style="color:#3fb950;border-color:rgba(63,185,80,0.5);background:rgba(63,185,80,0.08)">RARE</div>
+        </div>
+
+        <!-- Storm Eagle — owned -->
+        <div class="mount-card">
+          <div class="mount-card-icon">🦅</div>
+          <div class="mount-card-name">Storm Eagle</div>
+          <div class="mount-card-bonus" style="color:#a371f7">+10% Agility</div>
+          <div class="mount-card-tier" style="color:#a371f7;border-color:rgba(163,113,247,0.5);background:rgba(163,113,247,0.08)">EPIC</div>
+        </div>
+
+        <!-- Iron Horse — locked -->
+        <div class="mount-card locked">
+          <div class="mount-card-icon">🐴</div>
+          <div class="mount-card-name">Iron Horse</div>
+          <div class="mount-card-bonus" style="color:#8b949e">+10% all speed</div>
+          <div class="mount-card-tier" style="color:#4f9eff;border-color:rgba(79,158,255,0.4)">RARE</div>
+          <div class="mount-lock">
+            <div class="mount-lock-icon">🔒</div>
+            <div class="mount-lock-text">Defeat 5 boss raids</div>
+          </div>
+        </div>
+
+        <!-- Shadow Panther — locked -->
+        <div class="mount-card locked">
+          <div class="mount-card-icon">🐆</div>
+          <div class="mount-card-name">Shadow Panther</div>
+          <div class="mount-card-bonus" style="color:#8b949e">+25% Night runs</div>
+          <div class="mount-card-tier" style="color:#a371f7;border-color:rgba(163,113,247,0.4)">EPIC</div>
+          <div class="mount-lock">
+            <div class="mount-lock-icon">🔒</div>
+            <div class="mount-lock-text">Reach Level 20</div>
+          </div>
+        </div>
+
+        <!-- Lava Salamander — locked -->
+        <div class="mount-card locked">
+          <div class="mount-card-icon">🦎</div>
+          <div class="mount-card-name">Lava Salamander</div>
+          <div class="mount-card-bonus" style="color:#8b949e">+20% Desert speed</div>
+          <div class="mount-card-tier" style="color:#f85149;border-color:rgba(248,81,73,0.4)">EPIC</div>
+          <div class="mount-lock">
+            <div class="mount-lock-icon">🔒</div>
+            <div class="mount-lock-text">Unlock Desert zone</div>
+          </div>
+        </div>
+
+        <!-- Celestial Stag — locked legendary -->
+        <div class="mount-card locked">
+          <div class="mount-card-icon">🦌</div>
+          <div class="mount-card-name">Celestial Stag</div>
+          <div class="mount-card-bonus" style="color:#8b949e">+30% all zones</div>
+          <div class="mount-card-tier" style="color:#f5a623;border-color:rgba(245,166,35,0.4)">LEGENDARY</div>
+          <div class="mount-lock">
+            <div class="mount-lock-icon">🔒</div>
+            <div class="mount-lock-text">100-day streak</div>
+          </div>
+        </div>
+
+        <!-- Placeholder -->
+        <div class="mount-card" style="border-style:dashed;opacity:0.2;justify-content:center">
+          <div style="font-size:30px;color:#30363d">＋</div>
+          <div class="mount-card-name" style="color:#30363d">More coming</div>
+        </div>
+
+      </div>
+
+      <div style="margin:0 20px;background:rgba(79,158,255,0.06);border:1px solid rgba(79,158,255,0.2);border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:8px">
+        <span style="font-size:16px">💡</span>
+        <div style="font-size:11px;color:#8b949e;line-height:1.5">Mounts are purely cosmetic + speed bonus. They <strong style="color:#e6edf3">never affect XP earned from workouts</strong> — only how fast you travel on the map.</div>
+      </div>
+
+    </div>
+
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

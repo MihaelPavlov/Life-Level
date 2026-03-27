@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Implementation Roadmap</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; color:#e6edf3; min-height:100vh; padding:48px 40px; }
+.page { max-width:1100px; margin:0 auto; }
+
+/* Header */
+.page-header { text-align:center; margin-bottom:48px; }
+.page-tag { display:inline-block; background:rgba(79,158,255,0.1); border:1px solid rgba(79,158,255,0.4); border-radius:12px; padding:4px 16px; font-size:11px; font-weight:700; letter-spacing:0.1em; color:#4f9eff; margin-bottom:12px; }
+.page-title { font-size:32px; font-weight:700; color:#e6edf3; margin-bottom:8px; }
+.page-sub { font-size:14px; color:#8b949e; line-height:1.6; max-width:640px; margin:0 auto; }
+
+/* Legend */
+.legend { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:48px; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#8b949e; }
+.legend-dot { width:10px; height:10px; border-radius:50%; }
+
+/* Phase card */
+.phase { display:grid; grid-template-columns:200px 1fr; gap:0; margin-bottom:2px; border-radius:0; position:relative; }
+.phase:first-of-type { border-radius:16px 16px 0 0; }
+.phase:last-of-type { border-radius:0 0 16px 16px; margin-bottom:0; }
+.phase-group { margin-bottom:32px; border-radius:16px; overflow:hidden; border:1px solid #1e2632; }
+
+/* Phase sidebar */
+.phase-side { padding:24px 20px; display:flex; flex-direction:column; justify-content:flex-start; border-right:1px solid #1e2632; position:relative; }
+.phase-num { font-size:11px; font-weight:700; letter-spacing:0.1em; margin-bottom:6px; }
+.phase-name { font-size:15px; font-weight:700; color:#e6edf3; margin-bottom:6px; line-height:1.3; }
+.phase-est { font-size:11px; color:#8b949e; }
+.phase-status { display:inline-block; border-radius:6px; padding:2px 8px; font-size:9px; font-weight:700; letter-spacing:0.05em; margin-top:8px; width:fit-content; }
+
+/* Phase content */
+.phase-content { padding:20px 24px; background:#0d1117; }
+.phase-desc { font-size:12px; color:#8b949e; line-height:1.6; margin-bottom:16px; }
+
+/* Task sections */
+.task-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px; }
+.task-col-title { font-size:10px; font-weight:700; letter-spacing:0.07em; color:#586070; margin-bottom:8px; text-transform:uppercase; }
+.task-list { display:flex; flex-direction:column; gap:5px; }
+.task { display:flex; align-items:flex-start; gap:8px; }
+.task-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.task-text { font-size:12px; color:#c9d1d9; line-height:1.5; }
+.task-text.done { color:#586070; text-decoration:line-through; }
+.task-text strong { color:#e6edf3; }
+
+/* Mockup reference */
+.mockup-refs { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px solid #1e2632; }
+.mockup-ref { background:#1e2632; border:1px solid #30363d; border-radius:6px; padding:2px 8px; font-size:10px; color:#8b949e; }
+
+/* Dependency note */
+.dep-note { background:#1e2632; border-left:3px solid #30363d; border-radius:0 6px 6px 0; padding:6px 10px; font-size:11px; color:#8b949e; margin-top:10px; }
+
+/* Status colors */
+.s-done    { background:rgba(63,185,80,0.15);  color:#3fb950; }
+.s-active  { background:rgba(79,158,255,0.15); color:#4f9eff; }
+.s-next    { background:rgba(245,166,35,0.12); color:#f5a623; }
+.s-later   { background:rgba(48,54,61,0.5);    color:#586070; }
+
+.side-done  { background:#0f1a0f; border-right-color:#1e2632; }
+.side-active{ background:#0a1420; border-right-color:#1e2632; }
+.side-next  { background:#141008; border-right-color:#1e2632; }
+.side-later { background:#0d1117; border-right-color:#1e2632; }
+
+.row-done  { background:#0b150b; }
+.row-active{ background:#080e18; }
+.row-next  { background:#0f0c05; }
+.row-later { background:#0d1117; }
+
+/* Connector line between phases */
+.connector { width:2px; height:24px; background:linear-gradient(to bottom,#1e2632,transparent); margin:0 auto; }
+
+/* Big section labels */
+.section-divider { text-align:center; margin:40px 0 20px; }
+.section-divider-line { display:flex; align-items:center; gap:16px; }
+.section-divider-line::before, .section-divider-line::after { content:''; flex:1; height:1px; background:#1e2632; }
+.section-divider-text { font-size:11px; font-weight:700; letter-spacing:0.1em; color:#586070; white-space:nowrap; }
+
+/* Summary stats bar */
+.stats-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:40px; }
+.stat-card { background:#161b22; border:1px solid #1e2632; border-radius:12px; padding:16px; text-align:center; }
+.stat-val { font-size:22px; font-weight:700; margin-bottom:4px; }
+.stat-label { font-size:11px; color:#8b949e; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-tag">IMPLEMENTATION ROADMAP</div>
+    <div class="page-title">Life Level — Build Order</div>
+    <div class="page-sub">Based on all 14 design mockups. Ordered by dependency and business value. Spring Boot backend + React frontend.</div>
+  </div>
+
+  <!-- Stats summary -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-val" style="color:#3fb950">1</div>
+      <div class="stat-label">Phase done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#4f9eff">8</div>
+      <div class="stat-label">Phases total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#f5a623">14</div>
+      <div class="stat-label">Design screens</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#a371f7">MVP</div>
+      <div class="stat-label">Phase 1–4</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#e6edf3">Full</div>
+      <div class="stat-label">Phase 5–8</div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Done</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4f9eff"></div> Start next</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div> After current</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#586070"></div> Later phases</div>
+    <div class="legend-item" style="gap:8px"><span style="font-size:11px;background:#1e2632;border:1px solid #30363d;border-radius:4px;padding:1px 6px;color:#8b949e">BE</span> Backend task</div>
+    <div class="legend-item" style="gap:8px"><span style="font-size:11px;background:#1e2632;border:1px solid #30363d;border-radius:4px;padding:1px 6px;color:#8b949e">FE</span> Frontend task</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section-divider">
+    <div class="section-divider-line">
+      <div class="section-divider-text">✅ PHASE 0 — FOUNDATION (DONE)</div>
+    </div>
+  </div>
+
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-done">
+        <div class="phase-num" style="color:#3fb950">PHASE 0</div>
+        <div class="phase-name">Foundation & Auth</div>
+        <div class="phase-est">Already built</div>
+        <div class="phase-status s-done">✓ DONE</div>
+      </div>
+      <div class="phase-content row-done">
+        <div class="phase-desc">Project scaffolding, JWT authentication, security config, and core entity stubs are in place. This is the base everything else builds on.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">Spring Boot project setup</div></div>
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">Account register + login (JWT)</div></div>
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">SecurityConfig with roles</div></div>
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">Entity stubs: Account, User, Character, Activity, Quest, Inventory</div></div>
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">Enums: ActivityTypes, all Rank types</div></div>
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">AccountRepository + AccountService</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#3fb950"></div><div class="task-text done">React + TypeScript setup</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text" style="color:#8b949e">Register / Login screens <span style="color:#586070">(pending)</span></div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text" style="color:#8b949e">JWT token storage + axios interceptor <span style="color:#586070">(pending)</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section-divider" style="margin-top:40px">
+    <div class="section-divider-line">
+      <div class="section-divider-text">🎯 MVP — PHASES 1–4</div>
+    </div>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-active">
+        <div class="phase-num" style="color:#4f9eff">PHASE 1</div>
+        <div class="phase-name">Character & Activity Core</div>
+        <div class="phase-est">~3–4 weeks</div>
+        <div class="phase-status s-active">▶ START HERE</div>
+      </div>
+      <div class="phase-content row-active">
+        <div class="phase-desc">The engine of the entire game. Without XP calculation, stat gains, and activity logging, nothing else works. Everything downstream (map movement, boss damage, quest progress) plugs into this layer.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Character entity</strong> — finish fields: level, xp, currentXP, rank, title, class, stats (STR/END/AGI/FLX/STA)</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Activity entity</strong> — type, duration (min), distance (km), calories, heartRate, loggedAt, accountId</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>XP engine</strong> — calculate XP from activity: type × duration + distance × multiplier</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Stat gain engine</strong> — RUNNING→END+AGI, GYM→STR+STA, YOGA→FLX+STA, CYCLING→END+AGI</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Level-up logic</strong> — exponential XP thresholds, level-up event triggers</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text">POST /api/activities — log workout, returns XP gained + stat delta</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text">GET /api/character/me — full character state</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text">GET /api/activities — paginated activity history</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Profile — Overview tab</strong>: avatar, stats bars (STR/END/AGI/FLX/STA), XP bar, level, rank</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Log Workout screen</strong>: pick activity type, duration, distance, submit</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>XP gain animation</strong>: popup showing +XP and stat changes after logging</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text"><strong>Level-up screen</strong>: full-screen celebration when level increases</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text">Register + Login screens with JWT flow</div></div>
+              <div class="task"><div class="task-dot" style="background:#4f9eff"></div><div class="task-text">App shell: bottom nav, routing</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">profile-full.html (Overview tab)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- PHASE 2 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-next">
+        <div class="phase-num" style="color:#f5a623">PHASE 2</div>
+        <div class="phase-name">Daily Login & Quest System</div>
+        <div class="phase-est">~2–3 weeks</div>
+        <div class="phase-status s-next">AFTER PHASE 1</div>
+      </div>
+      <div class="phase-content row-next">
+        <div class="phase-desc">Daily quests and login streaks are the #1 daily retention driver. Implement these early so players have a reason to open the app every day from day one. Story quests give longer-term direction.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Quest entity</strong> — type (DAILY/STORY/SPECIAL), requirement, progress, reward, expiresAt</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Daily quest generation</strong> — cron job: reset + generate 5 daily quests at midnight</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Quest progress hook</strong> — every activity POST checks open quest requirements and updates progress</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Quest completion</strong> — auto-complete when requirement met, distribute XP/item reward</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Streak entity</strong> — currentStreak, longestStreak, lastActiveDate, shieldCount</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Login reward table</strong> — 7-day cycle with escalating rewards (Day 7 = Rare)</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text">GET /api/quests/daily · GET /api/quests/story · POST /api/login-reward/claim</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Daily Quests tab</strong>: quest list, progress bars, complete-all bonus banner</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Story Quests tab</strong>: chapter arc, current objective, lore text, reward preview</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Daily Login screen</strong>: 7-day calendar, reward claim animation, streak counter</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Streak broken screen</strong>: use Shield to restore or start fresh</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text">Quest completion toast notification</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">quests.html</span>
+          <span class="mockup-ref">daily-login.html</span>
+        </div>
+        <div class="dep-note">⚠️ Requires Phase 1: activity logging must exist for quest progress hooks</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- PHASE 3 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-next">
+        <div class="phase-num" style="color:#f5a623">PHASE 3</div>
+        <div class="phase-name">Adventure Map & Movement</div>
+        <div class="phase-est">~3–4 weeks</div>
+        <div class="phase-status s-next">AFTER PHASE 2</div>
+      </div>
+      <div class="phase-content row-next">
+        <div class="phase-desc">The map is the visual heart of the game — it's what makes this feel like an RPG and not just a fitness tracker. Once activity → movement conversion works, the whole game world opens up.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Zone entity</strong> — name, requiredLevel, coordinates, type, description, discovered</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>MapState entity</strong> — currentZoneId, positionKm, totalKmTraveled, lastActivityDate</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Movement engine</strong> — RUNNING×1.0, CYCLING×0.7, GYM×0.2, HIKING×0.8, SWIMMING×0.5 km/km</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Zone discovery</strong> — trigger when cumulative km reaches zone entry point</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Seed map data</strong> — 6 initial zones with km thresholds and level requirements</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text">GET /api/map/state · GET /api/map/zones · GET /api/map/zones/:id</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Adventure Map screen</strong>: SVG zone map, player position dot, traveled path, fog of war</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Zone info panel</strong>: tap zone → slide-up panel with zone details, enemies, rewards</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Movement card</strong>: "Real World → Game World" conversion table at bottom of map</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Zone discovery animation</strong>: fog lifts, new zone revealed</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text">Weekly progress + streak mini-cards on map</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">adventure-map.html</span>
+          <span class="mockup-ref">adventure-map-detailed.html</span>
+        </div>
+        <div class="dep-note">⚠️ Requires Phase 1: movement is calculated from logged activities</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- PHASE 4 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-next">
+        <div class="phase-num" style="color:#f5a623">PHASE 4</div>
+        <div class="phase-name">Boss Raid System</div>
+        <div class="phase-est">~2–3 weeks</div>
+        <div class="phase-status s-next">AFTER PHASE 3</div>
+      </div>
+      <div class="phase-content row-next">
+        <div class="phase-desc">The MVP boss system is what makes the map feel alive and gives players a multi-day goal to work toward. Implement the core presence + damage loop first, then add the retreat mechanic.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Boss entity</strong> — name, maxHp, currentHp, zoneId, state (LOCKED/AVAILABLE/ACTIVE/DEFEATED), defeatRewards</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Boss state machine</strong> — LOCKED→AVAILABLE (travel to zone), AVAILABLE→ACTIVE (begin fight), ACTIVE→DEFEATED</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Damage engine</strong> — RUNNING×100/km, GYM×300/session, CYCLING×60/km, HIKING×80/km</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Presence check</strong> — damage only applies if character is IN boss zone (mapState.currentZoneId == boss.zoneId)</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Retreat mechanic</strong> — cron: if no activity for 2 days while boss is ACTIVE, move character back one zone</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text">GET /api/boss/active · POST /api/boss/:id/damage (called after activity log)</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Traveling step</strong>: map shows boss node ahead, distance remaining, movement conversion table</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Boss arrived step</strong>: full-screen boss reveal, HP bar, damage rules, "Begin Raid" CTA</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Battle in progress</strong>: day counter, HP bar, damage log per day, "Log Workout" button</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text"><strong>Victory screen</strong>: stats, rewards, new zone unlock animation</div></div>
+              <div class="task"><div class="task-dot" style="background:#f5a623"></div><div class="task-text">Retreat warning card on map when inactive 2 days</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">boss-fight-flow.html</span>
+        </div>
+        <div class="dep-note">⚠️ Requires Phase 3: boss zones must exist on the map, character position must be tracked</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section-divider" style="margin-top:40px">
+    <div class="section-divider-line">
+      <div class="section-divider-text">🚀 FULL PRODUCT — PHASES 5–8</div>
+    </div>
+  </div>
+
+  <!-- PHASE 5 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-later">
+        <div class="phase-num" style="color:#8b949e">PHASE 5</div>
+        <div class="phase-name">Items, Inventory & Equipment</div>
+        <div class="phase-est">~3 weeks</div>
+        <div class="phase-status s-later">AFTER MVP</div>
+      </div>
+      <div class="phase-content row-later">
+        <div class="phase-desc">Items make boss defeats and quest completions feel tangible. The equipment system adds a persistent progression layer — players optimise gear loadouts for different activities.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Item entity</strong> — name, type (WEAPON/ARMOR/ACCESSORY/CONSUMABLE), rarity, bonuses (JSON), icon</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Inventory entity</strong> — accountId, items[], maxSlots (50), equippedSlots (6)</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Equipment effect engine</strong> — apply XP%, stat multiplier, boss damage bonuses when item equipped</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Item reward distribution</strong> — called by boss/quest/event completion, adds item to inventory</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">POST /api/inventory/equip/:itemId · GET /api/inventory · DELETE /api/inventory/:itemId</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Profile — Inventory tab</strong>: 4-col grid, rarity borders, filter chips, item detail panel</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Profile — Equipment tab</strong>: 6-slot layout around character, selected item detail, total bonuses</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Equip/unequip interaction, item rarity color system</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Item drop animation on boss/quest reward</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">profile-full.html (Equipment + Inventory tabs)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- PHASE 6 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-later">
+        <div class="phase-num" style="color:#8b949e">PHASE 6</div>
+        <div class="phase-name">Achievements, Titles & Ranks</div>
+        <div class="phase-est">~2–3 weeks</div>
+        <div class="phase-status s-later">AFTER PHASE 5</div>
+      </div>
+      <div class="phase-content row-later">
+        <div class="phase-desc">Achievements provide long-term meta-progression and social bragging rights. Titles are visible on leaderboards, creating identity and status. Ranks provide structural progression beyond level.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Achievement entity</strong> — name, description, tier (COMMON/UNCOMMON/RARE/EPIC/LEGENDARY), trigger, progress, unlockedAt</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Achievement trigger system</strong> — event bus: activity logged, boss defeated, streak milestone, level up → check achievement conditions</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Title entity</strong> — earned titles list, equipped title, unlock condition</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Rank progression</strong> — Novice → Warrior → Veteran → Champion → Legend based on boss defeats + total XP</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">GET /api/achievements · POST /api/titles/:id/equip · GET /api/rank</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Achievements screen</strong>: tier summary, category filter, in-progress bars, locked section</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Titles & Ranks screen</strong>: equipped title, rank ladder, earned titles list, equip button</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Achievement unlock push notification + in-app toast</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Title visible on profile header and leaderboard rows</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">achievements.html</span>
+          <span class="mockup-ref">titles-ranks.html</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- PHASE 7 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-later">
+        <div class="phase-num" style="color:#8b949e">PHASE 7</div>
+        <div class="phase-name">Social, Guilds & Leaderboards</div>
+        <div class="phase-est">~3–4 weeks</div>
+        <div class="phase-status s-later">AFTER PHASE 6</div>
+      </div>
+      <div class="phase-content row-later">
+        <div class="phase-desc">Social features are the long-term retention multiplier. Guild raids create group accountability — if your guildmates are working out, you feel pressure to too. Leaderboards create friendly competition.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Guild entity</strong> — name, members[], totalDamage, guildBossId</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>GuildBoss entity</strong> — shared HP pool, member damage contributions, regen mechanic (skip 2 days = +500HP)</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Leaderboard service</strong> — weekly XP ranking, cached with Redis/scheduled refresh</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Friends system</strong> — send/accept invite, view friend activity feed</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">GET /api/leaderboard · GET /api/guild/me · POST /api/guild/damage</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Guild Raid screen</strong>: guild boss HP, member damage bars, SLACKING badge, shared rewards</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Leaderboard screen</strong>: global + friends tabs, rank change arrows, your position highlighted</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Friends search + invite flow</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Mini bosses screen: list with HP bars and time remaining</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">guild-raids.html</span>
+          <span class="mockup-ref">mini-bosses.html</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- PHASE 8 -->
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-later">
+        <div class="phase-num" style="color:#8b949e">PHASE 8</div>
+        <div class="phase-name">Advanced Map, Events & Mounts</div>
+        <div class="phase-est">~4–5 weeks</div>
+        <div class="phase-status s-later">POLISH PHASE</div>
+      </div>
+      <div class="phase-content row-later">
+        <div class="phase-desc">This phase adds the depth that keeps long-term players engaged. Seasonal events drive spikes of activity. Map interactions (crossroads, dungeons, NPCs) make each journey feel different. Mounts are cosmetic prestige.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Crossroads system</strong> — PathChoice entity, lock logic, expiry timer, path-specific reward tables</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Dungeon Portal</strong> — DungeonRun entity, floor state machine, multi-activity-type tracking, 7-day timer</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>NPC system</strong> — spawn after workout, 24–48h window, NPC type (MERCHANT/QUEST_GIVER/STRANGER), workout gate</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Random events</strong> — event bus triggers: chest spawn, XP storm (2h window), wandering merchant</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Seasonal event</strong> — SeasonalEvent entity, stage reward track, countdown, event leaderboard</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Mounts</strong> — Mount entity, zone speed bonuses, cosmetic only (no XP effect)</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Crossroads flow</strong>: fork node on map, choice modal, path lock UI, Valley/Ruined completion screens</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Dungeon Portal</strong>: portal node, floor list, per-floor progress, boss floor gauntlet</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>NPC dialogs</strong>: portrait card, 3-tab interaction (Shop / Quest / Lore), XP-based shop</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Random event overlays</strong>: chest popup, XP storm banner, merchant notification</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Seasonal Events screen</strong>: banner, countdown, reward track, event leaderboard</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text"><strong>Profile — Mounts tab</strong>: active mount card, stable grid, unlock requirements</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-refs">
+          <span style="font-size:10px;color:#586070;margin-right:4px">Design refs:</span>
+          <span class="mockup-ref">map-interactions.html</span>
+          <span class="mockup-ref">crossroads-flow.html</span>
+          <span class="mockup-ref">random-events.html</span>
+          <span class="mockup-ref">seasonal-events.html</span>
+          <span class="mockup-ref">profile-full.html (Mounts tab)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section-divider" style="margin-top:40px">
+    <div class="section-divider-line">
+      <div class="section-divider-text">🔌 INTEGRATIONS — PARALLEL TRACK</div>
+    </div>
+  </div>
+
+  <div class="phase-group">
+    <div class="phase">
+      <div class="phase-side side-later">
+        <div class="phase-num" style="color:#8b949e">PARALLEL</div>
+        <div class="phase-name">External Integrations</div>
+        <div class="phase-est">Ongoing</div>
+        <div class="phase-status s-later">WHEN READY</div>
+      </div>
+      <div class="phase-content row-later">
+        <div class="phase-desc">These can be developed in parallel with Phase 3–5 since they only affect how activity data enters the system. The core activity POST API already handles manual entry — integrations just auto-populate it.</div>
+        <div class="task-cols">
+          <div>
+            <div class="task-col-title">BE — Backend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Google Fit API integration — OAuth2 + sync endpoint</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Apple HealthKit bridge (iOS only)</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Garmin Connect API (for Garmin watch users)</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Strava API import (optional — many users have Strava data)</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Push notification service (FCM/APNs)</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-title">FE — Frontend</div>
+            <div class="task-list">
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Settings screen — connect/disconnect external accounts</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Auto-sync badge on activity history (shows source icon)</div></div>
+              <div class="task"><div class="task-dot" style="background:#586070"></div><div class="task-text">Notification permission request flow</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- Final summary table -->
+  <div style="margin-top:48px">
+    <div class="section-divider-line" style="margin-bottom:24px">
+      <div class="section-divider-text">PHASE SUMMARY</div>
+    </div>
+    <div style="background:#0d1117;border:1px solid #1e2632;border-radius:16px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:10px;font-weight:700;color:#586070">PHASE</div>
+        <div style="padding:10px 16px;font-size:10px;font-weight:700;color:#586070">NAME</div>
+        <div style="padding:10px 16px;font-size:10px;font-weight:700;color:#586070;text-align:center">EST.</div>
+        <div style="padding:10px 16px;font-size:10px;font-weight:700;color:#586070;text-align:center">DESIGN REF</div>
+        <div style="padding:10px 16px;font-size:10px;font-weight:700;color:#586070;text-align:center">STATUS</div>
+      </div>
+      <!-- rows -->
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#3fb950">0</div>
+        <div style="padding:10px 16px;font-size:12px;color:#e6edf3">Foundation & Auth</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e;text-align:center">Done</div>
+        <div style="padding:10px 16px;font-size:11px;color:#8b949e;text-align:center">—</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(63,185,80,0.15);color:#3fb950;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">✓ DONE</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#4f9eff">1</div>
+        <div style="padding:10px 16px;font-size:12px;color:#e6edf3">Character & Activity Core</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e;text-align:center">3–4 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#8b949e;text-align:center">profile-full</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(79,158,255,0.15);color:#4f9eff;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">▶ START</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#f5a623">2</div>
+        <div style="padding:10px 16px;font-size:12px;color:#e6edf3">Daily Login & Quests</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e;text-align:center">2–3 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#8b949e;text-align:center">quests, login</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.5);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">PENDING</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#f5a623">3</div>
+        <div style="padding:10px 16px;font-size:12px;color:#e6edf3">Adventure Map & Movement</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e;text-align:center">3–4 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#8b949e;text-align:center">adventure-map</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.5);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">PENDING</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#f5a623">4</div>
+        <div style="padding:10px 16px;font-size:12px;color:#e6edf3">Boss Raid System</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e;text-align:center">2–3 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#8b949e;text-align:center">boss-fight</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.5);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">PENDING</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#8b949e">5</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e">Items, Inventory & Equipment</div>
+        <div style="padding:10px 16px;font-size:12px;color:#586070;text-align:center">3 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#586070;text-align:center">profile-full</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.3);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">LATER</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#8b949e">6</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e">Achievements, Titles & Ranks</div>
+        <div style="padding:10px 16px;font-size:12px;color:#586070;text-align:center">2–3 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#586070;text-align:center">achievements, titles</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.3);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">LATER</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px;border-bottom:1px solid #1e2632">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#8b949e">7</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e">Social, Guilds & Leaderboards</div>
+        <div style="padding:10px 16px;font-size:12px;color:#586070;text-align:center">3–4 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#586070;text-align:center">guild-raids</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.3);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">LATER</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 100px">
+        <div style="padding:10px 16px;font-size:12px;font-weight:700;color:#8b949e">8</div>
+        <div style="padding:10px 16px;font-size:12px;color:#8b949e">Advanced Map, Events & Mounts</div>
+        <div style="padding:10px 16px;font-size:12px;color:#586070;text-align:center">4–5 wk</div>
+        <div style="padding:10px 16px;font-size:11px;color:#586070;text-align:center">map-interactions, seasonal</div>
+        <div style="padding:10px 16px;text-align:center"><span style="background:rgba(48,54,61,0.3);color:#586070;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">LATER</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:32px;font-size:12px;color:#586070;padding-bottom:32px">
+    Life Level · Implementation Roadmap · All 14 design mockups covered across 8 phases
+  </div>
+
+</div>
+</body>
+</html>

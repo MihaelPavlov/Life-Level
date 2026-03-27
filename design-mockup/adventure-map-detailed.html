@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Adventure Map Detailed</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #040810;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 40px;
+}
+
+/* ── Phone shell ── */
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #080e14;
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.07),
+    0 40px 100px rgba(0,0,0,0.9),
+    0 0 80px rgba(79,158,255,0.05);
+}
+
+/* ══════════ STATUS BAR ══════════ */
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 0;
+  background: linear-gradient(to bottom, rgba(8,14,20,0.9), transparent);
+}
+.status-time { font-size: 13px; color: #e6edf3; font-weight: 600; }
+.status-icons { font-size: 12px; color: #8b949e; display: flex; gap: 6px; align-items: center; }
+
+/* ══════════ TOP HUD ══════════ */
+.top-hud {
+  position: absolute;
+  top: 48px; left: 0; right: 0;
+  z-index: 50;
+  padding: 10px 16px 16px;
+  background: linear-gradient(to bottom, rgba(8,14,20,0.95) 70%, transparent);
+}
+.hud-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.hud-title { font-size: 17px; font-weight: 700; color: #e6edf3; }
+.hud-region-badge {
+  background: rgba(63,185,80,0.12);
+  border: 1px solid rgba(63,185,80,0.5);
+  border-radius: 10px;
+  padding: 3px 10px;
+  font-size: 10px;
+  color: #3fb950;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.hud-stats {
+  display: flex;
+  gap: 8px;
+}
+.hud-stat {
+  background: rgba(22,27,34,0.9);
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  flex: 1;
+  justify-content: center;
+}
+.hud-stat.xp { color: #4f9eff; border-color: rgba(79,158,255,0.35); }
+.hud-stat.lvl { color: #f5a623; border-color: rgba(245,166,35,0.35); }
+.hud-stat.streak { color: #f85149; border-color: rgba(248,81,73,0.35); }
+
+/* ══════════ MAP CANVAS ══════════ */
+.map-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 390px;
+  height: 540px;
+  overflow: hidden;
+}
+
+/* SVG map fills entire canvas */
+.map-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+}
+
+/* Terrain fills */
+.terrain-forest { fill: #0a1c12; }
+.terrain-mountain { fill: #14121e; }
+.terrain-snow { fill: #1a1f2e; }
+.terrain-ocean { fill: #080f18; }
+.terrain-desert { fill: #1a1408; }
+.terrain-swamp { fill: #0f1a10; }
+.grid-line { stroke: rgba(48,54,61,0.15); stroke-width: 1; fill: none; }
+
+/* River */
+.river { stroke: rgba(79,158,255,0.25); stroke-width: 3; fill: none; stroke-linecap: round; }
+
+/* Road paths between zones */
+.road { stroke: rgba(245,166,35,0.2); stroke-width: 2; fill: none; stroke-dasharray: 6 4; stroke-linecap: round; }
+.road-traveled { stroke: rgba(63,185,80,0.5); stroke-width: 2.5; fill: none; stroke-linecap: round; }
+
+/* Fog overlay */
+.fog { fill: #080e14; }
+
+/* ══════════ ZONE NODES ══════════ */
+.zone-group { cursor: pointer; }
+
+/* Glow blur filters */
+.map-canvas { filter: none; }
+
+/* Zone outer ring (animated for active) */
+.zone-ring-pulse {
+  fill: none;
+  stroke-width: 2;
+  animation: ringPulse 2.2s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%,100% { opacity: 0.15; r: 26px; }
+  50% { opacity: 0.4; r: 30px; }
+}
+.zone-ring-static { fill: none; stroke-width: 1.5; opacity: 0.35; }
+
+/* Zone circle base */
+.zone-circle { stroke-width: 2; }
+
+/* Zone icon text */
+.zone-icon { font-size: 18px; dominant-baseline: central; text-anchor: middle; }
+.zone-name {
+  font-size: 9px; font-weight: 700;
+  dominant-baseline: central; text-anchor: middle;
+  letter-spacing: 0.04em;
+  font-family: 'Inter', sans-serif;
+}
+.zone-sublabel {
+  font-size: 8px;
+  dominant-baseline: central; text-anchor: middle;
+  font-family: 'Inter', sans-serif;
+  opacity: 0.7;
+}
+
+/* YOU ARE HERE indicator */
+.you-here-badge rect { rx: 10; }
+.you-here-text {
+  font-size: 8px; font-weight: 700;
+  dominant-baseline: central; text-anchor: middle;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+/* Distance tag */
+.dist-badge rect { rx: 8; }
+.dist-text {
+  font-size: 8px; font-weight: 700;
+  dominant-baseline: central; text-anchor: middle;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Boss skull ring animation */
+.boss-ring {
+  fill: none;
+  animation: bossRing 1.4s ease-in-out infinite;
+}
+@keyframes bossRing {
+  0%,100% { opacity: 0.2; }
+  50% { opacity: 0.55; }
+}
+
+/* Player dot */
+.player-dot {
+  animation: playerPulse 1.8s ease-in-out infinite;
+}
+@keyframes playerPulse {
+  0%,100% { opacity: 1; r: 5px; }
+  50% { opacity: 0.6; r: 7px; }
+}
+.player-halo {
+  fill: none;
+  stroke: #3fb950;
+  animation: haloPulse 1.8s ease-in-out infinite;
+}
+@keyframes haloPulse {
+  0%,100% { opacity: 0.5; r: 12px; stroke-width: 1.5; }
+  50% { opacity: 0.1; r: 18px; stroke-width: 1; }
+}
+
+/* Fog gradient top */
+.fog-gradient { pointer-events: none; }
+
+/* ══════════ COMPASS ══════════ */
+.compass {
+  position: absolute;
+  top: 148px; right: 14px;
+  width: 44px; height: 44px;
+  background: rgba(22,27,34,0.9);
+  border: 1px solid #30363d;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 20;
+  font-size: 20px;
+}
+
+/* ══════════ ZONE INFO CARD ══════════ */
+.zone-info-card {
+  position: absolute;
+  bottom: 300px; left: 16px; right: 16px;
+  z-index: 30;
+  background: rgba(22,27,34,0.97);
+  border: 1px solid rgba(63,185,80,0.5);
+  border-radius: 14px;
+  padding: 14px 16px;
+  backdrop-filter: blur(8px);
+}
+.zic-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.zic-icon {
+  width: 42px; height: 42px;
+  background: rgba(15,40,25,0.8);
+  border: 2px solid #3fb950;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 0 16px rgba(63,185,80,0.3);
+  flex-shrink: 0;
+}
+.zic-info { flex: 1; }
+.zic-name { font-size: 15px; font-weight: 700; color: #e6edf3; }
+.zic-type { font-size: 10px; color: #3fb950; font-weight: 600; margin-top: 2px; letter-spacing: 0.04em; }
+.zic-badge {
+  background: rgba(63,185,80,0.12);
+  border: 1px solid #3fb950;
+  border-radius: 10px;
+  padding: 3px 10px;
+  font-size: 10px; color: #3fb950; font-weight: 700;
+}
+.zic-stats { display: flex; gap: 8px; margin-bottom: 10px; }
+.zic-stat {
+  flex: 1;
+  background: #1e2632;
+  border-radius: 8px;
+  padding: 6px 8px;
+  text-align: center;
+}
+.zic-stat-val { font-size: 14px; font-weight: 700; }
+.zic-stat-lbl { font-size: 9px; color: #8b949e; margin-top: 1px; }
+.zic-progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: #8b949e; margin-bottom: 5px;
+}
+.zic-track { height: 5px; background: #1e2632; border-radius: 3px; overflow: hidden; }
+.zic-fill { height: 100%; border-radius: 3px; background: linear-gradient(to right, #3fb950, #4f9eff); width: 52%; }
+
+/* ══════════ BOTTOM PANEL ══════════ */
+.bottom-panel {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 304px;
+  background: #0d1117;
+  z-index: 40;
+}
+.bottom-panel::before {
+  content: '';
+  position: absolute;
+  top: -20px; left: 0; right: 0; height: 20px;
+  background: linear-gradient(to bottom, transparent, #0d1117);
+  pointer-events: none;
+}
+
+.panel-tabs {
+  display: flex;
+  padding: 12px 16px 0;
+  gap: 6px;
+  border-bottom: 1px solid #1e2632;
+  margin-bottom: 10px;
+}
+.tab {
+  font-size: 11px; font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  color: #8b949e;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab.active { color: #4f9eff; border-bottom-color: #4f9eff; background: rgba(79,158,255,0.05); }
+
+.panel-body { padding: 0 16px; overflow-y: auto; height: 214px; scrollbar-width: none; }
+.panel-body::-webkit-scrollbar { display: none; }
+
+/* Journey card */
+.journey-card {
+  background: #161b22;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid #30363d;
+  position: relative;
+  overflow: hidden;
+}
+.journey-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.jc-green::before { background: #3fb950; }
+.jc-red::before { background: #f85149; }
+.jc-purple::before { background: #a371f7; }
+.jc-gold::before { background: #f5a623; }
+
+.jc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.jc-left { display: flex; align-items: center; gap: 8px; }
+.jc-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+.jc-title { font-size: 13px; font-weight: 700; color: #e6edf3; }
+.jc-sub { font-size: 11px; color: #8b949e; margin-top: 2px; margin-bottom: 8px; }
+.jc-badge {
+  border-radius: 10px;
+  padding: 2px 9px;
+  font-size: 10px; font-weight: 700;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.prog-row { display: flex; align-items: center; gap: 8px; }
+.prog-track { flex: 1; height: 4px; background: #1e2632; border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 2px; }
+.prog-label { font-size: 9px; color: #8b949e; white-space: nowrap; }
+
+/* Boss card special */
+.boss-card {
+  background: rgba(40,10,10,0.5);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(248,81,73,0.4);
+  position: relative; overflow: hidden;
+}
+.boss-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.boss-label { font-size: 10px; color: #f85149; font-weight: 700; letter-spacing: 0.05em; }
+.boss-timer-badge {
+  background: rgba(248,81,73,0.12);
+  border: 1px solid rgba(248,81,73,0.5);
+  border-radius: 9px;
+  padding: 2px 8px;
+  font-size: 9px; color: #f85149; font-weight: 700;
+}
+.boss-body { display: flex; gap: 10px; align-items: flex-start; }
+.boss-main { flex: 1; }
+.boss-title { font-size: 14px; font-weight: 700; color: #e6edf3; margin-bottom: 3px; }
+.boss-desc { font-size: 11px; color: #8b949e; margin-bottom: 8px; }
+.boss-reward-box {
+  width: 68px; flex-shrink: 0;
+  background: rgba(248,81,73,0.08);
+  border: 1px solid rgba(248,81,73,0.4);
+  border-radius: 10px;
+  padding: 8px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.br-label { font-size: 8px; color: #f85149; font-weight: 700; letter-spacing: 0.04em; }
+.br-icon { font-size: 22px; }
+.br-xp { font-size: 10px; color: #f5a623; font-weight: 700; }
+.br-item { font-size: 9px; color: #8b949e; }
+
+/* Mini cards */
+.mini-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.mini-card {
+  flex: 1; background: #161b22;
+  border-radius: 10px; padding: 10px 12px;
+  border: 1px solid #1e2632;
+}
+.mc-label { font-size: 9px; color: #8b949e; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 4px; }
+.mc-val { font-size: 18px; font-weight: 700; line-height: 1.1; }
+.mc-sub { font-size: 9px; margin-top: 3px; }
+.mc-dots { display: flex; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+.mc-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* ══════════ NAV ══════════ */
+.nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 82px;
+  background: #161b22;
+  border-top: 1px solid #30363d;
+  display: flex; align-items: center;
+  padding: 0 8px 12px;
+  z-index: 100;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; padding-top: 10px;
+}
+.nav-icon { font-size: 20px; }
+.nav-label { font-size: 10px; }
+.nav-item.active .nav-icon,
+.nav-item.active .nav-label { color: #4f9eff; }
+.nav-item:not(.active) .nav-icon,
+.nav-item:not(.active) .nav-label { color: #8b949e; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <span>●●●</span><span>WiFi</span><span>🔋</span>
+    </div>
+  </div>
+
+  <!-- TOP HUD -->
+  <div class="top-hud">
+    <div class="hud-row1">
+      <div class="hud-title">Adventure Map</div>
+      <div class="hud-region-badge">🌲 Forest of Endurance</div>
+    </div>
+    <div class="hud-stats">
+      <div class="hud-stat xp">⚡ 8,420 XP</div>
+      <div class="hud-stat lvl">⚔️ LVL 12</div>
+      <div class="hud-stat streak">🔥 7 Days</div>
+    </div>
+  </div>
+
+  <!-- COMPASS -->
+  <div class="compass">🧭</div>
+
+  <!-- MAP CANVAS -->
+  <div class="map-canvas">
+    <svg class="map-svg" viewBox="0 0 390 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Glow filters -->
+        <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-purple" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="7" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- Fog gradients -->
+        <linearGradient id="fogTop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#080e14" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#080e14" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="forestGlow" cx="30%" cy="60%" r="60%">
+          <stop offset="0%" stop-color="#3fb950" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#0a1c12" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="mountainGlow" cx="65%" cy="40%" r="55%">
+          <stop offset="0%" stop-color="#a371f7" stop-opacity="0.1"/>
+          <stop offset="100%" stop-color="#14121e" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="snowGlow" cx="50%" cy="20%" r="50%">
+          <stop offset="0%" stop-color="#4f9eff" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#1a1f2e" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="desertGlow" cx="80%" cy="75%" r="45%">
+          <stop offset="0%" stop-color="#f5a623" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#1a1408" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="oceanGlow" cx="20%" cy="85%" r="50%">
+          <stop offset="0%" stop-color="#4f9eff" stop-opacity="0.1"/>
+          <stop offset="100%" stop-color="#080f18" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- ── TERRAIN BASE ── -->
+      <rect width="390" height="540" fill="#080e14"/>
+
+      <!-- Forest region -->
+      <ellipse cx="130" cy="340" rx="160" ry="130" fill="#0a1c12" opacity="0.85"/>
+      <ellipse cx="130" cy="340" rx="160" ry="130" fill="url(#forestGlow)"/>
+
+      <!-- Mountain region -->
+      <ellipse cx="270" cy="250" rx="140" ry="120" fill="#14121e" opacity="0.85"/>
+      <ellipse cx="270" cy="250" rx="140" ry="120" fill="url(#mountainGlow)"/>
+
+      <!-- Snow peaks region -->
+      <ellipse cx="240" cy="110" rx="120" ry="90" fill="#1a1f2e" opacity="0.7"/>
+      <ellipse cx="240" cy="110" rx="120" ry="90" fill="url(#snowGlow)"/>
+
+      <!-- Desert region -->
+      <ellipse cx="340" cy="400" rx="90" ry="80" fill="#1a1408" opacity="0.6"/>
+      <ellipse cx="340" cy="400" rx="90" ry="80" fill="url(#desertGlow)"/>
+
+      <!-- Ocean region -->
+      <ellipse cx="60" cy="460" rx="100" ry="80" fill="#080f18" opacity="0.7"/>
+      <ellipse cx="60" cy="460" rx="100" ry="80" fill="url(#oceanGlow)"/>
+
+      <!-- ── GRID ── -->
+      <g class="grid-line">
+        <line x1="0" y1="100" x2="390" y2="100"/><line x1="0" y1="140" x2="390" y2="140"/>
+        <line x1="0" y1="180" x2="390" y2="180"/><line x1="0" y1="220" x2="390" y2="220"/>
+        <line x1="0" y1="260" x2="390" y2="260"/><line x1="0" y1="300" x2="390" y2="300"/>
+        <line x1="0" y1="340" x2="390" y2="340"/><line x1="0" y1="380" x2="390" y2="380"/>
+        <line x1="0" y1="420" x2="390" y2="420"/><line x1="0" y1="460" x2="390" y2="460"/>
+        <line x1="50" y1="80" x2="50" y2="540"/><line x1="100" y1="80" x2="100" y2="540"/>
+        <line x1="150" y1="80" x2="150" y2="540"/><line x1="200" y1="80" x2="200" y2="540"/>
+        <line x1="250" y1="80" x2="250" y2="540"/><line x1="300" y1="80" x2="300" y2="540"/>
+        <line x1="350" y1="80" x2="350" y2="540"/>
+      </g>
+
+      <!-- ── RIVER ── -->
+      <path class="river" d="M 180 100 Q 160 160 155 210 Q 150 260 140 310 Q 130 360 110 400 Q 90 440 70 480"/>
+
+      <!-- ── ROADS (undiscovered, dim) ── -->
+      <path class="road" d="M 155 370 Q 180 340 210 310 Q 240 280 268 256"/>
+      <path class="road" d="M 268 256 Q 270 220 265 190 Q 260 160 250 135"/>
+      <path class="road" d="M 268 256 Q 300 270 320 300 Q 340 330 345 370"/>
+      <path class="road" d="M 155 370 Q 130 400 100 420 Q 75 440 62 460"/>
+
+      <!-- ── TRAVELED PATH (player has walked this) ── -->
+      <path class="road-traveled" d="M 62 460 Q 90 435 115 410 Q 135 390 155 370"/>
+
+      <!-- ── FOG OF WAR (top — undiscovered) ── -->
+      <rect x="0" y="0" width="390" height="90" fill="url(#fogTop)"/>
+      <rect x="0" y="0" width="390" height="70" fill="#080e14"/>
+
+      <!-- ── ZONE: Ocean of Whispers (VISITED / ORIGIN) ── -->
+      <g class="zone-group">
+        <!-- glow -->
+        <circle cx="62" cy="460" r="28" fill="#4f9eff" opacity="0.06"/>
+        <circle cx="62" cy="460" r="22" class="zone-ring-static" stroke="#4f9eff"/>
+        <!-- node -->
+        <circle cx="62" cy="460" r="18" fill="#080f18" stroke="#4f9eff" stroke-width="2"/>
+        <text x="62" y="460" class="zone-icon">🌊</text>
+        <!-- label -->
+        <rect x="20" y="483" width="84" height="28" rx="7" fill="rgba(22,27,34,0.92)" stroke="#4f9eff" stroke-width="1" stroke-opacity="0.4"/>
+        <text x="62" y="494" class="zone-name" fill="#4f9eff">Ocean of</text>
+        <text x="62" y="504" class="zone-name" fill="#4f9eff">Whispers</text>
+        <!-- visited badge -->
+        <rect x="40" y="438" width="44" height="16" rx="8" fill="rgba(79,158,255,0.1)" stroke="#4f9eff" stroke-width="1"/>
+        <text x="62" y="447" class="dist-text" fill="#4f9eff">✓ Visited</text>
+      </g>
+
+      <!-- ── ZONE: Forest of Endurance (CURRENT) ── -->
+      <g class="zone-group" filter="url(#glow-green)">
+        <!-- pulse rings -->
+        <circle cx="155" cy="370" r="28" class="zone-ring-pulse" stroke="#3fb950"/>
+        <circle cx="155" cy="370" r="22" class="zone-ring-static" stroke="#3fb950" opacity="0.4"/>
+        <!-- node -->
+        <circle cx="155" cy="370" r="18" fill="#0a1c12" stroke="#3fb950" stroke-width="2.5"/>
+        <text x="155" y="370" class="zone-icon">🌲</text>
+        <!-- label -->
+        <rect x="112" y="393" width="86" height="28" rx="7" fill="rgba(22,27,34,0.95)" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="155" y="404" class="zone-name" fill="#3fb950">Forest of</text>
+        <text x="155" y="414" class="zone-name" fill="#3fb950">Endurance</text>
+        <!-- YOU ARE HERE -->
+        <rect x="108" y="344" width="94" height="18" rx="9" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1"/>
+        <text x="155" y="354" class="you-here-text" fill="#3fb950">📍 YOU ARE HERE</text>
+      </g>
+
+      <!-- PLAYER DOT (on top of zone) -->
+      <circle cx="155" cy="370" r="5" class="player-dot" fill="#3fb950"/>
+      <circle cx="155" cy="370" r="12" class="player-halo"/>
+
+      <!-- ── ZONE: Mountains of Strength (NEXT DESTINATION) ── -->
+      <g class="zone-group" filter="url(#glow-purple)">
+        <circle cx="268" cy="256" r="26" fill="#a371f7" opacity="0.05"/>
+        <circle cx="268" cy="256" r="20" class="zone-ring-static" stroke="#a371f7" opacity="0.3"/>
+        <circle cx="268" cy="256" r="18" fill="#14121e" stroke="#a371f7" stroke-width="2"/>
+        <text x="268" y="256" class="zone-icon">⛰️</text>
+        <!-- label -->
+        <rect x="222" y="279" width="92" height="28" rx="7" fill="rgba(22,27,34,0.9)" stroke="#30363d" stroke-width="1"/>
+        <text x="268" y="290" class="zone-name" fill="#8b949e">Mountains of</text>
+        <text x="268" y="300" class="zone-name" fill="#8b949e">Strength</text>
+        <!-- distance badge -->
+        <rect x="234" y="232" width="68" height="17" rx="8" fill="rgba(163,113,247,0.12)" stroke="#a371f7" stroke-width="1"/>
+        <text x="268" y="242" class="dist-text" fill="#a371f7">➤ 15.2 km</text>
+      </g>
+
+      <!-- ── BOSS: Iron Peak (near mountains) ── -->
+      <g class="zone-group" filter="url(#glow-red)">
+        <circle cx="318" cy="310" r="30" class="boss-ring" stroke="#f85149" stroke-width="2"/>
+        <circle cx="318" cy="310" r="22" class="boss-ring" stroke="#f85149" stroke-width="1.5"/>
+        <circle cx="318" cy="310" r="18" fill="rgba(40,10,10,0.95)" stroke="#f85149" stroke-width="2.5"/>
+        <text x="318" y="310" class="zone-icon">💀</text>
+        <!-- boss tag -->
+        <rect x="280" y="284" width="76" height="17" rx="8" fill="rgba(248,81,73,0.15)" stroke="#f85149" stroke-width="1"/>
+        <text x="318" y="294" class="dist-text" fill="#f85149">⚠ BOSS RAID</text>
+        <!-- label -->
+        <rect x="282" y="332" width="72" height="17" rx="7" fill="rgba(22,27,34,0.9)" stroke="#30363d" stroke-width="1"/>
+        <text x="318" y="343" class="zone-sublabel" fill="#8b949e">Iron Peak</text>
+      </g>
+
+      <!-- ── ZONE: Snow Peaks (LOCKED LVL 18) ── -->
+      <g class="zone-group" opacity="0.5">
+        <circle cx="248" cy="138" r="18" fill="#1a1f2e" stroke="#30363d" stroke-width="1.5"/>
+        <text x="248" y="138" class="zone-icon" opacity="0.5">🔒</text>
+        <rect x="206" y="158" width="84" height="26" rx="6" fill="rgba(22,27,34,0.7)"/>
+        <text x="248" y="169" class="zone-name" fill="#586070">Snow Peaks</text>
+        <text x="248" y="179" class="zone-sublabel" fill="#586070">Req. LVL 18</text>
+      </g>
+
+      <!-- ── ZONE: Desert of Agility (LOCKED LVL 15) ── -->
+      <g class="zone-group" opacity="0.45">
+        <circle cx="342" cy="378" r="18" fill="#1a1408" stroke="#30363d" stroke-width="1.5"/>
+        <text x="342" y="378" class="zone-icon" opacity="0.5">🔒</text>
+        <rect x="302" y="400" width="80" height="26" rx="6" fill="rgba(22,27,34,0.7)"/>
+        <text x="342" y="411" class="zone-name" fill="#586070">Desert of</text>
+        <text x="342" y="421" class="zone-sublabel" fill="#586070">Agility • LVL 15</text>
+      </g>
+
+      <!-- ── REGION LABELS (ambient) ── -->
+      <text x="70" y="302" font-family="Inter,sans-serif" font-size="8" fill="#3fb950" opacity="0.25" letter-spacing="0.1em">ENDURANCE TERRITORY</text>
+      <text x="195" y="200" font-family="Inter,sans-serif" font-size="8" fill="#a371f7" opacity="0.2" letter-spacing="0.1em">STRENGTH HIGHLANDS</text>
+      <text x="190" y="86" font-family="Inter,sans-serif" font-size="8" fill="#4f9eff" opacity="0.2" letter-spacing="0.08em">??? FROZEN REALM ???</text>
+
+      <!-- ── TOP FOG OVERLAY ── -->
+      <rect x="0" y="0" width="390" height="82" fill="url(#fogTop)" class="fog-gradient"/>
+    </svg>
+  </div>
+
+  <!-- ZONE INFO CARD (current zone details) -->
+  <div class="zone-info-card">
+    <div class="zic-top">
+      <div class="zic-icon">🌲</div>
+      <div class="zic-info">
+        <div class="zic-name">Forest of Endurance</div>
+        <div class="zic-type">ENDURANCE TERRITORY  •  ZONE 2 / 6</div>
+      </div>
+      <div class="zic-badge">CURRENT</div>
+    </div>
+    <div class="zic-stats">
+      <div class="zic-stat">
+        <div class="zic-stat-val" style="color:#3fb950">5.2 km</div>
+        <div class="zic-stat-lbl">Today's run</div>
+      </div>
+      <div class="zic-stat">
+        <div class="zic-stat-val" style="color:#4f9eff">15.2 km</div>
+        <div class="zic-stat-lbl">To next zone</div>
+      </div>
+      <div class="zic-stat">
+        <div class="zic-stat-val" style="color:#f5a623">+1 END</div>
+        <div class="zic-stat-lbl">Today's gain</div>
+      </div>
+    </div>
+    <div class="zic-progress-label">
+      <span>Journey to Mountains of Strength</span>
+      <span style="color:#e6edf3">52%</span>
+    </div>
+    <div class="zic-track"><div class="zic-fill"></div></div>
+  </div>
+
+  <!-- BOTTOM PANEL -->
+  <div class="bottom-panel">
+    <div class="panel-tabs">
+      <div class="tab active">Journey</div>
+      <div class="tab">Quests</div>
+      <div class="tab">Zones</div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Movement conversion card -->
+      <div class="journey-card jc-green">
+        <div class="jc-header">
+          <div class="jc-left">
+            <span style="font-size:16px">🏃</span>
+            <div>
+              <div class="jc-label" style="color:#3fb950">REAL WORLD → MAP MOVEMENT</div>
+              <div class="jc-title">5.2 km run = 5.2 km on map</div>
+            </div>
+          </div>
+          <div class="jc-badge" style="color:#3fb950;border-color:rgba(63,185,80,0.5);background:rgba(63,185,80,0.1)">+1 END</div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-track"><div class="prog-fill" style="background:#3fb950;width:52%"></div></div>
+          <span class="prog-label">52% to Mountains of Strength</span>
+        </div>
+      </div>
+
+      <!-- Boss challenge card -->
+      <div class="boss-card">
+        <div class="boss-header">
+          <span class="boss-label">💀 BOSS RAID ACTIVE</span>
+          <div class="boss-timer-badge">⏳ 3 days left</div>
+        </div>
+        <div class="boss-body">
+          <div class="boss-main">
+            <div class="boss-title">Conquer the Iron Peak</div>
+            <div class="boss-desc">Run 30km total this week to defeat the boss and unlock the Mountains region</div>
+            <div class="prog-row">
+              <div class="prog-track"><div class="prog-fill" style="background:#f85149;width:47%"></div></div>
+              <span class="prog-label">14 / 30 km  (47%)</span>
+            </div>
+          </div>
+          <div class="boss-reward-box">
+            <div class="br-label">REWARD</div>
+            <div class="br-icon">⚔️</div>
+            <div class="br-xp">+2,000 XP</div>
+            <div class="br-item">Iron Sword</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini row: weekly + streak -->
+      <div class="mini-row">
+        <div class="mini-card">
+          <div class="mc-label">THIS WEEK</div>
+          <div class="mc-val" style="color:#4f9eff">+480 XP</div>
+          <div class="mc-sub" style="color:#8b949e">goal: 1,000 XP</div>
+          <div class="prog-track" style="margin-top:8px;height:3px">
+            <div class="prog-fill" style="background:linear-gradient(to right,#4f9eff,#a371f7);width:48%"></div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-label">STREAK</div>
+          <div class="mc-val" style="color:#f5a623">🔥 7 Days</div>
+          <div class="mc-sub" style="color:#f5a623">×1.5 XP active</div>
+          <div class="mc-dots">
+            <div class="mc-dot" style="background:#f5a623"></div>
+            <div class="mc-dot" style="background:#f5a623"></div>
+            <div class="mc-dot" style="background:#f5a623"></div>
+            <div class="mc-dot" style="background:#f5a623"></div>
+            <div class="mc-dot" style="background:#f5a623"></div>
+            <div class="mc-dot" style="background:#f5a623"></div>
+            <div class="mc-dot" style="background:#f5a623"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+    <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+    <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+    <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+  </div>
+
+</div>
+
+</body>
+</html>

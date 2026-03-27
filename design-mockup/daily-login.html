@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Daily Login & Streak</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#f5a623; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:100; }
+.st { font-size:13px; font-weight:600; color:#e6edf3; } .si { font-size:11px; color:#8b949e; }
+.nav { position:absolute; bottom:0; left:0; right:0; height:82px; background:#161b22; border-top:1px solid #30363d; display:flex; align-items:center; padding:0 8px 12px; z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; } .nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#f5a623; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+.scroll { position:absolute; inset:0; overflow-y:auto; padding-bottom:90px; scrollbar-width:none; }
+.scroll::-webkit-scrollbar { display:none; }
+@keyframes claimPulse { 0%,100%{box-shadow:0 4px 20px rgba(245,166,35,0.4)} 50%{box-shadow:0 4px 40px rgba(245,166,35,0.7),0 0 60px rgba(245,166,35,0.2)} }
+</style>
+</head>
+<body>
+
+<!-- DAILY LOGIN -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">DAILY LOGIN</div>
+    <div class="step-title">Day 7 — Claim big reward</div>
+    <div class="step-desc">Log in every day to build the streak</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,rgba(245,166,35,0.18) 0%,#080e14 70%)"></div>
+    <div class="scroll" style="z-index:10">
+      <div style="padding:56px 20px 0;min-height:100%">
+
+        <!-- Header -->
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:11px;color:#f5a623;font-weight:700;letter-spacing:0.08em;margin-bottom:6px">🔥 DAY 7 STREAK</div>
+          <div style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:4px">Daily Reward!</div>
+          <div style="font-size:13px;color:#8b949e">You've been active 7 days in a row</div>
+        </div>
+
+        <!-- Big reward of the day -->
+        <div style="background:rgba(22,27,34,0.97);border:2px solid rgba(245,166,35,0.6);border-radius:20px;padding:20px;margin-bottom:14px;text-align:center;box-shadow:0 0 40px rgba(245,166,35,0.15);animation:claimPulse 2s ease-in-out infinite">
+          <div style="font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.08em;margin-bottom:12px">TODAY'S REWARD — DAY 7</div>
+          <div style="font-size:56px;margin-bottom:12px">🗡️</div>
+          <div style="font-size:22px;font-weight:700;color:#e6edf3;margin-bottom:4px">Enchanted Blade</div>
+          <div style="display:inline-block;background:rgba(163,113,247,0.15);border:1px solid rgba(163,113,247,0.5);border-radius:8px;padding:3px 14px;font-size:10px;color:#a371f7;font-weight:700;margin-bottom:12px">RARE ITEM</div>
+          <div style="font-size:12px;color:#8b949e;margin-bottom:14px">+12% XP on all activities  •  Unique weekly appearance</div>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">⚡</div>
+              <div style="font-size:14px;font-weight:700;color:#4f9eff;margin-top:3px">+500 XP</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🗡️</div>
+              <div style="font-size:14px;font-weight:700;color:#a371f7;margin-top:3px">Rare Item</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🔥</div>
+              <div style="font-size:14px;font-weight:700;color:#f5a623;margin-top:3px">×1.5 XP</div>
+              <div style="font-size:9px;color:#8b949e">today only</div>
+            </div>
+          </div>
+          <button style="width:100%;background:linear-gradient(135deg,#f5a623,#e8920f);border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;color:#000;cursor:pointer">🎁 Claim Day 7 Reward</button>
+        </div>
+
+        <!-- Week calendar -->
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">THIS WEEK'S REWARDS</div>
+        <div style="background:#161b22;border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid #30363d">
+          <div style="display:flex;gap:4px">
+
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:8px 4px;margin-bottom:5px">
+                <div style="font-size:18px">⚡</div>
+                <div style="font-size:10px;font-weight:700;color:#3fb950">✓</div>
+              </div>
+              <div style="font-size:9px;color:#3fb950;font-weight:600">MON</div>
+              <div style="font-size:8px;color:#8b949e">+100 XP</div>
+            </div>
+
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:8px 4px;margin-bottom:5px">
+                <div style="font-size:18px">💊</div>
+                <div style="font-size:10px;font-weight:700;color:#3fb950">✓</div>
+              </div>
+              <div style="font-size:9px;color:#3fb950;font-weight:600">TUE</div>
+              <div style="font-size:8px;color:#8b949e">Potion</div>
+            </div>
+
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:8px 4px;margin-bottom:5px">
+                <div style="font-size:18px">⚡</div>
+                <div style="font-size:10px;font-weight:700;color:#3fb950">✓</div>
+              </div>
+              <div style="font-size:9px;color:#3fb950;font-weight:600">WED</div>
+              <div style="font-size:8px;color:#8b949e">+200 XP</div>
+            </div>
+
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:8px 4px;margin-bottom:5px">
+                <div style="font-size:18px">🛡️</div>
+                <div style="font-size:10px;font-weight:700;color:#3fb950">✓</div>
+              </div>
+              <div style="font-size:9px;color:#3fb950;font-weight:600">THU</div>
+              <div style="font-size:8px;color:#8b949e">Shield</div>
+            </div>
+
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:8px 4px;margin-bottom:5px">
+                <div style="font-size:18px">⚡</div>
+                <div style="font-size:10px;font-weight:700;color:#3fb950">✓</div>
+              </div>
+              <div style="font-size:9px;color:#3fb950;font-weight:600">FRI</div>
+              <div style="font-size:8px;color:#8b949e">+300 XP</div>
+            </div>
+
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:8px 4px;margin-bottom:5px">
+                <div style="font-size:18px">⚡</div>
+                <div style="font-size:10px;font-weight:700;color:#3fb950">✓</div>
+              </div>
+              <div style="font-size:9px;color:#3fb950;font-weight:600">SAT</div>
+              <div style="font-size:8px;color:#8b949e">+400 XP</div>
+            </div>
+
+            <!-- Day 7 active -->
+            <div style="flex:1;text-align:center">
+              <div style="background:rgba(245,166,35,0.15);border:2px solid rgba(245,166,35,0.6);border-radius:10px;padding:8px 4px;margin-bottom:5px;box-shadow:0 0 12px rgba(245,166,35,0.3)">
+                <div style="font-size:18px">🗡️</div>
+                <div style="font-size:10px;font-weight:700;color:#f5a623">!</div>
+              </div>
+              <div style="font-size:9px;color:#f5a623;font-weight:700">SUN</div>
+              <div style="font-size:8px;color:#f5a623">RARE</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Streak shield -->
+        <div style="background:#161b22;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid rgba(79,158,255,0.3);display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">🛡️</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#e6edf3;margin-bottom:3px">Streak Shield</div>
+            <div style="font-size:11px;color:#8b949e">Miss a day without losing your streak</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:16px;font-weight:700;color:#4f9eff">×2</div>
+            <div style="font-size:9px;color:#8b949e">owned</div>
+          </div>
+        </div>
+
+        <!-- Month preview -->
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">30-DAY MILESTONE</div>
+        <div style="background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px">
+          <div style="width:54px;height:54px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px">👑</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#f5a623;margin-bottom:3px">Legendary Cosmetic</div>
+            <div style="font-size:11px;color:#8b949e">Keep your streak for 30 days</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <div style="flex:1;height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:23%;background:#f5a623;border-radius:2px"></div>
+              </div>
+              <span style="font-size:10px;color:#f5a623;font-weight:600">7 / 30 days</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STREAK BROKEN -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">STREAK BROKEN</div>
+    <div class="step-title">Motivational recovery screen</div>
+    <div class="step-desc">Use shield or restart — don't churn</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,rgba(248,81,73,0.15) 0%,#080e14 70%)"></div>
+    <div style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;padding:56px 20px 90px">
+
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%">
+        <div style="font-size:64px;margin-bottom:12px;filter:grayscale(0.5)">🔥</div>
+        <div style="font-size:11px;color:#f85149;font-weight:700;letter-spacing:0.08em;margin-bottom:8px">STREAK BROKEN</div>
+        <div style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:6px">Your 12-Day Streak Ended</div>
+        <div style="font-size:13px;color:#8b949e;margin-bottom:24px;line-height:1.6">You missed yesterday's workout.<br>Don't give up — every champion falls.</div>
+
+        <!-- Use shield option -->
+        <div style="width:100%;background:rgba(22,27,34,0.95);border:2px solid rgba(79,158,255,0.5);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 0 20px rgba(79,158,255,0.1)">
+          <div style="font-size:11px;color:#4f9eff;font-weight:700;letter-spacing:0.06em;margin-bottom:8px">🛡️ USE STREAK SHIELD</div>
+          <div style="font-size:13px;color:#8b949e;margin-bottom:12px">You have 2 shields. Use one to restore your 12-day streak as if nothing happened.</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700;color:#e6edf3">Shields available: <span style="color:#4f9eff">×2</span></div>
+            <div style="font-size:12px;color:#8b949e">Earned at Day 7, 14, 21</div>
+          </div>
+          <button style="width:100%;background:linear-gradient(135deg,#4f9eff,#2d7dd2);border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(79,158,255,0.4)">🛡️ Use Shield — Keep 12-Day Streak</button>
+        </div>
+
+        <!-- Restart option -->
+        <div style="width:100%;background:#161b22;border:1px solid #30363d;border-radius:16px;padding:16px;margin-bottom:12px">
+          <div style="font-size:11px;color:#8b949e;font-weight:700;letter-spacing:0.06em;margin-bottom:8px">START FRESH</div>
+          <div style="font-size:13px;color:#8b949e;margin-bottom:12px">Begin a new streak today. Your history is saved — only today's rewards reset.</div>
+          <button style="width:100%;background:#1e2632;border:1px solid #30363d;border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#8b949e;cursor:pointer">🏃 Start New Streak Today</button>
+        </div>
+
+        <div style="font-size:11px;color:#8b949e;text-align:center;line-height:1.6">Your best ever streak: <span style="color:#f5a623;font-weight:700">28 days</span><br>You can beat it again.</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

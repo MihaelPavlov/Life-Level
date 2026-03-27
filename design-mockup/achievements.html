@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Achievements</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#f5a623; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:100; }
+.st { font-size:13px; font-weight:600; color:#e6edf3; } .si { font-size:11px; color:#8b949e; }
+.nav { position:absolute; bottom:0; left:0; right:0; height:82px; background:#161b22; border-top:1px solid #30363d; display:flex; align-items:center; padding:0 8px 12px; z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; } .nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#f5a623; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+.scroll { position:absolute; inset:0; overflow-y:auto; padding-bottom:90px; scrollbar-width:none; }
+.scroll::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">ACHIEVEMENTS</div>
+    <div class="step-title">Permanent badges, never expire</div>
+    <div class="step-desc">Flex your accomplishments everywhere</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(245,166,35,0.08) 0%,#080e14 70%);pointer-events:none"></div>
+    <div class="scroll">
+      <div style="padding:56px 20px 0;min-height:100%">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:22px;font-weight:700;color:#e6edf3">Achievements</div>
+            <div style="font-size:12px;color:#8b949e;margin-top:2px">Your permanent legacy</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:22px;font-weight:700;color:#f5a623">12 / 48</div>
+            <div style="font-size:9px;color:#8b949e">unlocked</div>
+          </div>
+        </div>
+
+        <!-- Summary bar -->
+        <div style="background:#161b22;border-radius:12px;padding:12px 14px;margin-bottom:6px;border:1px solid #30363d">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#8b949e;margin-bottom:5px"><span>Overall Progress</span><span>25%</span></div>
+          <div style="height:6px;background:#1e2632;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:25%;background:linear-gradient(to right,#f5a623,#a371f7);border-radius:3px"></div>
+          </div>
+        </div>
+
+        <!-- Tier counts -->
+        <div style="display:flex;gap:6px;margin-bottom:16px">
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:8px;text-align:center;border:1px solid #30363d">
+            <div style="font-size:14px;font-weight:700;color:#8b949e">5</div>
+            <div style="font-size:9px;color:#8b949e">Common</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:8px;text-align:center;border:1px solid rgba(63,185,80,0.3)">
+            <div style="font-size:14px;font-weight:700;color:#3fb950">4</div>
+            <div style="font-size:9px;color:#3fb950">Uncommon</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:8px;text-align:center;border:1px solid rgba(79,158,255,0.3)">
+            <div style="font-size:14px;font-weight:700;color:#4f9eff">2</div>
+            <div style="font-size:9px;color:#4f9eff">Rare</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:8px;text-align:center;border:1px solid rgba(163,113,247,0.3)">
+            <div style="font-size:14px;font-weight:700;color:#a371f7">1</div>
+            <div style="font-size:9px;color:#a371f7">Epic</div>
+          </div>
+          <div style="flex:1;background:#161b22;border-radius:10px;padding:8px;text-align:center;border:1px solid rgba(245,166,35,0.3)">
+            <div style="font-size:14px;font-weight:700;color:#f5a623">0</div>
+            <div style="font-size:9px;color:#f5a623">Legendary</div>
+          </div>
+        </div>
+
+        <!-- Category tabs -->
+        <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
+          <div style="background:#f5a623;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:700;color:#000;white-space:nowrap">All</div>
+          <div style="background:#161b22;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;color:#8b949e;white-space:nowrap">Running 🏃</div>
+          <div style="background:#161b22;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;color:#8b949e;white-space:nowrap">Strength 🏋</div>
+          <div style="background:#161b22;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;color:#8b949e;white-space:nowrap">Social 👥</div>
+          <div style="background:#161b22;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;color:#8b949e;white-space:nowrap">Raids ⚔️</div>
+        </div>
+
+        <!-- RECENTLY UNLOCKED -->
+        <div style="font-size:10px;color:#3fb950;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">✓ RECENTLY UNLOCKED</div>
+
+        <!-- Achievement: unlocked legendary-looking -->
+        <div style="background:rgba(22,27,34,0.95);border:1px solid rgba(245,166,35,0.5);border-radius:14px;padding:14px;margin-bottom:8px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;left:0;right:0;height:50px;background:linear-gradient(to bottom,rgba(245,166,35,0.07),transparent);pointer-events:none"></div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:54px;height:54px;background:rgba(245,166,35,0.1);border:2px solid rgba(245,166,35,0.6);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 16px rgba(245,166,35,0.2);flex-shrink:0">🏃</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="font-size:15px;font-weight:700;color:#e6edf3">Iron Runner</span>
+                <span style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);border-radius:6px;padding:1px 6px;font-size:8px;font-weight:700;color:#f5a623">RARE</span>
+              </div>
+              <div style="font-size:11px;color:#8b949e;margin-bottom:6px">Run 100km total lifetime distance</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                  <div style="height:100%;width:100%;background:#f5a623;border-radius:2px"></div>
+                </div>
+                <span style="font-size:10px;color:#f5a623;font-weight:600">Completed!</span>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:12px;font-weight:700;color:#f5a623">+1,000</div>
+              <div style="font-size:9px;color:#8b949e">XP</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#161b22;border:1px solid rgba(79,158,255,0.3);border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+          <div style="width:54px;height:54px;background:rgba(79,158,255,0.1);border:2px solid rgba(79,158,255,0.5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">💀</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:15px;font-weight:700;color:#e6edf3">Raid Veteran</span>
+              <span style="background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.4);border-radius:6px;padding:1px 6px;font-size:8px;font-weight:700;color:#4f9eff">UNCOMMON</span>
+            </div>
+            <div style="font-size:11px;color:#8b949e">Defeat 3 boss raids</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0"><div style="font-size:12px;font-weight:700;color:#4f9eff">+500</div><div style="font-size:9px;color:#8b949e">XP</div></div>
+        </div>
+
+        <div style="background:#161b22;border:1px solid rgba(63,185,80,0.3);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+          <div style="width:54px;height:54px;background:rgba(63,185,80,0.1);border:2px solid rgba(63,185,80,0.5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🔥</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:15px;font-weight:700;color:#e6edf3">Streak Master</span>
+              <span style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:6px;padding:1px 6px;font-size:8px;font-weight:700;color:#3fb950">UNCOMMON</span>
+            </div>
+            <div style="font-size:11px;color:#8b949e">Maintain a 30-day streak</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0"><div style="font-size:12px;font-weight:700;color:#3fb950">+750</div><div style="font-size:9px;color:#8b949e">XP</div></div>
+        </div>
+
+        <!-- IN PROGRESS -->
+        <div style="font-size:10px;color:#4f9eff;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">⟳ IN PROGRESS</div>
+
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:14px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <div style="width:54px;height:54px;background:#1e2632;border:2px solid rgba(163,113,247,0.4);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">⚔️</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="font-size:15px;font-weight:700;color:#e6edf3">Iron Runner 200</span>
+                <span style="background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.4);border-radius:6px;padding:1px 6px;font-size:8px;font-weight:700;color:#a371f7">EPIC</span>
+              </div>
+              <div style="font-size:11px;color:#8b949e;margin-bottom:6px">Run 200km total — 134 / 200 km</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:5px;background:#1e2632;border-radius:3px;overflow:hidden">
+                  <div style="height:100%;width:67%;background:#a371f7;border-radius:3px"></div>
+                </div>
+                <span style="font-size:10px;color:#a371f7;font-weight:600">67%</span>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0"><div style="font-size:12px;font-weight:700;color:#a371f7">+2,000</div><div style="font-size:9px;color:#8b949e">XP</div></div>
+          </div>
+        </div>
+
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:14px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <div style="width:54px;height:54px;background:#1e2632;border:2px solid rgba(245,166,35,0.4);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🌅</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="font-size:15px;font-weight:700;color:#e6edf3">5AM Club</span>
+                <span style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:6px;padding:1px 6px;font-size:8px;font-weight:700;color:#f5a623">RARE</span>
+              </div>
+              <div style="font-size:11px;color:#8b949e;margin-bottom:6px">10 workouts before 6AM — 6 / 10</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:5px;background:#1e2632;border-radius:3px;overflow:hidden">
+                  <div style="height:100%;width:60%;background:#f5a623;border-radius:3px"></div>
+                </div>
+                <span style="font-size:10px;color:#f5a623;font-weight:600">60%</span>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0"><div style="font-size:12px;font-weight:700;color:#f5a623">+1,000</div><div style="font-size:9px;color:#8b949e">XP</div></div>
+          </div>
+        </div>
+
+        <!-- LOCKED -->
+        <div style="font-size:10px;color:#586070;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">🔒 LEGENDARY — NOT YET</div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:14px;margin-bottom:8px;opacity:0.5;display:flex;align-items:center;gap:12px">
+          <div style="width:54px;height:54px;background:#1e2632;border:2px solid #30363d;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🏔️</div>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:700;color:#8b949e;margin-bottom:3px">Summit Conqueror</div>
+            <div style="font-size:11px;color:#586070">Hike 5,000m elevation total</div>
+          </div>
+          <div style="font-size:20px">🔒</div>
+        </div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:14px;margin-bottom:8px;opacity:0.5;display:flex;align-items:center;gap:12px">
+          <div style="width:54px;height:54px;background:#1e2632;border:2px solid #30363d;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🌟</div>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:700;color:#8b949e;margin-bottom:3px">The Unstoppable</div>
+            <div style="font-size:11px;color:#586070">100-day streak + all zones complete</div>
+          </div>
+          <div style="font-size:20px">🔒</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <div class="nav-item"><div class="nav-icon">🏆</div><div class="nav-label active" style="color:#f5a623">Awards</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

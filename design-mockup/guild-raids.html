@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Guild Raids</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(79,158,255,0.12); border:1px solid rgba(79,158,255,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#4f9eff; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:100; }
+.st { font-size:13px; font-weight:600; color:#e6edf3; } .si { font-size:11px; color:#8b949e; }
+.nav { position:absolute; bottom:0; left:0; right:0; height:82px; background:#161b22; border-top:1px solid #30363d; display:flex; align-items:center; padding:0 8px 12px; z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; } .nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+.scroll { position:absolute; inset:0; overflow-y:auto; padding-bottom:90px; scrollbar-width:none; }
+.scroll::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+
+<!-- GUILD RAID ACTIVE -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">GUILD RAID</div>
+    <div class="step-title">Co-op Boss Battle</div>
+    <div class="step-desc">Your guild fights together, each workout counts</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 25%,rgba(79,158,255,0.12) 0%,#080e14 70%);pointer-events:none"></div>
+    <div class="scroll">
+      <div style="padding:56px 20px 0;min-height:100%">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:#4f9eff;font-weight:700;letter-spacing:0.07em;margin-bottom:3px">🛡️ GUILD: IRON WOLVES</div>
+            <div style="font-size:22px;font-weight:700;color:#e6edf3">Guild Raid</div>
+          </div>
+          <div style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.4);border-radius:12px;padding:6px 12px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#f85149">4d 12h</div>
+            <div style="font-size:9px;color:#8b949e">remaining</div>
+          </div>
+        </div>
+
+        <!-- Boss HP block -->
+        <div style="background:rgba(22,27,34,0.95);border:2px solid rgba(248,81,73,0.4);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 0 24px rgba(248,81,73,0.1)">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:64px;height:64px;background:rgba(40,10,10,0.9);border:2px solid #f85149;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 20px rgba(248,81,73,0.4)">🐲</div>
+            <div style="flex:1">
+              <div style="font-size:10px;color:#f85149;font-weight:700;letter-spacing:0.06em;margin-bottom:3px">⚔️ GUILD BOSS RAID</div>
+              <div style="font-size:18px;font-weight:700;color:#e6edf3">Ancient Wyrm</div>
+              <div style="font-size:11px;color:#8b949e">Mountains of Strength</div>
+            </div>
+          </div>
+          <div style="margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:5px">
+              <span style="color:#f85149;font-weight:700">BOSS HP</span>
+              <span style="color:#e6edf3;font-weight:700">7,200 / 15,000 HP</span>
+            </div>
+            <div style="height:14px;background:#1e2632;border-radius:7px;overflow:hidden;position:relative">
+              <div style="height:100%;width:48%;background:linear-gradient(to right,#f85149,#ff6b35);border-radius:7px"></div>
+              <div style="position:absolute;inset:0;display:flex">
+                <div style="flex:1;border-right:1px solid rgba(8,14,20,0.4)"></div>
+                <div style="flex:1;border-right:1px solid rgba(8,14,20,0.4)"></div>
+                <div style="flex:1;border-right:1px solid rgba(8,14,20,0.4)"></div>
+                <div style="flex:1;border-right:1px solid rgba(8,14,20,0.4)"></div>
+                <div style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#8b949e">
+            <span>7,800 damage dealt by guild</span>
+            <span style="color:#3fb950">48% defeated</span>
+          </div>
+        </div>
+
+        <!-- Guild members damage -->
+        <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">GUILD MEMBERS — DAMAGE DEALT</div>
+
+        <!-- Member list -->
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+
+          <!-- You -->
+          <div style="background:rgba(79,158,255,0.08);border:1px solid rgba(79,158,255,0.4);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;background:rgba(10,28,18,0.9);border:2px solid #3fb950;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚔️</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="font-size:13px;font-weight:700;color:#e6edf3">Alex <span style="font-size:10px;color:#4f9eff;background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.3);border-radius:6px;padding:1px 6px;margin-left:4px">YOU</span></span>
+                <span style="font-size:14px;font-weight:700;color:#f85149">2,100 dmg</span>
+              </div>
+              <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:85%;background:#4f9eff;border-radius:2px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;background:#1e2632;border:2px solid #a371f7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🧙</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="font-size:13px;font-weight:700;color:#e6edf3">Sara</span>
+                <span style="font-size:14px;font-weight:700;color:#f85149">1,850 dmg</span>
+              </div>
+              <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:74%;background:#a371f7;border-radius:2px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;background:#1e2632;border:2px solid #3fb950;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🗡️</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="font-size:13px;font-weight:700;color:#e6edf3">Mike</span>
+                <span style="font-size:14px;font-weight:700;color:#f85149">1,600 dmg</span>
+              </div>
+              <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:64%;background:#3fb950;border-radius:2px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;background:#1e2632;border:2px solid #f5a623;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏹</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="font-size:13px;font-weight:700;color:#e6edf3">Emma</span>
+                <span style="font-size:14px;font-weight:700;color:#f85149">1,400 dmg</span>
+              </div>
+              <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:56%;background:#f5a623;border-radius:2px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slacking member warning -->
+          <div style="background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;background:#1e2632;border:2px solid rgba(248,81,73,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;opacity:0.7">😴</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="font-size:13px;font-weight:700;color:#8b949e">Carlos</span>
+                <span style="font-size:14px;font-weight:700;color:#f85149">250 dmg</span>
+              </div>
+              <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:10%;background:#f85149;border-radius:2px"></div>
+              </div>
+            </div>
+            <div style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.4);border-radius:8px;padding:2px 8px;font-size:9px;color:#f85149;font-weight:700;white-space:nowrap">SLACKING</div>
+          </div>
+        </div>
+
+        <!-- Regen mechanic warning -->
+        <div style="background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px">⚠️</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#f85149;margin-bottom:3px">Boss Regeneration Warning</div>
+            <div style="font-size:11px;color:#8b949e;line-height:1.5">If Carlos doesn't log a workout in the next 24h, the boss regenerates 500 HP. Kick or motivate your teammate!</div>
+          </div>
+        </div>
+
+        <!-- Shared reward -->
+        <div style="background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:12px 14px">
+          <div style="font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.06em;margin-bottom:8px">GUILD VICTORY REWARDS (ALL MEMBERS)</div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:18px">⚡</div>
+              <div style="font-size:11px;font-weight:700;color:#4f9eff">+3,000 XP</div>
+              <div style="font-size:9px;color:#8b949e">each</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:18px">🐲</div>
+              <div style="font-size:11px;font-weight:700;color:#f5a623">Wyrm Scale</div>
+              <div style="font-size:9px;color:#8b949e">EPIC item</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:18px">🏆</div>
+              <div style="font-size:11px;font-weight:700;color:#a371f7">+Top Dmg</div>
+              <div style="font-size:9px;color:#8b949e">bonus xp</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🛡️</div><div class="nav-label">Guild</div></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

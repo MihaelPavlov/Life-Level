@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Theme Showcase</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a0a0a;
+  font-family:'Inter',-apple-system,sans-serif;
+  padding:48px 40px 80px;
+  min-width:1800px;
+}
+.page-title {
+  text-align:center;
+  margin-bottom:48px;
+}
+.page-title h1 { font-size:28px; color:#fff; font-weight:800; margin-bottom:8px; }
+.page-title p { font-size:14px; color:#666; }
+
+.themes-row {
+  display:flex;
+  gap:48px;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+.theme-col {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:20px;
+  flex-shrink:0;
+}
+
+.theme-label {
+  text-align:center;
+  max-width:390px;
+}
+.theme-tag {
+  display:inline-block;
+  border-radius:12px;
+  padding:4px 16px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  margin-bottom:8px;
+}
+.theme-name { font-size:18px; font-weight:800; margin-bottom:4px; }
+.theme-desc { font-size:12px; line-height:1.6; max-width:340px; }
+
+.palette {
+  display:flex;
+  gap:6px;
+  justify-content:center;
+  flex-wrap:wrap;
+  max-width:390px;
+}
+.swatch {
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.12);
+  position:relative;
+}
+
+/* Phone shell */
+.phone {
+  width:390px;
+  height:844px;
+  border-radius:44px;
+  overflow:hidden;
+  position:relative;
+  flex-shrink:0;
+}
+
+/* ─────────────────────────────────────────
+   THEME A — CURRENT (Dark Gamer) — REFERENCE
+───────────────────────────────────────── */
+.a-bg       { background:#040810; }
+.a-phone    { background:#080e14; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); }
+.a-card     { background:#161b22; border:1px solid #30363d; }
+.a-card-in  { background:#1e2632; }
+.a-text     { color:#e6edf3; }
+.a-muted    { color:#8b949e; }
+.a-accent   { color:#4f9eff; }
+.a-gold     { color:#f5a623; }
+.a-green    { color:#3fb950; }
+.a-purple   { color:#a371f7; }
+.a-nav      { background:#161b22; border-top:1px solid #30363d; }
+.a-tab-active { background:#4f9eff; }
+.a-bar-active { background:linear-gradient(to right,#4f9eff,#a371f7); }
+
+/* ─────────────────────────────────────────
+   THEME B — ENCHANTED FOREST
+   Warm dark forest: deep bark greens, amber,
+   sage, earthy terracotta. Cozy & inclusive.
+───────────────────────────────────────── */
+.b-bg       { background:#090f08; }
+.b-phone    { background:#0d1a0c; box-shadow:0 0 0 1px rgba(180,220,100,0.08),0 32px 80px rgba(0,0,0,0.85); }
+.b-card     { background:#172414; border:1px solid #2a4020; }
+.b-card-in  { background:#1e2e1a; }
+.b-text     { color:#e8f0d8; }
+.b-muted    { color:#7a9e70; }
+.b-accent   { color:#7ec86e; }
+.b-gold     { color:#d4a853; }
+.b-green    { color:#5ec97e; }
+.b-purple   { color:#c47faa; }
+.b-nav      { background:#172414; border-top:1px solid #2a4020; }
+.b-tab-active { background:#7ec86e; }
+.b-bar-active { background:linear-gradient(to right,#7ec86e,#c47faa); }
+
+/* ─────────────────────────────────────────
+   THEME C — CELESTIAL / COSMIC
+   Midnight blue, teal, rose gold, soft violet.
+   Mystical & magical — more Studio Ghibli feel.
+───────────────────────────────────────── */
+.c-bg       { background:#06080f; }
+.c-phone    { background:#090d1a; box-shadow:0 0 0 1px rgba(100,180,255,0.08),0 32px 80px rgba(0,0,0,0.9); }
+.c-card     { background:#111830; border:1px solid #1e2d4a; }
+.c-card-in  { background:#162040; }
+.c-text     { color:#dde8ff; }
+.c-muted    { color:#6e84b0; }
+.c-accent   { color:#38d9c8; }
+.c-gold     { color:#e8b86d; }
+.c-green    { color:#52e0a0; }
+.c-purple   { color:#b08ce8; }
+.c-nav      { background:#111830; border-top:1px solid #1e2d4a; }
+.c-tab-active { background:#38d9c8; }
+.c-bar-active { background:linear-gradient(to right,#38d9c8,#b08ce8); }
+
+/* ─────────────────────────────────────────
+   THEME D — CRYSTAL KINGDOM
+   Dark slate (blue-grey, never pure black).
+   Jewel accents: aqua, coral, soft violet.
+   Clean, polished, gender-neutral.
+───────────────────────────────────────── */
+.d-bg       { background:#080c14; }
+.d-phone    { background:#0c1220; box-shadow:0 0 0 1px rgba(0,210,200,0.08),0 32px 80px rgba(0,0,0,0.85); }
+.d-card     { background:#141e32; border:1px solid #1f2e48; }
+.d-card-in  { background:#192640; }
+.d-text     { color:#e2eeff; }
+.d-muted    { color:#708ab0; }
+.d-accent   { color:#00c8c8; }
+.d-gold     { color:#ff9f5a; }
+.d-green    { color:#40e0b0; }
+.d-purple   { color:#9c7fff; }
+.d-nav      { background:#141e32; border-top:1px solid #1f2e48; }
+.d-tab-active { background:#00c8c8; }
+.d-bar-active { background:linear-gradient(to right,#00c8c8,#9c7fff); }
+
+/* ─────────────────────────────────────────
+   THEME E — DAWN / SUNRISE RPG
+   Deep plum/burgundy bg, warm coral,
+   peach, amber gold. Energetic & warm.
+───────────────────────────────────────── */
+.e-bg       { background:#0f0810; }
+.e-phone    { background:#160d1a; box-shadow:0 0 0 1px rgba(255,140,100,0.08),0 32px 80px rgba(0,0,0,0.9); }
+.e-card     { background:#221428; border:1px solid #3a1e42; }
+.e-card-in  { background:#2a1830; }
+.e-text     { color:#f5e8f0; }
+.e-muted    { color:#9e7aaa; }
+.e-accent   { color:#ff8c6e; }
+.e-gold     { color:#f0c040; }
+.e-green    { color:#70d090; }
+.e-purple   { color:#d080e0; }
+.e-nav      { background:#221428; border-top:1px solid #3a1e42; }
+.e-tab-active { background:#ff8c6e; }
+.e-bar-active { background:linear-gradient(to right,#ff8c6e,#d080e0); }
+
+/* shared phone internals */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+}
+.nav-bar {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  display:flex; align-items:center; padding:0 8px 12px; z-index:100;
+}
+.nav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  gap:4px; padding-top:10px;
+}
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.screen-scroll {
+  position:absolute; inset:0; overflow-y:auto; padding-bottom:90px;
+  scrollbar-width:none;
+}
+.screen-scroll::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>Life Level — Theme Exploration</h1>
+  <p>Same Quests screen · 5 visual themes · pick your direction</p>
+</div>
+
+<div class="themes-row">
+
+  <!-- ══════════════════════════════════════════
+       THEME A — CURRENT (DARK GAMER) reference
+  ══════════════════════════════════════════ -->
+  <div class="theme-col">
+    <div class="theme-label">
+      <div class="theme-tag" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">CURRENT</div>
+      <div class="theme-name" style="color:#e6edf3">Dark Gamer</div>
+      <div class="theme-desc" style="color:#8b949e">Near-black, cold blue / gold / purple. Strong masculine gaming aesthetic — the reference.</div>
+    </div>
+    <div class="palette">
+      <div class="swatch" style="background:#080e14" title="bg"></div>
+      <div class="swatch" style="background:#161b22" title="card"></div>
+      <div class="swatch" style="background:#30363d" title="border"></div>
+      <div class="swatch" style="background:#4f9eff" title="blue"></div>
+      <div class="swatch" style="background:#f5a623" title="gold"></div>
+      <div class="swatch" style="background:#a371f7" title="purple"></div>
+      <div class="swatch" style="background:#3fb950" title="green"></div>
+    </div>
+    <div class="phone a-phone">
+      <!-- status bar -->
+      <div class="status-bar">
+        <span style="font-size:13px;font-weight:600;color:#e6edf3">9:41</span>
+        <span style="font-size:11px;color:#8b949e">●●● 🔋</span>
+      </div>
+      <!-- bg glow -->
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(79,158,255,0.07) 0%,transparent 70%);pointer-events:none"></div>
+
+      <div class="screen-scroll">
+        <div style="padding:56px 20px 0;background:#080e14;min-height:100%">
+
+          <!-- header -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:22px;font-weight:700;color:#e6edf3">Quests</div>
+              <div style="font-size:12px;color:#8b949e;margin-top:2px">March 27, 2026</div>
+            </div>
+            <div style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+              <div style="font-size:16px;font-weight:700;color:#f5a623">🔥 7</div>
+              <div style="font-size:9px;color:#8b949e">day streak</div>
+            </div>
+          </div>
+
+          <!-- tabs -->
+          <div style="display:flex;gap:6px;margin:14px 0 16px;background:#161b22;border-radius:12px;padding:4px">
+            <div style="flex:1;background:#4f9eff;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#fff">Daily</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Weekly</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Story</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#8b949e">Special</div>
+          </div>
+
+          <!-- progress summary -->
+          <div style="background:#161b22;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #30363d;display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:#8b949e;margin-bottom:5px">Today's Progress</div>
+              <div style="height:6px;background:#1e2632;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:40%;background:linear-gradient(to right,#4f9eff,#a371f7);border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:700;color:#4f9eff">2/5</div>
+              <div style="font-size:9px;color:#8b949e">completed</div>
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+
+          <!-- quest completed -->
+          <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(63,185,80,0.3);position:relative;overflow:hidden;opacity:0.8">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#3fb950"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏃</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#e6edf3">Morning Run</div>
+                  <div style="font-size:11px;color:#8b949e">Run 3km  •  +90 XP  •  +1 END</div>
+                </div>
+              </div>
+              <div style="background:rgba(63,185,80,0.15);border:1px solid #3fb950;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#3fb950;flex-shrink:0">✓</div>
+            </div>
+            <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:100%;background:#3fb950"></div>
+            </div>
+            <div style="font-size:9px;color:#3fb950;margin-top:4px">Completed! 3.2 km / 3 km</div>
+          </div>
+
+          <!-- quest in progress -->
+          <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(79,158,255,0.3);position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#4f9eff"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏋</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#e6edf3">Strength Session</div>
+                  <div style="font-size:11px;color:#8b949e">30 min  •  +150 XP  •  +2 STR</div>
+                </div>
+              </div>
+              <div style="background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.4);border-radius:10px;padding:3px 9px;font-size:11px;color:#4f9eff;font-weight:700;flex-shrink:0">IN PROGRESS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#1e2632;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:60%;background:#4f9eff;border-radius:3px"></div>
+              </div>
+              <span style="font-size:10px;color:#4f9eff;font-weight:600">18 / 30 min</span>
+            </div>
+          </div>
+
+          <!-- quest not started -->
+          <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #30363d;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#a371f7"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🧘</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#e6edf3">Flexibility Flow</div>
+                <div style="font-size:11px;color:#8b949e">15 min yoga  •  +80 XP  •  +1 FLX</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#1e2632;border-radius:3px"></div>
+              <span style="font-size:10px;color:#8b949e">0 / 15 min</span>
+            </div>
+          </div>
+
+          <!-- quest not started -->
+          <div style="background:#161b22;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:14px;border:1px solid #30363d;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#f5a623"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🚴</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#e6edf3">Evening Ride</div>
+                <div style="font-size:11px;color:#8b949e">Cycle 10km  •  +120 XP  •  +1 AGI</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#1e2632;border-radius:3px"></div>
+              <span style="font-size:10px;color:#8b949e">0 / 10 km</span>
+            </div>
+          </div>
+
+          <!-- complete all bonus -->
+          <div style="background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#f5a623">Complete All Daily Quests</div>
+              <div style="font-size:11px;color:#8b949e">+300 XP bonus reward</div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#f5a623">2/5</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- nav -->
+      <div class="nav-bar" style="background:#161b22;border-top:1px solid #30363d">
+        <div class="nav-item"><div class="nav-icon" style="color:#8b949e">⊞</div><div class="nav-label" style="color:#8b949e">Home</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#4f9eff">📜</div><div class="nav-label" style="color:#4f9eff">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#8b949e">📊</div><div class="nav-label" style="color:#8b949e">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#8b949e">👤</div><div class="nav-label" style="color:#8b949e">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       THEME B — ENCHANTED FOREST
+  ══════════════════════════════════════════ -->
+  <div class="theme-col">
+    <div class="theme-label">
+      <div class="theme-tag" style="background:rgba(126,200,110,0.12);border:1px solid rgba(126,200,110,0.45);color:#7ec86e">OPTION A</div>
+      <div class="theme-name" style="color:#e8f0d8">Enchanted Forest</div>
+      <div class="theme-desc" style="color:#7a9e70">Warm dark bark-greens, amber gold, sage, earthy forest. Cozy RPG — feels hand-drawn & nature-rooted.</div>
+    </div>
+    <div class="palette">
+      <div class="swatch" style="background:#0d1a0c" title="bg"></div>
+      <div class="swatch" style="background:#172414" title="card"></div>
+      <div class="swatch" style="background:#2a4020" title="border"></div>
+      <div class="swatch" style="background:#7ec86e" title="green accent"></div>
+      <div class="swatch" style="background:#d4a853" title="amber gold"></div>
+      <div class="swatch" style="background:#c47faa" title="forest bloom"></div>
+      <div class="swatch" style="background:#5ec97e" title="sage"></div>
+    </div>
+    <div class="phone" style="background:#0d1a0c;box-shadow:0 0 0 1px rgba(126,200,110,0.08),0 32px 80px rgba(0,0,0,0.85)">
+      <div class="status-bar">
+        <span style="font-size:13px;font-weight:600;color:#e8f0d8">9:41</span>
+        <span style="font-size:11px;color:#7a9e70">●●● 🔋</span>
+      </div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(126,200,110,0.07) 0%,transparent 70%);pointer-events:none"></div>
+
+      <div class="screen-scroll">
+        <div style="padding:56px 20px 0;background:#0d1a0c;min-height:100%">
+
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:22px;font-weight:700;color:#e8f0d8">Quests</div>
+              <div style="font-size:12px;color:#7a9e70;margin-top:2px">March 27, 2026</div>
+            </div>
+            <div style="background:rgba(212,168,83,0.1);border:1px solid rgba(212,168,83,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+              <div style="font-size:16px;font-weight:700;color:#d4a853">🔥 7</div>
+              <div style="font-size:9px;color:#7a9e70">day streak</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;margin:14px 0 16px;background:#172414;border-radius:12px;padding:4px">
+            <div style="flex:1;background:#7ec86e;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#0d1a0c">Daily</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#7a9e70">Weekly</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#7a9e70">Story</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#7a9e70">Special</div>
+          </div>
+
+          <div style="background:#172414;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #2a4020;display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:#7a9e70;margin-bottom:5px">Today's Progress</div>
+              <div style="height:6px;background:#1e2e1a;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:40%;background:linear-gradient(to right,#7ec86e,#c47faa);border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:700;color:#7ec86e">2/5</div>
+              <div style="font-size:9px;color:#7a9e70">completed</div>
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:#7a9e70;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+
+          <div style="background:#172414;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(94,201,126,0.3);position:relative;overflow:hidden;opacity:0.85">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#5ec97e"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏃</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#e8f0d8">Morning Run</div>
+                  <div style="font-size:11px;color:#7a9e70">Run 3km  •  +90 XP  •  +1 END</div>
+                </div>
+              </div>
+              <div style="background:rgba(94,201,126,0.15);border:1px solid #5ec97e;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#5ec97e;flex-shrink:0">✓</div>
+            </div>
+            <div style="height:4px;background:#1e2e1a;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:100%;background:#5ec97e"></div>
+            </div>
+            <div style="font-size:9px;color:#5ec97e;margin-top:4px">Completed! 3.2 km / 3 km</div>
+          </div>
+
+          <div style="background:#172414;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(126,200,110,0.3);position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#7ec86e"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏋</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#e8f0d8">Strength Session</div>
+                  <div style="font-size:11px;color:#7a9e70">30 min  •  +150 XP  •  +2 STR</div>
+                </div>
+              </div>
+              <div style="background:rgba(126,200,110,0.1);border:1px solid rgba(126,200,110,0.4);border-radius:10px;padding:3px 9px;font-size:11px;color:#7ec86e;font-weight:700;flex-shrink:0">IN PROGRESS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#1e2e1a;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:60%;background:#7ec86e;border-radius:3px"></div>
+              </div>
+              <span style="font-size:10px;color:#7ec86e;font-weight:600">18 / 30 min</span>
+            </div>
+          </div>
+
+          <div style="background:#172414;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #2a4020;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#c47faa"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🧘</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#e8f0d8">Flexibility Flow</div>
+                <div style="font-size:11px;color:#7a9e70">15 min yoga  •  +80 XP  •  +1 FLX</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#1e2e1a;border-radius:3px"></div>
+              <span style="font-size:10px;color:#7a9e70">0 / 15 min</span>
+            </div>
+          </div>
+
+          <div style="background:#172414;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:14px;border:1px solid #2a4020;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#d4a853"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🚴</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#e8f0d8">Evening Ride</div>
+                <div style="font-size:11px;color:#7a9e70">Cycle 10km  •  +120 XP  •  +1 AGI</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#1e2e1a;border-radius:3px"></div>
+              <span style="font-size:10px;color:#7a9e70">0 / 10 km</span>
+            </div>
+          </div>
+
+          <div style="background:rgba(212,168,83,0.06);border:1px solid rgba(212,168,83,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#d4a853">Complete All Daily Quests</div>
+              <div style="font-size:11px;color:#7a9e70">+300 XP bonus reward</div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#d4a853">2/5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-bar" style="background:#172414;border-top:1px solid #2a4020">
+        <div class="nav-item"><div class="nav-icon" style="color:#7a9e70">⊞</div><div class="nav-label" style="color:#7a9e70">Home</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#7ec86e">📜</div><div class="nav-label" style="color:#7ec86e">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#7a9e70">📊</div><div class="nav-label" style="color:#7a9e70">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#7a9e70">👤</div><div class="nav-label" style="color:#7a9e70">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       THEME C — CELESTIAL / COSMIC
+  ══════════════════════════════════════════ -->
+  <div class="theme-col">
+    <div class="theme-label">
+      <div class="theme-tag" style="background:rgba(56,217,200,0.12);border:1px solid rgba(56,217,200,0.45);color:#38d9c8">OPTION B</div>
+      <div class="theme-name" style="color:#dde8ff">Celestial / Cosmic</div>
+      <div class="theme-desc" style="color:#6e84b0">Midnight blue, teal, rose-gold, soft violet. Mystical & magical — feels like Studio Ghibli meets RPG.</div>
+    </div>
+    <div class="palette">
+      <div class="swatch" style="background:#090d1a" title="bg"></div>
+      <div class="swatch" style="background:#111830" title="card"></div>
+      <div class="swatch" style="background:#1e2d4a" title="border"></div>
+      <div class="swatch" style="background:#38d9c8" title="teal"></div>
+      <div class="swatch" style="background:#e8b86d" title="rose gold"></div>
+      <div class="swatch" style="background:#b08ce8" title="violet"></div>
+      <div class="swatch" style="background:#52e0a0" title="mint"></div>
+    </div>
+    <div class="phone" style="background:#090d1a;box-shadow:0 0 0 1px rgba(56,217,200,0.08),0 32px 80px rgba(0,0,0,0.9)">
+      <div class="status-bar">
+        <span style="font-size:13px;font-weight:600;color:#dde8ff">9:41</span>
+        <span style="font-size:11px;color:#6e84b0">●●● 🔋</span>
+      </div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(56,217,200,0.07) 0%,transparent 70%);pointer-events:none"></div>
+
+      <div class="screen-scroll">
+        <div style="padding:56px 20px 0;background:#090d1a;min-height:100%">
+
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:22px;font-weight:700;color:#dde8ff">Quests</div>
+              <div style="font-size:12px;color:#6e84b0;margin-top:2px">March 27, 2026</div>
+            </div>
+            <div style="background:rgba(232,184,109,0.1);border:1px solid rgba(232,184,109,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+              <div style="font-size:16px;font-weight:700;color:#e8b86d">🔥 7</div>
+              <div style="font-size:9px;color:#6e84b0">day streak</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;margin:14px 0 16px;background:#111830;border-radius:12px;padding:4px">
+            <div style="flex:1;background:#38d9c8;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#090d1a">Daily</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#6e84b0">Weekly</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#6e84b0">Story</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#6e84b0">Special</div>
+          </div>
+
+          <div style="background:#111830;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #1e2d4a;display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:#6e84b0;margin-bottom:5px">Today's Progress</div>
+              <div style="height:6px;background:#162040;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:40%;background:linear-gradient(to right,#38d9c8,#b08ce8);border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:700;color:#38d9c8">2/5</div>
+              <div style="font-size:9px;color:#6e84b0">completed</div>
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:#6e84b0;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+
+          <div style="background:#111830;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(82,224,160,0.3);position:relative;overflow:hidden;opacity:0.85">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#52e0a0"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏃</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#dde8ff">Morning Run</div>
+                  <div style="font-size:11px;color:#6e84b0">Run 3km  •  +90 XP  •  +1 END</div>
+                </div>
+              </div>
+              <div style="background:rgba(82,224,160,0.15);border:1px solid #52e0a0;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#52e0a0;flex-shrink:0">✓</div>
+            </div>
+            <div style="height:4px;background:#162040;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:100%;background:#52e0a0"></div>
+            </div>
+            <div style="font-size:9px;color:#52e0a0;margin-top:4px">Completed! 3.2 km / 3 km</div>
+          </div>
+
+          <div style="background:#111830;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(56,217,200,0.3);position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#38d9c8"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏋</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#dde8ff">Strength Session</div>
+                  <div style="font-size:11px;color:#6e84b0">30 min  •  +150 XP  •  +2 STR</div>
+                </div>
+              </div>
+              <div style="background:rgba(56,217,200,0.1);border:1px solid rgba(56,217,200,0.4);border-radius:10px;padding:3px 9px;font-size:11px;color:#38d9c8;font-weight:700;flex-shrink:0">IN PROGRESS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#162040;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:60%;background:#38d9c8;border-radius:3px"></div>
+              </div>
+              <span style="font-size:10px;color:#38d9c8;font-weight:600">18 / 30 min</span>
+            </div>
+          </div>
+
+          <div style="background:#111830;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #1e2d4a;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#b08ce8"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🧘</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#dde8ff">Flexibility Flow</div>
+                <div style="font-size:11px;color:#6e84b0">15 min yoga  •  +80 XP  •  +1 FLX</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#162040;border-radius:3px"></div>
+              <span style="font-size:10px;color:#6e84b0">0 / 15 min</span>
+            </div>
+          </div>
+
+          <div style="background:#111830;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:14px;border:1px solid #1e2d4a;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#e8b86d"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🚴</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#dde8ff">Evening Ride</div>
+                <div style="font-size:11px;color:#6e84b0">Cycle 10km  •  +120 XP  •  +1 AGI</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#162040;border-radius:3px"></div>
+              <span style="font-size:10px;color:#6e84b0">0 / 10 km</span>
+            </div>
+          </div>
+
+          <div style="background:rgba(232,184,109,0.06);border:1px solid rgba(232,184,109,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#e8b86d">Complete All Daily Quests</div>
+              <div style="font-size:11px;color:#6e84b0">+300 XP bonus reward</div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#e8b86d">2/5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-bar" style="background:#111830;border-top:1px solid #1e2d4a">
+        <div class="nav-item"><div class="nav-icon" style="color:#6e84b0">⊞</div><div class="nav-label" style="color:#6e84b0">Home</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#38d9c8">📜</div><div class="nav-label" style="color:#38d9c8">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#6e84b0">📊</div><div class="nav-label" style="color:#6e84b0">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#6e84b0">👤</div><div class="nav-label" style="color:#6e84b0">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       THEME D — CRYSTAL KINGDOM
+  ══════════════════════════════════════════ -->
+  <div class="theme-col">
+    <div class="theme-label">
+      <div class="theme-tag" style="background:rgba(0,200,200,0.12);border:1px solid rgba(0,200,200,0.45);color:#00c8c8">OPTION C</div>
+      <div class="theme-name" style="color:#e2eeff">Crystal Kingdom</div>
+      <div class="theme-desc" style="color:#708ab0">Dark blue-slate (never pure black), jewel accents: aqua, coral, soft violet. Clean, polished, universally modern.</div>
+    </div>
+    <div class="palette">
+      <div class="swatch" style="background:#0c1220" title="bg"></div>
+      <div class="swatch" style="background:#141e32" title="card"></div>
+      <div class="swatch" style="background:#1f2e48" title="border"></div>
+      <div class="swatch" style="background:#00c8c8" title="aqua"></div>
+      <div class="swatch" style="background:#ff9f5a" title="coral"></div>
+      <div class="swatch" style="background:#9c7fff" title="violet"></div>
+      <div class="swatch" style="background:#40e0b0" title="jade"></div>
+    </div>
+    <div class="phone" style="background:#0c1220;box-shadow:0 0 0 1px rgba(0,200,200,0.08),0 32px 80px rgba(0,0,0,0.85)">
+      <div class="status-bar">
+        <span style="font-size:13px;font-weight:600;color:#e2eeff">9:41</span>
+        <span style="font-size:11px;color:#708ab0">●●● 🔋</span>
+      </div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,200,200,0.07) 0%,transparent 70%);pointer-events:none"></div>
+
+      <div class="screen-scroll">
+        <div style="padding:56px 20px 0;background:#0c1220;min-height:100%">
+
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:22px;font-weight:700;color:#e2eeff">Quests</div>
+              <div style="font-size:12px;color:#708ab0;margin-top:2px">March 27, 2026</div>
+            </div>
+            <div style="background:rgba(255,159,90,0.1);border:1px solid rgba(255,159,90,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+              <div style="font-size:16px;font-weight:700;color:#ff9f5a">🔥 7</div>
+              <div style="font-size:9px;color:#708ab0">day streak</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;margin:14px 0 16px;background:#141e32;border-radius:12px;padding:4px">
+            <div style="flex:1;background:#00c8c8;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#0c1220">Daily</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#708ab0">Weekly</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#708ab0">Story</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#708ab0">Special</div>
+          </div>
+
+          <div style="background:#141e32;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #1f2e48;display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:#708ab0;margin-bottom:5px">Today's Progress</div>
+              <div style="height:6px;background:#192640;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:40%;background:linear-gradient(to right,#00c8c8,#9c7fff);border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:700;color:#00c8c8">2/5</div>
+              <div style="font-size:9px;color:#708ab0">completed</div>
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:#708ab0;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+
+          <div style="background:#141e32;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(64,224,176,0.3);position:relative;overflow:hidden;opacity:0.85">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#40e0b0"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏃</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#e2eeff">Morning Run</div>
+                  <div style="font-size:11px;color:#708ab0">Run 3km  •  +90 XP  •  +1 END</div>
+                </div>
+              </div>
+              <div style="background:rgba(64,224,176,0.15);border:1px solid #40e0b0;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#40e0b0;flex-shrink:0">✓</div>
+            </div>
+            <div style="height:4px;background:#192640;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:100%;background:#40e0b0"></div>
+            </div>
+            <div style="font-size:9px;color:#40e0b0;margin-top:4px">Completed! 3.2 km / 3 km</div>
+          </div>
+
+          <div style="background:#141e32;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(0,200,200,0.3);position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#00c8c8"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏋</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#e2eeff">Strength Session</div>
+                  <div style="font-size:11px;color:#708ab0">30 min  •  +150 XP  •  +2 STR</div>
+                </div>
+              </div>
+              <div style="background:rgba(0,200,200,0.1);border:1px solid rgba(0,200,200,0.4);border-radius:10px;padding:3px 9px;font-size:11px;color:#00c8c8;font-weight:700;flex-shrink:0">IN PROGRESS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#192640;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:60%;background:#00c8c8;border-radius:3px"></div>
+              </div>
+              <span style="font-size:10px;color:#00c8c8;font-weight:600">18 / 30 min</span>
+            </div>
+          </div>
+
+          <div style="background:#141e32;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #1f2e48;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#9c7fff"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🧘</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#e2eeff">Flexibility Flow</div>
+                <div style="font-size:11px;color:#708ab0">15 min yoga  •  +80 XP  •  +1 FLX</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#192640;border-radius:3px"></div>
+              <span style="font-size:10px;color:#708ab0">0 / 15 min</span>
+            </div>
+          </div>
+
+          <div style="background:#141e32;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:14px;border:1px solid #1f2e48;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#ff9f5a"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🚴</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#e2eeff">Evening Ride</div>
+                <div style="font-size:11px;color:#708ab0">Cycle 10km  •  +120 XP  •  +1 AGI</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#192640;border-radius:3px"></div>
+              <span style="font-size:10px;color:#708ab0">0 / 10 km</span>
+            </div>
+          </div>
+
+          <div style="background:rgba(255,159,90,0.06);border:1px solid rgba(255,159,90,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#ff9f5a">Complete All Daily Quests</div>
+              <div style="font-size:11px;color:#708ab0">+300 XP bonus reward</div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#ff9f5a">2/5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-bar" style="background:#141e32;border-top:1px solid #1f2e48">
+        <div class="nav-item"><div class="nav-icon" style="color:#708ab0">⊞</div><div class="nav-label" style="color:#708ab0">Home</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#00c8c8">📜</div><div class="nav-label" style="color:#00c8c8">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#708ab0">📊</div><div class="nav-label" style="color:#708ab0">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#708ab0">👤</div><div class="nav-label" style="color:#708ab0">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       THEME E — DAWN / SUNRISE RPG
+  ══════════════════════════════════════════ -->
+  <div class="theme-col">
+    <div class="theme-label">
+      <div class="theme-tag" style="background:rgba(255,140,110,0.12);border:1px solid rgba(255,140,110,0.45);color:#ff8c6e">OPTION D</div>
+      <div class="theme-name" style="color:#f5e8f0">Dawn / Sunrise RPG</div>
+      <div class="theme-desc" style="color:#9e7aaa">Deep plum & burgundy, warm coral, peach, amber gold. Energetic, warm, inviting — feels like a living world.</div>
+    </div>
+    <div class="palette">
+      <div class="swatch" style="background:#160d1a" title="bg"></div>
+      <div class="swatch" style="background:#221428" title="card"></div>
+      <div class="swatch" style="background:#3a1e42" title="border"></div>
+      <div class="swatch" style="background:#ff8c6e" title="coral"></div>
+      <div class="swatch" style="background:#f0c040" title="gold"></div>
+      <div class="swatch" style="background:#d080e0" title="violet"></div>
+      <div class="swatch" style="background:#70d090" title="mint"></div>
+    </div>
+    <div class="phone" style="background:#160d1a;box-shadow:0 0 0 1px rgba(255,140,110,0.08),0 32px 80px rgba(0,0,0,0.9)">
+      <div class="status-bar">
+        <span style="font-size:13px;font-weight:600;color:#f5e8f0">9:41</span>
+        <span style="font-size:11px;color:#9e7aaa">●●● 🔋</span>
+      </div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,140,110,0.08) 0%,transparent 70%);pointer-events:none"></div>
+
+      <div class="screen-scroll">
+        <div style="padding:56px 20px 0;background:#160d1a;min-height:100%">
+
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:22px;font-weight:700;color:#f5e8f0">Quests</div>
+              <div style="font-size:12px;color:#9e7aaa;margin-top:2px">March 27, 2026</div>
+            </div>
+            <div style="background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.4);border-radius:12px;padding:6px 14px;text-align:center">
+              <div style="font-size:16px;font-weight:700;color:#f0c040">🔥 7</div>
+              <div style="font-size:9px;color:#9e7aaa">day streak</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;margin:14px 0 16px;background:#221428;border-radius:12px;padding:4px">
+            <div style="flex:1;background:#ff8c6e;border-radius:9px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#160d1a">Daily</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#9e7aaa">Weekly</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#9e7aaa">Story</div>
+            <div style="flex:1;padding:7px 0;text-align:center;font-size:12px;font-weight:600;color:#9e7aaa">Special</div>
+          </div>
+
+          <div style="background:#221428;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #3a1e42;display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:#9e7aaa;margin-bottom:5px">Today's Progress</div>
+              <div style="height:6px;background:#2a1830;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:40%;background:linear-gradient(to right,#ff8c6e,#d080e0);border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:700;color:#ff8c6e">2/5</div>
+              <div style="font-size:9px;color:#9e7aaa">completed</div>
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:#9e7aaa;font-weight:600;letter-spacing:0.07em;margin-bottom:10px">TODAY'S QUESTS</div>
+
+          <div style="background:#221428;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(112,208,144,0.3);position:relative;overflow:hidden;opacity:0.85">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#70d090"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏃</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#f5e8f0">Morning Run</div>
+                  <div style="font-size:11px;color:#9e7aaa">Run 3km  •  +90 XP  •  +1 END</div>
+                </div>
+              </div>
+              <div style="background:rgba(112,208,144,0.15);border:1px solid #70d090;border-radius:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#70d090;flex-shrink:0">✓</div>
+            </div>
+            <div style="height:4px;background:#2a1830;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:100%;background:#70d090"></div>
+            </div>
+            <div style="font-size:9px;color:#70d090;margin-top:4px">Completed! 3.2 km / 3 km</div>
+          </div>
+
+          <div style="background:#221428;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid rgba(255,140,110,0.3);position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#ff8c6e"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">🏋</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#f5e8f0">Strength Session</div>
+                  <div style="font-size:11px;color:#9e7aaa">30 min  •  +150 XP  •  +2 STR</div>
+                </div>
+              </div>
+              <div style="background:rgba(255,140,110,0.1);border:1px solid rgba(255,140,110,0.4);border-radius:10px;padding:3px 9px;font-size:11px;color:#ff8c6e;font-weight:700;flex-shrink:0">IN PROGRESS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#2a1830;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:60%;background:#ff8c6e;border-radius:3px"></div>
+              </div>
+              <span style="font-size:10px;color:#ff8c6e;font-weight:600">18 / 30 min</span>
+            </div>
+          </div>
+
+          <div style="background:#221428;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:8px;border:1px solid #3a1e42;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#d080e0"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🧘</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#f5e8f0">Flexibility Flow</div>
+                <div style="font-size:11px;color:#9e7aaa">15 min yoga  •  +80 XP  •  +1 FLX</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#2a1830;border-radius:3px"></div>
+              <span style="font-size:10px;color:#9e7aaa">0 / 15 min</span>
+            </div>
+          </div>
+
+          <div style="background:#221428;border-radius:12px;padding:14px 14px 14px 18px;margin-bottom:14px;border:1px solid #3a1e42;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#f0c040"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:22px">🚴</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#f5e8f0">Evening Ride</div>
+                <div style="font-size:11px;color:#9e7aaa">Cycle 10km  •  +120 XP  •  +1 AGI</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:#2a1830;border-radius:3px"></div>
+              <span style="font-size:10px;color:#9e7aaa">0 / 10 km</span>
+            </div>
+          </div>
+
+          <div style="background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.3);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#f0c040">Complete All Daily Quests</div>
+              <div style="font-size:11px;color:#9e7aaa">+300 XP bonus reward</div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#f0c040">2/5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-bar" style="background:#221428;border-top:1px solid #3a1e42">
+        <div class="nav-item"><div class="nav-icon" style="color:#9e7aaa">⊞</div><div class="nav-label" style="color:#9e7aaa">Home</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#ff8c6e">📜</div><div class="nav-label" style="color:#ff8c6e">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#9e7aaa">📊</div><div class="nav-label" style="color:#9e7aaa">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon" style="color:#9e7aaa">👤</div><div class="nav-label" style="color:#9e7aaa">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
