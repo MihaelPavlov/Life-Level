@@ -1,4 +1,5 @@
 using System.Text;
+using LifeLevel.Api.Application.Services;
 using LifeLevel.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
+// App services
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<AuthService>();
 
 // CORS — allow Flutter dev clients
 builder.Services.AddCors(options =>

@@ -47,7 +47,13 @@
       "Bash(powershell -Command \"Get-PSDrive | Where-Object { \\\\$_.Provider -like '*FileSystem*' } | Select-Object Name, @{N='Free GB';E={[math]::Round\\(\\\\$_.Free/1GB,1\\)}}, @{N='Used GB';E={[math]::Round\\(\\\\$_.Used/1GB,1\\)}}\")",
       "Bash(powershell -Command \"\n\\\\$ProgressPreference = 'SilentlyContinue'\nAdd-Type -Assembly System.IO.Compression.FileSystem\n[IO.Compression.ZipFile]::ExtractToDirectory\\(\\\\\"\\\\$env:USERPROFILE\\\\flutter_sdk.zip\\\\\", \\\\\"\\\\$env:USERPROFILE\\\\\"\\)\nWrite-Host 'Done:' \\(Test-Path \\\\\"\\\\$env:USERPROFILE\\\\flutter\\\\bin\\\\flutter.bat\\\\\"\\)\n\" 2>&1)",
       "Bash(powershell -Command \"\nRemove-Item \\\\\"\\\\$env:USERPROFILE\\\\flutter\\\\\" -Recurse -Force -ErrorAction SilentlyContinue\n\\\\$ProgressPreference = 'SilentlyContinue'\nAdd-Type -Assembly System.IO.Compression.FileSystem\n[IO.Compression.ZipFile]::ExtractToDirectory\\(\\\\\"\\\\$env:USERPROFILE\\\\flutter_sdk.zip\\\\\", \\\\\"\\\\$env:USERPROFILE\\\\\"\\)\nWrite-Host 'Done:' \\(Test-Path \\\\\"\\\\$env:USERPROFILE\\\\flutter\\\\bin\\\\flutter.bat\\\\\"\\)\n\" 2>&1)",
-      "Bash(export PATH=\"$PATH:/c/Users/MihaelPavlov/flutter/bin\")"
+      "Bash(export PATH=\"$PATH:/c/Users/MihaelPavlov/flutter/bin\")",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(taskkill /PID 62916 /F)",
+      "Bash(taskkill /PID 47720 /F)",
+      "Bash(powershell -Command \"Get-Process -Name 'LifeLevel.Api' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host 'done'\")",
+      "Bash(powershell -Command \"& 'C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\psql.exe' -U postgres -d lifelevel -c 'SELECT * FROM \\\\\"Characters\\\\\";' 2>&1\")"
     ]
   }
 }
