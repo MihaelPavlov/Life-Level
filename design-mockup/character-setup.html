@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Character Setup</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #040810;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 48px 40px;
+  min-width: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.page-header { text-align:center; margin-bottom:40px; width:100%; }
+.page-header h1 { font-size:22px; color:#e6edf3; font-weight:700; margin-bottom:8px; }
+.page-header p { font-size:13px; color:#8b949e; }
+
+.screens-row { display:flex; align-items:flex-start; gap:0; }
+
+.arrow {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:60px; padding-top:380px; flex-shrink:0; gap:6px;
+}
+.arrow-icon { font-size:22px; color:#30363d; }
+.arrow-label { font-size:9px; color:#586070; font-weight:600; letter-spacing:0.06em; text-align:center; }
+
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num {
+  display:inline-block; background:rgba(79,158,255,0.12);
+  border:1px solid rgba(79,158,255,0.4); border-radius:12px;
+  padding:3px 14px; font-size:10px; color:#4f9eff; font-weight:700;
+  letter-spacing:0.06em; margin-bottom:6px;
+}
+.step-num.purple { background:rgba(163,113,247,0.12); border-color:rgba(163,113,247,0.4); color:#a371f7; }
+.step-num.green  { background:rgba(63,185,80,0.12);  border-color:rgba(63,185,80,0.4);  color:#3fb950; }
+.step-num.orange { background:rgba(245,166,35,0.12); border-color:rgba(245,166,35,0.4); color:#f5a623; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc  { font-size:11px; color:#8b949e; line-height:1.5; }
+
+/* Phone frame */
+.phone {
+  width:390px; height:844px; border-radius:44px; overflow:hidden;
+  position:relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink:0;
+}
+
+/* Status bar */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+}
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+
+/* Full-screen scroll area (no nav for setup) */
+.scroll-full {
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  overflow-y:auto; scrollbar-width:none;
+}
+.scroll-full::-webkit-scrollbar { display:none; }
+
+/* ─── Progress dots ─── */
+.progress-dots {
+  display:flex; gap:6px; justify-content:center; margin-top:16px;
+}
+.dot {
+  width:6px; height:6px; border-radius:50%;
+  background:#1e2632; border:1px solid #30363d;
+}
+.dot.active { background:#4f9eff; border-color:#4f9eff; box-shadow:0 0 6px rgba(79,158,255,0.6); }
+.dot.done   { background:#3fb950; border-color:#3fb950; }
+
+/* ─── Shared button ─── */
+.btn-primary {
+  width:100%; padding:15px; border-radius:14px; border:none; cursor:pointer;
+  font-size:14px; font-weight:700; letter-spacing:1px;
+  color:#fff;
+}
+.btn-primary.blue   { background:linear-gradient(135deg,#4f9eff,#2563eb); box-shadow:0 4px 20px rgba(79,158,255,0.35); }
+.btn-primary.purple { background:linear-gradient(135deg,#a371f7,#7c3aed); box-shadow:0 4px 20px rgba(163,113,247,0.35); }
+.btn-primary.green  { background:linear-gradient(135deg,#3fb950,#16a34a); box-shadow:0 4px 20px rgba(63,185,80,0.35); }
+.btn-ghost {
+  width:100%; padding:13px; border-radius:14px; border:1px solid #30363d;
+  background:transparent; cursor:pointer; font-size:13px; font-weight:600;
+  color:#8b949e; margin-top:10px;
+}
+
+/* ─── SCREEN 1: Welcome ─── */
+.s1-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79,158,255,0.12) 0%, transparent 70%),
+              #040810;
+}
+.s1-content {
+  position:relative; z-index:2;
+  display:flex; flex-direction:column; align-items:center;
+  padding: 80px 28px 40px;
+  min-height:100%;
+}
+.s1-logo-ring {
+  width:90px; height:90px; border-radius:50%;
+  background:linear-gradient(135deg,rgba(79,158,255,0.15),rgba(163,113,247,0.15));
+  border:1.5px solid rgba(79,158,255,0.35);
+  display:flex; align-items:center; justify-content:center;
+  font-size:40px;
+  box-shadow: 0 0 40px rgba(79,158,255,0.2), 0 0 80px rgba(163,113,247,0.1);
+  margin-bottom:28px;
+}
+.s1-tag {
+  background:rgba(79,158,255,0.1); border:1px solid rgba(79,158,255,0.3);
+  border-radius:20px; padding:4px 14px;
+  font-size:10px; font-weight:700; color:#4f9eff; letter-spacing:0.08em;
+  margin-bottom:16px;
+}
+.s1-title {
+  font-size:26px; font-weight:800; color:#e6edf3; text-align:center;
+  line-height:1.25; margin-bottom:12px;
+}
+.s1-title span { color:#4f9eff; }
+.s1-subtitle {
+  font-size:13px; color:#8b949e; text-align:center; line-height:1.65;
+  margin-bottom:40px;
+}
+.s1-pillars {
+  width:100%; display:flex; flex-direction:column; gap:10px; margin-bottom:36px;
+}
+.s1-pillar {
+  background:#161b22; border:1px solid #1e2632; border-radius:12px;
+  padding:12px 14px; display:flex; align-items:center; gap:12px;
+}
+.s1-pillar-icon {
+  width:36px; height:36px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+.s1-pillar-icon.blue   { background:rgba(79,158,255,0.12); }
+.s1-pillar-icon.purple { background:rgba(163,113,247,0.12); }
+.s1-pillar-icon.orange { background:rgba(245,166,35,0.12); }
+.s1-pillar-text { flex:1; }
+.s1-pillar-title { font-size:12px; font-weight:700; color:#e6edf3; margin-bottom:2px; }
+.s1-pillar-desc  { font-size:10px; color:#8b949e; line-height:1.4; }
+
+/* ─── SCREEN 2: Choose Class ─── */
+.s2-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(163,113,247,0.10) 0%, transparent 65%),
+              #040810;
+}
+.s2-header {
+  padding:52px 20px 20px;
+  position:relative; z-index:2;
+}
+.s2-header-top {
+  display:flex; align-items:center; gap:12px; margin-bottom:4px;
+}
+.back-btn {
+  width:32px; height:32px; background:#161b22; border:1px solid #30363d;
+  border-radius:10px; display:flex; align-items:center; justify-content:center;
+  font-size:14px; color:#8b949e; flex-shrink:0;
+}
+.s2-step-label {
+  font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.06em;
+}
+.s2-title {
+  font-size:20px; font-weight:800; color:#e6edf3; margin-bottom:6px;
+}
+.s2-subtitle { font-size:12px; color:#8b949e; line-height:1.5; }
+
+.s2-scroll {
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  overflow-y:auto; scrollbar-width:none; z-index:1;
+}
+.s2-scroll::-webkit-scrollbar { display:none; }
+.s2-inner { padding:0 20px 40px; }
+
+.class-card {
+  background:#161b22; border:1.5px solid #1e2632; border-radius:16px;
+  padding:16px; margin-bottom:12px; cursor:pointer;
+  transition:border-color 0.15s;
+}
+.class-card.selected {
+  border-color:rgba(163,113,247,0.6);
+  background:rgba(163,113,247,0.05);
+  box-shadow:0 0 20px rgba(163,113,247,0.1);
+}
+.class-card-top {
+  display:flex; align-items:center; gap:14px; margin-bottom:12px;
+}
+.class-avatar {
+  width:52px; height:52px; border-radius:14px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+}
+.class-avatar.warrior  { background:linear-gradient(135deg,rgba(248,81,73,0.2),rgba(248,81,73,0.05)); border:1px solid rgba(248,81,73,0.3); }
+.class-avatar.ranger   { background:linear-gradient(135deg,rgba(63,185,80,0.2),rgba(63,185,80,0.05)); border:1px solid rgba(63,185,80,0.3); }
+.class-avatar.mystic   { background:linear-gradient(135deg,rgba(163,113,247,0.2),rgba(163,113,247,0.05)); border:1px solid rgba(163,113,247,0.3); }
+.class-avatar.sentinel { background:linear-gradient(135deg,rgba(79,158,255,0.2),rgba(79,158,255,0.05)); border:1px solid rgba(79,158,255,0.3); }
+.class-info { flex:1; }
+.class-name { font-size:15px; font-weight:800; color:#e6edf3; margin-bottom:3px; }
+.class-tagline { font-size:11px; color:#8b949e; margin-bottom:7px; }
+.class-bonus-row { display:flex; gap:6px; flex-wrap:wrap; }
+.class-bonus {
+  padding:2px 8px; border-radius:6px; font-size:9px; font-weight:700; letter-spacing:0.04em;
+}
+.class-bonus.str { background:rgba(248,81,73,0.12); color:#f85149; border:1px solid rgba(248,81,73,0.25); }
+.class-bonus.end { background:rgba(79,158,255,0.12); color:#4f9eff; border:1px solid rgba(79,158,255,0.25); }
+.class-bonus.agi { background:rgba(56,217,200,0.12); color:#38d9c8; border:1px solid rgba(56,217,200,0.25); }
+.class-bonus.flx { background:rgba(163,113,247,0.12); color:#a371f7; border:1px solid rgba(163,113,247,0.25); }
+.class-bonus.sta { background:rgba(245,166,35,0.12); color:#f5a623; border:1px solid rgba(245,166,35,0.25); }
+
+.class-stat-bars { display:flex; flex-direction:column; gap:5px; }
+.csb-row { display:flex; align-items:center; gap:8px; }
+.csb-key { font-size:9px; font-weight:700; color:#8b949e; width:22px; letter-spacing:0.04em; }
+.csb-track { flex:1; height:4px; background:#1e2632; border-radius:2px; overflow:hidden; }
+.csb-fill  { height:4px; border-radius:2px; }
+.csb-val   { font-size:9px; font-weight:700; color:#8b949e; width:16px; text-align:right; }
+
+.class-desc {
+  font-size:11px; color:#8b949e; line-height:1.55;
+  border-top:1px solid #1e2632; padding-top:10px;
+}
+
+.select-check {
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  border:1.5px solid #30363d;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px;
+}
+.select-check.on { background:#a371f7; border-color:#a371f7; }
+
+/* ─── SCREEN 3: Choose Avatar ─── */
+.s3-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(245,166,35,0.08) 0%, transparent 65%),
+              #040810;
+}
+.avatar-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+  padding:0 20px; margin-bottom:20px;
+}
+.avatar-cell {
+  aspect-ratio:1; background:#161b22; border:1.5px solid #1e2632;
+  border-radius:16px; display:flex; align-items:center; justify-content:center;
+  font-size:30px; cursor:pointer; position:relative;
+}
+.avatar-cell.selected {
+  border-color:rgba(245,166,35,0.6);
+  background:rgba(245,166,35,0.07);
+  box-shadow:0 0 16px rgba(245,166,35,0.15);
+}
+.avatar-cell .av-check {
+  position:absolute; top:6px; right:6px;
+  width:16px; height:16px; border-radius:50%;
+  background:#f5a623; display:flex; align-items:center; justify-content:center;
+  font-size:9px; color:#000;
+}
+.avatar-section-label {
+  font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.06em;
+  padding:0 20px; margin-bottom:10px;
+}
+
+/* ─── SCREEN 4: All Done ─── */
+.s4-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 100% 60% at 50% 30%, rgba(63,185,80,0.12) 0%, transparent 70%),
+              #040810;
+}
+.s4-content {
+  position:relative; z-index:2;
+  display:flex; flex-direction:column; align-items:center;
+  padding:80px 28px 40px; min-height:100%;
+}
+.s4-glow-ring {
+  width:110px; height:110px; border-radius:50%;
+  background:linear-gradient(135deg,rgba(63,185,80,0.15),rgba(79,158,255,0.15));
+  border:1.5px solid rgba(63,185,80,0.4);
+  display:flex; align-items:center; justify-content:center; font-size:48px;
+  box-shadow:0 0 50px rgba(63,185,80,0.25), 0 0 100px rgba(63,185,80,0.1);
+  margin-bottom:24px; position:relative;
+}
+.s4-particles {
+  position:absolute; inset:-20px;
+  background:
+    radial-gradient(2px 2px at 20% 20%, rgba(63,185,80,0.8) 0%, transparent 100%),
+    radial-gradient(2px 2px at 80% 15%, rgba(79,158,255,0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 15% 75%, rgba(245,166,35,0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 85% 80%, rgba(163,113,247,0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 50% 5%,  rgba(63,185,80,0.6) 0%, transparent 100%);
+}
+.s4-tag {
+  background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.3);
+  border-radius:20px; padding:4px 14px;
+  font-size:10px; font-weight:700; color:#3fb950; letter-spacing:0.08em;
+  margin-bottom:14px;
+}
+.s4-title {
+  font-size:26px; font-weight:800; color:#e6edf3; text-align:center;
+  line-height:1.25; margin-bottom:10px;
+}
+.s4-sub {
+  font-size:13px; color:#8b949e; text-align:center; line-height:1.65;
+  margin-bottom:32px;
+}
+.s4-card {
+  width:100%; background:#161b22; border:1px solid #1e2632;
+  border-radius:16px; padding:16px; margin-bottom:24px;
+}
+.s4-card-title {
+  font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.06em;
+  margin-bottom:14px;
+}
+.s4-char-row {
+  display:flex; align-items:center; gap:14px; margin-bottom:14px;
+}
+.s4-avatar {
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg,rgba(79,158,255,0.2),rgba(163,113,247,0.2));
+  border:2px solid rgba(79,158,255,0.4);
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+  box-shadow:0 0 20px rgba(79,158,255,0.2);
+}
+.s4-name  { font-size:16px; font-weight:800; color:#e6edf3; margin-bottom:3px; }
+.s4-meta  { display:flex; gap:6px; align-items:center; }
+.s4-class-badge {
+  padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700;
+  background:rgba(163,113,247,0.12); color:#a371f7;
+  border:1px solid rgba(163,113,247,0.3);
+}
+.s4-rank-badge {
+  padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700;
+  background:rgba(245,166,35,0.1); color:#f5a623;
+  border:1px solid rgba(245,166,35,0.25);
+}
+.s4-stat-row { display:flex; gap:8px; }
+.s4-stat {
+  flex:1; background:#1e2632; border-radius:10px;
+  padding:8px 6px; display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.s4-stat-label { font-size:9px; font-weight:700; color:#8b949e; letter-spacing:0.04em; }
+.s4-stat-val   { font-size:14px; font-weight:800; }
+.s4-rewards-row {
+  display:flex; gap:10px;
+}
+.s4-reward {
+  flex:1; background:#1e2632; border-radius:12px; padding:12px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.s4-reward-icon { font-size:22px; }
+.s4-reward-val  { font-size:13px; font-weight:800; color:#e6edf3; }
+.s4-reward-label { font-size:9px; color:#8b949e; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Character Setup Flow</h1>
+  <p>First-time onboarding after registration — 4 screens</p>
+</div>
+
+<div class="screens-row">
+
+  <!-- ═══════════════════════════════════════════════════════ STEP 1: WELCOME -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">STEP 1</div>
+      <div class="step-title">Welcome Screen</div>
+      <div class="step-desc">Sets the stage — no input needed,<br>just sets expectations and excitement.</div>
+    </div>
+
+    <div class="phone">
+      <!-- bg -->
+      <div class="s1-bg"></div>
+      <!-- status bar -->
+      <div class="status-bar">
+        <span class="st">9:41</span>
+        <span class="si">●●●●  WiFi  🔋</span>
+      </div>
+      <!-- scroll -->
+      <div class="scroll-full">
+        <div class="s1-content">
+          <div class="s1-logo-ring">🧙</div>
+          <div class="s1-tag">YOUR ADVENTURE BEGINS</div>
+          <div class="s1-title">Train in the Real World.<br><span>Level Up in the Game.</span></div>
+          <div class="s1-subtitle">Every workout you complete earns XP, raises your stats, and moves your hero across a living RPG world. Let's set up your character.</div>
+
+          <div class="s1-pillars">
+            <div class="s1-pillar">
+              <div class="s1-pillar-icon blue">⚡</div>
+              <div class="s1-pillar-text">
+                <div class="s1-pillar-title">Real activity → Real XP</div>
+                <div class="s1-pillar-desc">Every run, gym session, or yoga class earns experience and raises your character's stats.</div>
+              </div>
+            </div>
+            <div class="s1-pillar">
+              <div class="s1-pillar-icon purple">🗺️</div>
+              <div class="s1-pillar-text">
+                <div class="s1-pillar-title">Explore the Adventure Map</div>
+                <div class="s1-pillar-desc">Distance you cover in the real world moves your hero across zones, unlocking new quests and bosses.</div>
+              </div>
+            </div>
+            <div class="s1-pillar">
+              <div class="s1-pillar-icon orange">🏆</div>
+              <div class="s1-pillar-text">
+                <div class="s1-pillar-title">Compete &amp; Conquer</div>
+                <div class="s1-pillar-desc">Join guild raids, take on weekly challenges, and climb the leaderboard with your friends.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+
+          <div style="height:24px;"></div>
+          <button class="btn-primary blue">LET'S GO →</button>
+          <button class="btn-ghost">Skip Setup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow">
+    <div class="arrow-icon">→</div>
+    <div class="arrow-label">NEXT</div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ STEP 2: CHOOSE CLASS -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num purple">STEP 2</div>
+      <div class="step-title">Choose Your Class</div>
+      <div class="step-desc">Warrior is pre-selected. Determines<br>starting stat bonuses &amp; theme.</div>
+    </div>
+
+    <div class="phone">
+      <div class="s2-bg"></div>
+      <div class="status-bar">
+        <span class="st">9:41</span>
+        <span class="si">●●●●  WiFi  🔋</span>
+      </div>
+
+      <!-- header painted on top of scroll -->
+      <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                  background:linear-gradient(to bottom,#040810 80%,transparent);
+                  padding:52px 20px 16px;">
+        <div class="s2-header-top">
+          <div class="back-btn">←</div>
+          <span class="s2-step-label">STEP 2 OF 4</span>
+        </div>
+        <div class="s2-title">Choose Your Class</div>
+        <div class="s2-subtitle">Your class shapes your starting stat bonuses. You can change this later from settings.</div>
+        <div class="progress-dots" style="justify-content:flex-start;margin-top:12px;">
+          <div class="dot done"></div>
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <div class="s2-scroll">
+        <div class="s2-inner" style="padding-top:190px;">
+
+          <!-- Warrior (selected) -->
+          <div class="class-card selected">
+            <div class="class-card-top">
+              <div class="class-avatar warrior">⚔️</div>
+              <div class="class-info">
+                <div class="class-name">Warrior</div>
+                <div class="class-tagline">Master of strength &amp; endurance</div>
+                <div class="class-bonus-row">
+                  <span class="class-bonus str">+STR ×1.3</span>
+                  <span class="class-bonus sta">+STA ×1.2</span>
+                </div>
+              </div>
+              <div class="select-check on">✓</div>
+            </div>
+            <div class="class-stat-bars">
+              <div class="csb-row">
+                <span class="csb-key">STR</span>
+                <div class="csb-track"><div class="csb-fill" style="width:75%;background:#f85149;"></div></div>
+                <span class="csb-val">75</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">END</span>
+                <div class="csb-track"><div class="csb-fill" style="width:45%;background:#4f9eff;"></div></div>
+                <span class="csb-val">45</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">AGI</span>
+                <div class="csb-track"><div class="csb-fill" style="width:35%;background:#38d9c8;"></div></div>
+                <span class="csb-val">35</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">FLX</span>
+                <div class="csb-track"><div class="csb-fill" style="width:30%;background:#a371f7;"></div></div>
+                <span class="csb-val">30</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">STA</span>
+                <div class="csb-track"><div class="csb-fill" style="width:60%;background:#f5a623;"></div></div>
+                <span class="csb-val">60</span>
+              </div>
+            </div>
+            <div class="class-desc" style="margin-top:10px;">Best for gym-goers and powerlifters. Your heavy lifts and climbing sessions grant boosted XP, and you unlock Warrior-exclusive zones faster.</div>
+          </div>
+
+          <!-- Ranger -->
+          <div class="class-card">
+            <div class="class-card-top">
+              <div class="class-avatar ranger">🏹</div>
+              <div class="class-info">
+                <div class="class-name">Ranger</div>
+                <div class="class-tagline">Swift traveller of vast distances</div>
+                <div class="class-bonus-row">
+                  <span class="class-bonus end">+END ×1.3</span>
+                  <span class="class-bonus agi">+AGI ×1.2</span>
+                </div>
+              </div>
+              <div class="select-check"></div>
+            </div>
+            <div class="class-stat-bars">
+              <div class="csb-row">
+                <span class="csb-key">STR</span>
+                <div class="csb-track"><div class="csb-fill" style="width:30%;background:#f85149;"></div></div>
+                <span class="csb-val">30</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">END</span>
+                <div class="csb-track"><div class="csb-fill" style="width:75%;background:#4f9eff;"></div></div>
+                <span class="csb-val">75</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">AGI</span>
+                <div class="csb-track"><div class="csb-fill" style="width:65%;background:#38d9c8;"></div></div>
+                <span class="csb-val">65</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">FLX</span>
+                <div class="csb-track"><div class="csb-fill" style="width:35%;background:#a371f7;"></div></div>
+                <span class="csb-val">35</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">STA</span>
+                <div class="csb-track"><div class="csb-fill" style="width:50%;background:#f5a623;"></div></div>
+                <span class="csb-val">50</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mystic -->
+          <div class="class-card">
+            <div class="class-card-top">
+              <div class="class-avatar mystic">🧘</div>
+              <div class="class-info">
+                <div class="class-name">Mystic</div>
+                <div class="class-tagline">Balance, recovery &amp; inner power</div>
+                <div class="class-bonus-row">
+                  <span class="class-bonus flx">+FLX ×1.4</span>
+                  <span class="class-bonus sta">+STA ×1.2</span>
+                </div>
+              </div>
+              <div class="select-check"></div>
+            </div>
+            <div class="class-stat-bars">
+              <div class="csb-row">
+                <span class="csb-key">STR</span>
+                <div class="csb-track"><div class="csb-fill" style="width:25%;background:#f85149;"></div></div>
+                <span class="csb-val">25</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">END</span>
+                <div class="csb-track"><div class="csb-fill" style="width:40%;background:#4f9eff;"></div></div>
+                <span class="csb-val">40</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">AGI</span>
+                <div class="csb-track"><div class="csb-fill" style="width:35%;background:#38d9c8;"></div></div>
+                <span class="csb-val">35</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">FLX</span>
+                <div class="csb-track"><div class="csb-fill" style="width:80%;background:#a371f7;"></div></div>
+                <span class="csb-val">80</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">STA</span>
+                <div class="csb-track"><div class="csb-fill" style="width:65%;background:#f5a623;"></div></div>
+                <span class="csb-val">65</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentinel -->
+          <div class="class-card">
+            <div class="class-card-top">
+              <div class="class-avatar sentinel">🛡️</div>
+              <div class="class-info">
+                <div class="class-name">Sentinel</div>
+                <div class="class-tagline">Iron stamina, all-round athlete</div>
+                <div class="class-bonus-row">
+                  <span class="class-bonus sta">+STA ×1.4</span>
+                  <span class="class-bonus end">+END ×1.1</span>
+                </div>
+              </div>
+              <div class="select-check"></div>
+            </div>
+            <div class="class-stat-bars">
+              <div class="csb-row">
+                <span class="csb-key">STR</span>
+                <div class="csb-track"><div class="csb-fill" style="width:50%;background:#f85149;"></div></div>
+                <span class="csb-val">50</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">END</span>
+                <div class="csb-track"><div class="csb-fill" style="width:55%;background:#4f9eff;"></div></div>
+                <span class="csb-val">55</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">AGI</span>
+                <div class="csb-track"><div class="csb-fill" style="width:40%;background:#38d9c8;"></div></div>
+                <span class="csb-val">40</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">FLX</span>
+                <div class="csb-track"><div class="csb-fill" style="width:45%;background:#a371f7;"></div></div>
+                <span class="csb-val">45</span>
+              </div>
+              <div class="csb-row">
+                <span class="csb-key">STA</span>
+                <div class="csb-track"><div class="csb-fill" style="width:80%;background:#f5a623;"></div></div>
+                <span class="csb-val">80</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sticky CTA -->
+          <div style="position:sticky;bottom:0;padding:16px 0 0;background:linear-gradient(to top,#040810 70%,transparent);">
+            <button class="btn-primary purple">CONTINUE →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow">
+    <div class="arrow-icon">→</div>
+    <div class="arrow-label">NEXT</div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ STEP 3: CHOOSE AVATAR -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num orange">STEP 3</div>
+      <div class="step-title">Pick Your Avatar</div>
+      <div class="step-desc">Visual identity. Second row will be<br>unlockable at higher levels.</div>
+    </div>
+
+    <div class="phone">
+      <div class="s3-bg"></div>
+      <div class="status-bar">
+        <span class="st">9:41</span>
+        <span class="si">●●●●  WiFi  🔋</span>
+      </div>
+
+      <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                  background:linear-gradient(to bottom,#040810 80%,transparent);
+                  padding:52px 20px 16px;">
+        <div class="s2-header-top">
+          <div class="back-btn">←</div>
+          <span class="s2-step-label">STEP 3 OF 4</span>
+        </div>
+        <div class="s2-title">Choose Your Avatar</div>
+        <div class="s2-subtitle">This is how other players will see you on the map and leaderboards.</div>
+        <div class="progress-dots" style="justify-content:flex-start;margin-top:12px;">
+          <div class="dot done"></div>
+          <div class="dot done"></div>
+          <div class="dot active"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <div class="scroll-full" style="z-index:1;">
+        <div style="padding-top:186px;">
+
+          <!-- preview -->
+          <div style="display:flex;justify-content:center;margin-bottom:20px;">
+            <div style="
+              width:80px;height:80px;border-radius:50%;
+              background:linear-gradient(135deg,rgba(79,158,255,0.2),rgba(163,113,247,0.2));
+              border:2.5px solid rgba(245,166,35,0.6);
+              display:flex;align-items:center;justify-content:center;font-size:38px;
+              box-shadow:0 0 30px rgba(245,166,35,0.2);
+            ">🧙</div>
+          </div>
+
+          <div class="avatar-section-label">AVAILABLE NOW</div>
+          <div class="avatar-grid">
+            <div class="avatar-cell selected">🧙<div class="av-check">✓</div></div>
+            <div class="avatar-cell">🧝</div>
+            <div class="avatar-cell">🧟</div>
+            <div class="avatar-cell">🧛</div>
+            <div class="avatar-cell">🧜</div>
+            <div class="avatar-cell">🧚</div>
+            <div class="avatar-cell">🦸</div>
+            <div class="avatar-cell">🥷</div>
+          </div>
+
+          <div class="avatar-section-label" style="margin-top:8px;">LOCKED — UNLOCK AT HIGHER LEVELS</div>
+          <div class="avatar-grid">
+            <!-- locked cells -->
+            <div class="avatar-cell" style="opacity:0.3;position:relative;">
+              🐉
+              <div style="position:absolute;inset:0;display:flex;align-items:center;
+                          justify-content:center;font-size:14px;color:#8b949e;">🔒</div>
+            </div>
+            <div class="avatar-cell" style="opacity:0.3;position:relative;">
+              🦅
+              <div style="position:absolute;inset:0;display:flex;align-items:center;
+                          justify-content:center;font-size:14px;color:#8b949e;">🔒</div>
+            </div>
+            <div class="avatar-cell" style="opacity:0.3;position:relative;">
+              🦁
+              <div style="position:absolute;inset:0;display:flex;align-items:center;
+                          justify-content:center;font-size:14px;color:#8b949e;">🔒</div>
+            </div>
+            <div class="avatar-cell" style="opacity:0.3;position:relative;">
+              🐺
+              <div style="position:absolute;inset:0;display:flex;align-items:center;
+                          justify-content:center;font-size:14px;color:#8b949e;">🔒</div>
+            </div>
+          </div>
+
+          <div style="padding:0 20px 32px;">
+            <div style="background:#161b22;border:1px solid #1e2632;border-radius:12px;
+                        padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:20px;">
+              <span style="font-size:16px;">💡</span>
+              <div style="font-size:11px;color:#8b949e;line-height:1.55;">
+                More avatars unlock as you level up. Legendary avatars require Rank: Champion or higher.
+              </div>
+            </div>
+            <button class="btn-primary" style="background:linear-gradient(135deg,#f5a623,#e08c00);
+                    box-shadow:0 4px 20px rgba(245,166,35,0.3);">CONTINUE →</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow">
+    <div class="arrow-icon">→</div>
+    <div class="arrow-label">NEXT</div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ STEP 4: DONE -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num green">STEP 4</div>
+      <div class="step-title">Character Ready!</div>
+      <div class="step-desc">Summary of choices + starter rewards.<br>CTA takes user into the main app.</div>
+    </div>
+
+    <div class="phone">
+      <div class="s4-bg"></div>
+      <div class="status-bar">
+        <span class="st">9:41</span>
+        <span class="si">●●●●  WiFi  🔋</span>
+      </div>
+      <div class="scroll-full">
+        <div class="s4-content">
+
+          <div class="progress-dots" style="margin-bottom:28px;">
+            <div class="dot done"></div>
+            <div class="dot done"></div>
+            <div class="dot done"></div>
+            <div class="dot active"></div>
+          </div>
+
+          <div class="s4-glow-ring">
+            🧙
+            <div class="s4-particles"></div>
+          </div>
+
+          <div class="s4-tag">CHARACTER CREATED</div>
+          <div class="s4-title">Your Hero Awaits!</div>
+          <div class="s4-sub">Here's a summary of your new character. Log your first workout to earn XP and begin your journey.</div>
+
+          <!-- character card -->
+          <div class="s4-card">
+            <div class="s4-card-title">YOUR CHARACTER</div>
+            <div class="s4-char-row">
+              <div class="s4-avatar">🧙</div>
+              <div>
+                <div class="s4-name">ShadowRunner</div>
+                <div class="s4-meta">
+                  <span class="s4-class-badge">Warrior</span>
+                  <span class="s4-rank-badge">Novice</span>
+                </div>
+              </div>
+            </div>
+            <div class="s4-stat-row">
+              <div class="s4-stat">
+                <span class="s4-stat-label">STR</span>
+                <span class="s4-stat-val" style="color:#f85149;">10</span>
+              </div>
+              <div class="s4-stat">
+                <span class="s4-stat-label">END</span>
+                <span class="s4-stat-val" style="color:#4f9eff;">5</span>
+              </div>
+              <div class="s4-stat">
+                <span class="s4-stat-label">AGI</span>
+                <span class="s4-stat-val" style="color:#38d9c8;">5</span>
+              </div>
+              <div class="s4-stat">
+                <span class="s4-stat-label">FLX</span>
+                <span class="s4-stat-val" style="color:#a371f7;">3</span>
+              </div>
+              <div class="s4-stat">
+                <span class="s4-stat-label">STA</span>
+                <span class="s4-stat-val" style="color:#f5a623;">7</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- starter rewards -->
+          <div class="s4-card">
+            <div class="s4-card-title">STARTER REWARDS</div>
+            <div class="s4-rewards-row">
+              <div class="s4-reward">
+                <div class="s4-reward-icon">⚡</div>
+                <div class="s4-reward-val" style="color:#4f9eff;">+500 XP</div>
+                <div class="s4-reward-label">Account bonus</div>
+              </div>
+              <div class="s4-reward">
+                <div class="s4-reward-icon">📜</div>
+                <div class="s4-reward-val" style="color:#a371f7;">5 Quests</div>
+                <div class="s4-reward-label">Daily quests<br>unlocked</div>
+              </div>
+              <div class="s4-reward">
+                <div class="s4-reward-icon">🗺️</div>
+                <div class="s4-reward-val" style="color:#3fb950;">Zone 1</div>
+                <div class="s4-reward-label">Forest of<br>Endurance</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary green" style="margin-top:4px;">ENTER THE WORLD →</button>
+          <div style="margin-top:12px;font-size:11px;color:#8b949e;text-align:center;line-height:1.55;">
+            You can update your class and avatar anytime<br>from the Profile → Settings screen.
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- screens-row -->
+
+</body>
+</html>

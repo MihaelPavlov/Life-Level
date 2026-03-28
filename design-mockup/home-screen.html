@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Home Screen</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #040810;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 48px 40px;
+  min-width: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.page-header { text-align:center; margin-bottom:40px; width:100%; }
+.page-header h1 { font-size:22px; color:#e6edf3; font-weight:700; margin-bottom:8px; }
+.page-header p { font-size:13px; color:#8b949e; }
+
+/* Layout */
+.screens-row { display:flex; align-items:flex-start; gap:0; }
+.arrow { display:flex; flex-direction:column; align-items:center; justify-content:center; width:60px; padding-top:380px; flex-shrink:0; gap:6px; }
+.arrow-icon { font-size:22px; color:#30363d; }
+.arrow-label { font-size:9px; color:#586070; font-weight:600; letter-spacing:0.06em; text-align:center; }
+
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(79,158,255,0.12); border:1px solid rgba(79,158,255,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#4f9eff; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-num.orange { background:rgba(245,166,35,0.12); border-color:rgba(245,166,35,0.4); color:#f5a623; }
+.step-num.green { background:rgba(63,185,80,0.12); border-color:rgba(63,185,80,0.4); color:#3fb950; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+
+/* Phone */
+.phone {
+  width:390px; height:844px; border-radius:44px; overflow:hidden;
+  position:relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink:0;
+}
+
+/* Shared */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+}
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#161b22; border-top:1px solid #30363d;
+  display:flex; align-items:center; padding:0 8px 12px; z-index:100;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color:#8b949e; }
+
+.scroll {
+  position:absolute; top:0; left:0; right:0; bottom:82px;
+  overflow-y:auto; scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar { display:none; }
+
+/* ─── Shared section title ─── */
+.sec-title {
+  font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.07em;
+  margin-bottom:8px; padding:0 20px;
+}
+.sec-title-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0 20px; margin-bottom:8px;
+}
+.sec-title-row .sec-title { padding:0; margin:0; }
+.sec-link { font-size:10px; color:#4f9eff; font-weight:600; }
+
+/* ─── Header band ─── */
+.home-header {
+  padding:52px 20px 14px;
+  background: linear-gradient(to bottom, rgba(8,14,20,1) 60%, rgba(8,14,20,0));
+  position:relative; z-index:10;
+}
+.hh-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.hh-greeting { font-size:13px; color:#8b949e; }
+.hh-name { font-size:20px; font-weight:700; color:#e6edf3; margin-top:1px; }
+.notif-btn {
+  width:36px; height:36px; background:#161b22;
+  border:1px solid #30363d; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; position:relative;
+}
+.notif-dot {
+  position:absolute; top:4px; right:4px;
+  width:8px; height:8px; background:#f85149;
+  border-radius:50%; border:2px solid #080e14;
+}
+
+/* ─── Character card ─── */
+.char-card {
+  background: rgba(22,27,34,0.9);
+  border:1px solid #1e2632; border-radius:16px;
+  padding:14px 16px;
+  display:flex; align-items:center; gap:14px;
+}
+.char-avatar {
+  width:56px; height:56px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,#1e3a5f,#2d1b4e);
+  border:2px solid rgba(79,158,255,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px;
+  box-shadow:0 0 16px rgba(79,158,255,0.2);
+}
+.char-info { flex:1; min-width:0; }
+.char-name { font-size:14px; font-weight:700; color:#e6edf3; margin-bottom:1px; }
+.char-meta { display:flex; align-items:center; gap:6px; margin-bottom:7px; }
+.char-rank {
+  background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.35);
+  border-radius:5px; padding:1px 7px;
+  font-size:9px; font-weight:700; color:#f5a623; letter-spacing:0.04em;
+}
+.char-class { font-size:10px; color:#8b949e; }
+.xp-row { display:flex; justify-content:space-between; font-size:9px; color:#8b949e; margin-bottom:4px; }
+.xp-track { height:5px; background:#1e2632; border-radius:3px; overflow:hidden; }
+.xp-fill { height:100%; border-radius:3px; background:linear-gradient(to right,#4f9eff,#a371f7); }
+.char-lvl {
+  background:linear-gradient(135deg,#4f9eff,#a371f7);
+  border-radius:10px; padding:6px 10px; text-align:center; flex-shrink:0;
+}
+.lvl-num { font-size:20px; font-weight:700; color:#fff; line-height:1; }
+.lvl-lbl { font-size:8px; color:rgba(255,255,255,0.7); font-weight:600; letter-spacing:0.04em; margin-top:1px; }
+
+/* ─── Stats strip ─── */
+.stats-strip {
+  display:flex; gap:8px; padding:0 20px; margin-bottom:20px;
+}
+.stat-chip {
+  flex:1; background:#161b22; border:1px solid #1e2632;
+  border-radius:12px; padding:10px 8px; text-align:center;
+}
+.stat-chip-icon { font-size:18px; margin-bottom:3px; }
+.stat-chip-val { font-size:13px; font-weight:700; color:#e6edf3; }
+.stat-chip-lbl { font-size:9px; color:#8b949e; margin-top:1px; }
+
+/* ─── Streak bar ─── */
+.streak-card {
+  margin:0 20px 20px;
+  background:#161b22; border:1px solid #1e2632;
+  border-radius:14px; padding:12px 14px;
+  display:flex; align-items:center; gap:12px;
+}
+.streak-fire { font-size:28px; }
+.streak-info { flex:1; }
+.streak-num { font-size:18px; font-weight:700; color:#f5a623; display:inline; }
+.streak-label { font-size:12px; color:#e6edf3; font-weight:600; }
+.streak-sub { font-size:10px; color:#8b949e; margin-top:2px; }
+.streak-days { display:flex; gap:4px; margin-top:8px; }
+.sd {
+  flex:1; height:4px; border-radius:2px;
+}
+.sd.done { background:#f5a623; }
+.sd.today { background:linear-gradient(to right,#f5a623,rgba(245,166,35,0.3)); }
+.sd.future { background:#1e2632; }
+.streak-claim {
+  background:linear-gradient(135deg,#f5a623,#e8920f);
+  border:none; border-radius:10px; padding:8px 14px;
+  font-size:11px; font-weight:700; color:#000; cursor:pointer;
+  white-space:nowrap;
+}
+
+/* ─── Daily quests ─── */
+.quest-card {
+  margin:0 20px 8px;
+  background:#161b22; border:1px solid #1e2632;
+  border-radius:12px; padding:11px 14px;
+  display:flex; align-items:center; gap:12px;
+}
+.quest-card.done { opacity:0.55; }
+.quest-icon {
+  width:36px; height:36px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+.quest-info { flex:1; min-width:0; }
+.quest-name { font-size:12px; font-weight:700; color:#e6edf3; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.quest-prog-row { display:flex; align-items:center; gap:6px; }
+.quest-track { flex:1; height:4px; background:#1e2632; border-radius:2px; overflow:hidden; }
+.quest-fill { height:100%; border-radius:2px; }
+.quest-pct { font-size:9px; font-weight:700; color:#8b949e; white-space:nowrap; }
+.quest-xp {
+  background:rgba(79,158,255,0.1); border:1px solid rgba(79,158,255,0.25);
+  border-radius:6px; padding:2px 8px; font-size:10px; font-weight:700; color:#4f9eff;
+  white-space:nowrap;
+}
+.quest-check { font-size:18px; }
+
+/* ─── Active challenge mini card ─── */
+.challenge-card {
+  margin:0 20px 20px;
+  background:rgba(22,27,34,0.95);
+  border:1px solid rgba(248,81,73,0.35);
+  border-radius:14px; padding:14px 16px;
+  box-shadow:0 0 20px rgba(248,81,73,0.07);
+}
+.cc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.cc-badge {
+  background:rgba(248,81,73,0.12); border:1px solid rgba(248,81,73,0.4);
+  border-radius:7px; padding:2px 10px;
+  font-size:9px; font-weight:700; color:#f85149; letter-spacing:0.05em;
+}
+.cc-timer { font-size:10px; color:#8b949e; }
+.cc-timer span { color:#f85149; font-weight:700; }
+.cc-row { display:flex; align-items:center; gap:10px; }
+.cc-icon {
+  width:40px; height:40px; border-radius:10px; flex-shrink:0;
+  background:rgba(40,10,10,0.8); border:1px solid rgba(248,81,73,0.3);
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.cc-name { font-size:14px; font-weight:700; color:#e6edf3; margin-bottom:2px; }
+.cc-sub { font-size:10px; color:#8b949e; }
+.cc-prog-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.cc-track { flex:1; height:6px; background:#1e2632; border-radius:3px; overflow:hidden; }
+.cc-fill { height:100%; border-radius:3px; background:linear-gradient(to right,#f85149,#ff6b35); }
+.cc-pct { font-size:11px; font-weight:700; color:#f85149; }
+.cc-btn {
+  margin-top:10px; width:100%; background:rgba(248,81,73,0.1);
+  border:1px solid rgba(248,81,73,0.35); border-radius:10px;
+  padding:8px; font-size:11px; font-weight:700; color:#f85149; cursor:pointer;
+}
+
+/* ─── Recent activity ─── */
+.activity-card {
+  margin:0 20px 8px;
+  background:#161b22; border:1px solid #1e2632;
+  border-radius:12px; padding:12px 14px;
+  display:flex; align-items:center; gap:12px;
+}
+.act-icon {
+  width:40px; height:40px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.act-info { flex:1; }
+.act-name { font-size:13px; font-weight:700; color:#e6edf3; margin-bottom:2px; }
+.act-meta { font-size:10px; color:#8b949e; }
+.act-xp { text-align:right; }
+.act-xp-val { font-size:13px; font-weight:700; color:#4f9eff; }
+.act-xp-lbl { font-size:9px; color:#8b949e; }
+
+/* ─── Log workout FAB ─── */
+.fab {
+  position:absolute; bottom:94px; right:20px; z-index:200;
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg,#3fb950,#2d8f3c);
+  border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px;
+  box-shadow:0 4px 20px rgba(63,185,80,0.5);
+}
+
+/* ─────────────────────────────────────
+   SCREEN 2: XP STORM STATE
+───────────────────────────────────── */
+.xp-storm-banner {
+  margin:0 20px 20px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(248,81,73,0.1));
+  border:1px solid rgba(245,166,35,0.5);
+  border-radius:14px; padding:14px 16px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:0 0 30px rgba(245,166,35,0.12);
+  animation: stormPulse 2.5s ease-in-out infinite;
+}
+@keyframes stormPulse {
+  0%,100%{ box-shadow:0 0 20px rgba(245,166,35,0.12); }
+  50%{ box-shadow:0 0 40px rgba(245,166,35,0.3), 0 0 60px rgba(245,166,35,0.08); }
+}
+.storm-icon { font-size:32px; }
+.storm-info { flex:1; }
+.storm-title { font-size:14px; font-weight:700; color:#f5a623; margin-bottom:2px; }
+.storm-sub { font-size:10px; color:#8b949e; }
+.storm-timer {
+  background:rgba(245,166,35,0.15); border:1px solid rgba(245,166,35,0.4);
+  border-radius:8px; padding:6px 10px; text-align:center;
+}
+.storm-time { font-size:14px; font-weight:700; color:#f5a623; }
+.storm-time-lbl { font-size:8px; color:#8b949e; margin-top:1px; }
+.storm-multiplier {
+  position:absolute; top:52px; right:20px; z-index:30;
+  background:linear-gradient(135deg,#f5a623,#e8920f);
+  border-radius:8px; padding:4px 10px;
+  font-size:12px; font-weight:700; color:#000;
+  box-shadow:0 2px 12px rgba(245,166,35,0.4);
+}
+
+/* ─────────────────────────────────────
+   SCREEN 3: LEVEL-UP OVERLAY
+───────────────────────────────────── */
+.levelup-overlay {
+  position:absolute; inset:0; z-index:300;
+  background:rgba(4,8,16,0.92);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:30px 24px;
+}
+.lu-rings {
+  position:relative; width:160px; height:160px;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:20px;
+}
+.lu-ring {
+  position:absolute; border-radius:50%; border:2px solid;
+  animation:luRing 2s ease-in-out infinite;
+}
+.lu-ring-1 { inset:0; border-color:rgba(79,158,255,0.12); }
+.lu-ring-2 { inset:14px; border-color:rgba(79,158,255,0.2); animation-delay:.25s; }
+.lu-ring-3 { inset:28px; border-color:rgba(79,158,255,0.35); animation-delay:.5s; }
+@keyframes luRing { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+.lu-badge {
+  width:90px; height:90px; border-radius:50%;
+  background:linear-gradient(135deg,#1e3a5f,#2d1b4e);
+  border:3px solid #4f9eff;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  box-shadow:0 0 40px rgba(79,158,255,0.5), 0 0 80px rgba(79,158,255,0.2);
+  position:relative; z-index:1;
+}
+.lu-badge-lbl { font-size:9px; font-weight:700; color:rgba(255,255,255,0.6); letter-spacing:0.06em; }
+.lu-badge-num { font-size:32px; font-weight:700; color:#fff; line-height:1; }
+
+.lu-title { font-size:30px; font-weight:700; color:#e6edf3; margin-bottom:4px; letter-spacing:-0.5px; }
+.lu-sub { font-size:13px; color:#8b949e; margin-bottom:24px; }
+
+.lu-unlocks { width:100%; display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.lu-unlock {
+  background:#161b22; border:1px solid #1e2632;
+  border-radius:12px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+}
+.lu-unlock-icon { font-size:22px; }
+.lu-unlock-text { flex:1; }
+.lu-unlock-name { font-size:13px; font-weight:700; color:#e6edf3; }
+.lu-unlock-desc { font-size:10px; color:#8b949e; margin-top:1px; }
+.lu-unlock-badge {
+  font-size:9px; font-weight:700; padding:2px 8px; border-radius:5px;
+}
+.lu-unlock-badge.new { background:rgba(63,185,80,0.15); border:1px solid rgba(63,185,80,0.3); color:#3fb950; }
+.lu-unlock-badge.unlock { background:rgba(163,113,247,0.12); border:1px solid rgba(163,113,247,0.3); color:#a371f7; }
+
+.lu-stat-gains { display:flex; gap:8px; width:100%; margin-bottom:20px; }
+.lu-stat {
+  flex:1; background:#1e2632; border-radius:10px; padding:8px 6px; text-align:center;
+}
+.lu-stat-val { font-size:14px; font-weight:700; color:#3fb950; }
+.lu-stat-lbl { font-size:9px; color:#8b949e; margin-top:2px; }
+
+.lu-btn {
+  width:100%; background:linear-gradient(135deg,#4f9eff,#a371f7);
+  border:none; border-radius:14px; padding:15px;
+  font-size:15px; font-weight:700; color:#fff; cursor:pointer;
+  box-shadow:0 4px 24px rgba(79,158,255,0.4);
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Life Level — Home Screen</h1>
+  <p>Default state · XP Storm active · Level-up moment</p>
+</div>
+
+<div class="screens-row">
+
+<!-- ══════════════════════════════════
+     SCREEN 1 — DEFAULT HOME
+══════════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">STATE 1</div>
+    <div class="step-title">Home — Default</div>
+    <div class="step-desc">Normal day. Active streak,<br>daily quests + challenge snapshot</div>
+  </div>
+  <div class="phone" style="background:#080e14">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+      <!-- BG glow -->
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(79,158,255,0.06) 0%,transparent 55%);pointer-events:none;z-index:0"></div>
+
+      <div style="position:relative;z-index:1">
+        <!-- Header -->
+        <div class="home-header">
+          <div class="hh-top">
+            <div>
+              <div class="hh-greeting">Good morning 👋</div>
+              <div class="hh-name">Alex K.</div>
+            </div>
+            <div class="notif-btn">
+              🔔<div class="notif-dot"></div>
+            </div>
+          </div>
+          <!-- Character card -->
+          <div class="char-card">
+            <div class="char-avatar">🏃</div>
+            <div class="char-info">
+              <div class="char-name">Ironstrider</div>
+              <div class="char-meta">
+                <div class="char-rank">WARRIOR</div>
+                <div class="char-class">Endurance Runner</div>
+              </div>
+              <div class="xp-row">
+                <span>8,420 / 12,000 XP</span>
+                <span style="color:#4f9eff;font-weight:700">LVL 12 → 13</span>
+              </div>
+              <div class="xp-track"><div class="xp-fill" style="width:70%"></div></div>
+            </div>
+            <div class="char-lvl">
+              <div class="lvl-num">12</div>
+              <div class="lvl-lbl">LEVEL</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's stats -->
+        <div class="sec-title">TODAY</div>
+        <div class="stats-strip">
+          <div class="stat-chip">
+            <div class="stat-chip-icon">🏃</div>
+            <div class="stat-chip-val" style="color:#3fb950">8.2 km</div>
+            <div class="stat-chip-lbl">Distance</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-chip-icon">🔥</div>
+            <div class="stat-chip-val" style="color:#f85149">487</div>
+            <div class="stat-chip-lbl">Calories</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-chip-icon">⏱️</div>
+            <div class="stat-chip-val" style="color:#4f9eff">42 min</div>
+            <div class="stat-chip-lbl">Active</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-chip-icon">⚡</div>
+            <div class="stat-chip-val" style="color:#a371f7">+740</div>
+            <div class="stat-chip-lbl">XP Today</div>
+          </div>
+        </div>
+
+        <!-- Streak -->
+        <div class="streak-card">
+          <div class="streak-fire">🔥</div>
+          <div class="streak-info">
+            <span class="streak-num">7</span><span class="streak-label"> Day Streak!</span>
+            <div class="streak-sub">Keep it going — Day 7 reward available</div>
+            <div class="streak-days">
+              <div class="sd done"></div>
+              <div class="sd done"></div>
+              <div class="sd done"></div>
+              <div class="sd done"></div>
+              <div class="sd done"></div>
+              <div class="sd done"></div>
+              <div class="sd today"></div>
+            </div>
+          </div>
+          <button class="streak-claim">Claim 🎁</button>
+        </div>
+
+        <!-- Daily quests -->
+        <div class="sec-title-row">
+          <div class="sec-title">DAILY QUESTS</div>
+          <div class="sec-link">See all ›</div>
+        </div>
+
+        <div class="quest-card">
+          <div class="quest-icon" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2)">🏃</div>
+          <div class="quest-info">
+            <div class="quest-name">Run 5 km today</div>
+            <div class="quest-prog-row">
+              <div class="quest-track"><div class="quest-fill" style="background:#3fb950;width:100%"></div></div>
+              <div class="quest-pct" style="color:#3fb950">Done!</div>
+            </div>
+          </div>
+          <div class="quest-check">✅</div>
+        </div>
+
+        <div class="quest-card">
+          <div class="quest-icon" style="background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.2)">🔥</div>
+          <div class="quest-info">
+            <div class="quest-name">Burn 400 calories</div>
+            <div class="quest-prog-row">
+              <div class="quest-track"><div class="quest-fill" style="background:#4f9eff;width:100%"></div></div>
+              <div class="quest-pct" style="color:#3fb950">Done!</div>
+            </div>
+          </div>
+          <div class="quest-check">✅</div>
+        </div>
+
+        <div class="quest-card" style="margin-bottom:20px">
+          <div class="quest-icon" style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2)">🏋️</div>
+          <div class="quest-info">
+            <div class="quest-name">30 min strength workout</div>
+            <div class="quest-prog-row">
+              <div class="quest-track"><div class="quest-fill" style="background:#f5a623;width:0%"></div></div>
+              <div class="quest-pct">0 / 30 min</div>
+            </div>
+          </div>
+          <div class="quest-xp">+300 XP</div>
+        </div>
+
+        <!-- Active challenge -->
+        <div class="sec-title">ACTIVE CHALLENGE</div>
+        <div class="challenge-card">
+          <div class="cc-top">
+            <div class="cc-badge">⚡ CHALLENGE</div>
+            <div class="cc-timer">Expires in <span>5d 14h</span></div>
+          </div>
+          <div class="cc-row">
+            <div class="cc-icon">🏔️</div>
+            <div>
+              <div class="cc-name">Peak Ascent Trial</div>
+              <div class="cc-sub">Log 50 km total · Mountain Trail Zone</div>
+            </div>
+          </div>
+          <div class="cc-prog-row">
+            <div class="cc-track"><div class="cc-fill" style="width:45%"></div></div>
+            <div class="cc-pct">22.7 / 50 km</div>
+          </div>
+          <button class="cc-btn">View Challenge →</button>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="sec-title-row" style="margin-top:4px">
+          <div class="sec-title">RECENT ACTIVITY</div>
+          <div class="sec-link">History ›</div>
+        </div>
+
+        <div class="activity-card">
+          <div class="act-icon" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2)">🏃</div>
+          <div class="act-info">
+            <div class="act-name">Morning Run</div>
+            <div class="act-meta">8.2 km · 42 min · 487 cal · Today 7:30am</div>
+          </div>
+          <div class="act-xp">
+            <div class="act-xp-val">+740</div>
+            <div class="act-xp-lbl">XP</div>
+          </div>
+        </div>
+
+        <div class="activity-card" style="margin-bottom:24px">
+          <div class="act-icon" style="background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.2)">🚴</div>
+          <div class="act-info">
+            <div class="act-name">Evening Ride</div>
+            <div class="act-meta">18.4 km · 62 min · 540 cal · Yesterday</div>
+          </div>
+          <div class="act-xp">
+            <div class="act-xp-val">+830</div>
+            <div class="act-xp-lbl">XP</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab">+</button>
+
+    <nav class="nav">
+      <a href="home.html" class="nav-item active" style="text-decoration:none"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
+      <a href="quests.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></a>
+      <a href="profile-full.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></a>
+    </nav>
+  </div>
+</div>
+
+<div class="arrow"><div class="arrow-icon">›</div><div class="arrow-label">XP STORM</div></div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2 — XP STORM ACTIVE
+══════════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num orange">STATE 2</div>
+    <div class="step-title">XP Storm Active</div>
+    <div class="step-desc">×2 XP multiplier banner, timer,<br>everything glows orange</div>
+  </div>
+  <div class="phone" style="background:#080e14">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <!-- Storm global tint -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(245,166,35,0.1) 0%,transparent 60%);pointer-events:none;z-index:0"></div>
+
+    <!-- Storm multiplier badge -->
+    <div class="storm-multiplier">⚡ ×2 XP</div>
+
+    <div class="scroll">
+      <div style="position:relative;z-index:1">
+        <!-- Header -->
+        <div class="home-header">
+          <div class="hh-top">
+            <div>
+              <div class="hh-greeting" style="color:#f5a623;font-weight:600">⚡ XP Storm in progress!</div>
+              <div class="hh-name">Alex K.</div>
+            </div>
+            <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+          </div>
+          <div class="char-card" style="border-color:rgba(245,166,35,0.25)">
+            <div class="char-avatar">🏃</div>
+            <div class="char-info">
+              <div class="char-name">Ironstrider</div>
+              <div class="char-meta">
+                <div class="char-rank">WARRIOR</div>
+                <div class="char-class">Endurance Runner</div>
+              </div>
+              <div class="xp-row">
+                <span>8,420 / 12,000 XP</span>
+                <span style="color:#4f9eff;font-weight:700">LVL 12 → 13</span>
+              </div>
+              <div class="xp-track"><div class="xp-fill" style="width:70%"></div></div>
+            </div>
+            <div class="char-lvl">
+              <div class="lvl-num">12</div>
+              <div class="lvl-lbl">LEVEL</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- XP Storm banner (prominent) -->
+        <div class="xp-storm-banner">
+          <div class="storm-icon">⚡</div>
+          <div class="storm-info">
+            <div class="storm-title">XP Storm — ×2 All XP</div>
+            <div class="storm-sub">Every workout earns double XP right now</div>
+          </div>
+          <div class="storm-timer">
+            <div class="storm-time">1:42:08</div>
+            <div class="storm-time-lbl">Remaining</div>
+          </div>
+        </div>
+
+        <!-- Today's stats (with doubled XP highlighted) -->
+        <div class="sec-title">TODAY — DURING STORM</div>
+        <div class="stats-strip">
+          <div class="stat-chip" style="border-color:rgba(63,185,80,0.25)">
+            <div class="stat-chip-icon">🏃</div>
+            <div class="stat-chip-val" style="color:#3fb950">5.1 km</div>
+            <div class="stat-chip-lbl">Distance</div>
+          </div>
+          <div class="stat-chip" style="border-color:rgba(248,81,73,0.2)">
+            <div class="stat-chip-icon">🔥</div>
+            <div class="stat-chip-val" style="color:#f85149">310</div>
+            <div class="stat-chip-lbl">Calories</div>
+          </div>
+          <div class="stat-chip" style="border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.05)">
+            <div class="stat-chip-icon">⚡</div>
+            <div class="stat-chip-val" style="color:#f5a623">+920</div>
+            <div class="stat-chip-lbl">XP ×2</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-chip-icon">⏱️</div>
+            <div class="stat-chip-val" style="color:#4f9eff">28 min</div>
+            <div class="stat-chip-lbl">Active</div>
+          </div>
+        </div>
+
+        <!-- Streak -->
+        <div class="streak-card">
+          <div class="streak-fire">🔥</div>
+          <div class="streak-info">
+            <span class="streak-num">7</span><span class="streak-label"> Day Streak</span>
+            <div class="streak-sub">×1.5 streak bonus stacks with storm!</div>
+            <div class="streak-days">
+              <div class="sd done"></div><div class="sd done"></div><div class="sd done"></div>
+              <div class="sd done"></div><div class="sd done"></div><div class="sd done"></div>
+              <div class="sd today"></div>
+            </div>
+          </div>
+          <div style="text-align:center;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:10px;padding:6px 10px">
+            <div style="font-size:13px;font-weight:700;color:#f5a623">×3.0</div>
+            <div style="font-size:8px;color:#8b949e;margin-top:1px">Total XP</div>
+          </div>
+        </div>
+
+        <!-- Storm quest bonus -->
+        <div style="margin:0 20px 20px;background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:12px 14px">
+          <div style="font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.06em;margin-bottom:8px">STORM BONUS QUESTS</div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🏃</div>
+              <div style="font-size:11px;font-weight:700;color:#e6edf3;margin-top:4px">Run 3 km</div>
+              <div style="font-size:10px;color:#f5a623;margin-top:2px">+600 XP</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🚴</div>
+              <div style="font-size:11px;font-weight:700;color:#e6edf3;margin-top:4px">Cycle 10 km</div>
+              <div style="font-size:10px;color:#f5a623;margin-top:2px">+800 XP</div>
+            </div>
+            <div style="flex:1;background:#1e2632;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">💪</div>
+              <div style="font-size:11px;font-weight:700;color:#e6edf3;margin-top:4px">Strength 20m</div>
+              <div style="font-size:10px;color:#f5a623;margin-top:2px">+500 XP</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily quests -->
+        <div class="sec-title-row">
+          <div class="sec-title">DAILY QUESTS</div>
+          <div class="sec-link">See all ›</div>
+        </div>
+
+        <div class="quest-card done">
+          <div class="quest-icon" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2)">🏃</div>
+          <div class="quest-info">
+            <div class="quest-name">Run 5 km today</div>
+            <div class="quest-prog-row">
+              <div class="quest-track"><div class="quest-fill" style="background:#3fb950;width:100%"></div></div>
+              <div class="quest-pct" style="color:#3fb950">Done!</div>
+            </div>
+          </div>
+          <div class="quest-check">✅</div>
+        </div>
+
+        <div class="quest-card" style="margin-bottom:20px">
+          <div class="quest-icon" style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2)">🏋️</div>
+          <div class="quest-info">
+            <div class="quest-name">30 min strength workout</div>
+            <div class="quest-prog-row">
+              <div class="quest-track"><div class="quest-fill" style="background:#f5a623;width:0%"></div></div>
+              <div class="quest-pct">0 / 30 min</div>
+            </div>
+          </div>
+          <div class="quest-xp" style="color:#f5a623">+600 XP⚡</div>
+        </div>
+
+        <!-- CTA to log -->
+        <div style="margin:0 20px 24px">
+          <button style="width:100%;background:linear-gradient(135deg,#f5a623,#e8920f);border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:700;color:#000;cursor:pointer;box-shadow:0 4px 24px rgba(245,166,35,0.45)">
+            ⚡ Log Workout — Double XP!
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="home.html" class="nav-item active" style="text-decoration:none"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
+      <a href="quests.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">📋</div><div class="nav-label">Quests</div></a>
+      <a href="profile-full.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></a>
+    </nav>
+  </div>
+</div>
+
+<div class="arrow"><div class="arrow-icon">›</div><div class="arrow-label">LEVEL UP</div></div>
+
+<!-- ══════════════════════════════════
+     SCREEN 3 — LEVEL-UP OVERLAY
+══════════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num green">STATE 3</div>
+    <div class="step-title">Level Up!</div>
+    <div class="step-desc">Full-screen celebration overlay<br>with unlocks + stat gains</div>
+  </div>
+  <div class="phone" style="background:#080e14">
+    <div class="status-bar" style="z-index:400"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Blurred home behind -->
+    <div style="position:absolute;inset:0;filter:blur(2px);opacity:0.3;z-index:0">
+      <div style="padding:56px 20px 14px">
+        <div class="hh-top">
+          <div><div class="hh-name">Alex K.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level-up overlay -->
+    <div class="levelup-overlay">
+      <!-- Rays behind -->
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 38%,rgba(79,158,255,0.2) 0%,transparent 55%);pointer-events:none"></div>
+
+      <div style="position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center">
+
+        <div style="font-size:10px;color:#4f9eff;font-weight:700;letter-spacing:0.1em;margin-bottom:16px">✦ RANK UP ✦</div>
+
+        <!-- Rings + badge -->
+        <div class="lu-rings">
+          <div class="lu-ring lu-ring-1"></div>
+          <div class="lu-ring lu-ring-2"></div>
+          <div class="lu-ring lu-ring-3"></div>
+          <div class="lu-badge">
+            <div class="lu-badge-lbl">LEVEL</div>
+            <div class="lu-badge-num">13</div>
+          </div>
+        </div>
+
+        <div class="lu-title">Level Up!</div>
+        <div class="lu-sub">You reached Level 13 · Veteran tier</div>
+
+        <!-- Stat gains -->
+        <div class="lu-stat-gains">
+          <div class="lu-stat"><div class="lu-stat-val">+2 END</div><div class="lu-stat-lbl">Endurance</div></div>
+          <div class="lu-stat"><div class="lu-stat-val">+1 AGI</div><div class="lu-stat-lbl">Agility</div></div>
+          <div class="lu-stat"><div class="lu-stat-val">+1 STA</div><div class="lu-stat-lbl">Stamina</div></div>
+          <div class="lu-stat"><div class="lu-stat-val" style="color:#f5a623">+5%</div><div class="lu-stat-lbl">XP Gain</div></div>
+        </div>
+
+        <!-- Unlocks -->
+        <div class="lu-unlocks">
+          <div style="font-size:10px;color:#8b949e;font-weight:600;letter-spacing:0.07em;margin-bottom:4px;align-self:flex-start">UNLOCKED</div>
+
+          <div class="lu-unlock">
+            <div class="lu-unlock-icon">🗺️</div>
+            <div class="lu-unlock-text">
+              <div class="lu-unlock-name">Iron District Zone</div>
+              <div class="lu-unlock-desc">Gym-based terrain zone · STR challenges</div>
+            </div>
+            <div class="lu-unlock-badge unlock">ZONE</div>
+          </div>
+
+          <div class="lu-unlock">
+            <div class="lu-unlock-icon">⚡</div>
+            <div class="lu-unlock-text">
+              <div class="lu-unlock-name">Weekly Challenges</div>
+              <div class="lu-unlock-desc">Harder challenges with Epic gear drops</div>
+            </div>
+            <div class="lu-unlock-badge new">NEW</div>
+          </div>
+
+          <div class="lu-unlock">
+            <div class="lu-unlock-icon">🥊</div>
+            <div class="lu-unlock-text">
+              <div class="lu-unlock-name">Strength Gear Slot</div>
+              <div class="lu-unlock-desc">Equip gloves for +STR bonuses</div>
+            </div>
+            <div class="lu-unlock-badge unlock">UNLOCK</div>
+          </div>
+        </div>
+
+        <button class="lu-btn">Continue →</button>
+
+      </div>
+    </div>
+    <!-- No nav shown during level-up overlay -->
+  </div>
+</div>
+
+</div><!-- end screens-row -->
+
+<!-- ══════════════════════════════════
+     COMPONENT REFERENCE
+══════════════════════════════════ -->
+<div style="margin-top:64px;width:100%">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:6px">Home Screen — Component Map</div>
+    <div style="font-size:12px;color:#8b949e">All widgets + their priority on the screen</div>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;max-width:1800px">
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 16px;min-width:200px;flex:1">
+      <div style="font-size:10px;color:#4f9eff;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">ALWAYS VISIBLE (above fold)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">1.</span> Greeting + notifications</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">2.</span> Character card (avatar, level, XP bar)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">3.</span> Today's stats strip (km, cal, time, XP)</div>
+      <div style="font-size:11px;color:#8b949e;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">4.</span> Streak bar + claim button</div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 16px;min-width:200px;flex:1">
+      <div style="font-size:10px;color:#a371f7;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">SCROLL ZONE (mid priority)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">5.</span> Daily quests (3 cards, progress bars)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">6.</span> Active challenge mini-card</div>
+      <div style="font-size:11px;color:#8b949e;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">7.</span> Recent activity log (last 2–3)</div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 16px;min-width:200px;flex:1">
+      <div style="font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">CONDITIONAL (event-driven)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#f5a623;font-weight:600">⚡</span> XP Storm banner (when active)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#f5a623;font-weight:600">⚡</span> Storm bonus quests (3 quick actions)</div>
+      <div style="font-size:11px;color:#8b949e;display:flex;gap:8px;align-items:center"><span style="color:#f5a623;font-weight:600">⚡</span> ×N XP badge (corner multiplier chip)</div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 16px;min-width:200px;flex:1">
+      <div style="font-size:10px;color:#3fb950;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">OVERLAYS (interrupt states)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#3fb950;font-weight:600">↑</span> Level-up overlay (full-screen)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#3fb950;font-weight:600">↑</span> Daily login reward modal</div>
+      <div style="font-size:11px;color:#8b949e;display:flex;gap:8px;align-items:center"><span style="color:#3fb950;font-weight:600">↑</span> Challenge complete sheet</div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 16px;min-width:200px;flex:1">
+      <div style="font-size:10px;color:#f85149;font-weight:700;letter-spacing:0.06em;margin-bottom:10px">PERSISTENT UI</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">●</span> Bottom nav (Home/Map/Quests/Profile)</div>
+      <div style="font-size:11px;color:#8b949e;margin-bottom:5px;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">●</span> FAB green (+) — Log Workout shortcut</div>
+      <div style="font-size:11px;color:#8b949e;display:flex;gap:8px;align-items:center"><span style="color:#e6edf3;font-weight:600">●</span> Notification bell (top right)</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const routes = {
+    'Home':    'home.html',
+    'Map':     'adventure-map.html',
+    'Stats':   'profile-full.html',
+    'Profile': 'profile-full.html',
+    'Quests':  'quests.html',
+  };
+  document.querySelectorAll('.nav-item, .nav__item').forEach(function (el) {
+    const lbl = el.querySelector('.nav-label, .nav__label');
+    if (!lbl) return;
+    const href = routes[lbl.textContent.trim()];
+    if (href) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function () { window.location.href = href; });
+    }
+  });
+}());
+</script>
+</body>
+</html>

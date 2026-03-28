@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/main_shell.dart';
+import '../character/setup/welcome_setup_screen.dart';
 import 'auth_service.dart';
 import 'register_screen.dart';
 
@@ -31,10 +33,21 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       await ApiClient.saveToken(result.token);
       if (mounted) {
-        // TODO: navigate to main screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Welcome back, ${result.username}!')),
-        );
+        if (result.isSetupComplete) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (_) =>
+                    MainShell(initialRingIds: result.ringItems)),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (_) =>
+                    WelcomeSetupScreen(ringItems: result.ringItems)),
+          );
+        }
       }
     } catch (e) {
       setState(() => _error = 'Invalid email or password.');

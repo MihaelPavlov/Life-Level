@@ -14,11 +14,12 @@ public class JwtService(IConfiguration config)
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expires = DateTime.UtcNow.AddHours(int.Parse(config["Jwt:ExpiresInHours"] ?? "24"));
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
         };
 
         var token = new JwtSecurityToken(

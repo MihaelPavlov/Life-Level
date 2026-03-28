@@ -20,8 +20,15 @@ public class Character
     public int Flexibility { get; set; } = 0; // FLX — yoga/stretching
     public int Stamina { get; set; } = 0;    // STA — all activities
 
+    public int AvailableStatPoints { get; set; } = 0;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public Guid? ClassId { get; set; }
+    public CharacterClass? Class { get; set; }
+    public string? AvatarEmoji { get; set; }
+    public bool IsSetupComplete { get; set; } = false;
 
     public ICollection<Activity> Activities { get; set; } = [];
 }

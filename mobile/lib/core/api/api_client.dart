@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -32,4 +33,22 @@ class ApiClient {
   static Future<void> clearToken() => _storage.delete(key: 'jwt_token');
 
   static Future<String?> getToken() => _storage.read(key: 'jwt_token');
+
+  static Future<bool> isAdmin() async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) return false;
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return false;
+      var payload = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      while (payload.length % 4 != 0) payload += '=';
+      final claims = jsonDecode(utf8.decode(base64Decode(payload))) as Map<String, dynamic>;
+      // ASP.NET Core serialises ClaimTypes.Role as this URI key
+      final role = claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+          ?? claims['role'];
+      return role == 'Admin';
+    } catch (_) {
+      return false;
+    }
+  }
 }

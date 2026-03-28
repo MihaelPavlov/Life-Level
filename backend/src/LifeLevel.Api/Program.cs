@@ -31,17 +31,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 // App services
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CharacterService>();
+builder.Services.AddScoped<MapService>();
+builder.Services.AddScoped<BossService>();
+builder.Services.AddScoped<ChestService>();
+builder.Services.AddScoped<DungeonService>();
+builder.Services.AddScoped<CrossroadsService>();
 
-// CORS — allow Flutter dev clients
+// CORS — allow Flutter dev clients + local HTML files (Origin: null from file://)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        policy.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader());
 });
 
 // Swagger
@@ -80,5 +89,15 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Serve the HTML admin panel
+app.MapGet("/admin-map", (IWebHostEnvironment env) =>
+{
+    var path = Path.GetFullPath(
+        Path.Combine(env.ContentRootPath, "..", "..", "..", "design-mockup", "admin-map.html"));
+    return File.Exists(path)
+        ? Results.File(path, "text/html")
+        : Results.NotFound("admin-map.html not found");
+});
 
 app.Run();

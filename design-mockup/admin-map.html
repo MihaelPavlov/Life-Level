@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Map Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #040810;
+  --bg2: #080e14;
+  --s1: #161b22;
+  --s2: #1e2632;
+  --border: #30363d;
+  --border2: #21262d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #586070;
+  --blue: #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red: #f85149;
+  --green: #3fb950;
+  --yellow: #e3b341;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── Layout Shell ── */
+.app {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 100;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 8px;
+}
+.header-logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.header-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.header-subtitle {
+  font-size: 11px;
+  color: var(--text2);
+}
+.admin-badge {
+  background: rgba(163,113,247,0.12);
+  border: 1px solid rgba(163,113,247,0.35);
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.api-url-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.api-url-label {
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
+  font-weight: 600;
+}
+.api-url-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+  width: 280px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.api-url-input:focus { border-color: rgba(79,158,255,0.5); }
+
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.api-status.online {
+  color: var(--green);
+  background: rgba(63,185,80,0.08);
+  border-color: rgba(63,185,80,0.25);
+}
+.api-status.offline {
+  color: var(--red);
+  background: rgba(248,81,73,0.08);
+  border-color: rgba(248,81,73,0.25);
+}
+.api-status.checking {
+  color: var(--yellow);
+  background: rgba(227,179,65,0.08);
+  border-color: rgba(227,179,65,0.25);
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-dot.pulse {
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+  outline: none;
+  text-decoration: none;
+}
+.btn:focus-visible { outline: 2px solid rgba(79,158,255,0.4); outline-offset: 2px; }
+.btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-primary:hover { background: #6aabff; }
+.btn-secondary {
+  background: var(--s2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-secondary:hover { background: var(--border2); border-color: var(--text3); }
+.btn-orange { background: rgba(245,166,35,0.12); color: var(--orange); border-color: rgba(245,166,35,0.4); }
+.btn-orange:hover { background: rgba(245,166,35,0.2); }
+.btn-danger { background: rgba(248,81,73,0.1); color: var(--red); border-color: rgba(248,81,73,0.35); }
+.btn-danger:hover { background: rgba(248,81,73,0.18); }
+.btn-ghost { background: transparent; color: var(--text2); border-color: transparent; padding: 6px 8px; }
+.btn-ghost:hover { background: var(--s2); color: var(--text); }
+.btn-sm { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
+.btn-icon { padding: 6px; border-radius: 6px; }
+
+/* ── Sidebar ── */
+.sidebar {
+  grid-column: 1;
+  grid-row: 2;
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-tabs {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 10px 8px;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  font-family: var(--font);
+  text-align: left;
+}
+.sidebar-tab:hover { color: var(--text); background: var(--s2); }
+.sidebar-tab.active {
+  color: var(--text);
+  background: var(--s2);
+  border-color: var(--border);
+}
+.sidebar-tab .tab-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+.sidebar-tab .tab-count {
+  margin-left: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 22px;
+  text-align: center;
+}
+.sidebar-tab.active .tab-count {
+  background: rgba(79,158,255,0.12);
+  border-color: rgba(79,158,255,0.3);
+  color: var(--blue);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 8px;
+}
+.sidebar-list-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ── Entity Item Card ── */
+.entity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--bg2);
+}
+.entity-item:hover { background: var(--s2); border-color: var(--border); }
+.entity-item.selected {
+  background: rgba(79,158,255,0.06);
+  border-color: rgba(79,158,255,0.3);
+}
+.entity-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.entity-info { flex: 1; min-width: 0; }
+.entity-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entity-type-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+.entity-actions { display: flex; gap: 3px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.entity-item:hover .entity-actions { opacity: 1; }
+
+/* ── Add New Button ── */
+.add-new-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  font-family: var(--font);
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+.add-new-btn:hover { border-color: var(--blue); color: var(--blue); background: rgba(79,158,255,0.05); }
+
+/* ── Map Area ── */
+.map-area {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ── Map Toolbar ── */
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.map-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+.map-mode-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--font);
+  transition: all 0.15s;
+}
+.map-mode-btn:hover { background: var(--s2); color: var(--text); }
+.map-mode-btn.active {
+  background: var(--s2);
+  color: var(--text);
+  border-color: var(--blue);
+}
+.toolbar-info {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* ── SVG Canvas ── */
+.map-canvas-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+#map-svg {
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  user-select: none;
+}
+.grid-line { stroke: rgba(48,54,61,0.4); stroke-width: 1; }
+
+/* SVG Node styles */
+.node-circle {
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.node-circle:hover { filter: brightness(1.3); }
+.node-circle.selected { filter: brightness(1.2) drop-shadow(0 0 8px currentColor); }
+.node-text {
+  fill: #e6edf3;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.node-sublabel {
+  fill: #8b949e;
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.edge-line { stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.edge-label {
+  fill: #8b949e;
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* ── Right Panel ── */
+.right-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  background: var(--s1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+}
+.right-panel.open { transform: translateX(0); }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.panel-subtitle { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.panel-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Form Fields ── */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.form-section-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-section-header .section-icon { font-size: 13px; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.form-input, .form-select, .form-textarea {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: rgba(79,158,255,0.5);
+  box-shadow: 0 0 0 3px rgba(79,158,255,0.1);
+}
+.form-textarea { resize: vertical; min-height: 64px; }
+.form-select option { background: var(--s1); color: var(--text); }
+
+.form-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.form-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--blue);
+}
+.form-checkbox-label {
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Sub-section cards ── */
+.sub-card {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sub-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Floor / Path List Items ── */
+.list-item-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.list-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.list-item-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  flex: 1;
+}
+.empty-state-icon { font-size: 36px; opacity: 0.4; }
+.empty-state-title { font-size: 14px; font-weight: 700; color: var(--text2); }
+.empty-state-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+/* ── Tooltip ── */
+.tooltip-wrap { position: relative; }
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.tooltip-wrap:hover .tooltip { opacity: 1; }
+
+/* ── Toast ── */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+.toast {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: toastIn 0.2s ease;
+  pointer-events: auto;
+  max-width: 320px;
+}
+.toast.success { border-color: rgba(63,185,80,0.4); }
+.toast.error { border-color: rgba(248,81,73,0.4); }
+.toast.info { border-color: rgba(79,158,255,0.4); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── No-selection hint on map ── */
+.map-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22,27,34,0.9);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+/* Zoom level badge */
+.zoom-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(22,27,34,0.85);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+
+/* ── Node type colors ── */
+.type-zone     { color: var(--blue); }
+.type-boss     { color: var(--red); }
+.type-dungeon  { color: var(--purple); }
+.type-chest    { color: var(--orange); }
+.type-crossroads { color: var(--green); }
+.type-event    { color: var(--yellow); }
+
+.dot-zone     { background: var(--blue); }
+.dot-boss     { background: var(--red); }
+.dot-dungeon  { background: var(--purple); }
+.dot-chest    { background: var(--orange); }
+.dot-crossroads { background: var(--green); }
+.dot-event    { background: var(--yellow); }
+
+.badge-zone     { background: rgba(79,158,255,0.12); color: var(--blue); }
+.badge-boss     { background: rgba(248,81,73,0.12); color: var(--red); }
+.badge-dungeon  { background: rgba(163,113,247,0.12); color: var(--purple); }
+.badge-chest    { background: rgba(245,166,35,0.12); color: var(--orange); }
+.badge-crossroads { background: rgba(63,185,80,0.12); color: var(--green); }
+.badge-event    { background: rgba(227,179,65,0.12); color: var(--yellow); }
+
+/* ── Loading overlay ── */
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,8,16,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#loading-overlay.show { opacity: 1; pointer-events: all; }
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Confirm dialog ── */
+#confirm-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,8,16,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9997;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+#confirm-dialog.show { opacity: 1; pointer-events: all; }
+.dialog-box {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  width: 360px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+}
+.dialog-icon { font-size: 28px; margin-bottom: 10px; }
+.dialog-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.dialog-desc { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+.dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">🗺️</div>
+      <div>
+        <div class="header-title">Life Level</div>
+        <div class="header-subtitle">Map Admin Panel</div>
+      </div>
+    </div>
+    <span class="admin-badge">ADMIN</span>
+
+    <div class="header-divider"></div>
+
+    <div class="api-url-group">
+      <label class="api-url-label" for="api-url-input">API:</label>
+      <input type="text" id="api-url-input" class="api-url-input"
+        value="http://localhost:5128/api/admin/map"
+        placeholder="http://localhost:5128/api/admin/map">
+      <label class="api-url-label" for="token-input" style="margin-left:8px">Token:</label>
+      <input type="password" id="token-input" class="api-url-input" style="width:180px"
+        placeholder="Paste JWT token here">
+      <button class="api-status checking" id="api-status-btn" onclick="checkApiStatus()">
+        <div class="status-dot pulse" id="status-dot"></div>
+        <span id="status-text">Checking...</span>
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="refreshFromApi()" id="refresh-btn">
+        🔄 Refresh API
+      </button>
+      <button class="btn btn-orange" onclick="seedSampleData()">
+        🌱 Seed Data
+      </button>
+      <button class="btn btn-primary" onclick="saveAllChanges()" id="save-btn">
+        💾 Save All Changes
+      </button>
+    </div>
+  </header>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <!-- Tabs -->
+    <nav class="sidebar-tabs" id="sidebar-tabs">
+      <button class="sidebar-tab active" data-tab="nodes" onclick="switchTab('nodes')">
+        <span class="tab-icon">🔵</span> Nodes
+        <span class="tab-count" id="count-nodes">0</span>
+      </button>
+      <button class="sidebar-tab" data-tab="edges" onclick="switchTab('edges')">
+        <span class="tab-icon">↔️</span> Edges
+        <span class="tab-count" id="count-edges">0</span>
+      </button>
+      <button class="sidebar-tab" data-tab="bosses" onclick="switchTab('bosses')">
+        <span class="tab-icon">💀</span> Bosses
+        <span class="tab-count" id="count-bosses">0</span>
+      </button>
+      <button class="sidebar-tab" data-tab="dungeons" onclick="switchTab('dungeons')">
+        <span class="tab-icon">🏰</span> Dungeons
+        <span class="tab-count" id="count-dungeons">0</span>
+      </button>
+      <button class="sidebar-tab" data-tab="chests" onclick="switchTab('chests')">
+        <span class="tab-icon">📦</span> Chests
+        <span class="tab-count" id="count-chests">0</span>
+      </button>
+      <button class="sidebar-tab" data-tab="crossroads" onclick="switchTab('crossroads')">
+        <span class="tab-icon">🔀</span> Crossroads
+        <span class="tab-count" id="count-crossroads">0</span>
+      </button>
+    </nav>
+
+    <!-- List Content -->
+    <div class="sidebar-content" id="sidebar-content">
+      <!-- rendered dynamically -->
+    </div>
+  </aside>
+
+  <!-- ── MAP AREA ── -->
+  <main class="map-area" id="map-area">
+
+    <!-- Map Toolbar -->
+    <div class="map-toolbar">
+      <div class="map-toolbar-group">
+        <button class="map-mode-btn active" id="mode-select" onclick="setMode('select')">
+          ↖ Select
+        </button>
+        <button class="map-mode-btn" id="mode-edge" onclick="setMode('edge')">
+          ↔ Add Edge
+        </button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="map-toolbar-group">
+        <button class="btn btn-secondary btn-sm" onclick="addNode()">＋ Add Node</button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="map-toolbar-group">
+        <button class="btn btn-ghost btn-icon" onclick="zoomIn()" title="Zoom In">🔍＋</button>
+        <button class="btn btn-ghost btn-icon" onclick="zoomOut()" title="Zoom Out">🔍－</button>
+        <button class="btn btn-ghost btn-icon" onclick="resetZoom()" title="Reset View">⊞</button>
+      </div>
+      <div class="toolbar-info" id="toolbar-info">Click a node to select · Drag to move</div>
+    </div>
+
+    <!-- SVG Canvas -->
+    <div class="map-canvas-wrap" id="map-canvas-wrap">
+      <svg id="map-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="rgba(139,148,158,0.5)" />
+          </marker>
+          <filter id="glow-blue">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-red">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(48,54,61,0.3)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <g id="map-transform-group">
+          <!-- grid -->
+          <rect id="grid-bg" fill="url(#grid)" x="-5000" y="-5000" width="12000" height="12000"/>
+          <!-- edges layer -->
+          <g id="edges-layer"></g>
+          <!-- nodes layer -->
+          <g id="nodes-layer"></g>
+        </g>
+      </svg>
+
+      <!-- Map Hint -->
+      <div class="map-hint" id="map-hint">Click a node to edit · Drag to reposition · Scroll to zoom</div>
+
+      <!-- Zoom badge -->
+      <div class="zoom-badge">
+        <span>🔍</span>
+        <span id="zoom-label">100%</span>
+      </div>
+    </div>
+
+    <!-- ── RIGHT PANEL (slides over map) ── -->
+    <div class="right-panel" id="right-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title" id="panel-title">Edit Node</div>
+          <div class="panel-subtitle" id="panel-subtitle">Configure properties</div>
+        </div>
+        <button class="btn btn-ghost btn-icon" onclick="closePanel()" title="Close">✕</button>
+      </div>
+
+      <div class="panel-body" id="panel-body">
+        <!-- rendered dynamically -->
+      </div>
+
+      <div class="panel-footer" id="panel-footer">
+        <!-- rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+</div><!-- /app -->
+
+<!-- ── Toast container ── -->
+<div id="toast-container"></div>
+
+<!-- ── Loading overlay ── -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+</div>
+
+<!-- ── Confirm dialog ── -->
+<div id="confirm-dialog">
+  <div class="dialog-box">
+    <div class="dialog-icon" id="dialog-icon">⚠️</div>
+    <div class="dialog-title" id="dialog-title">Confirm Action</div>
+    <div class="dialog-desc" id="dialog-desc">Are you sure?</div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="dialog-confirm-btn" onclick="confirmAction()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let state = {
+  nodes: [],
+  edges: [],
+  bosses: [],
+  dungeons: [],
+  chests: [],
+  crossroads: []
+};
+
+let selectedNodeId = null;
+let selectedEdgeId = null;
+let activeTab = 'nodes';
+let mapMode = 'select';
+let edgeFirstNode = null;  // for edge drawing mode
+let _idCounter = 100;
+let confirmCallback = null;
+
+// Zoom/pan state
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+
+// Drag state
+let isDragging = false;
+let dragNodeId = null;
+let dragStart = { x: 0, y: 0 };
+let dragNodeStart = { x: 0, y: 0 };
+
+function newId() { return String(++_idCounter); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SEED DATA
+═══════════════════════════════════════════════════════════════ */
+function seedSampleData() {
+  if (state.nodes.length > 0) {
+    showConfirm(
+      '🌱',
+      'Seed Sample Data',
+      'This will replace all current data with the sample dataset. Continue?',
+      'Seed Data',
+      _loadSeedData
+    );
+  } else {
+    _loadSeedData();
+  }
+}
+
+function _loadSeedData() {
+  _idCounter = 100;
+  state = {
+    nodes: [
+      { id: 101, name: 'Ashfield Village',     icon: '🏘️', type: 'Zone',        region: 'Ashfield',             x: 160, y: 420, levelReq: 1,  rewardXp: 50,  isStart: true,  isHidden: false, description: 'The humble starting village. Every hero begins their journey here.' },
+      { id: 102, name: 'Forest Edge',           icon: '🌲', type: 'Zone',        region: 'ForestOfEndurance',    x: 300, y: 310, levelReq: 1,  rewardXp: 80,  isStart: false, isHidden: false, description: 'The treeline where Ashfield ends and the endless forest begins.' },
+      { id: 103, name: 'Ancient Crossroads',    icon: '🔀', type: 'Crossroads',  region: 'ForestOfEndurance',    x: 440, y: 285, levelReq: 2,  rewardXp: 100, isStart: false, isHidden: false, description: 'A stone crossroads carved by ancient explorers. Paths diverge here.' },
+      { id: 104, name: 'Forest Boss: Thornback',icon: '💀', type: 'Boss',        region: 'ForestOfEndurance',    x: 580, y: 195, levelReq: 3,  rewardXp: 200, isStart: false, isHidden: false, description: 'A fearsome beast of bark and thorn guards the forest depths.' },
+      { id: 105, name: 'Hidden Dungeon',        icon: '🏰', type: 'Dungeon',     region: 'ForestOfEndurance',    x: 455, y: 390, levelReq: 4,  rewardXp: 350, isStart: false, isHidden: false, description: 'Crystal-encrusted caverns hidden beneath the forest floor.' },
+      { id: 106, name: 'Treasure Cache',        icon: '📦', type: 'Chest',       region: 'Ashfield',             x: 210, y: 500, levelReq: 2,  rewardXp: 50,  isStart: false, isHidden: false, description: 'A weathered chest half-buried near the village outskirts.' },
+      { id: 107, name: 'Mountain Pass',         icon: '⛰️', type: 'Zone',        region: 'MountainsOfStrength',  x: 645, y: 305, levelReq: 5,  rewardXp: 150, isStart: false, isHidden: false, description: 'A treacherous pass leading into the Mountains of Strength.' },
+      { id: 108, name: 'Summit Boss: Stonebreaker', icon: '🗿', type: 'Boss',   region: 'MountainsOfStrength',  x: 755, y: 185, levelReq: 7,  rewardXp: 500, isStart: false, isHidden: false, description: 'The ancient stone golem that has guarded the summit for centuries.' }
+    ],
+    edges: [
+      { id: 201, fromNodeId: 101, toNodeId: 102, distanceKm: 5.0,  bidirectional: true },
+      { id: 202, fromNodeId: 102, toNodeId: 103, distanceKm: 3.5,  bidirectional: true },
+      { id: 203, fromNodeId: 103, toNodeId: 104, distanceKm: 6.0,  bidirectional: false },
+      { id: 204, fromNodeId: 103, toNodeId: 105, distanceKm: 4.0,  bidirectional: false },
+      { id: 205, fromNodeId: 101, toNodeId: 106, distanceKm: 1.5,  bidirectional: true },
+      { id: 206, fromNodeId: 102, toNodeId: 107, distanceKm: 12.0, bidirectional: true },
+      { id: 207, fromNodeId: 107, toNodeId: 108, distanceKm: 8.0,  bidirectional: false }
+    ],
+    bosses: [
+      { id: 301, nodeId: 104, name: 'Thornback',    icon: '🌿', maxHp: 500,  rewardXp: 200, timerDays: 7, isMini: false },
+      { id: 302, nodeId: 108, name: 'Stonebreaker', icon: '🗿', maxHp: 1000, rewardXp: 500, timerDays: 7, isMini: false }
+    ],
+    dungeons: [
+      {
+        id: 401, nodeId: 105, name: 'Crystal Depths', totalFloors: 3,
+        floors: [
+          { floor: 1, requiredActivity: 'Running',  requiredMinutes: 20, rewardXp: 80  },
+          { floor: 2, requiredActivity: 'Gym',       requiredMinutes: 30, rewardXp: 120 },
+          { floor: 3, requiredActivity: 'Cycling',   requiredMinutes: 25, rewardXp: 200 }
+        ]
+      }
+    ],
+    chests: [
+      { id: 501, nodeId: 106, rarity: 'Common', rewardXp: 50 }
+    ],
+    crossroads: [
+      {
+        id: 601, nodeId: 103,
+        paths: [
+          { name: 'Forest Trail',    distanceKm: 6.0,  difficulty: 'Easy',     estimatedDays: 2, rewardXp: 120, leadsToNodeId: 104 },
+          { name: 'Crystal Caverns', distanceKm: 4.0,  difficulty: 'Moderate', estimatedDays: 4, rewardXp: 200, leadsToNodeId: 105 }
+        ]
+      }
+    ]
+  };
+  _idCounter = 700;
+  selectedNodeId = null;
+  selectedEdgeId = null;
+  closePanel();
+  renderAll();
+  showToast('success', '🌱 Sample data loaded successfully!');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NODE COLORS / HELPERS
+═══════════════════════════════════════════════════════════════ */
+const NODE_COLORS = {
+  Zone:       '#4f9eff',
+  Boss:       '#f85149',
+  Dungeon:    '#a371f7',
+  Chest:      '#f5a623',
+  Crossroads: '#3fb950',
+  Event:      '#e3b341'
+};
+const NODE_TYPES = ['Zone','Boss','Crossroads','Dungeon','Chest','Event'];
+const REGIONS = ['Ashfield','ForestOfEndurance','MountainsOfStrength','OceanOfBalance','SnowPeaks','Desert','Swamps'];
+const ACTIVITIES = ['Running','Gym','Cycling','Yoga','Swimming','Climbing','Hiking'];
+const RARITIES = ['Common','Uncommon','Rare','Epic','Legendary'];
+const DIFFICULTIES = ['Easy','Moderate','Hard','Extreme'];
+
+function nodeColor(type) { return NODE_COLORS[type] || '#8b949e'; }
+function typeLower(t) { return (t||'zone').toLowerCase(); }
+
+function getNodeById(id) { return state.nodes.find(n => n.id === id); }
+function getBossForNode(nodeId) { return state.bosses.find(b => b.nodeId === nodeId); }
+function getDungeonForNode(nodeId) { return state.dungeons.find(d => d.nodeId === nodeId); }
+function getChestForNode(nodeId) { return state.chests.find(c => c.nodeId === nodeId); }
+function getCrossroadsForNode(nodeId) { return state.crossroads.find(c => c.nodeId === nodeId); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER ALL
+═══════════════════════════════════════════════════════════════ */
+function renderAll() {
+  updateCounts();
+  renderSidebar();
+  renderSvgMap();
+}
+
+function updateCounts() {
+  document.getElementById('count-nodes').textContent = state.nodes.length;
+  document.getElementById('count-edges').textContent = state.edges.length;
+  document.getElementById('count-bosses').textContent = state.bosses.length;
+  document.getElementById('count-dungeons').textContent = state.dungeons.length;
+  document.getElementById('count-chests').textContent = state.chests.length;
+  document.getElementById('count-crossroads').textContent = state.crossroads.length;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR RENDER
+═══════════════════════════════════════════════════════════════ */
+function renderSidebar() {
+  const el = document.getElementById('sidebar-content');
+  let html = '';
+
+  if (activeTab === 'nodes') {
+    html += sidebarListHeader('Nodes', 'addNode()');
+    state.nodes.forEach(n => {
+      const color = nodeColor(n.type);
+      const tl = typeLower(n.type);
+      const isSelected = selectedNodeId === n.id;
+      html += `
+        <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectNode('${n.id}')">
+          <div class="entity-dot dot-${tl}" style="background:${color}"></div>
+          <div class="entity-info">
+            <div class="entity-name">${esc(n.name)}</div>
+            <span class="entity-type-badge badge-${tl}">${n.type}</span>
+            ${n.isStart ? '<span class="entity-type-badge" style="background:rgba(245,166,35,0.12);color:#f5a623;margin-left:3px;">START</span>' : ''}
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectNode('${n.id}')" title="Edit">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteNode('${n.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.nodes.length === 0) html += emptyState('🔵', 'No Nodes', 'Add your first map node using the + button.');
+
+  } else if (activeTab === 'edges') {
+    html += sidebarListHeader('Edges', 'addEdge()');
+    state.edges.forEach(e => {
+      const from = getNodeById(e.fromNodeId);
+      const to = getNodeById(e.toNodeId);
+      if (!from || !to) return;
+      const isSelected = selectedEdgeId === e.id;
+      html += `
+        <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectEdge('${e.id}')">
+          <div class="entity-info">
+            <div class="entity-name">${esc(from.name)} → ${esc(to.name)}</div>
+            <span class="entity-type-badge" style="background:rgba(139,148,158,0.1);color:#8b949e">${e.distanceKm} km${e.bidirectional ? ' · ↔' : ''}</span>
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectEdge('${e.id}')" title="Edit">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteEdge('${e.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.edges.length === 0) html += emptyState('↔️', 'No Edges', 'Edges connect nodes. Use Add Edge mode on the map.');
+
+  } else if (activeTab === 'bosses') {
+    html += sidebarListHeader('Bosses', 'addBoss()');
+    state.bosses.forEach(b => {
+      const node = getNodeById(b.nodeId);
+      const isSelected = selectedNodeId === b.nodeId;
+      html += `
+        <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectNode('${b.nodeId}')">
+          <div class="entity-dot dot-boss"></div>
+          <div class="entity-info">
+            <div class="entity-name">${esc(b.icon)} ${esc(b.name)}</div>
+            <span class="entity-type-badge badge-boss">${b.isMini ? 'Mini-Boss' : 'Boss'}</span>
+            <span class="entity-type-badge" style="background:rgba(139,148,158,0.1);color:#8b949e;margin-left:3px;">${b.maxHp.toLocaleString()} HP · ${b.timerDays}d</span>
+            ${node ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">@ ${esc(node.name)}</div>` : ''}
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectNode('${b.nodeId}')" title="Edit Node">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteBoss('${b.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.bosses.length === 0) html += emptyState('💀', 'No Bosses', 'Bosses are attached to nodes of type Boss.');
+
+  } else if (activeTab === 'dungeons') {
+    html += sidebarListHeader('Dungeons', 'addDungeon()');
+    state.dungeons.forEach(d => {
+      const node = getNodeById(d.nodeId);
+      const isSelected = selectedNodeId === d.nodeId;
+      html += `
+        <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectNode('${d.nodeId}')">
+          <div class="entity-dot dot-dungeon"></div>
+          <div class="entity-info">
+            <div class="entity-name">🏰 ${esc(d.name)}</div>
+            <span class="entity-type-badge badge-dungeon">${d.totalFloors} Floors</span>
+            ${node ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">@ ${esc(node.name)}</div>` : ''}
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectNode('${d.nodeId}')" title="Edit Node">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteDungeon('${d.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.dungeons.length === 0) html += emptyState('🏰', 'No Dungeons', 'Dungeons are attached to nodes of type Dungeon.');
+
+  } else if (activeTab === 'chests') {
+    html += sidebarListHeader('Chests', 'addChest()');
+    state.chests.forEach(c => {
+      const node = getNodeById(c.nodeId);
+      const isSelected = selectedNodeId === c.nodeId;
+      html += `
+        <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectNode('${c.nodeId}')">
+          <div class="entity-dot dot-chest"></div>
+          <div class="entity-info">
+            <div class="entity-name">📦 Chest #${c.id}</div>
+            <span class="entity-type-badge badge-chest">${c.rarity}</span>
+            <span class="entity-type-badge" style="background:rgba(139,148,158,0.1);color:#8b949e;margin-left:3px;">${c.rewardXp} XP</span>
+            ${node ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">@ ${esc(node.name)}</div>` : ''}
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectNode('${c.nodeId}')" title="Edit Node">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteChest('${c.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.chests.length === 0) html += emptyState('📦', 'No Chests', 'Chests are attached to nodes of type Chest.');
+
+  } else if (activeTab === 'crossroads') {
+    html += sidebarListHeader('Crossroads', 'addCrossroads()');
+    state.crossroads.forEach(cr => {
+      const node = getNodeById(cr.nodeId);
+      const isSelected = selectedNodeId === cr.nodeId;
+      html += `
+        <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectNode('${cr.nodeId}')">
+          <div class="entity-dot dot-crossroads"></div>
+          <div class="entity-info">
+            <div class="entity-name">🔀 Crossroads #${cr.id}</div>
+            <span class="entity-type-badge badge-crossroads">${cr.paths.length} Path${cr.paths.length !== 1 ? 's' : ''}</span>
+            ${node ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">@ ${esc(node.name)}</div>` : ''}
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectNode('${cr.nodeId}')" title="Edit Node">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteCrossroads('${cr.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.crossroads.length === 0) html += emptyState('🔀', 'No Crossroads', 'Crossroads are attached to nodes of type Crossroads.');
+  }
+
+  el.innerHTML = html;
+}
+
+function sidebarListHeader(label, addFn) {
+  return `
+    <div class="sidebar-list-header">
+      <span class="sidebar-list-title">${label}</span>
+    </div>
+    <button class="add-new-btn" onclick="${addFn}">＋ Add New ${label.replace(/s$/, '')}</button>`;
+}
+
+function emptyState(icon, title, desc) {
+  return `<div class="empty-state" style="padding:24px 12px;">
+    <div class="empty-state-icon">${icon}</div>
+    <div class="empty-state-title">${title}</div>
+    <div class="empty-state-desc">${desc}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SVG MAP RENDER
+═══════════════════════════════════════════════════════════════ */
+function renderSvgMap() {
+  renderEdgesSvg();
+  renderNodesSvg();
+}
+
+function renderEdgesSvg() {
+  const layer = document.getElementById('edges-layer');
+  let html = '';
+  state.edges.forEach(e => {
+    const from = getNodeById(e.fromNodeId);
+    const to = getNodeById(e.toNodeId);
+    if (!from || !to) return;
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2;
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    // shorten endpoints so they don't overlap node circles
+    const r = 18;
+    const sx = from.x + (dx / len) * r;
+    const sy = from.y + (dy / len) * r;
+    const ex = to.x - (dx / len) * r;
+    const ey = to.y - (dy / len) * r;
+    const isSelected = selectedEdgeId === e.id;
+    const strokeColor = isSelected ? 'rgba(79,158,255,0.9)' : 'rgba(139,148,158,0.35)';
+    const strokeW = isSelected ? 2.5 : 1.5;
+    const dash = e.bidirectional ? '' : '5,4';
+    html += `<g class="edge-group" data-edge-id="${e.id}" onclick="selectEdge('${e.id}')" style="cursor:pointer">
+      <line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}"
+        stroke="${strokeColor}" stroke-width="${strokeW}"
+        stroke-dasharray="${dash}" stroke-linecap="round"
+        marker-end="${e.bidirectional ? '' : 'url(#arrow)'}"/>
+      <text class="edge-label" x="${mx}" y="${my - 5}">${e.distanceKm}km</text>
+      <line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}"
+        stroke="transparent" stroke-width="12"/>
+    </g>`;
+  });
+  layer.innerHTML = html;
+}
+
+function renderNodesSvg() {
+  const layer = document.getElementById('nodes-layer');
+  let html = '';
+  state.nodes.forEach(n => {
+    const color = nodeColor(n.type);
+    const isSelected = selectedNodeId === n.id;
+    const opacity = n.isHidden ? 0.45 : 1;
+    const strokeW = isSelected ? 3 : 1.5;
+    const strokeColor = isSelected ? color : 'rgba(255,255,255,0.15)';
+    const strokeDash = n.isHidden ? '3,2' : 'none';
+    const glowFilter = isSelected ? (n.type === 'Boss' ? 'url(#glow-red)' : 'url(#glow-blue)') : '';
+    const r = n.type === 'Boss' ? 22 : n.type === 'Dungeon' ? 20 : 17;
+
+    html += `<g class="node-group" data-node-id="${n.id}" style="opacity:${opacity};cursor:pointer"
+        onmousedown="nodeMouseDown(event, '${n.id}')"
+        onclick="selectNode('${n.id}')">`;
+
+    // outer glow ring for selected
+    if (isSelected) {
+      html += `<circle cx="${n.x}" cy="${n.y}" r="${r+8}" fill="none" stroke="${color}" stroke-width="1" opacity="0.25"/>`;
+    }
+
+    // shadow
+    html += `<circle cx="${n.x}" cy="${n.y+3}" r="${r}" fill="rgba(0,0,0,0.4)"/>`;
+
+    // main circle fill
+    const fillOpacity = isSelected ? 0.35 : 0.2;
+    html += `<circle class="node-circle ${isSelected ? 'selected' : ''}"
+      cx="${n.x}" cy="${n.y}" r="${r}"
+      fill="${color}" fill-opacity="${fillOpacity}"
+      stroke="${strokeColor}" stroke-width="${strokeW}"
+      stroke-dasharray="${strokeDash}"
+      ${glowFilter ? `filter="${glowFilter}"` : ''}/>`;
+
+    // icon text
+    html += `<text text-anchor="middle" dominant-baseline="central"
+      x="${n.x}" y="${n.y}" font-size="${r > 19 ? 16 : 14}"
+      style="pointer-events:none;user-select:none">${n.icon || '●'}</text>`;
+
+    // start star
+    if (n.isStart) {
+      html += `<text text-anchor="middle" x="${n.x + r - 4}" y="${n.y - r + 4}"
+        font-size="11" style="pointer-events:none">⭐</text>`;
+    }
+
+    // name label
+    const labelY = n.y + r + 14;
+    html += `<text class="node-text" x="${n.x}" y="${labelY}">${esc(n.name)}</text>`;
+
+    // level badge
+    html += `<text class="node-sublabel" x="${n.x}" y="${labelY + 13}">Lv.${n.levelReq} · ${n.region}</text>`;
+
+    html += `</g>`;
+  });
+  layer.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SELECTION
+═══════════════════════════════════════════════════════════════ */
+function selectNode(nodeId) {
+  if (mapMode === 'edge') {
+    handleEdgeModeClick(nodeId);
+    return;
+  }
+  selectedNodeId = nodeId;
+  selectedEdgeId = null;
+  renderSvgMap();
+  renderSidebar();
+  openNodePanel(nodeId);
+  document.getElementById('map-hint').style.display = 'none';
+}
+
+function selectEdge(edgeId) {
+  selectedEdgeId = edgeId;
+  selectedNodeId = null;
+  renderSvgMap();
+  renderSidebar();
+  openEdgePanel(edgeId);
+  document.getElementById('map-hint').style.display = 'none';
+}
+
+function deselectAll() {
+  selectedNodeId = null;
+  selectedEdgeId = null;
+  renderSvgMap();
+  renderSidebar();
+  closePanel();
+  document.getElementById('map-hint').style.display = '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANEL — NODE EDITOR
+═══════════════════════════════════════════════════════════════ */
+function openNodePanel(nodeId) {
+  const node = getNodeById(nodeId);
+  if (!node) return;
+
+  document.getElementById('panel-title').textContent = 'Edit Node';
+  document.getElementById('panel-subtitle').textContent = `ID: ${node.id} · ${node.type}`;
+
+  const boss = getBossForNode(nodeId);
+  const dungeon = getDungeonForNode(nodeId);
+  const chest = getChestForNode(nodeId);
+  const cr = getCrossroadsForNode(nodeId);
+
+  const nodeOptions = NODE_TYPES.map(t => `<option value="${t}" ${node.type === t ? 'selected' : ''}>${t}</option>`).join('');
+  const regionOptions = REGIONS.map(r => `<option value="${r}" ${node.region === r ? 'selected' : ''}>${r}</option>`).join('');
+
+  let html = `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">🔵</span> Node Properties</div>
+
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="f-name" value="${esc(node.name)}" oninput="updateNode('${nodeId}','name',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="f-desc" oninput="updateNode('${nodeId}','description',this.value)">${esc(node.description||'')}</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Icon (Emoji)</label>
+          <input class="form-input" id="f-icon" value="${esc(node.icon||'')}" oninput="updateNode('${nodeId}','icon',this.value)" placeholder="🔵">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="f-type" onchange="updateNode('${nodeId}','type',this.value);openNodePanel('${nodeId}')">${nodeOptions}</select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Region</label>
+        <select class="form-select" id="f-region" onchange="updateNode('${nodeId}','region',this.value)">${regionOptions}</select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Position X</label>
+          <input class="form-input" type="number" id="f-x" value="${node.x}" oninput="updateNode('${nodeId}','x',+this.value);renderSvgMap()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Position Y</label>
+          <input class="form-input" type="number" id="f-y" value="${node.y}" oninput="updateNode('${nodeId}','y',+this.value);renderSvgMap()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Level Req.</label>
+          <input class="form-input" type="number" id="f-lvl" value="${node.levelReq||1}" min="1" oninput="updateNode('${nodeId}','levelReq',+this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reward XP</label>
+          <input class="form-input" type="number" id="f-xp" value="${node.rewardXp||0}" min="0" oninput="updateNode('${nodeId}','rewardXp',+this.value)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-checkbox-group">
+          <input type="checkbox" class="form-checkbox" id="f-start" ${node.isStart ? 'checked' : ''} onchange="updateNode('${nodeId}','isStart',this.checked)">
+          <label class="form-checkbox-label" for="f-start">⭐ Start Node</label>
+        </div>
+        <div class="form-checkbox-group">
+          <input type="checkbox" class="form-checkbox" id="f-hidden" ${node.isHidden ? 'checked' : ''} onchange="updateNode('${nodeId}','isHidden',this.checked);renderSvgMap()">
+          <label class="form-checkbox-label" for="f-hidden">👁️ Hidden</label>
+        </div>
+      </div>
+    </div>`;
+
+  // Boss sub-section
+  if (node.type === 'Boss') {
+    const b = boss || { name: node.name, icon: '💀', maxHp: 500, rewardXp: 200, timerDays: 7, isMini: false };
+    html += `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">💀</span> Boss Config</div>
+      <div class="sub-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Boss Name</label>
+            <input class="form-input" value="${esc(b.name)}" oninput="updateBossField('${nodeId}','name',this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icon</label>
+            <input class="form-input" value="${esc(b.icon||'💀')}" oninput="updateBossField('${nodeId}','icon',this.value)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Max HP</label>
+            <input class="form-input" type="number" value="${b.maxHp}" min="1" oninput="updateBossField('${nodeId}','maxHp',+this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reward XP</label>
+            <input class="form-input" type="number" value="${b.rewardXp}" min="0" oninput="updateBossField('${nodeId}','rewardXp',+this.value)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Timer (days)</label>
+            <input class="form-input" type="number" value="${b.timerDays}" min="1" oninput="updateBossField('${nodeId}','timerDays',+this.value)">
+          </div>
+          <div class="form-checkbox-group" style="align-self:flex-end;padding-bottom:6px;">
+            <input type="checkbox" class="form-checkbox" id="f-mini" ${b.isMini ? 'checked' : ''} onchange="updateBossField('${nodeId}','isMini',this.checked)">
+            <label class="form-checkbox-label" for="f-mini">Mini-Boss</label>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Dungeon sub-section
+  if (node.type === 'Dungeon') {
+    const d = dungeon || { name: node.name, totalFloors: 1, floors: [{ floor:1, requiredActivity:'Running', requiredMinutes:20, rewardXp:80 }] };
+    const floorsHtml = d.floors.map((fl, idx) => {
+      const actOptions = ACTIVITIES.map(a => `<option value="${a}" ${fl.requiredActivity === a ? 'selected' : ''}>${a}</option>`).join('');
+      return `
+        <div class="list-item-card">
+          <div class="list-item-header">
+            <span class="list-item-label">Floor ${fl.floor}</span>
+            <button class="btn btn-danger btn-icon btn-sm" onclick="removeFloor('${nodeId}',${idx})">✕</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Activity</label>
+              <select class="form-select" onchange="updateFloor('${nodeId}',${idx},'requiredActivity',this.value)">${actOptions}</select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Minutes</label>
+              <input class="form-input" type="number" value="${fl.requiredMinutes}" min="1" oninput="updateFloor('${nodeId}',${idx},'requiredMinutes',+this.value)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reward XP</label>
+            <input class="form-input" type="number" value="${fl.rewardXp}" min="0" oninput="updateFloor('${nodeId}',${idx},'rewardXp',+this.value)">
+          </div>
+        </div>`;
+    }).join('');
+
+    html += `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">🏰</span> Dungeon Config</div>
+      <div class="sub-card">
+        <div class="form-group">
+          <label class="form-label">Dungeon Name</label>
+          <input class="form-input" value="${esc(d.name)}" oninput="updateDungeonField('${nodeId}','name',this.value)">
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;margin-bottom:8px;">Floors (${d.floors.length})</div>
+        ${floorsHtml}
+        <button class="add-new-btn" style="margin-top:4px" onclick="addFloor('${nodeId}')">＋ Add Floor</button>
+      </div>
+    </div>`;
+  }
+
+  // Chest sub-section
+  if (node.type === 'Chest') {
+    const c = chest || { rarity: 'Common', rewardXp: 50 };
+    const rarityOptions = RARITIES.map(r => `<option value="${r}" ${c.rarity === r ? 'selected' : ''}>${r}</option>`).join('');
+    html += `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">📦</span> Chest Config</div>
+      <div class="sub-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Rarity</label>
+            <select class="form-select" onchange="updateChestField('${nodeId}','rarity',this.value)">${rarityOptions}</select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reward XP</label>
+            <input class="form-input" type="number" value="${c.rewardXp}" min="0" oninput="updateChestField('${nodeId}','rewardXp',+this.value)">
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Crossroads sub-section
+  if (node.type === 'Crossroads') {
+    const crd = cr || { paths: [] };
+    const pathsHtml = crd.paths.map((p, idx) => {
+      const diffOptions = DIFFICULTIES.map(d => `<option value="${d}" ${p.difficulty === d ? 'selected' : ''}>${d}</option>`).join('');
+      const nodeOptions2 = state.nodes
+        .filter(n => n.id !== nodeId)
+        .map(n => `<option value="${n.id}" ${p.leadsToNodeId === n.id ? 'selected' : ''}>${esc(n.name)}</option>`).join('');
+      return `
+        <div class="list-item-card">
+          <div class="list-item-header">
+            <span class="list-item-label">Path ${idx+1}</span>
+            <button class="btn btn-danger btn-icon btn-sm" onclick="removePath('${nodeId}',${idx})">✕</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Path Name</label>
+            <input class="form-input" value="${esc(p.name||'')}" oninput="updatePath('${nodeId}',${idx},'name',this.value)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Distance (km)</label>
+              <input class="form-input" type="number" value="${p.distanceKm||0}" step="0.1" oninput="updatePath('${nodeId}',${idx},'distanceKm',+this.value)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Difficulty</label>
+              <select class="form-select" onchange="updatePath('${nodeId}',${idx},'difficulty',this.value)">${diffOptions}</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Est. Days</label>
+              <input class="form-input" type="number" value="${p.estimatedDays||1}" min="1" oninput="updatePath('${nodeId}',${idx},'estimatedDays',+this.value)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Reward XP</label>
+              <input class="form-input" type="number" value="${p.rewardXp||0}" min="0" oninput="updatePath('${nodeId}',${idx},'rewardXp',+this.value)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Leads To Node</label>
+            <select class="form-select" onchange="updatePath('${nodeId}',${idx},'leadsToNodeId',+this.value)">
+              <option value="">-- Select Node --</option>
+              ${nodeOptions2}
+            </select>
+          </div>
+        </div>`;
+    }).join('');
+
+    html += `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">🔀</span> Crossroads Config</div>
+      <div class="sub-card">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Paths (${crd.paths.length})</div>
+        ${pathsHtml || '<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px 0;">No paths yet</div>'}
+        <button class="add-new-btn" style="margin-top:4px" onclick="addPath('${nodeId}')">＋ Add Path</button>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('panel-body').innerHTML = html;
+  document.getElementById('panel-footer').innerHTML = `
+    <button class="btn btn-primary" style="flex:1" onclick="saveAllChanges()">💾 Save Changes</button>
+    <button class="btn btn-danger" onclick="deleteNode('${nodeId}')">🗑️ Delete</button>`;
+
+  openPanel();
+}
+
+/* ── Edge Panel ── */
+function openEdgePanel(edgeId) {
+  const edge = state.edges.find(e => e.id === edgeId);
+  if (!edge) return;
+  const from = getNodeById(edge.fromNodeId);
+  const to = getNodeById(edge.toNodeId);
+  document.getElementById('panel-title').textContent = 'Edit Edge';
+  document.getElementById('panel-subtitle').textContent = `ID: ${edgeId}`;
+
+  const nodeOptions = state.nodes.map(n =>
+    `<option value="${n.id}" ${edge.fromNodeId === n.id ? 'selected' : ''}>${esc(n.name)}</option>`).join('');
+  const nodeOptions2 = state.nodes.map(n =>
+    `<option value="${n.id}" ${edge.toNodeId === n.id ? 'selected' : ''}>${esc(n.name)}</option>`).join('');
+
+  document.getElementById('panel-body').innerHTML = `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">↔️</span> Edge Properties</div>
+      <div class="form-group">
+        <label class="form-label">From Node</label>
+        <select class="form-select" onchange="updateEdge('${edgeId}','fromNodeId',this.value);renderSvgMap()">${nodeOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Node</label>
+        <select class="form-select" onchange="updateEdge('${edgeId}','toNodeId',this.value);renderSvgMap()">${nodeOptions2}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Distance (km)</label>
+        <input class="form-input" type="number" step="0.1" value="${edge.distanceKm}" min="0"
+          oninput="updateEdge('${edgeId}','distanceKm',+this.value);renderSvgMap()">
+      </div>
+      <div class="form-checkbox-group">
+        <input type="checkbox" class="form-checkbox" id="f-bidir" ${edge.bidirectional ? 'checked' : ''}
+          onchange="updateEdge('${edgeId}','bidirectional',this.checked);renderSvgMap()">
+        <label class="form-checkbox-label" for="f-bidir">Bidirectional (↔)</label>
+      </div>
+    </div>`;
+
+  document.getElementById('panel-footer').innerHTML = `
+    <button class="btn btn-primary" style="flex:1" onclick="saveAllChanges()">💾 Save Changes</button>
+    <button class="btn btn-danger" onclick="deleteEdge('${edgeId}')">🗑️ Delete Edge</button>`;
+
+  openPanel();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UPDATE STATE HELPERS
+═══════════════════════════════════════════════════════════════ */
+function updateNode(nodeId, field, value) {
+  const node = getNodeById(nodeId);
+  if (!node) return;
+  node[field] = value;
+  updateCounts();
+  renderSidebar();
+  if (field === 'name' || field === 'icon' || field === 'type' || field === 'region' || field === 'levelReq') {
+    renderNodesSvg();
+  }
+}
+
+function updateEdge(edgeId, field, value) {
+  const edge = state.edges.find(e => e.id === edgeId);
+  if (!edge) return;
+  edge[field] = value;
+  renderSidebar();
+}
+
+function ensureBoss(nodeId) {
+  let b = getBossForNode(nodeId);
+  if (!b) {
+    const node = getNodeById(nodeId);
+    b = { id: newId(), nodeId, name: node ? node.name : 'Boss', icon: '💀', maxHp: 500, rewardXp: 200, timerDays: 7, isMini: false };
+    state.bosses.push(b);
+    updateCounts();
+  }
+  return b;
+}
+function updateBossField(nodeId, field, value) {
+  const b = ensureBoss(nodeId);
+  b[field] = value;
+  renderSidebar();
+}
+
+function ensureDungeon(nodeId) {
+  let d = getDungeonForNode(nodeId);
+  if (!d) {
+    const node = getNodeById(nodeId);
+    d = { id: newId(), nodeId, name: node ? node.name : 'Dungeon', totalFloors: 1, floors: [{ floor:1, requiredActivity:'Running', requiredMinutes:20, rewardXp:80 }] };
+    state.dungeons.push(d);
+    updateCounts();
+  }
+  return d;
+}
+function updateDungeonField(nodeId, field, value) {
+  const d = ensureDungeon(nodeId);
+  d[field] = value;
+  renderSidebar();
+}
+function updateFloor(nodeId, idx, field, value) {
+  const d = ensureDungeon(nodeId);
+  if (d.floors[idx]) { d.floors[idx][field] = value; }
+}
+function addFloor(nodeId) {
+  const d = ensureDungeon(nodeId);
+  d.floors.push({ floor: d.floors.length + 1, requiredActivity: 'Running', requiredMinutes: 20, rewardXp: 80 });
+  d.totalFloors = d.floors.length;
+  openNodePanel(nodeId);
+}
+function removeFloor(nodeId, idx) {
+  const d = ensureDungeon(nodeId);
+  d.floors.splice(idx, 1);
+  d.floors.forEach((f, i) => f.floor = i + 1);
+  d.totalFloors = d.floors.length;
+  openNodePanel(nodeId);
+}
+
+function ensureChest(nodeId) {
+  let c = getChestForNode(nodeId);
+  if (!c) {
+    c = { id: newId(), nodeId, rarity: 'Common', rewardXp: 50 };
+    state.chests.push(c);
+    updateCounts();
+  }
+  return c;
+}
+function updateChestField(nodeId, field, value) {
+  const c = ensureChest(nodeId);
+  c[field] = value;
+  renderSidebar();
+}
+
+function ensureCrossroads(nodeId) {
+  let cr = getCrossroadsForNode(nodeId);
+  if (!cr) {
+    cr = { id: newId(), nodeId, paths: [] };
+    state.crossroads.push(cr);
+    updateCounts();
+  }
+  return cr;
+}
+function updatePath(nodeId, idx, field, value) {
+  const cr = ensureCrossroads(nodeId);
+  if (cr.paths[idx]) { cr.paths[idx][field] = value; }
+}
+function addPath(nodeId) {
+  const cr = ensureCrossroads(nodeId);
+  cr.paths.push({ name: 'New Path', distanceKm: 5.0, difficulty: 'Easy', estimatedDays: 2, rewardXp: 100, leadsToNodeId: null });
+  openNodePanel(nodeId);
+}
+function removePath(nodeId, idx) {
+  const cr = ensureCrossroads(nodeId);
+  cr.paths.splice(idx, 1);
+  openNodePanel(nodeId);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADD / DELETE ENTITIES
+═══════════════════════════════════════════════════════════════ */
+function addNode() {
+  const svg = document.getElementById('map-svg');
+  const rect = svg.getBoundingClientRect();
+  // place near center of viewport, accounting for pan/zoom
+  const cx = (rect.width / 2 - panX) / zoom;
+  const cy = (rect.height / 2 - panY) / zoom;
+  const jitter = () => (Math.random() - 0.5) * 80;
+  const id = newId();
+  state.nodes.push({
+    id, name: 'New Node', icon: '🔵', type: 'Zone', region: 'Ashfield',
+    x: Math.round(cx + jitter()), y: Math.round(cy + jitter()),
+    levelReq: 1, rewardXp: 50, isStart: false, isHidden: false, description: ''
+  });
+  renderAll();
+  selectNode(id);
+  switchTab('nodes');
+  showToast('info', '🔵 New node added. Configure it in the editor.');
+}
+
+function deleteNode(nodeId) {
+  const node = getNodeById(nodeId);
+  if (!node) return;
+  showConfirm('🗑️', 'Delete Node', `Delete "${node.name}" and all its associated edges?`, 'Delete', () => {
+    state.nodes = state.nodes.filter(n => n.id !== nodeId);
+    state.edges = state.edges.filter(e => e.fromNodeId !== nodeId && e.toNodeId !== nodeId);
+    state.bosses = state.bosses.filter(b => b.nodeId !== nodeId);
+    state.dungeons = state.dungeons.filter(d => d.nodeId !== nodeId);
+    state.chests = state.chests.filter(c => c.nodeId !== nodeId);
+    state.crossroads = state.crossroads.filter(cr => cr.nodeId !== nodeId);
+    if (selectedNodeId === nodeId) { selectedNodeId = null; closePanel(); }
+    renderAll();
+    showToast('success', `🗑️ Node "${node.name}" deleted.`);
+  });
+}
+
+function deleteEdge(edgeId) {
+  showConfirm('🗑️', 'Delete Edge', 'Remove this connection between nodes?', 'Delete', () => {
+    state.edges = state.edges.filter(e => e.id !== edgeId);
+    if (selectedEdgeId === edgeId) { selectedEdgeId = null; closePanel(); }
+    renderAll();
+    showToast('success', '🗑️ Edge deleted.');
+  });
+}
+
+function deleteBoss(bossId) {
+  showConfirm('💀', 'Delete Boss', 'Remove this boss from the game?', 'Delete', () => {
+    state.bosses = state.bosses.filter(b => b.id !== bossId);
+    renderAll();
+    showToast('success', '💀 Boss deleted.');
+  });
+}
+
+function deleteDungeon(dungeonId) {
+  showConfirm('🏰', 'Delete Dungeon', 'Remove this dungeon and all its floors?', 'Delete', () => {
+    state.dungeons = state.dungeons.filter(d => d.id !== dungeonId);
+    renderAll();
+    showToast('success', '🏰 Dungeon deleted.');
+  });
+}
+
+function deleteChest(chestId) {
+  showConfirm('📦', 'Delete Chest', 'Remove this chest from the map?', 'Delete', () => {
+    state.chests = state.chests.filter(c => c.id !== chestId);
+    renderAll();
+    showToast('success', '📦 Chest deleted.');
+  });
+}
+
+function deleteCrossroads(crId) {
+  showConfirm('🔀', 'Delete Crossroads', 'Remove this crossroads and all its paths?', 'Delete', () => {
+    state.crossroads = state.crossroads.filter(c => c.id !== crId);
+    renderAll();
+    showToast('success', '🔀 Crossroads deleted.');
+  });
+}
+
+function addEdge() {
+  setMode('edge');
+  showToast('info', '↔ Click two nodes to create an edge between them.');
+}
+function addBoss() {
+  showToast('info', '💀 Select a Boss-type node to configure its boss data.');
+  switchTab('nodes');
+}
+function addDungeon() {
+  showToast('info', '🏰 Select a Dungeon-type node to configure its dungeon data.');
+  switchTab('nodes');
+}
+function addChest() {
+  showToast('info', '📦 Select a Chest-type node to configure chest data.');
+  switchTab('nodes');
+}
+function addCrossroads() {
+  showToast('info', '🔀 Select a Crossroads-type node to configure paths.');
+  switchTab('nodes');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EDGE DRAWING MODE
+═══════════════════════════════════════════════════════════════ */
+function handleEdgeModeClick(nodeId) {
+  if (!edgeFirstNode) {
+    edgeFirstNode = nodeId;
+    const node = getNodeById(nodeId);
+    document.getElementById('toolbar-info').textContent = `Now click the second node… (first: ${node ? node.name : nodeId})`;
+    // highlight first node
+    renderNodesSvg();
+  } else {
+    if (edgeFirstNode === nodeId) {
+      edgeFirstNode = null;
+      document.getElementById('toolbar-info').textContent = 'Click a node to select · Drag to move';
+      return;
+    }
+    const id = newId();
+    state.edges.push({ id, fromNodeId: edgeFirstNode, toNodeId: nodeId, distanceKm: 5.0, bidirectional: true });
+    edgeFirstNode = null;
+    setMode('select');
+    renderAll();
+    selectEdge(id);
+    showToast('success', '↔ Edge created. Configure distance in the panel.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAP INTERACTION — DRAG NODES
+═══════════════════════════════════════════════════════════════ */
+function nodeMouseDown(e, nodeId) {
+  if (mapMode !== 'select') return;
+  e.stopPropagation();
+  if (e.button !== 0) return;
+
+  isDragging = false;
+  dragNodeId = nodeId;
+  const node = getNodeById(nodeId);
+  dragStart = { x: e.clientX, y: e.clientY };
+  dragNodeStart = { x: node.x, y: node.y };
+
+  function onMove(ev) {
+    const dx = (ev.clientX - dragStart.x) / zoom;
+    const dy = (ev.clientY - dragStart.y) / zoom;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging = true;
+    if (isDragging) {
+      node.x = Math.round(dragNodeStart.x + dx);
+      node.y = Math.round(dragNodeStart.y + dy);
+      renderSvgMap();
+      // update position inputs if panel is open for this node
+      const fx = document.getElementById('f-x');
+      const fy = document.getElementById('f-y');
+      if (fx) fx.value = node.x;
+      if (fy) fy.value = node.y;
+    }
+  }
+  function onUp(ev) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    if (!isDragging) {
+      // treat as click
+    }
+    dragNodeId = null;
+    isDragging = false;
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+/* ── SVG Pan ── */
+const mapWrap = document.getElementById('map-canvas-wrap');
+
+document.getElementById('map-svg').addEventListener('mousedown', e => {
+  if (e.target.closest('.node-group') || e.target.closest('.edge-group')) return;
+  if (e.button !== 0) return;
+  isPanning = true;
+  panStart = { x: e.clientX - panX, y: e.clientY - panY };
+  document.getElementById('map-svg').style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  panX = e.clientX - panStart.x;
+  panY = e.clientY - panStart.y;
+  applyTransform();
+});
+
+document.addEventListener('mouseup', e => {
+  if (!isPanning) return;
+  isPanning = false;
+  document.getElementById('map-svg').style.cursor = 'default';
+});
+
+document.getElementById('map-svg').addEventListener('click', e => {
+  if (e.target === document.getElementById('map-svg') || e.target === document.getElementById('grid-bg')) {
+    if (!isDragging) deselectAll();
+  }
+});
+
+document.getElementById('map-svg').addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  const rect = document.getElementById('map-svg').getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  panX = mx - (mx - panX) * delta;
+  panY = my - (my - panY) * delta;
+  zoom = Math.min(3, Math.max(0.2, zoom * delta));
+  applyTransform();
+}, { passive: false });
+
+function applyTransform() {
+  document.getElementById('map-transform-group').setAttribute(
+    'transform', `translate(${panX},${panY}) scale(${zoom})`);
+  document.getElementById('zoom-label').textContent = Math.round(zoom * 100) + '%';
+}
+
+function zoomIn() {
+  const svg = document.getElementById('map-svg');
+  const r = svg.getBoundingClientRect();
+  const cx = r.width / 2, cy = r.height / 2;
+  panX = cx - (cx - panX) * 1.2;
+  panY = cy - (cy - panY) * 1.2;
+  zoom = Math.min(3, zoom * 1.2);
+  applyTransform();
+}
+function zoomOut() {
+  const svg = document.getElementById('map-svg');
+  const r = svg.getBoundingClientRect();
+  const cx = r.width / 2, cy = r.height / 2;
+  panX = cx - (cx - panX) * 0.85;
+  panY = cy - (cy - panY) * 0.85;
+  zoom = Math.max(0.2, zoom * 0.85);
+  applyTransform();
+}
+function resetZoom() {
+  zoom = 1; panX = 0; panY = 0;
+  applyTransform();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODE SWITCHING
+═══════════════════════════════════════════════════════════════ */
+function setMode(mode) {
+  mapMode = mode;
+  edgeFirstNode = null;
+  document.querySelectorAll('.map-mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('mode-' + mode);
+  if (btn) btn.classList.add('active');
+  document.getElementById('map-svg').style.cursor = mode === 'edge' ? 'crosshair' : 'default';
+  if (mode === 'select') {
+    document.getElementById('toolbar-info').textContent = 'Click a node to edit · Drag to reposition';
+  } else if (mode === 'edge') {
+    document.getElementById('toolbar-info').textContent = 'Click source node, then target node…';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.sidebar-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  renderSidebar();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANEL OPEN/CLOSE
+═══════════════════════════════════════════════════════════════ */
+function openPanel() {
+  document.getElementById('right-panel').classList.add('open');
+}
+function closePanel() {
+  document.getElementById('right-panel').classList.remove('open');
+  selectedNodeId = null;
+  selectedEdgeId = null;
+  renderSvgMap();
+  renderSidebar();
+  document.getElementById('map-hint').style.display = '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   API INTEGRATION
+═══════════════════════════════════════════════════════════════ */
+function getApiUrl() {
+  return document.getElementById('api-url-input').value.trim();
+}
+
+function getAuthHeaders() {
+  const token = document.getElementById('token-input').value.trim();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+async function checkApiStatus() {
+  const statusBtn = document.getElementById('api-status-btn');
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+
+  statusBtn.className = 'api-status checking';
+  dot.className = 'status-dot pulse';
+  txt.textContent = 'Checking...';
+
+  try {
+    const url = getApiUrl().replace(/\/map$/, '/health').replace(/\/admin\/map$/, '/health');
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    if (res.ok || res.status < 500) {
+      statusBtn.className = 'api-status online';
+      dot.className = 'status-dot';
+      txt.textContent = 'API Online';
+    } else {
+      throw new Error('Bad status');
+    }
+  } catch {
+    statusBtn.className = 'api-status offline';
+    dot.className = 'status-dot';
+    txt.textContent = 'API Offline';
+  }
+}
+
+async function refreshFromApi() {
+  showLoading(true);
+  try {
+    const url = getApiUrl();
+    const res = await fetch(url, { headers: getAuthHeaders(), signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.nodes) state.nodes = data.nodes;
+    if (data.edges) state.edges = data.edges;
+    if (data.bosses) state.bosses = data.bosses;
+    if (data.dungeons) state.dungeons = data.dungeons;
+    if (data.chests) state.chests = data.chests;
+    if (data.crossroads) state.crossroads = data.crossroads;
+
+    selectedNodeId = null;
+    selectedEdgeId = null;
+    closePanel();
+    renderAll();
+    showToast('success', '🔄 Data loaded from API successfully!');
+
+    document.getElementById('api-status-btn').className = 'api-status online';
+    document.getElementById('status-dot').className = 'status-dot';
+    document.getElementById('status-text').textContent = 'API Online';
+  } catch (err) {
+    showToast('error', `❌ Failed to load from API: ${err.message}`);
+    document.getElementById('api-status-btn').className = 'api-status offline';
+    document.getElementById('status-dot').className = 'status-dot';
+    document.getElementById('status-text').textContent = 'API Offline';
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function saveAllChanges() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+  showLoading(true);
+
+  try {
+    const url = getApiUrl();
+    const payload = {
+      nodes: state.nodes,
+      edges: state.edges,
+      bosses: state.bosses,
+      dungeons: state.dungeons,
+      chests: state.chests,
+      crossroads: state.crossroads
+    };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload, (key, value) => {
+        // C# expects all ID fields as strings; the HTML uses integer temp IDs
+        const idFields = ['id', 'nodeId', 'fromNodeId', 'toNodeId', 'leadsToNodeId'];
+        if (idFields.includes(key) && value !== null && value !== undefined)
+          return String(value);
+        return value;
+      }),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('success', '💾 All changes saved successfully!');
+    // Reload from API so the state has real GUIDs — prevents duplicates on next save
+    await refreshFromApi();
+  } catch (err) {
+    // If offline, still show confirmation of local state
+    showToast('info', `📋 Changes saved locally. API: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Save All Changes';
+    showLoading(false);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════════════════════════ */
+function showLoading(show) {
+  document.getElementById('loading-overlay').classList.toggle('show', show);
+}
+
+function showToast(type, message) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    toast.style.transition = 'all 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+function showConfirm(icon, title, desc, confirmLabel, callback) {
+  document.getElementById('dialog-icon').textContent = icon;
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-desc').textContent = desc;
+  document.getElementById('dialog-confirm-btn').textContent = confirmLabel;
+  confirmCallback = callback;
+  document.getElementById('confirm-dialog').classList.add('show');
+}
+function closeConfirm() {
+  document.getElementById('confirm-dialog').classList.remove('show');
+  confirmCallback = null;
+}
+function confirmAction() {
+  const cb = confirmCallback;
+  closeConfirm();
+  if (cb) cb();
+}
+
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+═══════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('confirm-dialog').classList.contains('show')) {
+      closeConfirm();
+    } else if (document.getElementById('right-panel').classList.contains('open')) {
+      closePanel();
+    } else if (mapMode !== 'select') {
+      setMode('select');
+    }
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    if (selectedNodeId) deleteNode(selectedNodeId);
+    else if (selectedEdgeId) deleteEdge(selectedEdgeId);
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveAllChanges();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    addNode();
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+(function init() {
+  _loadSeedData();
+  // Center the map on initial load
+  setTimeout(() => {
+    const wrap = document.getElementById('map-canvas-wrap');
+    panX = wrap.clientWidth * 0.05;
+    panY = wrap.clientHeight * 0.08;
+    zoom = 1;
+    applyTransform();
+    // Auto-fill token from URL query param (?token=...)
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken) document.getElementById('token-input').value = urlToken;
+
+    checkApiStatus();
+    // Always load real GUIDs from the API on startup so saves preserve user progress
+    refreshFromApi();
+  }, 50);
+})();
+</script>
+</body>
+</html>

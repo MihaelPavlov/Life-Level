@@ -435,8 +435,8 @@ body {
     </div>
 
     <div class="nav">
-      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
-      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
       <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
       <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
     </div>
@@ -449,8 +449,8 @@ body {
 <div class="step-wrap">
   <div class="step-label">
     <div class="step-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">TAB 2 — EQUIPMENT</div>
-    <div class="step-title">What your hero is wearing</div>
-    <div class="step-desc">6 slots — drag from inventory to equip</div>
+    <div class="step-title">Your real sports gear</div>
+    <div class="step-desc">6 slots — earn gear through activities & milestones</div>
   </div>
   <div class="phone">
     <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
@@ -482,56 +482,56 @@ body {
       <div class="equip-arena">
         <div class="equip-grid">
 
-          <!-- Left column: Helmet, Armor, Boots -->
+          <!-- Left column: Cap, Jersey, Shoes -->
           <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-            <!-- Helmet: EPIC -->
+            <!-- Running Cap: EPIC -->
             <div class="equip-slot equipped epic" style="width:60px;height:60px">
-              <div class="es-icon">⛑️</div>
-              <div class="es-label">Helm</div>
+              <div class="es-icon">🧢</div>
+              <div class="es-label">Cap</div>
               <div class="es-rarity" style="background:#a371f7"></div>
             </div>
-            <!-- Armor: RARE -->
+            <!-- Compression Jersey: RARE -->
             <div class="equip-slot equipped rare" style="width:60px;height:60px">
-              <div class="es-icon">🥋</div>
-              <div class="es-label">Armor</div>
+              <div class="es-icon">🎽</div>
+              <div class="es-label">Jersey</div>
               <div class="es-rarity" style="background:#4f9eff"></div>
             </div>
-            <!-- Boots: UNCOMMON -->
+            <!-- Running Shoes: UNCOMMON -->
             <div class="equip-slot equipped" style="width:60px;height:60px;border-color:rgba(63,185,80,0.5);background:rgba(63,185,80,0.04)">
               <div class="es-icon">👟</div>
-              <div class="es-label">Boots</div>
+              <div class="es-label">Shoes</div>
               <div class="es-rarity" style="background:#3fb950"></div>
             </div>
           </div>
 
           <!-- Center: Character -->
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-            <div class="char-body">⚔️</div>
-            <!-- Mount badge below character -->
+            <div class="char-body">🏃</div>
+            <!-- Active mount badge -->
             <div style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:5px">
-              <span style="font-size:14px">🐉</span>
-              <span style="font-size:10px;font-weight:700;color:#f5a623">Winter Dragon</span>
+              <span style="font-size:14px">🚴</span>
+              <span style="font-size:10px;font-weight:700;color:#f5a623">Carbon Road Bike</span>
             </div>
           </div>
 
-          <!-- Right column: Weapon, Gloves, Accessory -->
+          <!-- Right column: Watch, Gloves, Earbuds -->
           <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
-            <!-- Weapon: LEGENDARY -->
+            <!-- GPS Watch: LEGENDARY -->
             <div class="equip-slot equipped legendary" style="width:60px;height:60px">
-              <div class="es-icon">⚔️</div>
-              <div class="es-label">Weapon</div>
+              <div class="es-icon">⌚</div>
+              <div class="es-label">Watch</div>
               <div class="es-rarity" style="background:#f5a623"></div>
             </div>
-            <!-- Gloves: RARE -->
+            <!-- Gym Gloves: RARE -->
             <div class="equip-slot equipped rare" style="width:60px;height:60px">
               <div class="es-icon">🧤</div>
               <div class="es-label">Gloves</div>
               <div class="es-rarity" style="background:#4f9eff"></div>
             </div>
-            <!-- Accessory: EMPTY -->
+            <!-- Earbuds: EMPTY -->
             <div class="equip-slot empty" style="width:60px;height:60px">
               <div style="font-size:18px;color:#30363d">＋</div>
-              <div class="es-label">Ring</div>
+              <div class="es-label">Earbuds</div>
             </div>
           </div>
 
@@ -539,28 +539,28 @@ body {
       </div>
 
       <!-- Selected item detail -->
-      <div class="section-label">SELECTED — IRON BLADE (LEGENDARY)</div>
+      <div class="section-label">SELECTED — APEX GPS PRO (LEGENDARY)</div>
       <div style="margin:0 20px 12px;background:rgba(22,27,34,0.95);border:2px solid rgba(245,166,35,0.5);border-radius:14px;padding:14px;box-shadow:0 0 20px rgba(245,166,35,0.08)">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="width:56px;height:56px;background:rgba(245,166,35,0.08);border:2px solid rgba(245,166,35,0.6);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">⚔️</div>
+          <div style="width:56px;height:56px;background:rgba(245,166,35,0.08);border:2px solid rgba(245,166,35,0.6);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">⌚</div>
           <div>
-            <div style="font-size:16px;font-weight:700;color:#e6edf3">Iron Blade</div>
+            <div style="font-size:16px;font-weight:700;color:#e6edf3">Apex GPS Pro</div>
             <div style="display:inline-block;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);border-radius:6px;padding:1px 8px;font-size:9px;font-weight:700;color:#f5a623;margin-top:3px">LEGENDARY</div>
-            <div style="font-size:11px;color:#8b949e;margin-top:3px">Dropped from Iron Peak Boss</div>
+            <div style="font-size:11px;color:#8b949e;margin-top:3px">Milestone: 500 km lifetime distance</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:14px;font-weight:700;color:#f5a623">+12% XP</div>
+            <div style="font-size:14px;font-weight:700;color:#f5a623">+15% XP</div>
             <div style="font-size:9px;color:#8b949e">all activities</div>
           </div>
           <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:14px;font-weight:700;color:#f85149">+4 STR</div>
-            <div style="font-size:9px;color:#8b949e">strength</div>
+            <div style="font-size:14px;font-weight:700;color:#3fb950">+8 END</div>
+            <div style="font-size:9px;color:#8b949e">endurance</div>
           </div>
           <div style="flex:1;background:#1e2632;border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:14px;font-weight:700;color:#f9751f">+180</div>
-            <div style="font-size:9px;color:#8b949e">boss dmg</div>
+            <div style="font-size:14px;font-weight:700;color:#4f9eff">+12 AGI</div>
+            <div style="font-size:9px;color:#8b949e">agility</div>
           </div>
         </div>
         <button style="width:100%;background:#1e2632;border:1px solid #30363d;border-radius:10px;padding:10px;font-size:13px;font-weight:600;color:#8b949e;cursor:pointer">📦 Move to Inventory</button>
@@ -570,15 +570,15 @@ body {
       <div class="gear-bonuses">
         <div class="gb-title">TOTAL GEAR BONUSES</div>
         <div class="gb-row"><span class="gb-label">XP Multiplier</span><span class="gb-val" style="color:#4f9eff">+20%</span></div>
-        <div class="gb-row"><span class="gb-label">Strength bonus</span><span class="gb-val" style="color:#f85149">+6 STR</span></div>
-        <div class="gb-row"><span class="gb-label">Boss damage</span><span class="gb-val" style="color:#f9751f">+280 dmg/session</span></div>
-        <div class="gb-row"><span class="gb-label">Map travel speed</span><span class="gb-val" style="color:#3fb950">+8%</span></div>
+        <div class="gb-row"><span class="gb-label">Endurance boost</span><span class="gb-val" style="color:#3fb950">+8 END</span></div>
+        <div class="gb-row"><span class="gb-label">Calorie accuracy</span><span class="gb-val" style="color:#f9751f">+14%</span></div>
+        <div class="gb-row"><span class="gb-label">Recovery speed</span><span class="gb-val" style="color:#a371f7">+12%</span></div>
       </div>
     </div>
 
     <div class="nav">
-      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
-      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
       <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
       <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
     </div>
@@ -619,102 +619,102 @@ body {
       <!-- Filter chips -->
       <div class="inv-filter">
         <div class="if-chip active">All (34)</div>
-        <div class="if-chip">Weapons ⚔️</div>
-        <div class="if-chip">Armor 🛡️</div>
-        <div class="if-chip">Accessories 💍</div>
-        <div class="if-chip">Consumables 💊</div>
+        <div class="if-chip">Trackers ⌚</div>
+        <div class="if-chip">Clothing 🎽</div>
+        <div class="if-chip">Footwear 👟</div>
+        <div class="if-chip">Consumables 💧</div>
       </div>
 
       <!-- Selected item detail (tapped item) -->
       <div class="item-detail">
         <div class="id-row">
-          <div class="id-icon" style="border-color:rgba(245,166,35,0.7);background:rgba(245,166,35,0.08)">⚔️</div>
+          <div class="id-icon" style="border-color:rgba(245,166,35,0.7);background:rgba(245,166,35,0.08)">⌚</div>
           <div>
-            <div class="id-name">Iron Blade</div>
-            <div class="id-tier" style="background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.4);color:#f5a623">LEGENDARY • Weapon</div>
-            <div class="id-desc">Forged in the Iron Peak. Rewards those who push hardest.</div>
+            <div class="id-name">Apex GPS Pro</div>
+            <div class="id-tier" style="background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.4);color:#f5a623">LEGENDARY • Watch</div>
+            <div class="id-desc">Tracks every heartbeat, step, and calorie. Unlocked at 500 km lifetime.</div>
           </div>
         </div>
         <div class="id-stats">
-          <div class="id-stat"><div class="ids-v" style="color:#f5a623">+12% XP</div><div class="ids-l">Multiplier</div></div>
-          <div class="id-stat"><div class="ids-v" style="color:#f85149">+4 STR</div><div class="ids-l">Strength</div></div>
-          <div class="id-stat"><div class="ids-v" style="color:#f9751f">+180</div><div class="ids-l">Boss dmg</div></div>
+          <div class="id-stat"><div class="ids-v" style="color:#f5a623">+15% XP</div><div class="ids-l">Multiplier</div></div>
+          <div class="id-stat"><div class="ids-v" style="color:#3fb950">+8 END</div><div class="ids-l">Endurance</div></div>
+          <div class="id-stat"><div class="ids-v" style="color:#4f9eff">+12 AGI</div><div class="ids-l">Agility</div></div>
         </div>
         <div class="id-btns">
           <div class="id-btn-equip">✓ Equipped</div>
-          <div class="id-btn-drop">🗑 Drop</div>
+          <div class="id-btn-drop">🗑 Remove</div>
         </div>
       </div>
 
       <!-- Item grid -->
       <div class="inv-grid">
-        <!-- Row 1 -->
+        <!-- Row 1 — equipped items -->
         <div class="inv-item legendary equipped-badge">
-          <div class="ii-icon">⚔️</div>
-          <div class="ii-name">Iron Blade</div>
+          <div class="ii-icon">⌚</div>
+          <div class="ii-name">Apex GPS Pro</div>
           <div class="ii-rarity-bar" style="background:#f5a623"></div>
         </div>
         <div class="inv-item epic equipped-badge">
-          <div class="ii-icon">⛑️</div>
-          <div class="ii-name">Storm Helm</div>
+          <div class="ii-icon">🧢</div>
+          <div class="ii-name">Aero Race Cap</div>
           <div class="ii-rarity-bar" style="background:#a371f7"></div>
         </div>
         <div class="inv-item rare equipped-badge">
-          <div class="ii-icon">🥋</div>
-          <div class="ii-name">Frost Armor</div>
+          <div class="ii-icon">🎽</div>
+          <div class="ii-name">Cryo Jersey</div>
           <div class="ii-rarity-bar" style="background:#4f9eff"></div>
         </div>
         <div class="inv-item rare equipped-badge">
           <div class="ii-icon">🧤</div>
-          <div class="ii-name">Iron Gloves</div>
+          <div class="ii-name">Grip Wraps</div>
           <div class="ii-rarity-bar" style="background:#4f9eff"></div>
         </div>
-        <!-- Row 2 -->
+        <!-- Row 2 — equipped + unequipped -->
         <div class="inv-item uncommon equipped-badge">
           <div class="ii-icon">👟</div>
-          <div class="ii-name">Speed Boots</div>
+          <div class="ii-name">Carbon X3</div>
           <div class="ii-rarity-bar" style="background:#3fb950"></div>
         </div>
         <div class="inv-item rare">
-          <div class="ii-icon">💍</div>
-          <div class="ii-name">Endure Ring</div>
+          <div class="ii-icon">🎧</div>
+          <div class="ii-name">Sport Buds</div>
           <div class="ii-rarity-bar" style="background:#4f9eff"></div>
         </div>
         <div class="inv-item epic">
-          <div class="ii-icon">🛡️</div>
-          <div class="ii-name">Wyrm Scale</div>
+          <div class="ii-icon">👟</div>
+          <div class="ii-name">Carbon X5</div>
           <div class="ii-rarity-bar" style="background:#a371f7"></div>
         </div>
         <div class="inv-item uncommon">
-          <div class="ii-icon">🗡️</div>
-          <div class="ii-name">Enchant Blade</div>
+          <div class="ii-icon">⌚</div>
+          <div class="ii-name">Pulse Band</div>
           <div class="ii-rarity-bar" style="background:#3fb950"></div>
         </div>
-        <!-- Row 3 -->
+        <!-- Row 3 — consumables -->
         <div class="inv-item common">
-          <div class="ii-icon">💊</div>
-          <div class="ii-name">XP Potion</div>
+          <div class="ii-icon">💧</div>
+          <div class="ii-name">XP Booster</div>
           <div class="ii-rarity-bar" style="background:#8b949e"></div>
         </div>
         <div class="inv-item common">
-          <div class="ii-icon">💊</div>
-          <div class="ii-name">XP Potion</div>
+          <div class="ii-icon">💧</div>
+          <div class="ii-name">XP Booster</div>
           <div class="ii-rarity-bar" style="background:#8b949e"></div>
         </div>
         <div class="inv-item uncommon">
-          <div class="ii-icon">🧪</div>
-          <div class="ii-name">Sprint Flask</div>
+          <div class="ii-icon">⚡</div>
+          <div class="ii-name">Energy Gel</div>
           <div class="ii-rarity-bar" style="background:#3fb950"></div>
         </div>
         <div class="inv-item rare">
-          <div class="ii-icon">🎭</div>
-          <div class="ii-name">Forest Mask</div>
+          <div class="ii-icon">🩹</div>
+          <div class="ii-name">KT Tape Set</div>
           <div class="ii-rarity-bar" style="background:#4f9eff"></div>
         </div>
         <!-- Row 4 -->
         <div class="inv-item common">
           <div class="ii-icon">🧦</div>
-          <div class="ii-name">Basic Wrap</div>
+          <div class="ii-name">Comp Socks</div>
           <div class="ii-rarity-bar" style="background:#8b949e"></div>
         </div>
         <div class="inv-item uncommon">
@@ -737,8 +737,8 @@ body {
     </div>
 
     <div class="nav">
-      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
-      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
       <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
       <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
     </div>
@@ -902,13 +902,33 @@ body {
     </div>
 
     <div class="nav">
-      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
-      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
       <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
       <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
     </div>
   </div>
 </div>
 
+<script>
+(function () {
+  const routes = {
+    'Home':    'home.html',
+    'Map':     'adventure-map.html',
+    'Stats':   'profile-full.html',
+    'Profile': 'profile-full.html',
+    'Quests':  'quests.html',
+  };
+  document.querySelectorAll('.nav-item, .nav__item').forEach(function (el) {
+    const lbl = el.querySelector('.nav-label, .nav__label');
+    if (!lbl) return;
+    const href = routes[lbl.textContent.trim()];
+    if (href) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function () { window.location.href = href; });
+    }
+  });
+}());
+</script>
 </body>
 </html>

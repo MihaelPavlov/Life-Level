@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Character Viewer</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#040810;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  display:flex; align-items:flex-start; justify-content:center;
+  min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap;
+}
+
+/* ── Phone shell ── */
+.phone {
+  width:390px; height:844px; background:#080e14;
+  border-radius:44px; overflow:hidden; position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink:0;
+}
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-badge {
+  display:inline-block; border-radius:12px; padding:3px 14px;
+  font-size:10px; font-weight:700; letter-spacing:0.06em; margin-bottom:6px;
+}
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+
+/* ── Shared components ── */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+}
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#161b22; border-top:1px solid #30363d;
+  display:flex; align-items:center; padding:0 8px 12px; z-index:100;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color:#8b949e; }
+
+.scroll {
+  position:absolute; inset:0; overflow-y:auto;
+  padding-bottom:90px; scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar { display:none; }
+
+/* ── Profile header ── */
+.profile-header {
+  padding:54px 20px 0;
+  background:linear-gradient(to bottom, rgba(79,158,255,0.07), transparent);
+}
+.ph-row { display:flex; align-items:center; gap:12px; padding-bottom:12px; }
+.ph-avatar {
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg,#4f9eff,#a371f7);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; flex-shrink:0;
+  box-shadow:0 0 18px rgba(79,158,255,0.3);
+}
+.ph-name { font-size:18px; font-weight:700; color:#e6edf3; }
+.ph-title {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(245,166,35,0.1); border:1px solid rgba(245,166,35,0.4);
+  border-radius:8px; padding:2px 8px; margin-top:4px;
+  font-size:10px; font-weight:700; color:#f5a623;
+}
+.ph-sub { font-size:11px; color:#8b949e; margin-top:2px; }
+
+/* ── Tabs ── */
+.profile-tabs {
+  display:flex; gap:2px;
+  background:#0d1117; padding:0 20px;
+  border-bottom:1px solid #1e2632;
+  position:sticky; top:0; z-index:50;
+}
+.ptab {
+  flex:1; padding:10px 0; text-align:center;
+  font-size:11px; font-weight:600; color:#8b949e;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.ptab.active { color:#4f9eff; border-bottom-color:#4f9eff; }
+
+/* ══════════════════════════════════════════
+   CHARACTER VIEWER CARD
+══════════════════════════════════════════ */
+.viewer-card {
+  margin:10px 16px 8px;
+  background:#08111e;
+  border:1px solid #1a2535;
+  border-radius:20px;
+  padding:16px 10px 12px;
+  position:relative;
+  overflow:visible;
+}
+
+/* Atmospheric background glow */
+.viewer-card::before {
+  content:'';
+  position:absolute; inset:0; border-radius:20px;
+  background:
+    radial-gradient(ellipse at 50% 15%, rgba(79,158,255,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 85%, rgba(163,113,247,0.05) 0%, transparent 50%);
+  pointer-events:none;
+}
+
+/* Layout: left slots | character | right slots */
+.viewer-layout {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  position:relative; z-index:1;
+}
+
+/* ── Equipment Slots ── */
+.slots-col { display:flex; flex-direction:column; gap:8px; }
+
+.slot {
+  width:52px; height:56px; border-radius:12px;
+  background:#111a28; border:1.5px solid;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:2px; position:relative; overflow:hidden; cursor:pointer;
+  transition:all 0.15s ease;
+}
+.slot.common    { border-color:#2a3550; }
+.slot.uncommon  { border-color:rgba(63,185,80,0.55);  background:rgba(63,185,80,0.05); }
+.slot.rare      { border-color:rgba(79,158,255,0.55); background:rgba(79,158,255,0.05); }
+.slot.epic      { border-color:rgba(163,113,247,0.6); background:rgba(163,113,247,0.06); }
+.slot.legendary { border-color:rgba(245,166,35,0.65); background:rgba(245,166,35,0.06); box-shadow:0 0 12px rgba(245,166,35,0.15); }
+.slot.empty     { border-style:dashed; border-color:#1e2d42; opacity:0.5; }
+.slot.selected  { border-color:#4f9eff !important; box-shadow:0 0 16px rgba(79,158,255,0.4) !important; background:rgba(79,158,255,0.1) !important; }
+
+.slot-icon  { font-size:22px; line-height:1; }
+.slot-label { font-size:7px; color:#8b949e; font-weight:700; letter-spacing:0.05em; }
+.slot-bar   { position:absolute; bottom:0; left:0; right:0; height:2px; border-radius:0 0 10px 10px; }
+
+/* ── Character Stage ── */
+.char-stage {
+  position:relative;
+  width:168px;
+  height:278px;
+  flex-shrink:0;
+}
+
+/* Floor ambient shadow */
+.char-floor {
+  position:absolute;
+  bottom:2px; left:50%; transform:translateX(-50%);
+  width:100px; height:14px;
+  background:rgba(79,158,255,0.25);
+  border-radius:50%;
+  filter:blur(10px);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Item emoji overlays on character */
+.item-ov {
+  position:absolute;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+  z-index:10;
+  line-height:1;
+  user-select:none;
+}
+
+/* Rarity glow effects */
+@keyframes glow-legendary {
+  0%,100% { filter: drop-shadow(0 0 5px rgba(245,166,35,0.7)) drop-shadow(0 0 12px rgba(245,166,35,0.35)); }
+  50%      { filter: drop-shadow(0 0 10px rgba(245,166,35,1.0)) drop-shadow(0 0 22px rgba(245,166,35,0.6)); }
+}
+@keyframes glow-epic {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(163,113,247,0.7)); }
+  50%      { filter: drop-shadow(0 0 9px rgba(163,113,247,1.0)) drop-shadow(0 0 16px rgba(163,113,247,0.4)); }
+}
+@keyframes spin-sparkle {
+  from { transform:translateX(-50%) rotate(0deg); }
+  to   { transform:translateX(-50%) rotate(360deg); }
+}
+
+.ov-legendary { animation:glow-legendary 1.8s ease-in-out infinite; }
+.ov-epic      { animation:glow-epic 2.4s ease-in-out infinite; }
+.ov-rare      { filter:drop-shadow(0 0 4px rgba(79,158,255,0.6)); }
+.ov-uncommon  { filter:drop-shadow(0 0 3px rgba(63,185,80,0.5)); }
+
+/* Sparkle ring around legendary weapon */
+.legendary-ring {
+  position:absolute;
+  width:60px; height:60px;
+  border-radius:50%;
+  border:1px dashed rgba(245,166,35,0.4);
+  top:108px; right:-22px;
+  animation:spin-sparkle 6s linear infinite;
+  pointer-events:none; z-index:9;
+  transform-origin:center;
+}
+
+/* ── Mount Badge ── */
+.mount-badge {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  background:rgba(245,166,35,0.07);
+  border:1px solid rgba(245,166,35,0.28);
+  border-radius:10px; padding:5px 12px;
+  margin:8px auto 0;
+  width:fit-content; position:relative; z-index:1;
+}
+
+/* ══════════════════════════════════════════
+   ITEM DETAIL PANEL
+══════════════════════════════════════════ */
+.sec-label {
+  font-size:9px; color:#8b949e; font-weight:700;
+  letter-spacing:0.08em; padding:0 16px; margin-bottom:6px;
+}
+
+.item-panel {
+  margin:0 16px 10px;
+  border-radius:14px; padding:14px;
+}
+.item-panel.empty {
+  background:#111820;
+  border:1px dashed #1e2d40;
+  display:flex; align-items:center; justify-content:center;
+  padding:18px;
+}
+.item-panel.legendary {
+  background:rgba(18,12,2,0.95);
+  border:1.5px solid rgba(245,166,35,0.5);
+  box-shadow:0 0 24px rgba(245,166,35,0.08), inset 0 0 40px rgba(245,166,35,0.02);
+}
+.item-panel.epic {
+  background:rgba(16,11,24,0.95);
+  border:1.5px solid rgba(163,113,247,0.5);
+  box-shadow:0 0 18px rgba(163,113,247,0.08);
+}
+.item-panel.rare {
+  background:#111820;
+  border:1.5px solid rgba(79,158,255,0.4);
+}
+.item-panel.uncommon {
+  background:#111820;
+  border:1.5px solid rgba(63,185,80,0.4);
+}
+
+.ip-head { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.ip-icon {
+  width:52px; height:52px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; flex-shrink:0;
+}
+.ip-name { font-size:15px; font-weight:700; color:#e6edf3; }
+.ip-badge {
+  display:inline-block; border-radius:6px; padding:1px 8px;
+  font-size:9px; font-weight:700; margin-top:3px; letter-spacing:0.05em;
+}
+.ip-source { font-size:11px; color:#8b949e; margin-top:3px; }
+.ip-stats { display:flex; gap:6px; margin-bottom:10px; }
+.ip-stat { flex:1; background:#1a2535; border-radius:8px; padding:7px 6px; text-align:center; }
+.ips-v { font-size:13px; font-weight:700; }
+.ips-l { font-size:9px; color:#8b949e; margin-top:1px; }
+.ip-btn {
+  width:100%; border-radius:10px; padding:11px;
+  font-size:13px; font-weight:700; cursor:pointer; border:none;
+}
+
+/* ── Gear Bonuses ── */
+.bonuses {
+  margin:0 16px 10px;
+  background:#111820;
+  border:1px solid rgba(79,158,255,0.15);
+  border-radius:12px; padding:11px 14px;
+}
+.bon-title { font-size:9px; color:#4f9eff; font-weight:700; letter-spacing:0.08em; margin-bottom:8px; }
+.bon-row { display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; }
+.bon-row:last-child { margin-bottom:0; }
+.bon-l { color:#8b949e; }
+.bon-v { font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 1 — CHARACTER VIEWER (no item selected)
+══════════════════════════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">SCREEN 1 — CHARACTER VIEWER</div>
+    <div class="step-title">Paperdoll — items render on the body</div>
+    <div class="step-desc">Each item appears at its body slot with rarity glow.<br>Legendary weapon pulses gold. Epic helm glows purple.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <!-- Profile header -->
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">⚔️</div>
+          <div>
+            <div class="ph-name">Alex</div>
+            <div class="ph-title">🏃 The Marathoner</div>
+            <div class="ph-sub">Warrior · Level 12 · Veteran</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="profile-tabs">
+        <div class="ptab">Overview</div>
+        <div class="ptab active">Equipment</div>
+        <div class="ptab">Inventory</div>
+        <div class="ptab">Mounts</div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <!-- ── CHARACTER VIEWER CARD ── -->
+      <div class="viewer-card">
+        <div class="viewer-layout">
+
+          <!-- Left slots: Cap · Jersey · Shoes -->
+          <div class="slots-col">
+            <div class="slot epic">
+              <div class="slot-icon">🧢</div>
+              <div class="slot-label">CAP</div>
+              <div class="slot-bar" style="background:#a371f7"></div>
+            </div>
+            <div class="slot rare">
+              <div class="slot-icon">🎽</div>
+              <div class="slot-label">JERSEY</div>
+              <div class="slot-bar" style="background:#4f9eff"></div>
+            </div>
+            <div class="slot uncommon">
+              <div class="slot-icon">👟</div>
+              <div class="slot-label">SHOES</div>
+              <div class="slot-bar" style="background:#3fb950"></div>
+            </div>
+          </div>
+
+          <!-- ── Character Stage ── -->
+          <div class="char-stage">
+
+            <!-- SVG character body -->
+            <svg width="168" height="270" viewBox="0 0 168 270" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;z-index:1">
+              <defs>
+                <radialGradient id="g-head" cx="42%" cy="35%" r="58%">
+                  <stop offset="0%" stop-color="#263650"/>
+                  <stop offset="100%" stop-color="#172035"/>
+                </radialGradient>
+                <radialGradient id="g-body" cx="50%" cy="25%" r="65%">
+                  <stop offset="0%" stop-color="#1e2e48"/>
+                  <stop offset="100%" stop-color="#101828"/>
+                </radialGradient>
+                <radialGradient id="g-chest" cx="50%" cy="30%" r="60%">
+                  <stop offset="0%" stop-color="#223255"/>
+                  <stop offset="100%" stop-color="#131d30"/>
+                </radialGradient>
+                <radialGradient id="g-shoulder" cx="50%" cy="20%" r="70%">
+                  <stop offset="0%" stop-color="#2a4270"/>
+                  <stop offset="100%" stop-color="#182848"/>
+                </radialGradient>
+                <linearGradient id="g-leg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#18243c"/>
+                  <stop offset="100%" stop-color="#0c1420"/>
+                </linearGradient>
+                <linearGradient id="g-boot" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10181e"/>
+                  <stop offset="100%" stop-color="#080e14"/>
+                </linearGradient>
+                <linearGradient id="g-belt" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#241a08"/>
+                  <stop offset="100%" stop-color="#150e04"/>
+                </linearGradient>
+                <!-- Epic helm aura behind head -->
+                <radialGradient id="g-helm-aura" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(163,113,247,0.18)"/>
+                  <stop offset="100%" stop-color="rgba(163,113,247,0)"/>
+                </radialGradient>
+              </defs>
+
+              <!-- Helm aura -->
+              <ellipse cx="84" cy="42" rx="40" ry="38" fill="url(#g-helm-aura)"/>
+
+              <!-- Cape / cloak behind body (drawn first so it's behind) -->
+              <path d="M55,92 Q42,140 48,200 Q60,210 84,210 Q108,210 120,200 Q126,140 113,92 Z"
+                    fill="#0d1625" stroke="#182234" stroke-width="1" opacity="0.8"/>
+
+              <!-- Neck -->
+              <rect x="76" y="68" width="16" height="16" rx="5"
+                    fill="url(#g-head)" stroke="#253d5a" stroke-width="1.5"/>
+
+              <!-- Left shoulder pauldron -->
+              <rect x="14" y="78" width="44" height="22" rx="8"
+                    fill="url(#g-shoulder)" stroke="#304870" stroke-width="1.5"/>
+              <!-- Left shoulder highlight edge -->
+              <rect x="16" y="79" width="40" height="5" rx="4"
+                    fill="#3a5888" opacity="0.45"/>
+
+              <!-- Right shoulder pauldron -->
+              <rect x="110" y="78" width="44" height="22" rx="8"
+                    fill="url(#g-shoulder)" stroke="#304870" stroke-width="1.5"/>
+              <!-- Right shoulder highlight edge -->
+              <rect x="112" y="79" width="40" height="5" rx="4"
+                    fill="#3a5888" opacity="0.45"/>
+
+              <!-- Left upper arm -->
+              <rect x="13" y="98" width="23" height="48" rx="8"
+                    fill="url(#g-body)" stroke="#233552" stroke-width="1.5"/>
+              <!-- Right upper arm -->
+              <rect x="132" y="98" width="23" height="48" rx="8"
+                    fill="url(#g-body)" stroke="#233552" stroke-width="1.5"/>
+
+              <!-- Left forearm -->
+              <rect x="11" y="144" width="21" height="46" rx="7"
+                    fill="url(#g-body)" stroke="#233552" stroke-width="1.5"/>
+              <!-- Right forearm -->
+              <rect x="136" y="144" width="21" height="46" rx="7"
+                    fill="url(#g-body)" stroke="#233552" stroke-width="1.5"/>
+
+              <!-- Torso (main chest plate) -->
+              <rect x="46" y="98" width="76" height="80" rx="7"
+                    fill="url(#g-chest)" stroke="#253d5a" stroke-width="1.5"/>
+              <!-- Chest plate raised center panel -->
+              <rect x="60" y="102" width="48" height="32" rx="5"
+                    fill="#223050" opacity="0.7"/>
+              <!-- Chest highlight line -->
+              <rect x="62" y="103" width="44" height="4" rx="3"
+                    fill="#3a5888" opacity="0.5"/>
+              <!-- Center line / seam -->
+              <line x1="84" y1="104" x2="84" y2="172"
+                    stroke="#2a4060" stroke-width="1" opacity="0.7"/>
+              <!-- Lower torso horizontal detail -->
+              <rect x="52" y="152" width="64" height="6" rx="3"
+                    fill="#1e3050" opacity="0.6"/>
+
+              <!-- Left hand -->
+              <rect x="8" y="188" width="26" height="22" rx="8"
+                    fill="url(#g-head)" stroke="#233552" stroke-width="1.5"/>
+              <!-- Right hand -->
+              <rect x="134" y="188" width="26" height="22" rx="8"
+                    fill="url(#g-head)" stroke="#233552" stroke-width="1.5"/>
+
+              <!-- Belt -->
+              <rect x="44" y="174" width="80" height="16" rx="7"
+                    fill="url(#g-belt)" stroke="#3d2a10" stroke-width="1.5"/>
+              <!-- Belt buckle -->
+              <rect x="74" y="177" width="20" height="10" rx="4"
+                    fill="#2e1e08" stroke="#4a3018" stroke-width="1"/>
+              <rect x="78" y="180" width="12" height="4" rx="2"
+                    fill="#5a3c18" opacity="0.8"/>
+
+              <!-- Left upper leg -->
+              <rect x="46" y="188" width="34" height="52" rx="9"
+                    fill="url(#g-leg)" stroke="#1e2e42" stroke-width="1.5"/>
+              <!-- Left leg knee detail -->
+              <rect x="50" y="218" width="26" height="8" rx="4"
+                    fill="#1e2e44" opacity="0.7"/>
+
+              <!-- Right upper leg -->
+              <rect x="88" y="188" width="34" height="52" rx="9"
+                    fill="url(#g-leg)" stroke="#1e2e42" stroke-width="1.5"/>
+              <!-- Right leg knee detail -->
+              <rect x="92" y="218" width="26" height="8" rx="4"
+                    fill="#1e2e44" opacity="0.7"/>
+
+              <!-- Left boot -->
+              <rect x="38" y="234" width="44" height="26" rx="9"
+                    fill="url(#g-boot)" stroke="#182028" stroke-width="1.5"/>
+              <!-- Left boot sole detail -->
+              <rect x="38" y="250" width="44" height="10" rx="7"
+                    fill="#060c14" stroke="#141e2a" stroke-width="1"/>
+
+              <!-- Right boot -->
+              <rect x="86" y="234" width="44" height="26" rx="9"
+                    fill="url(#g-boot)" stroke="#182028" stroke-width="1.5"/>
+              <!-- Right boot sole detail -->
+              <rect x="86" y="250" width="44" height="10" rx="7"
+                    fill="#060c14" stroke="#141e2a" stroke-width="1"/>
+
+              <!-- Head (drawn last so it's on top) -->
+              <circle cx="84" cy="42" r="28"
+                      fill="url(#g-head)" stroke="#2d4562" stroke-width="1.5"/>
+              <!-- Eye sockets (subtle) -->
+              <ellipse cx="76" cy="40" rx="5" ry="5" fill="#1a2a42" opacity="0.8"/>
+              <ellipse cx="92" cy="40" rx="5" ry="5" fill="#1a2a42" opacity="0.8"/>
+              <!-- Eye glow -->
+              <ellipse cx="76" cy="40" rx="3" ry="3" fill="#4f9eff" opacity="0.5"/>
+              <ellipse cx="92" cy="40" rx="3" ry="3" fill="#4f9eff" opacity="0.5"/>
+            </svg>
+
+            <!-- ── Item overlays on character ── -->
+
+            <!-- Running Cap (EPIC) — on head -->
+            <div class="item-ov ov-epic"
+                 style="top:3px; left:50%; transform:translateX(-50%); font-size:38px">🧢</div>
+
+            <!-- Compression Jersey (RARE) — on chest -->
+            <div class="item-ov ov-rare"
+                 style="top:100px; left:50%; transform:translateX(-50%); font-size:32px">🎽</div>
+
+            <!-- GPS Watch (LEGENDARY) — right wrist -->
+            <div class="item-ov ov-legendary"
+                 style="top:185px; right:0px; font-size:26px">⌚</div>
+
+            <!-- Left glove (RARE) -->
+            <div class="item-ov ov-rare"
+                 style="top:182px; left:2px; font-size:22px; transform:scaleX(-1)">🧤</div>
+
+            <!-- Right glove (RARE) -->
+            <div class="item-ov ov-rare"
+                 style="top:182px; right:2px; font-size:22px">🧤</div>
+
+            <!-- Left boot (UNCOMMON) -->
+            <div class="item-ov ov-uncommon"
+                 style="bottom:2px; left:24px; font-size:24px; transform:scaleX(-1)">👟</div>
+
+            <!-- Right boot (UNCOMMON) -->
+            <div class="item-ov ov-uncommon"
+                 style="bottom:2px; right:20px; font-size:24px">👟</div>
+
+            <!-- Pulse ring around legendary watch -->
+            <div style="position:absolute;width:40px;height:40px;border-radius:50%;
+                        border:1px dashed rgba(245,166,35,0.35);
+                        top:183px;right:-2px;
+                        animation:spin-sparkle 6s linear infinite;
+                        pointer-events:none;z-index:9"></div>
+
+            <!-- Floor glow -->
+            <div class="char-floor"></div>
+
+          </div><!-- /char-stage -->
+
+          <!-- Right slots: Watch · Gloves · Earbuds -->
+          <div class="slots-col">
+            <div class="slot legendary">
+              <div class="slot-icon">⌚</div>
+              <div class="slot-label">WATCH</div>
+              <div class="slot-bar" style="background:#f5a623"></div>
+            </div>
+            <div class="slot rare">
+              <div class="slot-icon">🧤</div>
+              <div class="slot-label">GLOVES</div>
+              <div class="slot-bar" style="background:#4f9eff"></div>
+            </div>
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">EARBUDS</div>
+            </div>
+          </div>
+
+        </div><!-- /viewer-layout -->
+
+        <!-- Mount badge -->
+        <div class="mount-badge">
+          <span style="font-size:18px">🚴</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#f5a623">Carbon Road Bike</div>
+            <div style="font-size:9px;color:#8b949e">+15% map speed</div>
+          </div>
+        </div>
+
+      </div><!-- /viewer-card -->
+
+      <!-- Inspect panel (empty state) -->
+      <div class="sec-label">INSPECT ITEM</div>
+      <div class="item-panel empty">
+        <span style="font-size:12px;color:#3a4d62">Tap any slot to inspect</span>
+      </div>
+
+      <!-- Total gear bonuses -->
+      <div class="sec-label">TOTAL GEAR BONUSES</div>
+      <div class="bonuses">
+        <div class="bon-title">5 PIECES EQUIPPED</div>
+        <div class="bon-row"><span class="bon-l">XP Multiplier</span><span class="bon-v" style="color:#4f9eff">+20%</span></div>
+        <div class="bon-row"><span class="bon-l">Strength bonus</span><span class="bon-v" style="color:#f85149">+6 STR</span></div>
+        <div class="bon-row"><span class="bon-l">Boss damage</span><span class="bon-v" style="color:#f9751f">+280 dmg</span></div>
+        <div class="bon-row"><span class="bon-l">Map travel speed</span><span class="bon-v" style="color:#3fb950">+23%</span></div>
+      </div>
+
+    </div><!-- /scroll -->
+
+    <div class="nav">
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 2 — WEAPON SLOT SELECTED (Iron Blade)
+══════════════════════════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">SCREEN 2 — ITEM SELECTED</div>
+    <div class="step-title">Tap watch slot → inspect Apex GPS Pro</div>
+    <div class="step-desc">Watch slot highlights blue. Detail panel expands with stats, source, and swap button.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">⚔️</div>
+          <div>
+            <div class="ph-name">Alex</div>
+            <div class="ph-title">🏃 The Marathoner</div>
+            <div class="ph-sub">Warrior · Level 12 · Veteran</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="ptab">Overview</div>
+        <div class="ptab active">Equipment</div>
+        <div class="ptab">Inventory</div>
+        <div class="ptab">Mounts</div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <!-- CHARACTER VIEWER — weapon slot selected -->
+      <div class="viewer-card">
+        <div class="viewer-layout">
+
+          <!-- Left slots -->
+          <div class="slots-col">
+            <div class="slot epic">
+              <div class="slot-icon">⛑️</div>
+              <div class="slot-label">HELM</div>
+              <div class="slot-bar" style="background:#a371f7"></div>
+            </div>
+            <div class="slot rare">
+              <div class="slot-icon">🥋</div>
+              <div class="slot-label">ARMOR</div>
+              <div class="slot-bar" style="background:#4f9eff"></div>
+            </div>
+            <div class="slot uncommon">
+              <div class="slot-icon">👟</div>
+              <div class="slot-label">BOOTS</div>
+              <div class="slot-bar" style="background:#3fb950"></div>
+            </div>
+          </div>
+
+          <!-- Character Stage (weapon glows harder when selected) -->
+          <div class="char-stage">
+
+            <svg width="168" height="270" viewBox="0 0 168 270" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;z-index:1">
+              <defs>
+                <radialGradient id="g2-head" cx="42%" cy="35%" r="58%">
+                  <stop offset="0%" stop-color="#263650"/>
+                  <stop offset="100%" stop-color="#172035"/>
+                </radialGradient>
+                <radialGradient id="g2-body" cx="50%" cy="25%" r="65%">
+                  <stop offset="0%" stop-color="#1e2e48"/>
+                  <stop offset="100%" stop-color="#101828"/>
+                </radialGradient>
+                <radialGradient id="g2-chest" cx="50%" cy="30%" r="60%">
+                  <stop offset="0%" stop-color="#223255"/>
+                  <stop offset="100%" stop-color="#131d30"/>
+                </radialGradient>
+                <radialGradient id="g2-shoulder" cx="50%" cy="20%" r="70%">
+                  <stop offset="0%" stop-color="#2a4270"/>
+                  <stop offset="100%" stop-color="#182848"/>
+                </radialGradient>
+                <linearGradient id="g2-leg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#18243c"/>
+                  <stop offset="100%" stop-color="#0c1420"/>
+                </linearGradient>
+                <linearGradient id="g2-boot" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10181e"/>
+                  <stop offset="100%" stop-color="#080e14"/>
+                </linearGradient>
+                <linearGradient id="g2-belt" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#241a08"/>
+                  <stop offset="100%" stop-color="#150e04"/>
+                </linearGradient>
+                <radialGradient id="g2-helm-aura" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(163,113,247,0.18)"/>
+                  <stop offset="100%" stop-color="rgba(163,113,247,0)"/>
+                </radialGradient>
+              </defs>
+              <ellipse cx="84" cy="42" rx="40" ry="38" fill="url(#g2-helm-aura)"/>
+              <path d="M55,92 Q42,140 48,200 Q60,210 84,210 Q108,210 120,200 Q126,140 113,92 Z" fill="#0d1625" stroke="#182234" stroke-width="1" opacity="0.8"/>
+              <rect x="76" y="68" width="16" height="16" rx="5" fill="url(#g2-head)" stroke="#253d5a" stroke-width="1.5"/>
+              <rect x="14" y="78" width="44" height="22" rx="8" fill="url(#g2-shoulder)" stroke="#304870" stroke-width="1.5"/>
+              <rect x="16" y="79" width="40" height="5" rx="4" fill="#3a5888" opacity="0.45"/>
+              <rect x="110" y="78" width="44" height="22" rx="8" fill="url(#g2-shoulder)" stroke="#304870" stroke-width="1.5"/>
+              <rect x="112" y="79" width="40" height="5" rx="4" fill="#3a5888" opacity="0.45"/>
+              <rect x="13" y="98" width="23" height="48" rx="8" fill="url(#g2-body)" stroke="#233552" stroke-width="1.5"/>
+              <rect x="132" y="98" width="23" height="48" rx="8" fill="url(#g2-body)" stroke="#233552" stroke-width="1.5"/>
+              <rect x="11" y="144" width="21" height="46" rx="7" fill="url(#g2-body)" stroke="#233552" stroke-width="1.5"/>
+              <rect x="136" y="144" width="21" height="46" rx="7" fill="url(#g2-body)" stroke="#233552" stroke-width="1.5"/>
+              <rect x="46" y="98" width="76" height="80" rx="7" fill="url(#g2-chest)" stroke="#253d5a" stroke-width="1.5"/>
+              <rect x="60" y="102" width="48" height="32" rx="5" fill="#223050" opacity="0.7"/>
+              <rect x="62" y="103" width="44" height="4" rx="3" fill="#3a5888" opacity="0.5"/>
+              <line x1="84" y1="104" x2="84" y2="172" stroke="#2a4060" stroke-width="1" opacity="0.7"/>
+              <rect x="52" y="152" width="64" height="6" rx="3" fill="#1e3050" opacity="0.6"/>
+              <rect x="8" y="188" width="26" height="22" rx="8" fill="url(#g2-head)" stroke="#233552" stroke-width="1.5"/>
+              <!-- Right hand — warm tint (holding legendary weapon) -->
+              <rect x="134" y="188" width="26" height="22" rx="8" fill="#2a2010" stroke="#3d3018" stroke-width="1.5"/>
+              <rect x="44" y="174" width="80" height="16" rx="7" fill="url(#g2-belt)" stroke="#3d2a10" stroke-width="1.5"/>
+              <rect x="74" y="177" width="20" height="10" rx="4" fill="#2e1e08" stroke="#4a3018" stroke-width="1"/>
+              <rect x="78" y="180" width="12" height="4" rx="2" fill="#5a3c18" opacity="0.8"/>
+              <rect x="46" y="188" width="34" height="52" rx="9" fill="url(#g2-leg)" stroke="#1e2e42" stroke-width="1.5"/>
+              <rect x="50" y="218" width="26" height="8" rx="4" fill="#1e2e44" opacity="0.7"/>
+              <rect x="88" y="188" width="34" height="52" rx="9" fill="url(#g2-leg)" stroke="#1e2e42" stroke-width="1.5"/>
+              <rect x="92" y="218" width="26" height="8" rx="4" fill="#1e2e44" opacity="0.7"/>
+              <rect x="38" y="234" width="44" height="26" rx="9" fill="url(#g2-boot)" stroke="#182028" stroke-width="1.5"/>
+              <rect x="38" y="250" width="44" height="10" rx="7" fill="#060c14" stroke="#141e2a" stroke-width="1"/>
+              <rect x="86" y="234" width="44" height="26" rx="9" fill="url(#g2-boot)" stroke="#182028" stroke-width="1.5"/>
+              <rect x="86" y="250" width="44" height="10" rx="7" fill="#060c14" stroke="#141e2a" stroke-width="1"/>
+              <circle cx="84" cy="42" r="28" fill="url(#g2-head)" stroke="#2d4562" stroke-width="1.5"/>
+              <ellipse cx="76" cy="40" rx="5" ry="5" fill="#1a2a42" opacity="0.8"/>
+              <ellipse cx="92" cy="40" rx="5" ry="5" fill="#1a2a42" opacity="0.8"/>
+              <ellipse cx="76" cy="40" rx="3" ry="3" fill="#4f9eff" opacity="0.5"/>
+              <ellipse cx="92" cy="40" rx="3" ry="3" fill="#4f9eff" opacity="0.5"/>
+            </svg>
+
+            <!-- Item overlays -->
+            <div class="item-ov ov-epic"
+                 style="top:3px;left:50%;transform:translateX(-50%);font-size:38px">⛑️</div>
+            <div class="item-ov ov-rare"
+                 style="top:100px;left:50%;transform:translateX(-50%);font-size:32px">🥋</div>
+
+            <!-- GPS Watch (SELECTED — stronger glow, selection ring) -->
+            <div class="item-ov ov-legendary"
+                 style="top:185px;right:0px;font-size:30px;
+                        filter:drop-shadow(0 0 12px rgba(245,166,35,1)) drop-shadow(0 0 28px rgba(245,166,35,0.7))">⌚</div>
+
+            <div class="item-ov ov-rare"
+                 style="top:182px;left:2px;font-size:22px;transform:scaleX(-1)">🧤</div>
+            <div class="item-ov ov-rare"
+                 style="top:182px;right:2px;font-size:22px">🧤</div>
+            <div class="item-ov ov-uncommon"
+                 style="bottom:2px;left:24px;font-size:24px;transform:scaleX(-1)">👟</div>
+            <div class="item-ov ov-uncommon"
+                 style="bottom:2px;right:20px;font-size:24px">👟</div>
+
+            <!-- Pulse ring when watch is selected -->
+            <div style="position:absolute;width:46px;height:46px;border-radius:50%;
+                        border:1.5px dashed rgba(245,166,35,0.6);
+                        top:178px;right:-6px;
+                        animation:spin-sparkle 4s linear infinite;
+                        pointer-events:none;z-index:9"></div>
+
+            <div class="char-floor"></div>
+          </div><!-- /char-stage -->
+
+          <!-- Right slots (watch selected) -->
+          <div class="slots-col">
+            <div class="slot legendary selected">
+              <div class="slot-icon">⌚</div>
+              <div class="slot-label">WATCH</div>
+              <div class="slot-bar" style="background:#f5a623"></div>
+            </div>
+            <div class="slot rare">
+              <div class="slot-icon">🧤</div>
+              <div class="slot-label">GLOVES</div>
+              <div class="slot-bar" style="background:#4f9eff"></div>
+            </div>
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">EARBUDS</div>
+            </div>
+          </div>
+
+        </div><!-- /viewer-layout -->
+
+        <div class="mount-badge">
+          <span style="font-size:18px">🚴</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#f5a623">Carbon Road Bike</div>
+            <div style="font-size:9px;color:#8b949e">+15% map speed</div>
+          </div>
+        </div>
+
+      </div><!-- /viewer-card -->
+
+      <!-- Item detail — Apex GPS Pro (LEGENDARY) -->
+      <div class="sec-label">INSPECTING — WATCH SLOT</div>
+      <div class="item-panel legendary">
+        <div class="ip-head">
+          <div class="ip-icon" style="background:rgba(245,166,35,0.08);border:2px solid rgba(245,166,35,0.55)">⌚</div>
+          <div>
+            <div class="ip-name">Apex GPS Pro</div>
+            <div class="ip-badge" style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.4);color:#f5a623">LEGENDARY</div>
+            <div class="ip-source">Milestone: 500 km lifetime distance</div>
+          </div>
+        </div>
+        <div class="ip-stats">
+          <div class="ip-stat">
+            <div class="ips-v" style="color:#f5a623">+15%</div>
+            <div class="ips-l">XP bonus</div>
+          </div>
+          <div class="ip-stat">
+            <div class="ips-v" style="color:#3fb950">+8 END</div>
+            <div class="ips-l">endurance</div>
+          </div>
+          <div class="ip-stat">
+            <div class="ips-v" style="color:#4f9eff">+12 AGI</div>
+            <div class="ips-l">agility</div>
+          </div>
+        </div>
+        <!-- Compare row -->
+        <div style="background:#1a1204;border:1px solid rgba(245,166,35,0.2);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#8b949e">
+          <span style="color:#f5a623;font-weight:700">★ Best in slot</span> — no higher-tier tracker in your inventory
+        </div>
+        <button class="ip-btn" style="background:#1e2535;border:1px solid #30363d;color:#8b949e">📦 Move to Inventory</button>
+      </div>
+
+      <div class="sec-label">TOTAL GEAR BONUSES</div>
+      <div class="bonuses">
+        <div class="bon-title">5 PIECES EQUIPPED</div>
+        <div class="bon-row"><span class="bon-l">XP Multiplier</span><span class="bon-v" style="color:#4f9eff">+20%</span></div>
+        <div class="bon-row"><span class="bon-l">Strength bonus</span><span class="bon-v" style="color:#f85149">+6 STR</span></div>
+        <div class="bon-row"><span class="bon-l">Boss damage</span><span class="bon-v" style="color:#f9751f">+280 dmg</span></div>
+        <div class="bon-row"><span class="bon-l">Map travel speed</span><span class="bon-v" style="color:#3fb950">+23%</span></div>
+      </div>
+
+    </div><!-- /scroll -->
+
+    <div class="nav">
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 3 — NEW CHARACTER (no items equipped)
+══════════════════════════════════════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-badge" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);color:#3fb950">SCREEN 3 — NEW CHARACTER</div>
+    <div class="step-title">Empty paperdoll — nothing equipped yet</div>
+    <div class="step-desc">All slots empty. Character body shows with no item overlays. Tap a slot to equip from inventory.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="profile-header">
+        <div class="ph-row">
+          <div class="ph-avatar">🧙</div>
+          <div>
+            <div class="ph-name">NewUser</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.4);border-radius:8px;padding:2px 8px;margin-top:4px;font-size:10px;font-weight:700;color:#3fb950">🌱 The Wanderer</div>
+            <div class="ph-sub">Novice · Level 1 · Rank: Novice</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="ptab">Overview</div>
+        <div class="ptab active">Equipment</div>
+        <div class="ptab">Inventory</div>
+        <div class="ptab">Mounts</div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="viewer-card">
+        <div class="viewer-layout">
+
+          <!-- Left slots (all empty) -->
+          <div class="slots-col">
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">HELM</div>
+            </div>
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">ARMOR</div>
+            </div>
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">BOOTS</div>
+            </div>
+          </div>
+
+          <!-- Character Stage (no item overlays) -->
+          <div class="char-stage">
+            <svg width="168" height="270" viewBox="0 0 168 270" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;z-index:1;opacity:0.55">
+              <defs>
+                <radialGradient id="g3-head" cx="42%" cy="35%" r="58%">
+                  <stop offset="0%" stop-color="#202a3a"/>
+                  <stop offset="100%" stop-color="#141c28"/>
+                </radialGradient>
+                <radialGradient id="g3-body" cx="50%" cy="25%" r="65%">
+                  <stop offset="0%" stop-color="#181e2c"/>
+                  <stop offset="100%" stop-color="#0e131e"/>
+                </radialGradient>
+              </defs>
+              <path d="M55,92 Q42,140 48,200 Q60,210 84,210 Q108,210 120,200 Q126,140 113,92 Z" fill="#0a0f18" stroke="#131c28" stroke-width="1" opacity="0.8"/>
+              <rect x="76" y="68" width="16" height="16" rx="5" fill="url(#g3-head)" stroke="#1e2a3a" stroke-width="1.5"/>
+              <rect x="14" y="78" width="44" height="22" rx="8" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="110" y="78" width="44" height="22" rx="8" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="13" y="98" width="23" height="48" rx="8" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="132" y="98" width="23" height="48" rx="8" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="11" y="144" width="21" height="46" rx="7" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="136" y="144" width="21" height="46" rx="7" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="46" y="98" width="76" height="80" rx="7" fill="url(#g3-body)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="8" y="188" width="26" height="22" rx="8" fill="url(#g3-head)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="134" y="188" width="26" height="22" rx="8" fill="url(#g3-head)" stroke="#1a2535" stroke-width="1.5"/>
+              <rect x="44" y="174" width="80" height="16" rx="7" fill="#0e0a04" stroke="#1c1408" stroke-width="1.5"/>
+              <rect x="46" y="188" width="34" height="52" rx="9" fill="#0e1322" stroke="#141c2e" stroke-width="1.5"/>
+              <rect x="88" y="188" width="34" height="52" rx="9" fill="#0e1322" stroke="#141c2e" stroke-width="1.5"/>
+              <rect x="38" y="234" width="44" height="26" rx="9" fill="#080c14" stroke="#111820" stroke-width="1.5"/>
+              <rect x="86" y="234" width="44" height="26" rx="9" fill="#080c14" stroke="#111820" stroke-width="1.5"/>
+              <circle cx="84" cy="42" r="28" fill="url(#g3-head)" stroke="#1e2a3a" stroke-width="1.5"/>
+            </svg>
+
+            <!-- "?" placeholder on character body -->
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                        font-size:32px;color:#1e2d42;z-index:5;pointer-events:none">?</div>
+
+            <div class="char-floor" style="background:rgba(255,255,255,0.06)"></div>
+          </div><!-- /char-stage -->
+
+          <!-- Right slots (all empty) -->
+          <div class="slots-col">
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">WEAPON</div>
+            </div>
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">GLOVES</div>
+            </div>
+            <div class="slot empty">
+              <div style="font-size:16px;color:#1e2d42">＋</div>
+              <div class="slot-label">RING</div>
+            </div>
+          </div>
+
+        </div><!-- /viewer-layout -->
+
+        <!-- No mount equipped -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;
+                    background:#0d1220;border:1px dashed #1e2d40;border-radius:10px;
+                    padding:7px 14px;margin:8px auto 0;width:fit-content">
+          <span style="font-size:14px;opacity:0.4">🐴</span>
+          <span style="font-size:10px;color:#2a3d52;font-weight:600">No mount equipped</span>
+        </div>
+
+      </div><!-- /viewer-card -->
+
+      <!-- Call-to-action -->
+      <div style="margin:0 16px 10px;background:rgba(79,158,255,0.06);border:1px solid rgba(79,158,255,0.2);border-radius:14px;padding:16px;text-align:center">
+        <div style="font-size:20px;margin-bottom:6px">⚔️</div>
+        <div style="font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:4px">No gear equipped</div>
+        <div style="font-size:11px;color:#8b949e;margin-bottom:12px">Complete quests and defeat bosses to earn items. Equip gear to boost your stats.</div>
+        <button style="background:linear-gradient(135deg,#4f9eff,#2d7dd2);border:none;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">View Inventory</button>
+      </div>
+
+      <div class="sec-label">TOTAL GEAR BONUSES</div>
+      <div class="bonuses">
+        <div class="bon-title">0 PIECES EQUIPPED</div>
+        <div class="bon-row"><span class="bon-l">XP Multiplier</span><span class="bon-v" style="color:#3a4d62">+0%</span></div>
+        <div class="bon-row"><span class="bon-l">Stat bonuses</span><span class="bon-v" style="color:#3a4d62">None</span></div>
+        <div class="bon-row"><span class="bon-l">Boss damage</span><span class="bon-v" style="color:#3a4d62">Base only</span></div>
+        <div class="bon-row"><span class="bon-l">Map travel speed</span><span class="bon-v" style="color:#3a4d62">Base only</span></div>
+      </div>
+
+    </div><!-- /scroll -->
+
+    <div class="nav">
+      <a href="home.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></a>
+      <a href="adventure-map.html" class="nav-item" style="text-decoration:none"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></a>
+      <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const routes = {
+    'Home':    'home.html',
+    'Map':     'adventure-map.html',
+    'Stats':   'profile-full.html',
+    'Profile': 'profile-full.html',
+    'Quests':  'quests.html',
+  };
+  document.querySelectorAll('.nav-item, .nav__item').forEach(function (el) {
+    const lbl = el.querySelector('.nav-label, .nav__label');
+    if (!lbl) return;
+    const href = routes[lbl.textContent.trim()];
+    if (href) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function () { window.location.href = href; });
+    }
+  });
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Boss Fight Flow (Real Gear)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #040810;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 48px 40px;
+  min-width: max-content;
+}
+
+.flow-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.flow-header h1 { font-size: 22px; color: #e6edf3; font-weight: 700; margin-bottom: 8px; }
+.flow-header p { font-size: 13px; color: #8b949e; }
+
+.design-note {
+  max-width: 900px;
+  margin: 0 auto 40px;
+  background: rgba(79,158,255,0.06);
+  border: 1px solid rgba(79,158,255,0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  gap: 20px;
+}
+.dn-section { flex: 1; }
+.dn-title { font-size: 10px; color: #4f9eff; font-weight: 700; letter-spacing: 0.07em; margin-bottom: 8px; }
+.dn-item { font-size: 11px; color: #8b949e; margin-bottom: 4px; padding-left: 10px; position: relative; }
+.dn-item::before { content: "→"; position: absolute; left: 0; color: #30363d; }
+.dn-item span { color: #e6edf3; }
+
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  padding-top: 360px;
+  flex-shrink: 0;
+  gap: 6px;
+}
+.arrow-icon { font-size: 22px; color: #30363d; }
+.arrow-label { font-size: 9px; color: #586070; font-weight: 600; letter-spacing: 0.06em; text-align: center; }
+
+.step-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.step-label {
+  text-align: center;
+  max-width: 390px;
+}
+.step-num {
+  display: inline-block;
+  background: rgba(79,158,255,0.12);
+  border: 1px solid rgba(79,158,255,0.4);
+  border-radius: 12px;
+  padding: 3px 14px;
+  font-size: 10px;
+  color: #4f9eff;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.step-title { font-size: 14px; color: #e6edf3; font-weight: 700; margin-bottom: 3px; }
+.step-desc { font-size: 11px; color: #8b949e; line-height: 1.5; }
+
+/* Phone shell */
+.phone {
+  width: 390px;
+  height: 844px;
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════ */
+.status-bar {
+  position: absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 22px 0;
+  z-index: 100;
+}
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#161b22; border-top:1px solid #30363d;
+  display:flex; align-items:center; padding:0 8px 12px;
+  z-index:100;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color:#8b949e; }
+
+/* ═══════════════════════════════
+   SCREEN 1 — TRAIL MAP (TRAVELING)
+   Refactored: Topographic trail map
+   instead of fantasy RPG zones
+═══════════════════════════════ */
+#s1 { background: #080e14; }
+
+.map-bg {
+  position:absolute; top:0; left:0; right:0; height:500px;
+  overflow:hidden;
+}
+.map-bg svg { width:100%; height:100%; }
+
+.top-hud {
+  position:absolute; top:44px; left:0; right:0;
+  padding: 10px 18px 14px;
+  background: linear-gradient(to bottom, rgba(8,14,20,0.97) 65%, transparent);
+  z-index:20;
+}
+.hud-r1 { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.hud-title { font-size:17px; font-weight:700; color:#e6edf3; }
+.hud-stats { display:flex; gap:6px; }
+.hud-stat {
+  background:rgba(22,27,34,0.9); border:1px solid #30363d;
+  border-radius:10px; padding:4px 10px;
+  font-size:11px; font-weight:600;
+  display:flex; align-items:center; gap:4px;
+}
+
+.zone-card {
+  position:absolute; left:16px; right:16px;
+  background:rgba(22,27,34,0.97);
+  border-radius:14px; padding:14px 16px;
+  border:1px solid;
+  z-index:25;
+}
+.zc-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.zc-icon {
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+  border:2px solid;
+}
+.zc-name { font-size:15px; font-weight:700; color:#e6edf3; }
+.zc-sub { font-size:11px; margin-top:2px; }
+.zc-stats { display:flex; gap:8px; margin-bottom:10px; }
+.zc-stat { flex:1; background:#1e2632; border-radius:8px; padding:7px 8px; text-align:center; }
+.zcs-v { font-size:14px; font-weight:700; }
+.zcs-l { font-size:9px; color:#8b949e; margin-top:1px; }
+.prog-lbl-row { display:flex; justify-content:space-between; font-size:10px; color:#8b949e; margin-bottom:5px; }
+.prog-track { flex:1; height:5px; background:#1e2632; border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:3px; }
+
+.retreat-warn {
+  margin-top:8px; background:rgba(248,81,73,0.08);
+  border:1px solid rgba(248,81,73,0.3); border-radius:8px;
+  padding:6px 10px; display:flex; align-items:center; gap:6px;
+}
+.rw-text { font-size:10px; color:#f85149; }
+
+.bottom-light {
+  position:absolute; bottom:82px; left:0; right:0;
+  background:#0d1117; padding:14px 16px;
+}
+.bl-label { font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.07em; margin-bottom:8px; }
+.activity-row { display:flex; gap:8px; }
+.act-chip {
+  flex:1; background:#161b22; border-radius:10px;
+  padding:8px 10px; border:1px solid #30363d;
+  text-align:center;
+}
+.ac-icon { font-size:18px; }
+.ac-val { font-size:12px; font-weight:700; color:#e6edf3; margin-top:3px; }
+.ac-sub { font-size:9px; color:#8b949e; }
+
+/* ═══════════════════════════════
+   SCREEN 2 — CHALLENGE UNLOCKED
+═══════════════════════════════ */
+#s2 { background:#080e14; }
+
+.arrival-overlay {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(248,81,73,0.18) 0%, rgba(8,14,20,0.95) 70%);
+  z-index:5;
+}
+.arrival-content {
+  position:absolute; inset:0; z-index:10;
+  display:flex; flex-direction:column;
+  align-items:center;
+}
+.arrival-top {
+  width:100%; padding:56px 20px 0;
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.back-btn { font-size:14px; color:#8b949e; }
+.notif-badge {
+  background:rgba(248,81,73,0.15); border:1px solid #f85149;
+  border-radius:12px; padding:4px 12px;
+  font-size:10px; color:#f85149; font-weight:700; letter-spacing:0.05em;
+}
+
+.arrival-zone { margin-top:20px; text-align:center; }
+.az-tag {
+  display:inline-block;
+  background:rgba(163,113,247,0.12); border:1px solid rgba(163,113,247,0.4);
+  border-radius:10px; padding:3px 14px;
+  font-size:10px; color:#a371f7; font-weight:600; letter-spacing:0.06em;
+  margin-bottom:10px;
+}
+.az-name { font-size:13px; color:#8b949e; margin-bottom:4px; }
+.az-region { font-size:22px; font-weight:700; color:#e6edf3; margin-bottom:2px; }
+.az-check { font-size:12px; color:#3fb950; font-weight:600; }
+
+/* Challenge card (replaces Boss card) */
+.boss-big-card {
+  margin: 16px 20px 0;
+  background: rgba(22,27,34,0.95);
+  border: 2px solid rgba(248,81,73,0.6);
+  border-radius:20px; padding:18px;
+  width: calc(100% - 40px);
+  box-shadow: 0 0 40px rgba(248,81,73,0.15);
+}
+.bbc-tag {
+  display:inline-block;
+  background:rgba(248,81,73,0.12); border:1px solid rgba(248,81,73,0.5);
+  border-radius:8px; padding:3px 12px;
+  font-size:10px; color:#f85149; font-weight:700; letter-spacing:0.06em;
+  margin-bottom:12px;
+}
+
+/* Challenge icon ring — real-world feel */
+.bbc-icon {
+  width:80px; height:80px; margin:0 auto 12px;
+  background: linear-gradient(135deg, rgba(20,10,30,0.9), rgba(40,15,15,0.9));
+  border:2px solid #f85149;
+  border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:36px;
+  box-shadow: 0 0 30px rgba(248,81,73,0.4), 0 0 60px rgba(248,81,73,0.15);
+}
+.bbc-name { font-size:20px; font-weight:700; color:#e6edf3; margin-bottom:3px; }
+.bbc-badge-row { display:flex; gap:6px; justify-content:center; margin-bottom:10px; }
+.bbc-badge {
+  background:#1e2632; border-radius:6px; padding:3px 10px;
+  font-size:10px; color:#8b949e; border:1px solid #30363d;
+}
+.bbc-desc { font-size:12px; color:#8b949e; margin-bottom:14px; line-height:1.5; text-align:center; }
+
+/* HP bar — renamed to CHALLENGE PROGRESS */
+.hp-section { margin-bottom:12px; }
+.hp-lbl { display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; }
+.hp-lbl-l { color:#f85149; font-weight:700; letter-spacing:0.04em; }
+.hp-lbl-r { color:#e6edf3; font-weight:700; }
+.hp-track { height:10px; background:#1e2632; border-radius:5px; overflow:hidden; position:relative; }
+.hp-fill { height:100%; border-radius:5px; background:linear-gradient(to right,#f85149,#ff6b35); width:100%; }
+.hp-segments { position:absolute; inset:0; display:flex; }
+.hp-seg { flex:1; border-right:1px solid rgba(8,14,20,0.4); }
+.hp-seg:last-child { border:none; }
+
+/* Activity → Damage rules */
+.bbc-rules { display:flex; flex-direction:column; gap:5px; }
+.bbc-rule {
+  display:flex; align-items:center; gap:8px;
+  background:#1e2632; border-radius:8px; padding:8px 10px;
+}
+.br-ico { font-size:16px; }
+.br-info { flex:1; }
+.br-activity { font-size:12px; font-weight:700; color:#e6edf3; }
+.br-dmg { font-size:10px; color:#8b949e; }
+.br-dmg-val { font-size:12px; font-weight:700; color:#f85149; }
+
+.bbc-cta {
+  margin-top:14px; width:100%;
+  background: linear-gradient(135deg, #f85149, #c0392b);
+  border:none; border-radius:14px; padding:14px;
+  font-size:15px; font-weight:700; color:#fff;
+  cursor:pointer; letter-spacing:0.03em;
+  box-shadow: 0 4px 20px rgba(248,81,73,0.4);
+}
+
+/* ═══════════════════════════════
+   SCREEN 3 — CHALLENGE IN PROGRESS
+═══════════════════════════════ */
+#s3 { background:#080e14; }
+
+.battle-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(248,81,73,0.1) 0%, #080e14 65%);
+}
+.battle-content { position:absolute; inset:0; z-index:10; overflow:hidden; }
+
+.battle-header {
+  padding:52px 20px 0;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  margin-bottom:12px;
+}
+.bh-title { font-size:11px; color:#f85149; font-weight:700; letter-spacing:0.07em; margin-bottom:3px; }
+.bh-name { font-size:18px; font-weight:700; color:#e6edf3; }
+.bh-timer {
+  background:rgba(248,81,73,0.12); border:1px solid rgba(248,81,73,0.4);
+  border-radius:10px; padding:6px 14px;
+  font-size:12px; color:#f85149; font-weight:700;
+  text-align:center;
+}
+.bh-timer-sub { font-size:9px; color:#8b949e; margin-top:2px; }
+
+/* Challenge vs Athlete arena */
+.battle-arena {
+  margin: 0 20px 12px;
+  background: rgba(22,27,34,0.8);
+  border:1px solid rgba(248,81,73,0.3);
+  border-radius:16px; padding:14px;
+  position:relative; overflow:hidden;
+}
+.ba-glow {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(248,81,73,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.ba-versus { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.ba-entity { text-align:center; }
+.ba-avatar {
+  width:68px; height:68px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; margin:0 auto 8px;
+}
+.ba-boss-av { background:rgba(40,10,10,0.9); border:2px solid #f85149; box-shadow:0 0 20px rgba(248,81,73,0.4); }
+.ba-player-av { background:rgba(10,28,18,0.9); border:2px solid #3fb950; box-shadow:0 0 20px rgba(63,185,80,0.3); border-radius:50%; }
+.ba-name { font-size:11px; font-weight:700; color:#e6edf3; }
+.ba-sub { font-size:9px; color:#8b949e; }
+.vs-badge {
+  font-size:16px; font-weight:700; color:#30363d;
+  background:#161b22; border-radius:50%; width:34px; height:34px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #30363d;
+}
+
+/* Dual progress bars */
+.ba-hp { margin-top:4px; }
+.ba-hp-row { display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px; }
+.ba-hp-lbl { font-weight:700; }
+.ba-hp-track { height:8px; background:#1e2632; border-radius:4px; overflow:hidden; margin-bottom:10px; }
+.ba-hp-fill { height:100%; border-radius:4px; }
+.boss-hp-fill { background:linear-gradient(to right,#f85149,#ff6b35); width:55%; }
+.player-power-fill { background:linear-gradient(to right,#3fb950,#4f9eff); width:72%; }
+
+/* Workout log */
+.damage-log { margin:0 20px 10px; }
+.dl-label { font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.07em; margin-bottom:8px; }
+.dl-item {
+  display:flex; align-items:center; gap:10px;
+  background:#161b22; border-radius:10px; padding:10px 12px;
+  margin-bottom:6px; border:1px solid #1e2632;
+}
+.dl-icon { font-size:18px; }
+.dl-info { flex:1; }
+.dl-activity { font-size:12px; font-weight:700; color:#e6edf3; }
+.dl-meta { font-size:10px; color:#8b949e; margin-top:1px; }
+.dl-dmg {
+  font-size:15px; font-weight:700; color:#f85149;
+  display:flex; align-items:center; gap:3px;
+}
+.dl-new {
+  background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.4);
+  border-radius:6px; padding:1px 6px;
+  font-size:9px; color:#f85149; font-weight:700;
+}
+
+.battle-cta-row { margin:0 20px; display:flex; gap:8px; }
+.btn-log {
+  flex:1; background:#161b22; border:1px solid #30363d;
+  border-radius:12px; padding:12px;
+  font-size:13px; font-weight:700; color:#8b949e; cursor:pointer;
+}
+.btn-workout {
+  flex:2; background:linear-gradient(135deg,#3fb950,#2d8f3c);
+  border:none; border-radius:12px; padding:12px;
+  font-size:13px; font-weight:700; color:#fff; cursor:pointer;
+  box-shadow:0 4px 16px rgba(63,185,80,0.35);
+}
+
+/* ═══════════════════════════════
+   SCREEN 4 — VICTORY + REAL GEAR REWARDS
+   Key change: fantasy items → real fitness gear
+═══════════════════════════════ */
+#s4 { background:#060a0e; }
+
+.victory-bg {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(245,166,35,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 35%, rgba(248,81,73,0.1) 0%, transparent 80%),
+    #060a0e;
+}
+.victory-content { position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; }
+
+.victory-header { padding:52px 20px 0; width:100%; display:flex; justify-content:center; }
+.victory-tag {
+  background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.5);
+  border-radius:12px; padding:4px 18px;
+  font-size:11px; color:#f5a623; font-weight:700; letter-spacing:0.08em;
+}
+
+.victory-boss-dead {
+  margin-top:16px; text-align:center;
+  position:relative;
+}
+.vbd-rings {
+  position:relative; width:120px; height:120px; margin:0 auto 12px;
+  display:flex; align-items:center; justify-content:center;
+}
+.vbd-ring1 {
+  position:absolute; inset:0; border-radius:50%;
+  border:2px solid rgba(245,166,35,0.15);
+  animation:victoryRing1 2s ease-in-out infinite;
+}
+.vbd-ring2 {
+  position:absolute; inset:12px; border-radius:50%;
+  border:1.5px solid rgba(245,166,35,0.25);
+  animation:victoryRing2 2s ease-in-out infinite 0.3s;
+}
+@keyframes victoryRing1 { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.04)} }
+@keyframes victoryRing2 { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.03)} }
+
+.vbd-avatar {
+  width:84px; height:84px; border-radius:18px;
+  background:rgba(40,10,10,0.6);
+  border:2px solid rgba(245,166,35,0.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:40px;
+  box-shadow:0 0 40px rgba(245,166,35,0.3), 0 0 80px rgba(245,166,35,0.1);
+  position:relative; z-index:1;
+  filter:grayscale(0.4) brightness(0.7);
+}
+.vbd-defeated {
+  position:absolute; top:-4px; right:-4px;
+  background:#3fb950; border-radius:50%;
+  width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; z-index:2;
+  box-shadow:0 2px 8px rgba(63,185,80,0.5);
+}
+.victory-title { font-size:26px; font-weight:700; color:#e6edf3; margin-bottom:3px; }
+.victory-sub { font-size:12px; color:#8b949e; margin-bottom:14px; }
+
+/* Stats row */
+.victory-stats {
+  display:flex; gap:8px; margin:0 20px 12px; width:calc(100% - 40px);
+}
+.vs-stat {
+  flex:1; background:rgba(22,27,34,0.9); border-radius:12px; padding:8px 6px;
+  text-align:center; border:1px solid #30363d;
+}
+.vss-val { font-size:15px; font-weight:700; }
+.vss-lbl { font-size:9px; color:#8b949e; margin-top:2px; }
+
+/* ═══════════════════════════════════════
+   REAL GEAR REWARDS CARD
+   Replaces fantasy drops (sword/armor/amulet)
+   with real fitness equipment items
+═══════════════════════════════════════ */
+.rewards-card {
+  margin:0 20px 12px; width:calc(100% - 40px);
+  background:rgba(22,27,34,0.95);
+  border:1px solid rgba(245,166,35,0.4);
+  border-radius:16px; padding:14px;
+  box-shadow:0 0 30px rgba(245,166,35,0.08);
+}
+.rc-title {
+  font-size:11px; color:#f5a623; font-weight:700; letter-spacing:0.07em;
+  margin-bottom:10px; text-align:center;
+}
+
+/* XP + stat gains row */
+.rc-xp-row { display:flex; gap:8px; margin-bottom:10px; }
+.rc-xp-chip {
+  flex:1; background:#1e2632; border-radius:10px; padding:8px 6px;
+  text-align:center; border:1px solid #30363d;
+}
+.rc-xp-val { font-size:14px; font-weight:700; }
+.rc-xp-lbl { font-size:9px; color:#8b949e; margin-top:2px; }
+
+/* Real gear item drop */
+.gear-drop-label {
+  font-size:10px; color:#8b949e; font-weight:600; letter-spacing:0.06em;
+  margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.gear-drop-label::before, .gear-drop-label::after {
+  content: ""; flex:1; height:1px; background:#1e2632;
+}
+
+.gear-item {
+  display:flex; align-items:center; gap:12px;
+  background:#1e2632; border-radius:12px; padding:12px 14px;
+  margin-bottom:8px;
+  border:1px solid;
+  position:relative; overflow:hidden;
+}
+.gear-item::before {
+  content:"";
+  position:absolute; top:0; left:0; bottom:0; width:3px;
+  border-radius:3px 0 0 3px;
+}
+.gear-item.rarity-epic { border-color:rgba(163,113,247,0.5); }
+.gear-item.rarity-epic::before { background:#a371f7; }
+.gear-item.rarity-rare { border-color:rgba(79,158,255,0.4); }
+.gear-item.rarity-rare::before { background:#4f9eff; }
+
+.gear-icon {
+  width:48px; height:48px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; flex-shrink:0;
+}
+.gear-icon.epic { background:rgba(163,113,247,0.12); border:1px solid rgba(163,113,247,0.3); }
+.gear-icon.rare  { background:rgba(79,158,255,0.10); border:1px solid rgba(79,158,255,0.25); }
+
+.gear-info { flex:1; }
+.gear-name { font-size:13px; font-weight:700; color:#e6edf3; margin-bottom:2px; }
+.gear-brand { font-size:10px; color:#8b949e; margin-bottom:5px; }
+.gear-stats { display:flex; gap:6px; }
+.gear-stat-tag {
+  background:rgba(79,158,255,0.08); border:1px solid rgba(79,158,255,0.2);
+  border-radius:5px; padding:2px 7px;
+  font-size:9px; font-weight:700; color:#4f9eff;
+}
+.gear-stat-tag.str { background:rgba(248,81,73,0.08); border-color:rgba(248,81,73,0.2); color:#f85149; }
+.gear-stat-tag.end { background:rgba(63,185,80,0.08); border-color:rgba(63,185,80,0.2); color:#3fb950; }
+.gear-stat-tag.xp { background:rgba(245,166,35,0.08); border-color:rgba(245,166,35,0.2); color:#f5a623; }
+
+.gear-rarity-badge {
+  font-size:9px; font-weight:700; letter-spacing:0.05em;
+  padding:3px 8px; border-radius:5px;
+}
+.rarity-epic .gear-rarity-badge { background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3); }
+.rarity-rare .gear-rarity-badge { background:rgba(79,158,255,0.12); color:#4f9eff; border:1px solid rgba(79,158,255,0.25); }
+
+/* Zone unlock */
+.rc-unlock {
+  background:rgba(163,113,247,0.08); border:1px solid rgba(163,113,247,0.4);
+  border-radius:10px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+}
+.rc-unlock-icon { font-size:20px; }
+.rc-unlock-text { flex:1; }
+.rc-unlock-title { font-size:12px; font-weight:700; color:#e6edf3; }
+.rc-unlock-sub { font-size:10px; color:#a371f7; }
+
+.victory-btn {
+  margin:0 20px; width:calc(100% - 40px);
+  background:linear-gradient(135deg, #f5a623, #e8920f);
+  border:none; border-radius:14px; padding:14px;
+  font-size:15px; font-weight:700; color:#000;
+  cursor:pointer; letter-spacing:0.03em;
+  box-shadow:0 4px 24px rgba(245,166,35,0.5);
+}
+</style>
+</head>
+<body>
+
+<div class="flow-header">
+  <h1>Life Level — Boss Fight Flow (Real Gear Edition)</h1>
+  <p>Fitness challenges with real-world gear rewards + terrain-based map</p>
+</div>
+
+<!-- Design notes panel -->
+<div class="design-note">
+  <div class="dn-section">
+    <div class="dn-title">MAP REFACTOR</div>
+    <div class="dn-item">Fantasy zones → <span>real terrain types</span> (Urban, Mountain, Trail, Coast)</div>
+    <div class="dn-item">Monster dens → <span>challenge checkpoints</span> on a trail/topo map</div>
+    <div class="dn-item">SVG map uses <span>contour lines + trail markers</span> instead of biome art</div>
+    <div class="dn-item">Player icon → <span>GPS pin / runner silhouette</span></div>
+    <div class="dn-item">Fog of war → <span>unexplored trail sections</span></div>
+  </div>
+  <div class="dn-section">
+    <div class="dn-title">GEAR ITEM REFACTOR</div>
+    <div class="dn-item">⚔️ Sword/Armor → <span>⌚ Smartwatch, 🥊 Training Gloves, 👟 Running Shoes</span></div>
+    <div class="dn-item">🧪 Potion → <span>🎧 Wireless Earbuds, 🎽 Compression Gear</span></div>
+    <div class="dn-item">Items keep <span>rarity tiers</span> (Common/Rare/Epic/Legendary)</div>
+    <div class="dn-item">Stat bonuses reframe: <span>+END, +STR, +XP% multipliers</span></div>
+    <div class="dn-item">Epic/Legendary = <span>real brand partnerships</span> (Garmin, Nike, etc.)</div>
+  </div>
+  <div class="dn-section">
+    <div class="dn-title">BOSS REFACTOR</div>
+    <div class="dn-item">Monster → <span>Fitness Challenge Badge</span> (icon, not creature)</div>
+    <div class="dn-item">"Dragon" → <span>"Iron Mile Challenge", "Peak Ascent Trial"</span></div>
+    <div class="dn-item">Boss HP → <span>Challenge Threshold</span> (km/calories to conquer)</div>
+    <div class="dn-item">Damage dealt = <span>km logged, calories burned</span></div>
+  </div>
+</div>
+
+<div class="flow">
+
+  <!-- ═══ SCREEN 1: TRAIL MAP ═══ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">STEP 1</div>
+      <div class="step-title">Trail Map — Traveling</div>
+      <div class="step-desc">Terrain-based map replaces<br>fantasy zones — real trail aesthetic</div>
+    </div>
+    <div class="phone" id="s1">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- Topographic trail map -->
+      <div class="map-bg">
+        <svg viewBox="0 0 390 500" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="tg1" cx="30%" cy="70%" r="55%">
+              <stop offset="0%" stop-color="#1a2f1a" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#080e14" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="tg2" cx="70%" cy="35%" r="50%">
+              <stop offset="0%" stop-color="#1a1a2e" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#080e14" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="tg3" cx="80%" cy="65%" r="35%">
+              <stop offset="0%" stop-color="#2a1a0a" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#080e14" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="fogTop" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#080e14" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#080e14" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Base -->
+          <rect width="390" height="500" fill="#090f15"/>
+          <!-- Terrain color areas -->
+          <ellipse cx="130" cy="350" rx="150" ry="120" fill="url(#tg1)"/>
+          <ellipse cx="270" cy="230" rx="130" ry="110" fill="url(#tg2)"/>
+          <ellipse cx="310" cy="310" rx="75" ry="65" fill="url(#tg3)"/>
+          <!-- Topographic contour lines -->
+          <g stroke="rgba(63,185,80,0.07)" stroke-width="1" fill="none">
+            <ellipse cx="290" cy="290" rx="115" ry="95"/>
+            <ellipse cx="290" cy="290" rx="90" ry="72"/>
+            <ellipse cx="290" cy="290" rx="65" ry="50"/>
+            <ellipse cx="290" cy="290" rx="40" ry="30"/>
+          </g>
+          <g stroke="rgba(79,158,255,0.06)" stroke-width="1" fill="none">
+            <ellipse cx="130" cy="360" rx="100" ry="80"/>
+            <ellipse cx="130" cy="360" rx="70" ry="55"/>
+          </g>
+          <!-- Grid (subtle) -->
+          <g stroke="rgba(48,54,61,0.08)" stroke-width="1">
+            <line x1="0" y1="120" x2="390" y2="120"/><line x1="0" y1="160" x2="390" y2="160"/>
+            <line x1="0" y1="200" x2="390" y2="200"/><line x1="0" y1="240" x2="390" y2="240"/>
+            <line x1="0" y1="280" x2="390" y2="280"/><line x1="0" y1="320" x2="390" y2="320"/>
+            <line x1="0" y1="360" x2="390" y2="360"/><line x1="0" y1="400" x2="390" y2="400"/>
+            <line x1="0" y1="440" x2="390" y2="440"/>
+            <line x1="65" y1="100" x2="65" y2="500"/><line x1="130" y1="100" x2="130" y2="500"/>
+            <line x1="195" y1="100" x2="195" y2="500"/><line x1="260" y1="100" x2="260" y2="500"/>
+            <line x1="325" y1="100" x2="325" y2="500"/>
+          </g>
+          <!-- Trail path (dashed ahead) -->
+          <path d="M 128 370 Q 178 338 220 302 Q 258 268 293 308" stroke="rgba(245,166,35,0.25)" stroke-width="2.5" stroke-dasharray="7 5" fill="none" stroke-linecap="round"/>
+          <!-- Completed trail (solid green) -->
+          <path d="M 128 370 Q 155 355 175 340" stroke="#3fb950" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Trail zone markers -->
+          <!-- Origin: Urban District -->
+          <circle cx="128" cy="370" r="14" fill="#0a1c12" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="128" y="375" font-size="12" text-anchor="middle" dominant-baseline="central">🏙️</text>
+          <rect x="100" y="387" width="58" height="13" rx="6" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.3)" stroke-width="1"/>
+          <text x="129" y="394" font-size="8" text-anchor="middle" dominant-baseline="central" fill="#3fb950" font-family="Inter,sans-serif" font-weight="700">URBAN GRID</text>
+          <!-- Mid: Mountain Trailhead -->
+          <circle cx="220" cy="302" r="12" fill="#161b22" stroke="#4f9eff" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text x="220" y="307" font-size="11" text-anchor="middle" dominant-baseline="central">⛰️</text>
+          <rect x="192" y="317" width="58" height="13" rx="6" fill="rgba(79,158,255,0.08)" stroke="rgba(79,158,255,0.25)" stroke-width="1"/>
+          <text x="221" y="324" font-size="7" text-anchor="middle" dominant-baseline="central" fill="#4f9eff" font-family="Inter,sans-serif" font-weight="700">MTN TRAILHEAD</text>
+          <!-- Boss: Peak Summit Challenge -->
+          <g>
+            <circle cx="293" cy="308" r="20" fill="rgba(30,10,10,0.95)" stroke="#f85149" stroke-width="2.5"/>
+            <text x="293" y="313" font-size="15" text-anchor="middle" dominant-baseline="central">🏔️</text>
+            <rect x="256" y="283" width="74" height="14" rx="7" fill="rgba(248,81,73,0.15)" stroke="#f85149" stroke-width="1"/>
+            <text x="293" y="291" font-size="7.5" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#f85149" font-family="Inter,sans-serif">⚡ CHALLENGE</text>
+          </g>
+          <!-- Player GPS pin -->
+          <circle cx="175" cy="340" r="15" fill="#0a1c12" opacity="0.5"/>
+          <circle cx="175" cy="340" r="15" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/>
+          <circle cx="175" cy="340" r="5" fill="#3fb950"/>
+          <circle cx="175" cy="340" r="10" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.5"/>
+          <!-- Distance to challenge -->
+          <line x1="175" y1="340" x2="278" y2="308" stroke="rgba(248,81,73,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+          <rect x="196" y="314" width="56" height="14" rx="7" fill="rgba(8,14,20,0.9)" stroke="#30363d" stroke-width="1"/>
+          <text x="224" y="322" font-size="7.5" text-anchor="middle" dominant-baseline="central" fill="#8b949e" font-family="Inter,sans-serif">5.8 km left</text>
+          <!-- Elevation markers -->
+          <text x="260" y="260" font-size="7" fill="rgba(79,158,255,0.4)" font-family="Inter,sans-serif">▲ 1,240m</text>
+          <text x="148" y="400" font-size="7" fill="rgba(63,185,80,0.4)" font-family="Inter,sans-serif">▲ 340m</text>
+          <!-- Fog top -->
+          <rect x="0" y="0" width="390" height="95" fill="url(#fogTop)"/>
+          <rect x="0" y="0" width="390" height="60" fill="#080e14"/>
+        </svg>
+      </div>
+
+      <!-- Top HUD -->
+      <div class="top-hud" style="top:44px">
+        <div class="hud-r1">
+          <div class="hud-title">Trail Map</div>
+          <div class="hud-stats">
+            <div class="hud-stat" style="color:#f85149;border-color:rgba(248,81,73,0.3)">⚡ Challenge: 5.8km</div>
+          </div>
+        </div>
+        <div class="hud-stats">
+          <div class="hud-stat" style="color:#4f9eff;border-color:rgba(79,158,255,0.3)">⚡ 8,420 XP</div>
+          <div class="hud-stat" style="color:#f5a623;border-color:rgba(245,166,35,0.3)">🏅 LVL 12</div>
+          <div class="hud-stat" style="color:#f85149;border-color:rgba(248,81,73,0.3)">🔥 7d</div>
+        </div>
+      </div>
+
+      <!-- Zone info card -->
+      <div class="zone-card" style="bottom:205px;border-color:rgba(248,81,73,0.4);">
+        <div class="zc-row">
+          <div class="zc-icon" style="background:rgba(30,10,10,0.8);border-color:#f85149;box-shadow:0 0 16px rgba(248,81,73,0.3)">🏔️</div>
+          <div>
+            <div class="zc-name">Peak Ascent Challenge</div>
+            <div class="zc-sub" style="color:#f85149">⚡ Challenge zone approaching</div>
+          </div>
+        </div>
+        <div class="zc-stats">
+          <div class="zc-stat"><div class="zcs-v" style="color:#3fb950">9.2 km</div><div class="zcs-l">Traveled</div></div>
+          <div class="zc-stat"><div class="zcs-v" style="color:#f85149">5.8 km</div><div class="zcs-l">Remaining</div></div>
+          <div class="zc-stat"><div class="zcs-v" style="color:#f5a623">61%</div><div class="zcs-l">Progress</div></div>
+        </div>
+        <div class="prog-lbl-row"><span>Trail progress to challenge</span><span style="color:#e6edf3">61%</span></div>
+        <div class="prog-track">
+          <div class="prog-fill" style="background:linear-gradient(to right,#3fb950,#f85149);width:61%"></div>
+        </div>
+        <div class="retreat-warn">
+          <span style="font-size:14px">⚠️</span>
+          <span class="rw-text">Miss 2+ days → trail resets. Keep the streak!</span>
+        </div>
+      </div>
+
+      <!-- Bottom panel -->
+      <div class="bottom-light">
+        <div class="bl-label">EVERY WORKOUT MOVES YOU FORWARD</div>
+        <div class="activity-row">
+          <div class="act-chip">
+            <div class="ac-icon">🏃</div>
+            <div class="ac-val" style="color:#3fb950">+5.2 km</div>
+            <div class="ac-sub">Running</div>
+          </div>
+          <div class="act-chip">
+            <div class="ac-icon">🚴</div>
+            <div class="ac-val" style="color:#4f9eff">+8.1 km</div>
+            <div class="ac-sub">Cycling</div>
+          </div>
+          <div class="act-chip">
+            <div class="ac-icon">🏋️</div>
+            <div class="ac-val" style="color:#a371f7">+1.0 km</div>
+            <div class="ac-sub">Strength</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-icon">›</div><div class="arrow-label">ARRIVE</div></div>
+
+  <!-- ═══ SCREEN 2: CHALLENGE UNLOCKED ═══ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">STEP 2</div>
+      <div class="step-title">Challenge Zone Reached</div>
+      <div class="step-desc">Fitness challenge unlocked —<br>real-world achievement threshold</div>
+    </div>
+    <div class="phone" id="s2">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+      <div class="arrival-overlay"></div>
+      <div class="arrival-content">
+        <div class="arrival-top">
+          <span class="back-btn">‹ Map</span>
+          <div class="notif-badge">⚡ CHALLENGE UNLOCKED</div>
+        </div>
+
+        <div class="arrival-zone">
+          <div class="az-tag">MOUNTAIN TRAIL ZONE</div>
+          <div class="az-name">You reached</div>
+          <div class="az-region">Peak Summit</div>
+          <div class="az-check">✓ 15 km traveled this week</div>
+        </div>
+
+        <!-- Challenge Card (replaces Boss Card) -->
+        <div class="boss-big-card">
+          <div class="bbc-tag">⚡ WEEKLY CHALLENGE</div>
+          <div style="text-align:center">
+            <div class="bbc-icon">🏔️</div>
+            <div class="bbc-name">Peak Ascent Trial</div>
+            <div class="bbc-badge-row">
+              <div class="bbc-badge">7 days</div>
+              <div class="bbc-badge">Endurance</div>
+              <div class="bbc-badge">Solo</div>
+            </div>
+            <div class="bbc-desc">Log 50 km total distance before<br>the timer expires. Gear drops on completion.</div>
+          </div>
+
+          <!-- Challenge Threshold (was Boss HP) -->
+          <div class="hp-section">
+            <div class="hp-lbl">
+              <span class="hp-lbl-l">⚡ CHALLENGE THRESHOLD</span>
+              <span class="hp-lbl-r">50 km</span>
+            </div>
+            <div class="hp-track">
+              <div class="hp-fill"></div>
+              <div class="hp-segments">
+                <div class="hp-seg"></div><div class="hp-seg"></div>
+                <div class="hp-seg"></div><div class="hp-seg"></div>
+                <div class="hp-seg"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity → Progress rules -->
+          <div class="bbc-rules">
+            <div class="bbc-rule">
+              <div class="br-ico">🏃</div>
+              <div class="br-info">
+                <div class="br-activity">Running</div>
+                <div class="br-dmg">1 km run = 1 km progress · +END +AGI</div>
+              </div>
+              <div class="br-dmg-val">×1.0</div>
+            </div>
+            <div class="bbc-rule">
+              <div class="br-ico">🚴</div>
+              <div class="br-info">
+                <div class="br-activity">Cycling</div>
+                <div class="br-dmg">1 km ride = 0.5 km progress · +END</div>
+              </div>
+              <div class="br-dmg-val">×0.5</div>
+            </div>
+            <div class="bbc-rule">
+              <div class="br-ico">🥾</div>
+              <div class="br-info">
+                <div class="br-activity">Hiking / Trail Run</div>
+                <div class="br-dmg">Elevation bonus · +AGI +STR</div>
+              </div>
+              <div class="br-dmg-val">×1.5</div>
+            </div>
+          </div>
+
+          <button class="bbc-cta">⚡ Accept Challenge</button>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-icon">›</div><div class="arrow-label">TRAIN</div></div>
+
+  <!-- ═══ SCREEN 3: CHALLENGE IN PROGRESS ═══ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">STEP 3</div>
+      <div class="step-title">Challenge In Progress</div>
+      <div class="step-desc">Track workouts as progress<br>toward the challenge threshold</div>
+    </div>
+    <div class="phone" id="s3">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+      <div class="battle-bg"></div>
+      <div class="battle-content">
+
+        <div class="battle-header">
+          <div>
+            <div class="bh-title">⚡ CHALLENGE ACTIVE</div>
+            <div class="bh-name">Peak Ascent Trial</div>
+          </div>
+          <div class="bh-timer">
+            5d 14h left
+            <div class="bh-timer-sub">Challenge expires</div>
+          </div>
+        </div>
+
+        <!-- Challenge vs Athlete -->
+        <div class="battle-arena">
+          <div class="ba-glow"></div>
+          <div class="ba-versus">
+            <!-- Challenge icon -->
+            <div class="ba-entity">
+              <div class="ba-avatar ba-boss-av">🏔️</div>
+              <div class="ba-name">Peak Ascent</div>
+              <div class="ba-sub">50 km threshold</div>
+            </div>
+            <div class="vs-badge">VS</div>
+            <!-- Athlete -->
+            <div class="ba-entity">
+              <div class="ba-avatar ba-player-av">🏃</div>
+              <div class="ba-name">Alex K.</div>
+              <div class="ba-sub">LVL 12 Runner</div>
+            </div>
+          </div>
+          <!-- Dual bars -->
+          <div class="ba-hp">
+            <div class="ba-hp-row">
+              <span class="ba-hp-lbl" style="color:#f85149">REMAINING</span>
+              <span style="color:#f85149;font-size:10px">27.3 / 50 km</span>
+            </div>
+            <div class="ba-hp-track"><div class="ba-hp-fill boss-hp-fill"></div></div>
+            <div class="ba-hp-row">
+              <span class="ba-hp-lbl" style="color:#3fb950">YOUR PROGRESS</span>
+              <span style="color:#3fb950;font-size:10px">22.7 km logged</span>
+            </div>
+            <div class="ba-hp-track"><div class="ba-hp-fill player-power-fill"></div></div>
+          </div>
+        </div>
+
+        <!-- Workout log (was damage log) -->
+        <div class="damage-log">
+          <div class="dl-label">RECENT WORKOUTS</div>
+          <div class="dl-item">
+            <div class="dl-icon">🏃</div>
+            <div class="dl-info">
+              <div class="dl-activity">Morning Run</div>
+              <div class="dl-meta">8.2 km · 42 min · 487 cal · Today</div>
+            </div>
+            <div class="dl-dmg">
+              <div class="dl-new">NEW</div>
+              <div>+8.2</div>
+            </div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-icon">🥾</div>
+            <div class="dl-info">
+              <div class="dl-activity">Trail Hike</div>
+              <div class="dl-meta">6.4 km · 94 min · ×1.5 terrain bonus</div>
+            </div>
+            <div class="dl-dmg">+9.6</div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-icon">🚴</div>
+            <div class="dl-info">
+              <div class="dl-activity">Cycling Session</div>
+              <div class="dl-meta">10.0 km ride → 5.0 km progress</div>
+            </div>
+            <div class="dl-dmg">+5.0</div>
+          </div>
+        </div>
+
+        <div class="battle-cta-row">
+          <button class="btn-log">History</button>
+          <button class="btn-workout">+ Log Workout</button>
+        </div>
+
+      </div>
+
+      <nav class="nav" style="z-index:200">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-icon">›</div><div class="arrow-label">WIN</div></div>
+
+  <!-- ═══ SCREEN 4: VICTORY + REAL GEAR DROPS ═══ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">STEP 4</div>
+      <div class="step-title">Challenge Complete — Gear Drop</div>
+      <div class="step-desc">Real fitness gear rewards with<br>rarity tiers replacing fantasy items</div>
+    </div>
+    <div class="phone" id="s4">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+      <div class="victory-bg"></div>
+      <div class="victory-content">
+
+        <div class="victory-header">
+          <div class="victory-tag">⚡ CHALLENGE COMPLETE</div>
+        </div>
+
+        <!-- Defeated challenge -->
+        <div class="victory-boss-dead">
+          <div class="vbd-rings">
+            <div class="vbd-ring1"></div>
+            <div class="vbd-ring2"></div>
+            <div class="vbd-avatar">
+              🏔️
+              <div class="vbd-defeated">✓</div>
+            </div>
+          </div>
+          <div class="victory-title">Summit Reached!</div>
+          <div class="victory-sub">Peak Ascent Trial — Conquered</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="victory-stats">
+          <div class="vs-stat">
+            <div class="vss-val" style="color:#f5a623">+2,800</div>
+            <div class="vss-lbl">XP Earned</div>
+          </div>
+          <div class="vs-stat">
+            <div class="vss-val" style="color:#3fb950">50.4 km</div>
+            <div class="vss-lbl">Total Logged</div>
+          </div>
+          <div class="vs-stat">
+            <div class="vss-val" style="color:#4f9eff">6d 2h</div>
+            <div class="vss-lbl">Completed In</div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             REAL GEAR REWARDS
+             Fantasy items replaced with actual
+             fitness equipment (keyed by rarity)
+        ════════════════════════════════════ -->
+        <div class="rewards-card">
+          <div class="rc-title">GEAR DROPPED</div>
+
+          <!-- Stat gains -->
+          <div class="rc-xp-row">
+            <div class="rc-xp-chip">
+              <div class="rc-xp-val" style="color:#3fb950">+4 END</div>
+              <div class="rc-xp-lbl">Endurance</div>
+            </div>
+            <div class="rc-xp-chip">
+              <div class="rc-xp-val" style="color:#4f9eff">+2 AGI</div>
+              <div class="rc-xp-lbl">Agility</div>
+            </div>
+            <div class="rc-xp-chip">
+              <div class="rc-xp-val" style="color:#f5a623">+15%</div>
+              <div class="rc-xp-lbl">XP Boost</div>
+            </div>
+          </div>
+
+          <!-- Gear item divider -->
+          <div class="gear-drop-label">ITEM DROPS</div>
+
+          <!-- Epic gear item -->
+          <div class="gear-item rarity-epic">
+            <div class="gear-icon epic">⌚</div>
+            <div class="gear-info">
+              <div class="gear-name">Trail Runner Pro Watch</div>
+              <div class="gear-brand">GPS • Heart Rate • Route Tracking</div>
+              <div class="gear-stats">
+                <div class="gear-stat-tag end">+END 8%</div>
+                <div class="gear-stat-tag xp">+XP 12%</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div class="gear-rarity-badge">EPIC</div>
+            </div>
+          </div>
+
+          <!-- Rare gear item -->
+          <div class="gear-item rarity-rare">
+            <div class="gear-icon rare">🥊</div>
+            <div class="gear-info">
+              <div class="gear-name">Grip Training Gloves</div>
+              <div class="gear-brand">Wrist Support • Padded Palms</div>
+              <div class="gear-stats">
+                <div class="gear-stat-tag str">+STR 6%</div>
+                <div class="gear-stat-tag xp">+XP 5%</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div class="gear-rarity-badge">RARE</div>
+            </div>
+          </div>
+
+          <!-- Zone unlock -->
+          <div class="rc-unlock">
+            <div class="rc-unlock-icon">🗺️</div>
+            <div class="rc-unlock-text">
+              <div class="rc-unlock-title">Coastal Trail unlocked</div>
+              <div class="rc-unlock-sub">New terrain zone available → swim + trail runs</div>
+            </div>
+            <div style="font-size:18px">›</div>
+          </div>
+        </div>
+
+        <button class="victory-btn">Collect Rewards →</button>
+
+      </div>
+
+      <nav class="nav" style="z-index:200">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </nav>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═════════════════════════════════════════
+     MAP REFACTOR REFERENCE PANEL
+     Shows how fantasy zones map to real terrain
+═════════════════════════════════════════ -->
+<div style="margin-top:60px;max-width:1800px;">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:6px">Adventure Map → Trail Map Refactor</div>
+    <div style="font-size:12px;color:#8b949e">How each fantasy zone translates to a real-world terrain equivalent</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;width:220px">
+      <div style="font-size:10px;color:#8b949e;letter-spacing:0.06em;margin-bottom:10px;font-weight:600">WAS → NOW</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:22px">🌲</div>
+        <div>
+          <div style="font-size:12px;color:#8b949e;text-decoration:line-through">Forest of Endurance</div>
+          <div style="font-size:13px;font-weight:700;color:#3fb950">🏙️ Urban Grid</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#586070;line-height:1.5">City streets, parks, running tracks. Starter zone for all activity types.</div>
+      <div style="margin-top:8px;display:flex;gap:4px">
+        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#3fb950;font-weight:700">+END</div>
+        <div style="background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#4f9eff;font-weight:700">+AGI</div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;width:220px">
+      <div style="font-size:10px;color:#8b949e;letter-spacing:0.06em;margin-bottom:10px;font-weight:600">WAS → NOW</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:22px">⛰️</div>
+        <div>
+          <div style="font-size:12px;color:#8b949e;text-decoration:line-through">Mountains of Strength</div>
+          <div style="font-size:13px;font-weight:700;color:#4f9eff">⛰️ Mountain Pass</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#586070;line-height:1.5">Elevation gain routes. Hiking, trail running, climbing. High effort = high reward.</div>
+      <div style="margin-top:8px;display:flex;gap:4px">
+        <div style="background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#f85149;font-weight:700">+STR</div>
+        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#3fb950;font-weight:700">+END</div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;width:220px">
+      <div style="font-size:10px;color:#8b949e;letter-spacing:0.06em;margin-bottom:10px;font-weight:600">WAS → NOW</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:22px">🌊</div>
+        <div>
+          <div style="font-size:12px;color:#8b949e;text-decoration:line-through">Ocean of Balance</div>
+          <div style="font-size:13px;font-weight:700;color:#4f9eff">🏖️ Coastal Trail</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#586070;line-height:1.5">Beach runs, swimming, open-water sessions. Flexibility + endurance focus.</div>
+      <div style="margin-top:8px;display:flex;gap:4px">
+        <div style="background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#a371f7;font-weight:700">+FLX</div>
+        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#3fb950;font-weight:700">+STA</div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;width:220px">
+      <div style="font-size:10px;color:#8b949e;letter-spacing:0.06em;margin-bottom:10px;font-weight:600">NEW ZONE</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:22px">🏋️</div>
+        <div>
+          <div style="font-size:12px;color:#8b949e">No equivalent</div>
+          <div style="font-size:13px;font-weight:700;color:#a371f7">🏋️ Iron District</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#586070;line-height:1.5">Gym zone. Weightlifting, HIIT, CrossFit. Distance = sets × weight equivalent.</div>
+      <div style="margin-top:8px;display:flex;gap:4px">
+        <div style="background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#f85149;font-weight:700">+STR</div>
+        <div style="background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#a371f7;font-weight:700">+STA</div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;width:220px">
+      <div style="font-size:10px;color:#8b949e;letter-spacing:0.06em;margin-bottom:10px;font-weight:600">NEW ZONE</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:22px">🧘</div>
+        <div>
+          <div style="font-size:12px;color:#8b949e">No equivalent</div>
+          <div style="font-size:13px;font-weight:700;color:#a371f7">🌿 Recovery Grounds</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#586070;line-height:1.5">Yoga, stretching, mobility. Unlocks FLX stat bonuses. Required for legendary gear.</div>
+      <div style="margin-top:8px;display:flex;gap:4px">
+        <div style="background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#a371f7;font-weight:700">+FLX</div>
+        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.25);border-radius:5px;padding:2px 7px;font-size:9px;color:#3fb950;font-weight:700">+STA</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Gear rarity reference -->
+  <div style="margin-top:36px;text-align:center;margin-bottom:20px">
+    <div style="font-size:16px;font-weight:700;color:#e6edf3;margin-bottom:6px">Real Gear Rarity System</div>
+    <div style="font-size:12px;color:#8b949e">Fantasy item names → real fitness equipment, same rarity tiers</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+
+    <div style="background:#161b22;border:1px solid rgba(48,54,61,0.8);border-radius:12px;padding:14px 18px;min-width:180px">
+      <div style="font-size:10px;color:#8b949e;font-weight:700;letter-spacing:0.05em;margin-bottom:8px">COMMON</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
+        <span style="font-size:20px">🧦</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#8b949e">Compression Socks</div>
+          <div style="font-size:10px;color:#586070">+1% recovery rate</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:20px">💧</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#8b949e">Water Bottle</div>
+          <div style="font-size:10px;color:#586070">+2% stamina regen</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid rgba(79,158,255,0.3);border-radius:12px;padding:14px 18px;min-width:180px">
+      <div style="font-size:10px;color:#4f9eff;font-weight:700;letter-spacing:0.05em;margin-bottom:8px">RARE</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
+        <span style="font-size:20px">🥊</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#e6edf3">Training Gloves</div>
+          <div style="font-size:10px;color:#4f9eff">+STR 6% · +XP 5%</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:20px">🎧</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#e6edf3">Sport Earbuds</div>
+          <div style="font-size:10px;color:#4f9eff">+END 4% · motivation</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid rgba(163,113,247,0.4);border-radius:12px;padding:14px 18px;min-width:180px">
+      <div style="font-size:10px;color:#a371f7;font-weight:700;letter-spacing:0.05em;margin-bottom:8px">EPIC</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
+        <span style="font-size:20px">⌚</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#e6edf3">GPS Sport Watch</div>
+          <div style="font-size:10px;color:#a371f7">+END 8% · +XP 12%</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:20px">👟</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#e6edf3">Trail Running Shoes</div>
+          <div style="font-size:10px;color:#a371f7">+AGI 10% · +END 6%</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#161b22;border:1px solid rgba(245,166,35,0.5);border-radius:12px;padding:14px 18px;min-width:180px;box-shadow:0 0 20px rgba(245,166,35,0.08)">
+      <div style="font-size:10px;color:#f5a623;font-weight:700;letter-spacing:0.05em;margin-bottom:8px">LEGENDARY</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
+        <span style="font-size:20px">🎽</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#e6edf3">Athlete Kit (Full Set)</div>
+          <div style="font-size:10px;color:#f5a623">+All stats 5% · +XP 20%</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:20px">🚴</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#e6edf3">Carbon Road Bike</div>
+          <div style="font-size:10px;color:#f5a623">+END 15% · exclusive cosmetic</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

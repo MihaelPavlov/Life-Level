@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/api/api_client.dart';
+import '../character/setup/welcome_setup_screen.dart';
 import 'auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
 
   bool _loading = false;
+  bool _isAdmin = false;
   String? _error;
 
   Future<void> _register() async {
@@ -29,12 +31,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
+        isAdmin: _isAdmin,
       );
       await ApiClient.saveToken(result.token);
       if (mounted) {
-        // TODO: navigate to main screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Welcome, ${result.username}! Your adventure begins.')),
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (_) =>
+                  WelcomeSetupScreen(ringItems: result.ringItems)),
+          (_) => false,
         );
       }
     } catch (e) {
@@ -108,6 +114,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         v != null && v.length >= 6 ? null : 'Min 6 characters',
                   ),
                   const SizedBox(height: 12),
+
+                  // DEV ONLY — remove before production
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.surfaceElevated),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '[DEV] Admin account',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                        Switch(
+                          value: _isAdmin,
+                          onChanged: (v) => setState(() => _isAdmin = v),
+                          activeColor: AppColors.purple,
+                        ),
+                      ],
+                    ),
+                  ),
 
                   if (_error != null)
                     Text(

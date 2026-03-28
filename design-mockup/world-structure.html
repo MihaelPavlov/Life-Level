@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — World Structure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #040810;
+  --bg2: #080e14;
+  --s1: #161b22;
+  --s2: #1e2632;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #586070;
+  --blue: #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red: #f85149;
+  --green: #3fb950;
+  --yellow: #e3b341;
+  --font: 'Inter', system-ui, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+}
+
+/* ── Layout ── */
+.app {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 1fr 320px;
+  height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  grid-column: 1 / -1;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
+.header-logo {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.header-title { font-size: 15px; font-weight: 700; }
+.header-sub { font-size: 12px; color: var(--text3); margin-left: auto; }
+
+.header-tabs { display: flex; gap: 2px; margin-left: 24px; }
+.header-tab {
+  padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  color: var(--text2); cursor: pointer; border: none; background: transparent;
+  transition: all 0.15s;
+}
+.header-tab:hover { background: var(--s2); color: var(--text); }
+.header-tab.active { background: var(--blue); color: #fff; }
+
+/* ── Map Canvas ── */
+.map-area {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(79,158,255,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(163,113,247,0.04) 0%, transparent 50%),
+    var(--bg);
+}
+
+/* subtle grid */
+.map-area::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+#world-svg {
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+
+/* ── Detail Panel ── */
+.detail-panel {
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-title { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+}
+
+.panel-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; gap: 10px; color: var(--text3);
+}
+.panel-placeholder svg { opacity: 0.3; }
+.panel-placeholder p { font-size: 12px; text-align: center; line-height: 1.6; }
+
+/* Zone detail card */
+.zone-detail { display: none; }
+.zone-detail.visible { display: block; }
+
+.zd-hero {
+  border-radius: 12px; padding: 18px; margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.zd-hero::before {
+  content: attr(data-icon);
+  position: absolute; right: -10px; top: -10px;
+  font-size: 72px; opacity: 0.12; line-height: 1;
+  pointer-events: none;
+}
+.zd-status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.zd-name { font-size: 20px; font-weight: 800; margin-bottom: 3px; }
+.zd-subtitle { font-size: 12px; opacity: 0.6; }
+
+.zd-section { margin-bottom: 16px; }
+.zd-section-title {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.zd-desc { font-size: 12px; line-height: 1.65; color: var(--text2); }
+
+.zd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.zd-row:last-child { border-bottom: none; }
+.zd-row-label { color: var(--text2); }
+.zd-row-val { font-weight: 600; }
+
+.zd-req {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; margin-bottom: 6px;
+  font-size: 12px;
+}
+.zd-req.met { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.2); }
+.zd-req.unmet { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); }
+.zd-req-icon { font-size: 14px; flex-shrink: 0; }
+.zd-req-text { color: var(--text2); flex: 1; }
+.zd-req.met .zd-req-text { color: var(--green); }
+.zd-req.unmet .zd-req-text { color: var(--red); }
+
+.zd-nodes-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.zd-node-chip {
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--s1); border: 1px solid var(--border);
+  font-size: 11px; display: flex; align-items: center; gap: 6px;
+}
+.zd-node-chip.done { border-color: rgba(63,185,80,0.3); background: rgba(63,185,80,0.05); }
+.zd-node-chip.active { border-color: rgba(79,158,255,0.4); background: rgba(79,158,255,0.08); }
+
+.zd-action-btn {
+  width: 100%; padding: 11px; border-radius: 10px;
+  font-size: 13px; font-weight: 700; border: none; cursor: pointer;
+  margin-top: 4px; margin-bottom: 6px;
+  transition: opacity 0.15s;
+}
+.zd-action-btn:hover { opacity: 0.85; }
+.zd-action-btn.primary { background: var(--blue); color: #fff; }
+.zd-action-btn.locked { background: var(--s2); color: var(--text3); cursor: not-allowed; }
+.zd-action-btn.completed { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+
+/* Crossroads detail */
+.cr-detail { display: none; }
+.cr-detail.visible { display: block; }
+
+.cr-path {
+  border-radius: 10px; padding: 12px; margin-bottom: 8px;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: all 0.15s; position: relative; overflow: hidden;
+}
+.cr-path:hover { border-color: var(--blue); background: rgba(79,158,255,0.05); }
+.cr-path.chosen { border-color: var(--blue); background: rgba(79,158,255,0.08); }
+.cr-path.locked { opacity: 0.5; cursor: not-allowed; }
+.cr-path-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.cr-path-icon { font-size: 20px; }
+.cr-path-name { font-size: 13px; font-weight: 700; }
+.cr-path-diff {
+  margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 8px; border-radius: 10px;
+}
+.cr-path-desc { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+.cr-path-stats { display: flex; gap: 12px; }
+.cr-path-stat { font-size: 10px; color: var(--text3); }
+.cr-path-stat span { color: var(--text); font-weight: 600; }
+
+.cr-path-req {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 8px; border-radius: 10px;
+  background: rgba(248,81,73,0.15); color: var(--red);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 5px; border-radius: 3px; background: var(--s2); overflow: hidden;
+  margin-top: 8px;
+}
+.progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+/* Legend */
+.legend {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 14px; flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── SVG Styles (inline overrides) ── */
+.zone-node { cursor: pointer; }
+.zone-node:hover .zone-ring { r: 36; }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-logo">🗺️</div>
+    <div class="header-title">Life Level — World Structure</div>
+    <div class="header-tabs">
+      <button class="header-tab active">World Flow</button>
+      <button class="header-tab">Zone List</button>
+    </div>
+    <div class="header-sub">Click any zone or crossroads to inspect</div>
+  </header>
+
+  <!-- Map Canvas -->
+  <main class="map-area">
+    <svg id="world-svg" viewBox="0 0 900 780" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <!-- Glow filters -->
+        <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-blue" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="8" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-subtle" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <!-- Path gradients -->
+        <linearGradient id="path-completed" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#3fb950" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#3fb950" stop-opacity="0.3"/>
+        </linearGradient>
+        <linearGradient id="path-active" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#4f9eff" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#4f9eff" stop-opacity="0.2"/>
+        </linearGradient>
+        <linearGradient id="path-available" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#e3b341" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#e3b341" stop-opacity="0.15"/>
+        </linearGradient>
+        <linearGradient id="path-locked" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#30363d" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#30363d" stop-opacity="0.3"/>
+        </linearGradient>
+
+        <!-- Zone halos -->
+        <radialGradient id="halo-green" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3fb950" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#3fb950" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="halo-blue" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#4f9eff" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#4f9eff" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="halo-yellow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#e3b341" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#e3b341" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="halo-gray" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#586070" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#586070" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Animated dash for locked paths -->
+        <style>
+          .path-dash-anim { animation: dash-flow 3s linear infinite; }
+          .path-dash-locked { animation: none; opacity: 0.25; }
+          @keyframes dash-flow {
+            to { stroke-dashoffset: -30; }
+          }
+          @keyframes pulse-ring {
+            0%, 100% { opacity: 0.6; r: 38px; }
+            50% { opacity: 1; r: 42px; }
+          }
+          .pulse-ring { animation: pulse-ring 2.5s ease-in-out infinite; }
+          @keyframes spin-slow {
+            to { transform: rotate(360deg); }
+          }
+        </style>
+      </defs>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  PATHS / EDGES                                         -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+
+      <!-- Ashfield → First Fork (completed) -->
+      <path d="M 450 120 L 450 225" stroke="url(#path-completed)" stroke-width="3"
+            stroke-dasharray="8 4" class="path-dash-anim" fill="none"/>
+
+      <!-- First Fork → Forest (active - player heading here) -->
+      <path d="M 430 258 C 380 290, 300 320, 255 355" stroke="url(#path-active)" stroke-width="3"
+            stroke-dasharray="8 4" class="path-dash-anim" fill="none"/>
+
+      <!-- First Fork → Mountains (available) -->
+      <path d="M 470 258 C 520 290, 610 320, 645 355" stroke="url(#path-available)" stroke-width="2.5"
+            stroke-dasharray="8 4" class="path-dash-anim" fill="none"/>
+
+      <!-- Forest → The Convergence (locked) -->
+      <path d="M 255 420 C 280 460, 370 490, 430 510" stroke="url(#path-locked)" stroke-width="2"
+            stroke-dasharray="6 6" class="path-dash-locked" fill="none"/>
+
+      <!-- Mountains → The Convergence (locked) -->
+      <path d="M 645 420 C 620 460, 530 490, 470 510" stroke="url(#path-locked)" stroke-width="2"
+            stroke-dasharray="6 6" class="path-dash-locked" fill="none"/>
+
+      <!-- The Convergence → Ocean (locked) -->
+      <path d="M 430 545 C 380 570, 290 595, 245 625" stroke="url(#path-locked)" stroke-width="2"
+            stroke-dasharray="6 6" class="path-dash-locked" fill="none"/>
+
+      <!-- The Convergence → Snow Peaks (locked) -->
+      <path d="M 470 545 C 520 570, 620 595, 655 625" stroke="url(#path-locked)" stroke-width="2"
+            stroke-dasharray="6 6" class="path-dash-locked" fill="none"/>
+
+      <!-- Ocean → Final Approach (locked) -->
+      <path d="M 245 685 C 290 715, 370 730, 430 740" stroke="url(#path-locked)" stroke-width="2"
+            stroke-dasharray="6 6" class="path-dash-locked" fill="none"/>
+
+      <!-- Snow Peaks → Final Approach (locked) -->
+      <path d="M 655 685 C 620 715, 530 730, 470 740" stroke="url(#path-locked)" stroke-width="2"
+            stroke-dasharray="6 6" class="path-dash-locked" fill="none"/>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  TIER LABELS                                           -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <text x="30" y="90" fill="#30363d" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="0.1em">TIER 0</text>
+      <text x="30" y="260" fill="#30363d" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="0.1em">TIER 1</text>
+      <text x="30" y="395" fill="#30363d" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="0.1em">TIER 2</text>
+      <text x="30" y="535" fill="#30363d" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="0.1em">TIER 3</text>
+      <text x="30" y="660" fill="#30363d" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="0.1em">TIER 4</text>
+      <text x="30" y="762" fill="#30363d" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="0.1em">TIER 5</text>
+
+      <!-- Tier separator lines -->
+      <line x1="70" y1="155" x2="870" y2="155" stroke="#1a2030" stroke-width="1"/>
+      <line x1="70" y1="295" x2="870" y2="295" stroke="#1a2030" stroke-width="1"/>
+      <line x1="70" y1="460" x2="870" y2="460" stroke="#1a2030" stroke-width="1"/>
+      <line x1="70" y1="600" x2="870" y2="600" stroke="#1a2030" stroke-width="1"/>
+      <line x1="70" y1="715" x2="870" y2="715" stroke="#1a2030" stroke-width="1"/>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  ZONE: ASHFIELD (completed)                            -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-ashfield" onclick="selectZone('ashfield')" transform="translate(450,90)">
+        <!-- halo -->
+        <circle r="70" fill="url(#halo-green)" />
+        <!-- outer pulse ring -->
+        <circle r="42" fill="none" stroke="#3fb950" stroke-width="1" opacity="0.3"/>
+        <!-- ring -->
+        <circle r="36" fill="#0a1a0e" stroke="#3fb950" stroke-width="2.5" filter="url(#glow-green)"/>
+        <!-- fill -->
+        <circle r="30" fill="#0f2918"/>
+        <!-- icon -->
+        <text text-anchor="middle" dominant-baseline="central" font-size="22">🏕️</text>
+        <!-- completion check -->
+        <circle cx="24" cy="-24" r="10" fill="#3fb950"/>
+        <text x="24" y="-24" text-anchor="middle" dominant-baseline="central" font-size="11">✓</text>
+        <!-- label -->
+        <text y="52" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700" font-family="Inter,sans-serif">Ashfield</text>
+        <text y="67" text-anchor="middle" fill="#3fb950" font-size="10" font-family="Inter,sans-serif">Completed</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  CROSSROADS: FIRST FORK                                -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-firstfork" onclick="selectCrossroads('firstfork')" transform="translate(450,242)">
+        <!-- diamond -->
+        <polygon points="0,-22 22,0 0,22 -22,0" fill="#0a1020" stroke="#4f9eff" stroke-width="2" filter="url(#glow-blue)"/>
+        <polygon points="0,-14 14,0 0,14 -14,0" fill="#0e1a30"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="13">⑂</text>
+        <text y="34" text-anchor="middle" fill="#4f9eff" font-size="11" font-weight="700" font-family="Inter,sans-serif">First Fork</text>
+        <text y="47" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Choose your path</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  ZONE: FOREST OF ENDURANCE (active/in-progress)        -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-forest" onclick="selectZone('forest')" transform="translate(250,388)">
+        <!-- halo -->
+        <circle r="75" fill="url(#halo-blue)" />
+        <!-- animated pulse ring -->
+        <circle class="pulse-ring" r="40" fill="none" stroke="#4f9eff" stroke-width="1.5" opacity="0.5"/>
+        <!-- ring -->
+        <circle r="36" fill="#0a1220" stroke="#4f9eff" stroke-width="2.5" filter="url(#glow-blue)"/>
+        <circle r="30" fill="#0d1a2e"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="22">🌲</text>
+        <!-- active indicator -->
+        <circle cx="24" cy="-24" r="10" fill="#4f9eff"/>
+        <text x="24" y="-24" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#fff" font-weight="700">▶</text>
+        <text y="52" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700" font-family="Inter,sans-serif">Forest of Endurance</text>
+        <text y="67" text-anchor="middle" fill="#4f9eff" font-size="10" font-family="Inter,sans-serif">In Progress — 3/8 nodes</text>
+        <!-- progress bar -->
+        <rect x="-48" y="74" width="96" height="4" rx="2" fill="#1e2632"/>
+        <rect x="-48" y="74" width="36" height="4" rx="2" fill="#4f9eff" opacity="0.8"/>
+      </g>
+
+      <!-- Requirement badge on Forest -->
+      <g transform="translate(250,388)">
+        <rect x="-62" y="-62" width="56" height="18" rx="9" fill="#0d1a2e" stroke="rgba(79,158,255,0.3)" stroke-width="1"/>
+        <text x="-34" y="-50" text-anchor="middle" dominant-baseline="central" fill="#4f9eff" font-size="9" font-weight="700" font-family="Inter,sans-serif">END ≥ 10</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  ZONE: MOUNTAINS OF STRENGTH (available)               -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-mountains" onclick="selectZone('mountains')" transform="translate(650,388)">
+        <!-- halo -->
+        <circle r="70" fill="url(#halo-yellow)" />
+        <!-- ring -->
+        <circle r="36" fill="#191400" stroke="#e3b341" stroke-width="2" opacity="0.9"/>
+        <circle r="30" fill="#1a1500"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="22">⛰️</text>
+        <!-- available badge -->
+        <circle cx="24" cy="-24" r="10" fill="#e3b341"/>
+        <text x="24" y="-24" text-anchor="middle" dominant-baseline="central" font-size="11">!</text>
+        <text y="52" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700" font-family="Inter,sans-serif">Mountains of Strength</text>
+        <text y="67" text-anchor="middle" fill="#e3b341" font-size="10" font-family="Inter,sans-serif">Available — Not Started</text>
+      </g>
+
+      <!-- Requirement badge on Mountains -->
+      <g transform="translate(650,388)">
+        <rect x="-54" y="-62" width="52" height="18" rx="9" fill="#1a1500" stroke="rgba(227,179,65,0.3)" stroke-width="1"/>
+        <text x="-28" y="-50" text-anchor="middle" dominant-baseline="central" fill="#e3b341" font-size="9" font-weight="700" font-family="Inter,sans-serif">STR ≥ 10</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  CROSSROADS: THE CONVERGENCE (locked)                  -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-convergence" onclick="selectCrossroads('convergence')" transform="translate(450,528)" opacity="0.45">
+        <polygon points="0,-22 22,0 0,22 -22,0" fill="#0a0e14" stroke="#30363d" stroke-width="2"/>
+        <polygon points="0,-14 14,0 0,14 -14,0" fill="#0d1118"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="13">🔒</text>
+        <text y="34" text-anchor="middle" fill="#586070" font-size="11" font-weight="700" font-family="Inter,sans-serif">The Convergence</text>
+        <text y="47" text-anchor="middle" fill="#30363d" font-size="9" font-family="Inter,sans-serif">Complete Forest or Mountains</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  ZONE: OCEAN OF BALANCE (locked)                       -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-ocean" onclick="selectZone('ocean')" transform="translate(240,655)" opacity="0.4">
+        <circle r="70" fill="url(#halo-gray)" />
+        <circle r="36" fill="#0a0e14" stroke="#30363d" stroke-width="2"/>
+        <circle r="30" fill="#0d1118"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="22">🌊</text>
+        <circle cx="24" cy="-24" r="10" fill="#1e2632"/>
+        <text x="24" y="-24" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#586070">🔒</text>
+        <text y="52" text-anchor="middle" fill="#8b949e" font-size="13" font-weight="700" font-family="Inter,sans-serif">Ocean of Balance</text>
+        <text y="67" text-anchor="middle" fill="#586070" font-size="10" font-family="Inter,sans-serif">Locked</text>
+      </g>
+
+      <!-- Requirement badge on Ocean -->
+      <g transform="translate(240,655)" opacity="0.4">
+        <rect x="-52" y="-62" width="74" height="18" rx="9" fill="#0d1118" stroke="#30363d" stroke-width="1"/>
+        <text x="-15" y="-50" text-anchor="middle" dominant-baseline="central" fill="#586070" font-size="9" font-weight="700" font-family="Inter,sans-serif">LVL 10 required</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  ZONE: SNOW PEAKS (locked)                             -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-snow" onclick="selectZone('snow')" transform="translate(660,655)" opacity="0.4">
+        <circle r="70" fill="url(#halo-gray)" />
+        <circle r="36" fill="#0a0e14" stroke="#30363d" stroke-width="2"/>
+        <circle r="30" fill="#0d1118"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="22">❄️</text>
+        <circle cx="24" cy="-24" r="10" fill="#1e2632"/>
+        <text x="24" y="-24" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#586070">🔒</text>
+        <text y="52" text-anchor="middle" fill="#8b949e" font-size="13" font-weight="700" font-family="Inter,sans-serif">Snow Peaks</text>
+        <text y="67" text-anchor="middle" fill="#586070" font-size="10" font-family="Inter,sans-serif">Locked</text>
+      </g>
+
+      <!-- Requirement badge on Snow Peaks -->
+      <g transform="translate(660,655)" opacity="0.4">
+        <rect x="-52" y="-62" width="60" height="18" rx="9" fill="#0d1118" stroke="#30363d" stroke-width="1"/>
+        <text x="-22" y="-50" text-anchor="middle" dominant-baseline="central" fill="#586070" font-size="9" font-weight="700" font-family="Inter,sans-serif">LVL 15 + END</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  CROSSROADS: FINAL APPROACH (locked)                   -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g class="zone-node" id="node-finalapproach" onclick="selectCrossroads('finalapproach')" transform="translate(450,750)" opacity="0.3">
+        <polygon points="0,-20 20,0 0,20 -20,0" fill="#0a0e14" stroke="#30363d" stroke-width="1.5"/>
+        <text text-anchor="middle" dominant-baseline="central" font-size="11">🔒</text>
+        <text y="32" text-anchor="middle" fill="#30363d" font-size="10" font-weight="700" font-family="Inter,sans-serif">Final Approach</text>
+        <!-- hint of more below -->
+        <text y="44" text-anchor="middle" fill="#30363d" font-size="9" font-family="Inter,sans-serif">Desert · Swamps · ???</text>
+      </g>
+
+      <!-- "More zones below" hint arrow -->
+      <g transform="translate(450,775)" opacity="0.3">
+        <text text-anchor="middle" fill="#30363d" font-size="11" font-family="Inter,sans-serif">↓ more zones...</text>
+      </g>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  PLAYER POSITION INDICATOR on Forest                   -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <g transform="translate(250,388)">
+        <!-- travelling path line (partial progress) -->
+        <g opacity="0.7">
+          <!-- Small player marker orbiting the node -->
+        </g>
+      </g>
+
+    </svg>
+  </main>
+
+  <!-- Detail Panel -->
+  <aside class="detail-panel">
+    <div class="panel-header">
+      <div class="panel-title">Zone Inspector</div>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- Placeholder -->
+      <div class="panel-placeholder" id="placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#586070" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <p>Click a zone or crossroads<br>on the map to inspect it</p>
+      </div>
+
+      <!-- Zone Detail: Ashfield -->
+      <div class="zone-detail" id="detail-ashfield">
+        <div class="zd-hero" style="background:linear-gradient(135deg,rgba(63,185,80,0.12),rgba(63,185,80,0.04));border:1px solid rgba(63,185,80,0.2)" data-icon="🏕️">
+          <div class="zd-status-badge" style="background:rgba(63,185,80,0.15);color:#3fb950;">✓ Completed</div>
+          <div class="zd-name">Ashfield</div>
+          <div class="zd-subtitle">The Starting Grounds</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Description</div>
+          <div class="zd-desc">Rolling grasslands with ancient ruins. The birthplace of every adventurer. Simple terrain, gentle paths — but enough challenge to forge the foundation of a hero.</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Zone Stats</div>
+          <div class="zd-row"><span class="zd-row-label">Nodes</span><span class="zd-row-val" style="color:#3fb950">8 / 8 completed</span></div>
+          <div class="zd-row"><span class="zd-row-label">Bosses defeated</span><span class="zd-row-val" style="color:#3fb950">1 / 1</span></div>
+          <div class="zd-row"><span class="zd-row-label">XP earned</span><span class="zd-row-val">+2,400 XP</span></div>
+          <div class="zd-row"><span class="zd-row-label">Completion type</span><span class="zd-row-val">Defeat Zone Boss</span></div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Requirements</div>
+          <div class="zd-req met">
+            <div class="zd-req-icon">✓</div>
+            <div class="zd-req-text">Starting zone — no prerequisites</div>
+          </div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Nodes Inside</div>
+          <div class="zd-nodes-grid">
+            <div class="zd-node-chip done">✓ Camp Ashfield</div>
+            <div class="zd-node-chip done">✓ Old Ruins</div>
+            <div class="zd-node-chip done">✓ River Crossing</div>
+            <div class="zd-node-chip done">✓ Chest ×2</div>
+            <div class="zd-node-chip done">✓ Mini-Boss</div>
+            <div class="zd-node-chip done">✓ Zone Boss</div>
+          </div>
+        </div>
+
+        <button class="zd-action-btn completed">Zone Completed — Revisit</button>
+        <button class="zd-action-btn primary" style="background:#1e2632;color:#8b949e;font-size:12px">Unlocked: First Fork Crossroads</button>
+      </div>
+
+      <!-- Zone Detail: Forest -->
+      <div class="zone-detail" id="detail-forest">
+        <div class="zd-hero" style="background:linear-gradient(135deg,rgba(79,158,255,0.12),rgba(79,158,255,0.04));border:1px solid rgba(79,158,255,0.2)" data-icon="🌲">
+          <div class="zd-status-badge" style="background:rgba(79,158,255,0.15);color:#4f9eff;">▶ In Progress</div>
+          <div class="zd-name">Forest of Endurance</div>
+          <div class="zd-subtitle">Where the Endless Path Begins</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Progress</div>
+          <div class="zd-row"><span class="zd-row-label">Nodes completed</span><span class="zd-row-val" style="color:#4f9eff">3 / 8</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:37.5%;background:#4f9eff"></div></div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Description</div>
+          <div class="zd-desc">Ancient trees stretch for miles. Every path demands endurance. The deeper you go, the wilder it gets. The Forest Boss guards the exit — and your passage forward.</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Requirements to Enter</div>
+          <div class="zd-req met">
+            <div class="zd-req-icon">✓</div>
+            <div class="zd-req-text">Endurance ≥ 10 (yours: 14)</div>
+          </div>
+          <div class="zd-req met">
+            <div class="zd-req-icon">✓</div>
+            <div class="zd-req-text">Ashfield completed</div>
+          </div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Completion Condition</div>
+          <div class="zd-row"><span class="zd-row-label">Type</span><span class="zd-row-val">Defeat Zone Boss</span></div>
+          <div class="zd-row"><span class="zd-row-label">Boss</span><span class="zd-row-val" style="color:#f85149">Thornwood Guardian</span></div>
+          <div class="zd-row"><span class="zd-row-label">Reward</span><span class="zd-row-val" style="color:#e3b341">+3,200 XP + rare item</span></div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Nodes Inside</div>
+          <div class="zd-nodes-grid">
+            <div class="zd-node-chip done">✓ Forest Edge</div>
+            <div class="zd-node-chip done">✓ Hidden Path</div>
+            <div class="zd-node-chip done">✓ Druid's Cache</div>
+            <div class="zd-node-chip active">▶ Mossy Dungeon</div>
+            <div class="zd-node-chip">○ Ancient Grove</div>
+            <div class="zd-node-chip">○ Chest ×1</div>
+            <div class="zd-node-chip">○ Mini-Boss</div>
+            <div class="zd-node-chip" style="color:#f85149">💀 Thornwood Boss</div>
+          </div>
+        </div>
+
+        <button class="zd-action-btn primary">Continue Journey</button>
+      </div>
+
+      <!-- Zone Detail: Mountains -->
+      <div class="zone-detail" id="detail-mountains">
+        <div class="zd-hero" style="background:linear-gradient(135deg,rgba(227,179,65,0.12),rgba(227,179,65,0.04));border:1px solid rgba(227,179,65,0.2)" data-icon="⛰️">
+          <div class="zd-status-badge" style="background:rgba(227,179,65,0.15);color:#e3b341;">! Available</div>
+          <div class="zd-name">Mountains of Strength</div>
+          <div class="zd-subtitle">Where Only the Strong Survive</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Description</div>
+          <div class="zd-desc">Jagged peaks, thin air, relentless climbs. This zone favors the strong. Every workout logged here hits harder and rewards more — but the ascent is brutal.</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Requirements to Enter</div>
+          <div class="zd-req met">
+            <div class="zd-req-icon">✓</div>
+            <div class="zd-req-text">Strength ≥ 10 (yours: 12)</div>
+          </div>
+          <div class="zd-req met">
+            <div class="zd-req-icon">✓</div>
+            <div class="zd-req-text">Ashfield completed</div>
+          </div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Zone Stats</div>
+          <div class="zd-row"><span class="zd-row-label">Nodes</span><span class="zd-row-val">9 total</span></div>
+          <div class="zd-row"><span class="zd-row-label">Completion type</span><span class="zd-row-val">Defeat Zone Boss</span></div>
+          <div class="zd-row"><span class="zd-row-label">Stat bonus</span><span class="zd-row-val" style="color:#e3b341">+STR multiplier ×1.2</span></div>
+          <div class="zd-row"><span class="zd-row-label">Completion reward</span><span class="zd-row-val">+3,400 XP + epic gear</span></div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Note</div>
+          <div class="zd-desc" style="color:#e3b341;background:rgba(227,179,65,0.05);padding:10px;border-radius:8px;border:1px solid rgba(227,179,65,0.15)">
+            You are currently in the Forest. You can start this zone too — both paths are open until you reach The Convergence.
+          </div>
+        </div>
+
+        <button class="zd-action-btn primary" style="background:#e3b341;color:#000">Enter Mountains</button>
+      </div>
+
+      <!-- Zone Detail: Ocean (locked) -->
+      <div class="zone-detail" id="detail-ocean">
+        <div class="zd-hero" style="background:rgba(255,255,255,0.02);border:1px solid var(--border)" data-icon="🌊">
+          <div class="zd-status-badge" style="background:rgba(88,96,112,0.2);color:#586070;">🔒 Locked</div>
+          <div class="zd-name" style="color:#8b949e">Ocean of Balance</div>
+          <div class="zd-subtitle" style="color:#586070">Harmony Between All Forces</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Requirements to Unlock</div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Complete Forest or Mountains first</div>
+          </div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Level ≥ 10 (yours: 7)</div>
+          </div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Reach The Convergence crossroads</div>
+          </div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Preview</div>
+          <div class="zd-desc">A vast coastal expanse where strength and agility meet. Swimmers, climbers, and yogis thrive here. Balanced training across all activity types is rewarded.</div>
+        </div>
+
+        <button class="zd-action-btn locked">🔒 Zone Locked</button>
+      </div>
+
+      <!-- Zone Detail: Snow (locked) -->
+      <div class="zone-detail" id="detail-snow">
+        <div class="zd-hero" style="background:rgba(255,255,255,0.02);border:1px solid var(--border)" data-icon="❄️">
+          <div class="zd-status-badge" style="background:rgba(88,96,112,0.2);color:#586070;">🔒 Locked</div>
+          <div class="zd-name" style="color:#8b949e">Snow Peaks</div>
+          <div class="zd-subtitle" style="color:#586070">The Frozen Summit</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Requirements to Unlock</div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Level ≥ 15 (yours: 7)</div>
+          </div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Endurance ≥ 25</div>
+          </div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Reach The Convergence crossroads</div>
+          </div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Preview</div>
+          <div class="zd-desc">Only the most dedicated climbers reach this zone. Brutal cold, sheer cliffs. Legendary gear awaits at the summit. Exclusive titles for completionists.</div>
+        </div>
+
+        <button class="zd-action-btn locked">🔒 Zone Locked</button>
+      </div>
+
+      <!-- Crossroads: First Fork -->
+      <div class="cr-detail" id="detail-crossroads-firstfork">
+        <div class="zd-hero" style="background:linear-gradient(135deg,rgba(79,158,255,0.1),rgba(163,113,247,0.05));border:1px solid rgba(79,158,255,0.25)" data-icon="⑂">
+          <div class="zd-status-badge" style="background:rgba(79,158,255,0.15);color:#4f9eff;">⑂ Crossroads</div>
+          <div class="zd-name">First Fork</div>
+          <div class="zd-subtitle">Your first major choice</div>
+        </div>
+
+        <div class="zd-section">
+          <div class="zd-section-title">Choose Your Next Zone</div>
+          <div class="zd-desc" style="margin-bottom:12px">Both paths eventually lead forward. Pick based on your training focus — or do both.</div>
+
+          <div class="cr-path chosen" onclick="selectZone('forest')">
+            <div class="cr-path-header">
+              <span class="cr-path-icon">🌲</span>
+              <span class="cr-path-name">Forest of Endurance</span>
+              <span class="cr-path-diff" style="background:rgba(63,185,80,0.15);color:#3fb950">ACTIVE</span>
+            </div>
+            <div class="cr-path-desc">Running, cycling, and hiking boost END + AGI. Dense forest nodes with dungeons and chests.</div>
+            <div class="cr-path-stats">
+              <div class="cr-path-stat">Distance <span>12 km</span></div>
+              <div class="cr-path-stat">Nodes <span>8</span></div>
+              <div class="cr-path-stat">Reward <span>3,200 XP</span></div>
+            </div>
+          </div>
+
+          <div class="cr-path" onclick="selectZone('mountains')">
+            <div class="cr-path-header">
+              <span class="cr-path-icon">⛰️</span>
+              <span class="cr-path-name">Mountains of Strength</span>
+              <span class="cr-path-diff" style="background:rgba(227,179,65,0.15);color:#e3b341">AVAILABLE</span>
+            </div>
+            <div class="cr-path-desc">Gym and climbing workouts boost STR + STA. Harder terrain, bigger rewards, epic boss.</div>
+            <div class="cr-path-stats">
+              <div class="cr-path-stat">Distance <span>15 km</span></div>
+              <div class="cr-path-stat">Nodes <span>9</span></div>
+              <div class="cr-path-stat">Reward <span>3,400 XP</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="zd-desc" style="color:#8b949e;font-size:11px;border-top:1px solid var(--border);padding-top:12px">
+          💡 You are not locked in. Both paths remain open until you complete one and reach The Convergence.
+        </div>
+      </div>
+
+      <!-- Crossroads: Convergence (locked) -->
+      <div class="cr-detail" id="detail-crossroads-convergence">
+        <div class="zd-hero" style="background:rgba(255,255,255,0.02);border:1px solid var(--border)">
+          <div class="zd-status-badge" style="background:rgba(88,96,112,0.2);color:#586070;">🔒 Locked Crossroads</div>
+          <div class="zd-name" style="color:#8b949e">The Convergence</div>
+          <div class="zd-subtitle" style="color:#586070">Where paths meet again</div>
+        </div>
+        <div class="zd-section">
+          <div class="zd-section-title">Unlock Condition</div>
+          <div class="zd-req unmet">
+            <div class="zd-req-icon">✗</div>
+            <div class="zd-req-text">Complete Forest of Endurance OR Mountains of Strength</div>
+          </div>
+        </div>
+        <div class="zd-section">
+          <div class="zd-section-title">What's Here</div>
+          <div class="zd-desc">The two paths from Tier 2 converge here. You'll choose between Ocean of Balance and Snow Peaks — each leading deeper into the endgame.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Completed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4f9eff"></div> In Progress</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e3b341"></div> Available</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30363d"></div> Locked</div>
+      <div class="legend-item">
+        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0 14,7 7,14 0,7" fill="none" stroke="#4f9eff" stroke-width="1.5"/></svg>
+        Crossroads
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// Data
+const zones = {
+  ashfield:  { type: 'zone',       detailId: 'detail-ashfield' },
+  forest:    { type: 'zone',       detailId: 'detail-forest' },
+  mountains: { type: 'zone',       detailId: 'detail-mountains' },
+  ocean:     { type: 'zone',       detailId: 'detail-ocean' },
+  snow:      { type: 'zone',       detailId: 'detail-snow' },
+};
+const crossroads = {
+  firstfork:    { detailId: 'detail-crossroads-firstfork' },
+  convergence:  { detailId: 'detail-crossroads-convergence' },
+  finalapproach: null,
+};
+
+function hideAll() {
+  document.getElementById('placeholder').style.display = 'none';
+  document.querySelectorAll('.zone-detail, .cr-detail').forEach(el => el.classList.remove('visible'));
+}
+
+function selectZone(id) {
+  hideAll();
+  const z = zones[id];
+  if (z) document.getElementById(z.detailId).classList.add('visible');
+  // highlight selected node
+  document.querySelectorAll('.zone-node').forEach(n => n.style.filter = '');
+  const node = document.getElementById('node-' + id);
+  if (node) node.style.filter = 'brightness(1.2)';
+}
+
+function selectCrossroads(id) {
+  hideAll();
+  const c = crossroads[id];
+  if (c) {
+    document.getElementById(c.detailId).classList.add('visible');
+  } else {
+    document.getElementById('placeholder').style.display = 'flex';
+  }
+  document.querySelectorAll('.zone-node').forEach(n => n.style.filter = '');
+  const node = document.getElementById('node-' + id);
+  if (node) node.style.filter = 'brightness(1.3)';
+}
+
+// Tab switching (placeholder)
+document.querySelectorAll('.header-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.header-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
