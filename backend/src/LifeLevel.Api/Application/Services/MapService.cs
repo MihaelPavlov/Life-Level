@@ -1,31 +1,47 @@
 using LifeLevel.Api.Application.DTOs.Map;
-using LifeLevel.Api.Domain.Entities;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Entities;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Enums;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Enums;
+using LifeLevel.Modules.Character.Domain.Entities;
+using LifeLevel.Modules.Map.Domain.Entities;
+using LifeLevel.Modules.Map.Domain.Enums;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+
+// Type alias to avoid clash with namespace segment
+using CrossroadsEntity = LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads;
 
 namespace LifeLevel.Api.Application.Services;
 
-public class MapService(AppDbContext db, CharacterService characterService)
+public class MapService(AppDbContext db, ICharacterXpPort characterXp)
 {
     public async Task<MapFullResponse> GetFullMapAsync(Guid userId, Guid? worldZoneId = null)
     {
-        var nodesQuery = db.MapNodes
-            .Include(n => n.Boss)
-            .Include(n => n.Chest)
-            .Include(n => n.DungeonPortal).ThenInclude(d => d!.Floors)
-            .Include(n => n.Crossroads).ThenInclude(c => c!.Paths)
-            .AsQueryable();
-
+        var nodesQuery = db.MapNodes.AsQueryable();
         if (worldZoneId.HasValue)
             nodesQuery = nodesQuery.Where(n => n.WorldZoneId == worldZoneId.Value);
-
         var nodes = await nodesQuery.ToListAsync();
 
-        // Load per-user states separately and join in memory
-        var bossIds = nodes.Where(n => n.Boss != null).Select(n => n.Boss!.Id).ToList();
-        var chestIds = nodes.Where(n => n.Chest != null).Select(n => n.Chest!.Id).ToList();
-        var dungeonIds = nodes.Where(n => n.DungeonPortal != null).Select(n => n.DungeonPortal!.Id).ToList();
-        var crossroadsIds = nodes.Where(n => n.Crossroads != null).Select(n => n.Crossroads!.Id).ToList();
+        var nodeIds = nodes.Select(n => n.Id).ToHashSet();
+
+        // Load adventure sub-entities separately (MapNode no longer has nav props to these)
+        var bosses = await db.Bosses.Where(b => nodeIds.Contains(b.NodeId)).ToListAsync();
+        var chests = await db.Chests.Where(c => nodeIds.Contains(c.NodeId)).ToListAsync();
+        var dungeons = await db.DungeonPortals
+            .Include(d => d.Floors)
+            .Where(d => nodeIds.Contains(d.NodeId))
+            .ToListAsync();
+        var crossroadsList = await db.Crossroads
+            .Include(c => c.Paths)
+            .Where(c => nodeIds.Contains(c.NodeId))
+            .ToListAsync();
+
+        var bossIds = bosses.Select(b => b.Id).ToList();
+        var chestIds = chests.Select(c => c.Id).ToList();
+        var dungeonIds = dungeons.Select(d => d.Id).ToList();
+        var crossroadsIds = crossroadsList.Select(c => c.Id).ToList();
 
         var bossStates = await db.UserBossStates
             .Where(s => s.UserId == userId && bossIds.Contains(s.BossId))
@@ -40,7 +56,6 @@ public class MapService(AppDbContext db, CharacterService characterService)
             .Where(s => s.UserId == userId && crossroadsIds.Contains(s.CrossroadsId))
             .ToListAsync();
 
-        var nodeIds = nodes.Select(n => n.Id).ToHashSet();
         var edges = await db.MapEdges
             .Where(e => nodeIds.Contains(e.FromNodeId) && nodeIds.Contains(e.ToNodeId))
             .ToListAsync();
@@ -75,10 +90,19 @@ public class MapService(AppDbContext db, CharacterService characterService)
 
         var unlockedIds = progress.UnlockedNodes.Select(u => u.MapNodeId).ToHashSet();
 
+        // Build lookup dictionaries by NodeId
+        var bossByNodeId = bosses.ToDictionary(b => b.NodeId);
+        var chestByNodeId = chests.ToDictionary(c => c.NodeId);
+        var dungeonByNodeId = dungeons.ToDictionary(d => d.NodeId);
+        var crossroadsByNodeId = crossroadsList.ToDictionary(c => c.NodeId);
+
         return new MapFullResponse
         {
             CharacterLevel = characterLevel,
-            Nodes = nodes.Select(n => MapNodeToDto(n, progress, unlockedIds, characterLevel, bossStates, chestStates, dungeonStates, crossroadsStates)).ToList(),
+            Nodes = nodes.Select(n => MapNodeToDto(
+                n, progress, unlockedIds, characterLevel,
+                bossByNodeId, chestByNodeId, dungeonByNodeId, crossroadsByNodeId,
+                bossStates, chestStates, dungeonStates, crossroadsStates)).ToList(),
             Edges = edges.Select(e => new MapEdgeDto
             {
                 Id = e.Id,
@@ -105,11 +129,9 @@ public class MapService(AppDbContext db, CharacterService characterService)
             .FirstOrDefaultAsync(p => p.UserId == userId)
             ?? await InitializeUserProgressAsync(userId);
 
-        // Validate the destination node exists
         var destinationNode = await db.MapNodes.FindAsync(destinationNodeId)
             ?? throw new InvalidOperationException("Node not found.");
 
-        // Validate the destination is adjacent to current node (reachable in one edge)
         var isAdjacent = await db.MapEdges.AnyAsync(e =>
             (e.FromNodeId == progress.CurrentNodeId && e.ToNodeId == destinationNodeId) ||
             (e.IsBidirectional && e.ToNodeId == progress.CurrentNodeId && e.FromNodeId == destinationNodeId));
@@ -121,7 +143,6 @@ public class MapService(AppDbContext db, CharacterService characterService)
         progress.DistanceTraveledOnEdge = 0;
         progress.UpdatedAt = DateTime.UtcNow;
 
-        // Find and set the current edge
         var edge = await db.MapEdges.FirstOrDefaultAsync(e =>
             (e.FromNodeId == progress.CurrentNodeId && e.ToNodeId == destinationNodeId) ||
             (e.IsBidirectional && e.ToNodeId == progress.CurrentNodeId && e.FromNodeId == destinationNodeId));
@@ -146,7 +167,6 @@ public class MapService(AppDbContext db, CharacterService characterService)
         progress.DestinationNodeId = null;
         progress.UpdatedAt = DateTime.UtcNow;
 
-        // Unlock the node if not already unlocked
         var alreadyUnlocked = progress.UnlockedNodes.Any(u => u.MapNodeId == nodeId);
         if (!alreadyUnlocked)
         {
@@ -178,9 +198,7 @@ public class MapService(AppDbContext db, CharacterService characterService)
         progress.DistanceTraveledOnEdge += km;
 
         MapNode? discoveredNode = null;
-        Character? character = null;
 
-        // If we reached or passed the destination
         if (progress.DistanceTraveledOnEdge >= edge.DistanceKm)
         {
             var destinationNodeId = progress.DestinationNodeId.Value;
@@ -190,7 +208,6 @@ public class MapService(AppDbContext db, CharacterService characterService)
             progress.DistanceTraveledOnEdge = 0;
             progress.DestinationNodeId = null;
 
-            // Unlock destination node
             var alreadyUnlocked = progress.UnlockedNodes.Any(u => u.MapNodeId == destinationNodeId);
             if (!alreadyUnlocked)
             {
@@ -203,23 +220,16 @@ public class MapService(AppDbContext db, CharacterService characterService)
                 });
 
                 discoveredNode = await db.MapNodes.FindAsync(destinationNodeId);
-                character = await db.Characters.FirstOrDefaultAsync(c => c.UserId == userId);
-                if (discoveredNode != null && character != null && discoveredNode.RewardXp > 0)
-                {
-                    character.Xp += discoveredNode.RewardXp;
-                    character.UpdatedAt = DateTime.UtcNow;
-                }
             }
         }
 
         progress.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
-        // Record XP history after save
-        if (discoveredNode != null && character != null && discoveredNode.RewardXp > 0)
+        if (discoveredNode != null && discoveredNode.RewardXp > 0)
         {
-            await characterService.RecordXpAsync(
-                character,
+            await characterXp.AwardXpAsync(
+                userId,
                 "NodeDiscovery",
                 "🗺️",
                 $"Discovered {discoveredNode.Name}",
@@ -247,12 +257,14 @@ public class MapService(AppDbContext db, CharacterService characterService)
     public async Task<List<object>> DebugListNodesAsync()
     {
         var nodes = await db.MapNodes
-            .Include(n => n.Boss)
-            .Include(n => n.Chest)
-            .Include(n => n.DungeonPortal)
-            .Include(n => n.Crossroads)
             .OrderBy(n => n.Region.ToString()).ThenBy(n => n.Name)
             .ToListAsync();
+
+        var nodeIds = nodes.Select(n => n.Id).ToHashSet();
+        var bosses = await db.Bosses.Where(b => nodeIds.Contains(b.NodeId)).ToListAsync();
+        var chests = await db.Chests.Where(c => nodeIds.Contains(c.NodeId)).ToListAsync();
+        var dungeons = await db.DungeonPortals.Where(d => nodeIds.Contains(d.NodeId)).ToListAsync();
+        var crossroadsList = await db.Crossroads.Where(c => nodeIds.Contains(c.NodeId)).ToListAsync();
 
         return nodes.Select(n => (object)new
         {
@@ -263,7 +275,10 @@ public class MapService(AppDbContext db, CharacterService characterService)
             levelRequirement = n.LevelRequirement,
             isStartNode = n.IsStartNode,
             isHidden = n.IsHidden,
-            subEntityId = n.Boss?.Id ?? n.Chest?.Id ?? n.DungeonPortal?.Id ?? n.Crossroads?.Id
+            subEntityId = bosses.FirstOrDefault(b => b.NodeId == n.Id)?.Id
+                       ?? chests.FirstOrDefault(c => c.NodeId == n.Id)?.Id
+                       ?? dungeons.FirstOrDefault(d => d.NodeId == n.Id)?.Id
+                       ?? crossroadsList.FirstOrDefault(c => c.NodeId == n.Id)?.Id
         }).ToList();
     }
 
@@ -319,19 +334,21 @@ public class MapService(AppDbContext db, CharacterService characterService)
     {
         var progress = await db.UserMapProgresses
             .Include(p => p.UnlockedNodes)
-            .Include(p => p.BossStates)
-            .Include(p => p.ChestStates)
-            .Include(p => p.DungeonStates)
-            .Include(p => p.CrossroadsStates)
             .FirstOrDefaultAsync(p => p.UserId == userId);
 
         if (progress == null) return;
 
+        // Load adventure states separately (UserMapProgress no longer has these nav props)
+        var bossStates = await db.UserBossStates.Where(s => s.UserMapProgressId == progress.Id).ToListAsync();
+        var chestStates = await db.UserChestStates.Where(s => s.UserMapProgressId == progress.Id).ToListAsync();
+        var dungeonStates = await db.UserDungeonStates.Where(s => s.UserMapProgressId == progress.Id).ToListAsync();
+        var crossroadsStates = await db.UserCrossroadsStates.Where(s => s.UserMapProgressId == progress.Id).ToListAsync();
+
         db.UserNodeUnlocks.RemoveRange(progress.UnlockedNodes);
-        db.UserBossStates.RemoveRange(progress.BossStates);
-        db.UserChestStates.RemoveRange(progress.ChestStates);
-        db.UserDungeonStates.RemoveRange(progress.DungeonStates);
-        db.UserCrossroadsStates.RemoveRange(progress.CrossroadsStates);
+        db.UserBossStates.RemoveRange(bossStates);
+        db.UserChestStates.RemoveRange(chestStates);
+        db.UserDungeonStates.RemoveRange(dungeonStates);
+        db.UserCrossroadsStates.RemoveRange(crossroadsStates);
         db.UserMapProgresses.Remove(progress);
 
         await db.SaveChangesAsync();
@@ -344,7 +361,6 @@ public class MapService(AppDbContext db, CharacterService characterService)
 
         character.Xp = Math.Max(0, xp);
 
-        // Apply level-ups and award stat points, same as the normal XP path.
         while (character.Xp >= XpAtLevelStart(character.Level + 1))
         {
             character.Level++;
@@ -398,6 +414,10 @@ public class MapService(AppDbContext db, CharacterService characterService)
         UserMapProgress progress,
         HashSet<Guid> unlockedIds,
         int characterLevel,
+        Dictionary<Guid, Boss> bossByNodeId,
+        Dictionary<Guid, Chest> chestByNodeId,
+        Dictionary<Guid, DungeonPortal> dungeonByNodeId,
+        Dictionary<Guid, CrossroadsEntity> crossroadsByNodeId,
         List<UserBossState> bossStates,
         List<UserChestState> chestStates,
         List<UserDungeonState> dungeonStates,
@@ -426,50 +446,50 @@ public class MapService(AppDbContext db, CharacterService characterService)
             }
         };
 
-        if (node.Boss != null)
+        if (bossByNodeId.TryGetValue(node.Id, out var boss))
         {
-            var userBossState = bossStates.FirstOrDefault(s => s.BossId == node.Boss.Id);
+            var userBossState = bossStates.FirstOrDefault(s => s.BossId == boss.Id);
             dto.Boss = new BossDto
             {
-                Id = node.Boss.Id,
-                Name = node.Boss.Name,
-                Icon = node.Boss.Icon,
-                MaxHp = node.Boss.MaxHp,
-                RewardXp = node.Boss.RewardXp,
-                TimerDays = node.Boss.TimerDays,
-                IsMini = node.Boss.IsMini,
+                Id = boss.Id,
+                Name = boss.Name,
+                Icon = boss.Icon,
+                MaxHp = boss.MaxHp,
+                RewardXp = boss.RewardXp,
+                TimerDays = boss.TimerDays,
+                IsMini = boss.IsMini,
                 HpDealt = userBossState?.HpDealt ?? 0,
                 IsDefeated = userBossState?.IsDefeated ?? false,
                 IsExpired = userBossState?.IsExpired ?? false,
                 StartedAt = userBossState?.StartedAt,
-                TimerExpiresAt = userBossState?.StartedAt?.AddDays(node.Boss.TimerDays),
+                TimerExpiresAt = userBossState?.StartedAt?.AddDays(boss.TimerDays),
                 DefeatedAt = userBossState?.DefeatedAt
             };
         }
 
-        if (node.Chest != null)
+        if (chestByNodeId.TryGetValue(node.Id, out var chest))
         {
-            var userChestState = chestStates.FirstOrDefault(s => s.ChestId == node.Chest.Id);
+            var userChestState = chestStates.FirstOrDefault(s => s.ChestId == chest.Id);
             dto.Chest = new ChestDto
             {
-                Id = node.Chest.Id,
-                Rarity = node.Chest.Rarity.ToString(),
-                RewardXp = node.Chest.RewardXp,
+                Id = chest.Id,
+                Rarity = chest.Rarity.ToString(),
+                RewardXp = chest.RewardXp,
                 IsCollected = userChestState?.IsCollected ?? false
             };
         }
 
-        if (node.DungeonPortal != null)
+        if (dungeonByNodeId.TryGetValue(node.Id, out var dungeon))
         {
-            var userDungeonState = dungeonStates.FirstOrDefault(s => s.DungeonPortalId == node.DungeonPortal.Id);
+            var userDungeonState = dungeonStates.FirstOrDefault(s => s.DungeonPortalId == dungeon.Id);
             dto.DungeonPortal = new DungeonPortalDto
             {
-                Id = node.DungeonPortal.Id,
-                Name = node.DungeonPortal.Name,
-                TotalFloors = node.DungeonPortal.TotalFloors,
+                Id = dungeon.Id,
+                Name = dungeon.Name,
+                TotalFloors = dungeon.TotalFloors,
                 CurrentFloor = userDungeonState?.CurrentFloor ?? 0,
                 IsDiscovered = userDungeonState?.IsDiscovered ?? false,
-                Floors = node.DungeonPortal.Floors.OrderBy(f => f.FloorNumber).Select(f => new DungeonFloorDto
+                Floors = dungeon.Floors.OrderBy(f => f.FloorNumber).Select(f => new DungeonFloorDto
                 {
                     FloorNumber = f.FloorNumber,
                     RequiredActivity = f.RequiredActivity.ToString(),
@@ -479,14 +499,14 @@ public class MapService(AppDbContext db, CharacterService characterService)
             };
         }
 
-        if (node.Crossroads != null)
+        if (crossroadsByNodeId.TryGetValue(node.Id, out var crossroads))
         {
-            var userCrossroadsState = crossroadsStates.FirstOrDefault(s => s.CrossroadsId == node.Crossroads.Id);
+            var userCrossroadsState = crossroadsStates.FirstOrDefault(s => s.CrossroadsId == crossroads.Id);
             dto.Crossroads = new CrossroadsDto
             {
-                Id = node.Crossroads.Id,
+                Id = crossroads.Id,
                 ChosenPathId = userCrossroadsState?.ChosenPathId,
-                Paths = node.Crossroads.Paths.Select(p => new CrossroadsPathDto
+                Paths = crossroads.Paths.Select(p => new CrossroadsPathDto
                 {
                     Id = p.Id,
                     Name = p.Name,

@@ -1,6 +1,6 @@
-using LifeLevel.Api.Application.DTOs.CharacterClass;
-using LifeLevel.Api.Domain.Entities;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Character.Application.DTOs;
+using LifeLevel.Modules.Character.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

@@ -1,6 +1,7 @@
 using LifeLevel.Api.Application;
-using LifeLevel.Api.Application.DTOs.Map;
-using LifeLevel.Api.Application.Services;
+using LifeLevel.SharedKernel.Contracts;
+using LifeLevel.Modules.WorldZone.Application.DTOs;
+using LifeLevel.Modules.WorldZone.Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

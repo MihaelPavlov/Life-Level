@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using LifeLevel.Api.Application;
+using LifeLevel.SharedKernel.Contracts;
 
 namespace LifeLevel.Api.Infrastructure;
 

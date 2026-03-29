@@ -2,6 +2,19 @@
   <Folder Name="/src/">
     <Project Path="src/LifeLevel.Api/LifeLevel.Api.csproj" />
   </Folder>
+  <Folder Name="/src/modules/">
+    <Project Path="src/modules/LifeLevel.SharedKernel/LifeLevel.SharedKernel.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Identity/LifeLevel.Modules.Identity.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Character/LifeLevel.Modules.Character.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Activity/LifeLevel.Modules.Activity.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Quest/LifeLevel.Modules.Quest.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Streak/LifeLevel.Modules.Streak.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.LoginReward/LifeLevel.Modules.LoginReward.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Map/LifeLevel.Modules.Map.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.WorldZone/LifeLevel.Modules.WorldZone.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Adventure.Encounters/LifeLevel.Modules.Adventure.Encounters.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Adventure.Dungeons/LifeLevel.Modules.Adventure.Dungeons.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LifeLevel.Api.Tests/LifeLevel.Api.Tests.csproj" />
   </Folder>

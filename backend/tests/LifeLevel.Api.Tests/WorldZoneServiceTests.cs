@@ -1,9 +1,34 @@
-using LifeLevel.Api.Application.Services;
-using LifeLevel.Api.Domain.Entities;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Character.Domain.Entities;
+using LifeLevel.Modules.Identity.Domain.Entities;
+using LifeLevel.Modules.WorldZone.Application.DTOs;
+using LifeLevel.Modules.WorldZone.Application.UseCases;
+using LifeLevel.Modules.WorldZone.Domain.Entities;
+using LifeLevel.SharedKernel.Events;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
+// Type alias: 'WorldZone' class name conflicts with the 'LifeLevel.Modules.WorldZone' namespace
+using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
+using UserWorldProgressEntity = LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress;
+using UserZoneUnlockEntity = LifeLevel.Modules.WorldZone.Domain.Entities.UserZoneUnlock;
+
 namespace LifeLevel.Api.Tests;
+
+file sealed class NoOpCharacterXpPort : ICharacterXpPort
+{
+    public Task AwardXpAsync(Guid u, string s, string e, string d, long xp, CancellationToken ct = default)
+        => Task.CompletedTask;
+}
+
+file sealed class DbCharacterLevelReadPort(DbContext db) : ICharacterLevelReadPort
+{
+    public async Task<int> GetLevelAsync(Guid userId, CancellationToken ct = default)
+        => await db.Set<Character>()
+            .Where(c => c.UserId == userId)
+            .Select(c => c.Level)
+            .FirstOrDefaultAsync(ct);
+}
 
 public class WorldZoneServiceTests
 {
@@ -16,11 +41,7 @@ public class WorldZoneServiceTests
     }
 
     private static WorldZoneService CreateService(AppDbContext db)
-    {
-        var streakService = new StreakService(db);
-        var characterService = new CharacterService(db, streakService);
-        return new WorldZoneService(db, characterService);
-    }
+        => new WorldZoneService(db, new NoOpCharacterXpPort(), new DbCharacterLevelReadPort(db));
 
     // ──────────────────────────────────────────────────────────────────────────
     // Test 1: GetFullWorldAsync returns all zones with correct user state
@@ -30,29 +51,34 @@ public class WorldZoneServiceTests
     {
         var db = CreateDb(nameof(GetFullWorldAsync_ReturnsAllZonesWithUserState));
 
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
         var userId = Guid.NewGuid();
         var user = new User { Id = userId, Username = "test", Email = "test@test.com", PasswordHash = "x" };
         var character = new Character { Id = Guid.NewGuid(), UserId = userId, Level = 5 };
         db.Users.Add(user);
         db.Characters.Add(character);
 
-        var zone1 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 1", IsStartZone = true, LevelRequirement = 1 };
-        var zone2 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 2", IsStartZone = false, LevelRequirement = 3 };
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true, LevelRequirement = 1 };
+        var zone2 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 2", IsStartZone = false, LevelRequirement = 3 };
         db.WorldZones.AddRange(zone1, zone2);
 
         var edge = new WorldZoneEdge { Id = Guid.NewGuid(), FromZoneId = zone1.Id, ToZoneId = zone2.Id, DistanceKm = 10 };
         db.WorldZoneEdges.Add(edge);
 
-        var progress = new UserWorldProgress
+        var progress = new UserWorldProgressEntity
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            WorldId = worldId,
             CurrentZoneId = zone1.Id,
             DistanceTraveledOnEdge = 0
         };
         db.UserWorldProgresses.Add(progress);
 
-        var unlock = new UserZoneUnlock
+        var unlock = new UserZoneUnlockEntity
         {
             UserId = userId,
             WorldZoneId = zone1.Id,
@@ -91,13 +117,17 @@ public class WorldZoneServiceTests
     {
         var db = CreateDb(nameof(GetFullWorldAsync_InitializesProgressIfMissing));
 
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
         var userId = Guid.NewGuid();
         var user = new User { Id = userId, Username = "test2", Email = "test2@test.com", PasswordHash = "x" };
         var character = new Character { Id = Guid.NewGuid(), UserId = userId, Level = 1 };
         db.Users.Add(user);
         db.Characters.Add(character);
 
-        var startZone = new WorldZone { Id = Guid.NewGuid(), Name = "Start Zone", IsStartZone = true, LevelRequirement = 1 };
+        var startZone = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Start Zone", IsStartZone = true, LevelRequirement = 1 };
         db.WorldZones.Add(startZone);
 
         await db.SaveChangesAsync();
@@ -127,12 +157,16 @@ public class WorldZoneServiceTests
     {
         var db = CreateDb(nameof(SetDestinationAsync_SetsEdgeAndDestination));
 
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
         var userId = Guid.NewGuid();
         var user = new User { Id = userId, Username = "test3", Email = "test3@test.com", PasswordHash = "x" };
         db.Users.Add(user);
 
-        var zone1 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 1", IsStartZone = true };
-        var zone2 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 2" };
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        var zone2 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 2" };
         db.WorldZones.AddRange(zone1, zone2);
 
         var edge = new WorldZoneEdge
@@ -145,14 +179,15 @@ public class WorldZoneServiceTests
         };
         db.WorldZoneEdges.Add(edge);
 
-        var progress = new UserWorldProgress
+        var progress = new UserWorldProgressEntity
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            WorldId = worldId,
             CurrentZoneId = zone1.Id
         };
         db.UserWorldProgresses.Add(progress);
-        db.UserZoneUnlocks.Add(new UserZoneUnlock
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
         {
             UserId = userId,
             WorldZoneId = zone1.Id,
@@ -178,23 +213,28 @@ public class WorldZoneServiceTests
     {
         var db = CreateDb(nameof(SetDestinationAsync_ThrowsIfNotAdjacent));
 
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
         var userId = Guid.NewGuid();
         var user = new User { Id = userId, Username = "test4", Email = "test4@test.com", PasswordHash = "x" };
         db.Users.Add(user);
 
-        var zone1 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 1", IsStartZone = true };
-        var zone2 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 2" };
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        var zone2 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 2" };
         db.WorldZones.AddRange(zone1, zone2);
         // No edge between zone1 and zone2
 
-        var progress = new UserWorldProgress
+        var progress = new UserWorldProgressEntity
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            WorldId = worldId,
             CurrentZoneId = zone1.Id
         };
         db.UserWorldProgresses.Add(progress);
-        db.UserZoneUnlocks.Add(new UserZoneUnlock
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
         {
             UserId = userId,
             WorldZoneId = zone1.Id,
@@ -217,14 +257,18 @@ public class WorldZoneServiceTests
     {
         var db = CreateDb(nameof(AddDistanceAsync_ArrivesAtDestination));
 
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
         var userId = Guid.NewGuid();
         var user = new User { Id = userId, Username = "test5", Email = "test5@test.com", PasswordHash = "x" };
         var character = new Character { Id = Guid.NewGuid(), UserId = userId, Level = 1 };
         db.Users.Add(user);
         db.Characters.Add(character);
 
-        var zone1 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 1", IsStartZone = true };
-        var zone2 = new WorldZone { Id = Guid.NewGuid(), Name = "Zone 2", TotalXp = 0 };
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        var zone2 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 2", TotalXp = 0 };
         db.WorldZones.AddRange(zone1, zone2);
 
         var edge = new WorldZoneEdge
@@ -237,17 +281,18 @@ public class WorldZoneServiceTests
         };
         db.WorldZoneEdges.Add(edge);
 
-        var progress = new UserWorldProgress
+        var progress = new UserWorldProgressEntity
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            WorldId = worldId,
             CurrentZoneId = zone1.Id,
             CurrentEdgeId = edge.Id,
             DestinationZoneId = zone2.Id,
             DistanceTraveledOnEdge = 0
         };
         db.UserWorldProgresses.Add(progress);
-        db.UserZoneUnlocks.Add(new UserZoneUnlock
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
         {
             UserId = userId,
             WorldZoneId = zone1.Id,

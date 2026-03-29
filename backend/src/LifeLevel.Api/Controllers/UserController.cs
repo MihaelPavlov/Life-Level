@@ -1,7 +1,7 @@
-using LifeLevel.Api.Application;
-using LifeLevel.Api.Domain.Entities;
-using LifeLevel.Api.Domain.Enums;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Identity.Domain.Entities;
+using LifeLevel.Modules.Identity.Domain.Enums;
+using LifeLevel.SharedKernel.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

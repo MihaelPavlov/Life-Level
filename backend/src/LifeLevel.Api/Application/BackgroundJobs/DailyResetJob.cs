@@ -1,4 +1,4 @@
-using LifeLevel.Api.Application.Services;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -28,12 +28,14 @@ public class DailyResetJob(IServiceScopeFactory scopeFactory, ILogger<DailyReset
             try
             {
                 using var scope = scopeFactory.CreateScope();
+                var sp = scope.ServiceProvider;
 
-                var streakService = scope.ServiceProvider.GetRequiredService<StreakService>();
-                await streakService.CheckAndBreakExpiredStreaksAsync();
+                var streakReset = sp.GetRequiredService<IStreakDailyReset>();
+                await streakReset.CheckAndBreakExpiredStreaksAsync(stoppingToken);
+                await streakReset.ResetShieldUsedTodayFlagsAsync(stoppingToken);
 
-                var loginRewardService = scope.ServiceProvider.GetRequiredService<LoginRewardService>();
-                await loginRewardService.ResetDailyClaimFlagsAsync();
+                var loginReset = sp.GetRequiredService<ILoginRewardDailyReset>();
+                await loginReset.ResetDailyClaimFlagsAsync(stoppingToken);
 
                 logger.LogInformation("DailyResetJob completed successfully.");
             }

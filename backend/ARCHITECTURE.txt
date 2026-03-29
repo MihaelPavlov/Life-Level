@@ -18,6 +18,21 @@ libraries with no Program.cs or HTTP listener. If a module needs to become a mic
 later, the boundaries are already clean.
 
 
+CONCEPT GLOSSARY
+----------------
+WorldZone  — The overworld layer. Named regions (Forest of Endurance, Mountains of Strength,
+             Ocean of Balance) connected by a zone graph (World → WorldZone → WorldZoneEdge).
+             Users travel between zones; zone unlocks gate progression by level requirement.
+
+Map        — The dungeon instance layer within a zone. A node/edge graph (MapNode → MapEdge)
+             containing encounter nodes: Boss, Chest, DungeonPortal, and Crossroads.
+             Users navigate the map by spending movement earned from real-world activity.
+
+The two layers are separate modules. WorldZone owns overworld state (UserWorldProgress,
+UserZoneUnlock). Map owns dungeon state (UserMapProgress, UserNodeUnlock). A user arrives
+at a zone via WorldZone, then explores its internal map via Map + Adventure modules.
+
+
 TARGET SOLUTION STRUCTURE
 --------------------------
 backend/
@@ -34,7 +49,8 @@ backend/
       LifeLevel.Modules.LoginReward/
       LifeLevel.Modules.Map/
       LifeLevel.Modules.WorldZone/
-      LifeLevel.Modules.Adventure/
+      LifeLevel.Modules.Adventure.Encounters/
+      LifeLevel.Modules.Adventure.Dungeons/
   tests/
     LifeLevel.Api.Tests/
     LifeLevel.Modules.Character.Tests/
@@ -75,8 +91,15 @@ LoginReward      | LoginReward                                           | -
 Map              | MapNode, MapEdge, UserMapProgress, UserNodeUnlock     | -
 WorldZone        | WorldZone, WorldZoneEdge, UserWorldProgress,          | -
                  | UserZoneUnlock                                        |
-Adventure        | Boss, Chest, DungeonPortal, DungeonFloor,             | -
-                 | Crossroads, CrossroadsPath + all User*State entities  |
+Adventure.       | Boss, Chest, UserBossState, UserChestState            | -
+Encounters       |                                                       |
+Adventure.       | DungeonPortal, DungeonFloor, Crossroads,              | -
+Dungeons         | CrossroadsPath, UserDungeonState,                     |
+                 | UserCrossroadsState                                   |
+
+Note: Adventure.Encounters and Adventure.Dungeons may be merged into a single Adventure
+module if at runtime they share no cross-cutting concerns and splitting creates more
+indirection than value. Split trigger: > 4 services or > 8 entities in one module.
 
 
 CROSS-MODULE COMMUNICATION: TWO-TIER PATTERN
@@ -174,16 +197,22 @@ PROJECT REFERENCE GRAPH (DAG — no cycles)
 LifeLevel.Api          -> all modules + SharedKernel
 Identity               -> SharedKernel
 Character              -> SharedKernel
-Activity               -> SharedKernel, Character
-Quest                  -> SharedKernel, Character
+Activity               -> SharedKernel
+Quest                  -> SharedKernel
 Streak                 -> SharedKernel
-LoginReward            -> SharedKernel, Character, Streak
-Map                    -> SharedKernel, Character
-WorldZone              -> SharedKernel, Character
-Adventure              -> SharedKernel, Character, Map
+LoginReward            -> SharedKernel
+Map                    -> SharedKernel
+WorldZone              -> SharedKernel
+Adventure.Encounters   -> SharedKernel, Map
+Adventure.Dungeons     -> SharedKernel, Map
 
 Cycle check: none. Character depends only on SharedKernel. Identity depends only on
 SharedKernel. The graph is a DAG with SharedKernel at the root and LifeLevel.Api at the top.
+
+All cross-module port calls (ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort,
+IStreakReadPort, etc.) resolve through SharedKernel interfaces — no module except Adventure
+needs a direct project reference to another module. Adventure.Encounters and .Dungeons
+reference Map only for MapNode/UserMapProgress/MapEdge types used in their business logic.
 
 
 PACKAGES TO ADD
@@ -197,44 +226,62 @@ Npgsql.EntityFrameworkCore.PostgreSQL| LifeLevel.Api only         | DB provider 
 Do NOT add MediatR or outbox patterns at MVP stage.
 
 
-MIGRATION ORDER (Strangler Fig — keep builds green throughout)
---------------------------------------------------------------
-Step | What                  | Key files to touch                                          | Notes
------|-----------------------|-------------------------------------------------------------|-------------------------------
-0    | SharedKernel +        | New .csproj files, move IUserContext,                       | No behavior change
-     | scaffold modules      | define ICharacterXpPort                                     |
-1    | Extract Character     | CharacterService -> CharacterXpService : ICharacterXpPort;  | Most critical — everything
-     |                       | remove direct CharacterService injection from 8 callers     | depends on it
-2    | Extract Streak        | StreakService; expose IStreakReadPort, IStreakShieldPort;    |
-     |                       | update CharacterService.GetProfileAsync                     |
-3    | Extract Identity      | AuthService, JwtService, HttpUserContext;                   |
-     |                       | publish UserRegisteredEvent                                 |
-4    | Extract Quest         | QuestService; wire QuestActivityHandler                     |
-5    | Extract Activity      | ActivityService; publish ActivityLoggedEvent;               | Introduces the event bus
-     |                       | remove direct Streak/Quest calls                            |
-6    | Extract LoginReward   | LoginRewardService; expose ILoginRewardReadPort             |
-7    | Extract Map +         | Their services, entities, EF configs                        | Largely mechanical
-     | WorldZone + Adventure |                                                             |
-8    | Clean DailyResetJob   | Replace concrete deps with IStreakDailyReset +              |
-     |                       | ILoginRewardDailyReset                                      |
+MIGRATION ORDER (Strangler Fig — COMPLETED)
+-------------------------------------------
+Step | What                  | Status
+-----|-----------------------|--------
+0    | SharedKernel + scaffold modules                    | DONE
+1    | Extract Character module                           | DONE
+2    | Extract Streak module                              | DONE
+3    | Extract Identity module + UserRegisteredEvent      | DONE
+4    | Extract Quest module                               | DONE
+5    | Extract Activity module + event bus                | DONE
+6    | Extract LoginReward module                         | DONE
+7    | Extract Map, WorldZone, Adventure modules          | DONE
+8    | DailyResetJob fully port-based; CharacterCreatedHandler | DONE
+
+All 11 modules extracted. LifeLevel.Api is now a thin composition root:
+- 16 controllers (no business logic)
+- Program.cs: AddXxxModule() calls + DbContext + JWT + CORS + Swagger
+- MapService (stays in Api — cross-module entity loading, extracting would create cycles)
+- WorldSeeder (stays in Api — composition root seeder)
+- AppDbContext: DbSets + cross-module FK configuration via ApplyConfigurationsFromAssembly
 
 
-CRITICAL FILES (current locations in LifeLevel.Api)
-----------------------------------------------------
-Application/Services/ActivityService.cs
-  Main seam: 3 direct service calls -> 1 ICharacterXpPort call + 1 ActivityLoggedEvent publish
+KEY FILES (post-migration)
+--------------------------
+LifeLevel.Api/Infrastructure/Persistence/AppDbContext.cs
+  All DbSets + cross-module FK relationships configured inline (cross-module FKs cannot live
+  inside individual module configurations because the referenced entity types are in other
+  assemblies). OnModelCreating calls ApplyConfigurationsFromAssembly for each module.
 
-Application/Services/CharacterService.cs
-  Source of RecordXpAsync/CheckAndApplyLevelUpsAsync that becomes ICharacterXpPort
+LifeLevel.Api/Application/Services/MapService.cs
+  Intentionally stays in LifeLevel.Api. GetFullMapAsync loads Boss/Chest/DungeonPortal/
+  Crossroads entities from multiple Adventure modules by NodeId lookup. Moving it to Map
+  module would require Map → Adventure references (cycle).
 
-Infrastructure/Persistence/AppDbContext.cs
-  41 DbSets + OnModelCreating configs to split into per-module IEntityTypeConfiguration classes
+LifeLevel.Api/Infrastructure/Persistence/WorldSeeder.cs
+  Imperative seeder. Creates World, WorldZone, MapNode rows with relational data. Stays
+  in composition root because it touches entities from multiple modules.
 
-Application/BackgroundJobs/DailyResetJob.cs
-  Concrete dependencies to replace with IStreakDailyReset + ILoginRewardDailyReset ports
 
-Application/Services/LoginRewardService.cs
-  Three-way dependency (Character + Streak + LoginReward) that validates the port design
+KNOWN MVP LIMITATIONS
+----------------------
+1. In-process event delivery is not guaranteed.
+   Risk:   ActivityLoggedEvent is published AFTER the DB save. If StreakActivityHandler or
+           QuestActivityHandler throws after the commit, the event is silently lost and
+           quest/streak progress is not updated. This is a user-visible data inconsistency.
+   Acceptable at MVP because: handlers are simple DB writes; failures will surface in logs
+           and can be replayed manually during early development.
+   Fix trigger: first production incident where a handler failure causes missing progress.
+   Fix:    Transactional outbox pattern —
+             a) Write the event as a row in an OutboxMessages table INSIDE the same
+                EF Core SaveChanges call as the triggering entity (Activity).
+             b) A background worker (IHostedService) polls OutboxMessages, delivers to
+                handlers, and deletes the row on success.
+             c) OutboxMessages table needs: Id, Type, Payload (JSON), CreatedAt, ProcessedAt.
+           Do NOT add MediatR outbox or a message broker until this pattern proves
+           insufficient (i.e., fan-out to > 5 handlers or cross-service delivery is needed).
 
 
 VERIFICATION (after each module extraction)

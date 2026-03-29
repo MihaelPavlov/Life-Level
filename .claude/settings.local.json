@@ -113,7 +113,11 @@
       "Bash(curl -s http://localhost:5128/api/admin/health)",
       "Bash(curl:*)",
       "Bash(find C:UsersMihaelPavlovreposHomeLife-Level -name *WorldSeeder* -o -name *Seeder*)",
-      "Bash(find C:UsersMihaelPavlovreposHomeLife-Level -path */Domain/Enums* -name *.cs)"
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Level -path */Domain/Enums* -name *.cs)",
+      "Bash(grep -r 'public interface I' /c/Users/MihaelPavlov/repos/home/Life-level/backend/src/LifeLevel.Api --include=*.cs)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/MihaelPavlov/repos/home/Life-level/**)",
+      "Bash(xargs cat:*)"
     ]
   }
 }

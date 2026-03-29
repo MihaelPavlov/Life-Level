@@ -1,5 +1,6 @@
-using LifeLevel.Api.Application;
-using LifeLevel.Api.Application.Services;
+using LifeLevel.Modules.LoginReward.Application.DTOs;
+using LifeLevel.Modules.LoginReward.Application.UseCases;
+using LifeLevel.SharedKernel.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

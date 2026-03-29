@@ -1,5 +1,5 @@
-using LifeLevel.Api.Application.DTOs.Auth;
-using LifeLevel.Api.Application.Services;
+using LifeLevel.Modules.Identity.Application.DTOs;
+using LifeLevel.Modules.Identity.Application.UseCases;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LifeLevel.Api.Controllers;

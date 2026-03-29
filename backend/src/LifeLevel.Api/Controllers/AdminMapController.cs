@@ -1,6 +1,14 @@
-using LifeLevel.Api.Domain.Entities;
-using LifeLevel.Api.Domain.Enums;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Entities;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Enums;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Enums;
+using LifeLevel.Modules.Map.Domain.Entities;
+using LifeLevel.Modules.Map.Domain.Enums;
+using LifeLevel.Modules.WorldZone.Domain.Entities;
+
+using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.SharedKernel.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -528,33 +536,54 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                 n.LevelRequirement,
                 n.RewardXp,
                 n.IsStartNode,
-                n.IsHidden,
-                HasBoss = n.Boss != null,
-                HasChest = n.Chest != null,
-                HasDungeon = n.DungeonPortal != null,
-                HasCrossroads = n.Crossroads != null,
-                FloorCount = n.DungeonPortal != null ? n.DungeonPortal.Floors.Count : 0,
-                PathCount = n.Crossroads != null ? n.Crossroads.Paths.Count : 0
+                n.IsHidden
             })
             .OrderBy(n => n.Name)
             .ToListAsync();
 
-        return Ok(nodes);
+        var nodeIds = nodes.Select(n => n.Id).ToHashSet();
+        var bossNodeIds = await db.Bosses.Where(b => nodeIds.Contains(b.NodeId)).Select(b => b.NodeId).ToHashSetAsync();
+        var chestNodeIds = await db.Chests.Where(c => nodeIds.Contains(c.NodeId)).Select(c => c.NodeId).ToHashSetAsync();
+        var dungeonNodeIds = await db.DungeonPortals.Where(d => nodeIds.Contains(d.NodeId)).Select(d => new { d.NodeId, FloorCount = d.Floors.Count }).ToListAsync();
+        var crossroadsNodeIds = await db.Crossroads.Where(c => nodeIds.Contains(c.NodeId)).Select(c => new { c.NodeId, PathCount = c.Paths.Count }).ToListAsync();
+
+        var result = nodes.Select(n => new
+        {
+            n.Id,
+            n.Name,
+            n.Description,
+            n.Icon,
+            n.Type,
+            n.Region,
+            n.PositionX,
+            n.PositionY,
+            n.LevelRequirement,
+            n.RewardXp,
+            n.IsStartNode,
+            n.IsHidden,
+            HasBoss = bossNodeIds.Contains(n.Id),
+            HasChest = chestNodeIds.Contains(n.Id),
+            HasDungeon = dungeonNodeIds.Any(d => d.NodeId == n.Id),
+            HasCrossroads = crossroadsNodeIds.Any(c => c.NodeId == n.Id),
+            FloorCount = dungeonNodeIds.FirstOrDefault(d => d.NodeId == n.Id)?.FloorCount ?? 0,
+            PathCount = crossroadsNodeIds.FirstOrDefault(c => c.NodeId == n.Id)?.PathCount ?? 0
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("nodes/{id:guid}")]
     public async Task<IActionResult> GetNodeById(Guid id)
     {
-        var node = await db.MapNodes
-            .Include(n => n.Boss)
-            .Include(n => n.Chest)
-            .Include(n => n.DungeonPortal).ThenInclude(d => d!.Floors)
-            .Include(n => n.Crossroads).ThenInclude(c => c!.Paths)
-            .Where(n => n.Id == id)
-            .FirstOrDefaultAsync();
-
+        var node = await db.MapNodes.FindAsync(id);
         if (node is null) return NotFound();
-        return Ok(node);
+
+        var boss = await db.Bosses.Where(b => b.NodeId == id).FirstOrDefaultAsync();
+        var chest = await db.Chests.Where(c => c.NodeId == id).FirstOrDefaultAsync();
+        var dungeon = await db.DungeonPortals.Include(d => d.Floors).Where(d => d.NodeId == id).FirstOrDefaultAsync();
+        var crossroads = await db.Crossroads.Include(c => c.Paths).Where(c => c.NodeId == id).FirstOrDefaultAsync();
+
+        return Ok(new { node, boss, chest, dungeon, crossroads });
     }
 
     [HttpPost("nodes")]
@@ -618,26 +647,23 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpDelete("nodes/{id:guid}")]
     public async Task<IActionResult> DeleteNode(Guid id)
     {
-        var node = await db.MapNodes
-            .Include(n => n.Boss)
-            .Include(n => n.Chest)
-            .Include(n => n.DungeonPortal)
-            .Include(n => n.Crossroads)
-            .Where(n => n.Id == id)
-            .FirstOrDefaultAsync();
-
+        var node = await db.MapNodes.FindAsync(id);
         if (node is null) return NotFound();
 
-        if (node.Boss is not null)
+        var hasBoss = await db.Bosses.AnyAsync(b => b.NodeId == id);
+        if (hasBoss)
             return BadRequest("Cannot delete node: a Boss is attached. Delete the Boss first.");
 
-        if (node.Chest is not null)
+        var hasChest = await db.Chests.AnyAsync(c => c.NodeId == id);
+        if (hasChest)
             return BadRequest("Cannot delete node: a Chest is attached. Delete the Chest first.");
 
-        if (node.DungeonPortal is not null)
+        var hasDungeon = await db.DungeonPortals.AnyAsync(d => d.NodeId == id);
+        if (hasDungeon)
             return BadRequest("Cannot delete node: a DungeonPortal is attached. Delete the Dungeon first.");
 
-        if (node.Crossroads is not null)
+        var hasCrossroads = await db.Crossroads.AnyAsync(c => c.NodeId == id);
+        if (hasCrossroads)
             return BadRequest("Cannot delete node: a Crossroads is attached. Delete the Crossroads first.");
 
         db.MapNodes.Remove(node);
@@ -710,51 +736,51 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpGet("bosses")]
     public async Task<IActionResult> GetAllBosses()
     {
-        var bosses = await db.Bosses
-            .Select(b => new
-            {
-                b.Id,
-                b.NodeId,
-                NodeName = b.Node.Name,
-                b.Name,
-                b.Icon,
-                b.MaxHp,
-                b.RewardXp,
-                b.TimerDays,
-                b.IsMini
-            })
-            .OrderBy(b => b.Name)
+        var bosses = await db.Bosses.ToListAsync();
+        var nodeIds = bosses.Select(b => b.NodeId).ToHashSet();
+        var nodeNames = await db.MapNodes
+            .Where(n => nodeIds.Contains(n.Id))
+            .Select(n => new { n.Id, n.Name })
             .ToListAsync();
+        var nodeNameMap = nodeNames.ToDictionary(n => n.Id, n => n.Name);
 
-        return Ok(bosses);
+        var result = bosses.OrderBy(b => b.Name).Select(b => new
+        {
+            b.Id,
+            b.NodeId,
+            NodeName = nodeNameMap.GetValueOrDefault(b.NodeId, ""),
+            b.Name,
+            b.Icon,
+            b.MaxHp,
+            b.RewardXp,
+            b.TimerDays,
+            b.IsMini
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("bosses/{id:guid}")]
     public async Task<IActionResult> GetBossById(Guid id)
     {
-        var boss = await db.Bosses
-            .Include(b => b.Node)
-            .Where(b => b.Id == id)
-            .FirstOrDefaultAsync();
-
+        var boss = await db.Bosses.FindAsync(id);
         if (boss is null) return NotFound();
-        return Ok(boss);
+        var node = await db.MapNodes.FindAsync(boss.NodeId);
+        return Ok(new { boss, node });
     }
 
     [HttpPost("bosses")]
     public async Task<IActionResult> CreateBoss([FromBody] CreateBossRequest req)
     {
-        var node = await db.MapNodes
-            .Include(n => n.Boss)
-            .Where(n => n.Id == req.NodeId)
-            .FirstOrDefaultAsync();
+        var node = await db.MapNodes.FindAsync(req.NodeId);
 
         if (node is null) return BadRequest($"NodeId '{req.NodeId}' does not exist.");
 
         if (node.Type != MapNodeType.Boss)
             return BadRequest($"Node type must be 'Boss'. Current type is '{node.Type}'. Update the node type first.");
 
-        if (node.Boss is not null)
+        var existingBoss = await db.Bosses.AnyAsync(b => b.NodeId == req.NodeId);
+        if (existingBoss)
             return BadRequest("This node already has a Boss attached.");
 
         var boss = new Boss
@@ -809,46 +835,49 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpGet("dungeons")]
     public async Task<IActionResult> GetAllDungeons()
     {
-        var dungeons = await db.DungeonPortals
-            .Select(d => new
-            {
-                d.Id,
-                d.NodeId,
-                NodeName = d.Node.Name,
-                d.Name,
-                d.TotalFloors,
-                FloorCount = d.Floors.Count
-            })
-            .OrderBy(d => d.Name)
+        var dungeons = await db.DungeonPortals.Include(d => d.Floors).ToListAsync();
+        var nodeIds = dungeons.Select(d => d.NodeId).ToHashSet();
+        var nodeNames = await db.MapNodes
+            .Where(n => nodeIds.Contains(n.Id))
+            .Select(n => new { n.Id, n.Name })
             .ToListAsync();
+        var nodeNameMap = nodeNames.ToDictionary(n => n.Id, n => n.Name);
 
-        return Ok(dungeons);
+        var result = dungeons.OrderBy(d => d.Name).Select(d => new
+        {
+            d.Id,
+            d.NodeId,
+            NodeName = nodeNameMap.GetValueOrDefault(d.NodeId, ""),
+            d.Name,
+            d.TotalFloors,
+            FloorCount = d.Floors.Count
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("dungeons/{id:guid}")]
     public async Task<IActionResult> GetDungeonById(Guid id)
     {
         var dungeon = await db.DungeonPortals
-            .Include(d => d.Node)
             .Include(d => d.Floors.OrderBy(f => f.FloorNumber))
             .Where(d => d.Id == id)
             .FirstOrDefaultAsync();
 
         if (dungeon is null) return NotFound();
-        return Ok(dungeon);
+        var node = await db.MapNodes.FindAsync(dungeon.NodeId);
+        return Ok(new { dungeon, node });
     }
 
     [HttpPost("dungeons")]
     public async Task<IActionResult> CreateDungeon([FromBody] CreateDungeonRequest req)
     {
-        var node = await db.MapNodes
-            .Include(n => n.DungeonPortal)
-            .Where(n => n.Id == req.NodeId)
-            .FirstOrDefaultAsync();
+        var node = await db.MapNodes.FindAsync(req.NodeId);
 
         if (node is null) return BadRequest($"NodeId '{req.NodeId}' does not exist.");
 
-        if (node.DungeonPortal is not null)
+        var existingDungeon = await db.DungeonPortals.AnyAsync(d => d.NodeId == req.NodeId);
+        if (existingDungeon)
             return BadRequest("This node already has a DungeonPortal attached.");
 
         var dungeon = new DungeonPortal
@@ -970,31 +999,33 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpGet("chests")]
     public async Task<IActionResult> GetAllChests()
     {
-        var chests = await db.Chests
-            .Select(c => new
-            {
-                c.Id,
-                c.NodeId,
-                NodeName = c.Node.Name,
-                c.Rarity,
-                c.RewardXp
-            })
-            .OrderBy(c => c.NodeName)
+        var chests = await db.Chests.ToListAsync();
+        var nodeIds = chests.Select(c => c.NodeId).ToHashSet();
+        var nodeNames = await db.MapNodes
+            .Where(n => nodeIds.Contains(n.Id))
+            .Select(n => new { n.Id, n.Name })
             .ToListAsync();
+        var nodeNameMap = nodeNames.ToDictionary(n => n.Id, n => n.Name);
 
-        return Ok(chests);
+        var result = chests.OrderBy(c => nodeNameMap.GetValueOrDefault(c.NodeId, "")).Select(c => new
+        {
+            c.Id,
+            c.NodeId,
+            NodeName = nodeNameMap.GetValueOrDefault(c.NodeId, ""),
+            c.Rarity,
+            c.RewardXp
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("chests/{id:guid}")]
     public async Task<IActionResult> GetChestById(Guid id)
     {
-        var chest = await db.Chests
-            .Include(c => c.Node)
-            .Where(c => c.Id == id)
-            .FirstOrDefaultAsync();
-
+        var chest = await db.Chests.FindAsync(id);
         if (chest is null) return NotFound();
-        return Ok(chest);
+        var node = await db.MapNodes.FindAsync(chest.NodeId);
+        return Ok(new { chest, node });
     }
 
     [HttpPost("chests")]
@@ -1003,14 +1034,12 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         if (!Enum.TryParse<ChestRarity>(req.Rarity, ignoreCase: true, out var rarity))
             return BadRequest($"Invalid Rarity. Valid values: {string.Join(", ", Enum.GetNames<ChestRarity>())}");
 
-        var node = await db.MapNodes
-            .Include(n => n.Chest)
-            .Where(n => n.Id == req.NodeId)
-            .FirstOrDefaultAsync();
+        var node = await db.MapNodes.FindAsync(req.NodeId);
 
         if (node is null) return BadRequest($"NodeId '{req.NodeId}' does not exist.");
 
-        if (node.Chest is not null)
+        var existingChest = await db.Chests.AnyAsync(c => c.NodeId == req.NodeId);
+        if (existingChest)
             return BadRequest("This node already has a Chest attached.");
 
         var chest = new Chest
@@ -1060,44 +1089,47 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpGet("crossroads")]
     public async Task<IActionResult> GetAllCrossroads()
     {
-        var crossroads = await db.Crossroads
-            .Select(c => new
-            {
-                c.Id,
-                c.NodeId,
-                NodeName = c.Node.Name,
-                PathCount = c.Paths.Count
-            })
-            .OrderBy(c => c.NodeName)
+        var crossroadsList = await db.Crossroads.Include(c => c.Paths).ToListAsync();
+        var nodeIds = crossroadsList.Select(c => c.NodeId).ToHashSet();
+        var nodeNames = await db.MapNodes
+            .Where(n => nodeIds.Contains(n.Id))
+            .Select(n => new { n.Id, n.Name })
             .ToListAsync();
+        var nodeNameMap = nodeNames.ToDictionary(n => n.Id, n => n.Name);
 
-        return Ok(crossroads);
+        var result = crossroadsList.OrderBy(c => nodeNameMap.GetValueOrDefault(c.NodeId, "")).Select(c => new
+        {
+            c.Id,
+            c.NodeId,
+            NodeName = nodeNameMap.GetValueOrDefault(c.NodeId, ""),
+            PathCount = c.Paths.Count
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("crossroads/{id:guid}")]
     public async Task<IActionResult> GetCrossroadsById(Guid id)
     {
         var crossroads = await db.Crossroads
-            .Include(c => c.Node)
             .Include(c => c.Paths)
             .Where(c => c.Id == id)
             .FirstOrDefaultAsync();
 
         if (crossroads is null) return NotFound();
-        return Ok(crossroads);
+        var node = await db.MapNodes.FindAsync(crossroads.NodeId);
+        return Ok(new { crossroads, node });
     }
 
     [HttpPost("crossroads")]
     public async Task<IActionResult> CreateCrossroads([FromBody] CreateCrossroadsRequest req)
     {
-        var node = await db.MapNodes
-            .Include(n => n.Crossroads)
-            .Where(n => n.Id == req.NodeId)
-            .FirstOrDefaultAsync();
+        var node = await db.MapNodes.FindAsync(req.NodeId);
 
         if (node is null) return BadRequest($"NodeId '{req.NodeId}' does not exist.");
 
-        if (node.Crossroads is not null)
+        var existingCrossroads = await db.Crossroads.AnyAsync(c => c.NodeId == req.NodeId);
+        if (existingCrossroads)
             return BadRequest("This node already has a Crossroads attached.");
 
         var crossroads = new Crossroads
@@ -1352,7 +1384,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             }
             else
             {
-                db.WorldZones.Add(new Domain.Entities.WorldZone
+                db.WorldZones.Add(new WorldZoneEntity
                 {
                     Id               = guid,
                     Name             = z.Name ?? "Unnamed Zone",
@@ -1395,7 +1427,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             }
             else
             {
-                db.WorldZoneEdges.Add(new Domain.Entities.WorldZoneEdge
+                db.WorldZoneEdges.Add(new WorldZoneEdge
                 {
                     Id               = guid,
                     FromZoneId       = fromId,

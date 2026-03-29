@@ -1,20 +1,58 @@
-using LifeLevel.Api.Domain.Entities;
-using LifeLevel.Api.Domain.Enums;
+using LifeLevel.Modules.Activity.Domain.Entities;
+using LifeLevel.Modules.Activity.Infrastructure;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Entities;
+using LifeLevel.Modules.Adventure.Dungeons.Infrastructure;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
+using LifeLevel.Modules.Adventure.Encounters.Infrastructure;
+using LifeLevel.Modules.Character.Domain.Entities;
+using LifeLevel.Modules.Character.Infrastructure;
+using LifeLevel.Modules.Identity.Domain.Entities;
+using LifeLevel.Modules.Identity.Infrastructure;
+using LifeLevel.Modules.LoginReward.Domain.Entities;
+using LifeLevel.Modules.LoginReward.Infrastructure;
+using LifeLevel.Modules.Map.Domain.Entities;
+using LifeLevel.Modules.Map.Infrastructure;
+using LifeLevel.Modules.Quest.Domain.Entities;
+using LifeLevel.Modules.Quest.Infrastructure;
+using LifeLevel.Modules.Streak.Domain.Entities;
+using LifeLevel.Modules.Streak.Infrastructure;
+using LifeLevel.Modules.WorldZone.Domain.Entities;
+using LifeLevel.Modules.WorldZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+
+// Type aliases needed to avoid name conflicts between entity types and their module namespace segments
+using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
+using CrossroadsEntity = LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads;
 
 namespace LifeLevel.Api.Infrastructure.Persistence;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
+    // Identity
     public DbSet<User> Users => Set<User>();
-    public DbSet<Character> Characters => Set<Character>();
-    public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<UserRingItem> UserRingItems => Set<UserRingItem>();
-    public DbSet<CharacterClass> CharacterClasses => Set<CharacterClass>();
 
-    // World Map (overworld)
+    // Character
+    public DbSet<Character> Characters => Set<Character>();
+    public DbSet<CharacterClass> CharacterClasses => Set<CharacterClass>();
+    public DbSet<XpHistoryEntry> XpHistoryEntries => Set<XpHistoryEntry>();
+
+    // Activity
+    public DbSet<Activity> Activities => Set<Activity>();
+
+    // Quest
+    public DbSet<Quest> Quests => Set<Quest>();
+    public DbSet<UserQuestProgress> UserQuestProgress => Set<UserQuestProgress>();
+
+    // Streak
+    public DbSet<Streak> Streaks => Set<Streak>();
+
+    // LoginReward
+    public DbSet<LoginReward> LoginRewards => Set<LoginReward>();
+
+    // WorldZone (overworld)
     public DbSet<World> Worlds => Set<World>();
-    public DbSet<WorldZone> WorldZones => Set<WorldZone>();
+    public DbSet<WorldZoneEntity> WorldZones => Set<WorldZoneEntity>();
     public DbSet<WorldZoneEdge> WorldZoneEdges => Set<WorldZoneEdge>();
     public DbSet<UserWorldProgress> UserWorldProgresses => Set<UserWorldProgress>();
     public DbSet<UserZoneUnlock> UserZoneUnlocks => Set<UserZoneUnlock>();
@@ -22,375 +60,168 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Map
     public DbSet<MapNode> MapNodes => Set<MapNode>();
     public DbSet<MapEdge> MapEdges => Set<MapEdge>();
-    public DbSet<Boss> Bosses => Set<Boss>();
-    public DbSet<Chest> Chests => Set<Chest>();
-    public DbSet<DungeonPortal> DungeonPortals => Set<DungeonPortal>();
-    public DbSet<DungeonFloor> DungeonFloors => Set<DungeonFloor>();
-    public DbSet<Crossroads> Crossroads => Set<Crossroads>();
-    public DbSet<CrossroadsPath> CrossroadsPaths => Set<CrossroadsPath>();
     public DbSet<UserMapProgress> UserMapProgresses => Set<UserMapProgress>();
     public DbSet<UserNodeUnlock> UserNodeUnlocks => Set<UserNodeUnlock>();
+
+    // Adventure.Encounters
+    public DbSet<Boss> Bosses => Set<Boss>();
+    public DbSet<Chest> Chests => Set<Chest>();
     public DbSet<UserBossState> UserBossStates => Set<UserBossState>();
     public DbSet<UserChestState> UserChestStates => Set<UserChestState>();
+
+    // Adventure.Dungeons
+    public DbSet<DungeonPortal> DungeonPortals => Set<DungeonPortal>();
+    public DbSet<DungeonFloor> DungeonFloors => Set<DungeonFloor>();
+    public DbSet<CrossroadsEntity> Crossroads => Set<CrossroadsEntity>();
+    public DbSet<CrossroadsPath> CrossroadsPaths => Set<CrossroadsPath>();
     public DbSet<UserDungeonState> UserDungeonStates => Set<UserDungeonState>();
     public DbSet<UserCrossroadsState> UserCrossroadsStates => Set<UserCrossroadsState>();
-    public DbSet<XpHistoryEntry> XpHistoryEntries => Set<XpHistoryEntry>();
-    public DbSet<Streak> Streaks => Set<Streak>();
-    public DbSet<LoginReward> LoginRewards => Set<LoginReward>();
-    public DbSet<Quest> Quests => Set<Quest>();
-    public DbSet<UserQuestProgress> UserQuestProgress => Set<UserQuestProgress>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // --- Existing entities ---
-        modelBuilder.Entity<User>(e =>
-        {
-            e.HasKey(u => u.Id);
-            e.HasIndex(u => u.Email).IsUnique();
-            e.HasIndex(u => u.Username).IsUnique();
-        });
+        // ── Per-module EF configurations ──────────────────────────────────────────
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CharacterModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(StreakModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(QuestModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ActivityModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LoginRewardModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WorldZoneModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MapModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(EncountersModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(DungeonsModule).Assembly);
 
-        modelBuilder.Entity<Character>(e =>
-        {
-            e.HasKey(c => c.Id);
-            e.HasOne(c => c.User)
-             .WithOne(u => u.Character)
-             .HasForeignKey<Character>(c => c.UserId);
-            e.HasOne(c => c.Class)
-             .WithMany(cc => cc.Characters)
-             .HasForeignKey(c => c.ClassId)
-             .IsRequired(false);
-        });
+        // ── Cross-module FK relationships ─────────────────────────────────────────
 
-        modelBuilder.Entity<CharacterClass>(e =>
-        {
-            e.HasKey(c => c.Id);
-            e.HasIndex(c => c.Name).IsUnique();
-        });
+        // Character → User (Identity)
+        modelBuilder.Entity<Character>()
+            .HasOne<User>()
+            .WithOne()
+            .HasForeignKey<Character>(c => c.UserId);
 
-        modelBuilder.Entity<CharacterClass>().HasData(Domain.Data.CharacterClasses.SeedData);
+        // Activity → Character
+        modelBuilder.Entity<Activity>()
+            .HasOne<Character>()
+            .WithMany()
+            .HasForeignKey(a => a.CharacterId);
 
-        modelBuilder.Entity<Activity>(e =>
-        {
-            e.HasKey(a => a.Id);
-            e.HasOne(a => a.Character)
-             .WithMany(c => c.Activities)
-             .HasForeignKey(a => a.CharacterId);
-        });
+        // Streak → User
+        modelBuilder.Entity<Streak>()
+            .HasOne<User>()
+            .WithOne()
+            .HasForeignKey<Streak>(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<UserRingItem>(e =>
-        {
-            e.HasKey(r => r.Id);
-            e.HasOne(r => r.User)
-             .WithMany(u => u.RingItems)
-             .HasForeignKey(r => r.UserId)
-             .OnDelete(DeleteBehavior.Cascade);
-            e.Property(r => r.ItemType).HasConversion<string>();
-        });
+        // LoginReward → User
+        modelBuilder.Entity<LoginReward>()
+            .HasOne<User>()
+            .WithOne()
+            .HasForeignKey<LoginReward>(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // --- World Map (overworld) entities ---
-        modelBuilder.Entity<World>(e =>
-        {
-            e.HasKey(w => w.Id);
-        });
+        // UserQuestProgress → User
+        modelBuilder.Entity<UserQuestProgress>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<WorldZone>(e =>
-        {
-            e.HasKey(z => z.Id);
-            e.HasOne(z => z.World)
-             .WithMany(w => w.Zones)
-             .HasForeignKey(z => z.WorldId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
+        // WorldZone module cross-module: UserWorldProgress/UserZoneUnlock → User
+        modelBuilder.Entity<UserWorldProgress>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(p => p.UserId);
 
-        modelBuilder.Entity<WorldZoneEdge>(e =>
-        {
-            e.HasKey(edge => edge.Id);
-            e.HasOne(edge => edge.FromZone)
-             .WithMany(z => z.EdgesFrom)
-             .HasForeignKey(edge => edge.FromZoneId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(edge => edge.ToZone)
-             .WithMany(z => z.EdgesTo)
-             .HasForeignKey(edge => edge.ToZoneId)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
+        modelBuilder.Entity<UserZoneUnlock>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(u => u.UserId);
 
-        modelBuilder.Entity<UserWorldProgress>(e =>
-        {
-            e.HasKey(p => p.Id);
-            e.HasOne(p => p.User)
-             .WithMany()
-             .HasForeignKey(p => p.UserId);
-            e.HasOne(p => p.World)
-             .WithMany(w => w.UserProgresses)
-             .HasForeignKey(p => p.WorldId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(p => p.CurrentZone)
-             .WithMany()
-             .HasForeignKey(p => p.CurrentZoneId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(p => p.CurrentEdge)
-             .WithMany()
-             .HasForeignKey(p => p.CurrentEdgeId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(p => p.DestinationZone)
-             .WithMany()
-             .HasForeignKey(p => p.DestinationZoneId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
+        // Map module cross-module: MapNode → WorldZone, UserMapProgress/UserNodeUnlock → User
+        modelBuilder.Entity<MapNode>()
+            .HasOne<WorldZoneEntity>()
+            .WithMany()
+            .HasForeignKey(n => n.WorldZoneId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<UserZoneUnlock>(e =>
-        {
-            e.HasKey(u => new { u.UserId, u.WorldZoneId });
-            e.HasOne(u => u.User)
-             .WithMany()
-             .HasForeignKey(u => u.UserId);
-            e.HasOne(u => u.WorldZone)
-             .WithMany(z => z.UnlockedByUsers)
-             .HasForeignKey(u => u.WorldZoneId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(u => u.UserWorldProgress)
-             .WithMany(p => p.UnlockedZones)
-             .HasForeignKey(u => u.UserWorldProgressId);
-        });
+        modelBuilder.Entity<UserMapProgress>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(p => p.UserId);
 
-        // --- Map entities ---
-        modelBuilder.Entity<MapNode>(e =>
-        {
-            e.HasKey(n => n.Id);
-            e.Property(n => n.Type).HasConversion<string>();
-            e.Property(n => n.Region).HasConversion<string>();
-            e.HasOne(n => n.WorldZone)
-             .WithMany(z => z.Nodes)
-             .HasForeignKey(n => n.WorldZoneId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
+        modelBuilder.Entity<UserNodeUnlock>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(u => u.UserId);
 
-        modelBuilder.Entity<MapEdge>(e =>
-        {
-            e.HasKey(me => me.Id);
-            e.HasOne(me => me.FromNode)
-             .WithMany(n => n.EdgesFrom)
-             .HasForeignKey(me => me.FromNodeId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(me => me.ToNode)
-             .WithMany(n => n.EdgesTo)
-             .HasForeignKey(me => me.ToNodeId)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
+        // Adventure.Encounters cross-module: Boss/Chest → MapNode; UserBossState/UserChestState → User/UserMapProgress
+        modelBuilder.Entity<Boss>()
+            .HasOne<MapNode>()
+            .WithOne()
+            .HasForeignKey<Boss>(b => b.NodeId);
 
-        modelBuilder.Entity<Boss>(e =>
-        {
-            e.HasKey(b => b.Id);
-            e.HasOne(b => b.Node)
-             .WithOne(n => n.Boss)
-             .HasForeignKey<Boss>(b => b.NodeId);
-        });
+        modelBuilder.Entity<Chest>()
+            .HasOne<MapNode>()
+            .WithOne()
+            .HasForeignKey<Chest>(c => c.NodeId);
 
-        modelBuilder.Entity<Chest>(e =>
-        {
-            e.HasKey(c => c.Id);
-            e.HasOne(c => c.Node)
-             .WithOne(n => n.Chest)
-             .HasForeignKey<Chest>(c => c.NodeId);
-            e.Property(c => c.Rarity).HasConversion<string>();
-        });
+        modelBuilder.Entity<UserBossState>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId);
 
-        modelBuilder.Entity<DungeonPortal>(e =>
-        {
-            e.HasKey(d => d.Id);
-            e.HasOne(d => d.Node)
-             .WithOne(n => n.DungeonPortal)
-             .HasForeignKey<DungeonPortal>(d => d.NodeId);
-        });
+        modelBuilder.Entity<UserBossState>()
+            .HasOne<UserMapProgress>()
+            .WithMany()
+            .HasForeignKey(s => s.UserMapProgressId);
 
-        modelBuilder.Entity<DungeonFloor>(e =>
-        {
-            e.HasKey(f => f.Id);
-            e.HasOne(f => f.DungeonPortal)
-             .WithMany(d => d.Floors)
-             .HasForeignKey(f => f.DungeonPortalId);
-            e.Property(f => f.RequiredActivity).HasConversion<string>();
-        });
+        modelBuilder.Entity<UserChestState>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId);
 
-        modelBuilder.Entity<Crossroads>(e =>
-        {
-            e.HasKey(c => c.Id);
-            e.HasOne(c => c.Node)
-             .WithOne(n => n.Crossroads)
-             .HasForeignKey<Crossroads>(c => c.NodeId);
-        });
+        modelBuilder.Entity<UserChestState>()
+            .HasOne<UserMapProgress>()
+            .WithMany()
+            .HasForeignKey(s => s.UserMapProgressId);
 
-        modelBuilder.Entity<CrossroadsPath>(e =>
-        {
-            e.HasKey(p => p.Id);
-            e.HasOne(p => p.Crossroads)
-             .WithMany(c => c.Paths)
-             .HasForeignKey(p => p.CrossroadsId);
-            e.HasOne(p => p.LeadsToNode)
-             .WithMany()
-             .HasForeignKey(p => p.LeadsToNodeId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.Property(p => p.Difficulty).HasConversion<string>();
-        });
+        // Adventure.Dungeons cross-module: DungeonPortal/Crossroads → MapNode; states → User/UserMapProgress
+        modelBuilder.Entity<DungeonPortal>()
+            .HasOne<MapNode>()
+            .WithOne()
+            .HasForeignKey<DungeonPortal>(d => d.NodeId);
 
-        modelBuilder.Entity<UserMapProgress>(e =>
-        {
-            e.HasKey(p => p.Id);
-            e.HasOne(p => p.User)
-             .WithMany()
-             .HasForeignKey(p => p.UserId);
-            e.HasOne(p => p.CurrentNode)
-             .WithMany()
-             .HasForeignKey(p => p.CurrentNodeId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(p => p.CurrentEdge)
-             .WithMany()
-             .HasForeignKey(p => p.CurrentEdgeId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(p => p.DestinationNode)
-             .WithMany()
-             .HasForeignKey(p => p.DestinationNodeId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
+        modelBuilder.Entity<CrossroadsEntity>()
+            .HasOne<MapNode>()
+            .WithOne()
+            .HasForeignKey<CrossroadsEntity>(c => c.NodeId);
 
-        modelBuilder.Entity<UserNodeUnlock>(e =>
-        {
-            e.HasKey(u => new { u.UserId, u.MapNodeId });
-            e.HasOne(u => u.User)
-             .WithMany()
-             .HasForeignKey(u => u.UserId);
-            e.HasOne(u => u.MapNode)
-             .WithMany()
-             .HasForeignKey(u => u.MapNodeId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(u => u.UserMapProgress)
-             .WithMany(p => p.UnlockedNodes)
-             .HasForeignKey(u => u.UserMapProgressId);
-        });
+        modelBuilder.Entity<CrossroadsPath>()
+            .HasOne<MapNode>()
+            .WithMany()
+            .HasForeignKey(p => p.LeadsToNodeId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<UserBossState>(e =>
-        {
-            e.HasKey(s => s.Id);
-            e.HasOne(s => s.User)
-             .WithMany()
-             .HasForeignKey(s => s.UserId);
-            e.HasOne(s => s.Boss)
-             .WithMany(b => b.UserStates)
-             .HasForeignKey(s => s.BossId);
-            e.HasOne(s => s.UserMapProgress)
-             .WithMany(p => p.BossStates)
-             .HasForeignKey(s => s.UserMapProgressId);
-        });
+        modelBuilder.Entity<UserDungeonState>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId);
 
-        modelBuilder.Entity<UserChestState>(e =>
-        {
-            e.HasKey(s => s.Id);
-            e.HasOne(s => s.User)
-             .WithMany()
-             .HasForeignKey(s => s.UserId);
-            e.HasOne(s => s.Chest)
-             .WithMany(c => c.UserStates)
-             .HasForeignKey(s => s.ChestId);
-            e.HasOne(s => s.UserMapProgress)
-             .WithMany(p => p.ChestStates)
-             .HasForeignKey(s => s.UserMapProgressId);
-        });
+        modelBuilder.Entity<UserDungeonState>()
+            .HasOne<UserMapProgress>()
+            .WithMany()
+            .HasForeignKey(s => s.UserMapProgressId);
 
-        modelBuilder.Entity<UserDungeonState>(e =>
-        {
-            e.HasKey(s => s.Id);
-            e.HasOne(s => s.User)
-             .WithMany()
-             .HasForeignKey(s => s.UserId);
-            e.HasOne(s => s.DungeonPortal)
-             .WithMany(d => d.UserStates)
-             .HasForeignKey(s => s.DungeonPortalId);
-            e.HasOne(s => s.UserMapProgress)
-             .WithMany(p => p.DungeonStates)
-             .HasForeignKey(s => s.UserMapProgressId);
-        });
+        modelBuilder.Entity<UserCrossroadsState>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId);
 
-        modelBuilder.Entity<UserCrossroadsState>(e =>
-        {
-            e.HasKey(s => s.Id);
-            e.HasOne(s => s.User)
-             .WithMany()
-             .HasForeignKey(s => s.UserId);
-            e.HasOne(s => s.Crossroads)
-             .WithMany(c => c.UserStates)
-             .HasForeignKey(s => s.CrossroadsId);
-            e.HasOne(s => s.UserMapProgress)
-             .WithMany(p => p.CrossroadsStates)
-             .HasForeignKey(s => s.UserMapProgressId);
-            e.HasOne(s => s.ChosenPath)
-             .WithMany()
-             .HasForeignKey(s => s.ChosenPathId)
-             .IsRequired(false)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<XpHistoryEntry>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.HasOne(x => x.Character)
-             .WithMany()
-             .HasForeignKey(x => x.CharacterId)
-             .OnDelete(DeleteBehavior.Cascade);
-            e.Property(x => x.Source).HasMaxLength(64).IsRequired();
-            e.Property(x => x.SourceEmoji).HasMaxLength(16).IsRequired();
-            e.Property(x => x.Description).HasMaxLength(256).IsRequired();
-        });
-
-        // --- Phase 2: Streak, LoginReward, Quest, UserQuestProgress ---
-
-        modelBuilder.Entity<Streak>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.HasOne(x => x.User)
-             .WithOne(u => u.Streak)
-             .HasForeignKey<Streak>(x => x.UserId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<LoginReward>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.HasOne(x => x.User)
-             .WithOne(u => u.LoginReward)
-             .HasForeignKey<LoginReward>(x => x.UserId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<Quest>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Type).HasConversion<string>();
-            e.Property(x => x.Category).HasConversion<string>();
-            e.Property(x => x.RequiredActivity).HasConversion<string?>();
-        });
-
-        modelBuilder.Entity<UserQuestProgress>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.HasOne(x => x.User)
-             .WithMany(u => u.QuestProgress)
-             .HasForeignKey(x => x.UserId)
-             .OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(x => x.Quest)
-             .WithMany(q => q.UserProgress)
-             .HasForeignKey(x => x.QuestId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Quest seed data
-        modelBuilder.Entity<Quest>().HasData(Domain.Data.QuestSeedData.All);
+        modelBuilder.Entity<UserCrossroadsState>()
+            .HasOne<UserMapProgress>()
+            .WithMany()
+            .HasForeignKey(s => s.UserMapProgressId);
     }
 }

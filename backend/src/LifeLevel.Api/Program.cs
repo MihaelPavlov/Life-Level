@@ -1,9 +1,22 @@
 using System.Text;
-using LifeLevel.Api.Application;
+using LifeLevel.Api.Application.Adapters;
 using LifeLevel.Api.Application.BackgroundJobs;
 using LifeLevel.Api.Application.Services;
 using LifeLevel.Api.Infrastructure;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Activity.Infrastructure;
+using LifeLevel.Modules.Adventure.Dungeons.Infrastructure;
+using LifeLevel.Modules.Adventure.Encounters.Infrastructure;
+using LifeLevel.Modules.Character.Infrastructure;
+using LifeLevel.Modules.Identity.Infrastructure;
+using LifeLevel.Modules.LoginReward.Infrastructure;
+using LifeLevel.Modules.Map.Infrastructure;
+using LifeLevel.Modules.Quest.Infrastructure;
+using LifeLevel.Modules.Streak.Infrastructure;
+using LifeLevel.Modules.WorldZone.Infrastructure;
+using LifeLevel.SharedKernel;
+using LifeLevel.SharedKernel.Contracts;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,6 +27,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register DbContext as base type so modules can inject it
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
 // JWT Auth
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -39,20 +55,45 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
-// App services
-builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<StreakService>();
-builder.Services.AddScoped<CharacterService>();
-builder.Services.AddScoped<LoginRewardService>();
-builder.Services.AddScoped<QuestService>();
-builder.Services.AddScoped<ActivityService>();
+// Shared kernel (registers IEventPublisher)
+builder.Services.AddSharedKernel();
+
+// Identity module (registers JwtService + AuthService)
+builder.Services.AddIdentityModule();
+
+// Character module (registers CharacterService + port interfaces)
+builder.Services.AddCharacterModule();
+
+// Streak module (registers StreakService + port interfaces)
+builder.Services.AddStreakModule();
+
+// IUserReadPort — now served by CharacterModule's CharacterService via Identity module UserReadPortAdapter
+builder.Services.AddScoped<IUserReadPort>(sp =>
+    new UserReadPortAdapter(sp.GetRequiredService<AppDbContext>()));
+
+// Quest module
+builder.Services.AddQuestModule();
+
+// Activity module
+builder.Services.AddActivityModule();
+
+// LoginReward module
+builder.Services.AddLoginRewardModule();
+
+// WorldZone module
+builder.Services.AddWorldZoneModule();
+
+// Map module (entities + EF configs + IMapProgressReadPort)
+builder.Services.AddMapModule();
+
+// Adventure.Encounters module (BossService + ChestService)
+builder.Services.AddEncountersModule();
+
+// Adventure.Dungeons module (DungeonService + CrossroadsService)
+builder.Services.AddDungeonsModule();
+
+// App services (MapService stays in LifeLevel.Api)
 builder.Services.AddScoped<MapService>();
-builder.Services.AddScoped<WorldZoneService>();
-builder.Services.AddScoped<BossService>();
-builder.Services.AddScoped<ChestService>();
-builder.Services.AddScoped<DungeonService>();
-builder.Services.AddScoped<CrossroadsService>();
 builder.Services.AddScoped<WorldSeeder>();
 
 // User context
@@ -66,7 +107,7 @@ builder.Services.AddHostedService<DailyResetJob>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader());
+        policy.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 });
 
 // Swagger
@@ -101,6 +142,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

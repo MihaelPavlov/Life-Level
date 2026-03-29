@@ -22,7 +22,7 @@ namespace LifeLevel.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Activity", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.Activity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -61,8 +61,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("StrGained")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<long>("XpGained")
                         .HasColumnType("bigint");
@@ -74,7 +75,187 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Activities");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Boss", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NodeId")
+                        .IsUnique();
+
+                    b.ToTable("Crossroads");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.CrossroadsPath", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdditionalRequirement")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CrossroadsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("DistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("EstimatedDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("LeadsToNodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RewardXp")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CrossroadsId");
+
+                    b.HasIndex("LeadsToNodeId");
+
+                    b.ToTable("CrossroadsPaths");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonFloor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DungeonPortalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("FloorNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RequiredActivity")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RequiredMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RewardXp")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DungeonPortalId");
+
+                    b.ToTable("DungeonFloors");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonPortal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalFloors")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NodeId")
+                        .IsUnique();
+
+                    b.ToTable("DungeonPortals");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.UserCrossroadsState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ChosenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ChosenPathId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CrossroadsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserMapProgressId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChosenPathId");
+
+                    b.HasIndex("CrossroadsId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserMapProgressId");
+
+                    b.ToTable("UserCrossroadsStates");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.UserDungeonState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CurrentFloor")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DiscoveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DungeonPortalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDiscovered")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserMapProgressId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DungeonPortalId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserMapProgressId");
+
+                    b.ToTable("UserDungeonStates");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Boss", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -111,7 +292,104 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Bosses");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Character", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Chest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Rarity")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RewardXp")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NodeId")
+                        .IsUnique();
+
+                    b.ToTable("Chests");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.UserBossState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BossId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DefeatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HpDealt")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDefeated")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsExpired")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserMapProgressId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BossId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserMapProgressId");
+
+                    b.ToTable("UserBossStates");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.UserChestState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CollectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCollected")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserMapProgressId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChestId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserMapProgressId");
+
+                    b.ToTable("UserChestStates");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.Character", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -172,7 +450,7 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Characters");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.CharacterClass", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.CharacterClass", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -278,142 +556,103 @@ namespace LifeLevel.Api.Migrations
                         });
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Chest", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("NodeId")
+                    b.Property<Guid>("CharacterId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Rarity")
+                    b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
-                    b.Property<int>("RewardXp")
-                        .HasColumnType("integer");
+                    b.Property<DateTime>("EarnedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceEmoji")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<long>("Xp")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NodeId")
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("XpHistoryEntries");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Chests");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Crossroads", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("NodeId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NodeId")
+                    b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Crossroads");
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.CrossroadsPath", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.UserRingItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AdditionalRequirement")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CrossroadsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Difficulty")
+                    b.Property<string>("ItemType")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("DistanceKm")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("EstimatedDays")
+                    b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("LeadsToNodeId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("RewardXp")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CrossroadsId");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("LeadsToNodeId");
-
-                    b.ToTable("CrossroadsPaths");
+                    b.ToTable("UserRingItems");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.DungeonFloor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DungeonPortalId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("FloorNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RequiredActivity")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("RequiredMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RewardXp")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DungeonPortalId");
-
-                    b.ToTable("DungeonFloors");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.DungeonPortal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("NodeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("TotalFloors")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NodeId")
-                        .IsUnique();
-
-                    b.ToTable("DungeonPortals");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.LoginReward", b =>
+            modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -442,7 +681,7 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("LoginRewards");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapEdge", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapEdge", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -469,7 +708,7 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("MapEdges");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapNode", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapNode", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -522,7 +761,67 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("MapNodes");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Quest", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CurrentEdgeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CurrentNodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DestinationNodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("DistanceTraveledOnEdge")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentEdgeId");
+
+                    b.HasIndex("CurrentNodeId");
+
+                    b.HasIndex("DestinationNodeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMapProgresses");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.UserNodeUnlock", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MapNodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserMapProgressId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId", "MapNodeId");
+
+                    b.HasIndex("MapNodeId");
+
+                    b.HasIndex("UserMapProgressId");
+
+                    b.ToTable("UserNodeUnlocks");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.Quest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -542,8 +841,8 @@ namespace LifeLevel.Api.Migrations
                     b.Property<string>("RequiredActivity")
                         .HasColumnType("text");
 
-                    b.Property<int>("RewardXp")
-                        .HasColumnType("integer");
+                    b.Property<long>("RewardXp")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
@@ -552,8 +851,8 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("TargetValue")
-                        .HasColumnType("numeric");
+                    b.Property<double?>("TargetValue")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -574,10 +873,10 @@ namespace LifeLevel.Api.Migrations
                             Category = "Duration",
                             Description = "Complete any workout lasting at least 30 minutes.",
                             IsActive = true,
-                            RewardXp = 150,
+                            RewardXp = 150L,
                             SortOrder = 1,
                             TargetUnit = "minutes",
-                            TargetValue = 30m,
+                            TargetValue = 30.0,
                             Title = "Morning Mover",
                             Type = "Daily"
                         },
@@ -587,10 +886,10 @@ namespace LifeLevel.Api.Migrations
                             Category = "Calories",
                             Description = "Burn at least 300 calories in a single session.",
                             IsActive = true,
-                            RewardXp = 200,
+                            RewardXp = 200L,
                             SortOrder = 2,
                             TargetUnit = "calories",
-                            TargetValue = 300m,
+                            TargetValue = 300.0,
                             Title = "Calorie Crusher",
                             Type = "Daily"
                         },
@@ -601,10 +900,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run at least 5 km.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 250,
+                            RewardXp = 250L,
                             SortOrder = 3,
                             TargetUnit = "km",
-                            TargetValue = 5m,
+                            TargetValue = 5.0,
                             Title = "Road Warrior",
                             Type = "Daily"
                         },
@@ -615,10 +914,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Hit the gym for at least 45 minutes.",
                             IsActive = true,
                             RequiredActivity = "Gym",
-                            RewardXp = 200,
+                            RewardXp = 200L,
                             SortOrder = 4,
                             TargetUnit = "minutes",
-                            TargetValue = 45m,
+                            TargetValue = 45.0,
                             Title = "Iron Session",
                             Type = "Daily"
                         },
@@ -629,10 +928,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Practice yoga for at least 30 minutes.",
                             IsActive = true,
                             RequiredActivity = "Yoga",
-                            RewardXp = 150,
+                            RewardXp = 150L,
                             SortOrder = 5,
                             TargetUnit = "minutes",
-                            TargetValue = 30m,
+                            TargetValue = 30.0,
                             Title = "Zen Master",
                             Type = "Daily"
                         },
@@ -643,10 +942,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run for at least 30 minutes.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 175,
+                            RewardXp = 175L,
                             SortOrder = 6,
                             TargetUnit = "minutes",
-                            TargetValue = 30m,
+                            TargetValue = 30.0,
                             Title = "Endurance Push",
                             Type = "Daily"
                         },
@@ -656,10 +955,10 @@ namespace LifeLevel.Api.Migrations
                             Category = "Workouts",
                             Description = "Complete 3 workouts this week.",
                             IsActive = true,
-                            RewardXp = 500,
+                            RewardXp = 500L,
                             SortOrder = 1,
                             TargetUnit = "workouts",
-                            TargetValue = 3m,
+                            TargetValue = 3.0,
                             Title = "Triple Threat",
                             Type = "Weekly"
                         },
@@ -670,10 +969,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run a total of 10 km this week.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 600,
+                            RewardXp = 600L,
                             SortOrder = 2,
                             TargetUnit = "km",
-                            TargetValue = 10m,
+                            TargetValue = 10.0,
                             Title = "Road Runner",
                             Type = "Weekly"
                         },
@@ -684,10 +983,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Spend at least 90 minutes at the gym this week.",
                             IsActive = true,
                             RequiredActivity = "Gym",
-                            RewardXp = 550,
+                            RewardXp = 550L,
                             SortOrder = 3,
                             TargetUnit = "minutes",
-                            TargetValue = 90m,
+                            TargetValue = 90.0,
                             Title = "Iron Week",
                             Type = "Weekly"
                         },
@@ -698,10 +997,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run a total of 10 km across all activities.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 1000,
+                            RewardXp = 1000L,
                             SortOrder = 1,
                             TargetUnit = "km",
-                            TargetValue = 10m,
+                            TargetValue = 10.0,
                             Title = "First Steps",
                             Type = "Special"
                         },
@@ -712,10 +1011,10 @@ namespace LifeLevel.Api.Migrations
                             Description = "Spend 60 minutes climbing.",
                             IsActive = true,
                             RequiredActivity = "Climbing",
-                            RewardXp = 1200,
+                            RewardXp = 1200L,
                             SortOrder = 2,
                             TargetUnit = "minutes",
-                            TargetValue = 60m,
+                            TargetValue = 60.0,
                             Title = "Summit Seeker",
                             Type = "Special"
                         },
@@ -725,16 +1024,58 @@ namespace LifeLevel.Api.Migrations
                             Category = "Duration",
                             Description = "Log a total of 500 minutes of any activity.",
                             IsActive = true,
-                            RewardXp = 2000,
+                            RewardXp = 2000L,
                             SortOrder = 3,
                             TargetUnit = "minutes",
-                            TargetValue = 500m,
+                            TargetValue = 500.0,
                             Title = "Endurance Initiate",
                             Type = "Special"
                         });
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Streak", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.UserQuestProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("BonusAwarded")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("CurrentValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("QuestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RewardClaimed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserQuestProgress");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Streak.Domain.Entities.Streak", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -772,330 +1113,7 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Streaks");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("Username")
-                        .IsUnique();
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserBossState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BossId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DefeatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("HpDealt")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsDefeated")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsExpired")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserMapProgressId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BossId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserMapProgressId");
-
-                    b.ToTable("UserBossStates");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserChestState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ChestId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("CollectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsCollected")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserMapProgressId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChestId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserMapProgressId");
-
-                    b.ToTable("UserChestStates");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserCrossroadsState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ChosenAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ChosenPathId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CrossroadsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserMapProgressId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChosenPathId");
-
-                    b.HasIndex("CrossroadsId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserMapProgressId");
-
-                    b.ToTable("UserCrossroadsStates");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserDungeonState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("CurrentFloor")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("DiscoveredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("DungeonPortalId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsDiscovered")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserMapProgressId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DungeonPortalId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserMapProgressId");
-
-                    b.ToTable("UserDungeonStates");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserMapProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CurrentEdgeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CurrentNodeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("DestinationNodeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<double>("DistanceTraveledOnEdge")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrentEdgeId");
-
-                    b.HasIndex("CurrentNodeId");
-
-                    b.HasIndex("DestinationNodeId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserMapProgresses");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserNodeUnlock", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("MapNodeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UnlockedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserMapProgressId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("UserId", "MapNodeId");
-
-                    b.HasIndex("MapNodeId");
-
-                    b.HasIndex("UserMapProgressId");
-
-                    b.ToTable("UserNodeUnlocks");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserQuestProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("BonusAwarded")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("CurrentValue")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("QuestId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("RewardClaimed")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserQuestProgress");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserRingItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ItemType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserRingItems");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.World", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Worlds");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1137,7 +1155,7 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserWorldProgresses");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserZoneUnlock", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserZoneUnlock", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1160,7 +1178,28 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserZoneUnlocks");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.World", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Worlds");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1218,7 +1257,7 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("WorldZones");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZoneEdge", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZoneEdge", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1245,125 +1284,43 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("WorldZoneEdges");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.XpHistoryEntry", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.Activity", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<DateTime>("EarnedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("SourceEmoji")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<long>("Xp")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("XpHistoryEntries");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Activity", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Character", "Character")
-                        .WithMany("Activities")
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
+                        .WithMany()
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Boss", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "Node")
-                        .WithOne("Boss")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.Boss", "NodeId")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", "NodeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Node");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Character", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.CrossroadsPath", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.CharacterClass", "Class")
-                        .WithMany("Characters")
-                        .HasForeignKey("ClassId");
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithOne("Character")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.Character", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Class");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Chest", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "Node")
-                        .WithOne("Chest")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.Chest", "NodeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Node");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Crossroads", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "Node")
-                        .WithOne("Crossroads")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.Crossroads", "NodeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Node");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.CrossroadsPath", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Crossroads", "Crossroads")
+                    b.HasOne("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", "Crossroads")
                         .WithMany("Paths")
                         .HasForeignKey("CrossroadsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "LeadsToNode")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", null)
                         .WithMany()
                         .HasForeignKey("LeadsToNodeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Crossroads");
-
-                    b.Navigation("LeadsToNode");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.DungeonFloor", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonFloor", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.DungeonPortal", "DungeonPortal")
+                    b.HasOne("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonPortal", "DungeonPortal")
                         .WithMany("Floors")
                         .HasForeignKey("DungeonPortalId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1372,37 +1329,185 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("DungeonPortal");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.DungeonPortal", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonPortal", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "Node")
-                        .WithOne("DungeonPortal")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.DungeonPortal", "NodeId")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonPortal", "NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.UserCrossroadsState", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.CrossroadsPath", "ChosenPath")
+                        .WithMany()
+                        .HasForeignKey("ChosenPathId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", "Crossroads")
+                        .WithMany("UserStates")
+                        .HasForeignKey("CrossroadsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Node");
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", null)
+                        .WithMany()
+                        .HasForeignKey("UserMapProgressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChosenPath");
+
+                    b.Navigation("Crossroads");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.LoginReward", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.UserDungeonState", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithOne("LoginReward")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.LoginReward", "UserId")
+                    b.HasOne("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonPortal", "DungeonPortal")
+                        .WithMany("UserStates")
+                        .HasForeignKey("DungeonPortalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", null)
+                        .WithMany()
+                        .HasForeignKey("UserMapProgressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DungeonPortal");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Boss", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Boss", "NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Chest", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Chest", "NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.UserBossState", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Boss", "Boss")
+                        .WithMany("UserStates")
+                        .HasForeignKey("BossId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", null)
+                        .WithMany()
+                        .HasForeignKey("UserMapProgressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Boss");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.UserChestState", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Chest", "Chest")
+                        .WithMany("UserStates")
+                        .HasForeignKey("ChestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", null)
+                        .WithMany()
+                        .HasForeignKey("UserMapProgressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chest");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.Character", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.CharacterClass", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassId");
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Character.Domain.Entities.Character", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.UserRingItem", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", "User")
+                        .WithMany("RingItems")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapEdge", b =>
+            modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "FromNode")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapEdge", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", "FromNode")
                         .WithMany("EdgesFrom")
                         .HasForeignKey("FromNodeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "ToNode")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", "ToNode")
                         .WithMany("EdgesTo")
                         .HasForeignKey("ToNodeId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1413,161 +1518,33 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("ToNode");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapNode", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapNode", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "WorldZone")
-                        .WithMany("Nodes")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", null)
+                        .WithMany()
                         .HasForeignKey("WorldZoneId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("WorldZone");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Streak", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithOne("Streak")
-                        .HasForeignKey("LifeLevel.Api.Domain.Entities.Streak", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserBossState", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Boss", "Boss")
-                        .WithMany("UserStates")
-                        .HasForeignKey("BossId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.UserMapProgress", "UserMapProgress")
-                        .WithMany("BossStates")
-                        .HasForeignKey("UserMapProgressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Boss");
-
-                    b.Navigation("User");
-
-                    b.Navigation("UserMapProgress");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserChestState", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Chest", "Chest")
-                        .WithMany("UserStates")
-                        .HasForeignKey("ChestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.UserMapProgress", "UserMapProgress")
-                        .WithMany("ChestStates")
-                        .HasForeignKey("UserMapProgressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Chest");
-
-                    b.Navigation("User");
-
-                    b.Navigation("UserMapProgress");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserCrossroadsState", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.CrossroadsPath", "ChosenPath")
-                        .WithMany()
-                        .HasForeignKey("ChosenPathId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Crossroads", "Crossroads")
-                        .WithMany("UserStates")
-                        .HasForeignKey("CrossroadsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.UserMapProgress", "UserMapProgress")
-                        .WithMany("CrossroadsStates")
-                        .HasForeignKey("UserMapProgressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ChosenPath");
-
-                    b.Navigation("Crossroads");
-
-                    b.Navigation("User");
-
-                    b.Navigation("UserMapProgress");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserDungeonState", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.DungeonPortal", "DungeonPortal")
-                        .WithMany("UserStates")
-                        .HasForeignKey("DungeonPortalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LifeLevel.Api.Domain.Entities.UserMapProgress", "UserMapProgress")
-                        .WithMany("DungeonStates")
-                        .HasForeignKey("UserMapProgressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DungeonPortal");
-
-                    b.Navigation("User");
-
-                    b.Navigation("UserMapProgress");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserMapProgress", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapEdge", "CurrentEdge")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapEdge", "CurrentEdge")
                         .WithMany()
                         .HasForeignKey("CurrentEdgeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "CurrentNode")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", "CurrentNode")
                         .WithMany()
                         .HasForeignKey("CurrentNodeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "DestinationNode")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", "DestinationNode")
                         .WithMany()
                         .HasForeignKey("DestinationNodeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1578,25 +1555,23 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("CurrentNode");
 
                     b.Navigation("DestinationNode");
-
-                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserNodeUnlock", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.UserNodeUnlock", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "MapNode")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.MapNode", "MapNode")
                         .WithMany()
                         .HasForeignKey("MapNodeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.UserMapProgress", "UserMapProgress")
+                    b.HasOne("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", "UserMapProgress")
                         .WithMany("UnlockedNodes")
                         .HasForeignKey("UserMapProgressId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1604,66 +1579,60 @@ namespace LifeLevel.Api.Migrations
 
                     b.Navigation("MapNode");
 
-                    b.Navigation("User");
-
                     b.Navigation("UserMapProgress");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserQuestProgress", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.UserQuestProgress", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Quest", "Quest")
+                    b.HasOne("LifeLevel.Modules.Quest.Domain.Entities.Quest", "Quest")
                         .WithMany("UserProgress")
                         .HasForeignKey("QuestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithMany("QuestProgress")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Quest");
-
-                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserRingItem", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Streak.Domain.Entities.Streak", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
-                        .WithMany("RingItems")
-                        .HasForeignKey("UserId")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Streak.Domain.Entities.Streak", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZoneEdge", "CurrentEdge")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZoneEdge", "CurrentEdge")
                         .WithMany()
                         .HasForeignKey("CurrentEdgeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "CurrentZone")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", "CurrentZone")
                         .WithMany()
                         .HasForeignKey("CurrentZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "DestinationZone")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", "DestinationZone")
                         .WithMany()
                         .HasForeignKey("DestinationZoneId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.World", "World")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.World", "World")
                         .WithMany("UserProgresses")
                         .HasForeignKey("WorldId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1675,41 +1644,37 @@ namespace LifeLevel.Api.Migrations
 
                     b.Navigation("DestinationZone");
 
-                    b.Navigation("User");
-
                     b.Navigation("World");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserZoneUnlock", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserZoneUnlock", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.UserWorldProgress", "UserWorldProgress")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", "UserWorldProgress")
                         .WithMany("UnlockedZones")
                         .HasForeignKey("UserWorldProgressId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "WorldZone")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", "WorldZone")
                         .WithMany("UnlockedByUsers")
                         .HasForeignKey("WorldZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("User");
 
                     b.Navigation("UserWorldProgress");
 
                     b.Navigation("WorldZone");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.World", "World")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.World", "World")
                         .WithMany("Zones")
                         .HasForeignKey("WorldId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1718,15 +1683,15 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("World");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZoneEdge", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZoneEdge", b =>
                 {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "FromZone")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", "FromZone")
                         .WithMany("EdgesFrom")
                         .HasForeignKey("FromZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "ToZone")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", "ToZone")
                         .WithMany("EdgesTo")
                         .HasForeignKey("ToZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1737,116 +1702,69 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("ToZone");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.XpHistoryEntry", b =>
-                {
-                    b.HasOne("LifeLevel.Api.Domain.Entities.Character", "Character")
-                        .WithMany()
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Boss", b =>
-                {
-                    b.Navigation("UserStates");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Character", b =>
-                {
-                    b.Navigation("Activities");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.CharacterClass", b =>
-                {
-                    b.Navigation("Characters");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Chest", b =>
-                {
-                    b.Navigation("UserStates");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Crossroads", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", b =>
                 {
                     b.Navigation("Paths");
 
                     b.Navigation("UserStates");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.DungeonPortal", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.DungeonPortal", b =>
                 {
                     b.Navigation("Floors");
 
                     b.Navigation("UserStates");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapNode", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Boss", b =>
                 {
-                    b.Navigation("Boss");
+                    b.Navigation("UserStates");
+                });
 
-                    b.Navigation("Chest");
+            modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Chest", b =>
+                {
+                    b.Navigation("UserStates");
+                });
 
-                    b.Navigation("Crossroads");
+            modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.User", b =>
+                {
+                    b.Navigation("RingItems");
+                });
 
-                    b.Navigation("DungeonPortal");
-
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapNode", b =>
+                {
                     b.Navigation("EdgesFrom");
 
                     b.Navigation("EdgesTo");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Quest", b =>
+            modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.UserMapProgress", b =>
+                {
+                    b.Navigation("UnlockedNodes");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.Quest", b =>
                 {
                     b.Navigation("UserProgress");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.User", b =>
-                {
-                    b.Navigation("Character");
-
-                    b.Navigation("LoginReward");
-
-                    b.Navigation("QuestProgress");
-
-                    b.Navigation("RingItems");
-
-                    b.Navigation("Streak");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserMapProgress", b =>
-                {
-                    b.Navigation("BossStates");
-
-                    b.Navigation("ChestStates");
-
-                    b.Navigation("CrossroadsStates");
-
-                    b.Navigation("DungeonStates");
-
-                    b.Navigation("UnlockedNodes");
-                });
-
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.Navigation("UnlockedZones");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.World", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.World", b =>
                 {
                     b.Navigation("UserProgresses");
 
                     b.Navigation("Zones");
                 });
 
-            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", b =>
                 {
                     b.Navigation("EdgesFrom");
 
                     b.Navigation("EdgesTo");
-
-                    b.Navigation("Nodes");
 
                     b.Navigation("UnlockedByUsers");
                 });

@@ -1,5 +1,9 @@
-using LifeLevel.Api.Domain.Entities;
-using LifeLevel.Api.Domain.Enums;
+using LifeLevel.Modules.Map.Domain.Entities;
+using LifeLevel.Modules.Map.Domain.Enums;
+using LifeLevel.Modules.WorldZone.Domain.Entities;
+
+// Type alias: 'WorldZone' class name conflicts with the 'LifeLevel.Modules.WorldZone' namespace
+using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
 
 namespace LifeLevel.Api.Infrastructure.Persistence;
 
@@ -80,108 +84,108 @@ public static class WorldSeedData
     // PositionX is in pixel coords (0–390, matching the admin canvas width).
     // Flutter's ZoneData.fromApiModel divides by 390 to get relativeX.
     // PositionY is unused by Flutter (Y is derived from Tier).
-    public static IReadOnlyList<WorldZone> CreateZones(Guid worldId) =>
+    public static IReadOnlyList<WorldZoneEntity> CreateZones(Guid worldId) =>
     [
         // Tier 0 — start (crossroads → 2 paths)
-        new WorldZone { Id = Z01, WorldId = worldId, Name = "First Fork", Icon = "⑂",
+        new WorldZoneEntity { Id = Z01, WorldId = worldId, Name = "First Fork", Icon = "⑂",
             Region = "Lowlands", Tier = 0, PositionX = 195f, PositionY = 0f,
             LevelRequirement = 1, TotalXp = 0, TotalDistanceKm = 0,
             IsStartZone = true, IsCrossroads = true,
             Description = "Where every journey begins. Two roads stretch ahead — choose your path." },
 
         // Tier 1 — 2 unique starting paths
-        new WorldZone { Id = Z02, WorldId = worldId, Name = "Forest of Endurance", Icon = "🌲",
+        new WorldZoneEntity { Id = Z02, WorldId = worldId, Name = "Forest of Endurance", Icon = "🌲",
             Region = "Verdant Reach", Tier = 1, PositionX = 117f, PositionY = 0f,
             LevelRequirement = 1, TotalXp = 600, TotalDistanceKm = 6,
             IsStartZone = false, IsCrossroads = false,
             Description = "Ancient trees stretch for miles. Every step demands endurance." },
 
-        new WorldZone { Id = Z03, WorldId = worldId, Name = "Mountains of Strength", Icon = "⛰️",
+        new WorldZoneEntity { Id = Z03, WorldId = worldId, Name = "Mountains of Strength", Icon = "⛰️",
             Region = "Stonereach", Tier = 1, PositionX = 273f, PositionY = 0f,
             LevelRequirement = 1, TotalXp = 600, TotalDistanceKm = 6,
             IsStartZone = false, IsCrossroads = false,
             Description = "Iron peaks forged by ancient forces. Only the strong reach the summit." },
 
         // Tier 2 — deeper unique zones
-        new WorldZone { Id = Z04, WorldId = worldId, Name = "Deepwood Trails", Icon = "🍃",
+        new WorldZoneEntity { Id = Z04, WorldId = worldId, Name = "Deepwood Trails", Icon = "🍃",
             Region = "Verdant Reach", Tier = 2, PositionX = 117f, PositionY = 0f,
             LevelRequirement = 3, TotalXp = 900, TotalDistanceKm = 8,
             IsStartZone = false, IsCrossroads = false,
             Description = "The forest deepens. Ancient paths wind through roots and ruins." },
 
-        new WorldZone { Id = Z05, WorldId = worldId, Name = "Iron Forge", Icon = "🔨",
+        new WorldZoneEntity { Id = Z05, WorldId = worldId, Name = "Iron Forge", Icon = "🔨",
             Region = "Stonereach", Tier = 2, PositionX = 273f, PositionY = 0f,
             LevelRequirement = 3, TotalXp = 900, TotalDistanceKm = 8,
             IsStartZone = false, IsCrossroads = false,
             Description = "Molten iron and sweat. This is where legends temper themselves." },
 
         // Tier 3 — 3-way crossroads
-        new WorldZone { Id = Z06, WorldId = worldId, Name = "The Convergence", Icon = "🔀",
+        new WorldZoneEntity { Id = Z06, WorldId = worldId, Name = "The Convergence", Icon = "🔀",
             Region = "Nexus", Tier = 3, PositionX = 195f, PositionY = 0f,
             LevelRequirement = 5, TotalXp = 0, TotalDistanceKm = 10,
             IsStartZone = false, IsCrossroads = true,
             Description = "All paths meet here. Three roads diverge into the unknown." },
 
         // Tier 4 — 3 paths
-        new WorldZone { Id = Z07, WorldId = worldId, Name = "Ocean of Balance", Icon = "🌊",
+        new WorldZoneEntity { Id = Z07, WorldId = worldId, Name = "Ocean of Balance", Icon = "🌊",
             Region = "Azure Shore", Tier = 4, PositionX = 78f, PositionY = 0f,
             LevelRequirement = 6, TotalXp = 1500, TotalDistanceKm = 12,
             IsStartZone = false, IsCrossroads = false,
             Description = "Endless waves teach patience. Balance is the only way forward." },
 
-        new WorldZone { Id = Z08, WorldId = worldId, Name = "Desert Expanse", Icon = "🏜️",
+        new WorldZoneEntity { Id = Z08, WorldId = worldId, Name = "Desert Expanse", Icon = "🏜️",
             Region = "Ashen Wastes", Tier = 4, PositionX = 195f, PositionY = 0f,
             LevelRequirement = 6, TotalXp = 1500, TotalDistanceKm = 12,
             IsStartZone = false, IsCrossroads = false,
             Description = "Scorching sands stretch to the horizon. Only the relentless survive." },
 
-        new WorldZone { Id = Z09, WorldId = worldId, Name = "Snow Peaks", Icon = "❄️",
+        new WorldZoneEntity { Id = Z09, WorldId = worldId, Name = "Snow Peaks", Icon = "❄️",
             Region = "Glacial Expanse", Tier = 4, PositionX = 312f, PositionY = 0f,
             LevelRequirement = 6, TotalXp = 1500, TotalDistanceKm = 12,
             IsStartZone = false, IsCrossroads = false,
             Description = "Frozen peaks cut through the clouds. Cold forges clarity." },
 
         // Tier 5 — 4-way crossroads
-        new WorldZone { Id = Z10, WorldId = worldId, Name = "The Grand Nexus", Icon = "⭕",
+        new WorldZoneEntity { Id = Z10, WorldId = worldId, Name = "The Grand Nexus", Icon = "⭕",
             Region = "Nexus", Tier = 5, PositionX = 195f, PositionY = 0f,
             LevelRequirement = 10, TotalXp = 0, TotalDistanceKm = 15,
             IsStartZone = false, IsCrossroads = true,
             Description = "Four great roads converge and split. The world holds its breath." },
 
         // Tier 6 — 4 paths
-        new WorldZone { Id = Z11, WorldId = worldId, Name = "Void Wastes", Icon = "🌑",
+        new WorldZoneEntity { Id = Z11, WorldId = worldId, Name = "Void Wastes", Icon = "🌑",
             Region = "Shadowvast", Tier = 6, PositionX = 58f, PositionY = 0f,
             LevelRequirement = 12, TotalXp = 3000, TotalDistanceKm = 20,
             IsStartZone = false, IsCrossroads = false,
             Description = "Darkness without end. Only legends dare tread here." },
 
-        new WorldZone { Id = Z12, WorldId = worldId, Name = "Shadow Vale", Icon = "🌫️",
+        new WorldZoneEntity { Id = Z12, WorldId = worldId, Name = "Shadow Vale", Icon = "🌫️",
             Region = "Shadowvast", Tier = 6, PositionX = 156f, PositionY = 0f,
             LevelRequirement = 12, TotalXp = 3000, TotalDistanceKm = 20,
             IsStartZone = false, IsCrossroads = false,
             Description = "Mist hides everything. Agility is your only guide." },
 
-        new WorldZone { Id = Z13, WorldId = worldId, Name = "Fire Summit", Icon = "🔥",
+        new WorldZoneEntity { Id = Z13, WorldId = worldId, Name = "Fire Summit", Icon = "🔥",
             Region = "Ignis", Tier = 6, PositionX = 234f, PositionY = 0f,
             LevelRequirement = 12, TotalXp = 3000, TotalDistanceKm = 20,
             IsStartZone = false, IsCrossroads = false,
             Description = "A volcanic peak where strength is tested by fire." },
 
-        new WorldZone { Id = Z14, WorldId = worldId, Name = "Crystal Citadel", Icon = "💎",
+        new WorldZoneEntity { Id = Z14, WorldId = worldId, Name = "Crystal Citadel", Icon = "💎",
             Region = "Solara", Tier = 6, PositionX = 332f, PositionY = 0f,
             LevelRequirement = 12, TotalXp = 3000, TotalDistanceKm = 20,
             IsStartZone = false, IsCrossroads = false,
             Description = "A fortress of light and crystal. Flexibility unlocks its secrets." },
 
         // Tier 7 — final crossroads (→ 1)
-        new WorldZone { Id = Z15, WorldId = worldId, Name = "The Final Gate", Icon = "🔱",
+        new WorldZoneEntity { Id = Z15, WorldId = worldId, Name = "The Final Gate", Icon = "🔱",
             Region = "Apex", Tier = 7, PositionX = 195f, PositionY = 0f,
             LevelRequirement = 18, TotalXp = 0, TotalDistanceKm = 25,
             IsStartZone = false, IsCrossroads = true,
             Description = "The last threshold. Beyond lies the end of all paths." },
 
         // Tier 8 — final zone
-        new WorldZone { Id = Z16, WorldId = worldId, Name = "The Eternal Nexus", Icon = "✨",
+        new WorldZoneEntity { Id = Z16, WorldId = worldId, Name = "The Eternal Nexus", Icon = "✨",
             Region = "Apex", Tier = 8, PositionX = 195f, PositionY = 0f,
             LevelRequirement = 25, TotalXp = 10000, TotalDistanceKm = 30,
             IsStartZone = false, IsCrossroads = false,

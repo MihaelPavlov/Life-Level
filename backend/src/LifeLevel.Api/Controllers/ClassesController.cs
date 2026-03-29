@@ -1,4 +1,4 @@
-using LifeLevel.Api.Application.Services;
+using LifeLevel.Modules.Character.Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

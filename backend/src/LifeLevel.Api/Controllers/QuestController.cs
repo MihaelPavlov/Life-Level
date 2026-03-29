@@ -1,6 +1,6 @@
-using LifeLevel.Api.Application;
-using LifeLevel.Api.Application.Services;
-using LifeLevel.Api.Domain.Enums;
+using LifeLevel.Modules.Quest.Application.UseCases;
+using LifeLevel.Modules.Quest.Domain.Enums;
+using LifeLevel.SharedKernel.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

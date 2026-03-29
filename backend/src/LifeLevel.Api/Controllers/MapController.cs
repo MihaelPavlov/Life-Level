@@ -1,4 +1,5 @@
 using LifeLevel.Api.Application;
+using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.Api.Application.DTOs.Map;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
