@@ -86,7 +86,13 @@
       "Bash(flutter pub:*)",
       "Bash(find /c/Users/MihaelPavlov/repos -name *admin* -o -name *map*)",
       "Bash(grep -E \"\\\\.\\(html|js|dart\\)$\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(wc -l C:UsersMihaelPavlovreposHomeLife-Levelmobilelibfeatures/**/*.dart)",
+      "Bash(xargs wc:*)",
+      "Bash(wc -l C:UsersMihaelPavlovreposHomeLife-Levelmobilelibfeaturesprofile/*.dart)",
+      "Bash(while read:*)",
+      "Bash(do wc:*)",
+      "Bash(done)"
     ]
   }
 }

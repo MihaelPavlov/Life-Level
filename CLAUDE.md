@@ -197,6 +197,54 @@ Spring Boot setup, JWT auth, SecurityConfig, entity stubs.
 
 ---
 
+## Flutter App Architecture
+
+The mobile app lives in `mobile/lib/`. Each feature is self-contained under `features/`; shared infrastructure is in `core/`.
+
+### `core/shell/` — App Shell
+
+Extracted from the old monolithic `main_shell.dart`. Owns the navigation container, radial FAB, and global overlays.
+
+| File | Description |
+|------|-------------|
+| `main_shell.dart` | Root scaffold. Hosts the `IndexedStack` of tab screens, renders the radial ring, backdrop, nav bar, and boss FAB. Listens to `LevelUpNotifier` to trigger the level-up overlay from anywhere in the app. Supports long-press on the FAB to open the customization sheet. |
+| `shell_models.dart` | `RingItem` and `NavTab` data classes. Declares `kAllRingItems` (10 items: World, Guild, Stats, Battle, Titles, Boss, Profile, Leaderboard, Map, Quests) and `kAllNavItems`. `kDefaultRingIds` and `kDefaultNavIds` define the out-of-box selections. |
+| `shell_constants.dart` | Layout constants: `kNavBarH = 82`, `kFabSize = 62`, `kRadius = 130` (ring orbit), `kItemSize = 54`. Also holds nav/card colour tokens. |
+| `widgets/boss_fab.dart` | Animated central FAB. Shows a boss icon; rotates/scales when the radial ring opens. |
+| `widgets/bottom_nav_bar.dart` | Renders the bottom tab bar from a `List<NavTab>`, highlights the active tab. |
+| `widgets/ring_item_tile.dart` | Single tile rendered at each ring position — emoji icon + label, colour-coded per item. |
+
+### `features/home/` — Home Screen
+
+| File | Description |
+|------|-------------|
+| `home_screen.dart` | Orchestrates the home feed. Fetches `CharacterProfile` and passes it to the card widgets below. Exposes `HomeScreenState.refresh()` so the shell can reload on tab switch. |
+| `home_cards.dart` | Card-level widgets: `HomeHeader` (greeting, avatar, badges, notification dot), `HomeXpCard` (XP progress bar to next level), `HomeStreakCard` (7-day streak grid + shield status), `HomeQuestsCard` (5 daily quests with progress + bonus XP banner), `HomeLastActivityCard` (most recent workout summary), `HomeStatsRow` (STR/END/AGI/FLX/STA gems), `HomeBossCard` (active boss HP bar + player damage). |
+| `home_widgets.dart` | Atomic micro-widgets reused by the cards: `HomeBadge`, `HomeCard` (surface container with optional glow), `HomeSectionTitle`, `HomeProgressBar`, `HomeStreakDay`, `HomeQuestItem`, `HomeGainChip`, `HomeStatGem`, `HomePulsingLvBadge` (animated pulsing badge on avatar). Also contains local palette constants and the `homeFmt()` number formatter. |
+
+### `features/map/` — World Map
+
+| File | Description |
+|------|-------------|
+| `world_map_screen.dart` | Full-screen map modal. Handles zoom, pan, and zone tap interactions. Can be opened as an overlay from the shell or pushed as a route. |
+| `world_map_models.dart` | Domain models: `ZoneData` (id, name, icon, status, tier, region, level requirement, crossroads flag) and the `ZoneStatus` enum (`completed / active / available / locked`). |
+| `world_map_data.dart` | Static list of all `ZoneData` instances that populate the map (Forest of Endurance, Mountains of Strength, Ocean of Balance, etc.). |
+| `world_map_painter.dart` | `CustomPainter` that draws the map canvas — zone nodes, connecting paths, and tier indicators. |
+| `world_map_detail_sheet.dart` | Bottom sheet shown on zone tap. Displays zone lore, requirements, XP/distance stats, and a travel/enter action button. |
+
+### `features/profile/` — Profile Screen
+
+| File | Description |
+|------|-------------|
+| `profile_screen.dart` | Tabbed screen with four tabs: Overview, Equipment, Inventory, Achievements. Fetches `CharacterProfile` and exposes `ProfileScreenState.refresh()`. |
+| `profile_overview_tab.dart` | Overview tab content: `ProfileXpSection` (XP bar, tappable to open XP history), `ProfileStatsSection` (stat cards with optional +point button), `ProfileActivitySummary` (horizontal scroll of weekly mini-cards: runs, distance, streak, XP earned). |
+| `profile_stat_metadata.dart` | Static metadata for all five stats (`StatMeta`: key, label, emoji, colour, description, boosting activities, perks). Constants: `kStrMeta`, `kEndMeta`, `kAgiMeta`, `kFlxMeta`, `kStaMeta`. `buildProfileStats()` maps a `CharacterProfile` → `List<StatData>`. Also holds profile-wide colour aliases and `profileRankColor()` helper. |
+| `profile_widgets.dart` | Shared profile widgets: `ProfileRankBadge`, `ProfileMiniCard` (emoji + label + value + sub), `ProfilePlaceholderTab` (coming-soon stub), `ProfileSheetSection` (bulleted section used inside bottom sheets). |
+| `stat_detail_sheet.dart` | Bottom sheet for a single stat. Shows description, boosting activities, and perks; includes the spend-stat-point button when points are available. |
+| `xp_history_sheet.dart` | Bottom sheet listing recent XP gain events (activity type, amount, timestamp). |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Notes |
