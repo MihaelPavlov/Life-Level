@@ -12,10 +12,10 @@ namespace LifeLevel.Api.Controllers;
 public class MapController(MapService mapService, IUserContext userContext) : ControllerBase
 {
     [HttpGet("full")]
-    public async Task<ActionResult<MapFullResponse>> GetFullMap()
+    public async Task<ActionResult<MapFullResponse>> GetFullMap([FromQuery] Guid? worldZoneId = null)
     {
         var userId = userContext.UserId;
-        var result = await mapService.GetFullMapAsync(userId);
+        var result = await mapService.GetFullMapAsync(userId, worldZoneId);
         return Ok(result);
     }
 

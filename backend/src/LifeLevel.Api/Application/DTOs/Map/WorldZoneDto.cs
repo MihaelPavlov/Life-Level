@@ -62,3 +62,11 @@ public class DebugAddWorldDistanceRequest
 {
     public double Km { get; set; }
 }
+
+public class CompleteZoneResult
+{
+    public string ZoneName { get; set; } = string.Empty;
+    public string ZoneIcon { get; set; } = string.Empty;
+    public int XpAwarded { get; set; }
+    public bool AlreadyCompleted { get; set; }
+}

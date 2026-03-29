@@ -1074,6 +1074,27 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserRingItems");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.World", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Worlds");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1098,6 +1119,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CurrentEdgeId");
@@ -1107,6 +1131,8 @@ namespace LifeLevel.Api.Migrations
                     b.HasIndex("DestinationZoneId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("WorldId");
 
                     b.ToTable("UserWorldProgresses");
                 });
@@ -1182,7 +1208,12 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("TotalXp")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WorldId");
 
                     b.ToTable("WorldZones");
                 });
@@ -1632,6 +1663,12 @@ namespace LifeLevel.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LifeLevel.Api.Domain.Entities.World", "World")
+                        .WithMany("UserProgresses")
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("CurrentEdge");
 
                     b.Navigation("CurrentZone");
@@ -1639,6 +1676,8 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("DestinationZone");
 
                     b.Navigation("User");
+
+                    b.Navigation("World");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserZoneUnlock", b =>
@@ -1666,6 +1705,17 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("UserWorldProgress");
 
                     b.Navigation("WorldZone");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.World", "World")
+                        .WithMany("Zones")
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("World");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZoneEdge", b =>
@@ -1781,6 +1831,13 @@ namespace LifeLevel.Api.Migrations
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.Navigation("UnlockedZones");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.World", b =>
+                {
+                    b.Navigation("UserProgresses");
+
+                    b.Navigation("Zones");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>

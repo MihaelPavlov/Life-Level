@@ -111,7 +111,9 @@
       "Bash(sed -i \"s|''models/|''../models/|g\" \"$f\")",
       "Bash(echo \"Fixed: $f\")",
       "Bash(curl -s http://localhost:5128/api/admin/health)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Level -name *WorldSeeder* -o -name *Seeder*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Level -path */Domain/Enums* -name *.cs)"
     ]
   }
 }

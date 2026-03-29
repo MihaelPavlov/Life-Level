@@ -9,14 +9,9 @@ public class WorldZoneService(AppDbContext db, CharacterService characterService
 {
     public async Task<WorldFullResponse> GetFullWorldAsync(Guid userId)
     {
-        var zones = await db.WorldZones
-            .Include(z => z.Nodes)
-            .ToListAsync();
+        var activeWorld = await db.Worlds.FirstOrDefaultAsync(w => w.IsActive);
 
-        var edges = await db.WorldZoneEdges.ToListAsync();
-
-        // If there are no zones yet, return an empty world without touching progress.
-        if (zones.Count == 0)
+        if (activeWorld == null)
         {
             var lvl = await db.Characters
                 .Where(c => c.UserId == userId)
@@ -31,12 +26,23 @@ public class WorldZoneService(AppDbContext db, CharacterService characterService
             };
         }
 
+        var zones = await db.WorldZones
+            .Where(z => z.WorldId == activeWorld.Id)
+            .Include(z => z.Nodes)
+            .ToListAsync();
+
+        var zoneIds = zones.Select(z => z.Id).ToHashSet();
+
+        var edges = await db.WorldZoneEdges
+            .Where(e => zoneIds.Contains(e.FromZoneId))
+            .ToListAsync();
+
         var progress = await db.UserWorldProgresses
             .Include(p => p.UnlockedZones)
-            .FirstOrDefaultAsync(p => p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id);
 
         if (progress == null)
-            progress = await InitializeUserProgressAsync(userId);
+            progress = await InitializeUserProgressAsync(userId, activeWorld.Id);
 
         var characterLevel = await db.Characters
             .Where(c => c.UserId == userId)
@@ -93,10 +99,13 @@ public class WorldZoneService(AppDbContext db, CharacterService characterService
 
     public async Task SetDestinationAsync(Guid userId, Guid destinationZoneId)
     {
+        var activeWorld = await db.Worlds.FirstOrDefaultAsync(w => w.IsActive)
+            ?? throw new InvalidOperationException("No active world found.");
+
         var progress = await db.UserWorldProgresses
             .Include(p => p.UnlockedZones)
-            .FirstOrDefaultAsync(p => p.UserId == userId)
-            ?? await InitializeUserProgressAsync(userId);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id)
+            ?? await InitializeUserProgressAsync(userId, activeWorld.Id);
 
         var destinationZone = await db.WorldZones.FindAsync(destinationZoneId)
             ?? throw new InvalidOperationException("Zone not found.");
@@ -122,10 +131,13 @@ public class WorldZoneService(AppDbContext db, CharacterService characterService
 
     public async Task AddDistanceAsync(Guid userId, double km)
     {
+        var activeWorld = await db.Worlds.FirstOrDefaultAsync(w => w.IsActive)
+            ?? throw new InvalidOperationException("No active world found.");
+
         var progress = await db.UserWorldProgresses
             .Include(p => p.UnlockedZones)
-            .FirstOrDefaultAsync(p => p.UserId == userId)
-            ?? await InitializeUserProgressAsync(userId);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id)
+            ?? await InitializeUserProgressAsync(userId, activeWorld.Id);
 
         if (progress.CurrentEdgeId == null || progress.DestinationZoneId == null)
             throw new InvalidOperationException("No active destination set. Set a destination first.");
@@ -180,15 +192,74 @@ public class WorldZoneService(AppDbContext db, CharacterService characterService
         }
     }
 
-    private async Task<UserWorldProgress> InitializeUserProgressAsync(Guid userId)
+    public async Task<CompleteZoneResult> CompleteZoneAsync(Guid userId, Guid zoneId)
     {
-        var startZone = await db.WorldZones.FirstOrDefaultAsync(z => z.IsStartZone)
-            ?? await db.WorldZones.FirstAsync();
+        var activeWorld = await db.Worlds.FirstOrDefaultAsync(w => w.IsActive)
+            ?? throw new InvalidOperationException("No active world found.");
+
+        var zone = await db.WorldZones.FindAsync(zoneId)
+            ?? throw new InvalidOperationException("Zone not found.");
+
+        var progress = await db.UserWorldProgresses
+            .Include(p => p.UnlockedZones)
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id)
+            ?? await InitializeUserProgressAsync(userId, activeWorld.Id);
+
+        progress.CurrentZoneId = zoneId;
+        progress.DestinationZoneId = null;
+        progress.CurrentEdgeId = null;
+        progress.DistanceTraveledOnEdge = 0;
+        progress.UpdatedAt = DateTime.UtcNow;
+
+        var alreadyUnlocked = progress.UnlockedZones.Any(u => u.WorldZoneId == zoneId);
+        int xpAwarded = 0;
+
+        if (!alreadyUnlocked)
+        {
+            db.UserZoneUnlocks.Add(new UserZoneUnlock
+            {
+                UserId = userId,
+                WorldZoneId = zoneId,
+                UserWorldProgressId = progress.Id,
+                UnlockedAt = DateTime.UtcNow
+            });
+
+            var character = await db.Characters.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (character != null && zone.TotalXp > 0)
+            {
+                character.Xp += zone.TotalXp;
+                character.UpdatedAt = DateTime.UtcNow;
+                xpAwarded = zone.TotalXp;
+                await db.SaveChangesAsync();
+                await characterService.RecordXpAsync(
+                    character, "ZoneCompletion", zone.Icon,
+                    $"Completed {zone.Name}", zone.TotalXp);
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        return new CompleteZoneResult
+        {
+            ZoneName = zone.Name,
+            ZoneIcon = zone.Icon,
+            XpAwarded = xpAwarded,
+            AlreadyCompleted = alreadyUnlocked
+        };
+    }
+
+    private async Task<UserWorldProgress> InitializeUserProgressAsync(Guid userId, Guid worldId)
+    {
+        var startZone = await db.WorldZones
+            .Where(z => z.WorldId == worldId)
+            .FirstOrDefaultAsync(z => z.IsStartZone)
+            ?? await db.WorldZones.Where(z => z.WorldId == worldId).FirstAsync();
 
         var progress = new UserWorldProgress
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            WorldId = worldId,
             CurrentZoneId = startZone.Id,
             DistanceTraveledOnEdge = 0,
             UpdatedAt = DateTime.UtcNow

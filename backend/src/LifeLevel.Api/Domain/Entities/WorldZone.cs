@@ -17,6 +17,9 @@ public class WorldZone
     public bool IsStartZone { get; set; } = false;
     public bool IsHidden { get; set; } = false;
 
+    public Guid WorldId { get; set; }
+    public World World { get; set; } = null!;
+
     public ICollection<WorldZoneEdge> EdgesFrom { get; set; } = [];
     public ICollection<WorldZoneEdge> EdgesTo { get; set; } = [];
     public ICollection<MapNode> Nodes { get; set; } = [];

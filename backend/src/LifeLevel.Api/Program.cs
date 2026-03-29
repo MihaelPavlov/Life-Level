@@ -53,6 +53,7 @@ builder.Services.AddScoped<BossService>();
 builder.Services.AddScoped<ChestService>();
 builder.Services.AddScoped<DungeonService>();
 builder.Services.AddScoped<CrossroadsService>();
+builder.Services.AddScoped<WorldSeeder>();
 
 // User context
 builder.Services.AddHttpContextAccessor();
@@ -114,5 +115,14 @@ app.MapGet("/admin-map", (IWebHostEnvironment env) =>
         ? Results.File(path, "text/html")
         : Results.NotFound("admin-map.html not found");
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
+    var seeder = scope.ServiceProvider.GetRequiredService<WorldSeeder>();
+    await seeder.SeedAsync();
+}
 
 app.Run();

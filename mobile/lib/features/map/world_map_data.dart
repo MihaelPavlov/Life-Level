@@ -152,7 +152,7 @@ const Map<String, List<String>> kEdges = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const double kCanvasWidth   = 390.0;
-const double kCanvasHeight  = 1200.0;
+const double kCanvasHeight  = 1800.0;
 const double kTierHeight    = 160.0;
 const double kTopPadding    = 140.0;
 const double kZoneRadius    = 26.0;

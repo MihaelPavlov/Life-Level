@@ -23,6 +23,7 @@ class ZoneData {
     this.description,
     this.absoluteX,
     this.absoluteY,
+    this.isDestination = false,
   });
 
   final String id;
@@ -42,6 +43,7 @@ class ZoneData {
   // the tier/relativeX fallback layout when both are present.
   final double? absoluteX;
   final double? absoluteY;
+  final bool isDestination;
 
   // ── Factory from API model ─────────────────────────────────────────────────
 
@@ -82,6 +84,7 @@ class ZoneData {
       description: m.description,
       absoluteX: null,  // do not use admin pixel coords directly
       absoluteY: null,
+      isDestination: state?.isDestination ?? false,
     );
   }
 }

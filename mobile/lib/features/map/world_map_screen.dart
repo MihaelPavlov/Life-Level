@@ -40,6 +40,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   bool _loading = true;
   String? _error;
 
+  String? _lastKnownZoneId;
+
   // ── lifecycle ────────────────────────────────────────────────────────────────
 
   @override
@@ -67,6 +69,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ── data loading ─────────────────────────────────────────────────────────────
 
   Future<void> _load() async {
+    final previousZoneId = _lastKnownZoneId;
+
     setState(() {
       _loading = true;
       _error = null;
@@ -118,6 +122,18 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         _travelProgress = travelProgress;
         _loading = false;
       });
+
+      // Detect zone arrival
+      final activeZone = layoutZones.cast<ZoneData?>().firstWhere(
+        (z) => z!.status == ZoneStatus.active,
+        orElse: () => null,
+      );
+      if (activeZone != null) {
+        if (previousZoneId != null && previousZoneId != activeZone.id && mounted) {
+          _showZoneArrivalBanner(activeZone);
+        }
+        _lastKnownZoneId = activeZone.id;
+      }
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -167,6 +183,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           levelRequirement: z.levelRequirement,
           isCrossroads: z.isCrossroads,
           description: z.description,
+          isDestination: z.isDestination,
         );
       }
     }
@@ -218,17 +235,78 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   Future<void> _handleEnterZone(ZoneData zone) async {
     try {
       await _service.setDestination(zone.id);
-      await _load();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to set destination: $e'),
-            backgroundColor: AppColors.red,
-          ),
-        );
-      }
+    } catch (_) {
+      // Zone may not be adjacent yet — still allow exploring local map
     }
+    if (mounted) {
+      Navigator.pop(context, {'zoneId': zone.id, 'zoneName': zone.name});
+    }
+  }
+
+  void _showZoneArrivalBanner(ZoneData zone) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 400),
+      transitionBuilder: (ctx, anim, _, child) {
+        final slide = Tween<Offset>(
+          begin: const Offset(0, -1),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
+        return SlideTransition(position: slide, child: child);
+      },
+      pageBuilder: (ctx, _, __) => Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 56, 16, 0),
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1e2632),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.orange.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(color: AppColors.orange.withOpacity(0.15), blurRadius: 16),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(zone.icon, style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 12),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('ZONE REACHED',
+                        style: TextStyle(color: AppColors.orange, fontSize: 10,
+                            fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                      const SizedBox(height: 2),
+                      Text(zone.name,
+                        style: const TextStyle(color: AppColors.textPrimary,
+                            fontSize: 15, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openWorldDebugPanel() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WorldDebugPanel(service: _service, onRefresh: _load),
+    );
   }
 
   // ── build ────────────────────────────────────────────────────────────────────
@@ -381,8 +459,125 @@ class _WorldMapScreenState extends State<WorldMapScreen>
               ),
             ),
           ),
+
+          // ── world debug FAB ─────────────────────────────────────────────────
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'world_debug',
+              backgroundColor: const Color(0xFF6e40c9).withOpacity(0.85),
+              onPressed: _openWorldDebugPanel,
+              child: const Text('🌐', style: TextStyle(fontSize: 16)),
+            ),
+          ),
         ],
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// World debug panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _WorldDebugPanel extends StatefulWidget {
+  const _WorldDebugPanel({required this.service, required this.onRefresh});
+  final WorldZoneService service;
+  final VoidCallback onRefresh;
+  @override
+  State<_WorldDebugPanel> createState() => _WorldDebugPanelState();
+}
+
+class _WorldDebugPanelState extends State<_WorldDebugPanel> {
+  bool _busy = false;
+
+  Future<void> _addDistance(double km) async {
+    setState(() => _busy = true);
+    try {
+      await widget.service.debugAddDistance(km);
+      widget.onRefresh();
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF161b22),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(top: BorderSide(color: Color(0xFF30363d))),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3a4a5a),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('WORLD DEBUG',
+            style: TextStyle(color: Color(0xFF8b949e), fontSize: 10,
+                fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+          const SizedBox(height: 4),
+          const Text('Add travel distance toward destination zone',
+            style: TextStyle(color: Color(0xFF8b949e), fontSize: 12)),
+          const SizedBox(height: 12),
+          if (_busy)
+            const Center(child: CircularProgressIndicator())
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _DebugBtn(label: '+1 km',  onTap: () => _addDistance(1)),
+                _DebugBtn(label: '+5 km',  onTap: () => _addDistance(5)),
+                _DebugBtn(label: '+10 km', onTap: () => _addDistance(10)),
+                _DebugBtn(label: '+20 km', onTap: () => _addDistance(20)),
+                _DebugBtn(label: '+50 km', onTap: () => _addDistance(50)),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebugBtn extends StatelessWidget {
+  const _DebugBtn({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1e2632),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF30363d)),
+        ),
+        child: Text(label,
+          style: const TextStyle(color: Color(0xFF4f9eff),
+              fontSize: 13, fontWeight: FontWeight.w600)),
+      ),
     );
   }
 }

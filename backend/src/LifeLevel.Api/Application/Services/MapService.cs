@@ -7,14 +7,19 @@ namespace LifeLevel.Api.Application.Services;
 
 public class MapService(AppDbContext db, CharacterService characterService)
 {
-    public async Task<MapFullResponse> GetFullMapAsync(Guid userId)
+    public async Task<MapFullResponse> GetFullMapAsync(Guid userId, Guid? worldZoneId = null)
     {
-        var nodes = await db.MapNodes
+        var nodesQuery = db.MapNodes
             .Include(n => n.Boss)
             .Include(n => n.Chest)
             .Include(n => n.DungeonPortal).ThenInclude(d => d!.Floors)
             .Include(n => n.Crossroads).ThenInclude(c => c!.Paths)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (worldZoneId.HasValue)
+            nodesQuery = nodesQuery.Where(n => n.WorldZoneId == worldZoneId.Value);
+
+        var nodes = await nodesQuery.ToListAsync();
 
         // Load per-user states separately and join in memory
         var bossIds = nodes.Where(n => n.Boss != null).Select(n => n.Boss!.Id).ToList();
@@ -35,7 +40,10 @@ public class MapService(AppDbContext db, CharacterService characterService)
             .Where(s => s.UserId == userId && crossroadsIds.Contains(s.CrossroadsId))
             .ToListAsync();
 
-        var edges = await db.MapEdges.ToListAsync();
+        var nodeIds = nodes.Select(n => n.Id).ToHashSet();
+        var edges = await db.MapEdges
+            .Where(e => nodeIds.Contains(e.FromNodeId) && nodeIds.Contains(e.ToNodeId))
+            .ToListAsync();
 
         var progress = await db.UserMapProgresses
             .Include(p => p.UnlockedNodes)
@@ -43,7 +51,21 @@ public class MapService(AppDbContext db, CharacterService characterService)
 
         if (progress == null)
         {
-            progress = await InitializeUserProgressAsync(userId);
+            if (nodes.Count == 0)
+            {
+                return new MapFullResponse
+                {
+                    CharacterLevel = 0,
+                    Nodes = [],
+                    Edges = [],
+                    UserProgress = new UserMapProgressDto
+                    {
+                        CurrentNodeId = Guid.Empty,
+                        UnlockedNodeIds = []
+                    }
+                };
+            }
+            progress = await InitializeUserProgressAsync(userId, worldZoneId);
         }
 
         var characterLevel = await db.Characters
@@ -337,9 +359,16 @@ public class MapService(AppDbContext db, CharacterService characterService)
     private static long XpAtLevelStart(int level) =>
         (long)level * (level - 1) / 2 * 300;
 
-    private async Task<UserMapProgress> InitializeUserProgressAsync(Guid userId)
+    private async Task<UserMapProgress> InitializeUserProgressAsync(Guid userId, Guid? worldZoneId = null)
     {
-        var startNode = await db.MapNodes.FirstAsync(n => n.IsStartNode);
+        MapNode? startNode = null;
+        if (worldZoneId.HasValue)
+            startNode = await db.MapNodes.FirstOrDefaultAsync(n => n.IsStartNode && n.WorldZoneId == worldZoneId.Value);
+
+        startNode ??= await db.MapNodes.FirstOrDefaultAsync(n => n.IsStartNode);
+
+        if (startNode == null)
+            throw new InvalidOperationException("No start node found in map.");
 
         var progress = new UserMapProgress
         {
@@ -352,7 +381,6 @@ public class MapService(AppDbContext db, CharacterService characterService)
 
         db.UserMapProgresses.Add(progress);
 
-        // Unlock the start node
         db.UserNodeUnlocks.Add(new UserNodeUnlock
         {
             UserId = userId,

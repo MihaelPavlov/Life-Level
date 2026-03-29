@@ -1,0 +1,247 @@
+MODULAR MONOLITH + PORTS & ADAPTERS — LIFE-LEVEL BACKEND
+=========================================================
+
+CONTEXT
+-------
+The current LifeLevel.Api project is a single-project ASP.NET Core app with 28 entities,
+16 controllers, 13 services, and a 41-DbSet AppDbContext. As Phase 3-9 features land
+(Guild Raids, Items, Achievements, Seasonal Events, Social), the project will become
+difficult to navigate, test, and reason about.
+
+Refactoring to a Modular Monolith gives each business domain its own project with explicit
+contracts, while keeping a single deployable binary and a single database. Each module uses
+Ports & Adapters internally — pure domain, interface-driven application layer, EF
+implementations as adapters.
+
+Single deployable: all modules compile into one LifeLevel.Api.exe. The modules are class
+libraries with no Program.cs or HTTP listener. If a module needs to become a microservice
+later, the boundaries are already clean.
+
+
+TARGET SOLUTION STRUCTURE
+--------------------------
+backend/
+  LifeLevel.slnx
+  src/
+    LifeLevel.Api/                     <- thin composition root (controllers + DI wiring)
+    modules/
+      LifeLevel.SharedKernel/
+      LifeLevel.Modules.Identity/
+      LifeLevel.Modules.Character/
+      LifeLevel.Modules.Activity/
+      LifeLevel.Modules.Quest/
+      LifeLevel.Modules.Streak/
+      LifeLevel.Modules.LoginReward/
+      LifeLevel.Modules.Map/
+      LifeLevel.Modules.WorldZone/
+      LifeLevel.Modules.Adventure/
+  tests/
+    LifeLevel.Api.Tests/
+    LifeLevel.Modules.Character.Tests/
+    LifeLevel.Modules.Activity.Tests/
+
+
+INTERNAL LAYOUT OF EVERY MODULE (identical convention)
+-------------------------------------------------------
+LifeLevel.Modules.{Name}/
+  Domain/
+    Entities/          module-owned entities only
+    Enums/             module-specific enums
+    Events/            domain events this module raises
+  Application/
+    Ports/
+      In/              driving ports: IXxxService interfaces (called by controllers)
+      Out/             driven ports: IXxxRepository, cross-module read ports
+    UseCases/          service implementations
+    DTOs/              request/response DTOs
+  Infrastructure/
+    Persistence/
+      Configurations/  IEntityTypeConfiguration<T> classes
+      Repositories/    IRepository implementations
+    {Name}Module.cs    AddXxxModule(IServiceCollection) extension method
+
+
+MODULE OWNERSHIP
+----------------
+Module           | Entities                                              | Raises Events
+-----------------|-------------------------------------------------------|------------------------------------------
+SharedKernel     | -                                                     | -
+Identity         | User, UserRingItem                                    | UserRegisteredEvent
+Character        | Character, CharacterClass, XpHistoryEntry             | CharacterLeveledUpEvent
+Activity         | Activity                                              | ActivityLoggedEvent
+Quest            | Quest, UserQuestProgress                              | QuestCompletedEvent, AllDailyQuestsCompletedEvent
+Streak           | Streak                                                | StreakBrokenEvent
+LoginReward      | LoginReward                                           | -
+Map              | MapNode, MapEdge, UserMapProgress, UserNodeUnlock     | -
+WorldZone        | WorldZone, WorldZoneEdge, UserWorldProgress,          | -
+                 | UserZoneUnlock                                        |
+Adventure        | Boss, Chest, DungeonPortal, DungeonFloor,             | -
+                 | Crossroads, CrossroadsPath + all User*State entities  |
+
+
+CROSS-MODULE COMMUNICATION: TWO-TIER PATTERN
+---------------------------------------------
+
+TIER 1 — Direct interface calls (synchronous, same transaction)
+  Used when: caller needs the result in the same HTTP response.
+
+  All modules that award XP     -> ICharacterXpPort.AwardXpAsync()
+  LoginRewardService            -> IStreakShieldPort.AddShieldAsync()
+  CharacterService.GetProfile   -> IStreakReadPort, ILoginRewardReadPort, IDailyQuestReadPort
+
+TIER 2 — In-process domain events (fire-and-await, after save)
+  Used when: side effect does not affect the response and direct coupling would create a cycle.
+
+  ActivityService publishes ActivityLoggedEvent
+    -> StreakActivityHandler  (Streak module)
+    -> QuestActivityHandler   (Quest module)
+
+  AuthService publishes UserRegisteredEvent
+    -> CharacterCreatedHandler (Character module) — creates Character row
+
+EVENT PUBLISHER (no MediatR needed yet)
+  // SharedKernel/Events/
+  public interface IDomainEvent { }
+
+  public interface IEventHandler<TEvent> where TEvent : IDomainEvent
+  {
+      Task HandleAsync(TEvent e, CancellationToken ct = default);
+  }
+
+  public interface IEventPublisher
+  {
+      Task PublishAsync<TEvent>(TEvent e, CancellationToken ct = default)
+          where TEvent : IDomainEvent;
+  }
+  // InProcessEventPublisher resolves IEventHandler<T> from IServiceProvider and calls each
+
+  Add MediatR only when > 10 event types or pipeline behaviors (logging, validation) are needed.
+
+
+SHAREDKERNEL CONTENTS
+----------------------
+SharedKernel/
+  Contracts/
+    IUserContext.cs             <- moved from Application/
+    ICurrentClock.cs            <- replaces DateTime.UtcNow (testability)
+  Primitives/
+    Result.cs                   <- Result<T> — eliminate exceptions as flow control
+    DomainException.cs
+  Events/
+    IDomainEvent.cs
+    IEventHandler.cs
+    IEventPublisher.cs
+    InProcessEventPublisher.cs
+  CrossModulePorts/
+    ICharacterXpPort.cs         <- AwardXpAsync + XpAwardResult
+    ICharacterStatPort.cs       <- ApplyStatGainsAsync + StatGains
+    ICharacterLevelReadPort.cs  <- GetLevelAsync(Guid userId)
+    IStreakReadPort.cs          <- GetCurrentStreakAsync(Guid userId)
+    IStreakShieldPort.cs        <- AddShieldAsync(Guid userId)
+    ILoginRewardReadPort.cs     <- HasClaimedTodayAsync(Guid userId)
+    IDailyQuestReadPort.cs      <- CountCompletedDailyQuestsAsync(Guid userId)
+    IMapProgressReadPort.cs     <- GetCurrentNodeIdAsync(Guid userId)
+  Enums/
+    UserRole.cs
+    ActivityType.cs             <- shared by Activity + Quest modules
+
+Port interfaces live in SharedKernel so test projects only need to reference SharedKernel
+to mock them — no pulling the entire Character module into every test project.
+
+
+DBCONTEXT STRATEGY: SINGLE AppDbContext + PER-MODULE EF CONFIGURATIONS
+------------------------------------------------------------------------
+Keep one AppDbContext and one migrations project (LifeLevel.Api). Do not use per-module
+DbContexts — cross-module FKs (e.g. UserBossState -> UserMapProgress -> User) require a
+shared context at MVP stage.
+
+Each module owns its IEntityTypeConfiguration<T> classes.
+AppDbContext.OnModelCreating calls:
+
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityModule).Assembly);
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(CharacterModule).Assembly);
+    // ... one per module
+
+Module repositories receive AppDbContext (or an IAppDbContext interface) via DI.
+
+Future path: once past MVP, AppDbContext can be split by creating CharacterDbContext that
+overrides OnModelCreating to only configure character tables. This is a mechanical refactor,
+not an architectural rethink.
+
+
+PROJECT REFERENCE GRAPH (DAG — no cycles)
+------------------------------------------
+LifeLevel.Api          -> all modules + SharedKernel
+Identity               -> SharedKernel
+Character              -> SharedKernel
+Activity               -> SharedKernel, Character
+Quest                  -> SharedKernel, Character
+Streak                 -> SharedKernel
+LoginReward            -> SharedKernel, Character, Streak
+Map                    -> SharedKernel, Character
+WorldZone              -> SharedKernel, Character
+Adventure              -> SharedKernel, Character, Map
+
+Cycle check: none. Character depends only on SharedKernel. Identity depends only on
+SharedKernel. The graph is a DAG with SharedKernel at the root and LifeLevel.Api at the top.
+
+
+PACKAGES TO ADD
+---------------
+Package                              | Where                      | Why
+-------------------------------------|----------------------------|-------------------------------------------
+FluentValidation                     | Each module Application    | Replace InvalidOperationException for input validation
+Microsoft.EntityFrameworkCore        | Each module Infrastructure  | EF abstractions for IEntityTypeConfiguration
+Npgsql.EntityFrameworkCore.PostgreSQL| LifeLevel.Api only         | DB provider configured once at composition root
+
+Do NOT add MediatR or outbox patterns at MVP stage.
+
+
+MIGRATION ORDER (Strangler Fig — keep builds green throughout)
+--------------------------------------------------------------
+Step | What                  | Key files to touch                                          | Notes
+-----|-----------------------|-------------------------------------------------------------|-------------------------------
+0    | SharedKernel +        | New .csproj files, move IUserContext,                       | No behavior change
+     | scaffold modules      | define ICharacterXpPort                                     |
+1    | Extract Character     | CharacterService -> CharacterXpService : ICharacterXpPort;  | Most critical — everything
+     |                       | remove direct CharacterService injection from 8 callers     | depends on it
+2    | Extract Streak        | StreakService; expose IStreakReadPort, IStreakShieldPort;    |
+     |                       | update CharacterService.GetProfileAsync                     |
+3    | Extract Identity      | AuthService, JwtService, HttpUserContext;                   |
+     |                       | publish UserRegisteredEvent                                 |
+4    | Extract Quest         | QuestService; wire QuestActivityHandler                     |
+5    | Extract Activity      | ActivityService; publish ActivityLoggedEvent;               | Introduces the event bus
+     |                       | remove direct Streak/Quest calls                            |
+6    | Extract LoginReward   | LoginRewardService; expose ILoginRewardReadPort             |
+7    | Extract Map +         | Their services, entities, EF configs                        | Largely mechanical
+     | WorldZone + Adventure |                                                             |
+8    | Clean DailyResetJob   | Replace concrete deps with IStreakDailyReset +              |
+     |                       | ILoginRewardDailyReset                                      |
+
+
+CRITICAL FILES (current locations in LifeLevel.Api)
+----------------------------------------------------
+Application/Services/ActivityService.cs
+  Main seam: 3 direct service calls -> 1 ICharacterXpPort call + 1 ActivityLoggedEvent publish
+
+Application/Services/CharacterService.cs
+  Source of RecordXpAsync/CheckAndApplyLevelUpsAsync that becomes ICharacterXpPort
+
+Infrastructure/Persistence/AppDbContext.cs
+  41 DbSets + OnModelCreating configs to split into per-module IEntityTypeConfiguration classes
+
+Application/BackgroundJobs/DailyResetJob.cs
+  Concrete dependencies to replace with IStreakDailyReset + ILoginRewardDailyReset ports
+
+Application/Services/LoginRewardService.cs
+  Three-way dependency (Character + Streak + LoginReward) that validates the port design
+
+
+VERIFICATION (after each module extraction)
+-------------------------------------------
+1. dotnet build from solution root — must stay green
+2. dotnet test — existing WorldZoneServiceTests must still pass
+3. Swagger at /swagger — all 16 controller endpoints still respond
+4. Register the module's AddXxxModule() in Program.cs BEFORE deleting old service registrations
+5. After Step 5 (Activity): POST /api/activity/log and verify response contains
+   XP gained + streak + quest progress

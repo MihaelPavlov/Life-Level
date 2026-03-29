@@ -17,6 +17,11 @@ class WorldZoneService {
     });
   }
 
+  Future<Map<String, dynamic>> completeZone(String zoneId) async {
+    final response = await ApiClient.instance.post('/world/zone/$zoneId/complete');
+    return response.data as Map<String, dynamic>;
+  }
+
   // ── Debug ──────────────────────────────────────────────────────────────────
 
   Future<void> debugAddDistance(double km) async {

@@ -48,4 +48,19 @@ public class WorldZoneController(WorldZoneService worldZoneService, IUserContext
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("zone/{zoneId:guid}/complete")]
+    public async Task<ActionResult<CompleteZoneResult>> CompleteZone(Guid zoneId)
+    {
+        var userId = userContext.UserId;
+        try
+        {
+            var result = await worldZoneService.CompleteZoneAsync(userId, zoneId);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

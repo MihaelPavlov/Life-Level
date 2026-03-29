@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CharacterClass> CharacterClasses => Set<CharacterClass>();
 
     // World Map (overworld)
+    public DbSet<World> Worlds => Set<World>();
     public DbSet<WorldZone> WorldZones => Set<WorldZone>();
     public DbSet<WorldZoneEdge> WorldZoneEdges => Set<WorldZoneEdge>();
     public DbSet<UserWorldProgress> UserWorldProgresses => Set<UserWorldProgress>();
@@ -88,9 +89,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         });
 
         // --- World Map (overworld) entities ---
+        modelBuilder.Entity<World>(e =>
+        {
+            e.HasKey(w => w.Id);
+        });
+
         modelBuilder.Entity<WorldZone>(e =>
         {
             e.HasKey(z => z.Id);
+            e.HasOne(z => z.World)
+             .WithMany(w => w.Zones)
+             .HasForeignKey(z => z.WorldId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<WorldZoneEdge>(e =>
@@ -112,6 +122,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(p => p.User)
              .WithMany()
              .HasForeignKey(p => p.UserId);
+            e.HasOne(p => p.World)
+             .WithMany(w => w.UserProgresses)
+             .HasForeignKey(p => p.WorldId)
+             .OnDelete(DeleteBehavior.Restrict);
             e.HasOne(p => p.CurrentZone)
              .WithMany()
              .HasForeignKey(p => p.CurrentZoneId)

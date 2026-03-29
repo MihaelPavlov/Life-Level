@@ -89,7 +89,7 @@ class WorldMapPainter extends CustomPainter {
   // ── tier label ───────────────────────────────────────────────────────────────
 
   void _drawTierLabel(Canvas canvas, int tier, double y) {
-    const labels = ['TIER 0', 'TIER I', 'TIER II', 'TIER III', 'TIER IV', 'TIER V', 'TIER VI'];
+    const labels = ['TIER 0', 'TIER I', 'TIER II', 'TIER III', 'TIER IV', 'TIER V', 'TIER VI', 'TIER VII', 'TIER VIII'];
     if (tier >= labels.length) return;
 
     final tp = TextPainter(
@@ -168,7 +168,7 @@ class WorldMapPainter extends CustomPainter {
     _drawEdges(canvas);
     _drawTierLabels(canvas);
     _drawZones(canvas);
-    if (playerOnEdge != null && playerAnchor != null) {
+    if (playerOnEdge != null && playerAnchor != null && travelProgress > 0) {
       _drawTravelProgress(canvas);
     }
     _drawFogOfWar(canvas, size);
@@ -268,8 +268,8 @@ class WorldMapPainter extends CustomPainter {
 
       _drawZoneName(canvas, z.name, c, z.status);
 
-      // Draw player at zone only when NOT travelling along an edge
-      if (z.status == ZoneStatus.active && playerOnEdge == null) {
+      // Draw player at current zone when stationary OR when travel just started (0%)
+      if (z.status == ZoneStatus.active && (playerOnEdge == null || travelProgress == 0)) {
         _drawPlayerMarker(canvas, c);
       }
     }
@@ -286,6 +286,15 @@ class WorldMapPainter extends CustomPainter {
         ..color = AppColors.blue.withOpacity(0.18 + pulseValue * 0.12)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
       canvas.drawCircle(c, glowRadius, glowPaint);
+    }
+
+    // Destination glow (orange pulsing ring)
+    if (z.isDestination) {
+      final destRadius = kZoneRadius + 6 + pulseValue * 10;
+      final destPaint = Paint()
+        ..color = AppColors.orange.withOpacity(0.20 + pulseValue * 0.15)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+      canvas.drawCircle(c, destRadius, destPaint);
     }
 
     // Fill

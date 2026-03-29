@@ -2,8 +2,9 @@ import '../../../core/api/api_client.dart';
 import '../models/map_models.dart';
 
 class MapService {
-  Future<MapFullData> getFullMap() async {
-    final response = await ApiClient.instance.get('/map/full');
+  Future<MapFullData> getFullMap({String? worldZoneId}) async {
+    final query = worldZoneId != null ? '?worldZoneId=$worldZoneId' : '';
+    final response = await ApiClient.instance.get('/map/full$query');
     return MapFullData.fromJson(response.data);
   }
 

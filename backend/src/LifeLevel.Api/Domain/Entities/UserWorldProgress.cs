@@ -18,5 +18,8 @@ public class UserWorldProgress
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public Guid WorldId { get; set; }
+    public World World { get; set; } = null!;
+
     public ICollection<UserZoneUnlock> UnlockedZones { get; set; } = [];
 }

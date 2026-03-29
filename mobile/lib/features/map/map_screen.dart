@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
 import 'services/boss_service.dart';
+import 'services/world_zone_service.dart';
 import 'map_colors.dart';
 import 'map_painter.dart';
 import 'map_debug_panel.dart';
@@ -10,12 +11,15 @@ import 'services/map_service.dart';
 import 'map_banners.dart';
 import 'models/map_models.dart';
 import 'node_detail_sheet.dart';
+import 'world_map_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MapScreen
 // ─────────────────────────────────────────────────────────────────────────────
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({super.key, this.worldZoneId, this.zoneName});
+  final String? worldZoneId;
+  final String? zoneName;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -24,10 +28,14 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final _service = MapService();
   final _bossService = BossService();
+  final _worldZoneService = WorldZoneService();
 
   MapFullData? _data;
   bool _loading = true;
   String? _error;
+
+  late String? _worldZoneId;
+  late String? _zoneName;
 
   late final AnimationController _pulseCtrl;
   late final AnimationController _destCtrl;
@@ -39,6 +47,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _worldZoneId = widget.worldZoneId;
+    _zoneName = widget.zoneName;
     _pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -69,8 +79,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         .map((n) => n.id)
         .toSet() ?? {};
     setState(() { _loading = true; _error = null; });
+
+    if (_worldZoneId == null) {
+      setState(() { _loading = false; _data = null; });
+      return;
+    }
+
     try {
-      final data = await _service.getFullMap();
+      final data = await _service.getFullMap(worldZoneId: _worldZoneId);
       if (!mounted) return;
       setState(() { _data = data; _loading = false; });
 
@@ -180,6 +196,89 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     } catch (_) { return null; }
   }
 
+  bool get _isAtLastNode {
+    final data = _data;
+    if (data == null || data.nodes.isEmpty) return false;
+
+    final currentId = data.userProgress.currentNodeId;
+    final currentNode = data.nodes.cast<MapNodeModel?>().firstWhere(
+      (n) => n!.id == currentId,
+      orElse: () => null,
+    );
+
+    if (currentNode == null) return false;
+    if (currentNode.isStartNode) return false;
+    if (!(currentNode.userState?.isUnlocked ?? false)) return false;
+
+    final adjacentIds = data.edges
+      .where((e) =>
+        e.fromNodeId == currentId ||
+        (e.isBidirectional && e.toNodeId == currentId))
+      .map((e) => e.fromNodeId == currentId ? e.toNodeId : e.fromNodeId)
+      .toSet();
+
+    if (adjacentIds.isEmpty) return false;
+
+    final unlockedIds = data.nodes
+      .where((n) => n.userState?.isUnlocked ?? false)
+      .map((n) => n.id)
+      .toSet();
+
+    return adjacentIds.every((id) => unlockedIds.contains(id));
+  }
+
+  Future<void> _completeZone() async {
+    final zoneId = _worldZoneId;
+    if (zoneId == null) return;
+
+    setState(() { _loading = true; });
+    try {
+      final result = await _worldZoneService.completeZone(zoneId);
+      if (!mounted) return;
+
+      final xp = result['xpAwarded'] as int? ?? 0;
+      final zoneName = result['zoneName'] as String? ?? _zoneName ?? 'Zone';
+      final zoneIcon = result['zoneIcon'] as String? ?? '✅';
+      final alreadyDone = result['alreadyCompleted'] as bool? ?? false;
+
+      setState(() { _loading = false; });
+
+      if (!alreadyDone && xp > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Text(zoneIcon, style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '$zoneName complete! +$xp XP',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF1a3d1f),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      // Open world map to show new position
+      await _openWorldMap();
+    } catch (e) {
+      if (mounted) {
+        setState(() { _loading = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppColors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _onNodeTapped(MapNodeModel node) {
     showModalBottomSheet(
       context: context,
@@ -195,6 +294,26 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         onLevelUp: _showLevelUpDialog,
       ),
     );
+  }
+
+  Future<void> _openWorldMap() async {
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const FractionallySizedBox(
+        heightFactor: 0.95,
+        child: WorldMapScreen(),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _worldZoneId = result['zoneId'];
+        _zoneName = result['zoneName'];
+        _hasInitializedViewport = false;
+      });
+      await _loadMap();
+    }
   }
 
   void _openDebugPanel() {
@@ -222,6 +341,40 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         children: [
           _buildBody(),
           if (_data != null) _buildHud(),
+          if (_isAtLastNode && _worldZoneId != null)
+            Positioned(
+              bottom: 100,
+              left: 20,
+              right: 80,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.green,
+                  foregroundColor: Colors.white,
+                  elevation: 6,
+                  shadowColor: AppColors.green.withOpacity(0.4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                icon: const Icon(Icons.check_circle_outline, size: 20),
+                label: Text(
+                  'Complete ${_zoneName ?? "Zone"}',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                onPressed: _completeZone,
+              ),
+            ),
+          Positioned(
+            bottom: 80,
+            right: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'world_map_btn',
+              backgroundColor: AppColors.blue.withOpacity(0.85),
+              onPressed: _openWorldMap,
+              child: const Text('🌍', style: TextStyle(fontSize: 18)),
+            ),
+          ),
           Positioned(
             bottom: 24,
             right: 16,
@@ -265,6 +418,43 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 ),
                 onPressed: _loadMap,
                 child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_data == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🌍', style: TextStyle(fontSize: 56)),
+              const SizedBox(height: 20),
+              const Text('Your Journey Begins',
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 22,
+                    fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              const Text(
+                'Explore the World Map to choose a zone,\nthen complete activities to progress through it.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+                textAlign: TextAlign.center),
+              const SizedBox(height: 28),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.blue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                ),
+                icon: const Text('🌍', style: TextStyle(fontSize: 18)),
+                label: const Text('Open World Map',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                onPressed: _openWorldMap,
               ),
             ],
           ),
@@ -337,7 +527,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             children: [
               const Text('🗺️', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 8),
-              Text(region,
+              Text(_zoneName ?? region,
                 style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(width: 10),
               Container(
