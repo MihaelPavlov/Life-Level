@@ -17,6 +17,9 @@ public class MapNode
     public bool IsStartNode { get; set; } = false;
     public bool IsHidden { get; set; } = false;
 
+    public Guid? WorldZoneId { get; set; }
+    public WorldZone? WorldZone { get; set; }
+
     public ICollection<MapEdge> EdgesFrom { get; set; } = [];
     public ICollection<MapEdge> EdgesTo { get; set; } = [];
     public Boss? Boss { get; set; }

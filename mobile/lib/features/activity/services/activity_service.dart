@@ -1,5 +1,5 @@
-import '../../core/api/api_client.dart';
-import 'models/activity_models.dart';
+import '../../../core/api/api_client.dart';
+import '../models/activity_models.dart';
 
 class ActivityService {
   final _dio = ApiClient.instance;

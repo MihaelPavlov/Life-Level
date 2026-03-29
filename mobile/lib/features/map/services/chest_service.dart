@@ -1,4 +1,4 @@
-import '../../core/api/api_client.dart';
+import '../../../core/api/api_client.dart';
 
 class ChestService {
   Future<Map<String, dynamic>> collect(String chestId) async {

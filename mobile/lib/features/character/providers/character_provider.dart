@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../character_service.dart';
+import '../services/character_service.dart';
 import '../models/character_profile.dart';
 import '../models/xp_history_entry.dart';
 import '../../../core/services/level_up_notifier.dart';

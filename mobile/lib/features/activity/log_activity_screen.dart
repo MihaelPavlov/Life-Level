@@ -32,9 +32,9 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF040810),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF040810),
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: const Text(
           'Log Activity',
@@ -233,11 +233,11 @@ class _ActivityTypeGrid extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected
                   ? AppColors.blue.withValues(alpha: 0.15)
-                  : const Color(0xFF161b22),
+                  : AppColors.surface,
               border: Border.all(
                 color: isSelected
                     ? AppColors.blue
-                    : const Color(0xFF30363d),
+                    : AppColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
               borderRadius: BorderRadius.circular(12),
@@ -286,8 +286,8 @@ class _DurationPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161b22),
-        border: Border.all(color: const Color(0xFF30363d)),
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -323,7 +323,7 @@ class _DurationPicker extends StatelessWidget {
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: AppColors.blue,
-              inactiveTrackColor: const Color(0xFF1e2632),
+              inactiveTrackColor: AppColors.surfaceElevated,
               thumbColor: AppColors.blue,
               overlayColor: AppColors.blue.withValues(alpha: 0.15),
               trackHeight: 4,
@@ -366,8 +366,8 @@ class _StepButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFF1e2632),
-          border: Border.all(color: const Color(0xFF30363d)),
+          color: AppColors.surfaceElevated,
+          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(9),
         ),
         child: Icon(icon, color: AppColors.textPrimary, size: 18),
@@ -403,16 +403,16 @@ class _NumberField extends StatelessWidget {
         suffixText: label,
         suffixStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFF161b22),
+        fillColor: AppColors.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF30363d)),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF30363d)),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,5 @@
-import '../../core/api/api_client.dart';
-import 'models/map_models.dart';
+import '../../../core/api/api_client.dart';
+import '../models/map_models.dart';
 
 class MapService {
   Future<MapFullData> getFullMap() async {

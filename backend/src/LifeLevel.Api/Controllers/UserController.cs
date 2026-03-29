@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Domain.Entities;
 using LifeLevel.Api.Domain.Enums;
 using LifeLevel.Api.Infrastructure.Persistence;
@@ -11,12 +11,12 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/user")]
 [Authorize]
-public class UserController(AppDbContext db) : ControllerBase
+public class UserController(AppDbContext db, IUserContext userContext) : ControllerBase
 {
     [HttpPut("ring")]
     public async Task<IActionResult> SaveRingConfig([FromBody] SaveRingRequest req)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
 
         // Replace existing ring items
         var existing = await db.UserRingItems

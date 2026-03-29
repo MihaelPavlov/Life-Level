@@ -1,6 +1,56 @@
-enum QuestType { daily, weekly, special }
+import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 
-enum QuestCategory { duration, calories, distance, workouts, streak, login }
+// ── Quest category string constants ────────────────────────────────────────────
+class QuestCategory {
+  QuestCategory._();
+
+  static const duration = 'duration';
+  static const calories = 'calories';
+  static const distance = 'distance';
+  static const workouts = 'workouts';
+  static const streak = 'streak';
+  static const login = 'login';
+}
+
+// ── Category display helpers ────────────────────────────────────────────────────
+String questCategoryEmoji(String category) {
+  switch (category.toLowerCase()) {
+    case QuestCategory.duration:
+      return '⏱️';
+    case QuestCategory.calories:
+      return '🔥';
+    case QuestCategory.distance:
+      return '📍';
+    case QuestCategory.workouts:
+      return '🏋️';
+    case QuestCategory.streak:
+      return '🔥';
+    case QuestCategory.login:
+      return '📅';
+    default:
+      return '🎯';
+  }
+}
+
+Color questCategoryColor(String category) {
+  switch (category.toLowerCase()) {
+    case QuestCategory.duration:
+      return AppColors.blue;
+    case QuestCategory.calories:
+      return AppColors.orange;
+    case QuestCategory.distance:
+      return AppColors.green;
+    case QuestCategory.workouts:
+      return AppColors.red;
+    case QuestCategory.streak:
+      return AppColors.orange;
+    default:
+      return AppColors.purple;
+  }
+}
+
+enum QuestType { daily, weekly, special }
 
 class UserQuestProgress {
   final String id;

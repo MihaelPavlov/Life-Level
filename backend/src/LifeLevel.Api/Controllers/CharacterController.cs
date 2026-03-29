@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.DTOs.Character;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -9,12 +9,12 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/character")]
 [Authorize]
-public class CharacterController(CharacterService characterService) : ControllerBase
+public class CharacterController(CharacterService characterService, IUserContext userContext) : ControllerBase
 {
     [HttpPost("setup")]
     public async Task<IActionResult> Setup([FromBody] CharacterSetupRequest req)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         try
         {
             var result = await characterService.SetupAsync(userId, req);
@@ -29,7 +29,7 @@ public class CharacterController(CharacterService characterService) : Controller
     [HttpGet("me")]
     public async Task<IActionResult> GetProfile()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         try
         {
             var result = await characterService.GetProfileAsync(userId);
@@ -44,7 +44,7 @@ public class CharacterController(CharacterService characterService) : Controller
     [HttpGet("xp-history")]
     public async Task<IActionResult> GetXpHistory()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         var history = await characterService.GetXpHistoryAsync(userId);
         return Ok(history);
     }
@@ -52,7 +52,7 @@ public class CharacterController(CharacterService characterService) : Controller
     [HttpPost("spend-stat")]
     public async Task<IActionResult> SpendStat([FromBody] SpendStatRequest req)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         try
         {
             await characterService.SpendStatPointAsync(userId, req.Stat);

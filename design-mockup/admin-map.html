@@ -765,6 +765,24 @@ html, body {
 .badge-crossroads { background: rgba(63,185,80,0.12); color: var(--green); }
 .badge-event    { background: rgba(227,179,65,0.12); color: var(--yellow); }
 
+.btn-dirty {
+  background: rgba(245,166,35,0.15) !important;
+  border-color: rgba(245,166,35,0.6) !important;
+  color: var(--orange) !important;
+}
+
+.tab-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 10px 12px 3px;
+  border-top: 1px solid var(--border2);
+  margin-top: 2px;
+}
+.tab-group-label:first-child { border-top: none; margin-top: 0; }
+
 /* ── Loading overlay ── */
 #loading-overlay {
   position: fixed;
@@ -857,6 +875,11 @@ html, body {
       <button class="btn btn-orange" onclick="seedSampleData()">
         🌱 Seed Data
       </button>
+      <button class="btn btn-secondary btn-sm" onclick="runValidation()" title="Check for errors before saving">✓ Validate</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyJsonToClipboard()" title="Copy current state as JSON to clipboard">📋 Copy JSON</button>
+      <button id="save-world-btn" class="btn btn-secondary" onclick="saveWorldChanges()">
+        🌍 Save World
+      </button>
       <button class="btn btn-primary" onclick="saveAllChanges()" id="save-btn">
         💾 Save All Changes
       </button>
@@ -867,7 +890,17 @@ html, body {
   <aside class="sidebar">
     <!-- Tabs -->
     <nav class="sidebar-tabs" id="sidebar-tabs">
-      <button class="sidebar-tab active" data-tab="nodes" onclick="switchTab('nodes')">
+      <div class="tab-group-label">OVERWORLD</div>
+      <button class="sidebar-tab active" data-tab="worldzones" onclick="switchTab('worldzones')">
+        <span class="tab-icon">🌍</span> Zones
+        <span class="tab-count" id="count-worldzones">0</span>
+      </button>
+      <button class="sidebar-tab" data-tab="worldedges" onclick="switchTab('worldedges')">
+        <span class="tab-icon">🔗</span> World Edges
+        <span class="tab-count" id="count-worldedges">0</span>
+      </button>
+      <div class="tab-group-label">ZONE INTERIOR</div>
+      <button class="sidebar-tab" data-tab="nodes" onclick="switchTab('nodes')">
         <span class="tab-icon">🔵</span> Nodes
         <span class="tab-count" id="count-nodes">0</span>
       </button>
@@ -911,10 +944,12 @@ html, body {
         <button class="map-mode-btn" id="mode-edge" onclick="setMode('edge')">
           ↔ Add Edge
         </button>
+        <button class="map-mode-btn" id="mode-worldedge" style="display:none" onclick="addWorldEdgeMode()" title="Draw connection between world zones (Ctrl+L)">🔗 Link Zones</button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="map-toolbar-group">
         <button class="btn btn-secondary btn-sm" onclick="addNode()">＋ Add Node</button>
+        <button class="map-mode-btn" id="toggle-ghost-zones" onclick="toggleZoneOverlay()" title="Show/hide world zone regions on canvas" style="margin-left:4px">🌍 Zones</button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="map-toolbar-group">
@@ -947,6 +982,8 @@ html, body {
         <g id="map-transform-group">
           <!-- grid -->
           <rect id="grid-bg" fill="url(#grid)" x="-5000" y="-5000" width="12000" height="12000"/>
+          <!-- ghost world zones layer -->
+          <g id="ghost-zones-layer"></g>
           <!-- edges layer -->
           <g id="edges-layer"></g>
           <!-- nodes layer -->
@@ -1018,16 +1055,21 @@ let state = {
   bosses: [],
   dungeons: [],
   chests: [],
-  crossroads: []
+  crossroads: [],
+  worldZones: [],
+  worldEdges: []
 };
 
 let selectedNodeId = null;
 let selectedEdgeId = null;
-let activeTab = 'nodes';
+let activeTab = 'worldzones';
 let mapMode = 'select';
 let edgeFirstNode = null;  // for edge drawing mode
 let _idCounter = 100;
 let confirmCallback = null;
+let isDirty = false;
+let showZoneOverlay = true;
+let sidebarFilter = '';
 
 // Zoom/pan state
 let zoom = 1;
@@ -1065,14 +1107,14 @@ function _loadSeedData() {
   _idCounter = 100;
   state = {
     nodes: [
-      { id: 101, name: 'Ashfield Village',     icon: '🏘️', type: 'Zone',        region: 'Ashfield',             x: 160, y: 420, levelReq: 1,  rewardXp: 50,  isStart: true,  isHidden: false, description: 'The humble starting village. Every hero begins their journey here.' },
-      { id: 102, name: 'Forest Edge',           icon: '🌲', type: 'Zone',        region: 'ForestOfEndurance',    x: 300, y: 310, levelReq: 1,  rewardXp: 80,  isStart: false, isHidden: false, description: 'The treeline where Ashfield ends and the endless forest begins.' },
-      { id: 103, name: 'Ancient Crossroads',    icon: '🔀', type: 'Crossroads',  region: 'ForestOfEndurance',    x: 440, y: 285, levelReq: 2,  rewardXp: 100, isStart: false, isHidden: false, description: 'A stone crossroads carved by ancient explorers. Paths diverge here.' },
-      { id: 104, name: 'Forest Boss: Thornback',icon: '💀', type: 'Boss',        region: 'ForestOfEndurance',    x: 580, y: 195, levelReq: 3,  rewardXp: 200, isStart: false, isHidden: false, description: 'A fearsome beast of bark and thorn guards the forest depths.' },
-      { id: 105, name: 'Hidden Dungeon',        icon: '🏰', type: 'Dungeon',     region: 'ForestOfEndurance',    x: 455, y: 390, levelReq: 4,  rewardXp: 350, isStart: false, isHidden: false, description: 'Crystal-encrusted caverns hidden beneath the forest floor.' },
-      { id: 106, name: 'Treasure Cache',        icon: '📦', type: 'Chest',       region: 'Ashfield',             x: 210, y: 500, levelReq: 2,  rewardXp: 50,  isStart: false, isHidden: false, description: 'A weathered chest half-buried near the village outskirts.' },
-      { id: 107, name: 'Mountain Pass',         icon: '⛰️', type: 'Zone',        region: 'MountainsOfStrength',  x: 645, y: 305, levelReq: 5,  rewardXp: 150, isStart: false, isHidden: false, description: 'A treacherous pass leading into the Mountains of Strength.' },
-      { id: 108, name: 'Summit Boss: Stonebreaker', icon: '🗿', type: 'Boss',   region: 'MountainsOfStrength',  x: 755, y: 185, levelReq: 7,  rewardXp: 500, isStart: false, isHidden: false, description: 'The ancient stone golem that has guarded the summit for centuries.' }
+      { id: 101, name: 'Ashfield Village',     icon: '🏘️', type: 'Zone',        region: 'Ashfield',             x: 160, y: 420, levelReq: 1,  rewardXp: 50,  isStart: true,  isHidden: false, description: 'The humble starting village. Every hero begins their journey here.', worldZoneId: 701 },
+      { id: 102, name: 'Forest Edge',           icon: '🌲', type: 'Zone',        region: 'ForestOfEndurance',    x: 300, y: 310, levelReq: 1,  rewardXp: 80,  isStart: false, isHidden: false, description: 'The treeline where Ashfield ends and the endless forest begins.', worldZoneId: 703 },
+      { id: 103, name: 'Ancient Crossroads',    icon: '🔀', type: 'Crossroads',  region: 'ForestOfEndurance',    x: 440, y: 285, levelReq: 2,  rewardXp: 100, isStart: false, isHidden: false, description: 'A stone crossroads carved by ancient explorers. Paths diverge here.', worldZoneId: 703 },
+      { id: 104, name: 'Forest Boss: Thornback',icon: '💀', type: 'Boss',        region: 'ForestOfEndurance',    x: 580, y: 195, levelReq: 3,  rewardXp: 200, isStart: false, isHidden: false, description: 'A fearsome beast of bark and thorn guards the forest depths.', worldZoneId: 703 },
+      { id: 105, name: 'Hidden Dungeon',        icon: '🏰', type: 'Dungeon',     region: 'ForestOfEndurance',    x: 455, y: 390, levelReq: 4,  rewardXp: 350, isStart: false, isHidden: false, description: 'Crystal-encrusted caverns hidden beneath the forest floor.', worldZoneId: 703 },
+      { id: 106, name: 'Treasure Cache',        icon: '📦', type: 'Chest',       region: 'Ashfield',             x: 210, y: 500, levelReq: 2,  rewardXp: 50,  isStart: false, isHidden: false, description: 'A weathered chest half-buried near the village outskirts.', worldZoneId: 701 },
+      { id: 107, name: 'Mountain Pass',         icon: '⛰️', type: 'Zone',        region: 'MountainsOfStrength',  x: 645, y: 305, levelReq: 5,  rewardXp: 150, isStart: false, isHidden: false, description: 'A treacherous pass leading into the Mountains of Strength.', worldZoneId: 704 },
+      { id: 108, name: 'Summit Boss: Stonebreaker', icon: '🗿', type: 'Boss',   region: 'MountainsOfStrength',  x: 755, y: 185, levelReq: 7,  rewardXp: 500, isStart: false, isHidden: false, description: 'The ancient stone golem that has guarded the summit for centuries.', worldZoneId: 704 }
     ],
     edges: [
       { id: 201, fromNodeId: 101, toNodeId: 102, distanceKm: 5.0,  bidirectional: true },
@@ -1108,9 +1150,20 @@ function _loadSeedData() {
           { name: 'Crystal Caverns', distanceKm: 4.0,  difficulty: 'Moderate', estimatedDays: 4, rewardXp: 200, leadsToNodeId: 105 }
         ]
       }
-    ]
+    ],
+    worldZones: [
+      { id: 701, name: 'Ashfield Plains', icon: '🌾', description: 'A gentle open plain where adventurers begin their journey.', region: 'Ashfield', tier: 0, x: 195, y: 700, levelReq: 1, totalXp: 200, totalDistanceKm: 8, isCrossroads: false, isStart: true, isHidden: false },
+      { id: 702, name: 'First Fork', icon: '⚔️', description: 'A crossroads where two great paths diverge.', region: 'Lowlands', tier: 1, x: 195, y: 540, levelReq: 1, totalXp: 0, totalDistanceKm: 0, isCrossroads: true, isStart: false, isHidden: false },
+      { id: 703, name: 'Thornwood Forest', icon: '🌲', description: 'Dense woodland filled with ancient ruins and hidden trails.', region: 'Verdant Reach', tier: 2, x: 100, y: 380, levelReq: 5, totalXp: 600, totalDistanceKm: 20, isCrossroads: false, isStart: false, isHidden: false },
+      { id: 704, name: 'Iron Peaks', icon: '⛰️', description: 'Towering mountains forged from iron ore, home to powerful beasts.', region: 'Stonereach', tier: 2, x: 290, y: 380, levelReq: 5, totalXp: 800, totalDistanceKm: 25, isCrossroads: false, isStart: false, isHidden: false },
+    ],
+    worldEdges: [
+      { id: 801, fromZoneId: 701, toZoneId: 702, distanceKm: 8.0, bidirectional: true },
+      { id: 802, fromZoneId: 702, toZoneId: 703, distanceKm: 12.0, bidirectional: true },
+      { id: 803, fromZoneId: 702, toZoneId: 704, distanceKm: 15.0, bidirectional: true },
+    ],
   };
-  _idCounter = 700;
+  _idCounter = 900;
   selectedNodeId = null;
   selectedEdgeId = null;
   closePanel();
@@ -1150,7 +1203,11 @@ function getCrossroadsForNode(nodeId) { return state.crossroads.find(c => c.node
 function renderAll() {
   updateCounts();
   renderSidebar();
-  renderSvgMap();
+  if (activeTab === 'worldzones' || activeTab === 'worldedges') {
+    renderWorldZonesSvg();
+  } else {
+    renderSvgMap();
+  }
 }
 
 function updateCounts() {
@@ -1160,6 +1217,8 @@ function updateCounts() {
   document.getElementById('count-dungeons').textContent = state.dungeons.length;
   document.getElementById('count-chests').textContent = state.chests.length;
   document.getElementById('count-crossroads').textContent = state.crossroads.length;
+  document.getElementById('count-worldzones').textContent = state.worldZones.length;
+  document.getElementById('count-worldedges').textContent = state.worldEdges.length;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1169,12 +1228,65 @@ function renderSidebar() {
   const el = document.getElementById('sidebar-content');
   let html = '';
 
-  if (activeTab === 'nodes') {
+  const q = sidebarFilter.trim().toLowerCase();
+
+  if (activeTab === 'worldzones') {
+    html += sidebarListHeader('World Zones', 'addWorldZone()');
+    html += sidebarSearchHtml('Filter zones…');
+    const filteredZones = q ? state.worldZones.filter(z => z.name.toLowerCase().includes(q) || (z.region||'').toLowerCase().includes(q)) : state.worldZones;
+    filteredZones.forEach(z => {
+      const sel = selectedWorldZoneId === z.id;
+      html += `
+        <div class="entity-item ${sel ? 'selected' : ''}" onclick="openWorldZonePanel('${z.id}')">
+          <div class="entity-dot" style="background:${z.isCrossroads ? 'var(--purple)' : 'var(--blue)'}"></div>
+          <div class="entity-info">
+            <div class="entity-name">${esc(z.icon || '🌍')} ${esc(z.name)}</div>
+            <span class="entity-type-badge ${z.isCrossroads ? 'badge-crossroads' : 'badge-zone'}">${z.isCrossroads ? 'Fork' : 'Zone'}</span>
+            <span class="entity-type-badge" style="background:rgba(139,148,158,0.1);color:#8b949e;margin-left:3px;">${esc(z.region || '')} · Tier ${z.tier || 0}</span>
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();openWorldZonePanel('${z.id}')" title="Edit">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteWorldZone('${z.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.worldZones.length === 0) html += emptyState('🌍', 'No World Zones', 'Add your first world zone using the + button.');
+
+  } else if (activeTab === 'worldedges') {
+    html += sidebarListHeader('World Edges', 'addWorldEdgeMode()');
+    html += sidebarSearchHtml('Filter edges…');
+    const filteredWorldEdges = q ? state.worldEdges.filter(e => {
+      const f = getWorldZoneById(e.fromZoneId); const t = getWorldZoneById(e.toZoneId);
+      return (f && f.name.toLowerCase().includes(q)) || (t && t.name.toLowerCase().includes(q));
+    }) : state.worldEdges;
+    filteredWorldEdges.forEach(e => {
+      const from = getWorldZoneById(e.fromZoneId);
+      const to = getWorldZoneById(e.toZoneId);
+      const sel = selectedWorldEdgeId === e.id;
+      html += `
+        <div class="entity-item ${sel ? 'selected' : ''}" onclick="openWorldEdgePanel('${e.id}')">
+          <div class="entity-info">
+            <div class="entity-name">${from ? esc(from.name) : e.fromZoneId} → ${to ? esc(to.name) : e.toZoneId}</div>
+            <span class="entity-type-badge" style="background:rgba(139,148,158,0.1);color:#8b949e">${e.distanceKm} km${e.bidirectional ? ' · ↔' : ''}</span>
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();openWorldEdgePanel('${e.id}')" title="Edit">✏️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteWorldEdge('${e.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (state.worldEdges.length === 0) html += emptyState('🔗', 'No World Edges', 'Click two world zone nodes on the canvas to connect them.');
+
+  } else if (activeTab === 'nodes') {
     html += sidebarListHeader('Nodes', 'addNode()');
-    state.nodes.forEach(n => {
+    html += sidebarSearchHtml('Filter nodes…');
+    const filteredNodes = q ? state.nodes.filter(n => n.name.toLowerCase().includes(q) || (n.type||'').toLowerCase().includes(q) || (n.region||'').toLowerCase().includes(q)) : state.nodes;
+    filteredNodes.forEach(n => {
       const color = nodeColor(n.type);
       const tl = typeLower(n.type);
       const isSelected = selectedNodeId === n.id;
+      const wz = getWorldZoneById(n.worldZoneId);
+      const wzBadge = wz ? `<span style="font-size:10px;color:var(--blue);margin-left:4px;">🌍 ${esc(wz.name)}</span>` : '';
       html += `
         <div class="entity-item ${isSelected ? 'selected' : ''}" onclick="selectNode('${n.id}')">
           <div class="entity-dot dot-${tl}" style="background:${color}"></div>
@@ -1182,6 +1294,7 @@ function renderSidebar() {
             <div class="entity-name">${esc(n.name)}</div>
             <span class="entity-type-badge badge-${tl}">${n.type}</span>
             ${n.isStart ? '<span class="entity-type-badge" style="background:rgba(245,166,35,0.12);color:#f5a623;margin-left:3px;">START</span>' : ''}
+            ${wzBadge}
           </div>
           <div class="entity-actions">
             <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();selectNode('${n.id}')" title="Edit">✏️</button>
@@ -1193,7 +1306,12 @@ function renderSidebar() {
 
   } else if (activeTab === 'edges') {
     html += sidebarListHeader('Edges', 'addEdge()');
-    state.edges.forEach(e => {
+    html += sidebarSearchHtml('Filter edges…');
+    const filteredEdges = q ? state.edges.filter(e => {
+      const f = getNodeById(e.fromNodeId); const t = getNodeById(e.toNodeId);
+      return (f && f.name.toLowerCase().includes(q)) || (t && t.name.toLowerCase().includes(q));
+    }) : state.edges;
+    filteredEdges.forEach(e => {
       const from = getNodeById(e.fromNodeId);
       const to = getNodeById(e.toNodeId);
       if (!from || !to) return;
@@ -1214,7 +1332,9 @@ function renderSidebar() {
 
   } else if (activeTab === 'bosses') {
     html += sidebarListHeader('Bosses', 'addBoss()');
-    state.bosses.forEach(b => {
+    html += sidebarSearchHtml('Filter bosses…');
+    const filteredBosses = q ? state.bosses.filter(b => b.name.toLowerCase().includes(q)) : state.bosses;
+    filteredBosses.forEach(b => {
       const node = getNodeById(b.nodeId);
       const isSelected = selectedNodeId === b.nodeId;
       html += `
@@ -1236,7 +1356,9 @@ function renderSidebar() {
 
   } else if (activeTab === 'dungeons') {
     html += sidebarListHeader('Dungeons', 'addDungeon()');
-    state.dungeons.forEach(d => {
+    html += sidebarSearchHtml('Filter dungeons…');
+    const filteredDungeons = q ? state.dungeons.filter(d => d.name.toLowerCase().includes(q)) : state.dungeons;
+    filteredDungeons.forEach(d => {
       const node = getNodeById(d.nodeId);
       const isSelected = selectedNodeId === d.nodeId;
       html += `
@@ -1257,7 +1379,12 @@ function renderSidebar() {
 
   } else if (activeTab === 'chests') {
     html += sidebarListHeader('Chests', 'addChest()');
-    state.chests.forEach(c => {
+    html += sidebarSearchHtml('Filter chests…');
+    const filteredChests = q ? state.chests.filter(c => {
+      const node = getNodeById(c.nodeId);
+      return (node && node.name.toLowerCase().includes(q)) || (c.rarity||'').toLowerCase().includes(q);
+    }) : state.chests;
+    filteredChests.forEach(c => {
       const node = getNodeById(c.nodeId);
       const isSelected = selectedNodeId === c.nodeId;
       html += `
@@ -1279,7 +1406,12 @@ function renderSidebar() {
 
   } else if (activeTab === 'crossroads') {
     html += sidebarListHeader('Crossroads', 'addCrossroads()');
-    state.crossroads.forEach(cr => {
+    html += sidebarSearchHtml('Filter crossroads…');
+    const filteredCrossroads = q ? state.crossroads.filter(cr => {
+      const node = getNodeById(cr.nodeId);
+      return node && node.name.toLowerCase().includes(q);
+    }) : state.crossroads;
+    filteredCrossroads.forEach(cr => {
       const node = getNodeById(cr.nodeId);
       const isSelected = selectedNodeId === cr.nodeId;
       html += `
@@ -1300,6 +1432,9 @@ function renderSidebar() {
   }
 
   el.innerHTML = html;
+  if (sidebarFilter) {
+    setTimeout(() => { const el2 = document.querySelector('.sidebar-search'); if (el2) el2.focus(); }, 0);
+  }
 }
 
 function sidebarListHeader(label, addFn) {
@@ -1308,6 +1443,14 @@ function sidebarListHeader(label, addFn) {
       <span class="sidebar-list-title">${label}</span>
     </div>
     <button class="add-new-btn" onclick="${addFn}">＋ Add New ${label.replace(/s$/, '')}</button>`;
+}
+
+function sidebarSearchHtml(placeholder) {
+  return `<div style="padding:0 0 6px">
+    <input class="sidebar-search" placeholder="${placeholder}" value="${esc(sidebarFilter)}"
+      oninput="sidebarFilter=this.value;renderSidebar()"
+      style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--font);outline:none">
+  </div>`;
 }
 
 function emptyState(icon, title, desc) {
@@ -1322,8 +1465,29 @@ function emptyState(icon, title, desc) {
    SVG MAP RENDER
 ═══════════════════════════════════════════════════════════════ */
 function renderSvgMap() {
+  renderWorldZonesGhost();
   renderEdgesSvg();
   renderNodesSvg();
+}
+
+function renderWorldZonesGhost() {
+  const layer = document.getElementById('ghost-zones-layer');
+  if (!layer) return;
+  if (!showZoneOverlay) { layer.innerHTML = ''; return; }
+  let html = '';
+  state.worldZones.forEach(z => {
+    const r = 70;
+    const color = z.isCrossroads ? '#a371f7' : '#4f9eff';
+    html += `<g style="pointer-events:none">
+      <circle cx="${z.x}" cy="${z.y}" r="${r}"
+        fill="${color}" fill-opacity="0.04"
+        stroke="${color}" stroke-width="1.5" stroke-opacity="0.2" stroke-dasharray="8,5"/>
+      <text x="${z.x}" y="${z.y - r - 6}" text-anchor="middle"
+        font-size="11" fill="${color}" fill-opacity="0.55"
+        style="pointer-events:none;user-select:none;font-family:var(--font)">${esc(z.icon || '🌍')} ${esc(z.name)}</text>
+    </g>`;
+  });
+  layer.innerHTML = html;
 }
 
 function renderEdgesSvg() {
@@ -1495,6 +1659,13 @@ function openNodePanel(nodeId) {
       <div class="form-group">
         <label class="form-label">Region</label>
         <select class="form-select" id="f-region" onchange="updateNode('${nodeId}','region',this.value)">${regionOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">World Zone</label>
+        <select class="form-select" onchange="updateNode('${nodeId}','worldZoneId', this.value ? +this.value : null)">
+          <option value="">— None —</option>
+          ${state.worldZones.map(wz => `<option value="${wz.id}" ${String(node.worldZoneId) === String(wz.id) ? 'selected' : ''}>${esc(wz.icon || '🌍')} ${esc(wz.name)}</option>`).join('')}
+        </select>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -1752,6 +1923,7 @@ function updateNode(nodeId, field, value) {
   const node = getNodeById(nodeId);
   if (!node) return;
   node[field] = value;
+  markDirty();
   updateCounts();
   renderSidebar();
   if (field === 'name' || field === 'icon' || field === 'type' || field === 'region' || field === 'levelReq') {
@@ -1763,6 +1935,7 @@ function updateEdge(edgeId, field, value) {
   const edge = state.edges.find(e => e.id === edgeId);
   if (!edge) return;
   edge[field] = value;
+  markDirty();
   renderSidebar();
 }
 
@@ -1779,6 +1952,7 @@ function ensureBoss(nodeId) {
 function updateBossField(nodeId, field, value) {
   const b = ensureBoss(nodeId);
   b[field] = value;
+  markDirty();
   renderSidebar();
 }
 
@@ -1795,16 +1969,18 @@ function ensureDungeon(nodeId) {
 function updateDungeonField(nodeId, field, value) {
   const d = ensureDungeon(nodeId);
   d[field] = value;
+  markDirty();
   renderSidebar();
 }
 function updateFloor(nodeId, idx, field, value) {
   const d = ensureDungeon(nodeId);
-  if (d.floors[idx]) { d.floors[idx][field] = value; }
+  if (d.floors[idx]) { d.floors[idx][field] = value; markDirty(); }
 }
 function addFloor(nodeId) {
   const d = ensureDungeon(nodeId);
   d.floors.push({ floor: d.floors.length + 1, requiredActivity: 'Running', requiredMinutes: 20, rewardXp: 80 });
   d.totalFloors = d.floors.length;
+  markDirty();
   openNodePanel(nodeId);
 }
 function removeFloor(nodeId, idx) {
@@ -1812,6 +1988,7 @@ function removeFloor(nodeId, idx) {
   d.floors.splice(idx, 1);
   d.floors.forEach((f, i) => f.floor = i + 1);
   d.totalFloors = d.floors.length;
+  markDirty();
   openNodePanel(nodeId);
 }
 
@@ -1827,6 +2004,7 @@ function ensureChest(nodeId) {
 function updateChestField(nodeId, field, value) {
   const c = ensureChest(nodeId);
   c[field] = value;
+  markDirty();
   renderSidebar();
 }
 
@@ -1841,16 +2019,18 @@ function ensureCrossroads(nodeId) {
 }
 function updatePath(nodeId, idx, field, value) {
   const cr = ensureCrossroads(nodeId);
-  if (cr.paths[idx]) { cr.paths[idx][field] = value; }
+  if (cr.paths[idx]) { cr.paths[idx][field] = value; markDirty(); }
 }
 function addPath(nodeId) {
   const cr = ensureCrossroads(nodeId);
   cr.paths.push({ name: 'New Path', distanceKm: 5.0, difficulty: 'Easy', estimatedDays: 2, rewardXp: 100, leadsToNodeId: null });
+  markDirty();
   openNodePanel(nodeId);
 }
 function removePath(nodeId, idx) {
   const cr = ensureCrossroads(nodeId);
   cr.paths.splice(idx, 1);
+  markDirty();
   openNodePanel(nodeId);
 }
 
@@ -1868,8 +2048,9 @@ function addNode() {
   state.nodes.push({
     id, name: 'New Node', icon: '🔵', type: 'Zone', region: 'Ashfield',
     x: Math.round(cx + jitter()), y: Math.round(cy + jitter()),
-    levelReq: 1, rewardXp: 50, isStart: false, isHidden: false, description: ''
+    levelReq: 1, rewardXp: 50, isStart: false, isHidden: false, description: '', worldZoneId: null
   });
+  markDirty();
   renderAll();
   selectNode(id);
   switchTab('nodes');
@@ -1887,6 +2068,7 @@ function deleteNode(nodeId) {
     state.chests = state.chests.filter(c => c.nodeId !== nodeId);
     state.crossroads = state.crossroads.filter(cr => cr.nodeId !== nodeId);
     if (selectedNodeId === nodeId) { selectedNodeId = null; closePanel(); }
+    markDirty();
     renderAll();
     showToast('success', `🗑️ Node "${node.name}" deleted.`);
   });
@@ -1896,6 +2078,7 @@ function deleteEdge(edgeId) {
   showConfirm('🗑️', 'Delete Edge', 'Remove this connection between nodes?', 'Delete', () => {
     state.edges = state.edges.filter(e => e.id !== edgeId);
     if (selectedEdgeId === edgeId) { selectedEdgeId = null; closePanel(); }
+    markDirty();
     renderAll();
     showToast('success', '🗑️ Edge deleted.');
   });
@@ -1904,6 +2087,7 @@ function deleteEdge(edgeId) {
 function deleteBoss(bossId) {
   showConfirm('💀', 'Delete Boss', 'Remove this boss from the game?', 'Delete', () => {
     state.bosses = state.bosses.filter(b => b.id !== bossId);
+    markDirty();
     renderAll();
     showToast('success', '💀 Boss deleted.');
   });
@@ -1912,6 +2096,7 @@ function deleteBoss(bossId) {
 function deleteDungeon(dungeonId) {
   showConfirm('🏰', 'Delete Dungeon', 'Remove this dungeon and all its floors?', 'Delete', () => {
     state.dungeons = state.dungeons.filter(d => d.id !== dungeonId);
+    markDirty();
     renderAll();
     showToast('success', '🏰 Dungeon deleted.');
   });
@@ -1920,6 +2105,7 @@ function deleteDungeon(dungeonId) {
 function deleteChest(chestId) {
   showConfirm('📦', 'Delete Chest', 'Remove this chest from the map?', 'Delete', () => {
     state.chests = state.chests.filter(c => c.id !== chestId);
+    markDirty();
     renderAll();
     showToast('success', '📦 Chest deleted.');
   });
@@ -1928,6 +2114,7 @@ function deleteChest(chestId) {
 function deleteCrossroads(crId) {
   showConfirm('🔀', 'Delete Crossroads', 'Remove this crossroads and all its paths?', 'Delete', () => {
     state.crossroads = state.crossroads.filter(c => c.id !== crId);
+    markDirty();
     renderAll();
     showToast('success', '🔀 Crossroads deleted.');
   });
@@ -1938,20 +2125,48 @@ function addEdge() {
   showToast('info', '↔ Click two nodes to create an edge between them.');
 }
 function addBoss() {
-  showToast('info', '💀 Select a Boss-type node to configure its boss data.');
-  switchTab('nodes');
+  const svg = document.getElementById('map-svg');
+  const rect = svg.getBoundingClientRect();
+  const cx = Math.round((rect.width / 2 - panX) / zoom + (Math.random() - 0.5) * 80);
+  const cy = Math.round((rect.height / 2 - panY) / zoom + (Math.random() - 0.5) * 80);
+  const nodeId = newId();
+  state.nodes.push({ id: nodeId, name: 'New Boss', icon: '💀', type: 'Boss', region: 'Ashfield', x: cx, y: cy, levelReq: 5, rewardXp: 300, isStart: false, isHidden: false, description: '', worldZoneId: null });
+  state.bosses.push({ id: newId(), nodeId: nodeId, name: 'New Boss', icon: '💀', maxHp: 500, rewardXp: 300, timerDays: 7, isMini: false });
+  markDirty(); updateCounts(); renderAll(); selectNode(nodeId); switchTab('bosses');
+  showToast('success', '💀 Boss node created. Configure it in the panel.');
 }
 function addDungeon() {
-  showToast('info', '🏰 Select a Dungeon-type node to configure its dungeon data.');
-  switchTab('nodes');
+  const svg = document.getElementById('map-svg');
+  const rect = svg.getBoundingClientRect();
+  const cx = Math.round((rect.width / 2 - panX) / zoom + (Math.random() - 0.5) * 80);
+  const cy = Math.round((rect.height / 2 - panY) / zoom + (Math.random() - 0.5) * 80);
+  const nodeId = newId();
+  state.nodes.push({ id: nodeId, name: 'New Dungeon', icon: '🏰', type: 'Dungeon', region: 'Ashfield', x: cx, y: cy, levelReq: 3, rewardXp: 150, isStart: false, isHidden: false, description: '', worldZoneId: null });
+  state.dungeons.push({ id: newId(), nodeId: nodeId, name: 'New Dungeon', totalFloors: 1, floors: [{ floor: 1, requiredActivity: 'Running', requiredMinutes: 20, rewardXp: 80 }] });
+  markDirty(); updateCounts(); renderAll(); selectNode(nodeId); switchTab('dungeons');
+  showToast('success', '🏰 Dungeon node created. Configure floors in the panel.');
 }
 function addChest() {
-  showToast('info', '📦 Select a Chest-type node to configure chest data.');
-  switchTab('nodes');
+  const svg = document.getElementById('map-svg');
+  const rect = svg.getBoundingClientRect();
+  const cx = Math.round((rect.width / 2 - panX) / zoom + (Math.random() - 0.5) * 80);
+  const cy = Math.round((rect.height / 2 - panY) / zoom + (Math.random() - 0.5) * 80);
+  const nodeId = newId();
+  state.nodes.push({ id: nodeId, name: 'Treasure Chest', icon: '📦', type: 'Chest', region: 'Ashfield', x: cx, y: cy, levelReq: 1, rewardXp: 50, isStart: false, isHidden: false, description: '', worldZoneId: null });
+  state.chests.push({ id: newId(), nodeId: nodeId, rarity: 'Common', rewardXp: 50 });
+  markDirty(); updateCounts(); renderAll(); selectNode(nodeId); switchTab('chests');
+  showToast('success', '📦 Chest node created. Configure rarity in the panel.');
 }
 function addCrossroads() {
-  showToast('info', '🔀 Select a Crossroads-type node to configure paths.');
-  switchTab('nodes');
+  const svg = document.getElementById('map-svg');
+  const rect = svg.getBoundingClientRect();
+  const cx = Math.round((rect.width / 2 - panX) / zoom + (Math.random() - 0.5) * 80);
+  const cy = Math.round((rect.height / 2 - panY) / zoom + (Math.random() - 0.5) * 80);
+  const nodeId = newId();
+  state.nodes.push({ id: nodeId, name: 'Crossroads', icon: '🔀', type: 'Crossroads', region: 'Ashfield', x: cx, y: cy, levelReq: 1, rewardXp: 0, isStart: false, isHidden: false, description: '', worldZoneId: null });
+  state.crossroads.push({ id: newId(), nodeId: nodeId, paths: [] });
+  markDirty(); updateCounts(); renderAll(); selectNode(nodeId); switchTab('crossroads');
+  showToast('success', '🔀 Crossroads node created. Add paths in the panel.');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2114,11 +2329,18 @@ function setMode(mode) {
    TAB SWITCHING
 ═══════════════════════════════════════════════════════════════ */
 function switchTab(tab) {
+  sidebarFilter = '';
   activeTab = tab;
   document.querySelectorAll('.sidebar-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
   renderSidebar();
+  if (tab === 'worldzones' || tab === 'worldedges') {
+    renderWorldZonesSvg();
+  } else {
+    renderSvgMap();
+  }
+  updateToolbarForTab(tab);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2131,7 +2353,13 @@ function closePanel() {
   document.getElementById('right-panel').classList.remove('open');
   selectedNodeId = null;
   selectedEdgeId = null;
-  renderSvgMap();
+  selectedWorldZoneId = null;
+  selectedWorldEdgeId = null;
+  if (activeTab === 'worldzones' || activeTab === 'worldedges') {
+    renderWorldZonesSvg();
+  } else {
+    renderSvgMap();
+  }
   renderSidebar();
   document.getElementById('map-hint').style.display = '';
 }
@@ -2190,6 +2418,8 @@ async function refreshFromApi() {
     if (data.dungeons) state.dungeons = data.dungeons;
     if (data.chests) state.chests = data.chests;
     if (data.crossroads) state.crossroads = data.crossroads;
+    if (data.worldZones) state.worldZones = data.worldZones;
+    if (data.worldEdges) state.worldEdges = data.worldEdges;
 
     selectedNodeId = null;
     selectedEdgeId = null;
@@ -2210,7 +2440,8 @@ async function refreshFromApi() {
   }
 }
 
-async function saveAllChanges() {
+function _doSaveAll() { _saveAllImpl(); }
+async function _saveAllImpl() {
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
   btn.textContent = '⏳ Saving...';
@@ -2230,7 +2461,6 @@ async function saveAllChanges() {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload, (key, value) => {
-        // C# expects all ID fields as strings; the HTML uses integer temp IDs
         const idFields = ['id', 'nodeId', 'fromNodeId', 'toNodeId', 'leadsToNodeId'];
         if (idFields.includes(key) && value !== null && value !== undefined)
           return String(value);
@@ -2240,16 +2470,25 @@ async function saveAllChanges() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     showToast('success', '💾 All changes saved successfully!');
-    // Reload from API so the state has real GUIDs — prevents duplicates on next save
+    clearDirty();
     await refreshFromApi();
   } catch (err) {
-    // If offline, still show confirmation of local state
     showToast('info', `📋 Changes saved locally. API: ${err.message}`);
   } finally {
     btn.disabled = false;
     btn.textContent = '💾 Save All Changes';
     showLoading(false);
   }
+}
+
+async function saveAllChanges() {
+  const { errors } = validateState();
+  if (errors.length > 0) {
+    const msg = errors.slice(0, 5).join('\n') + (errors.length > 5 ? `\n…and ${errors.length - 5} more` : '');
+    showConfirm('⚠️', 'Validation Errors', msg, 'Save Anyway', () => _doSaveAll());
+    return;
+  }
+  _doSaveAll();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2302,11 +2541,535 @@ function esc(str) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   DIRTY / UNSAVED CHANGES
+═══════════════════════════════════════════════════════════════ */
+function markDirty() {
+  if (isDirty) return;
+  isDirty = true;
+  const saveBtn = document.getElementById('save-btn');
+  const saveWorldBtn = document.getElementById('save-world-btn');
+  if (saveBtn) { saveBtn.classList.add('btn-dirty'); saveBtn.textContent = '💾 Save All Changes ●'; }
+  if (saveWorldBtn) { saveWorldBtn.classList.add('btn-dirty'); saveWorldBtn.textContent = '🌍 Save World ●'; }
+}
+
+function clearDirty() {
+  isDirty = false;
+  const saveBtn = document.getElementById('save-btn');
+  const saveWorldBtn = document.getElementById('save-world-btn');
+  if (saveBtn) { saveBtn.classList.remove('btn-dirty'); saveBtn.textContent = '💾 Save All Changes'; }
+  if (saveWorldBtn) { saveWorldBtn.classList.remove('btn-dirty'); saveWorldBtn.textContent = '🌍 Save World'; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ZONE OVERLAY TOGGLE
+═══════════════════════════════════════════════════════════════ */
+function toggleZoneOverlay() {
+  showZoneOverlay = !showZoneOverlay;
+  const btn = document.getElementById('toggle-ghost-zones');
+  if (btn) btn.classList.toggle('active', showZoneOverlay);
+  renderSvgMap();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COPY JSON TO CLIPBOARD
+═══════════════════════════════════════════════════════════════ */
+function copyJsonToClipboard() {
+  try {
+    navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+    showToast('success', '📋 State JSON copied to clipboard.');
+  } catch {
+    showToast('error', '❌ Could not access clipboard.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VALIDATION
+═══════════════════════════════════════════════════════════════ */
+function validateState() {
+  const errors = [];
+  const warnings = [];
+  const nodeIds = new Set(state.nodes.map(n => String(n.id)));
+  const zoneIds = new Set(state.worldZones.map(z => String(z.id)));
+
+  // Self-edges
+  state.edges.forEach(e => {
+    if (String(e.fromNodeId) === String(e.toNodeId))
+      errors.push(`Edge connects node to itself: "${getNodeById(e.fromNodeId)?.name || e.fromNodeId}"`);
+  });
+  state.worldEdges.forEach(e => {
+    if (String(e.fromZoneId) === String(e.toZoneId))
+      errors.push(`World edge connects zone to itself: "${getWorldZoneById(e.fromZoneId)?.name || e.fromZoneId}"`);
+  });
+
+  // Dangling edges
+  state.edges.forEach(e => {
+    if (!nodeIds.has(String(e.fromNodeId))) errors.push(`Edge references missing node (from): ${e.fromNodeId}`);
+    if (!nodeIds.has(String(e.toNodeId))) errors.push(`Edge references missing node (to): ${e.toNodeId}`);
+  });
+  state.worldEdges.forEach(e => {
+    if (!zoneIds.has(String(e.fromZoneId))) errors.push(`World edge references missing zone (from): ${e.fromZoneId}`);
+    if (!zoneIds.has(String(e.toZoneId))) errors.push(`World edge references missing zone (to): ${e.toZoneId}`);
+  });
+
+  // Crossroads paths pointing to non-existent nodes
+  state.crossroads.forEach(cr => {
+    (cr.paths || []).forEach(p => {
+      if (p.leadsToNodeId && !nodeIds.has(String(p.leadsToNodeId)))
+        errors.push(`Crossroads path "${p.name}" leads to missing node: ${p.leadsToNodeId}`);
+    });
+  });
+
+  // Warnings
+  if (!state.nodes.find(n => n.isStart)) warnings.push('⚠ No start node defined');
+  if (!state.worldZones.find(z => z.isStart)) warnings.push('⚠ No start world zone defined');
+
+  return { errors, warnings };
+}
+
+function runValidation() {
+  const { errors, warnings } = validateState();
+  const all = [...errors.map(e => '❌ ' + e), ...warnings];
+  if (all.length === 0) {
+    showToast('success', '✅ No validation errors found.');
+  } else {
+    showConfirm('🔍', 'Validation Results', all.join('\n'), 'OK', () => {});
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOOLBAR UPDATE FOR TAB
+═══════════════════════════════════════════════════════════════ */
+function updateToolbarForTab(tab) {
+  const worldEdgeBtn = document.getElementById('mode-worldedge');
+  const addEdgeBtn = document.getElementById('mode-edge');
+  const isWorldTab = tab === 'worldzones' || tab === 'worldedges';
+  if (worldEdgeBtn) worldEdgeBtn.style.display = isWorldTab ? '' : 'none';
+  if (addEdgeBtn) addEdgeBtn.style.display = isWorldTab ? 'none' : '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WORLD ZONE / WORLD EDGE STATE & HELPERS
+═══════════════════════════════════════════════════════════════ */
+let selectedWorldZoneId = null;
+let selectedWorldEdgeId = null;
+let worldEdgeFirstZone = null;
+let worldEdgeMode = false;
+
+function getWorldZoneById(id) {
+  return state.worldZones.find(z => z.id === id);
+}
+
+function openWorldZonePanel(zoneId) {
+  selectedWorldZoneId = zoneId;
+  selectedWorldEdgeId = null;
+  const z = getWorldZoneById(zoneId);
+  if (!z) return;
+  document.getElementById('panel-title').textContent = 'Edit World Zone';
+  document.getElementById('panel-subtitle').textContent = `ID: ${z.id}`;
+
+  document.getElementById('panel-body').innerHTML = `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">🌍</span> World Zone Properties</div>
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="wz-name" value="${esc(z.name)}" oninput="updateWorldZoneField('${z.id}','name',this.value)">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Icon (emoji)</label>
+          <input class="form-input" id="wz-icon" value="${esc(z.icon || '')}" oninput="updateWorldZoneField('${z.id}','icon',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tier</label>
+          <input class="form-input" type="number" id="wz-tier" value="${z.tier || 0}" oninput="updateWorldZoneField('${z.id}','tier',+this.value)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="wz-desc" oninput="updateWorldZoneField('${z.id}','description',this.value)">${esc(z.description || '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Region</label>
+        <input class="form-input" id="wz-region" value="${esc(z.region || '')}" oninput="updateWorldZoneField('${z.id}','region',this.value)">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Position X</label>
+          <input class="form-input" type="number" id="wz-x" value="${z.x || 0}" oninput="updateWorldZoneField('${z.id}','x',+this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Position Y</label>
+          <input class="form-input" type="number" id="wz-y" value="${z.y || 0}" oninput="updateWorldZoneField('${z.id}','y',+this.value)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Level Requirement</label>
+          <input class="form-input" type="number" id="wz-levelreq" value="${z.levelReq || 1}" oninput="updateWorldZoneField('${z.id}','levelReq',+this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total XP</label>
+          <input class="form-input" type="number" id="wz-totalxp" value="${z.totalXp || 0}" oninput="updateWorldZoneField('${z.id}','totalXp',+this.value)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total Distance (km)</label>
+        <input class="form-input" type="number" step="0.1" id="wz-dist" value="${z.totalDistanceKm || 0}" oninput="updateWorldZoneField('${z.id}','totalDistanceKm',+this.value)">
+      </div>
+      <div class="form-row">
+        <div class="form-checkbox-group">
+          <input type="checkbox" class="form-checkbox" id="wz-crossroads" ${z.isCrossroads ? 'checked' : ''} onchange="updateWorldZoneField('${z.id}','isCrossroads',this.checked);renderWorldZonesSvg()">
+          <label class="form-checkbox-label" for="wz-crossroads">Is Crossroads</label>
+        </div>
+        <div class="form-checkbox-group">
+          <input type="checkbox" class="form-checkbox" id="wz-start" ${z.isStart ? 'checked' : ''} onchange="updateWorldZoneField('${z.id}','isStart',this.checked)">
+          <label class="form-checkbox-label" for="wz-start">⭐ Is Start Zone</label>
+        </div>
+      </div>
+    </div>`;
+
+  const assignedNodes = state.nodes.filter(n => String(n.worldZoneId) === String(z.id));
+  if (assignedNodes.length > 0) {
+    document.getElementById('panel-body').innerHTML += `<div class="form-section">
+      <div class="form-section-header">Assigned Nodes (${assignedNodes.length})</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">
+        ${assignedNodes.map(n => `${n.icon || '⬡'} ${esc(n.name)}`).join('<br>')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('panel-footer').innerHTML = `
+    <button class="btn btn-primary" style="flex:1" onclick="saveWorldChanges()">🌍 Save World</button>
+    <button class="btn btn-danger" onclick="deleteWorldZone('${z.id}')">🗑️ Delete</button>`;
+
+  openPanel();
+  renderSidebar();
+  renderWorldZonesSvg();
+}
+
+function openWorldEdgePanel(edgeId) {
+  selectedWorldEdgeId = edgeId;
+  selectedWorldZoneId = null;
+  const e = state.worldEdges.find(ed => ed.id === edgeId);
+  if (!e) return;
+  document.getElementById('panel-title').textContent = 'Edit World Edge';
+  document.getElementById('panel-subtitle').textContent = `ID: ${edgeId}`;
+
+  const zoneOptions = state.worldZones.map(z =>
+    `<option value="${z.id}" ${z.id === e.fromZoneId ? 'selected' : ''}>${esc(z.name)}</option>`
+  ).join('');
+  const zoneOptions2 = state.worldZones.map(z =>
+    `<option value="${z.id}" ${z.id === e.toZoneId ? 'selected' : ''}>${esc(z.name)}</option>`
+  ).join('');
+
+  document.getElementById('panel-body').innerHTML = `
+    <div class="form-section">
+      <div class="form-section-header"><span class="section-icon">🔗</span> World Edge Properties</div>
+      <div class="form-group">
+        <label class="form-label">From Zone</label>
+        <select class="form-select" onchange="updateWorldEdgeField('${e.id}','fromZoneId',this.value);renderWorldZonesSvg()">${zoneOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Zone</label>
+        <select class="form-select" onchange="updateWorldEdgeField('${e.id}','toZoneId',this.value);renderWorldZonesSvg()">${zoneOptions2}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Distance (km)</label>
+        <input class="form-input" type="number" step="0.1" value="${e.distanceKm}" min="0" oninput="updateWorldEdgeField('${e.id}','distanceKm',+this.value)">
+      </div>
+      <div class="form-checkbox-group">
+        <input type="checkbox" class="form-checkbox" id="we-bidir" ${e.bidirectional ? 'checked' : ''} onchange="updateWorldEdgeField('${e.id}','bidirectional',this.checked)">
+        <label class="form-checkbox-label" for="we-bidir">Bidirectional (↔)</label>
+      </div>
+    </div>`;
+
+  document.getElementById('panel-footer').innerHTML = `
+    <button class="btn btn-primary" style="flex:1" onclick="saveWorldChanges()">🌍 Save World</button>
+    <button class="btn btn-danger" onclick="deleteWorldEdge('${e.id}')">🗑️ Delete Edge</button>`;
+
+  openPanel();
+  renderSidebar();
+  renderWorldZonesSvg();
+}
+
+function updateWorldZoneField(id, field, value) {
+  const z = getWorldZoneById(id);
+  if (!z) return;
+  z[field] = value;
+  markDirty();
+  renderSidebar();
+  if (field === 'x' || field === 'y' || field === 'name' || field === 'icon') renderWorldZonesSvg();
+  // sync position inputs if panel is open
+  if (field === 'x') { const fx = document.getElementById('wz-x'); if (fx) fx.value = value; }
+  if (field === 'y') { const fy = document.getElementById('wz-y'); if (fy) fy.value = value; }
+}
+
+function updateWorldEdgeField(id, field, value) {
+  const e = state.worldEdges.find(ed => ed.id === id);
+  if (e) e[field] = value;
+  markDirty();
+  renderSidebar();
+}
+
+function addWorldZone() {
+  const svg = document.getElementById('map-svg');
+  const rect = svg.getBoundingClientRect();
+  const cx = (rect.width / 2 - panX) / zoom;
+  const cy = (rect.height / 2 - panY) / zoom;
+  const id = newId();
+  state.worldZones.push({
+    id, name: 'New Zone', icon: '🌍', description: '', region: 'Unknown',
+    tier: 0, x: Math.round(cx), y: Math.round(cy), levelReq: 1, totalXp: 0, totalDistanceKm: 0,
+    isCrossroads: false, isStart: false, isHidden: false
+  });
+  markDirty();
+  updateCounts();
+  renderSidebar();
+  renderWorldZonesSvg();
+  openWorldZonePanel(id);
+  showToast('info', '🌍 New world zone added.');
+}
+
+function deleteWorldZone(id) {
+  const z = getWorldZoneById(id);
+  if (!z) return;
+  showConfirm('🗑️', 'Delete World Zone', `Delete "${z.name}" and its world edges?`, 'Delete', () => {
+    state.worldZones = state.worldZones.filter(wz => wz.id !== id);
+    state.worldEdges = state.worldEdges.filter(e => e.fromZoneId !== id && e.toZoneId !== id);
+    selectedWorldZoneId = null;
+    closePanel();
+    markDirty();
+    updateCounts();
+    renderSidebar();
+    renderWorldZonesSvg();
+    showToast('success', `🗑️ Zone "${z.name}" deleted.`);
+  });
+}
+
+function deleteWorldEdge(id) {
+  showConfirm('🗑️', 'Delete World Edge', 'Remove this world zone connection?', 'Delete', () => {
+    state.worldEdges = state.worldEdges.filter(e => e.id !== id);
+    selectedWorldEdgeId = null;
+    closePanel();
+    markDirty();
+    updateCounts();
+    renderSidebar();
+    renderWorldZonesSvg();
+    showToast('success', '🗑️ World edge deleted.');
+  });
+}
+
+function addWorldEdgeMode() {
+  worldEdgeMode = true;
+  worldEdgeFirstZone = null;
+  document.getElementById('toolbar-info').textContent = '🔗 Click the FIRST world zone on the canvas…';
+  if (activeTab !== 'worldzones' && activeTab !== 'worldedges') switchTab('worldzones');
+  // Highlight the Link Zones button if present
+  const btn = document.getElementById('mode-worldedge');
+  if (btn) btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WORLD ZONES SVG RENDERING
+═══════════════════════════════════════════════════════════════ */
+function renderWorldZonesSvg() {
+  if (activeTab !== 'worldzones' && activeTab !== 'worldedges') return;
+
+  const edgesLayer = document.getElementById('edges-layer');
+  const nodesLayer = document.getElementById('nodes-layer');
+  if (!edgesLayer || !nodesLayer) return;
+
+  // Draw world edges
+  let edgeHtml = '';
+  state.worldEdges.forEach(e => {
+    const from = getWorldZoneById(e.fromZoneId);
+    const to = getWorldZoneById(e.toZoneId);
+    if (!from || !to) return;
+    const sel = selectedWorldEdgeId === e.id;
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2;
+    edgeHtml += `<g class="edge-group" data-wedge-id="${e.id}" onclick="openWorldEdgePanel('${e.id}')" style="cursor:pointer">
+      <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
+        stroke="${sel ? '#4f9eff' : '#30363d'}" stroke-width="${sel ? 3 : 2}" stroke-dasharray="6,4" stroke-linecap="round"/>
+      <text class="edge-label" x="${mx}" y="${my - 5}">${e.distanceKm}km${e.bidirectional ? ' ↔' : ''}</text>
+      <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
+        stroke="transparent" stroke-width="14"/>
+    </g>`;
+  });
+  edgesLayer.innerHTML = edgeHtml;
+
+  // Draw world zones
+  let nodeHtml = '';
+  state.worldZones.forEach(z => {
+    const sel = selectedWorldZoneId === z.id;
+    const color = z.isCrossroads ? '#a371f7' : '#4f9eff';
+    const size = z.isCrossroads ? 22 : 26;
+    nodeHtml += `<g class="node-group" data-wzone-id="${z.id}"
+      onmousedown="worldZoneMouseDown(event,'${z.id}')"
+      onclick="handleWorldZoneClick('${z.id}')">`;
+
+    if (z.isCrossroads) {
+      const d = `M ${z.x} ${z.y - size} L ${z.x + size} ${z.y} L ${z.x} ${z.y + size} L ${z.x - size} ${z.y} Z`;
+      nodeHtml += `<path d="${d}" fill="${sel ? color + '55' : color + '22'}" stroke="${color}" stroke-width="${sel ? 3 : 2}" style="cursor:pointer"/>`;
+    } else {
+      nodeHtml += `<circle cx="${z.x}" cy="${z.y}" r="${size}" fill="${sel ? color + '55' : color + '22'}" stroke="${color}" stroke-width="${sel ? 3 : 2}" style="cursor:pointer"/>`;
+    }
+    if (sel) {
+      nodeHtml += `<circle cx="${z.x}" cy="${z.y}" r="${size + 8}" fill="none" stroke="${color}" stroke-width="1" opacity="0.25"/>`;
+    }
+    nodeHtml += `<text x="${z.x}" y="${z.y + 5}" text-anchor="middle" font-size="14" style="pointer-events:none;user-select:none">${esc(z.icon || '🌍')}</text>`;
+    nodeHtml += `<text x="${z.x}" y="${z.y + size + 14}" text-anchor="middle" font-size="10" fill="#8b949e" style="pointer-events:none;user-select:none">${esc(z.name)}</text>`;
+    const assignedCount = state.nodes.filter(n => String(n.worldZoneId) === String(z.id)).length;
+    if (assignedCount > 0) {
+      nodeHtml += `<text x="${z.x + size + 2}" y="${z.y - size + 2}" text-anchor="middle"
+        font-size="9" fill="${color}" fill-opacity="0.8" font-weight="700">${assignedCount}</text>`;
+    }
+    if (z.isStart) {
+      nodeHtml += `<text x="${z.x + size - 4}" y="${z.y - size + 4}" text-anchor="middle" font-size="11" style="pointer-events:none">⭐</text>`;
+    }
+    if (z.id == worldEdgeFirstZone) {
+      nodeHtml += `<circle cx="${z.x}" cy="${z.y}" r="${size + 10}"
+        fill="none" stroke="var(--orange)" stroke-width="2" stroke-dasharray="5,3" stroke-opacity="0.9"/>`;
+    }
+    nodeHtml += `</g>`;
+  });
+  nodesLayer.innerHTML = nodeHtml;
+}
+
+function handleWorldZoneClick(zoneId) {
+  if (worldEdgeMode) {
+    if (worldEdgeFirstZone === null) {
+      worldEdgeFirstZone = zoneId;
+      const z = getWorldZoneById(zoneId);
+      document.getElementById('toolbar-info').textContent =
+        `🔗 First: "${z ? z.name : zoneId}" — click the second zone. (Esc to cancel)`;
+      renderWorldZonesSvg();
+      return;
+    }
+    if (worldEdgeFirstZone === zoneId) {
+      // Cancel — clicked same zone
+      worldEdgeFirstZone = null;
+      worldEdgeMode = false;
+      document.getElementById('toolbar-info').textContent = 'Click a zone to edit · Drag to reposition';
+      const btn = document.getElementById('mode-worldedge');
+      if (btn) btn.classList.remove('active');
+      renderWorldZonesSvg();
+      return;
+    }
+    // Complete the edge
+    const id = newId();
+    state.worldEdges.push({ id, fromZoneId: worldEdgeFirstZone, toZoneId: zoneId, distanceKm: 10.0, bidirectional: true });
+    worldEdgeFirstZone = null;
+    worldEdgeMode = false;
+    document.getElementById('toolbar-info').textContent = 'Click a zone to edit · Drag to reposition';
+    const btn = document.getElementById('mode-worldedge');
+    if (btn) btn.classList.remove('active');
+    markDirty();
+    updateCounts();
+    renderSidebar();
+    renderWorldZonesSvg();
+    openWorldEdgePanel(id);
+    showToast('success', '🔗 World edge created. Configure distance in the panel.');
+  } else {
+    openWorldZonePanel(zoneId);
+    if (activeTab !== 'worldzones' && activeTab !== 'worldedges') switchTab('worldzones');
+  }
+}
+
+function worldZoneMouseDown(e, zoneId) {
+  if (e.button !== 0) return;
+  e.stopPropagation();
+  const z = getWorldZoneById(zoneId);
+  if (!z) return;
+  let isDrag = false;
+  const startX = e.clientX, startY = e.clientY;
+  const origX = z.x, origY = z.y;
+
+  function onMove(ev) {
+    const dx = (ev.clientX - startX) / zoom;
+    const dy = (ev.clientY - startY) / zoom;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) isDrag = true;
+    if (isDrag) {
+      z.x = Math.round(origX + dx);
+      z.y = Math.round(origY + dy);
+      renderWorldZonesSvg();
+      const fx = document.getElementById('wz-x'), fy = document.getElementById('wz-y');
+      if (fx) fx.value = z.x;
+      if (fy) fy.value = z.y;
+    }
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SAVE WORLD CHANGES
+═══════════════════════════════════════════════════════════════ */
+function _doSaveWorld() { _saveWorldImpl(); }
+async function _saveWorldImpl() {
+  const btn = document.getElementById('save-world-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving World...';
+  showLoading(true);
+  try {
+    const baseUrl = getApiUrl();
+    const url = baseUrl.replace(/\/sync$/, '') + '/sync-world';
+    const payload = {
+      zones: state.worldZones,
+      edges: state.worldEdges.map(e => ({
+        id: e.id,
+        fromZoneId: e.fromZoneId,
+        toZoneId: e.toZoneId,
+        distanceKm: e.distanceKm,
+        bidirectional: e.bidirectional
+      }))
+    };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('success', '🌍 World zones saved successfully!');
+    clearDirty();
+    await refreshFromApi();
+  } catch (err) {
+    showToast('error', `❌ Failed to save world: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🌍 Save World';
+    showLoading(false);
+  }
+}
+
+async function saveWorldChanges() {
+  const { errors } = validateState();
+  if (errors.length > 0) {
+    const msg = errors.slice(0, 5).join('\n') + (errors.length > 5 ? `\n…and ${errors.length - 5} more` : '');
+    showConfirm('⚠️', 'Validation Errors', msg, 'Save Anyway', () => _doSaveWorld());
+    return;
+  }
+  _doSaveWorld();
+}
+
+/* ═══════════════════════════════════════════════════════════════
    KEYBOARD SHORTCUTS
 ═══════════════════════════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    if (document.getElementById('confirm-dialog').classList.contains('show')) {
+    if (worldEdgeMode) {
+      worldEdgeMode = false;
+      worldEdgeFirstZone = null;
+      document.getElementById('toolbar-info').textContent = 'Click a zone to edit · Drag to reposition';
+      const weBtn = document.getElementById('mode-worldedge');
+      if (weBtn) weBtn.classList.remove('active');
+      renderWorldZonesSvg();
+    } else if (document.getElementById('confirm-dialog').classList.contains('show')) {
       closeConfirm();
     } else if (document.getElementById('right-panel').classList.contains('open')) {
       closePanel();
@@ -2318,8 +3081,23 @@ document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
     if (selectedNodeId) deleteNode(selectedNodeId);
     else if (selectedEdgeId) deleteEdge(selectedEdgeId);
+    else if (selectedWorldZoneId) deleteWorldZone(selectedWorldZoneId);
+    else if (selectedWorldEdgeId) deleteWorldEdge(selectedWorldEdgeId);
   }
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+  // Ctrl+L = Link Zones
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'l') {
+    if (activeTab === 'worldzones' || activeTab === 'worldedges') {
+      e.preventDefault();
+      addWorldEdgeMode();
+    }
+  }
+  // Ctrl+Shift+S = Save World
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+    e.preventDefault();
+    saveWorldChanges();
+  }
+  // Ctrl+S = Save All
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 's') {
     e.preventDefault();
     saveAllChanges();
   }
@@ -2327,6 +3105,10 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     addNode();
   }
+});
+
+window.addEventListener('beforeunload', e => {
+  if (isDirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2344,6 +3126,11 @@ document.addEventListener('keydown', e => {
     // Auto-fill token from URL query param (?token=...)
     const urlToken = new URLSearchParams(window.location.search).get('token');
     if (urlToken) document.getElementById('token-input').value = urlToken;
+
+    // Initialize toolbar for default tab and ghost zones button
+    updateToolbarForTab(activeTab);
+    const ghostBtn = document.getElementById('toggle-ghost-zones');
+    if (ghostBtn) ghostBtn.classList.toggle('active', showZoneOverlay);
 
     checkApiStatus();
     // Always load real GUIDs from the API on startup so saves preserve user progress

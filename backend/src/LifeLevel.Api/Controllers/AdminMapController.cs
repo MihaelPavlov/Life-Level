@@ -111,7 +111,38 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new { nodes, edges, bosses, dungeons, chests, crossroads });
+        var worldZones = await db.WorldZones
+            .Select(z => new
+            {
+                id              = z.Id.ToString(),
+                name            = z.Name,
+                description     = z.Description,
+                icon            = z.Icon,
+                region          = z.Region,
+                tier            = z.Tier,
+                x               = (double)z.PositionX,
+                y               = (double)z.PositionY,
+                levelReq        = z.LevelRequirement,
+                totalXp         = z.TotalXp,
+                totalDistanceKm = z.TotalDistanceKm,
+                isCrossroads    = z.IsCrossroads,
+                isStart         = z.IsStartZone,
+                isHidden        = z.IsHidden,
+            })
+            .ToListAsync();
+
+        var worldEdges = await db.WorldZoneEdges
+            .Select(e => new
+            {
+                id            = e.Id.ToString(),
+                fromZoneId    = e.FromZoneId.ToString(),
+                toZoneId      = e.ToZoneId.ToString(),
+                distanceKm    = e.DistanceKm,
+                bidirectional = e.IsBidirectional,
+            })
+            .ToListAsync();
+
+        return Ok(new { nodes, edges, bosses, dungeons, chests, crossroads, worldZones, worldEdges });
     }
 
     [HttpPost]
@@ -1172,6 +1203,212 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         await db.SaveChangesAsync();
         return NoContent();
     }
+
+    // -------------------------------------------------------------------------
+    // WORLD ZONES (overworld sync)
+    // -------------------------------------------------------------------------
+
+    [HttpPost("sync-world")]
+    public async Task<IActionResult> SyncWorld([FromBody] SyncWorldRequest payload)
+    {
+        // ── Resolve incoming zone GUIDs ────────────────────────────────────────
+        var zoneIdMap = new Dictionary<string, Guid>(); // temp ID → assigned GUID
+        var incomingZoneGuids = new HashSet<Guid>();
+
+        foreach (var z in payload.Zones ?? [])
+        {
+            if (Guid.TryParse(z.Id, out var guid))
+                incomingZoneGuids.Add(guid);
+            else
+            {
+                guid = Guid.NewGuid();
+                if (z.Id != null) zoneIdMap[z.Id] = guid;
+                incomingZoneGuids.Add(guid);
+            }
+        }
+
+        // ── Resolve incoming edge GUIDs ────────────────────────────────────────
+        var edgeIdMap = new Dictionary<string, Guid>();
+        var incomingEdgeGuids = new HashSet<Guid>();
+
+        foreach (var e in payload.Edges ?? [])
+        {
+            if (Guid.TryParse(e.Id, out var guid))
+                incomingEdgeGuids.Add(guid);
+            else
+            {
+                guid = Guid.NewGuid();
+                if (e.Id != null) edgeIdMap[e.Id] = guid;
+                incomingEdgeGuids.Add(guid);
+            }
+        }
+
+        // ── Delete removed edges ───────────────────────────────────────────────
+        var removedEdgeIds = await db.WorldZoneEdges
+            .Where(e => !incomingEdgeGuids.Contains(e.Id))
+            .Select(e => e.Id)
+            .ToListAsync();
+
+        if (removedEdgeIds.Count > 0)
+        {
+            var edgeProgress = await db.UserWorldProgresses
+                .Where(p => p.CurrentEdgeId.HasValue && removedEdgeIds.Contains(p.CurrentEdgeId.Value))
+                .ToListAsync();
+            foreach (var p in edgeProgress)
+            {
+                p.CurrentEdgeId = null;
+                p.DestinationZoneId = null;
+                p.DistanceTraveledOnEdge = 0;
+            }
+
+            await db.SaveChangesAsync();
+
+            static string ToSqlArray(IEnumerable<Guid> ids) =>
+                $"ARRAY[{string.Join(",", ids.Select(id => $"'{id}'"))}]::uuid[]";
+
+            await db.Database.ExecuteSqlRawAsync(
+                $"DELETE FROM \"WorldZoneEdges\" WHERE \"Id\" = ANY({ToSqlArray(removedEdgeIds)});");
+        }
+
+        // ── Delete removed zones (only if not referenced by any UserWorldProgress) ──
+        var removedZoneIds = await db.WorldZones
+            .Where(z => !incomingZoneGuids.Contains(z.Id))
+            .Select(z => z.Id)
+            .ToListAsync();
+
+        if (removedZoneIds.Count > 0)
+        {
+            // Re-point progress records whose current zone was removed to the start zone
+            var startZoneId = incomingZoneGuids.Count > 0
+                ? await db.WorldZones
+                    .Where(z => z.IsStartZone && incomingZoneGuids.Contains(z.Id))
+                    .Select(z => (Guid?)z.Id)
+                    .FirstOrDefaultAsync()
+                : null;
+
+            var affectedProgress = await db.UserWorldProgresses
+                .Where(p => removedZoneIds.Contains(p.CurrentZoneId))
+                .ToListAsync();
+
+            foreach (var p in affectedProgress)
+            {
+                if (startZoneId.HasValue)
+                {
+                    p.CurrentZoneId = startZoneId.Value;
+                    p.CurrentEdgeId = null;
+                    p.DestinationZoneId = null;
+                    p.DistanceTraveledOnEdge = 0;
+                }
+                else
+                {
+                    db.UserWorldProgresses.Remove(p);
+                }
+            }
+
+            // Remove zone unlocks for deleted zones
+            var staleUnlocks = await db.UserZoneUnlocks
+                .Where(u => removedZoneIds.Contains(u.WorldZoneId))
+                .ToListAsync();
+            db.UserZoneUnlocks.RemoveRange(staleUnlocks);
+
+            await db.SaveChangesAsync();
+
+            static string ToSqlArray(IEnumerable<Guid> ids) =>
+                $"ARRAY[{string.Join(",", ids.Select(id => $"'{id}'"))}]::uuid[]";
+
+            await db.Database.ExecuteSqlRawAsync(
+                $"DELETE FROM \"WorldZones\" WHERE \"Id\" = ANY({ToSqlArray(removedZoneIds)});");
+        }
+
+        // ── ZONES (upsert) ─────────────────────────────────────────────────────
+        foreach (var z in payload.Zones ?? [])
+        {
+            var guid = Guid.TryParse(z.Id, out var parsedGuid) ? parsedGuid : zoneIdMap[z.Id!];
+
+            var existing = await db.WorldZones.FindAsync(guid);
+            if (existing is not null)
+            {
+                existing.Name            = z.Name ?? existing.Name;
+                existing.Description     = z.Description;
+                existing.Icon            = z.Icon ?? existing.Icon;
+                existing.Region          = z.Region ?? existing.Region;
+                existing.Tier            = z.Tier;
+                existing.PositionX       = (float)z.X;
+                existing.PositionY       = (float)z.Y;
+                existing.LevelRequirement = z.LevelReq;
+                existing.TotalXp         = z.TotalXp;
+                existing.TotalDistanceKm = z.TotalDistanceKm;
+                existing.IsCrossroads    = z.IsCrossroads;
+                existing.IsStartZone     = z.IsStart;
+                existing.IsHidden        = z.IsHidden;
+            }
+            else
+            {
+                db.WorldZones.Add(new Domain.Entities.WorldZone
+                {
+                    Id               = guid,
+                    Name             = z.Name ?? "Unnamed Zone",
+                    Description      = z.Description,
+                    Icon             = z.Icon ?? "❓",
+                    Region           = z.Region ?? string.Empty,
+                    Tier             = z.Tier,
+                    PositionX        = (float)z.X,
+                    PositionY        = (float)z.Y,
+                    LevelRequirement = z.LevelReq,
+                    TotalXp          = z.TotalXp,
+                    TotalDistanceKm  = z.TotalDistanceKm,
+                    IsCrossroads     = z.IsCrossroads,
+                    IsStartZone      = z.IsStart,
+                    IsHidden         = z.IsHidden,
+                });
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        // ── EDGES (upsert) ─────────────────────────────────────────────────────
+        foreach (var e in payload.Edges ?? [])
+        {
+            var guid = Guid.TryParse(e.Id, out var parsedEdgeGuid) ? parsedEdgeGuid : edgeIdMap[e.Id!];
+
+            var fromId = zoneIdMap.TryGetValue(e.FromZoneId ?? "", out var f) ? f
+                : Guid.TryParse(e.FromZoneId, out var fg) ? fg : Guid.Empty;
+            var toId = zoneIdMap.TryGetValue(e.ToZoneId ?? "", out var t) ? t
+                : Guid.TryParse(e.ToZoneId, out var tg) ? tg : Guid.Empty;
+            if (fromId == Guid.Empty || toId == Guid.Empty) continue;
+
+            var existing = await db.WorldZoneEdges.FindAsync(guid);
+            if (existing is not null)
+            {
+                existing.FromZoneId      = fromId;
+                existing.ToZoneId        = toId;
+                existing.DistanceKm      = e.DistanceKm;
+                existing.IsBidirectional = e.Bidirectional;
+            }
+            else
+            {
+                db.WorldZoneEdges.Add(new Domain.Entities.WorldZoneEdge
+                {
+                    Id               = guid,
+                    FromZoneId       = fromId,
+                    ToZoneId         = toId,
+                    DistanceKm       = e.DistanceKm,
+                    IsBidirectional  = e.Bidirectional,
+                });
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        var syncedZones = await db.WorldZones
+            .Where(z => incomingZoneGuids.Contains(z.Id))
+            .ToListAsync();
+        var syncedEdges = await db.WorldZoneEdges
+            .Where(e => incomingEdgeGuids.Contains(e.Id))
+            .ToListAsync();
+
+        return Ok(new { synced = true, zones = syncedZones.Count, edges = syncedEdges.Count });
+    }
 }
 
 // =============================================================================
@@ -1324,3 +1561,37 @@ public record SyncCrossroadsPath(
     string? Id, string? Name, double DistanceKm, string? Difficulty,
     int EstimatedDays, int RewardXp,
     string? AdditionalRequirement, string? LeadsToNodeId);
+
+// ── World Zone sync records ───────────────────────────────────────────────────
+public class SyncWorldRequest
+{
+    public List<WorldZonePayload> Zones { get; set; } = [];
+    public List<WorldZoneEdgePayload> Edges { get; set; } = [];
+}
+
+public class WorldZonePayload
+{
+    public string? Id { get; set; }
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Region { get; set; }
+    public int Tier { get; set; }
+    public double X { get; set; }
+    public double Y { get; set; }
+    public int LevelReq { get; set; }
+    public int TotalXp { get; set; }
+    public double TotalDistanceKm { get; set; }
+    public bool IsCrossroads { get; set; }
+    public bool IsStart { get; set; }
+    public bool IsHidden { get; set; }
+}
+
+public class WorldZoneEdgePayload
+{
+    public string? Id { get; set; }
+    public string? FromZoneId { get; set; }
+    public string? ToZoneId { get; set; }
+    public double DistanceKm { get; set; }
+    public bool Bidirectional { get; set; }
+}

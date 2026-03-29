@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.Services;
 using LifeLevel.Api.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -9,12 +9,12 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/quests")]
 [Authorize]
-public class QuestController(QuestService questService) : ControllerBase
+public class QuestController(QuestService questService, IUserContext userContext) : ControllerBase
 {
     [HttpGet("daily")]
     public async Task<IActionResult> GetDaily()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         var quests = await questService.GetActiveQuestsAsync(userId, QuestType.Daily);
         if (quests.Count == 0)
         {
@@ -27,7 +27,7 @@ public class QuestController(QuestService questService) : ControllerBase
     [HttpGet("weekly")]
     public async Task<IActionResult> GetWeekly()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         var quests = await questService.GetActiveQuestsAsync(userId, QuestType.Weekly);
         if (quests.Count == 0)
         {
@@ -40,7 +40,7 @@ public class QuestController(QuestService questService) : ControllerBase
     [HttpGet("special")]
     public async Task<IActionResult> GetSpecial()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         var quests = await questService.GetActiveQuestsAsync(userId, QuestType.Special);
         return Ok(quests);
     }
@@ -48,7 +48,7 @@ public class QuestController(QuestService questService) : ControllerBase
     [HttpPost("generate/daily")]
     public async Task<IActionResult> GenerateDaily()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         await questService.GenerateDailyQuestsAsync(userId);
         var quests = await questService.GetActiveQuestsAsync(userId, QuestType.Daily);
         return Ok(quests);
@@ -57,7 +57,7 @@ public class QuestController(QuestService questService) : ControllerBase
     [HttpPost("generate/weekly")]
     public async Task<IActionResult> GenerateWeekly()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         await questService.GenerateWeeklyQuestsAsync(userId);
         var quests = await questService.GetActiveQuestsAsync(userId, QuestType.Weekly);
         return Ok(quests);

@@ -1,8 +1,8 @@
-import '../../core/api/api_client.dart';
-import 'models/character_class.dart';
-import 'models/character_profile.dart';
-import 'models/character_setup_result.dart';
-import 'models/xp_history_entry.dart';
+import '../../../core/api/api_client.dart';
+import '../models/character_class.dart';
+import '../models/character_profile.dart';
+import '../models/character_setup_result.dart';
+import '../models/xp_history_entry.dart';
 
 class CharacterService {
   final _dio = ApiClient.instance;

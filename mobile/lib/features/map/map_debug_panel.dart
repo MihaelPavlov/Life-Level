@@ -5,11 +5,11 @@ import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../character/providers/character_provider.dart';
 import 'map_colors.dart';
-import 'boss_service.dart';
-import 'chest_service.dart';
-import 'dungeon_service.dart';
-import 'crossroads_service.dart';
-import 'map_service.dart';
+import 'services/boss_service.dart';
+import 'services/chest_service.dart';
+import 'services/dungeon_service.dart';
+import 'services/crossroads_service.dart';
+import 'services/map_service.dart';
 import 'models/map_models.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────

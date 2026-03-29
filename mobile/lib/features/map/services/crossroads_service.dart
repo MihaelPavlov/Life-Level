@@ -1,4 +1,4 @@
-import '../../core/api/api_client.dart';
+import '../../../core/api/api_client.dart';
 
 class CrossroadsService {
   Future<Map<String, dynamic>> choosePath(String crossroadsId, String pathId) async {

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-// ─── local palette constants ──────────────────────────────────────────────────
-const kHBgBase      = Color(0xFF080e14);
-const kHSurface1    = Color(0xFF161b22);
-const kHSurface2    = Color(0xFF1e2632);
-const kHBorderColor = Color(0xFF30363d);
-const kHBorderSoft  = Color(0xFF1e2632);
-const kHTextMuted   = Color(0xFF4d5b6b);
+// ─── local palette aliases (thin wrappers around AppColors) ──────────────────
+const kHBgBase      = AppColors.backgroundAlt;
+const kHSurface1    = AppColors.surface;
+const kHSurface2    = AppColors.surfaceElevated;
+const kHBorderColor = AppColors.border;
+const kHBorderSoft  = AppColors.surfaceElevated;
+const kHTextMuted   = AppColors.textMuted;
 
 // ── Format helper ──────────────────────────────────────────────────────────────
 String homeFmt(int n) {

@@ -1,6 +1,8 @@
 using System.Text;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.BackgroundJobs;
 using LifeLevel.Api.Application.Services;
+using LifeLevel.Api.Infrastructure;
 using LifeLevel.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -46,10 +48,15 @@ builder.Services.AddScoped<LoginRewardService>();
 builder.Services.AddScoped<QuestService>();
 builder.Services.AddScoped<ActivityService>();
 builder.Services.AddScoped<MapService>();
+builder.Services.AddScoped<WorldZoneService>();
 builder.Services.AddScoped<BossService>();
 builder.Services.AddScoped<ChestService>();
 builder.Services.AddScoped<DungeonService>();
 builder.Services.AddScoped<CrossroadsService>();
+
+// User context
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, HttpUserContext>();
 
 // Background jobs
 builder.Services.AddHostedService<DailyResetJob>();

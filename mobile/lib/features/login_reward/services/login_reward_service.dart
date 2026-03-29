@@ -1,5 +1,5 @@
-import '../../core/api/api_client.dart';
-import 'models/login_reward_models.dart';
+import '../../../core/api/api_client.dart';
+import '../models/login_reward_models.dart';
 
 class LoginRewardService {
   final _dio = ApiClient.instance;

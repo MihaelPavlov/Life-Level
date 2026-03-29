@@ -512,7 +512,12 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("WorldZoneId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WorldZoneId");
 
                     b.ToTable("MapNodes");
                 });
@@ -1069,6 +1074,146 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserRingItems");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CurrentEdgeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CurrentZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DestinationZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("DistanceTraveledOnEdge")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentEdgeId");
+
+                    b.HasIndex("CurrentZoneId");
+
+                    b.HasIndex("DestinationZoneId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserWorldProgresses");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserZoneUnlock", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorldZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserWorldProgressId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId", "WorldZoneId");
+
+                    b.HasIndex("UserWorldProgressId");
+
+                    b.HasIndex("WorldZoneId");
+
+                    b.ToTable("UserZoneUnlocks");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCrossroads")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsStartZone")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LevelRequirement")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<float>("PositionX")
+                        .HasColumnType("real");
+
+                    b.Property<float>("PositionY")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("TotalDistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("TotalXp")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WorldZones");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZoneEdge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("DistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("FromZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsBidirectional")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ToZoneId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromZoneId");
+
+                    b.HasIndex("ToZoneId");
+
+                    b.ToTable("WorldZoneEdges");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.XpHistoryEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1235,6 +1380,16 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("FromNode");
 
                     b.Navigation("ToNode");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapNode", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "WorldZone")
+                        .WithMany("Nodes")
+                        .HasForeignKey("WorldZoneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("WorldZone");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Streak", b =>
@@ -1453,6 +1608,85 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZoneEdge", "CurrentEdge")
+                        .WithMany()
+                        .HasForeignKey("CurrentEdgeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "CurrentZone")
+                        .WithMany()
+                        .HasForeignKey("CurrentZoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "DestinationZone")
+                        .WithMany()
+                        .HasForeignKey("DestinationZoneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CurrentEdge");
+
+                    b.Navigation("CurrentZone");
+
+                    b.Navigation("DestinationZone");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserZoneUnlock", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.UserWorldProgress", "UserWorldProgress")
+                        .WithMany("UnlockedZones")
+                        .HasForeignKey("UserWorldProgressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "WorldZone")
+                        .WithMany("UnlockedByUsers")
+                        .HasForeignKey("WorldZoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("UserWorldProgress");
+
+                    b.Navigation("WorldZone");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZoneEdge", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "FromZone")
+                        .WithMany("EdgesFrom")
+                        .HasForeignKey("FromZoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.WorldZone", "ToZone")
+                        .WithMany("EdgesTo")
+                        .HasForeignKey("ToZoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromZone");
+
+                    b.Navigation("ToZone");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.XpHistoryEntry", b =>
                 {
                     b.HasOne("LifeLevel.Api.Domain.Entities.Character", "Character")
@@ -1542,6 +1776,22 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("DungeonStates");
 
                     b.Navigation("UnlockedNodes");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserWorldProgress", b =>
+                {
+                    b.Navigation("UnlockedZones");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.WorldZone", b =>
+                {
+                    b.Navigation("EdgesFrom");
+
+                    b.Navigation("EdgesTo");
+
+                    b.Navigation("Nodes");
+
+                    b.Navigation("UnlockedByUsers");
                 });
 #pragma warning restore 612, 618
         }

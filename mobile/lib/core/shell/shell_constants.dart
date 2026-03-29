@@ -6,6 +6,8 @@ const kRadius    = 130.0;
 const kItemSize  = 54.0;
 const kFabBottom = kNavBarH - kFabSize / 2;
 
-const kNavBg     = Color(0xFF111830);
-const kNavBorder = Color(0xFF1e2d4a);
-const kCardBg    = Color(0xFF1a2848);
+const kNavBg       = Color(0xFF111830);
+const kNavBorder   = Color(0xFF1e2d4a);
+const kCardBg      = Color(0xFF1a2848);
+// Semi-transparent overlay shown behind the radial ring when it opens
+const kRadialScrim = Color(0xCC06080F);

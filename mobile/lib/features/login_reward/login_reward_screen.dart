@@ -50,7 +50,7 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF161b22),
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: AppColors.blue.withValues(alpha: 0.3),
@@ -311,7 +311,7 @@ class _SevenDayCycle extends StatelessWidget {
                     ? AppColors.green.withValues(alpha: 0.3)
                     : isToday
                         ? AppColors.blue
-                        : const Color(0xFF1e2632),
+                        : AppColors.surfaceElevated,
                 border: Border.all(
                   color: isToday
                       ? AppColors.blue

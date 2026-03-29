@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../character_service.dart';
+import '../services/character_service.dart';
 import '../models/character_class.dart';
 import 'avatar_selection_screen.dart';
 import 'welcome_setup_screen.dart' show setupProgressDots;

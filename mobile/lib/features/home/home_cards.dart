@@ -5,7 +5,8 @@ import '../../core/widgets/level_up_overlay.dart';
 import '../activity/log_activity_screen.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
-import '../quests/models/quest_models.dart';
+import '../quests/models/quest_models.dart'
+    show UserQuestProgress, questCategoryEmoji, questCategoryColor;
 import '../quests/providers/quest_provider.dart';
 import '../streak/providers/streak_provider.dart';
 import 'home_widgets.dart';
@@ -28,7 +29,7 @@ class HomeHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Good morning 👋',
                   style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
@@ -349,7 +350,7 @@ class HomeQuestsCard extends ConsumerWidget {
             },
           ),
           questsAsync.when(
-            loading: () => _QuestLoadingRows(),
+            loading: () => const _QuestLoadingRows(),
             error: (_, __) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: GestureDetector(
@@ -444,28 +445,9 @@ class HomeQuestsCard extends ConsumerWidget {
     );
   }
 
-  String _categoryEmoji(String category) {
-    switch (category.toLowerCase()) {
-      case 'duration':  return '⏱️';
-      case 'calories':  return '🔥';
-      case 'distance':  return '📍';
-      case 'workouts':  return '💪';
-      case 'streak':    return '🔥';
-      case 'login':     return '📅';
-      default:          return '🎯';
-    }
-  }
+  String _categoryEmoji(String category) => questCategoryEmoji(category);
 
-  Color _categoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'duration':  return AppColors.blue;
-      case 'calories':  return AppColors.orange;
-      case 'distance':  return AppColors.green;
-      case 'workouts':  return AppColors.red;
-      case 'streak':    return AppColors.orange;
-      default:          return AppColors.purple;
-    }
-  }
+  Color _categoryColor(String category) => questCategoryColor(category);
 
   String _progressSub(UserQuestProgress q) {
     final cur = q.targetUnit == 'km'
@@ -481,6 +463,8 @@ class HomeQuestsCard extends ConsumerWidget {
 
 // Loading placeholder rows
 class _QuestLoadingRows extends StatelessWidget {
+  const _QuestLoadingRows();
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -490,7 +474,7 @@ class _QuestLoadingRows extends StatelessWidget {
           height: 38,
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1e2632).withValues(alpha: 0.6),
+            color: AppColors.surfaceElevated.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(6),
           ),
         ),
@@ -691,7 +675,7 @@ class HomeBossCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          HomeProgressBar(progress: 0.70, colors: [AppColors.red, const Color(0xFFc0392b)]),
+          HomeProgressBar(progress: 0.70, colors: [AppColors.red, AppColors.redDark]),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,

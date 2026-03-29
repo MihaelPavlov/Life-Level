@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../streak_service.dart';
+import '../services/streak_service.dart';
 import '../models/streak_models.dart';
 
 // ── Service provider ───────────────────────────────────────────────────────────
@@ -9,7 +9,7 @@ final streakServiceProvider = Provider<StreakService>((ref) => StreakService());
 class StreakNotifier extends AsyncNotifier<StreakData> {
   @override
   Future<StreakData> build() =>
-      ref.read(streakServiceProvider).getStreak();
+      ref.watch(streakServiceProvider).getStreak();
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();

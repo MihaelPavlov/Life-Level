@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/auth/auth_service.dart';
+import '../../core/constants/app_colors.dart';
+import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../services/level_up_notifier.dart';
 import '../widgets/level_up_overlay.dart';
@@ -260,7 +261,7 @@ class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateM
     final angles = anglesFor(_ringItems.length);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090d1a),
+      backgroundColor: AppColors.shellBackground,
       body: LayoutBuilder(builder: (_, constraints) {
         final w     = constraints.maxWidth;
         final h     = constraints.maxHeight;
@@ -302,7 +303,7 @@ class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateM
                       onTap: _closeRadial,
                       child: Container(
                         color: Color.lerp(Colors.transparent,
-                            const Color(0xCC06080F), _openCtrl.value),
+                            kRadialScrim, _openCtrl.value),
                       ),
                     );
                   },

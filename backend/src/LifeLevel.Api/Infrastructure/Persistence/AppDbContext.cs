@@ -12,6 +12,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserRingItem> UserRingItems => Set<UserRingItem>();
     public DbSet<CharacterClass> CharacterClasses => Set<CharacterClass>();
 
+    // World Map (overworld)
+    public DbSet<WorldZone> WorldZones => Set<WorldZone>();
+    public DbSet<WorldZoneEdge> WorldZoneEdges => Set<WorldZoneEdge>();
+    public DbSet<UserWorldProgress> UserWorldProgresses => Set<UserWorldProgress>();
+    public DbSet<UserZoneUnlock> UserZoneUnlocks => Set<UserZoneUnlock>();
+
     // Map
     public DbSet<MapNode> MapNodes => Set<MapNode>();
     public DbSet<MapEdge> MapEdges => Set<MapEdge>();
@@ -81,12 +87,73 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(r => r.ItemType).HasConversion<string>();
         });
 
+        // --- World Map (overworld) entities ---
+        modelBuilder.Entity<WorldZone>(e =>
+        {
+            e.HasKey(z => z.Id);
+        });
+
+        modelBuilder.Entity<WorldZoneEdge>(e =>
+        {
+            e.HasKey(edge => edge.Id);
+            e.HasOne(edge => edge.FromZone)
+             .WithMany(z => z.EdgesFrom)
+             .HasForeignKey(edge => edge.FromZoneId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(edge => edge.ToZone)
+             .WithMany(z => z.EdgesTo)
+             .HasForeignKey(edge => edge.ToZoneId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserWorldProgress>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.HasOne(p => p.User)
+             .WithMany()
+             .HasForeignKey(p => p.UserId);
+            e.HasOne(p => p.CurrentZone)
+             .WithMany()
+             .HasForeignKey(p => p.CurrentZoneId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(p => p.CurrentEdge)
+             .WithMany()
+             .HasForeignKey(p => p.CurrentEdgeId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(p => p.DestinationZone)
+             .WithMany()
+             .HasForeignKey(p => p.DestinationZoneId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserZoneUnlock>(e =>
+        {
+            e.HasKey(u => new { u.UserId, u.WorldZoneId });
+            e.HasOne(u => u.User)
+             .WithMany()
+             .HasForeignKey(u => u.UserId);
+            e.HasOne(u => u.WorldZone)
+             .WithMany(z => z.UnlockedByUsers)
+             .HasForeignKey(u => u.WorldZoneId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(u => u.UserWorldProgress)
+             .WithMany(p => p.UnlockedZones)
+             .HasForeignKey(u => u.UserWorldProgressId);
+        });
+
         // --- Map entities ---
         modelBuilder.Entity<MapNode>(e =>
         {
             e.HasKey(n => n.Id);
             e.Property(n => n.Type).HasConversion<string>();
             e.Property(n => n.Region).HasConversion<string>();
+            e.HasOne(n => n.WorldZone)
+             .WithMany(z => z.Nodes)
+             .HasForeignKey(n => n.WorldZoneId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<MapEdge>(e =>

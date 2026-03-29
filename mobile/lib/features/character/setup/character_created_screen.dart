@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/main_shell.dart';
-import '../character_service.dart';
+import '../services/character_service.dart';
 import '../models/character_class.dart';
 import '../models/character_setup_result.dart';
 import 'welcome_setup_screen.dart' show setupProgressDots;

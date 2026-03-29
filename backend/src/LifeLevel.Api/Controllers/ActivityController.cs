@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.DTOs.Activity;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -9,12 +9,12 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/activity")]
 [Authorize]
-public class ActivityController(ActivityService activityService) : ControllerBase
+public class ActivityController(ActivityService activityService, IUserContext userContext) : ControllerBase
 {
     [HttpPost("log")]
     public async Task<IActionResult> Log([FromBody] LogActivityRequest req)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         try
         {
             var result = await activityService.LogActivityAsync(userId, req);
@@ -29,7 +29,7 @@ public class ActivityController(ActivityService activityService) : ControllerBas
     [HttpGet("history")]
     public async Task<IActionResult> GetHistory()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = userContext.UserId;
         var history = await activityService.GetHistoryAsync(userId);
         return Ok(history);
     }

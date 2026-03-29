@@ -3,7 +3,7 @@ import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/main_shell.dart';
 import '../character/setup/welcome_setup_screen.dart';
-import 'auth_service.dart';
+import 'services/auth_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {

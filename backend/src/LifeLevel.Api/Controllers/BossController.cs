@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class BossController(BossService bossService) : ControllerBase
+public class BossController(BossService bossService, IUserContext userContext) : ControllerBase
 {
     // ── Fight lifecycle ────────────────────────────────────────────────────────
 
@@ -19,7 +19,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/activate")]
     public async Task<IActionResult> Activate(Guid bossId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var state = await bossService.ActivateFightAsync(userId, bossId);
@@ -41,7 +41,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/damage")]
     public async Task<IActionResult> DealDamage(Guid bossId, [FromBody] DealDamageRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var result = await bossService.DealDamageAsync(userId, bossId, request.Damage);
@@ -61,7 +61,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/damage/activity")]
     public async Task<IActionResult> DealActivityDamage(Guid bossId, [FromBody] ActivityDamageRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var damage = BossService.CalculateDamageFromActivity(
@@ -91,7 +91,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpGet("{bossId:guid}/state")]
     public async Task<IActionResult> GetState(Guid bossId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         var state = await bossService.GetStateAsync(userId, bossId);
 
         if (state == null)
@@ -116,7 +116,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/debug/set-hp")]
     public async Task<IActionResult> DebugSetHp(Guid bossId, [FromBody] DebugSetHpRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await bossService.DebugSetHpAsync(userId, bossId, request.Hp);
@@ -132,7 +132,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/debug/force-defeat")]
     public async Task<IActionResult> DebugForceDefeat(Guid bossId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await bossService.DebugForceDefeatAsync(userId, bossId);
@@ -148,7 +148,7 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/debug/force-expire")]
     public async Task<IActionResult> DebugForceExpire(Guid bossId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await bossService.DebugForceExpireAsync(userId, bossId);
@@ -164,16 +164,9 @@ public class BossController(BossService bossService) : ControllerBase
     [HttpPost("{bossId:guid}/debug/reset")]
     public async Task<IActionResult> DebugReset(Guid bossId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await bossService.DebugResetAsync(userId, bossId);
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? throw new UnauthorizedAccessException();
-        return Guid.Parse(claim);
     }
 }
 

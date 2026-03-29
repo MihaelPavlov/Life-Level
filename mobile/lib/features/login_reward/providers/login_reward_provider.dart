@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../login_reward_service.dart';
+import '../services/login_reward_service.dart';
 import '../models/login_reward_models.dart';
 
 // ── Service provider ───────────────────────────────────────────────────────────

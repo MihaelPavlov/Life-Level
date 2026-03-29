@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.DTOs.Map;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -9,12 +9,12 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class MapController(MapService mapService) : ControllerBase
+public class MapController(MapService mapService, IUserContext userContext) : ControllerBase
 {
     [HttpGet("full")]
     public async Task<ActionResult<MapFullResponse>> GetFullMap()
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         var result = await mapService.GetFullMapAsync(userId);
         return Ok(result);
     }
@@ -22,7 +22,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPut("destination")]
     public async Task<IActionResult> SetDestination([FromBody] SetDestinationRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await mapService.SetDestinationAsync(userId, request.DestinationNodeId);
@@ -48,7 +48,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/teleport/{nodeId:guid}")]
     public async Task<IActionResult> DebugTeleport(Guid nodeId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await mapService.DebugTeleportAsync(userId, nodeId);
         return NoContent();
     }
@@ -57,7 +57,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/add-distance")]
     public async Task<IActionResult> DebugAddDistance([FromBody] DebugAddDistanceRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await mapService.DebugAddDistanceAsync(userId, request.Km);
@@ -73,7 +73,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/adjust-level")]
     public async Task<ActionResult<object>> DebugAdjustLevel([FromBody] DebugAdjustLevelRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         var newLevel = await mapService.DebugAdjustLevelAsync(userId, request.Delta);
         return Ok(new { level = newLevel });
     }
@@ -82,7 +82,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/unlock-node/{nodeId:guid}")]
     public async Task<IActionResult> DebugUnlockNode(Guid nodeId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await mapService.DebugUnlockNodeAsync(userId, nodeId);
@@ -98,7 +98,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/unlock-all")]
     public async Task<IActionResult> DebugUnlockAll()
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await mapService.DebugUnlockAllNodesAsync(userId);
         return NoContent();
     }
@@ -107,7 +107,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/reset-progress")]
     public async Task<IActionResult> DebugResetProgress()
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await mapService.DebugResetProgressAsync(userId);
         return NoContent();
     }
@@ -116,7 +116,7 @@ public class MapController(MapService mapService) : ControllerBase
     [HttpPost("debug/set-xp")]
     public async Task<ActionResult<object>> DebugSetXp([FromBody] DebugSetXpRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var newXp = await mapService.DebugSetXpAsync(userId, request.Xp);
@@ -126,12 +126,5 @@ public class MapController(MapService mapService) : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-    }
-
-    private Guid GetUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? throw new UnauthorizedAccessException();
-        return Guid.Parse(claim);
     }
 }

@@ -1,5 +1,5 @@
-import '../../core/api/api_client.dart';
-import 'models/streak_models.dart';
+import '../../../core/api/api_client.dart';
+import '../models/streak_models.dart';
 
 class StreakService {
   final _dio = ApiClient.instance;

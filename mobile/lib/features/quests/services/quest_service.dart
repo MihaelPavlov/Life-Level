@@ -1,5 +1,5 @@
-import '../../core/api/api_client.dart';
-import 'models/quest_models.dart';
+import '../../../core/api/api_client.dart';
+import '../models/quest_models.dart';
 
 class QuestService {
   final _dio = ApiClient.instance;

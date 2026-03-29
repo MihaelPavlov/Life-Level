@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,13 +8,13 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class CrossroadsController(CrossroadsService crossroadsService) : ControllerBase
+public class CrossroadsController(CrossroadsService crossroadsService, IUserContext userContext) : ControllerBase
 {
     /// <summary>Choose a path at the crossroads. Player must be at the crossroads node. One-time only.</summary>
     [HttpPost("{crossroadsId:guid}/choose-path")]
     public async Task<IActionResult> ChoosePath(Guid crossroadsId, [FromBody] ChoosePathRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var result = await crossroadsService.ChoosePathAsync(userId, crossroadsId, request.PathId);
@@ -30,16 +30,9 @@ public class CrossroadsController(CrossroadsService crossroadsService) : Control
     [HttpPost("{crossroadsId:guid}/debug/reset")]
     public async Task<IActionResult> DebugReset(Guid crossroadsId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await crossroadsService.DebugResetAsync(userId, crossroadsId);
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? throw new UnauthorizedAccessException();
-        return Guid.Parse(claim);
     }
 }
 

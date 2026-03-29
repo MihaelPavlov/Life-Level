@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../quest_service.dart';
+import '../services/quest_service.dart';
 import '../models/quest_models.dart';
 
 // ── Service provider ───────────────────────────────────────────────────────────
@@ -9,7 +9,7 @@ final questServiceProvider = Provider<QuestService>((ref) => QuestService());
 class DailyQuestsNotifier extends AsyncNotifier<List<UserQuestProgress>> {
   @override
   Future<List<UserQuestProgress>> build() =>
-      ref.read(questServiceProvider).getDailyQuests();
+      ref.watch(questServiceProvider).getDailyQuests();
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
@@ -28,7 +28,7 @@ final dailyQuestsProvider =
 class WeeklyQuestsNotifier extends AsyncNotifier<List<UserQuestProgress>> {
   @override
   Future<List<UserQuestProgress>> build() =>
-      ref.read(questServiceProvider).getWeeklyQuests();
+      ref.watch(questServiceProvider).getWeeklyQuests();
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();

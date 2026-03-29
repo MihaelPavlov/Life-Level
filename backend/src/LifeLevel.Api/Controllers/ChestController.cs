@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,13 +8,13 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ChestController(ChestService chestService) : ControllerBase
+public class ChestController(ChestService chestService, IUserContext userContext) : ControllerBase
 {
     /// <summary>Collect a chest. Player must be at the chest node.</summary>
     [HttpPost("{chestId:guid}/collect")]
     public async Task<IActionResult> Collect(Guid chestId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var result = await chestService.CollectAsync(userId, chestId);
@@ -30,15 +30,8 @@ public class ChestController(ChestService chestService) : ControllerBase
     [HttpPost("{chestId:guid}/debug/reset")]
     public async Task<IActionResult> DebugReset(Guid chestId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await chestService.DebugResetAsync(userId, chestId);
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? throw new UnauthorizedAccessException();
-        return Guid.Parse(claim);
     }
 }

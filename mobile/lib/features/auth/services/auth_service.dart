@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../core/api/api_client.dart';
+import '../../../core/api/api_client.dart';
 
 class AuthService {
   final _dio = ApiClient.instance;

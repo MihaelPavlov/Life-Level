@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LifeLevel.Api.Application;
 using LifeLevel.Api.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,13 +8,13 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class DungeonController(DungeonService dungeonService) : ControllerBase
+public class DungeonController(DungeonService dungeonService, IUserContext userContext) : ControllerBase
 {
     /// <summary>Enter (discover) the dungeon. Player must be at the dungeon node.</summary>
     [HttpPost("{dungeonId:guid}/enter")]
     public async Task<IActionResult> Enter(Guid dungeonId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var state = await dungeonService.DiscoverAsync(userId, dungeonId);
@@ -30,7 +30,7 @@ public class DungeonController(DungeonService dungeonService) : ControllerBase
     [HttpPost("{dungeonId:guid}/complete-floor")]
     public async Task<IActionResult> CompleteFloor(Guid dungeonId, [FromBody] CompleteFloorRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             var result = await dungeonService.CompleteFloorAsync(userId, dungeonId, request.FloorNumber);
@@ -46,7 +46,7 @@ public class DungeonController(DungeonService dungeonService) : ControllerBase
     [HttpPost("{dungeonId:guid}/debug/set-floor")]
     public async Task<IActionResult> DebugSetFloor(Guid dungeonId, [FromBody] DebugSetFloorRequest request)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         try
         {
             await dungeonService.DebugSetFloorAsync(userId, dungeonId, request.Floor);
@@ -62,16 +62,9 @@ public class DungeonController(DungeonService dungeonService) : ControllerBase
     [HttpPost("{dungeonId:guid}/debug/reset")]
     public async Task<IActionResult> DebugReset(Guid dungeonId)
     {
-        var userId = GetUserId();
+        var userId = userContext.UserId;
         await dungeonService.DebugResetAsync(userId, dungeonId);
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? throw new UnauthorizedAccessException();
-        return Guid.Parse(claim);
     }
 }
 

@@ -92,7 +92,24 @@
       "Bash(wc -l C:UsersMihaelPavlovreposHomeLife-Levelmobilelibfeaturesprofile/*.dart)",
       "Bash(while read:*)",
       "Bash(do wc:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(dotnet test:*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-LevelbackendsrcLifeLevel.Application -type f -name *.cs)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-LevelbackendsrcLifeLevel.Infrastructure -type f -name *.cs)",
+      "Bash(cd:*)",
+      "Bash(mv activity/activity_service.dart activity/services/activity_service.dart)",
+      "Bash(mv auth/auth_service.dart auth/services/auth_service.dart)",
+      "Bash(mv character/character_service.dart character/services/character_service.dart)",
+      "Bash(mv login_reward/login_reward_service.dart login_reward/services/login_reward_service.dart)",
+      "Bash(mv map/map_service.dart map/services/map_service.dart)",
+      "Bash(grep -rn \"import ''.*features/activity/activity_service\\\\|import ''.*features/auth/auth_service\\\\|import ''.*features/character/character_service\\\\|import ''.*features/login_reward/login_reward_service\\\\|import ''.*features/map/map_service\\\\|import ''.*features/map/boss_service\\\\|import ''.*features/map/chest_service\\\\|import ''.*features/map/crossroads_service\\\\|import ''.*features/map/dungeon_service\\\\|import ''.*features/map/world_zone_service\\\\|import ''.*features/quests/quest_service\\\\|import ''.*features/streak/streak_service\" lib/ --include=\"*.dart\")",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-LevelbackendsrcLifeLevel.ApiInfrastructure -type f -name *.cs)",
+      "Bash(grep -rn \"import ''\\\\.\\\\./activity_service\\\\|import ''\\\\.\\\\./auth_service\\\\|import ''\\\\.\\\\./character_service\\\\|import ''\\\\.\\\\./login_reward_service\\\\|import ''\\\\.\\\\./map_service\\\\|import ''\\\\.\\\\./boss_service\\\\|import ''\\\\.\\\\./chest_service\\\\|import ''\\\\.\\\\./crossroads_service\\\\|import ''\\\\.\\\\./dungeon_service\\\\|import ''\\\\.\\\\./world_zone_service\\\\|import ''\\\\.\\\\./quest_service\\\\|import ''\\\\.\\\\./streak_service\\\\|import ''activity_service\\\\|import ''auth_service\\\\|import ''character_service\\\\|import ''login_reward_service\\\\|import ''map_service\\\\|import ''boss_service\\\\|import ''chest_service\\\\|import ''crossroads_service\\\\|import ''dungeon_service\\\\|import ''world_zone_service\\\\|import ''quest_service\\\\|import ''streak_service\" lib/ --include=\"*.dart\")",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i \"s|''../../core/|''../../../core/|g\" \"$f\")",
+      "Bash(sed -i \"s|''models/|''../models/|g\" \"$f\")",
+      "Bash(echo \"Fixed: $f\")"
     ]
   }
 }

@@ -46,7 +46,7 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF161b22),
+        color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -62,7 +62,7 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF30363d),
+                    color: AppColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
