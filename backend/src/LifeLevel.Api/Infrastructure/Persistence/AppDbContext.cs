@@ -28,6 +28,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserDungeonState> UserDungeonStates => Set<UserDungeonState>();
     public DbSet<UserCrossroadsState> UserCrossroadsStates => Set<UserCrossroadsState>();
     public DbSet<XpHistoryEntry> XpHistoryEntries => Set<XpHistoryEntry>();
+    public DbSet<Streak> Streaks => Set<Streak>();
+    public DbSet<LoginReward> LoginRewards => Set<LoginReward>();
+    public DbSet<Quest> Quests => Set<Quest>();
+    public DbSet<UserQuestProgress> UserQuestProgress => Set<UserQuestProgress>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -264,5 +268,48 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Description).HasMaxLength(256).IsRequired();
         });
 
+        // --- Phase 2: Streak, LoginReward, Quest, UserQuestProgress ---
+
+        modelBuilder.Entity<Streak>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.User)
+             .WithOne(u => u.Streak)
+             .HasForeignKey<Streak>(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LoginReward>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.User)
+             .WithOne(u => u.LoginReward)
+             .HasForeignKey<LoginReward>(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Quest>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Type).HasConversion<string>();
+            e.Property(x => x.Category).HasConversion<string>();
+            e.Property(x => x.RequiredActivity).HasConversion<string?>();
+        });
+
+        modelBuilder.Entity<UserQuestProgress>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.User)
+             .WithMany(u => u.QuestProgress)
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Quest)
+             .WithMany(q => q.UserProgress)
+             .HasForeignKey(x => x.QuestId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Quest seed data
+        modelBuilder.Entity<Quest>().HasData(Domain.Data.QuestSeedData.All);
     }
 }

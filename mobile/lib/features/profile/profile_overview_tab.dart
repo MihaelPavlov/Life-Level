@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
-import '../character/character_service.dart';
 import '../character/models/character_profile.dart';
+import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'xp_history_sheet.dart';
@@ -10,8 +11,7 @@ import 'stat_detail_sheet.dart';
 // ── ProfileOverviewTab ────────────────────────────────────────────────────────
 class ProfileOverviewTab extends StatelessWidget {
   final CharacterProfile profile;
-  final VoidCallback onStatSpent;
-  const ProfileOverviewTab({super.key, required this.profile, required this.onStatSpent});
+  const ProfileOverviewTab({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,6 @@ class ProfileOverviewTab extends StatelessWidget {
         ProfileStatsSection(
           stats: buildProfileStats(profile),
           availablePoints: profile.availableStatPoints,
-          onStatSpent: onStatSpent,
         ),
         const SizedBox(height: 20),
         ProfileActivitySummary(profile: profile),
@@ -170,12 +169,10 @@ class ProfileXpSection extends StatelessWidget {
 class ProfileStatsSection extends StatelessWidget {
   final List<StatData> stats;
   final int availablePoints;
-  final VoidCallback onStatSpent;
   const ProfileStatsSection({
     super.key,
     required this.stats,
     required this.availablePoints,
-    required this.onStatSpent,
   });
 
   @override
@@ -223,11 +220,7 @@ class ProfileStatsSection extends StatelessWidget {
           ),
         ),
         for (final stat in stats) ...[
-          ProfileStatCard(
-            stat: stat,
-            availablePoints: availablePoints,
-            onStatSpent: onStatSpent,
-          ),
+          ProfileStatCard(stat: stat, availablePoints: availablePoints),
           const SizedBox(height: 6),
         ],
       ],
@@ -236,22 +229,20 @@ class ProfileStatsSection extends StatelessWidget {
 }
 
 // ── ProfileStatCard ───────────────────────────────────────────────────────────
-class ProfileStatCard extends StatefulWidget {
+class ProfileStatCard extends ConsumerStatefulWidget {
   final StatData stat;
   final int availablePoints;
-  final VoidCallback onStatSpent;
   const ProfileStatCard({
     super.key,
     required this.stat,
     required this.availablePoints,
-    required this.onStatSpent,
   });
 
   @override
-  State<ProfileStatCard> createState() => _ProfileStatCardState();
+  ConsumerState<ProfileStatCard> createState() => _ProfileStatCardState();
 }
 
-class _ProfileStatCardState extends State<ProfileStatCard> {
+class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
   bool _spending = false;
 
   void _showDetail(BuildContext context) {
@@ -262,7 +253,6 @@ class _ProfileStatCardState extends State<ProfileStatCard> {
       builder: (_) => StatDetailSheet(
         stat: widget.stat,
         availablePoints: widget.availablePoints,
-        onStatSpent: widget.onStatSpent,
       ),
     );
   }
@@ -270,10 +260,9 @@ class _ProfileStatCardState extends State<ProfileStatCard> {
   Future<void> _spendPoint() async {
     setState(() => _spending = true);
     try {
-      await CharacterService().spendStatPoint(widget.stat.key);
-      widget.onStatSpent();
+      await ref.read(characterProfileProvider.notifier).spendStatPoint(widget.stat.key);
     } catch (_) {
-      // silently fail — profile will not refresh
+      // silently fail — provider will not refresh on error
     } finally {
       if (mounted) setState(() => _spending = false);
     }

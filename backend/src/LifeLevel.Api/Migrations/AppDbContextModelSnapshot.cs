@@ -413,6 +413,35 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("DungeonPortals");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.LoginReward", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ClaimedToday")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("DayInCycle")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TotalLoginDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("LoginRewards");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapEdge", b =>
                 {
                     b.Property<Guid>("Id")
@@ -486,6 +515,256 @@ namespace LifeLevel.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("MapNodes");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Quest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RequiredActivity")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RewardXp")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TargetUnit")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("TargetValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Quests");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0001-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Complete any workout lasting at least 30 minutes.",
+                            IsActive = true,
+                            RewardXp = 150,
+                            SortOrder = 1,
+                            TargetUnit = "minutes",
+                            TargetValue = 30m,
+                            Title = "Morning Mover",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0002-0000-0000-000000000000"),
+                            Category = "Calories",
+                            Description = "Burn at least 300 calories in a single session.",
+                            IsActive = true,
+                            RewardXp = 200,
+                            SortOrder = 2,
+                            TargetUnit = "calories",
+                            TargetValue = 300m,
+                            Title = "Calorie Crusher",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0003-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Run at least 5 km.",
+                            IsActive = true,
+                            RequiredActivity = "Running",
+                            RewardXp = 250,
+                            SortOrder = 3,
+                            TargetUnit = "km",
+                            TargetValue = 5m,
+                            Title = "Road Warrior",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0004-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Hit the gym for at least 45 minutes.",
+                            IsActive = true,
+                            RequiredActivity = "Gym",
+                            RewardXp = 200,
+                            SortOrder = 4,
+                            TargetUnit = "minutes",
+                            TargetValue = 45m,
+                            Title = "Iron Session",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0005-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Practice yoga for at least 30 minutes.",
+                            IsActive = true,
+                            RequiredActivity = "Yoga",
+                            RewardXp = 150,
+                            SortOrder = 5,
+                            TargetUnit = "minutes",
+                            TargetValue = 30m,
+                            Title = "Zen Master",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0006-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Run for at least 30 minutes.",
+                            IsActive = true,
+                            RequiredActivity = "Running",
+                            RewardXp = 175,
+                            SortOrder = 6,
+                            TargetUnit = "minutes",
+                            TargetValue = 30m,
+                            Title = "Endurance Push",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0007-0000-0000-000000000000"),
+                            Category = "Workouts",
+                            Description = "Complete 3 workouts this week.",
+                            IsActive = true,
+                            RewardXp = 500,
+                            SortOrder = 1,
+                            TargetUnit = "workouts",
+                            TargetValue = 3m,
+                            Title = "Triple Threat",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0008-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Run a total of 10 km this week.",
+                            IsActive = true,
+                            RequiredActivity = "Running",
+                            RewardXp = 600,
+                            SortOrder = 2,
+                            TargetUnit = "km",
+                            TargetValue = 10m,
+                            Title = "Road Runner",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0009-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Spend at least 90 minutes at the gym this week.",
+                            IsActive = true,
+                            RequiredActivity = "Gym",
+                            RewardXp = 550,
+                            SortOrder = 3,
+                            TargetUnit = "minutes",
+                            TargetValue = 90m,
+                            Title = "Iron Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0010-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Run a total of 10 km across all activities.",
+                            IsActive = true,
+                            RequiredActivity = "Running",
+                            RewardXp = 1000,
+                            SortOrder = 1,
+                            TargetUnit = "km",
+                            TargetValue = 10m,
+                            Title = "First Steps",
+                            Type = "Special"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0011-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Spend 60 minutes climbing.",
+                            IsActive = true,
+                            RequiredActivity = "Climbing",
+                            RewardXp = 1200,
+                            SortOrder = 2,
+                            TargetUnit = "minutes",
+                            TargetValue = 60m,
+                            Title = "Summit Seeker",
+                            Type = "Special"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0012-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Log a total of 500 minutes of any activity.",
+                            IsActive = true,
+                            RewardXp = 2000,
+                            SortOrder = 3,
+                            TargetUnit = "minutes",
+                            TargetValue = 500m,
+                            Title = "Endurance Initiate",
+                            Type = "Special"
+                        });
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Streak", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Current")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastActivityDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Longest")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ShieldUsedToday")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ShieldsAvailable")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ShieldsUsed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalDaysActive")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Streaks");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.User", b =>
@@ -725,6 +1004,48 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserNodeUnlocks");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserQuestProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("BonusAwarded")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("CurrentValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("QuestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RewardClaimed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserQuestProgress");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserRingItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -886,6 +1207,17 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("Node");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.LoginReward", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                        .WithOne("LoginReward")
+                        .HasForeignKey("LifeLevel.Api.Domain.Entities.LoginReward", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.MapEdge", b =>
                 {
                     b.HasOne("LifeLevel.Api.Domain.Entities.MapNode", "FromNode")
@@ -903,6 +1235,17 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("FromNode");
 
                     b.Navigation("ToNode");
+                });
+
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Streak", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                        .WithOne("Streak")
+                        .HasForeignKey("LifeLevel.Api.Domain.Entities.Streak", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserBossState", b =>
@@ -1080,6 +1423,25 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("UserMapProgress");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserQuestProgress", b =>
+                {
+                    b.HasOne("LifeLevel.Api.Domain.Entities.Quest", "Quest")
+                        .WithMany("UserProgress")
+                        .HasForeignKey("QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
+                        .WithMany("QuestProgress")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quest");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserRingItem", b =>
                 {
                     b.HasOne("LifeLevel.Api.Domain.Entities.User", "User")
@@ -1151,11 +1513,22 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("EdgesTo");
                 });
 
+            modelBuilder.Entity("LifeLevel.Api.Domain.Entities.Quest", b =>
+                {
+                    b.Navigation("UserProgress");
+                });
+
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.User", b =>
                 {
                     b.Navigation("Character");
 
+                    b.Navigation("LoginReward");
+
+                    b.Navigation("QuestProgress");
+
                     b.Navigation("RingItems");
+
+                    b.Navigation("Streak");
                 });
 
             modelBuilder.Entity("LifeLevel.Api.Domain.Entities.UserMapProgress", b =>

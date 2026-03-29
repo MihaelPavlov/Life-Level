@@ -1,32 +1,30 @@
 import 'package:flutter/material.dart';
-import '../character/character_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 
 // ── StatDetailSheet ───────────────────────────────────────────────────────────
-class StatDetailSheet extends StatefulWidget {
+class StatDetailSheet extends ConsumerStatefulWidget {
   final StatData stat;
   final int availablePoints;
-  final VoidCallback onStatSpent;
   const StatDetailSheet({
     super.key,
     required this.stat,
     required this.availablePoints,
-    required this.onStatSpent,
   });
 
   @override
-  State<StatDetailSheet> createState() => _StatDetailSheetState();
+  ConsumerState<StatDetailSheet> createState() => _StatDetailSheetState();
 }
 
-class _StatDetailSheetState extends State<StatDetailSheet> {
+class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
   bool _spending = false;
 
   Future<void> _spendPoint() async {
     setState(() => _spending = true);
     try {
-      await CharacterService().spendStatPoint(widget.stat.key);
-      widget.onStatSpent();
+      await ref.read(characterProfileProvider.notifier).spendStatPoint(widget.stat.key);
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (mounted) setState(() => _spending = false);

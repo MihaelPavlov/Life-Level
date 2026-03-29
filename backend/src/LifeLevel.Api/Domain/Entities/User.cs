@@ -13,4 +13,7 @@ public class User
 
     public Character? Character { get; set; }
     public ICollection<UserRingItem> RingItems { get; set; } = [];
+    public Streak? Streak { get; set; }
+    public LoginReward? LoginReward { get; set; }
+    public ICollection<UserQuestProgress> QuestProgress { get; set; } = new List<UserQuestProgress>();
 }

@@ -210,7 +210,13 @@ public class MapService(AppDbContext db, CharacterService characterService)
         var character = await db.Characters.FirstOrDefaultAsync(c => c.UserId == userId)
             ?? throw new InvalidOperationException("Character not found.");
 
-        character.Level = Math.Max(1, character.Level + delta);
+        var newLevel = Math.Max(1, character.Level + delta);
+        var levelsGained = newLevel - character.Level;
+
+        character.Level = newLevel;
+        if (levelsGained > 0)
+            character.AvailableStatPoints += levelsGained;
+
         character.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return character.Level;
@@ -315,10 +321,21 @@ public class MapService(AppDbContext db, CharacterService characterService)
             ?? throw new InvalidOperationException("Character not found.");
 
         character.Xp = Math.Max(0, xp);
+
+        // Apply level-ups and award stat points, same as the normal XP path.
+        while (character.Xp >= XpAtLevelStart(character.Level + 1))
+        {
+            character.Level++;
+            character.AvailableStatPoints++;
+        }
+
         character.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return character.Xp;
     }
+
+    private static long XpAtLevelStart(int level) =>
+        (long)level * (level - 1) / 2 * 300;
 
     private async Task<UserMapProgress> InitializeUserProgressAsync(Guid userId)
     {

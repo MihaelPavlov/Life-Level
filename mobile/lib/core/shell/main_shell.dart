@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/auth_service.dart';
+import '../../features/character/providers/character_provider.dart';
 import '../services/level_up_notifier.dart';
 import '../widgets/level_up_overlay.dart';
 import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/login_reward/login_reward_screen.dart';
 import '../../features/quests/quests_screen.dart';
 import '../../features/map/map_screen.dart';
 import '../../features/map/world_map_screen.dart';
-import '../../features/profile/profile_screen.dart' show ProfileScreen, ProfileScreenState;
+import '../../features/profile/profile_screen.dart';
 import 'shell_constants.dart';
 import 'shell_models.dart';
 import 'widgets/ring_item_tile.dart';
@@ -17,21 +20,19 @@ import 'widgets/boss_fab.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 // ── shell ─────────────────────────────────────────────────────────────────────
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   final List<String>? initialRingIds;
   final List<String>? initialNavIds;
   const MainShell({super.key, this.initialRingIds, this.initialNavIds});
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
+class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateMixin {
   int _tabIndex = 0;
   bool _radialOpen = false;
   bool _worldOpen = false;
-
-  final _homeKey    = GlobalKey<HomeScreenState>();
-  final _profileKey = GlobalKey<ProfileScreenState>();
+  bool _loginRewardShown = false;
 
   late final AnimationController _openCtrl;
   late final Animation<double> _openAnim;
@@ -64,6 +65,27 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
   late final StreamSubscription<int> _levelUpSub;
 
   final _fabKey = GlobalKey();
+
+  void _checkLoginReward(AsyncValue<Object?> profileAsync) {
+    if (_loginRewardShown) return;
+    // characterProfileProvider is AsyncNotifierProvider<_, CharacterProfile>
+    // We access valueOrNull which may be null while loading.
+    final profile = ref.read(characterProfileProvider).valueOrNull;
+    if (profile == null) return;
+    if (!profile.loginRewardAvailable) return;
+    _loginRewardShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => LoginRewardScreen(
+          onDismiss: () => Navigator.of(ctx).pop(),
+        ),
+      );
+    });
+  }
 
   @override
   void initState() {
@@ -218,11 +240,11 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
 
   Widget _screenFor(String id) {
     switch (id) {
-      case 'home':    return HomeScreen(key: _homeKey);
+      case 'home':    return const HomeScreen();
       case 'quests':  return const QuestsScreen();
       case 'map':     return const MapScreen();
       case 'world':   return const WorldMapScreen();
-      case 'profile': return ProfileScreen(key: _profileKey);
+      case 'profile': return const ProfileScreen();
       default:        return Center(
         child: Text(id, style: const TextStyle(color: Colors.white38)),
       );
@@ -232,6 +254,9 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
   // ── build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    // Listen for the first successful profile load to check login reward.
+    ref.listen(characterProfileProvider, (_, next) => _checkLoginReward(next));
+
     final angles = anglesFor(_ringItems.length);
 
     return Scaffold(
@@ -310,8 +335,9 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                   onTap: (i) {
                     _closeRadial();
                     setState(() { _tabIndex = i; _worldOpen = false; });
-                    if (_navIds[i] == 'home')    _homeKey.currentState?.refresh();
-                    if (_navIds[i] == 'profile') _profileKey.currentState?.refresh();
+                    if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
+                      ref.read(characterProfileProvider.notifier).refresh();
+                    }
                   },
                 ),
               ),

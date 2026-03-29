@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
-import '../character/character_service.dart';
 import '../character/models/character_profile.dart';
+import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'profile_overview_tab.dart';
@@ -9,37 +10,21 @@ import 'profile_overview_tab.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // ProfileScreen
 // ─────────────────────────────────────────────────────────────────────────────
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
   @override
-  State<ProfileScreen> createState() => ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class ProfileScreenState extends State<ProfileScreen>
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
-  CharacterProfile? _profile;
-  bool _loading = true;
-  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tab = TabController(length: kProfileTabs.length, vsync: this);
     _tab.addListener(() => setState(() {}));
-    _loadProfile();
-  }
-
-  Future<void> refresh() => _loadProfile();
-
-  Future<void> _loadProfile() async {
-    setState(() { _loading = true; _error = null; });
-    try {
-      final profile = await CharacterService().getProfile();
-      if (mounted) setState(() { _profile = profile; _loading = false; });
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
-    }
   }
 
   @override
@@ -50,49 +35,51 @@ class ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
+    final profileAsync = ref.watch(characterProfileProvider);
+    final profile = profileAsync.valueOrNull;
+
+    // First load — no data yet.
+    if (profile == null) {
+      if (profileAsync.hasError) {
+        return Scaffold(
+          backgroundColor: kPBg,
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Failed to load profile',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: kPTextPri),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    profileAsync.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12, color: kPTextSec),
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () => ref.read(characterProfileProvider.notifier).refresh(),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
       return const Scaffold(
         backgroundColor: kPBg,
         body: Center(child: CircularProgressIndicator(color: AppColors.blue)),
       );
     }
 
-    if (_error != null) {
-      return Scaffold(
-        backgroundColor: kPBg,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Failed to load profile',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: kPTextPri),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: kPTextSec),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: _loadProfile,
-                  child: const Text(
-                    'Retry',
-                    style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    final profile = _profile!;
-
+    // Profile is available — show it. Silently refreshes in background.
     return Scaffold(
       backgroundColor: kPBg,
       body: Column(
@@ -102,7 +89,7 @@ class ProfileScreenState extends State<ProfileScreen>
             child: TabBarView(
               controller: _tab,
               children: [
-                ProfileOverviewTab(profile: profile, onStatSpent: _loadProfile),
+                ProfileOverviewTab(profile: profile),
                 const ProfilePlaceholderTab('Equipment', '🛡️'),
                 const ProfilePlaceholderTab('Inventory', '🎒'),
                 const ProfilePlaceholderTab('Achievements', '🏆'),

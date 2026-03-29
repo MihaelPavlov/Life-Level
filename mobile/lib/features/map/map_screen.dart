@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
@@ -31,6 +32,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   late final AnimationController _pulseCtrl;
   late final AnimationController _destCtrl;
   late final TransformationController _transformCtrl;
+  late final StreamSubscription<int> _levelUpSub;
 
   bool _hasInitializedViewport = false;
 
@@ -46,11 +48,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
     _transformCtrl = TransformationController();
+    // Re-fetch map when the character levels up so node lock states update.
+    _levelUpSub = LevelUpNotifier.stream.listen((_) => _loadMap());
     _loadMap();
   }
 
   @override
   void dispose() {
+    _levelUpSub.cancel();
     _pulseCtrl.dispose();
     _destCtrl.dispose();
     _transformCtrl.dispose();

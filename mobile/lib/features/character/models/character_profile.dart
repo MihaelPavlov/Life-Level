@@ -18,6 +18,7 @@ class CharacterProfile {
   final int weeklyXpEarned;
   final int currentStreak;
   final int availableStatPoints;
+  final bool loginRewardAvailable;
 
   const CharacterProfile({
     required this.username,
@@ -39,6 +40,7 @@ class CharacterProfile {
     required this.weeklyXpEarned,
     required this.currentStreak,
     required this.availableStatPoints,
+    this.loginRewardAvailable = false,
   });
 
   factory CharacterProfile.fromJson(Map<String, dynamic> json) =>
@@ -62,6 +64,7 @@ class CharacterProfile {
         weeklyXpEarned: json['weeklyXpEarned'] as int,
         currentStreak: json['currentStreak'] as int,
         availableStatPoints: json['availableStatPoints'] as int? ?? 0,
+        loginRewardAvailable: json['loginRewardAvailable'] as bool? ?? false,
       );
 
   double get xpProgress {

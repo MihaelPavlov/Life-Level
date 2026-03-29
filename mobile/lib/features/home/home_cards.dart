@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/level_up_overlay.dart';
+import '../activity/log_activity_screen.dart';
 import '../character/models/character_profile.dart';
+import '../character/providers/character_provider.dart';
+import '../quests/models/quest_models.dart';
+import '../quests/providers/quest_provider.dart';
+import '../streak/providers/streak_provider.dart';
 import 'home_widgets.dart';
 
 // ── HEADER ──────────────────────────────────────────────────────────────────────
@@ -151,13 +157,29 @@ class HomeXpCard extends StatelessWidget {
 }
 
 // ── STREAK CARD ──────────────────────────────────────────────────────────────────
-class HomeStreakCard extends StatelessWidget {
+class HomeStreakCard extends ConsumerWidget {
   const HomeStreakCard({super.key});
 
+  static const _dayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(characterProfileProvider).valueOrNull;
+    final streakAsync = ref.watch(streakProvider);
+    final streakData = streakAsync.valueOrNull;
+
+    final currentStreak = profile?.currentStreak ?? streakData?.current ?? 0;
+    final longestStreak = streakData?.longest ?? 0;
+    final shields = streakData?.shieldsAvailable ?? 0;
+
+    // Build 7-day grid: last `currentStreak` days are filled (capped at 7),
+    // today is the rightmost slot if streak > 0.
+    final today = DateTime.now();
+    final dayIndex = today.weekday - 1; // 0 = Mon, 6 = Sun
+
     return HomeCard(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -167,79 +189,238 @@ class HomeStreakCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('14-Day Streak',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    Text(
+                      currentStreak == 1
+                          ? '1-Day Streak'
+                          : '$currentStreak-Day Streak',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('Reward in 7 days — ×1.5 XP bonus',
-                        style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    Text(
+                      longestStreak > 0
+                          ? 'Best: $longestStreak days'
+                          : 'Keep it going!',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              HomeBadge('🛡 Shield ready', AppColors.green, fontSize: 9),
+              if (shields > 0)
+                HomeBadge('🛡 $shields Shield${shields > 1 ? 's' : ''}', AppColors.green, fontSize: 9),
             ],
           ),
           const SizedBox(height: 10),
+          // 7-day grid: Mon–Sun
           Row(
-            children: [
-              HomeStreakDay(icon: '✓',  label: 'MON',   state: HomeStreakState.done),
-              const SizedBox(width: 5),
-              HomeStreakDay(icon: '✓',  label: 'TUE',   state: HomeStreakState.done),
-              const SizedBox(width: 5),
-              HomeStreakDay(icon: '✓',  label: 'WED',   state: HomeStreakState.done),
-              const SizedBox(width: 5),
-              HomeStreakDay(icon: '✓',  label: 'THU',   state: HomeStreakState.done),
-              const SizedBox(width: 5),
-              HomeStreakDay(icon: '✓',  label: 'FRI',   state: HomeStreakState.done),
-              const SizedBox(width: 5),
-              HomeStreakDay(icon: '✓',  label: 'SAT',   state: HomeStreakState.done),
-              const SizedBox(width: 5),
-              HomeStreakDay(icon: '🔥', label: 'TODAY', state: HomeStreakState.today),
-            ],
+            children: List.generate(7, (i) {
+              // How many days ago is index i (0=Mon)?
+              // Days before today in the week are index 0..(dayIndex-1),
+              // today is dayIndex, days after today are dayIndex+1..6.
+              final daysAgo = dayIndex - i;
+              final isToday = i == dayIndex;
+              final isFuture = i > dayIndex;
+
+              // A past day is "done" if the streak covers it.
+              // streak=1 means only today is active.
+              // streak=5 means today + 4 prior days.
+              final isDone = !isFuture && !isToday && daysAgo <= currentStreak - 1;
+
+              HomeStreakState state;
+              String icon;
+              if (isToday && currentStreak > 0) {
+                state = HomeStreakState.today;
+                icon = '🔥';
+              } else if (isDone) {
+                state = HomeStreakState.done;
+                icon = '✓';
+              } else {
+                state = HomeStreakState.next;
+                icon = '·';
+              }
+
+              return [
+                Expanded(
+                  child: HomeStreakDay(
+                    icon: icon,
+                    label: _dayLabels[i],
+                    state: state,
+                  ),
+                ),
+                if (i < 6) const SizedBox(width: 5),
+              ];
+            }).expand((w) => w).toList(),
           ),
+          // Use Shield button
+          if (shields > 0) ...[
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => _useShield(context, ref),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: AppColors.blue.withValues(alpha: 0.08),
+                  border: Border.all(color: AppColors.blue.withValues(alpha: 0.25)),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text('🛡️', style: TextStyle(fontSize: 14)),
+                    SizedBox(width: 6),
+                    Text(
+                      'Use Shield to protect streak',
+                      style: TextStyle(
+                        color: AppColors.blue,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+
+  Future<void> _useShield(BuildContext context, WidgetRef ref) async {
+    try {
+      final result = await ref.read(streakProvider.notifier).useShield();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor:
+                result.success ? AppColors.green : AppColors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to use shield: $e'),
+            backgroundColor: AppColors.red,
+          ),
+        );
+      }
+    }
+  }
 }
 
 // ── DAILY QUESTS CARD ────────────────────────────────────────────────────────────
-class HomeQuestsCard extends StatelessWidget {
+class HomeQuestsCard extends ConsumerWidget {
   const HomeQuestsCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final questsAsync = ref.watch(dailyQuestsProvider);
+
     return HomeCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          HomeSectionTitle(label: 'DAILY QUESTS', action: '3 / 5 done · resets 12h'),
-          HomeQuestItem(
-            icon: '🏃', iconState: HomeQuestState.done,
-            name: 'Run 30 minutes', sub: '32 min completed',
-            xp: '+150 XP', done: true,
+          questsAsync.when(
+            loading: () => HomeSectionTitle(
+              label: 'DAILY QUESTS',
+              action: 'Loading...',
+            ),
+            error: (_, __) => HomeSectionTitle(
+              label: 'DAILY QUESTS',
+              action: 'Tap to retry',
+              actionColor: AppColors.red,
+            ),
+            data: (quests) {
+              final completed = quests.where((q) => q.isCompleted).length;
+              final total = quests.isEmpty ? 5 : quests.length;
+              return HomeSectionTitle(
+                label: 'DAILY QUESTS',
+                action: '$completed / $total done',
+              );
+            },
           ),
-          HomeQuestItem(
-            icon: '🔥', iconState: HomeQuestState.done,
-            name: 'Burn 300 calories', sub: '348 cal burned',
-            xp: '+100 XP', done: true,
+          questsAsync.when(
+            loading: () => _QuestLoadingRows(),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: GestureDetector(
+                onTap: () => ref.read(dailyQuestsProvider.notifier).refresh(),
+                child: const Text(
+                  'Failed to load. Tap to retry.',
+                  style: TextStyle(
+                    color: AppColors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+            data: (quests) {
+              if (quests.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'No daily quests available.',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                );
+              }
+              // Show up to 3 quests in the card.
+              final preview = quests.take(3).toList();
+              return Column(
+                children: preview.map((q) {
+                  final iconState = q.isCompleted
+                      ? HomeQuestState.done
+                      : q.progress > 0
+                          ? HomeQuestState.active
+                          : HomeQuestState.pending;
+                  final progressColor = _categoryColor(q.category);
+                  return HomeQuestItem(
+                    icon: _categoryEmoji(q.category),
+                    iconState: iconState,
+                    name: q.title,
+                    sub: _progressSub(q),
+                    xp: '+${q.rewardXp} XP',
+                    done: q.isCompleted,
+                    progress: q.isCompleted ? null : q.progress,
+                    progressColor: progressColor,
+                  );
+                }).toList(),
+              );
+            },
           ),
-          HomeQuestItem(
-            icon: '📍', iconState: HomeQuestState.done,
-            name: 'Cover 5 km', sub: '5.2 km logged',
-            xp: '+100 XP', done: true,
-          ),
-          HomeQuestItem(
-            icon: '💪', iconState: HomeQuestState.active,
-            name: 'Strength session', sub: '0 / 1 session',
-            xp: '+150 XP', done: false, progress: 0.0,
-            progressColor: AppColors.red,
-          ),
-          HomeQuestItem(
-            icon: '🧘', iconState: HomeQuestState.active,
-            name: '10 min yoga / stretch', sub: '0 / 10 minutes',
-            xp: '+100 XP', done: false, progress: 0.0,
-            progressColor: AppColors.purple,
-          ),
+          // "See all" link when there are more than 3 quests
+          questsAsync.whenOrNull(
+            data: (quests) {
+              if (quests.length <= 3) return null;
+              final remaining = quests.length - 3;
+              return Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 2),
+                child: GestureDetector(
+                  onTap: () {
+                    // The shell handles navigation — navigate by switching tab.
+                    // Fallback: do nothing. The user can tap the Quests tab.
+                  },
+                  child: Text(
+                    '+$remaining more — See all →',
+                    style: const TextStyle(
+                      color: AppColors.blue,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ) ?? const SizedBox.shrink(),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -251,7 +432,7 @@ class HomeQuestsCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Complete all 5 quests',
+                Text('Complete all quests',
                     style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 Text('+300 Bonus XP',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.orange)),
@@ -259,6 +440,60 @@ class HomeQuestsCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _categoryEmoji(String category) {
+    switch (category.toLowerCase()) {
+      case 'duration':  return '⏱️';
+      case 'calories':  return '🔥';
+      case 'distance':  return '📍';
+      case 'workouts':  return '💪';
+      case 'streak':    return '🔥';
+      case 'login':     return '📅';
+      default:          return '🎯';
+    }
+  }
+
+  Color _categoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'duration':  return AppColors.blue;
+      case 'calories':  return AppColors.orange;
+      case 'distance':  return AppColors.green;
+      case 'workouts':  return AppColors.red;
+      case 'streak':    return AppColors.orange;
+      default:          return AppColors.purple;
+    }
+  }
+
+  String _progressSub(UserQuestProgress q) {
+    final cur = q.targetUnit == 'km'
+        ? q.currentValue.toStringAsFixed(1)
+        : q.currentValue.toInt().toString();
+    final tgt = q.targetUnit == 'km'
+        ? q.targetValue.toStringAsFixed(1)
+        : q.targetValue.toInt().toString();
+    if (q.isCompleted) return 'Completed';
+    return '$cur / $tgt ${q.targetUnit}';
+  }
+}
+
+// Loading placeholder rows
+class _QuestLoadingRows extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        3,
+        (_) => Container(
+          height: 38,
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1e2632).withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
       ),
     );
   }
@@ -275,41 +510,94 @@ class HomeLastActivityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          HomeSectionTitle(label: 'LAST ACTIVITY', action: '2 hours ago'),
+          HomeSectionTitle(
+            label: 'LAST ACTIVITY',
+            action: '2 hours ago',
+          ),
           Row(
             children: [
               Container(
-                width: 46, height: 46,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: AppColors.green.withValues(alpha: 0.1),
-                  border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+                  border: Border.all(
+                      color: AppColors.green.withValues(alpha: 0.25)),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Center(child: Text('🏃', style: TextStyle(fontSize: 22))),
+                child: const Center(
+                    child: Text('🏃', style: TextStyle(fontSize: 22))),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Morning Run',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    const Text(
+                      'Morning Run',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('5.2 km · 28:14 · Avg 5:26/km · 156 bpm',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                    Text(
+                      '5.2 km · 28:14 · Avg 5:26/km · 156 bpm',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
                       children: [
                         HomeGainChip(label: '+450 XP', color: AppColors.orange),
-                        HomeGainChip(label: '+2 END',  color: AppColors.green),
-                        HomeGainChip(label: '+2 AGI',  color: AppColors.blue),
+                        HomeGainChip(label: '+2 END', color: AppColors.green),
+                        HomeGainChip(label: '+2 AGI', color: AppColors.blue),
                       ],
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Log Activity button
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const LogActivityScreen(),
+                fullscreenDialog: true,
+              ),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.blue.withValues(alpha: 0.1),
+                border: Border.all(
+                    color: AppColors.blue.withValues(alpha: 0.35)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('💪', style: TextStyle(fontSize: 15)),
+                  SizedBox(width: 6),
+                  Text(
+                    'Log Activity',
+                    style: TextStyle(
+                      color: AppColors.blue,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

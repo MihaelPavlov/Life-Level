@@ -25,6 +25,12 @@ public record CharacterProfileResponse(
     int WeeklyRuns,
     double WeeklyDistanceKm,
     long WeeklyXpEarned,
-    int CurrentStreak,       // always 0 for now — streak tracking not yet implemented
-    int AvailableStatPoints
+    int CurrentStreak,
+    int AvailableStatPoints,
+
+    // Phase 2 — streak & login
+    int LongestStreak,
+    int ShieldsAvailable,
+    int DailyQuestsCompleted,
+    bool LoginRewardAvailable
 );

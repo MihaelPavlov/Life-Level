@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../character/providers/character_provider.dart';
 import 'map_colors.dart';
 import 'boss_service.dart';
 import 'chest_service.dart';
@@ -13,7 +15,7 @@ import 'models/map_models.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // MapDebugPanel
 // ─────────────────────────────────────────────────────────────────────────────
-class MapDebugPanel extends StatefulWidget {
+class MapDebugPanel extends ConsumerStatefulWidget {
   final List<MapNodeModel> nodes;
   final UserMapProgressModel userProgress;
   final MapService service;
@@ -30,10 +32,10 @@ class MapDebugPanel extends StatefulWidget {
   });
 
   @override
-  State<MapDebugPanel> createState() => _MapDebugPanelState();
+  ConsumerState<MapDebugPanel> createState() => _MapDebugPanelState();
 }
 
-class _MapDebugPanelState extends State<MapDebugPanel> {
+class _MapDebugPanelState extends ConsumerState<MapDebugPanel> {
   bool _busy = false;
   String? _status;
   int? _currentLevel;
@@ -64,6 +66,9 @@ class _MapDebugPanelState extends State<MapDebugPanel> {
     try {
       final newLevel = await widget.service.debugAdjustLevel(delta);
       if (mounted) setState(() { _busy = false; _currentLevel = newLevel; _status = '✓ Level $newLevel'; });
+      // Refresh map node locks + character profile (fires LevelUpNotifier if level increased).
+      widget.onRefresh();
+      await ref.read(characterProfileProvider.notifier).refresh();
     } catch (e) {
       if (mounted) setState(() { _busy = false; _status = '✗ $e'; });
     }
@@ -294,6 +299,7 @@ class _MapDebugPanelState extends State<MapDebugPanel> {
                             final newXp = await widget.service.debugSetXp((_currentXp ?? 0) + 1000);
                             if (mounted) setState(() { _busy = false; _currentXp = newXp; _status = '✓ XP: $newXp'; });
                             widget.onRefresh();
+                            await ref.read(characterProfileProvider.notifier).refresh();
                           } catch (e) {
                             if (mounted) setState(() { _busy = false; _status = '✗ $e'; });
                           }
@@ -308,6 +314,7 @@ class _MapDebugPanelState extends State<MapDebugPanel> {
                             final newXp = await widget.service.debugSetXp((_currentXp ?? 0) + 5000);
                             if (mounted) setState(() { _busy = false; _currentXp = newXp; _status = '✓ XP: $newXp'; });
                             widget.onRefresh();
+                            await ref.read(characterProfileProvider.notifier).refresh();
                           } catch (e) {
                             if (mounted) setState(() { _busy = false; _status = '✗ $e'; });
                           }

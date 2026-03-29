@@ -1,4 +1,5 @@
 using System.Text;
+using LifeLevel.Api.Application.BackgroundJobs;
 using LifeLevel.Api.Application.Services;
 using LifeLevel.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,12 +40,19 @@ builder.Services.AddControllers()
 // App services
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<StreakService>();
 builder.Services.AddScoped<CharacterService>();
+builder.Services.AddScoped<LoginRewardService>();
+builder.Services.AddScoped<QuestService>();
+builder.Services.AddScoped<ActivityService>();
 builder.Services.AddScoped<MapService>();
 builder.Services.AddScoped<BossService>();
 builder.Services.AddScoped<ChestService>();
 builder.Services.AddScoped<DungeonService>();
 builder.Services.AddScoped<CrossroadsService>();
+
+// Background jobs
+builder.Services.AddHostedService<DailyResetJob>();
 
 // CORS — allow Flutter dev clients + local HTML files (Origin: null from file://)
 builder.Services.AddCors(options =>

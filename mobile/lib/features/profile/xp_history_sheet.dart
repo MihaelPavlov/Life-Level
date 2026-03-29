@@ -1,39 +1,18 @@
 import 'package:flutter/material.dart';
-import '../character/character_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../character/models/xp_history_entry.dart';
+import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 
 // ── XpHistorySheet ────────────────────────────────────────────────────────────
-class XpHistorySheet extends StatefulWidget {
+class XpHistorySheet extends ConsumerWidget {
   const XpHistorySheet({super.key});
 
   @override
-  State<XpHistorySheet> createState() => _XpHistorySheetState();
-}
-
-class _XpHistorySheetState extends State<XpHistorySheet> {
-  List<XpHistoryEntry>? _entries;
-  bool _loading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final entries = await CharacterService().getXpHistory();
-      if (mounted) setState(() { _entries = entries; _loading = false; });
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final totalXp = _entries?.fold<int>(0, (sum, e) => sum + e.xp) ?? 0;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(xpHistoryProvider);
+    final entries = historyAsync.valueOrNull;
+    final totalXp = entries?.fold<int>(0, (sum, e) => sum + e.xp) ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(top: 80),
@@ -97,51 +76,54 @@ class _XpHistorySheetState extends State<XpHistorySheet> {
 
           // body
           Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator(color: kPBlue))
-                : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Failed to load history',
-                                style: TextStyle(color: kPTextPri, fontSize: 14, fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 6),
-                            TextButton(
-                              onPressed: () {
-                                setState(() { _loading = true; _error = null; });
-                                _load();
-                              },
-                              child: const Text('Retry', style: TextStyle(color: kPBlue)),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _entries!.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('⚡', style: TextStyle(fontSize: 40)),
-                                SizedBox(height: 12),
-                                Text('No XP earned yet',
-                                    style: TextStyle(color: kPTextPri, fontSize: 14, fontWeight: FontWeight.w700)),
-                                SizedBox(height: 4),
-                                Text('Complete activities to earn XP',
-                                    style: TextStyle(color: kPTextSec, fontSize: 12)),
-                              ],
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                            itemCount: _entries!.length,
-                            separatorBuilder: (_, __) => const Divider(color: kPBorder2, height: 1),
-                            itemBuilder: (_, i) => XpEntryRow(entry: _entries![i]),
+            child: historyAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator(color: kPBlue)),
+              error: (e, _) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Failed to load history',
+                      style: TextStyle(color: kPTextPri, fontSize: 14, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    TextButton(
+                      onPressed: () => ref.invalidate(xpHistoryProvider),
+                      child: const Text('Retry', style: TextStyle(color: kPBlue)),
+                    ),
+                  ],
+                ),
+              ),
+              data: (list) => list.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('⚡', style: TextStyle(fontSize: 40)),
+                          SizedBox(height: 12),
+                          Text(
+                            'No XP earned yet',
+                            style: TextStyle(color: kPTextPri, fontSize: 14, fontWeight: FontWeight.w700),
                           ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Complete activities to earn XP',
+                            style: TextStyle(color: kPTextSec, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                      itemCount: list.length,
+                      separatorBuilder: (_, __) => const Divider(color: kPBorder2, height: 1),
+                      itemBuilder: (_, i) => XpEntryRow(entry: list[i]),
+                    ),
+            ),
           ),
 
-          // total footer
-          if (!_loading && _error == null && _entries != null && _entries!.isNotEmpty) ...[
+          // total footer — only when data is loaded and non-empty
+          if (entries != null && entries.isNotEmpty) ...[
             const Divider(color: kPBorder2, height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -150,11 +132,20 @@ class _XpHistorySheetState extends State<XpHistorySheet> {
                 children: [
                   const Text(
                     'TOTAL XP EARNED',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: kPTextSec, letterSpacing: 0.7),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: kPTextSec,
+                      letterSpacing: 0.7,
+                    ),
                   ),
                   Text(
                     '+${totalXp >= 1000 ? '${(totalXp / 1000).toStringAsFixed(1)}k' : totalXp} XP',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kPBlue),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: kPBlue,
+                    ),
                   ),
                 ],
               ),

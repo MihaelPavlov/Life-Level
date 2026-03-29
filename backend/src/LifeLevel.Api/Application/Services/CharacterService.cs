@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Api.Application.Services;
 
-public class CharacterService(AppDbContext db)
+public class CharacterService(AppDbContext db, StreakService streakService)
 {
     private const int StarterXpReward = 500;
 
@@ -74,6 +74,18 @@ public class CharacterService(AppDbContext db)
         var weeklyDistance = weeklyActivities.Sum(a => a.DistanceKm);
         var weeklyXp = weeklyActivities.Sum(a => a.XpGained);
 
+        // Phase 2: streak, login reward and daily quest fields
+        var streak = await streakService.GetOrCreateAsync(userId);
+
+        var loginReward = await db.LoginRewards.FirstOrDefaultAsync(lr => lr.UserId == userId);
+
+        var now = DateTime.UtcNow;
+        var dailyQuestsCompleted = await db.UserQuestProgress
+            .CountAsync(p => p.UserId == userId
+                             && p.Quest.Type == QuestType.Daily
+                             && p.IsCompleted
+                             && p.ExpiresAt > now);
+
         return new CharacterProfileResponse(
             Username: user.Username,
             AvatarEmoji: character.AvatarEmoji,
@@ -92,8 +104,12 @@ public class CharacterService(AppDbContext db)
             WeeklyRuns: weeklyRuns,
             WeeklyDistanceKm: weeklyDistance,
             WeeklyXpEarned: weeklyXp,
-            CurrentStreak: 0,
-            AvailableStatPoints: character.AvailableStatPoints
+            CurrentStreak: streak.Current,
+            AvailableStatPoints: character.AvailableStatPoints,
+            LongestStreak: streak.Longest,
+            ShieldsAvailable: streak.ShieldsAvailable,
+            DailyQuestsCompleted: dailyQuestsCompleted,
+            LoginRewardAvailable: loginReward == null || !loginReward.ClaimedToday
         );
     }
 
@@ -113,7 +129,7 @@ public class CharacterService(AppDbContext db)
         return await CheckAndApplyLevelUpsAsync(character.Id);
     }
 
-    private async Task<(bool LeveledUp, int NewLevel)> CheckAndApplyLevelUpsAsync(Guid characterId)
+    public async Task<(bool LeveledUp, int NewLevel)> CheckAndApplyLevelUpsAsync(Guid characterId)
     {
         var character = await db.Characters.FindAsync(characterId);
         if (character == null) return (false, 0);
