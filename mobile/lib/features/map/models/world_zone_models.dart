@@ -152,8 +152,13 @@ class WorldFullData {
         edges: (json['edges'] as List)
             .map((e) => WorldZoneEdgeModel.fromJson(e as Map<String, dynamic>))
             .toList(),
-        userProgress:
-            WorldUserProgress.fromJson(json['userProgress'] as Map<String, dynamic>),
+        userProgress: json['userProgress'] != null
+            ? WorldUserProgress.fromJson(json['userProgress'] as Map<String, dynamic>)
+            : WorldUserProgress(
+                currentZoneId: '',
+                distanceTraveledOnEdge: 0,
+                unlockedZoneIds: [],
+              ),
         characterLevel: json['characterLevel'] as int,
       );
 }

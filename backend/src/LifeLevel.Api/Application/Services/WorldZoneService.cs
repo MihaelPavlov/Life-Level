@@ -15,6 +15,22 @@ public class WorldZoneService(AppDbContext db, CharacterService characterService
 
         var edges = await db.WorldZoneEdges.ToListAsync();
 
+        // If there are no zones yet, return an empty world without touching progress.
+        if (zones.Count == 0)
+        {
+            var lvl = await db.Characters
+                .Where(c => c.UserId == userId)
+                .Select(c => c.Level)
+                .FirstOrDefaultAsync();
+            return new WorldFullResponse
+            {
+                CharacterLevel = lvl,
+                Zones = [],
+                Edges = [],
+                UserProgress = new UserWorldProgressDto { UnlockedZoneIds = [] }
+            };
+        }
+
         var progress = await db.UserWorldProgresses
             .Include(p => p.UnlockedZones)
             .FirstOrDefaultAsync(p => p.UserId == userId);

@@ -5,7 +5,7 @@ import 'world_map_data.dart';
 import 'world_map_models.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WorldMapPainter
+// WorldMapPainter  (map elements only — background is drawn by the screen)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class WorldMapPainter extends CustomPainter {
@@ -14,12 +14,18 @@ class WorldMapPainter extends CustomPainter {
     required this.centres,
     required this.edges,
     required this.pulseValue,
+    this.playerOnEdge,
+    this.playerAnchor,
+    this.travelProgress = 0.0,
   });
 
   final List<ZoneData> zones;
   final List<Offset> centres;
   final Map<String, List<String>> edges;
   final double pulseValue;
+  final Offset? playerOnEdge;
+  final Offset? playerAnchor;
+  final double travelProgress;
 
   // Cache id → index lookup
   late final Map<String, int> _idxById = {
@@ -162,7 +168,54 @@ class WorldMapPainter extends CustomPainter {
     _drawEdges(canvas);
     _drawTierLabels(canvas);
     _drawZones(canvas);
+    if (playerOnEdge != null && playerAnchor != null) {
+      _drawTravelProgress(canvas);
+    }
     _drawFogOfWar(canvas, size);
+  }
+
+  void _drawTravelProgress(Canvas canvas) {
+    final from = playerAnchor!;
+    final to   = playerOnEdge!;
+
+    // Soft glow trail
+    canvas.drawLine(
+      from, to,
+      Paint()
+        ..color = AppColors.blue.withOpacity(0.25)
+        ..strokeWidth = 8
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+
+    // Solid progress line
+    canvas.drawLine(
+      from, to,
+      Paint()
+        ..color = AppColors.blue
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Percentage label near the midpoint
+    final mid = Offset.lerp(from, to, 0.5)!;
+    final pct = '${(travelProgress * 100).round()}%';
+    final tp = TextPainter(
+      text: TextSpan(
+        text: pct,
+        style: TextStyle(
+          color: AppColors.blue,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          shadows: [Shadow(color: Colors.black.withOpacity(0.8), blurRadius: 4)],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, mid.translate(-tp.width / 2 - 14, -tp.height / 2));
+
+    // Player character at interpolated position
+    _drawPlayerMarker(canvas, to);
   }
 
   void _drawEdges(Canvas canvas) {
@@ -215,7 +268,8 @@ class WorldMapPainter extends CustomPainter {
 
       _drawZoneName(canvas, z.name, c, z.status);
 
-      if (z.status == ZoneStatus.active) {
+      // Draw player at zone only when NOT travelling along an edge
+      if (z.status == ZoneStatus.active && playerOnEdge == null) {
         _drawPlayerMarker(canvas, c);
       }
     }
@@ -354,5 +408,8 @@ class WorldMapPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(WorldMapPainter old) => old.pulseValue != pulseValue;
+  bool shouldRepaint(WorldMapPainter old) =>
+      old.pulseValue != pulseValue ||
+      old.playerOnEdge != playerOnEdge ||
+      old.travelProgress != travelProgress;
 }

@@ -60,13 +60,19 @@ class ZoneData {
       status = ZoneStatus.locked;
     }
 
+    // Normalise admin-panel X (0–390 canvas) to a 0..1 relative fraction.
+    // Y is always derived from tier in the painter — the admin-panel pixel Y
+    // is in a different coordinate space and must not be used directly.
+    const double adminCanvasWidth = 390.0;
+    final relX = (m.positionX / adminCanvasWidth).clamp(0.05, 0.95);
+
     return ZoneData(
       id: m.id,
       name: m.name,
       icon: m.icon,
       status: status,
       tier: m.tier,
-      relativeX: 0.5, // fallback; absoluteX/Y take priority in _centreFor
+      relativeX: relX,
       region: m.region,
       nodeCount: m.nodeCount,
       totalXp: m.totalXp,
@@ -74,8 +80,8 @@ class ZoneData {
       levelRequirement: m.levelRequirement,
       isCrossroads: m.isCrossroads,
       description: m.description,
-      absoluteX: m.positionX,
-      absoluteY: m.positionY,
+      absoluteX: null,  // do not use admin pixel coords directly
+      absoluteY: null,
     );
   }
 }

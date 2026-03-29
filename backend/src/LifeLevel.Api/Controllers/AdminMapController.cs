@@ -16,6 +16,10 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // BULK / HTML ADMIN PANEL
     // -------------------------------------------------------------------------
 
+    [HttpGet("health")]
+    [AllowAnonymous]
+    public IActionResult Health() => Ok(new { status = "ok", timestamp = DateTime.UtcNow });
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -34,6 +38,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                 rewardXp    = n.RewardXp,
                 isStart     = n.IsStartNode,
                 isHidden    = n.IsHidden,
+                worldZoneId = n.WorldZoneId.HasValue ? n.WorldZoneId.Value.ToString() : (string?)null,
             })
             .ToListAsync();
 
@@ -314,6 +319,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         foreach (var n in payload.Nodes ?? [])
         {
             var guid = Guid.TryParse(n.Id, out var parsedGuid) ? parsedGuid : nodeIdMap[n.Id!];
+            var worldZoneId = Guid.TryParse(n.WorldZoneId, out var wzGuid) ? (Guid?)wzGuid : null;
 
             if (!Enum.TryParse<MapNodeType>(n.Type, ignoreCase: true, out var nodeType))
                 nodeType = MapNodeType.Zone;
@@ -334,6 +340,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                 existing.RewardXp         = n.RewardXp;
                 existing.IsStartNode      = n.IsStart;
                 existing.IsHidden         = n.IsHidden;
+                existing.WorldZoneId      = worldZoneId;
             }
             else
             {
@@ -351,6 +358,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                     RewardXp         = n.RewardXp,
                     IsStartNode      = n.IsStart,
                     IsHidden         = n.IsHidden,
+                    WorldZoneId      = worldZoneId,
                 });
             }
         }
@@ -1533,7 +1541,8 @@ public record SyncNode(
     string? Type, string? Region,
     double X, double Y,
     int LevelReq, int RewardXp,
-    bool IsStart, bool IsHidden);
+    bool IsStart, bool IsHidden,
+    string? WorldZoneId = null);
 
 public record SyncEdge(
     string? Id, string? FromNodeId, string? ToNodeId,

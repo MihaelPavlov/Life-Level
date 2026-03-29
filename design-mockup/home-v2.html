@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Home v2 (Map Events First)</title>
+<style>
+
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --border-soft: #1e2632;
+
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+
+  --blue:    #4f9eff;
+  --purple:  #a371f7;
+  --orange:  #f5a623;
+  --red:     #f85149;
+  --green:   #3fb950;
+  --yellow:  #e3b341;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh; padding: 48px 40px; gap: 48px; flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════
+   PHONE SHELL
+═══════════════════════════════════════════ */
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+
+.screen-wrap  { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.screen-label { text-align: center; max-width: 390px; }
+.screen-badge {
+  display: inline-block; border-radius: 12px; padding: 3px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.screen-title { font-size: 14px; color: var(--text-primary); font-weight: 700; margin-bottom: 3px; }
+.screen-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ═══════════════════════════════════════════
+   STATUS BAR
+═══════════════════════════════════════════ */
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px 0; z-index: 100;
+}
+.status-bar__time  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.status-bar__icons { font-size: 11px; color: var(--text-secondary); }
+
+/* ═══════════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════════ */
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background: var(--surface-1); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 8px 12px; z-index: 100;
+}
+.nav__item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; padding-top: 10px;
+  text-decoration: none;
+}
+.nav__icon  { font-size: 20px; }
+.nav__label { font-size: 10px; }
+.nav__item--active .nav__icon,
+.nav__item--active .nav__label { color: var(--blue); }
+.nav__item:not(.nav__item--active) .nav__icon,
+.nav__item:not(.nav__item--active) .nav__label { color: var(--text-secondary); }
+
+/* ═══════════════════════════════════════════
+   FAB
+═══════════════════════════════════════════ */
+.fab {
+  position: absolute; bottom: 93px; left: 50%; transform: translateX(-50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(145deg, #ff4e4e, #c0392b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; z-index: 200;
+  box-shadow: 0 0 0 3px rgba(248,81,73,0.2), 0 0 22px rgba(248,81,73,0.5), 0 4px 12px rgba(0,0,0,0.4);
+}
+@keyframes fab-pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(248,81,73,0.2), 0 0 22px rgba(248,81,73,0.45), 0 4px 12px rgba(0,0,0,0.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(248,81,73,0.15), 0 0 34px rgba(248,81,73,0.65), 0 4px 12px rgba(0,0,0,0.4); }
+}
+.fab--pulse { animation: fab-pulse 2.4s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════
+   SCROLL CONTAINER
+═══════════════════════════════════════════ */
+.scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; padding-bottom: 96px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ═══════════════════════════════════════════
+   COMMON COMPONENTS
+═══════════════════════════════════════════ */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative; overflow: hidden;
+}
+.card--blue   { border-color: rgba(79,158,255,0.28); }
+.card--orange { border-color: rgba(245,166,35,0.32); }
+.card--red    { border-color: rgba(248,81,73,0.28);  }
+.card--green  { border-color: rgba(63,185,80,0.28);  }
+.card--glow-blue   { box-shadow: 0 0 24px rgba(79,158,255,0.07); }
+.card--glow-orange { box-shadow: 0 0 24px rgba(245,166,35,0.08); }
+.card--glow-red    { box-shadow: 0 0 24px rgba(248,81,73,0.07);  }
+
+.section-title {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-secondary); letter-spacing: 0.08em;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-title__action {
+  font-size: 10px; font-weight: 600;
+  color: var(--blue); letter-spacing: 0; text-transform: none;
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  border-radius: 8px; padding: 2px 8px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+  border: 1px solid;
+}
+.badge--blue   { background: rgba(79,158,255,0.1);  border-color: rgba(79,158,255,0.35);  color: var(--blue); }
+.badge--orange { background: rgba(245,166,35,0.1);  border-color: rgba(245,166,35,0.35);  color: var(--orange); }
+.badge--purple { background: rgba(163,113,247,0.1); border-color: rgba(163,113,247,0.35); color: var(--purple); }
+.badge--green  { background: rgba(63,185,80,0.1);   border-color: rgba(63,185,80,0.35);   color: var(--green); }
+.badge--red    { background: rgba(248,81,73,0.1);   border-color: rgba(248,81,73,0.35);   color: var(--red); }
+.badge--grey   { background: rgba(139,148,158,0.08);border-color: rgba(139,148,158,0.3);  color: var(--text-secondary); }
+
+.progress { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.progress--thick { height: 10px; border-radius: 5px; }
+.progress--thin  { height: 4px;  border-radius: 2px; }
+.progress__fill  { height: 100%; border-radius: inherit; }
+.progress__fill--xp  { background: linear-gradient(to right, var(--blue), var(--purple)); }
+.progress__fill--hp  { background: linear-gradient(to right, var(--red), #c0392b); }
+.progress__fill--str { background: var(--red); }
+.progress__fill--end { background: var(--green); }
+.progress__fill--agi { background: var(--blue); }
+.progress__fill--flx { background: var(--purple); }
+.progress__fill--sta { background: var(--orange); }
+.progress__fill--green  { background: var(--green); }
+
+.quest-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.quest-item:last-child { border-bottom: none; padding-bottom: 2px; }
+.quest-item__icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0; border: 1px solid;
+}
+.quest-item__icon--done    { background: rgba(63,185,80,0.1);    border-color: rgba(63,185,80,0.3);   }
+.quest-item__icon--active  { background: rgba(79,158,255,0.08);  border-color: rgba(79,158,255,0.25); }
+.quest-item__icon--pending { background: rgba(139,148,158,0.06); border-color: rgba(139,148,158,0.2); opacity:0.6; }
+.quest-item__body { flex: 1; min-width: 0; }
+.quest-item__name {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.quest-item__name--done { color: var(--text-secondary); text-decoration: line-through; }
+.quest-item__sub  { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.quest-item__right { text-align: right; flex-shrink: 0; }
+.quest-item__xp    { font-size: 10px; font-weight: 700; color: var(--orange); }
+.quest-item__check { font-size: 16px; color: var(--green); line-height: 1; }
+
+.stat-gem {
+  flex: 1;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 4px; text-align: center;
+}
+.stat-gem__val   { font-size: 18px; font-weight: 700; }
+.stat-gem__label { font-size: 8px; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.07em; margin-top: 2px; }
+
+.streak-days { display: flex; gap: 5px; margin-top: 10px; }
+.streak-day {
+  flex: 1; height: 36px; border-radius: 9px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px;
+  font-size: 7px; font-weight: 700; letter-spacing: 0.03em;
+  border: 1px solid;
+}
+.streak-day--done  { background: rgba(63,185,80,0.1);  border-color: rgba(63,185,80,0.3);  color: var(--green); }
+.streak-day--today { background: rgba(245,166,35,0.12); border-color: rgba(245,166,35,0.5); color: var(--orange); }
+.streak-day--next  { background: var(--surface-2);      border-color: var(--border);         color: var(--text-muted); }
+.streak-day__icon  { font-size: 12px; line-height: 1; }
+.streak-day__label { font-size: 7px; }
+
+.activity-row { display: flex; align-items: center; gap: 12px; }
+.activity-row__icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.activity-row__icon--run   { background: rgba(63,185,80,0.1);   border: 1px solid rgba(63,185,80,0.25);  }
+.activity-row__body { flex: 1; }
+.activity-row__name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.activity-row__meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.activity-row__gains { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+.gain-chip {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 10px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 7px;
+}
+
+.boss-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.boss-row__icon {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3);
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.boss-row__name  { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.boss-row__timer { font-size: 11px; color: var(--red); font-weight: 600; margin-top: 2px; }
+.boss-row__hp    { font-size: 10px; color: var(--text-secondary); margin-top: 1px; }
+
+.row-between { display: flex; align-items: center; justify-content: space-between; }
+.row-center  { display: flex; align-items: center; gap: 8px; }
+.xp-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-bottom: 6px; }
+.xp-row__level { font-weight: 700; color: var(--text-primary); }
+.xp-row__note  { font-size: 10px; color: var(--text-muted); margin-top: 5px; }
+.page-content { padding: 0 16px; }
+
+/* ═══════════════════════════════════════════
+   HOME HEADER
+═══════════════════════════════════════════ */
+.home-header {
+  padding: 54px 16px 0;
+  margin-bottom: 12px;
+}
+.home-header__row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.home-header__greeting { font-size: 12px; color: var(--text-secondary); }
+.home-header__name     { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-top: 1px; }
+.home-header__badges   { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+.home-header__avatar-wrap { position: relative; flex-shrink: 0; }
+.home-header__avatar {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 0 20px rgba(79,158,255,0.35);
+}
+.home-header__lv-badge {
+  position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: #fff;
+  font-size: 8px; font-weight: 800; padding: 1px 7px;
+  border-radius: 6px; border: 2px solid var(--bg-base);
+  white-space: nowrap;
+}
+.home-header__notif {
+  position: absolute; top: -2px; right: -2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--red); border: 2px solid var(--bg-base);
+  font-size: 7px; color: #fff; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+@keyframes lv-tap-hint {
+  0%,100% { box-shadow: 0 0 0 2px rgba(79,158,255,0.5), 0 0 10px rgba(79,158,255,0.3); }
+  50%      { box-shadow: 0 0 0 5px rgba(79,158,255,0.25), 0 0 20px rgba(79,158,255,0.5); }
+}
+.home-header__lv-badge--tappable {
+  animation: lv-tap-hint 2s ease-in-out infinite; cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════
+   WORLD EVENTS — FEATURED HERO + SCROLL
+   First thing the user sees
+═══════════════════════════════════════════ */
+.events-section {
+  margin-bottom: 14px;
+}
+.events-section__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; margin-bottom: 10px;
+}
+.events-section__title {
+  font-size: 11px; font-weight: 800; color: var(--text-primary);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.events-live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green), 0 0 20px rgba(63,185,80,0.4);
+  animation: live-blink 1.6s ease-in-out infinite;
+}
+@keyframes live-blink {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.events-section__link {
+  font-size: 11px; font-weight: 700; color: var(--blue);
+  background: rgba(79,158,255,0.1); border: 1px solid rgba(79,158,255,0.25);
+  border-radius: 8px; padding: 3px 10px;
+}
+
+/* ── FEATURED EVENT (full-width hero card) ── */
+.event-featured {
+  margin: 0 16px 10px;
+  border-radius: 18px; padding: 16px 18px 14px;
+  position: relative; overflow: hidden;
+  cursor: pointer; border: 1px solid;
+  min-height: 148px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.event-featured__top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.event-featured__badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.08em;
+  border-radius: 7px; padding: 3px 10px; border: 1px solid;
+}
+.event-featured__dismiss { font-size: 11px; color: var(--text-muted); cursor: pointer; }
+.event-featured__body { position: relative; z-index: 1; flex: 1; }
+
+/* Node name + sub */
+.event-featured__heading {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.09em;
+  color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;
+}
+.event-featured__name { font-size: 18px; font-weight: 800; color: var(--text-primary); line-height: 1.1; letter-spacing: -0.3px; }
+.event-featured__sub  { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+
+/* Distance / progress block inside featured */
+.event-featured__progress-wrap { margin-top: 10px; }
+.event-featured__progress-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: var(--text-secondary); margin-bottom: 5px;
+}
+.event-featured__progress-val { font-weight: 800; color: var(--text-primary); }
+.event-featured__progress-pct { font-weight: 700; font-size: 10px; }
+.event-featured__bar {
+  height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;
+}
+.event-featured__bar-fill {
+  height: 100%; border-radius: inherit;
+}
+
+/* Activity chips row (what moves you) */
+.event-featured__chips {
+  display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap;
+}
+.event-featured__chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 7px; padding: 3px 8px;
+  color: var(--text-secondary);
+}
+
+/* Sync badge */
+.event-featured__sync {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; font-weight: 700;
+  color: var(--green); background: rgba(63,185,80,0.1);
+  border: 1px solid rgba(63,185,80,0.3); border-radius: 6px;
+  padding: 2px 7px; margin-top: 8px;
+}
+
+/* Challenge requirement block */
+.event-featured__challenge {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 8px 10px; margin-top: 10px;
+}
+.event-featured__challenge-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.07em;
+  color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px;
+}
+.event-featured__challenge-text {
+  font-size: 12px; font-weight: 700; color: var(--text-primary); line-height: 1.35;
+}
+
+.event-featured__footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px; position: relative; z-index: 1;
+}
+.event-featured__timer {
+  font-size: 13px; font-weight: 800; letter-spacing: -0.2px;
+  display: flex; align-items: center; gap: 5px;
+}
+.event-featured__cta {
+  font-size: 11px; font-weight: 700; border-radius: 10px;
+  padding: 7px 16px; border: none; cursor: pointer;
+}
+
+/* ── Featured variants ── */
+
+/* TRAVELING state — blue/teal theme */
+.event-featured--traveling {
+  background: linear-gradient(135deg, rgba(4,18,32,0.99) 0%, rgba(2,10,20,0.99) 100%);
+  border-color: rgba(79,158,255,0.55);
+}
+@keyframes featured-traveling-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(79,158,255,0), 0 4px 28px rgba(79,158,255,0.15); }
+  50%      { box-shadow: 0 0 0 3px rgba(79,158,255,0.1), 0 4px 38px rgba(79,158,255,0.35); }
+}
+.event-featured--traveling { animation: featured-traveling-glow 2.8s ease-in-out infinite; }
+
+/* NODE REACHED state — green arrival burst */
+.event-featured--arrived {
+  background: linear-gradient(135deg, rgba(4,20,10,0.99) 0%, rgba(2,12,6,0.99) 100%);
+  border-color: rgba(63,185,80,0.6);
+}
+@keyframes featured-arrived-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(63,185,80,0), 0 4px 28px rgba(63,185,80,0.18); }
+  50%      { box-shadow: 0 0 0 3px rgba(63,185,80,0.12), 0 4px 40px rgba(63,185,80,0.42); }
+}
+.event-featured--arrived { animation: featured-arrived-glow 2.2s ease-in-out infinite; }
+
+/* CHALLENGE IN PROGRESS — purple/blue */
+.event-featured--challenge {
+  background: linear-gradient(135deg, rgba(12,6,24,0.99) 0%, rgba(6,4,18,0.99) 100%);
+  border-color: rgba(163,113,247,0.5);
+}
+@keyframes featured-challenge-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(163,113,247,0), 0 4px 26px rgba(163,113,247,0.15); }
+  50%      { box-shadow: 0 0 0 3px rgba(163,113,247,0.1), 0 4px 36px rgba(163,113,247,0.38); }
+}
+.event-featured--challenge { animation: featured-challenge-glow 2.5s ease-in-out infinite; }
+
+/* XP STORM — orange (overrides everything when active) */
+.event-featured--storm {
+  background: linear-gradient(135deg, rgba(30,20,4,0.98) 0%, rgba(20,12,4,0.98) 100%);
+  border-color: rgba(245,166,35,0.6);
+}
+@keyframes featured-storm-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(245,166,35,0), 0 4px 30px rgba(245,166,35,0.2); }
+  50%      { box-shadow: 0 0 0 3px rgba(245,166,35,0.12), 0 4px 40px rgba(245,166,35,0.45); }
+}
+.event-featured--storm { animation: featured-storm-glow 2.2s ease-in-out infinite; }
+
+/* BOSS node — red */
+.event-featured--boss {
+  background: linear-gradient(135deg, rgba(24,6,6,0.98) 0%, rgba(16,4,4,0.98) 100%);
+  border-color: rgba(248,81,73,0.6);
+}
+@keyframes featured-boss-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(248,81,73,0), 0 4px 30px rgba(248,81,73,0.15); }
+  50%      { box-shadow: 0 0 0 3px rgba(248,81,73,0.1), 0 4px 40px rgba(248,81,73,0.35); }
+}
+.event-featured--boss { animation: featured-boss-glow 2.5s ease-in-out infinite; }
+
+/* Horizontal scroll track */
+.events-scroll {
+  display: flex; gap: 10px;
+  overflow-x: auto; scrollbar-width: none;
+  padding: 0 16px 4px;
+}
+.events-scroll::-webkit-scrollbar { display: none; }
+
+/* Individual secondary event card */
+.event-card {
+  flex-shrink: 0; width: 148px;
+  border-radius: 16px; padding: 12px 14px 14px;
+  position: relative; overflow: hidden;
+  cursor: pointer; border: 1px solid;
+  display: flex; flex-direction: column;
+}
+.event-card__bg-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.06), transparent 60%);
+}
+
+/* Node type color variants */
+/* Boss node */
+.event-card--boss {
+  background: linear-gradient(160deg, rgba(20,4,4,0.98), rgba(14,2,2,0.98));
+  border-color: rgba(248,81,73,0.55);
+  animation: boss-card-glow 2.5s ease-in-out infinite;
+}
+@keyframes boss-card-glow {
+  0%,100% { box-shadow: 0 2px 14px rgba(248,81,73,0.15); }
+  50%      { box-shadow: 0 2px 28px rgba(248,81,73,0.45), inset 0 0 20px rgba(248,81,73,0.04); }
+}
+
+/* Dungeon node */
+.event-card--dungeon {
+  background: linear-gradient(160deg, rgba(10,6,22,0.98), rgba(6,4,16,0.98));
+  border-color: rgba(163,113,247,0.5);
+  animation: dungeon-card-glow 2.6s ease-in-out infinite;
+}
+@keyframes dungeon-card-glow {
+  0%,100% { box-shadow: 0 2px 12px rgba(163,113,247,0.14); }
+  50%      { box-shadow: 0 2px 26px rgba(163,113,247,0.4); }
+}
+
+/* Chest node */
+.event-card--chest {
+  background: linear-gradient(160deg, rgba(4,16,8,0.98), rgba(2,10,4,0.98));
+  border-color: rgba(63,185,80,0.5);
+  animation: chest-card-glow 3s ease-in-out infinite;
+}
+@keyframes chest-card-glow {
+  0%,100% { box-shadow: 0 2px 12px rgba(63,185,80,0.12); }
+  50%      { box-shadow: 0 2px 22px rgba(63,185,80,0.38); }
+}
+
+/* Crossroads node */
+.event-card--crossroads {
+  background: linear-gradient(160deg, rgba(18,16,4,0.98), rgba(12,10,2,0.98));
+  border-color: rgba(227,179,65,0.5);
+}
+
+/* Mini-boss node */
+.event-card--miniboss {
+  background: linear-gradient(160deg, rgba(20,6,4,0.98), rgba(14,4,2,0.98));
+  border-color: rgba(245,166,35,0.5);
+  animation: miniboss-card-glow 2.8s ease-in-out infinite;
+}
+@keyframes miniboss-card-glow {
+  0%,100% { box-shadow: 0 2px 12px rgba(245,166,35,0.14); }
+  50%      { box-shadow: 0 2px 24px rgba(245,166,35,0.42); }
+}
+
+/* XP Storm world event */
+.event-card--storm {
+  background: linear-gradient(160deg, rgba(22,14,4,0.98), rgba(14,8,2,0.98));
+  border-color: rgba(245,166,35,0.55);
+  animation: storm-card-glow 2.2s ease-in-out infinite;
+}
+@keyframes storm-card-glow {
+  0%,100% { box-shadow: 0 2px 16px rgba(245,166,35,0.18); }
+  50%      { box-shadow: 0 2px 28px rgba(245,166,35,0.5),  inset 0 0 20px rgba(245,166,35,0.04); }
+}
+
+/* Merchant world event */
+.event-card--merchant {
+  background: linear-gradient(160deg, rgba(12,4,22,0.98), rgba(8,2,16,0.98));
+  border-color: rgba(163,113,247,0.5);
+  animation: merchant-shimmer 3s ease-in-out infinite;
+}
+@keyframes merchant-shimmer {
+  0%,100% { box-shadow: 0 2px 12px rgba(163,113,247,0.15); }
+  50%      { box-shadow: 0 2px 24px rgba(163,113,247,0.45); }
+}
+
+/* Sync status card */
+.event-card--sync {
+  background: linear-gradient(160deg, rgba(4,12,8,0.98), rgba(2,8,6,0.98));
+  border-color: rgba(63,185,80,0.35);
+}
+
+/* Card icon */
+.event-card__art {
+  position: absolute; right: -4px; top: -4px;
+  font-size: 56px; opacity: 0.1; pointer-events: none;
+  line-height: 1; user-select: none;
+}
+.event-card__icon { font-size: 28px; line-height: 1; margin-bottom: 7px; display: block; position: relative; z-index: 1; }
+
+/* Node type label */
+.event-card__type {
+  font-size: 8px; font-weight: 800; letter-spacing: 0.09em;
+  margin-bottom: 3px; position: relative; z-index: 1; text-transform: uppercase;
+}
+.event-card__type--boss      { color: var(--red); }
+.event-card__type--dungeon   { color: var(--purple); }
+.event-card__type--chest     { color: var(--green); }
+.event-card__type--crossroads { color: var(--yellow); }
+.event-card__type--miniboss  { color: var(--orange); }
+.event-card__type--storm     { color: var(--orange); }
+.event-card__type--merchant  { color: var(--purple); }
+.event-card__type--sync      { color: var(--green); }
+
+.event-card__name {
+  font-size: 12px; font-weight: 800; color: var(--text-primary);
+  line-height: 1.25; margin-bottom: 4px;
+  position: relative; z-index: 1;
+}
+
+/* Distance to reach chip */
+.event-card__distance {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 800;
+  color: var(--blue); background: rgba(79,158,255,0.1);
+  border: 1px solid rgba(79,158,255,0.3);
+  border-radius: 7px; padding: 3px 8px;
+  margin-bottom: 5px; position: relative; z-index: 1;
+}
+
+/* Activity requirement chip (what you do once there) */
+.event-card__req {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 700;
+  border-radius: 6px; padding: 3px 8px;
+  border: 1px solid; margin-bottom: 5px;
+  position: relative; z-index: 1; line-height: 1.3;
+}
+.event-card__req--boss     { color: var(--red);    background: rgba(248,81,73,0.1);   border-color: rgba(248,81,73,0.35); }
+.event-card__req--dungeon  { color: var(--purple);  background: rgba(163,113,247,0.1); border-color: rgba(163,113,247,0.35); }
+.event-card__req--chest    { color: var(--green);   background: rgba(63,185,80,0.1);   border-color: rgba(63,185,80,0.35); }
+.event-card__req--crossroads { color: var(--yellow); background: rgba(227,179,65,0.1); border-color: rgba(227,179,65,0.35); }
+.event-card__req--miniboss { color: var(--orange);  background: rgba(245,166,35,0.1);  border-color: rgba(245,166,35,0.35); }
+.event-card__req--storm    { color: var(--orange);  background: rgba(245,166,35,0.14); border-color: rgba(245,166,35,0.4); }
+.event-card__req--merchant { color: var(--purple);  background: rgba(163,113,247,0.12);border-color: rgba(163,113,247,0.35); }
+.event-card__req--sync     { color: var(--green);   background: rgba(63,185,80,0.1);   border-color: rgba(63,185,80,0.35); }
+
+.event-card__detail {
+  font-size: 9px; color: var(--text-secondary); line-height: 1.4;
+  margin-bottom: 6px; position: relative; z-index: 1;
+}
+
+/* Mini progress bar on secondary card (challenge in progress) */
+.event-card__progress {
+  height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px;
+  overflow: hidden; margin-top: auto; position: relative; z-index: 1;
+}
+.event-card__progress-fill {
+  height: 100%; border-radius: inherit;
+}
+
+/* Spacer to push content up when no progress bar */
+.event-card__spacer { flex: 1; }
+
+/* ═══════════════════════════════════════════
+   LEVEL UP OVERLAY
+═══════════════════════════════════════════ */
+.levelup-overlay {
+  position: absolute; inset: 0; z-index: 300;
+  background: rgba(4,8,16,0.93);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 28px 22px;
+}
+.levelup-overlay__bg-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 36%, rgba(79,158,255,0.22) 0%, transparent 55%);
+}
+.lu-rings {
+  position: relative; width: 160px; height: 160px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+}
+.lu-ring { position: absolute; border-radius: 50%; border: 2px solid; animation: luRing 2s ease-in-out infinite; }
+.lu-ring-1 { inset: 0;    border-color: rgba(79,158,255,0.12); }
+.lu-ring-2 { inset: 14px; border-color: rgba(79,158,255,0.22); animation-delay: .25s; }
+.lu-ring-3 { inset: 28px; border-color: rgba(79,158,255,0.38); animation-delay: .5s; }
+@keyframes luRing {
+  0%,100% { opacity: 0.45; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.05); }
+}
+.lu-badge {
+  width: 90px; height: 90px; border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a5f, #2d1b4e);
+  border: 3px solid var(--blue);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(79,158,255,0.5), 0 0 80px rgba(79,158,255,0.18);
+  position: relative; z-index: 1;
+}
+.lu-badge__label { font-size: 9px;  font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 0.07em; }
+.lu-badge__num   { font-size: 32px; font-weight: 800; color: #fff; line-height: 1; }
+.lu-title { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; }
+.lu-sub   { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+.lu-stat-gains { display: flex; gap: 8px; width: 100%; margin-bottom: 18px; }
+.lu-stat {
+  flex: 1; background: var(--surface-2); border-radius: 10px; padding: 8px 6px; text-align: center;
+}
+.lu-stat__val { font-size: 13px; font-weight: 700; color: var(--green); }
+.lu-stat__lbl { font-size: 9px;  color: var(--text-secondary); margin-top: 2px; }
+.lu-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  border: none; border-radius: 14px; padding: 15px;
+  font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;
+  box-shadow: 0 4px 24px rgba(79,158,255,0.35);
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1 — HOME v2 · MAP EVENTS FIRST (DEFAULT)
+══════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">SCREEN 1 — TRAVELING</div>
+    <div class="screen-title">Heading to next node</div>
+    <div class="screen-desc">Featured = journey progress to Ember Forge Dungeon (2.1/5.0 km, auto-synced Strava) · activity chips show what moves you · secondary = upcoming nodes with distances + challenges + world events</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar">
+      <span class="status-bar__time">9:41</span>
+      <span class="status-bar__icons">●●● 🔋</span>
+    </div>
+
+    <!-- BG glow -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(79,158,255,0.05) 0%,transparent 50%);pointer-events:none;z-index:0"></div>
+
+    <div class="scroll">
+      <div style="position:relative;z-index:1">
+
+        <!-- ── HOME HEADER ── -->
+        <div class="home-header">
+          <div class="home-header__row">
+            <div>
+              <div class="home-header__greeting">Good morning 👋</div>
+              <div class="home-header__name">Alex</div>
+              <div class="home-header__badges">
+                <span class="badge badge--blue">LV 12</span>
+                <span class="badge badge--purple">WARRIOR</span>
+                <span class="badge badge--orange">VETERAN</span>
+              </div>
+            </div>
+            <div class="home-header__avatar-wrap">
+              <div class="home-header__avatar">🏃</div>
+              <div class="home-header__lv-badge home-header__lv-badge--tappable">LV 12</div>
+              <div class="home-header__notif">3</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             MAP PROGRESS & WORLD EVENTS
+             Featured = Traveling · secondary = upcoming nodes + world events
+        ══════════════════════════════════════ -->
+        <div class="events-section">
+          <div class="events-section__header">
+            <div class="events-section__title">
+              <div class="events-live-dot"></div>
+              MAP PROGRESS
+            </div>
+            <span class="events-section__link">Map →</span>
+          </div>
+
+          <!-- ── FEATURED: TRAVELING TO EMBER FORGE DUNGEON ── -->
+          <div class="event-featured event-featured--traveling">
+            <div style="position:absolute;right:-14px;top:-10px;font-size:100px;opacity:0.09;pointer-events:none;line-height:1;user-select:none">⛏️</div>
+            <div class="event-featured__top">
+              <div class="event-featured__badge" style="background:rgba(79,158,255,0.15);border-color:rgba(79,158,255,0.45);color:var(--blue)">🚶 TRAVELING</div>
+              <div class="event-featured__sync">⟳ Strava · 14m ago</div>
+            </div>
+            <div class="event-featured__body">
+              <div class="event-featured__heading">Next node</div>
+              <div class="event-featured__name">Ember Forge Dungeon</div>
+              <div class="event-featured__sub">⛏️ Dungeon · Run 5km to clear once arrived</div>
+              <div class="event-featured__progress-wrap">
+                <div class="event-featured__progress-row">
+                  <span>Distance traveled</span>
+                  <span class="event-featured__progress-val">2.1 <span style="font-weight:400;color:var(--text-secondary)">/ 5.0 km</span></span>
+                </div>
+                <div class="event-featured__bar">
+                  <div class="event-featured__bar-fill" style="width:42%;background:linear-gradient(to right,var(--blue),#6ab8ff)"></div>
+                </div>
+              </div>
+              <div class="event-featured__chips">
+                <span class="event-featured__chip">🏃 Run</span>
+                <span class="event-featured__chip">🚴 Cycle</span>
+                <span class="event-featured__chip">👣 Steps</span>
+              </div>
+            </div>
+            <div class="event-featured__footer">
+              <div class="event-featured__timer" style="color:var(--blue)">
+                <span style="font-size:15px;font-weight:900">2.9 km</span>
+                <span style="font-size:10px;color:var(--text-secondary);font-weight:600">to go</span>
+              </div>
+              <button class="event-featured__cta" style="background:linear-gradient(135deg,#4f9eff,#2d7fd4);color:#fff;font-weight:800">Log Activity →</button>
+            </div>
+          </div>
+
+          <!-- ── SECONDARY: upcoming nodes + world events ── -->
+          <div class="events-scroll">
+
+            <!-- Boss node upcoming -->
+            <div class="event-card event-card--boss">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">🗡️</div>
+              <span class="event-card__icon">🗡️</span>
+              <div class="event-card__type event-card__type--boss">BOSS NODE</div>
+              <div class="event-card__name">Ironclad Sentinel</div>
+              <div class="event-card__distance">📍 +4.2 km</div>
+              <div class="event-card__req event-card__req--boss">⚔️ High-intensity workout</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Crossroads upcoming -->
+            <div class="event-card event-card--crossroads">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">⑂</div>
+              <span class="event-card__icon">⑂</span>
+              <div class="event-card__type event-card__type--crossroads">CROSSROADS</div>
+              <div class="event-card__name">The Iron Fork</div>
+              <div class="event-card__distance">📍 +7.8 km</div>
+              <div class="event-card__req event-card__req--crossroads">⑂ Arrive &amp; choose path</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- XP Storm world event -->
+            <div class="event-card event-card--storm">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">⚡</div>
+              <span class="event-card__icon">⚡</span>
+              <div class="event-card__type event-card__type--storm">XP STORM</div>
+              <div class="event-card__name">Double XP</div>
+              <div class="event-card__req event-card__req--storm">⚡ Any activity ×2 XP</div>
+              <div class="event-card__detail">Stacks with streak</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Chest node upcoming -->
+            <div class="event-card event-card--chest">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">💰</div>
+              <span class="event-card__icon">💰</span>
+              <div class="event-card__type event-card__type--chest">CHEST NODE</div>
+              <div class="event-card__name">Mountain Cache</div>
+              <div class="event-card__distance">📍 +9.1 km</div>
+              <div class="event-card__req event-card__req--chest">💰 Log any workout</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Merchant world event -->
+            <div class="event-card event-card--merchant">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">🧙</div>
+              <span class="event-card__icon">🧙</span>
+              <div class="event-card__type event-card__type--merchant">MERCHANT</div>
+              <div class="event-card__name">Wandering Alchemist</div>
+              <div class="event-card__req event-card__req--merchant">🧙 Mystery wares</div>
+              <div class="event-card__detail">⏱ 8h left · visit now</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+          </div><!-- /events-scroll -->
+        </div><!-- /events-section -->
+
+        <div class="page-content">
+
+          <!-- ── MAP HISTORY CARD ── -->
+          <div class="card" style="padding:12px 16px 10px">
+            <div class="section-title">
+              MAP HISTORY
+              <span class="section-title__action">View all →</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-soft)">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⛏️</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Ember Forge Dungeon</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Cleared · 5.0 km run · Today 10:22am</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:11px;font-weight:700;color:var(--orange)">+680 XP</div>
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">DUNGEON</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Valley Cache</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Opened · 2.1 km traveled · Yesterday</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:11px;font-weight:700;color:var(--orange)">+220 XP</div>
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">CHEST</div>
+              </div>
+            </div>
+            <button style="width:100%;margin-top:8px;background:rgba(79,158,255,0.08);border:1px solid rgba(79,158,255,0.22);border-radius:11px;padding:10px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer">View full map history →</button>
+          </div>
+
+          <!-- ── XP PROGRESS CARD ── -->
+          <div class="card card--blue card--glow-blue">
+            <div class="xp-row">
+              <span class="xp-row__level">Level 12</span>
+              <span>12,400 / 15,000 XP</span>
+              <span class="xp-row__level">Level 13</span>
+            </div>
+            <div class="progress progress--thick">
+              <div class="progress__fill progress__fill--xp" style="width:83%"></div>
+            </div>
+            <div class="row-between" style="margin-top:6px">
+              <span class="xp-row__note">2,600 XP to next level</span>
+              <span style="font-size:10px;font-weight:700;color:var(--blue)">83%</span>
+            </div>
+          </div>
+
+          <!-- ── STREAK + LOGIN REWARD CARD ── -->
+          <div class="card">
+            <div class="row-between">
+              <div class="row-center">
+                <span style="font-size:22px">🔥</span>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--text-primary)">14-Day Streak</div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Reward in 7 days — ×1.5 XP bonus</div>
+                </div>
+              </div>
+              <span class="badge badge--green">🛡 Shield ready</span>
+            </div>
+            <div class="streak-days">
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">MON</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">TUE</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">WED</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">THU</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">FRI</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">SAT</div></div>
+              <div class="streak-day streak-day--today"><div class="streak-day__icon">🔥</div><div class="streak-day__label">TODAY</div></div>
+            </div>
+          </div>
+
+          <!-- ── DAILY QUESTS CARD ── -->
+          <div class="card">
+            <div class="section-title">
+              DAILY QUESTS
+              <span class="section-title__action">3 / 5 done · resets 12h</span>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🏃</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name quest-item__name--done">Run 30 minutes</div>
+                <div class="quest-item__sub">32 min completed</div>
+              </div>
+              <div class="quest-item__right">
+                <div class="quest-item__check">✓</div>
+                <div class="quest-item__xp">+150 XP</div>
+              </div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🔥</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name quest-item__name--done">Burn 300 calories</div>
+                <div class="quest-item__sub">348 cal burned</div>
+              </div>
+              <div class="quest-item__right">
+                <div class="quest-item__check">✓</div>
+                <div class="quest-item__xp">+100 XP</div>
+              </div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">📍</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name quest-item__name--done">Cover 5 km</div>
+                <div class="quest-item__sub">5.2 km logged</div>
+              </div>
+              <div class="quest-item__right">
+                <div class="quest-item__check">✓</div>
+                <div class="quest-item__xp">+100 XP</div>
+              </div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--active">💪</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name">Strength session</div>
+                <div style="margin-top:4px">
+                  <div class="progress progress--thin"><div class="progress__fill progress__fill--str" style="width:0%"></div></div>
+                  <div class="quest-item__sub" style="margin-top:3px">0 / 1 session</div>
+                </div>
+              </div>
+              <div class="quest-item__right"><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--active">🧘</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name">10 min yoga / stretch</div>
+                <div style="margin-top:4px">
+                  <div class="progress progress--thin"><div class="progress__fill progress__fill--flx" style="width:0%"></div></div>
+                  <div class="quest-item__sub" style="margin-top:3px">0 / 10 minutes</div>
+                </div>
+              </div>
+              <div class="quest-item__right"><div class="quest-item__xp">+100 XP</div></div>
+            </div>
+            <div style="margin-top:10px;background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-secondary)">Complete all 5 quests</span>
+              <span style="font-size:12px;font-weight:700;color:var(--orange)">+300 Bonus XP</span>
+            </div>
+          </div>
+
+          <!-- ── LAST ACTIVITY CARD ── -->
+          <div class="card card--green">
+            <div class="section-title">
+              LAST ACTIVITY
+              <span class="section-title__action">2 hours ago</span>
+            </div>
+            <div class="activity-row">
+              <div class="activity-row__icon activity-row__icon--run">🏃</div>
+              <div class="activity-row__body">
+                <div class="activity-row__name">Morning Run</div>
+                <div class="activity-row__meta">5.2 km · 28:14 · Avg 5:26/km · 156 bpm</div>
+                <div class="activity-row__gains">
+                  <span class="gain-chip" style="color:var(--orange)">+450 XP</span>
+                  <span class="gain-chip" style="color:var(--green)">+2 END</span>
+                  <span class="gain-chip" style="color:var(--blue)">+2 AGI</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CHARACTER STATS ROW ── -->
+          <div style="margin-bottom:10px">
+            <div class="section-title">CHARACTER STATS</div>
+            <div style="display:flex;gap:6px">
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--red)">84</div><div class="stat-gem__label">STR</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--green)">71</div><div class="stat-gem__label">END</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--blue)">92</div><div class="stat-gem__label">AGI</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--purple)">65</div><div class="stat-gem__label">FLX</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--orange)">78</div><div class="stat-gem__label">STA</div></div>
+            </div>
+          </div>
+
+          <!-- ── ACTIVE BOSS CARD ── -->
+          <div class="card card--red card--glow-red">
+            <div class="section-title">
+              ACTIVE BOSS
+              <span class="section-title__action" style="color:var(--red)">Fight now →</span>
+            </div>
+            <div class="boss-row">
+              <div class="boss-row__icon">💀</div>
+              <div>
+                <div class="boss-row__name">Stoneclaw Golem</div>
+                <div class="boss-row__timer">⏰ 6d 14h remaining</div>
+                <div class="boss-row__hp">HP: 9,800 / 14,000 · Veteran difficulty</div>
+              </div>
+            </div>
+            <div style="margin-bottom:6px">
+              <div class="row-between" style="margin-bottom:4px;font-size:10px;color:var(--text-secondary)">
+                <span>9,800 HP remaining</span>
+                <span style="font-weight:700;color:var(--red)">70%</span>
+              </div>
+              <div class="progress">
+                <div class="progress__fill progress__fill--hp" style="width:70%"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <span class="badge badge--red">🗡 You dealt 980 dmg</span>
+              <span class="badge badge--orange">+200 dmg / session</span>
+            </div>
+          </div>
+
+        </div><!-- /page-content -->
+      </div>
+    </div><!-- /scroll -->
+
+    <div class="fab fab--pulse">⚔️</div>
+
+    <div class="nav">
+      <a href="home-v2.html" class="nav__item nav__item--active"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="adventure-map.html" class="nav__item"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="profile-full.html" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2 — HOME v2 · NODE REACHED (challenge unlocked)
+══════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);color:#3fb950">SCREEN 2 — NODE REACHED</div>
+    <div class="screen-title">Arrived at Ember Forge Dungeon</div>
+    <div class="screen-desc">Node reached via accumulated distance · challenge unlocked · Run 5km to clear · 0% progress · secondary shows mini-boss in progress</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar">
+      <span class="status-bar__time">9:41</span>
+      <span class="status-bar__icons">●●● 🔋</span>
+    </div>
+
+    <!-- Arrival ambient glow -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(63,185,80,0.08) 0%,transparent 55%);pointer-events:none;z-index:0"></div>
+
+    <div class="scroll">
+      <div style="position:relative;z-index:1">
+
+        <!-- ── HEADER with arrived badge ── -->
+        <div class="home-header">
+          <div class="home-header__row">
+            <div>
+              <div class="home-header__greeting">Good morning 👋</div>
+              <div class="home-header__name">Alex</div>
+              <div class="home-header__badges">
+                <span class="badge badge--blue">LV 12</span>
+                <span class="badge badge--purple">WARRIOR</span>
+                <span class="badge badge--green">⛏️ Node reached!</span>
+              </div>
+            </div>
+            <div class="home-header__avatar-wrap">
+              <div class="home-header__avatar" style="box-shadow:0 0 24px rgba(63,185,80,0.45)">🏃</div>
+              <div class="home-header__lv-badge home-header__lv-badge--tappable">LV 12</div>
+              <div class="home-header__notif">1</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── EVENTS: node reached featured + secondary ── -->
+        <div class="events-section">
+          <div class="events-section__header">
+            <div class="events-section__title">
+              <div class="events-live-dot"></div>
+              MAP PROGRESS
+            </div>
+            <span class="events-section__link">Map →</span>
+          </div>
+
+          <!-- FEATURED: NODE REACHED — challenge unlocked -->
+          <div class="event-featured event-featured--arrived">
+            <div style="position:absolute;right:-14px;top:-10px;font-size:100px;opacity:0.1;pointer-events:none;line-height:1;user-select:none">⛏️</div>
+            <div class="event-featured__top">
+              <div class="event-featured__badge" style="background:rgba(63,185,80,0.18);border-color:rgba(63,185,80,0.5);color:var(--green)">✅ NODE REACHED</div>
+              <div class="event-featured__sync">⟳ Strava · 2m ago</div>
+            </div>
+            <div class="event-featured__body">
+              <div class="event-featured__heading">You've arrived at</div>
+              <div class="event-featured__name">Ember Forge Dungeon</div>
+              <div class="event-featured__challenge">
+                <div class="event-featured__challenge-label">⛏️ Dungeon challenge</div>
+                <div class="event-featured__challenge-text">Complete a 5km run to clear the dungeon</div>
+              </div>
+              <div class="event-featured__progress-wrap">
+                <div class="event-featured__progress-row">
+                  <span>Challenge progress</span>
+                  <span class="event-featured__progress-val">0 <span style="font-weight:400;color:var(--text-secondary)">/ 5.0 km</span></span>
+                </div>
+                <div class="event-featured__bar">
+                  <div class="event-featured__bar-fill" style="width:0%;background:linear-gradient(to right,var(--green),#6ddd8f)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="event-featured__footer">
+              <div class="event-featured__timer" style="color:var(--text-secondary)">
+                <span style="font-size:14px;font-weight:800;color:var(--green)">0%</span>
+                <span style="font-size:10px;font-weight:600">complete</span>
+              </div>
+              <button class="event-featured__cta" style="background:linear-gradient(135deg,#3fb950,#2da040);color:#fff;font-weight:800">Log Run →</button>
+            </div>
+          </div>
+
+          <div class="events-scroll">
+
+            <!-- Mini-boss: challenge in progress 60% -->
+            <div class="event-card event-card--miniboss">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">👹</div>
+              <span class="event-card__icon">👹</span>
+              <div class="event-card__type event-card__type--miniboss">MINI-BOSS</div>
+              <div class="event-card__name">Thornback Warden</div>
+              <div class="event-card__req event-card__req--miniboss">👹 20-min workout</div>
+              <div class="event-card__detail">In progress · 60%</div>
+              <div class="event-card__progress">
+                <div class="event-card__progress-fill" style="width:60%;background:var(--orange)"></div>
+              </div>
+            </div>
+
+            <!-- Boss node upcoming -->
+            <div class="event-card event-card--boss">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">🗡️</div>
+              <span class="event-card__icon">🗡️</span>
+              <div class="event-card__type event-card__type--boss">BOSS NODE</div>
+              <div class="event-card__name">Ironclad Sentinel</div>
+              <div class="event-card__distance">📍 +4.2 km</div>
+              <div class="event-card__req event-card__req--boss">⚔️ High-intensity</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Chest node: arrived, log to open -->
+            <div class="event-card event-card--chest">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">💰</div>
+              <span class="event-card__icon">💰</span>
+              <div class="event-card__type event-card__type--chest">CHEST · HERE</div>
+              <div class="event-card__name">Mountain Cache</div>
+              <div class="event-card__req event-card__req--chest">💰 Log any workout</div>
+              <div class="event-card__detail">You're here! Open it</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- XP Storm world event -->
+            <div class="event-card event-card--storm">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">⚡</div>
+              <span class="event-card__icon">⚡</span>
+              <div class="event-card__type event-card__type--storm">XP STORM</div>
+              <div class="event-card__name">Double XP</div>
+              <div class="event-card__req event-card__req--storm">⚡ Any activity ×2 XP</div>
+              <div class="event-card__detail">Stacks with challenge</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="page-content">
+
+          <!-- ── MAP HISTORY CARD ── -->
+          <div class="card" style="padding:12px 16px 10px">
+            <div class="section-title">
+              MAP HISTORY
+              <span class="section-title__action">View all →</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-soft)">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(63,185,80,0.15);border:1px solid rgba(63,185,80,0.4);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⛏️</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Ember Forge Dungeon</div>
+                <div style="font-size:10px;color:var(--green);margin-top:1px;font-weight:700">✓ Just arrived! Challenge unlocked</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">DUNGEON</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">👹</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Thornback Warden</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Mini-boss · 60% damage dealt</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">MINI-BOSS</div>
+              </div>
+            </div>
+            <button style="width:100%;margin-top:8px;background:rgba(79,158,255,0.08);border:1px solid rgba(79,158,255,0.22);border-radius:11px;padding:10px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer">View full map history →</button>
+          </div>
+
+          <!-- XP card -->
+          <div class="card card--blue card--glow-blue">
+            <div class="xp-row">
+              <span class="xp-row__level">Level 12</span>
+              <span>12,400 / 15,000 XP</span>
+              <span class="xp-row__level">Level 13</span>
+            </div>
+            <div class="progress progress--thick">
+              <div class="progress__fill progress__fill--xp" style="width:83%"></div>
+            </div>
+            <div class="row-between" style="margin-top:6px">
+              <span class="xp-row__note">2,600 XP to next level</span>
+              <span style="font-size:10px;font-weight:700;color:var(--blue)">83%</span>
+            </div>
+          </div>
+
+          <!-- Streak -->
+          <div class="card">
+            <div class="row-between">
+              <div class="row-center">
+                <span style="font-size:22px">🔥</span>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--text-primary)">14-Day Streak</div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Active streak stacks with storm → ×3 XP</div>
+                </div>
+              </div>
+              <span class="badge badge--orange">⚡ ×3 XP</span>
+            </div>
+            <div class="streak-days">
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">MON</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">TUE</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">WED</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">THU</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">FRI</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">SAT</div></div>
+              <div class="streak-day streak-day--today"><div class="streak-day__icon">🔥</div><div class="streak-day__label">TODAY</div></div>
+            </div>
+          </div>
+
+          <!-- Daily quests (compact) -->
+          <div class="card">
+            <div class="section-title">
+              DAILY QUESTS
+              <span class="section-title__action">3 / 5 done · resets 12h</span>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🏃</div>
+              <div class="quest-item__body"><div class="quest-item__name quest-item__name--done">Run 30 minutes</div><div class="quest-item__sub">32 min completed</div></div>
+              <div class="quest-item__right"><div class="quest-item__check">✓</div><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🔥</div>
+              <div class="quest-item__body"><div class="quest-item__name quest-item__name--done">Burn 300 calories</div><div class="quest-item__sub">348 cal burned</div></div>
+              <div class="quest-item__right"><div class="quest-item__check">✓</div><div class="quest-item__xp">+100 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--active">💪</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name">Strength session</div>
+                <div style="margin-top:4px"><div class="progress progress--thin"><div class="progress__fill progress__fill--str" style="width:0%"></div></div><div class="quest-item__sub" style="margin-top:3px">0 / 1 session</div></div>
+              </div>
+              <div class="quest-item__right"><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div style="margin-top:10px;background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-secondary)">Complete all 5 quests</span>
+              <span style="font-size:12px;font-weight:700;color:var(--orange)">+300 Bonus XP</span>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div style="margin-bottom:10px">
+            <div class="section-title">CHARACTER STATS</div>
+            <div style="display:flex;gap:6px">
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--red)">84</div><div class="stat-gem__label">STR</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--green)">71</div><div class="stat-gem__label">END</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--blue)">92</div><div class="stat-gem__label">AGI</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--purple)">65</div><div class="stat-gem__label">FLX</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--orange)">78</div><div class="stat-gem__label">STA</div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="fab fab--pulse">⚔️</div>
+    <div class="nav">
+      <a href="home-v2.html" class="nav__item nav__item--active"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="adventure-map.html" class="nav__item"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="profile-full.html" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3 — HOME v2 · XP STORM ACTIVE (overrides as featured)
+══════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">SCREEN 3 — XP STORM ACTIVE</div>
+    <div class="screen-title">Storm overrides as featured</div>
+    <div class="screen-desc">XP Storm is promoted to featured because it stacks with any activity · streak badge shows ×3 XP · secondary shows dungeon 40% in progress, boss upcoming, chest arrived, merchant</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar">
+      <span class="status-bar__time">9:41</span>
+      <span class="status-bar__icons">●●● 🔋</span>
+    </div>
+    <!-- Storm ambient glow -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(245,166,35,0.1) 0%,transparent 55%);pointer-events:none;z-index:0"></div>
+
+    <div class="scroll">
+      <div style="position:relative;z-index:1">
+
+        <div class="home-header">
+          <div class="home-header__row">
+            <div>
+              <div class="home-header__greeting">Good evening ⚡</div>
+              <div class="home-header__name">Alex</div>
+              <div class="home-header__badges">
+                <span class="badge badge--blue">LV 12</span>
+                <span class="badge badge--purple">WARRIOR</span>
+                <span class="badge badge--orange" style="animation:storm-card-glow 2s ease-in-out infinite">⚡ ×3 XP</span>
+              </div>
+            </div>
+            <div class="home-header__avatar-wrap">
+              <div class="home-header__avatar" style="box-shadow:0 0 24px rgba(245,166,35,0.5)">🏃</div>
+              <div class="home-header__lv-badge home-header__lv-badge--tappable">LV 12</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Events section — XP Storm as featured override -->
+        <div class="events-section">
+          <div class="events-section__header">
+            <div class="events-section__title">
+              <div class="events-live-dot"></div>
+              MAP PROGRESS
+            </div>
+            <span class="events-section__link">Map →</span>
+          </div>
+
+          <!-- FEATURED: XP STORM overrides (stacks with any node challenge) -->
+          <div class="event-featured event-featured--storm">
+            <div style="position:absolute;right:-14px;top:-10px;font-size:110px;opacity:0.1;pointer-events:none;line-height:1;user-select:none">⚡</div>
+            <div class="event-featured__top">
+              <div class="event-featured__badge" style="background:rgba(245,166,35,0.18);border-color:rgba(245,166,35,0.5);color:var(--orange)">⚡ XP STORM · ACTIVE</div>
+              <span style="font-size:10px;color:rgba(245,166,35,0.5)">›</span>
+            </div>
+            <div class="event-featured__body">
+              <div class="event-featured__heading">World event — stacks with everything</div>
+              <div class="event-featured__name">Double XP Storm</div>
+              <div class="event-featured__sub">All activities earn ×2 XP · stacks with 14-day streak → ×3 XP total</div>
+              <div class="event-featured__challenge">
+                <div class="event-featured__challenge-label">⚡ How to benefit</div>
+                <div class="event-featured__challenge-text">Log any workout now — dungeon challenge, boss damage, or free run all count</div>
+              </div>
+              <div class="event-featured__chips">
+                <span class="event-featured__chip">🏃 Run</span>
+                <span class="event-featured__chip">🚴 Cycle</span>
+                <span class="event-featured__chip">💪 Gym</span>
+                <span class="event-featured__chip">🧘 Yoga</span>
+              </div>
+            </div>
+            <div class="event-featured__footer">
+              <div class="event-featured__timer" style="color:var(--orange)">
+                <span style="font-size:17px;font-weight:900">1:23</span>
+                <span style="font-size:10px;color:var(--text-secondary);font-weight:600">remaining</span>
+              </div>
+              <button class="event-featured__cta" style="background:linear-gradient(135deg,#f5a623,#e8920f);color:#000;font-weight:800">Log Workout →</button>
+            </div>
+          </div>
+
+          <div class="events-scroll">
+
+            <!-- Dungeon: challenge in progress 40% -->
+            <div class="event-card event-card--dungeon">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">⛏️</div>
+              <span class="event-card__icon">⛏️</span>
+              <div class="event-card__type event-card__type--dungeon">DUNGEON</div>
+              <div class="event-card__name">Ember Forge</div>
+              <div class="event-card__req event-card__req--dungeon">⛏️ Run 5km · 40%</div>
+              <div class="event-card__detail">2.0 / 5.0 km done</div>
+              <div class="event-card__progress">
+                <div class="event-card__progress-fill" style="width:40%;background:var(--purple)"></div>
+              </div>
+            </div>
+
+            <!-- Boss node upcoming -->
+            <div class="event-card event-card--boss">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">🗡️</div>
+              <span class="event-card__icon">🗡️</span>
+              <div class="event-card__type event-card__type--boss">BOSS NODE</div>
+              <div class="event-card__name">Ironclad Sentinel</div>
+              <div class="event-card__distance">📍 +4.2 km</div>
+              <div class="event-card__req event-card__req--boss">⚔️ High-intensity</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Chest arrived — log to open -->
+            <div class="event-card event-card--chest">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">💰</div>
+              <span class="event-card__icon">💰</span>
+              <div class="event-card__type event-card__type--chest">CHEST · HERE</div>
+              <div class="event-card__name">Mountain Cache</div>
+              <div class="event-card__req event-card__req--chest">💰 Log any workout</div>
+              <div class="event-card__detail">You're here! Open it</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Merchant world event -->
+            <div class="event-card event-card--merchant">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">🧙</div>
+              <span class="event-card__icon">🧙</span>
+              <div class="event-card__type event-card__type--merchant">MERCHANT</div>
+              <div class="event-card__name">Wandering Alchemist</div>
+              <div class="event-card__req event-card__req--merchant">🧙 Mystery wares</div>
+              <div class="event-card__detail">⏱ 8h left</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="page-content">
+
+          <!-- ── MAP HISTORY CARD ── -->
+          <div class="card" style="padding:12px 16px 10px">
+            <div class="section-title">
+              MAP HISTORY
+              <span class="section-title__action">View all →</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-soft)">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⛏️</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Ember Forge Dungeon</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Challenge in progress · 40% · 2.0/5.0 km</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">DUNGEON</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Valley Cache</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Opened · 2.1 km traveled · Yesterday</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:11px;font-weight:700;color:var(--orange)">+220 XP</div>
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">CHEST</div>
+              </div>
+            </div>
+            <button style="width:100%;margin-top:8px;background:rgba(79,158,255,0.08);border:1px solid rgba(79,158,255,0.22);border-radius:11px;padding:10px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer">View full map history →</button>
+          </div>
+
+          <div class="card card--blue card--glow-blue">
+            <div class="xp-row">
+              <span class="xp-row__level">Level 12</span>
+              <span>12,400 / 15,000 XP</span>
+              <span class="xp-row__level">Level 13</span>
+            </div>
+            <div class="progress progress--thick">
+              <div class="progress__fill progress__fill--xp" style="width:83%"></div>
+            </div>
+            <div class="row-between" style="margin-top:6px">
+              <span class="xp-row__note">2,600 XP to next level</span>
+              <span style="font-size:10px;font-weight:700;color:var(--blue)">83%</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row-between">
+              <div class="row-center">
+                <span style="font-size:22px">🔥</span>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--text-primary)">14-Day Streak</div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Reward in 7 days — ×1.5 XP bonus</div>
+                </div>
+              </div>
+              <span class="badge badge--green">🛡 Shield ready</span>
+            </div>
+            <div class="streak-days">
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">MON</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">TUE</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">WED</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">THU</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">FRI</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">SAT</div></div>
+              <div class="streak-day streak-day--today"><div class="streak-day__icon">🔥</div><div class="streak-day__label">TODAY</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              DAILY QUESTS
+              <span class="section-title__action">2 / 5 done · resets 6h</span>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🏃</div>
+              <div class="quest-item__body"><div class="quest-item__name quest-item__name--done">Run 30 minutes</div><div class="quest-item__sub">32 min completed</div></div>
+              <div class="quest-item__right"><div class="quest-item__check">✓</div><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🔥</div>
+              <div class="quest-item__body"><div class="quest-item__name quest-item__name--done">Burn 300 calories</div><div class="quest-item__sub">348 cal burned</div></div>
+              <div class="quest-item__right"><div class="quest-item__check">✓</div><div class="quest-item__xp">+100 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--active">💪</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name">Strength session</div>
+                <div style="margin-top:4px"><div class="progress progress--thin"><div class="progress__fill progress__fill--str" style="width:0%"></div></div><div class="quest-item__sub" style="margin-top:3px">0 / 1 session</div></div>
+              </div>
+              <div class="quest-item__right"><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--pending">🧘</div>
+              <div class="quest-item__body"><div class="quest-item__name" style="opacity:0.5">10 min yoga</div></div>
+              <div class="quest-item__right"><div class="quest-item__xp" style="opacity:0.5">+100 XP</div></div>
+            </div>
+            <div style="margin-top:10px;background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-secondary)">Complete all 5 quests</span>
+              <span style="font-size:12px;font-weight:700;color:var(--orange)">+300 Bonus XP</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <div class="section-title">CHARACTER STATS</div>
+            <div style="display:flex;gap:6px">
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--red)">84</div><div class="stat-gem__label">STR</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--green)">71</div><div class="stat-gem__label">END</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--blue)">92</div><div class="stat-gem__label">AGI</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--purple)">65</div><div class="stat-gem__label">FLX</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--orange)">78</div><div class="stat-gem__label">STA</div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="fab fab--pulse">⚔️</div>
+    <div class="nav">
+      <a href="home-v2.html" class="nav__item nav__item--active"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="adventure-map.html" class="nav__item"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="profile-full.html" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 4 — HOME v2 · MULTIPLE ACTIVE (dungeon challenge featured)
+══════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);color:#a371f7">SCREEN 4 — MULTIPLE ACTIVE</div>
+    <div class="screen-title">Dungeon challenge in progress</div>
+    <div class="screen-desc">Dungeon challenge (40%) is most actionable → featured · secondary: crossroads decision, boss upcoming, mini-boss active, Strava sync card</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar">
+      <span class="status-bar__time">9:41</span>
+      <span class="status-bar__icons">●●● 🔋</span>
+    </div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(163,113,247,0.07) 0%,transparent 50%);pointer-events:none;z-index:0"></div>
+
+    <div class="scroll">
+      <div style="position:relative;z-index:1">
+
+        <div class="home-header">
+          <div class="home-header__row">
+            <div>
+              <div class="home-header__greeting">Good afternoon ⛏️</div>
+              <div class="home-header__name">Alex</div>
+              <div class="home-header__badges">
+                <span class="badge badge--blue">LV 12</span>
+                <span class="badge badge--purple">WARRIOR</span>
+                <span class="badge badge--purple">⛏️ Challenge active</span>
+              </div>
+            </div>
+            <div class="home-header__avatar-wrap">
+              <div class="home-header__avatar" style="box-shadow:0 0 20px rgba(163,113,247,0.35)">🏃</div>
+              <div class="home-header__lv-badge home-header__lv-badge--tappable">LV 12</div>
+              <div class="home-header__notif">3</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="events-section">
+          <div class="events-section__header">
+            <div class="events-section__title">
+              <div class="events-live-dot"></div>
+              MAP PROGRESS
+            </div>
+            <span class="events-section__link">Map →</span>
+          </div>
+
+          <!-- FEATURED: Dungeon challenge in progress (40%) — most actionable -->
+          <div class="event-featured event-featured--challenge">
+            <div style="position:absolute;right:-14px;top:-10px;font-size:100px;opacity:0.09;pointer-events:none;line-height:1;user-select:none">⛏️</div>
+            <div class="event-featured__top">
+              <div class="event-featured__badge" style="background:rgba(163,113,247,0.15);border-color:rgba(163,113,247,0.45);color:var(--purple)">⛏️ DUNGEON · IN PROGRESS</div>
+              <div class="event-featured__sync">⟳ Garmin · 3m ago</div>
+            </div>
+            <div class="event-featured__body">
+              <div class="event-featured__heading">Challenge in progress</div>
+              <div class="event-featured__name">Ember Forge Dungeon</div>
+              <div class="event-featured__sub">⛏️ Run 5km to clear the dungeon</div>
+              <div class="event-featured__progress-wrap">
+                <div class="event-featured__progress-row">
+                  <span>Run progress</span>
+                  <span class="event-featured__progress-val">2.0 <span style="font-weight:400;color:var(--text-secondary)">/ 5.0 km</span></span>
+                </div>
+                <div class="event-featured__bar">
+                  <div class="event-featured__bar-fill" style="width:40%;background:linear-gradient(to right,var(--purple),#c4a0ff)"></div>
+                </div>
+              </div>
+              <div class="event-featured__chips">
+                <span class="event-featured__chip">🏃 Run only</span>
+              </div>
+            </div>
+            <div class="event-featured__footer">
+              <div class="event-featured__timer" style="color:var(--purple)">
+                <span style="font-size:15px;font-weight:900">40%</span>
+                <span style="font-size:10px;color:var(--text-secondary);font-weight:600">complete</span>
+              </div>
+              <button class="event-featured__cta" style="background:linear-gradient(135deg,#a371f7,#7c4dc4);color:#fff;font-weight:800">Log Run →</button>
+            </div>
+          </div>
+
+          <div class="events-scroll">
+
+            <!-- Crossroads: decision required -->
+            <div class="event-card event-card--crossroads">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">⑂</div>
+              <span class="event-card__icon">⑂</span>
+              <div class="event-card__type event-card__type--crossroads">CROSSROADS</div>
+              <div class="event-card__name">The Iron Fork</div>
+              <div class="event-card__req event-card__req--crossroads">⑂ Decision required</div>
+              <div class="event-card__detail">Arrive to choose path</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Boss node upcoming -->
+            <div class="event-card event-card--boss">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">🗡️</div>
+              <span class="event-card__icon">🗡️</span>
+              <div class="event-card__type event-card__type--boss">BOSS NODE</div>
+              <div class="event-card__name">Ironclad Sentinel</div>
+              <div class="event-card__distance">📍 +4.2 km</div>
+              <div class="event-card__req event-card__req--boss">⚔️ High-intensity</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+            <!-- Mini-boss: active challenge -->
+            <div class="event-card event-card--miniboss">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art">👹</div>
+              <span class="event-card__icon">👹</span>
+              <div class="event-card__type event-card__type--miniboss">MINI-BOSS</div>
+              <div class="event-card__name">Thornback Warden</div>
+              <div class="event-card__req event-card__req--miniboss">👹 20-min · active</div>
+              <div class="event-card__detail">1d 8h left</div>
+              <div class="event-card__progress">
+                <div class="event-card__progress-fill" style="width:0%;background:var(--orange)"></div>
+              </div>
+            </div>
+
+            <!-- Strava sync status card -->
+            <div class="event-card event-card--sync">
+              <div class="event-card__bg-glow"></div>
+              <div class="event-card__art" style="opacity:0.12">⟳</div>
+              <span class="event-card__icon" style="font-size:22px">⟳</span>
+              <div class="event-card__type event-card__type--sync">SYNC STATUS</div>
+              <div class="event-card__name">Strava</div>
+              <div class="event-card__req event-card__req--sync">✓ Last sync 3m ago</div>
+              <div class="event-card__detail">Apple Health · linked</div>
+              <div class="event-card__spacer"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="page-content">
+
+          <!-- ── MAP HISTORY CARD ── -->
+          <div class="card" style="padding:12px 16px 10px">
+            <div class="section-title">
+              MAP HISTORY
+              <span class="section-title__action">View all →</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-soft)">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⛏️</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Ember Forge Dungeon</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Challenge in progress · 40% · 2.0/5.0 km</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">DUNGEON</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">👹</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Thornback Warden</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Mini-boss active · 0% damage dealt · 1d 8h left</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:8px;color:var(--text-muted);letter-spacing:0.05em">MINI-BOSS</div>
+              </div>
+            </div>
+            <button style="width:100%;margin-top:8px;background:rgba(79,158,255,0.08);border:1px solid rgba(79,158,255,0.22);border-radius:11px;padding:10px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer">View full map history →</button>
+          </div>
+
+          <div class="card card--blue card--glow-blue">
+            <div class="xp-row">
+              <span class="xp-row__level">Level 12</span>
+              <span>12,400 / 15,000 XP</span>
+              <span class="xp-row__level">Level 13</span>
+            </div>
+            <div class="progress progress--thick">
+              <div class="progress__fill progress__fill--xp" style="width:83%"></div>
+            </div>
+            <div class="row-between" style="margin-top:6px">
+              <span class="xp-row__note">2,600 XP to next level</span>
+              <span style="font-size:10px;font-weight:700;color:var(--blue)">83%</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row-between">
+              <div class="row-center">
+                <span style="font-size:22px">🔥</span>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--text-primary)">14-Day Streak</div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-top:1px">Reward in 7 days — ×1.5 XP bonus</div>
+                </div>
+              </div>
+              <span class="badge badge--green">🛡 Shield ready</span>
+            </div>
+            <div class="streak-days">
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">MON</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">TUE</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">WED</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">THU</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">FRI</div></div>
+              <div class="streak-day streak-day--done"><div class="streak-day__icon">✓</div><div class="streak-day__label">SAT</div></div>
+              <div class="streak-day streak-day--today"><div class="streak-day__icon">🔥</div><div class="streak-day__label">TODAY</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">DAILY QUESTS<span class="section-title__action">3/5 done · resets 12h</span></div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🏃</div>
+              <div class="quest-item__body"><div class="quest-item__name quest-item__name--done">Run 30 minutes</div></div>
+              <div class="quest-item__right"><div class="quest-item__check">✓</div><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--done">🔥</div>
+              <div class="quest-item__body"><div class="quest-item__name quest-item__name--done">Burn 300 calories</div></div>
+              <div class="quest-item__right"><div class="quest-item__check">✓</div><div class="quest-item__xp">+100 XP</div></div>
+            </div>
+            <div class="quest-item">
+              <div class="quest-item__icon quest-item__icon--active">💪</div>
+              <div class="quest-item__body">
+                <div class="quest-item__name">Strength session</div>
+                <div style="margin-top:4px"><div class="progress progress--thin"><div class="progress__fill progress__fill--str" style="width:0%"></div></div><div class="quest-item__sub" style="margin-top:3px">0 / 1 session</div></div>
+              </div>
+              <div class="quest-item__right"><div class="quest-item__xp">+150 XP</div></div>
+            </div>
+            <div style="margin-top:10px;background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-secondary)">Complete all 5 quests</span>
+              <span style="font-size:12px;font-weight:700;color:var(--orange)">+300 Bonus XP</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <div class="section-title">CHARACTER STATS</div>
+            <div style="display:flex;gap:6px">
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--red)">84</div><div class="stat-gem__label">STR</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--green)">71</div><div class="stat-gem__label">END</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--blue)">92</div><div class="stat-gem__label">AGI</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--purple)">65</div><div class="stat-gem__label">FLX</div></div>
+              <div class="stat-gem"><div class="stat-gem__val" style="color:var(--orange)">78</div><div class="stat-gem__label">STA</div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="fab fab--pulse">⚔️</div>
+    <div class="nav">
+      <a href="home-v2.html" class="nav__item nav__item--active"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="adventure-map.html" class="nav__item"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="profile-full.html" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

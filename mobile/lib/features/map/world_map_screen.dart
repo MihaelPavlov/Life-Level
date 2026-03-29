@@ -1,9 +1,11 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'world_map_data.dart';
 import 'world_map_detail_sheet.dart';
 import 'world_map_models.dart';
 import 'world_map_painter.dart';
+import 'models/world_zone_models.dart';
 import 'services/world_zone_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,6 +32,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   Map<String, List<String>> _edges = {};
   List<Offset> _zoneCentres = [];
   int _characterLevel = 1;
+
+  Offset? _playerOnEdge;   // null = player is at zone, not travelling
+  Offset? _playerAnchor;   // source zone centre for the progress line
+  double  _travelProgress = 0.0;
 
   bool _loading = true;
   String? _error;
@@ -78,11 +84,38 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         }
       }
 
+      final layoutZones = _applyTierLayout(zones);
+
+      // ── travel state ────────────────────────────────────────────────────────
+      Offset? playerOnEdge;
+      Offset? playerAnchor;
+      double  travelProgress = 0.0;
+
+      final prog = data.userProgress;
+      if (prog.destinationZoneId != null && prog.currentEdgeId != null) {
+        final edge = data.edges.cast<WorldZoneEdgeModel?>().firstWhere(
+          (e) => e?.id == prog.currentEdgeId,
+          orElse: () => null,
+        );
+        final fromIdx = layoutZones.indexWhere((z) => z.id == prog.currentZoneId);
+        final toIdx   = layoutZones.indexWhere((z) => z.id == prog.destinationZoneId);
+        if (edge != null && fromIdx != -1 && toIdx != -1 && edge.distanceKm > 0) {
+          final frac = (prog.distanceTraveledOnEdge / edge.distanceKm).clamp(0.0, 1.0);
+          final centres = layoutZones.map(_centreFor).toList();
+          playerOnEdge   = Offset.lerp(centres[fromIdx], centres[toIdx], frac)!;
+          playerAnchor   = centres[fromIdx];
+          travelProgress = frac;
+        }
+      }
+
       setState(() {
-        _zones = zones;
+        _zones = layoutZones;
         _edges = edges;
-        _zoneCentres = zones.map(_centreFor).toList();
+        _zoneCentres = layoutZones.map(_centreFor).toList();
         _characterLevel = data.characterLevel;
+        _playerOnEdge   = playerOnEdge;
+        _playerAnchor   = playerAnchor;
+        _travelProgress = travelProgress;
         _loading = false;
       });
     } catch (e) {
@@ -96,14 +129,60 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ── helpers ──────────────────────────────────────────────────────────────────
 
   Offset _centreFor(ZoneData z) {
-    // Prefer absolute canvas positions supplied by the API.
-    if (z.absoluteX != null && z.absoluteY != null) {
-      return Offset(z.absoluteX!, z.absoluteY!);
-    }
-    // Fallback: derive position from tier row + relative X fraction.
     final y = kTopPadding + z.tier * kTierHeight;
     final x = z.relativeX * kCanvasWidth;
     return Offset(x, y);
+  }
+
+  // ── tier-based layout ─────────────────────────────────────────────────────────
+  // Ignores admin-panel X coordinates and places zones evenly within each tier
+  // so they are always centered regardless of how they were positioned in the editor.
+
+  List<ZoneData> _applyTierLayout(List<ZoneData> zones) {
+    // Group indices by tier, sorted by original relativeX to preserve left/right order
+    final tierIndices = <int, List<int>>{};
+    for (int i = 0; i < zones.length; i++) {
+      tierIndices.putIfAbsent(zones[i].tier, () => []).add(i);
+    }
+    for (final ids in tierIndices.values) {
+      ids.sort((a, b) => zones[a].relativeX.compareTo(zones[b].relativeX));
+    }
+
+    final result = List<ZoneData?>.filled(zones.length, null);
+    for (final ids in tierIndices.values) {
+      final xs = _tierXPositions(ids.length);
+      for (int j = 0; j < ids.length; j++) {
+        final z = zones[ids[j]];
+        result[ids[j]] = ZoneData(
+          id: z.id,
+          name: z.name,
+          icon: z.icon,
+          status: z.status,
+          tier: z.tier,
+          relativeX: xs[j],
+          region: z.region,
+          nodeCount: z.nodeCount,
+          totalXp: z.totalXp,
+          distanceKm: z.distanceKm,
+          levelRequirement: z.levelRequirement,
+          isCrossroads: z.isCrossroads,
+          description: z.description,
+        );
+      }
+    }
+    return result.cast<ZoneData>();
+  }
+
+  List<double> _tierXPositions(int count) {
+    switch (count) {
+      case 1: return [0.5];
+      case 2: return [0.30, 0.70];
+      case 3: return [0.20, 0.50, 0.80];
+      default:
+        return [
+          for (int i = 0; i < count; i++) 0.15 + 0.70 / (count - 1) * i,
+        ];
+    }
   }
 
   void _onCanvasTap(TapDownDetails details) {
@@ -156,155 +235,237 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      child: Stack(
-        children: [
-          // ── loading state ───────────────────────────────────────────────────
-          if (_loading)
-            const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.blue,
-                strokeWidth: 2,
-              ),
-            )
+    return Stack(
+      children: [
+        // ── full-screen background ────────────────────────────────────────────
+        Positioned.fill(
+          child: CustomPaint(painter: _MapBackgroundPainter()),
+        ),
 
-          // ── error state ─────────────────────────────────────────────────────
-          else if (_error != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
+        // ── content ───────────────────────────────────────────────────────────
+        if (_loading)
+          const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.blue,
+              strokeWidth: 2,
+            ),
+          )
+        else if (_error != null)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('⚠️', style: TextStyle(fontSize: 32)),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Failed to load world map',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _error!,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _load,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else ...[
+          // ── scrollable map canvas ───────────────────────────────────────────
+          Positioned.fill(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Center(
+                child: GestureDetector(
+                  onTapDown: _onCanvasTap,
+                  child: AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, __) => CustomPaint(
+                      size: const Size(kCanvasWidth, kCanvasHeight),
+                      painter: WorldMapPainter(
+                        zones: _zones,
+                        centres: _zoneCentres,
+                        edges: _edges,
+                        pulseValue: _pulseAnim.value,
+                        playerOnEdge: _playerOnEdge,
+                        playerAnchor: _playerAnchor,
+                        travelProgress: _travelProgress,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── floating HUD pill ───────────────────────────────────────────────
+          Positioned(
+            top: 48,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withOpacity(0.88),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF30363d), width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Text('🌍', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 8),
                     const Text(
-                      '⚠️',
-                      style: TextStyle(fontSize: 32),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Failed to load world map',
+                      'World Map',
                       style: TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 16,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      _error!,
+                      'Lv $_characterLevel',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _load,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.blue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: const Text('Retry'),
                     ),
                   ],
                 ),
               ),
-            )
-
-          // ── loaded state ────────────────────────────────────────────────────
-          else ...[
-            GestureDetector(
-              onTapDown: _onCanvasTap,
-              child: InteractiveViewer(
-                constrained: false,
-                minScale: 0.6,
-                maxScale: 2.0,
-                child: AnimatedBuilder(
-                  animation: _pulseAnim,
-                  builder: (_, __) => CustomPaint(
-                    size: const Size(kCanvasWidth, kCanvasHeight),
-                    painter: WorldMapPainter(
-                      zones: _zones,
-                      centres: _zoneCentres,
-                      edges: _edges,
-                      pulseValue: _pulseAnim.value,
-                    ),
-                  ),
-                ),
-              ),
             ),
-
-            // ── floating HUD pill ─────────────────────────────────────────────
-            Positioned(
-              top: 48,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withOpacity(0.88),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: const Color(0xFF30363d), width: 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
-                        blurRadius: 12,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('🌍',
-                          style: TextStyle(fontSize: 14)),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'World Map',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Lv $_characterLevel',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Full-screen background — matches world-structure.html:
+//   • base #040810
+//   • radial blue glow  — top-left  (30 % / 20 %)
+//   • radial purple glow — bottom-right (70 % / 80 %)
+//   • subtle 40 px grid
+//   • scattered stars
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BgStar {
+  const _BgStar(this.x, this.y, this.r, this.a);
+  final double x, y, r, a;
+}
+
+class _MapBackgroundPainter extends CustomPainter {
+  static final List<_BgStar> _stars = _genStars();
+
+  static List<_BgStar> _genStars() {
+    final rng = math.Random(0xBEEF1234);
+    return [
+      for (int i = 0; i < 90; i++)
+        _BgStar(
+          rng.nextDouble() * 430,
+          rng.nextDouble() * 960,
+          rng.nextDouble() * 1.3 + 0.2,
+          rng.nextDouble() * 0.5 + 0.1,
+        ),
+    ];
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+
+    // base fill
+    canvas.drawRect(rect, Paint()..color = const Color(0xFF040810));
+
+    // radial blue — top-left
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(-0.40, -0.60),
+          radius: 1.1,
+          colors: [Color(0x0A4F9EFF), Color(0x004F9EFF)],
+        ).createShader(rect),
+    );
+
+    // radial purple — bottom-right
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(0.40, 0.60),
+          radius: 1.1,
+          colors: [Color(0x0AA371F7), Color(0x00A371F7)],
+        ).createShader(rect),
+    );
+
+    // 40 px grid
+    final gridPaint = Paint()
+      ..color = const Color(0x05FFFFFF)
+      ..strokeWidth = 1.0;
+    const step = 40.0;
+    for (double x = 0; x <= size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (double y = 0; y <= size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // stars
+    final starPaint = Paint()..style = PaintingStyle.fill;
+    for (final s in _stars) {
+      starPaint.color = Color.fromRGBO(190, 220, 255, s.a);
+      canvas.drawCircle(Offset(s.x, s.y), s.r, starPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MapBackgroundPainter _) => false;
 }

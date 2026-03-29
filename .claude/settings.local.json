@@ -109,7 +109,9 @@
       "Bash(do)",
       "Bash(sed -i \"s|''../../core/|''../../../core/|g\" \"$f\")",
       "Bash(sed -i \"s|''models/|''../models/|g\" \"$f\")",
-      "Bash(echo \"Fixed: $f\")"
+      "Bash(echo \"Fixed: $f\")",
+      "Bash(curl -s http://localhost:5128/api/admin/health)",
+      "Bash(curl:*)"
     ]
   }
 }
