@@ -13,6 +13,7 @@ import '../../features/login_reward/login_reward_screen.dart';
 import '../../features/quests/quests_screen.dart';
 import '../../features/map/map_screen.dart';
 import '../../features/map/world_map_screen.dart';
+import '../services/map_tab_notifier.dart';
 import '../../features/profile/profile_screen.dart';
 import 'shell_constants.dart';
 import 'shell_models.dart';
@@ -338,6 +339,9 @@ class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateM
                     setState(() { _tabIndex = i; _worldOpen = false; });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
+                    }
+                    if (_navIds[i] == 'map') {
+                      MapTabNotifier.notify();
                     }
                   },
                 ),

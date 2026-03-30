@@ -83,6 +83,36 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp)
             progress = await InitializeUserProgressAsync(userId, worldZoneId);
         }
 
+        // If the user's current node is not in this zone (they've entered a new zone),
+        // auto-place them at the zone's start node so adjacency checks work correctly.
+        if (worldZoneId.HasValue && nodes.Count > 0 && !nodeIds.Contains(progress.CurrentNodeId))
+        {
+            var startNode = nodes.FirstOrDefault(n => n.IsStartNode)
+                ?? nodes.First();
+
+            progress.CurrentNodeId = startNode.Id;
+            progress.CurrentEdgeId = null;
+            progress.DistanceTraveledOnEdge = 0;
+            progress.DestinationNodeId = null;
+            progress.UpdatedAt = DateTime.UtcNow;
+
+            var alreadyUnlocked = progress.UnlockedNodes.Any(u => u.MapNodeId == startNode.Id);
+            if (!alreadyUnlocked)
+            {
+                var unlock = new UserNodeUnlock
+                {
+                    UserId = userId,
+                    MapNodeId = startNode.Id,
+                    UserMapProgressId = progress.Id,
+                    UnlockedAt = DateTime.UtcNow
+                };
+                db.UserNodeUnlocks.Add(unlock);
+                progress.UnlockedNodes.Add(unlock);
+            }
+
+            await db.SaveChangesAsync();
+        }
+
         var characterLevel = await db.Characters
             .Where(c => c.UserId == userId)
             .Select(c => c.Level)
@@ -381,10 +411,9 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp)
         if (worldZoneId.HasValue)
             startNode = await db.MapNodes.FirstOrDefaultAsync(n => n.IsStartNode && n.WorldZoneId == worldZoneId.Value);
 
-        startNode ??= await db.MapNodes.FirstOrDefaultAsync(n => n.IsStartNode);
-
         if (startNode == null)
-            throw new InvalidOperationException("No start node found in map.");
+            throw new InvalidOperationException(
+                $"No start node found for zone {worldZoneId}. Ensure the zone has been seeded with map nodes.");
 
         var progress = new UserMapProgress
         {

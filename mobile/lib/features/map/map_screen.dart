@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
+import '../../core/services/map_tab_notifier.dart';
 import 'services/boss_service.dart';
 import 'services/world_zone_service.dart';
 import 'map_colors.dart';
@@ -10,6 +11,7 @@ import 'map_debug_panel.dart';
 import 'services/map_service.dart';
 import 'map_banners.dart';
 import 'models/map_models.dart';
+import 'models/world_zone_models.dart';
 import 'node_detail_sheet.dart';
 import 'world_map_screen.dart';
 
@@ -41,6 +43,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   late final AnimationController _destCtrl;
   late final TransformationController _transformCtrl;
   late final StreamSubscription<int> _levelUpSub;
+  late final StreamSubscription<void> _mapTabSub;
 
   bool _hasInitializedViewport = false;
 
@@ -60,12 +63,21 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _transformCtrl = TransformationController();
     // Re-fetch map when the character levels up so node lock states update.
     _levelUpSub = LevelUpNotifier.stream.listen((_) => _loadMap());
+    // Re-fetch from scratch when the Map tab is re-selected so that crossroads
+    // or any zone change is always reflected.
+    _mapTabSub = MapTabNotifier.stream.listen((_) {
+      _worldZoneId = null;
+      _zoneName = null;
+      _hasInitializedViewport = false;
+      _loadMap();
+    });
     _loadMap();
   }
 
   @override
   void dispose() {
     _levelUpSub.cancel();
+    _mapTabSub.cancel();
     _pulseCtrl.dispose();
     _destCtrl.dispose();
     _transformCtrl.dispose();
@@ -81,8 +93,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     setState(() { _loading = true; _error = null; });
 
     if (_worldZoneId == null) {
-      setState(() { _loading = false; _data = null; });
-      return;
+      try {
+        final world = await _worldZoneService.getFullWorld();
+        final currentZoneId = world.userProgress.currentZoneId;
+        if (currentZoneId.isEmpty) {
+          setState(() { _loading = false; _data = null; });
+          return;
+        }
+        final matchedZone = world.zones.cast<WorldZoneModel?>().firstWhere(
+          (z) => z!.id == currentZoneId,
+          orElse: () => null,
+        );
+        _worldZoneId = currentZoneId;
+        _zoneName = matchedZone?.name;
+      } catch (e) {
+        setState(() { _loading = false; _data = null; });
+        return;
+      }
     }
 
     try {
@@ -128,21 +155,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _showNodeArrivalBanner(MapNodeModel node) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 300),
-      transitionBuilder: (ctx, anim, _, child) {
-        final slide = Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-        return SlideTransition(position: slide, child: child);
-      },
-      pageBuilder: (ctx, _, __) => NodeArrivalBanner(node: node),
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => NodeArrivalBanner(node: node, onDismiss: () => entry.remove()),
     );
+    Overlay.of(context).insert(entry);
   }
 
   void _showLevelUpDialog(int newLevel) {
@@ -150,21 +167,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _showNodeDiscoveredBanner(MapNodeModel node) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 400),
-      transitionBuilder: (ctx, anim, _, child) {
-        final slide = Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-        return SlideTransition(position: slide, child: child);
-      },
-      pageBuilder: (ctx, _, __) => NodeDiscoveredBanner(node: node),
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => NodeDiscoveredBanner(node: node, onDismiss: () => entry.remove()),
     );
+    Overlay.of(context).insert(entry);
   }
 
   MapNodeModel? get _currentNode {
@@ -345,24 +352,44 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             Positioned(
               bottom: 100,
               left: 20,
-              right: 80,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.green,
-                  foregroundColor: Colors.white,
-                  elevation: 6,
-                  shadowColor: AppColors.green.withOpacity(0.4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              right: 20,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.green.withOpacity(0.35),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1a3d1f),
+                    foregroundColor: AppColors.green,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: AppColors.green.withOpacity(0.6), width: 1.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  onPressed: _completeZone,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check_circle, size: 22),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Complete ${_zoneName ?? "Zone"}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('✓', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
                 ),
-                icon: const Icon(Icons.check_circle_outline, size: 20),
-                label: Text(
-                  'Complete ${_zoneName ?? "Zone"}',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-                onPressed: _completeZone,
               ),
             ),
           Positioned(
@@ -424,6 +451,55 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
       );
     }
+
+    if (_data != null && _data!.nodes.isEmpty)
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_zoneName != null ? '🔀' : '🌍',
+                style: const TextStyle(fontSize: 52)),
+              const SizedBox(height: 20),
+              Text(
+                _zoneName ?? 'Choose Your Path',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'This is a crossroads zone.\nOpen the World Map to choose your next destination.',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 28),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.blue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 14),
+                ),
+                icon: const Text('🌍', style: TextStyle(fontSize: 18)),
+                label: const Text('Open World Map',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                onPressed: _openWorldMap,
+              ),
+            ],
+          ),
+        ),
+      );
 
     if (_data == null) {
       return Center(

@@ -10,7 +10,7 @@ using UserZoneUnlockEntity = LifeLevel.Modules.WorldZone.Domain.Entities.UserZon
 
 namespace LifeLevel.Modules.WorldZone.Application.UseCases;
 
-public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, ICharacterLevelReadPort characterLevel)
+public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, ICharacterLevelReadPort characterLevel, IMapNodeCountPort mapNodeCount, IMapNodeCompletedCountPort mapNodeCompletedCount)
 {
     public async Task<WorldFullResponse> GetFullWorldAsync(Guid userId)
     {
@@ -32,6 +32,9 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
             .ToListAsync();
 
         var zoneIds = zones.Select(z => z.Id).ToHashSet();
+
+        var nodeCounts = await mapNodeCount.GetNodeCountsByZoneIdsAsync(zoneIds);
+        var completedNodeCounts = await mapNodeCompletedCount.GetCompletedNodeCountsByZoneIdsAsync(userId, zoneIds);
 
         var edges = await db.Set<WorldZoneEdgeEntity>()
             .Where(e => zoneIds.Contains(e.FromZoneId))
@@ -66,7 +69,8 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
                 TotalDistanceKm = z.TotalDistanceKm,
                 IsCrossroads = z.IsCrossroads,
                 IsStartZone = z.IsStartZone,
-                NodeCount = 0, // MapNode is in a different module
+                NodeCount = nodeCounts.GetValueOrDefault(z.Id, 0),
+                CompletedNodeCount = completedNodeCounts.GetValueOrDefault(z.Id, 0),
                 UserState = new ZoneUserStateDto
                 {
                     IsUnlocked = unlockedIds.Contains(z.Id),
@@ -104,7 +108,7 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
             .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id)
             ?? await InitializeUserProgressAsync(userId, activeWorld.Id);
 
-        _ = await db.Set<WorldZoneEntity>().FindAsync(destinationZoneId)
+        var destinationZone = await db.Set<WorldZoneEntity>().FindAsync(destinationZoneId)
             ?? throw new InvalidOperationException("Zone not found.");
 
         var isAdjacent = await db.Set<WorldZoneEdgeEntity>().AnyAsync(e =>
@@ -113,6 +117,41 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
 
         if (!isAdjacent)
             throw new InvalidOperationException("Destination zone is not adjacent to your current zone.");
+
+        // Crossroads: instant pass-through — no distance required
+        if (destinationZone.IsCrossroads)
+        {
+            progress.CurrentZoneId = destinationZoneId;
+            progress.CurrentEdgeId = null;
+            progress.DistanceTraveledOnEdge = 0;
+            progress.DestinationZoneId = null;
+            progress.UpdatedAt = DateTime.UtcNow;
+
+            var alreadyUnlocked = progress.UnlockedZones.Any(u => u.WorldZoneId == destinationZoneId);
+            if (!alreadyUnlocked)
+            {
+                db.Set<UserZoneUnlockEntity>().Add(new UserZoneUnlockEntity
+                {
+                    UserId = userId,
+                    WorldZoneId = destinationZoneId,
+                    UserWorldProgressId = progress.Id,
+                    UnlockedAt = DateTime.UtcNow
+                });
+                await db.SaveChangesAsync();
+
+                if (destinationZone.TotalXp > 0)
+                {
+                    await characterXp.AwardXpAsync(
+                        userId, "ZoneDiscovery", destinationZone.Icon,
+                        $"Passed through {destinationZone.Name}", destinationZone.TotalXp);
+                }
+            }
+            else
+            {
+                await db.SaveChangesAsync();
+            }
+            return;
+        }
 
         var edge = await db.Set<WorldZoneEdgeEntity>().FirstOrDefaultAsync(e =>
             (e.FromZoneId == progress.CurrentZoneId && e.ToZoneId == destinationZoneId) ||

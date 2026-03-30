@@ -15,7 +15,8 @@ public class WorldZoneDto
     public double TotalDistanceKm { get; set; }
     public bool IsCrossroads { get; set; }
     public bool IsStartZone { get; set; }
-    public int NodeCount { get; set; }  // Will be 0 after module extraction (MapNode is in different module)
+    public int NodeCount { get; set; }  // Queried from MapNode table via cross-module db.Set<MapNode>()
+    public int CompletedNodeCount { get; set; }
     public ZoneUserStateDto? UserState { get; set; }
 }
 

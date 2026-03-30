@@ -168,7 +168,7 @@ class WorldMapPainter extends CustomPainter {
     _drawEdges(canvas);
     _drawTierLabels(canvas);
     _drawZones(canvas);
-    if (playerOnEdge != null && playerAnchor != null && travelProgress > 0) {
+    if (playerOnEdge != null && playerAnchor != null) {
       _drawTravelProgress(canvas);
     }
     _drawFogOfWar(canvas, size);
@@ -178,43 +178,46 @@ class WorldMapPainter extends CustomPainter {
     final from = playerAnchor!;
     final to   = playerOnEdge!;
 
-    // Soft glow trail
-    canvas.drawLine(
-      from, to,
-      Paint()
-        ..color = AppColors.blue.withOpacity(0.25)
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
+    // Only draw the trail line and percentage when there is actual progress
+    if (from != to) {
+      // Soft glow trail
+      canvas.drawLine(
+        from, to,
+        Paint()
+          ..color = AppColors.blue.withOpacity(0.25)
+          ..strokeWidth = 8
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
 
-    // Solid progress line
-    canvas.drawLine(
-      from, to,
-      Paint()
-        ..color = AppColors.blue
-        ..strokeWidth = 2.5
-        ..strokeCap = StrokeCap.round,
-    );
+      // Solid progress line
+      canvas.drawLine(
+        from, to,
+        Paint()
+          ..color = AppColors.blue
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round,
+      );
 
-    // Percentage label near the midpoint
-    final mid = Offset.lerp(from, to, 0.5)!;
-    final pct = '${(travelProgress * 100).round()}%';
-    final tp = TextPainter(
-      text: TextSpan(
-        text: pct,
-        style: TextStyle(
-          color: AppColors.blue,
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          shadows: [Shadow(color: Colors.black.withOpacity(0.8), blurRadius: 4)],
+      // Percentage label near the midpoint
+      final mid = Offset.lerp(from, to, 0.5)!;
+      final pct = '${(travelProgress * 100).round()}%';
+      final tp = TextPainter(
+        text: TextSpan(
+          text: pct,
+          style: TextStyle(
+            color: AppColors.blue,
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            shadows: [Shadow(color: Colors.black.withOpacity(0.8), blurRadius: 4)],
+          ),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, mid.translate(-tp.width / 2 - 14, -tp.height / 2));
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, mid.translate(-tp.width / 2 - 14, -tp.height / 2));
+    }
 
-    // Player character at interpolated position
+    // Always draw player character at current position
     _drawPlayerMarker(canvas, to);
   }
 
@@ -268,8 +271,8 @@ class WorldMapPainter extends CustomPainter {
 
       _drawZoneName(canvas, z.name, c, z.status);
 
-      // Draw player at current zone when stationary OR when travel just started (0%)
-      if (z.status == ZoneStatus.active && (playerOnEdge == null || travelProgress == 0)) {
+      // Draw player at current zone only when stationary (not travelling)
+      if (z.status == ZoneStatus.active && playerOnEdge == null) {
         _drawPlayerMarker(canvas, c);
       }
     }
@@ -420,5 +423,8 @@ class WorldMapPainter extends CustomPainter {
   bool shouldRepaint(WorldMapPainter old) =>
       old.pulseValue != pulseValue ||
       old.playerOnEdge != playerOnEdge ||
-      old.travelProgress != travelProgress;
+      old.playerAnchor != playerAnchor ||
+      old.travelProgress != travelProgress ||
+      old.zones != zones ||
+      old.centres != centres;
 }

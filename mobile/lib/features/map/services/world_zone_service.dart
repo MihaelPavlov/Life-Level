@@ -22,10 +22,7 @@ class WorldZoneService {
     return response.data as Map<String, dynamic>;
   }
 
-  // ── Debug ──────────────────────────────────────────────────────────────────
-
   Future<void> debugAddDistance(double km) async {
-    await ApiClient.instance
-        .post('/world/debug/add-distance', data: {'km': km});
+    await ApiClient.instance.post('/world/debug/add-distance', data: {'km': km});
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/world_zone_refresh_notifier.dart';
 import '../character/providers/character_provider.dart';
 import 'map_colors.dart';
 import 'services/boss_service.dart';
@@ -10,6 +11,7 @@ import 'services/chest_service.dart';
 import 'services/dungeon_service.dart';
 import 'services/crossroads_service.dart';
 import 'services/map_service.dart';
+import 'services/world_zone_service.dart';
 import 'models/map_models.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,12 +39,15 @@ class MapDebugPanel extends ConsumerStatefulWidget {
 
 class _MapDebugPanelState extends ConsumerState<MapDebugPanel> {
   bool _busy = false;
+  bool _worldTravelBusy = false;
   String? _status;
   int? _currentLevel;
   int? _currentXp;
   String? _selectedBossId;
   String? _selectedBossName;
   bool _isAdmin = false;
+
+  final _worldZoneService = WorldZoneService();
 
   @override
   void initState() {
@@ -71,6 +76,26 @@ class _MapDebugPanelState extends ConsumerState<MapDebugPanel> {
       await ref.read(characterProfileProvider.notifier).refresh();
     } catch (e) {
       if (mounted) setState(() { _busy = false; _status = '✗ $e'; });
+    }
+  }
+
+  Future<void> _addWorldDistance(double km) async {
+    setState(() => _worldTravelBusy = true);
+    try {
+      await _worldZoneService.debugAddDistance(km);
+      widget.onRefresh();
+      WorldZoneRefreshNotifier.notify();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('World travel error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _worldTravelBusy = false);
     }
   }
 
@@ -223,6 +248,29 @@ class _MapDebugPanelState extends ConsumerState<MapDebugPanel> {
                               style: TextStyle(color: AppColors.orange, fontSize: 12)),
                           ]),
                         ),
+                    const SizedBox(height: 20),
+
+                    // ── World Travel section ───────────────────────────────
+                    const Text('WORLD TRAVEL',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 10,
+                        fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+                    const SizedBox(height: 4),
+                    const Text('Add distance toward destination world zone',
+                      style: TextStyle(color: Color(0xFF8b949e), fontSize: 12)),
+                    const SizedBox(height: 10),
+                    if (_worldTravelBusy)
+                      const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          DebugButton(label: '+1 km',  color: AppColors.blue, onTap: () => _addWorldDistance(1)),
+                          DebugButton(label: '+5 km',  color: AppColors.blue, onTap: () => _addWorldDistance(5)),
+                          DebugButton(label: '+10 km', color: AppColors.blue, onTap: () => _addWorldDistance(10)),
+                          DebugButton(label: '+20 km', color: AppColors.blue, onTap: () => _addWorldDistance(20)),
+                        ],
+                      ),
                     const SizedBox(height: 20),
                     const Text('TELEPORT TO NODE',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 10,

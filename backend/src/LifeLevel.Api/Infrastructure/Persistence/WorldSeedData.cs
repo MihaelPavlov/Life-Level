@@ -42,13 +42,114 @@ public static class WorldSeedData
     private static readonly Guid N07 = new("cc000203-0000-0000-0000-000000000000"); // Storm Peak
     private static readonly Guid N08 = new("cc000204-0000-0000-0000-000000000000"); // Summit
 
-    // MapEdge IDs — local map edges
+    // MapNode IDs — Z04 Deepwood Trails (4 nodes)
+    private static readonly Guid N09  = new("cc000301-0000-0000-0000-000000000000"); // Trail Entrance
+    private static readonly Guid N10  = new("cc000302-0000-0000-0000-000000000000"); // Twisted Roots
+    private static readonly Guid N11  = new("cc000303-0000-0000-0000-000000000000"); // Hollow Glade
+    private static readonly Guid N12  = new("cc000304-0000-0000-0000-000000000000"); // Ancient Heart
+
+    // MapNode IDs — Z05 Iron Forge (4 nodes)
+    private static readonly Guid N13  = new("cc000401-0000-0000-0000-000000000000"); // Forge Gate
+    private static readonly Guid N14  = new("cc000402-0000-0000-0000-000000000000"); // Ember Hall
+    private static readonly Guid N15  = new("cc000403-0000-0000-0000-000000000000"); // Anvil Pit
+    private static readonly Guid N16  = new("cc000404-0000-0000-0000-000000000000"); // Master's Furnace
+
+    // MapNode IDs — Z07 Ocean of Balance (4 nodes)
+    private static readonly Guid N17  = new("cc000501-0000-0000-0000-000000000000"); // Shore Landing
+    private static readonly Guid N18  = new("cc000502-0000-0000-0000-000000000000"); // Tidal Shelf
+    private static readonly Guid N19  = new("cc000503-0000-0000-0000-000000000000"); // Sunken Arch
+    private static readonly Guid N20  = new("cc000504-0000-0000-0000-000000000000"); // Deep Horizon
+
+    // MapNode IDs — Z08 Desert Expanse (4 nodes)
+    private static readonly Guid N21  = new("cc000601-0000-0000-0000-000000000000"); // Dune Gateway
+    private static readonly Guid N22  = new("cc000602-0000-0000-0000-000000000000"); // Scorched Mesa
+    private static readonly Guid N23  = new("cc000603-0000-0000-0000-000000000000"); // Mirage Oasis
+    private static readonly Guid N24  = new("cc000604-0000-0000-0000-000000000000"); // Sand Tomb
+
+    // MapNode IDs — Z09 Snow Peaks (4 nodes)
+    private static readonly Guid N25  = new("cc000701-0000-0000-0000-000000000000"); // Frost Gate
+    private static readonly Guid N26  = new("cc000702-0000-0000-0000-000000000000"); // Ice Bridge
+    private static readonly Guid N27  = new("cc000703-0000-0000-0000-000000000000"); // Blizzard Pass
+    private static readonly Guid N28  = new("cc000704-0000-0000-0000-000000000000"); // Glacial Throne
+
+    // MapNode IDs — Z11 Void Wastes (4 nodes)
+    private static readonly Guid N29  = new("cc000801-0000-0000-0000-000000000000"); // Void Edge
+    private static readonly Guid N30  = new("cc000802-0000-0000-0000-000000000000"); // Ashen Plain
+    private static readonly Guid N31  = new("cc000803-0000-0000-0000-000000000000"); // Shattered Spire
+    private static readonly Guid N32  = new("cc000804-0000-0000-0000-000000000000"); // The Abyss
+
+    // MapNode IDs — Z12 Shadow Vale (4 nodes)
+    private static readonly Guid N33  = new("cc000901-0000-0000-0000-000000000000"); // Mist Gate
+    private static readonly Guid N34  = new("cc000902-0000-0000-0000-000000000000"); // Dark Hollow
+    private static readonly Guid N35  = new("cc000903-0000-0000-0000-000000000000"); // Wraith Crossing
+    private static readonly Guid N36  = new("cc000904-0000-0000-0000-000000000000"); // Shadow Sanctum
+
+    // MapNode IDs — Z13 Fire Summit (4 nodes)
+    private static readonly Guid N37  = new("cc001001-0000-0000-0000-000000000000"); // Lava Foothills
+    private static readonly Guid N38  = new("cc001002-0000-0000-0000-000000000000"); // Cinder Climb
+    private static readonly Guid N39  = new("cc001003-0000-0000-0000-000000000000"); // Magma Ridge
+    private static readonly Guid N40  = new("cc001004-0000-0000-0000-000000000000"); // Inferno Crown
+
+    // MapNode IDs — Z14 Crystal Citadel (4 nodes)
+    private static readonly Guid N41  = new("cc001101-0000-0000-0000-000000000000"); // Crystal Gate
+    private static readonly Guid N42  = new("cc001102-0000-0000-0000-000000000000"); // Prism Hall
+    private static readonly Guid N43  = new("cc001103-0000-0000-0000-000000000000"); // Refraction Tower
+    private static readonly Guid N44  = new("cc001104-0000-0000-0000-000000000000"); // Radiant Throne
+
+    // MapNode IDs — Z16 The Eternal Nexus (4 nodes)
+    private static readonly Guid N45  = new("cc001201-0000-0000-0000-000000000000"); // Nexus Threshold
+    private static readonly Guid N46  = new("cc001202-0000-0000-0000-000000000000"); // Convergence Point
+    private static readonly Guid N47  = new("cc001203-0000-0000-0000-000000000000"); // Eternity's Edge
+    private static readonly Guid N48  = new("cc001204-0000-0000-0000-000000000000"); // The Eternal Core
+
+    // MapEdge IDs — local map edges (Z02)
     private static readonly Guid ME01 = new("dd000001-0000-0000-0000-000000000000"); // N01→N02
     private static readonly Guid ME02 = new("dd000002-0000-0000-0000-000000000000"); // N02→N03
     private static readonly Guid ME03 = new("dd000003-0000-0000-0000-000000000000"); // N03→N04
+    // MapEdge IDs — local map edges (Z03)
     private static readonly Guid ME04 = new("dd000004-0000-0000-0000-000000000000"); // N05→N06
     private static readonly Guid ME05 = new("dd000005-0000-0000-0000-000000000000"); // N06→N07
     private static readonly Guid ME06 = new("dd000006-0000-0000-0000-000000000000"); // N07→N08
+    // MapEdge IDs — local map edges (Z04 Deepwood Trails)
+    private static readonly Guid ME07 = new("dd000007-0000-0000-0000-000000000000"); // N09→N10
+    private static readonly Guid ME08 = new("dd000008-0000-0000-0000-000000000000"); // N10→N11
+    private static readonly Guid ME09 = new("dd000009-0000-0000-0000-000000000000"); // N11→N12
+    // MapEdge IDs — local map edges (Z05 Iron Forge)
+    private static readonly Guid ME10 = new("dd000010-0000-0000-0000-000000000000"); // N13→N14
+    private static readonly Guid ME11 = new("dd000011-0000-0000-0000-000000000000"); // N14→N15
+    private static readonly Guid ME12 = new("dd000012-0000-0000-0000-000000000000"); // N15→N16
+    // MapEdge IDs — local map edges (Z07 Ocean of Balance)
+    private static readonly Guid ME13 = new("dd000013-0000-0000-0000-000000000000"); // N17→N18
+    private static readonly Guid ME14 = new("dd000014-0000-0000-0000-000000000000"); // N18→N19
+    private static readonly Guid ME15 = new("dd000015-0000-0000-0000-000000000000"); // N19→N20
+    // MapEdge IDs — local map edges (Z08 Desert Expanse)
+    private static readonly Guid ME16 = new("dd000016-0000-0000-0000-000000000000"); // N21→N22
+    private static readonly Guid ME17 = new("dd000017-0000-0000-0000-000000000000"); // N22→N23
+    private static readonly Guid ME18 = new("dd000018-0000-0000-0000-000000000000"); // N23→N24
+    // MapEdge IDs — local map edges (Z09 Snow Peaks)
+    private static readonly Guid ME19 = new("dd000019-0000-0000-0000-000000000000"); // N25→N26
+    private static readonly Guid ME20 = new("dd000020-0000-0000-0000-000000000000"); // N26→N27
+    private static readonly Guid ME21 = new("dd000021-0000-0000-0000-000000000000"); // N27→N28
+    // MapEdge IDs — local map edges (Z11 Void Wastes)
+    private static readonly Guid ME22 = new("dd000022-0000-0000-0000-000000000000"); // N29→N30
+    private static readonly Guid ME23 = new("dd000023-0000-0000-0000-000000000000"); // N30→N31
+    private static readonly Guid ME24 = new("dd000024-0000-0000-0000-000000000000"); // N31→N32
+    // MapEdge IDs — local map edges (Z12 Shadow Vale)
+    private static readonly Guid ME25 = new("dd000025-0000-0000-0000-000000000000"); // N33→N34
+    private static readonly Guid ME26 = new("dd000026-0000-0000-0000-000000000000"); // N34→N35
+    private static readonly Guid ME27 = new("dd000027-0000-0000-0000-000000000000"); // N35→N36
+    // MapEdge IDs — local map edges (Z13 Fire Summit)
+    private static readonly Guid ME28 = new("dd000028-0000-0000-0000-000000000000"); // N37→N38
+    private static readonly Guid ME29 = new("dd000029-0000-0000-0000-000000000000"); // N38→N39
+    private static readonly Guid ME30 = new("dd000030-0000-0000-0000-000000000000"); // N39→N40
+    // MapEdge IDs — local map edges (Z14 Crystal Citadel)
+    private static readonly Guid ME31 = new("dd000031-0000-0000-0000-000000000000"); // N41→N42
+    private static readonly Guid ME32 = new("dd000032-0000-0000-0000-000000000000"); // N42→N43
+    private static readonly Guid ME33 = new("dd000033-0000-0000-0000-000000000000"); // N43→N44
+    // MapEdge IDs — local map edges (Z16 The Eternal Nexus)
+    private static readonly Guid ME34 = new("dd000034-0000-0000-0000-000000000000"); // N45→N46
+    private static readonly Guid ME35 = new("dd000035-0000-0000-0000-000000000000"); // N46→N47
+    private static readonly Guid ME36 = new("dd000036-0000-0000-0000-000000000000"); // N47→N48
 
     // Edge IDs
     private static readonly Guid E01 = new("bb000001-0000-0000-0000-000000000000");
@@ -325,18 +426,528 @@ public static class WorldSeedData
             LevelRequirement = 3, RewardXp = 400,
             IsStartNode = false, IsHidden = false
         },
+
+        // ── Z04: Deepwood Trails ──────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N09, WorldZoneId = Z04,
+            Name = "Trail Entrance", Icon = "🍃",
+            Description = "The forest grows dense here. Gnarled roots claw at the path.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.ForestOfEndurance,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N10, WorldZoneId = Z04,
+            Name = "Twisted Roots", Icon = "🌿",
+            Description = "Enormous roots twist above and below. Every step is a puzzle.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.ForestOfEndurance,
+            PositionX = 310, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N11, WorldZoneId = Z04,
+            Name = "Hollow Glade", Icon = "🌑",
+            Description = "A clearing where sunlight never reaches. Strange silence fills the air.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.ForestOfEndurance,
+            PositionX = 180, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N12, WorldZoneId = Z04,
+            Name = "Ancient Heart", Icon = "💫",
+            Description = "The oldest tree in existence. Its roots reach the core of the world.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.ForestOfEndurance,
+            PositionX = 290, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z05: Iron Forge ───────────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N13, WorldZoneId = Z05,
+            Name = "Forge Gate", Icon = "🔩",
+            Description = "Smoke-stained walls mark the entrance to the forge district.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N14, WorldZoneId = Z05,
+            Name = "Ember Hall", Icon = "🔥",
+            Description = "Walls of smoldering coal radiate punishing heat. Endure to advance.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 300, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N15, WorldZoneId = Z05,
+            Name = "Anvil Pit", Icon = "⚒️",
+            Description = "The rhythmic thunder of hammers never stops. Strength is forged here.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 170, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N16, WorldZoneId = Z05,
+            Name = "Master's Furnace", Icon = "🔨",
+            Description = "The greatest forge ever built. Only masters of strength stand before it.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 280, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z07: Ocean of Balance ─────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N17, WorldZoneId = Z07,
+            Name = "Shore Landing", Icon = "🏖️",
+            Description = "Warm sand and crashing surf. The ocean stretches endlessly ahead.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.OceanOfBalance,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N18, WorldZoneId = Z07,
+            Name = "Tidal Shelf", Icon = "🌊",
+            Description = "Submerged stone shelves rise and fall with the tide. Time your movement.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.OceanOfBalance,
+            PositionX = 310, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N19, WorldZoneId = Z07,
+            Name = "Sunken Arch", Icon = "🐚",
+            Description = "Ancient stone arches half-swallowed by the sea. Balance or be swept away.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.OceanOfBalance,
+            PositionX = 185, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N20, WorldZoneId = Z07,
+            Name = "Deep Horizon", Icon = "🌅",
+            Description = "Where ocean meets sky. Perfect equilibrium reigns at the edge of the world.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.OceanOfBalance,
+            PositionX = 280, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z08: Desert Expanse ───────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N21, WorldZoneId = Z08,
+            Name = "Dune Gateway", Icon = "🏜️",
+            Description = "The first dunes rise before you. The sun is merciless here.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Desert,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N22, WorldZoneId = Z08,
+            Name = "Scorched Mesa", Icon = "🌋",
+            Description = "A flat-topped rock formation baked by centuries of sun. No shade anywhere.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Desert,
+            PositionX = 305, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N23, WorldZoneId = Z08,
+            Name = "Mirage Oasis", Icon = "🌴",
+            Description = "A splash of green in the endless gold. Real — but only for those who push on.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Desert,
+            PositionX = 180, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N24, WorldZoneId = Z08,
+            Name = "Sand Tomb", Icon = "⏳",
+            Description = "Half-buried ruins of a lost civilization. The sands claim everything in time.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Desert,
+            PositionX = 285, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z09: Snow Peaks ───────────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N25, WorldZoneId = Z09,
+            Name = "Frost Gate", Icon = "🧊",
+            Description = "An archway of ancient ice marks the boundary of the frozen realm.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.SnowPeaks,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N26, WorldZoneId = Z09,
+            Name = "Ice Bridge", Icon = "❄️",
+            Description = "A bridge of pure ice spans a chasm of wind. One wrong step is fatal.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.SnowPeaks,
+            PositionX = 315, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N27, WorldZoneId = Z09,
+            Name = "Blizzard Pass", Icon = "🌨️",
+            Description = "White-out conditions. Only your stamina can guide you through.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.SnowPeaks,
+            PositionX = 185, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N28, WorldZoneId = Z09,
+            Name = "Glacial Throne", Icon = "👑",
+            Description = "A throne carved from a single glacier. Cold forges the sharpest minds.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.SnowPeaks,
+            PositionX = 280, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z11: Void Wastes ──────────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N29, WorldZoneId = Z11,
+            Name = "Void Edge", Icon = "🌑",
+            Description = "Where light ends and the void begins. Only legends dare step further.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N30, WorldZoneId = Z11,
+            Name = "Ashen Plain", Icon = "🩶",
+            Description = "Grey ash covers everything. The remains of a world consumed by nothing.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 305, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N31, WorldZoneId = Z11,
+            Name = "Shattered Spire", Icon = "🗿",
+            Description = "The broken remains of a tower that once touched the heavens.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 175, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N32, WorldZoneId = Z11,
+            Name = "The Abyss", Icon = "🕳️",
+            Description = "A chasm with no visible bottom. The void stares back at those who look.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 285, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z12: Shadow Vale ──────────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N33, WorldZoneId = Z12,
+            Name = "Mist Gate", Icon = "🌫️",
+            Description = "Thick mist swallows the path ahead. Agility is your only compass.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N34, WorldZoneId = Z12,
+            Name = "Dark Hollow", Icon = "🦇",
+            Description = "A sunken depression where shadows gather unnaturally. Move quickly.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 310, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N35, WorldZoneId = Z12,
+            Name = "Wraith Crossing", Icon = "👻",
+            Description = "A bridge where spectral figures drift. Cross without hesitation.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 180, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N36, WorldZoneId = Z12,
+            Name = "Shadow Sanctum", Icon = "🖤",
+            Description = "The heart of the vale. Darkness here is absolute — only the swift survive.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Swamps,
+            PositionX = 290, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z13: Fire Summit ──────────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N37, WorldZoneId = Z13,
+            Name = "Lava Foothills", Icon = "🌋",
+            Description = "Rivers of molten rock cut through the lower slopes. The heat is extreme.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N38, WorldZoneId = Z13,
+            Name = "Cinder Climb", Icon = "🔥",
+            Description = "Ash rains down constantly. Each handhold crumbles under weak grip.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 305, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N39, WorldZoneId = Z13,
+            Name = "Magma Ridge", Icon = "♨️",
+            Description = "A narrow ridge between two lava flows. One step wrong means oblivion.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 180, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N40, WorldZoneId = Z13,
+            Name = "Inferno Crown", Icon = "👑",
+            Description = "The crater rim. Smoke and fire pour endlessly into the sky. You made it.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.MountainsOfStrength,
+            PositionX = 285, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z14: Crystal Citadel ──────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N41, WorldZoneId = Z14,
+            Name = "Crystal Gate", Icon = "💎",
+            Description = "Towering pillars of crystal flank the entrance. Light refracts in every direction.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N42, WorldZoneId = Z14,
+            Name = "Prism Hall", Icon = "🔮",
+            Description = "A hall of living crystal. Walls shift and reshape as you move through.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 310, PositionY = 300,
+            LevelRequirement = 1, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N43, WorldZoneId = Z14,
+            Name = "Refraction Tower", Icon = "🌟",
+            Description = "A soaring spire that splits light into its components. Clarity of mind is required.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 185, PositionY = 500,
+            LevelRequirement = 2, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N44, WorldZoneId = Z14,
+            Name = "Radiant Throne", Icon = "✨",
+            Description = "Pure light crystallized into a seat of power. Flexibility of body and mind unlocks it.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 280, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
+
+        // ── Z16: The Eternal Nexus ────────────────────────────────────────────────
+        new MapNode
+        {
+            Id = N45, WorldZoneId = Z16,
+            Name = "Nexus Threshold", Icon = "🌀",
+            Description = "The air shimmers with pure energy. Reality bends at the edge of the nexus.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 200, PositionY = 100,
+            LevelRequirement = 1, RewardXp = 0,
+            IsStartNode = true, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N46, WorldZoneId = Z16,
+            Name = "Convergence Point", Icon = "⭕",
+            Description = "All timelines intersect here. Every path you have ever walked echoes in this place.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 310, PositionY = 300,
+            LevelRequirement = 2, RewardXp = 150,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N47, WorldZoneId = Z16,
+            Name = "Eternity's Edge", Icon = "🔱",
+            Description = "The boundary between existence and nothing. Time stops for those who reach it.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 185, PositionY = 500,
+            LevelRequirement = 3, RewardXp = 250,
+            IsStartNode = false, IsHidden = false
+        },
+        new MapNode
+        {
+            Id = N48, WorldZoneId = Z16,
+            Name = "The Eternal Core", Icon = "💫",
+            Description = "The heart of everything. Time and space converge. This is the end — and the beginning.",
+            Type = MapNodeType.Zone,
+            Region = MapRegion.Ashfield,
+            PositionX = 280, PositionY = 700,
+            LevelRequirement = 3, RewardXp = 400,
+            IsStartNode = false, IsHidden = false
+        },
     ];
 
     public static IReadOnlyList<MapEdge> CreateMapEdges() =>
     [
-        // Z02 Forest edges
-        new MapEdge { Id = ME01, FromNodeId = N01, ToNodeId = N02, DistanceKm = 2, IsBidirectional = true },
+        // Z02 Forest of Endurance edges
+        new MapEdge { Id = ME01, FromNodeId = N01, ToNodeId = N02, DistanceKm = 2,   IsBidirectional = true },
         new MapEdge { Id = ME02, FromNodeId = N02, ToNodeId = N03, DistanceKm = 2.5, IsBidirectional = true },
-        new MapEdge { Id = ME03, FromNodeId = N03, ToNodeId = N04, DistanceKm = 3, IsBidirectional = true },
+        new MapEdge { Id = ME03, FromNodeId = N03, ToNodeId = N04, DistanceKm = 3,   IsBidirectional = true },
 
-        // Z03 Mountain edges
-        new MapEdge { Id = ME04, FromNodeId = N05, ToNodeId = N06, DistanceKm = 2, IsBidirectional = true },
+        // Z03 Mountains of Strength edges
+        new MapEdge { Id = ME04, FromNodeId = N05, ToNodeId = N06, DistanceKm = 2,   IsBidirectional = true },
         new MapEdge { Id = ME05, FromNodeId = N06, ToNodeId = N07, DistanceKm = 2.5, IsBidirectional = true },
-        new MapEdge { Id = ME06, FromNodeId = N07, ToNodeId = N08, DistanceKm = 3, IsBidirectional = true },
+        new MapEdge { Id = ME06, FromNodeId = N07, ToNodeId = N08, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z04 Deepwood Trails edges
+        new MapEdge { Id = ME07, FromNodeId = N09, ToNodeId = N10, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME08, FromNodeId = N10, ToNodeId = N11, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME09, FromNodeId = N11, ToNodeId = N12, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z05 Iron Forge edges
+        new MapEdge { Id = ME10, FromNodeId = N13, ToNodeId = N14, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME11, FromNodeId = N14, ToNodeId = N15, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME12, FromNodeId = N15, ToNodeId = N16, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z07 Ocean of Balance edges
+        new MapEdge { Id = ME13, FromNodeId = N17, ToNodeId = N18, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME14, FromNodeId = N18, ToNodeId = N19, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME15, FromNodeId = N19, ToNodeId = N20, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z08 Desert Expanse edges
+        new MapEdge { Id = ME16, FromNodeId = N21, ToNodeId = N22, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME17, FromNodeId = N22, ToNodeId = N23, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME18, FromNodeId = N23, ToNodeId = N24, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z09 Snow Peaks edges
+        new MapEdge { Id = ME19, FromNodeId = N25, ToNodeId = N26, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME20, FromNodeId = N26, ToNodeId = N27, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME21, FromNodeId = N27, ToNodeId = N28, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z11 Void Wastes edges
+        new MapEdge { Id = ME22, FromNodeId = N29, ToNodeId = N30, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME23, FromNodeId = N30, ToNodeId = N31, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME24, FromNodeId = N31, ToNodeId = N32, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z12 Shadow Vale edges
+        new MapEdge { Id = ME25, FromNodeId = N33, ToNodeId = N34, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME26, FromNodeId = N34, ToNodeId = N35, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME27, FromNodeId = N35, ToNodeId = N36, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z13 Fire Summit edges
+        new MapEdge { Id = ME28, FromNodeId = N37, ToNodeId = N38, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME29, FromNodeId = N38, ToNodeId = N39, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME30, FromNodeId = N39, ToNodeId = N40, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z14 Crystal Citadel edges
+        new MapEdge { Id = ME31, FromNodeId = N41, ToNodeId = N42, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME32, FromNodeId = N42, ToNodeId = N43, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME33, FromNodeId = N43, ToNodeId = N44, DistanceKm = 3,   IsBidirectional = true },
+
+        // Z16 The Eternal Nexus edges
+        new MapEdge { Id = ME34, FromNodeId = N45, ToNodeId = N46, DistanceKm = 2,   IsBidirectional = true },
+        new MapEdge { Id = ME35, FromNodeId = N46, ToNodeId = N47, DistanceKm = 2.5, IsBidirectional = true },
+        new MapEdge { Id = ME36, FromNodeId = N47, ToNodeId = N48, DistanceKm = 3,   IsBidirectional = true },
     ];
 }

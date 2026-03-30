@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/world_zone_refresh_notifier.dart';
 import 'world_map_data.dart';
 import 'world_map_detail_sheet.dart';
 import 'world_map_models.dart';
@@ -41,6 +43,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   String? _error;
 
   String? _lastKnownZoneId;
+  late StreamSubscription<void> _refreshSub;
 
   // ── lifecycle ────────────────────────────────────────────────────────────────
 
@@ -57,11 +60,13 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
+    _refreshSub = WorldZoneRefreshNotifier.stream.listen((_) => _load());
     _load();
   }
 
   @override
   void dispose() {
+    _refreshSub.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -78,7 +83,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     try {
       final data = await _service.getFullWorld();
 
-      final zones = data.zones.map(ZoneData.fromApiModel).toList();
+      final isTraveling = data.userProgress.currentEdgeId != null;
+      final zones = data.zones.map((m) => ZoneData.fromApiModel(m, isTraveling: isTraveling)).toList();
 
       final edges = <String, List<String>>{};
       for (final e in data.edges) {
@@ -106,7 +112,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         if (edge != null && fromIdx != -1 && toIdx != -1 && edge.distanceKm > 0) {
           final frac = (prog.distanceTraveledOnEdge / edge.distanceKm).clamp(0.0, 1.0);
           final centres = layoutZones.map(_centreFor).toList();
-          playerOnEdge   = Offset.lerp(centres[fromIdx], centres[toIdx], frac)!;
+          // Use a minimum visual fraction so the character is always visibly
+          // on the edge (not sitting on top of the source zone node at 0%).
+          final visualFrac = frac > 0 ? frac : 0.06;
+          playerOnEdge   = Offset.lerp(centres[fromIdx], centres[toIdx], visualFrac)!;
           playerAnchor   = centres[fromIdx];
           travelProgress = frac;
         }
@@ -178,6 +187,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           relativeX: xs[j],
           region: z.region,
           nodeCount: z.nodeCount,
+          completedNodeCount: z.completedNodeCount,
           totalXp: z.totalXp,
           distanceKm: z.distanceKm,
           levelRequirement: z.levelRequirement,
@@ -216,7 +226,75 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     }
   }
 
+  Future<void> _handleSetDestination(ZoneData zone) async {
+    try {
+      await _service.setDestination(zone.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to set destination: $e'),
+            backgroundColor: AppColors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+    // Crossroads: backend auto-completed the move — stay on world map and refresh
+    if (zone.isCrossroads) {
+      await _load();
+      return;
+    }
+
+    _handleEnterLocalMap(zone);
+  }
+
+  void _handleEnterLocalMap(ZoneData zone) {
+    if (mounted) {
+      Navigator.pop(context, {'zoneId': zone.id, 'zoneName': zone.name});
+    }
+  }
+
   void _showZoneSheet(ZoneData zone) {
+    final currentZone = _zones.cast<ZoneData?>().firstWhere(
+      (z) => z!.status == ZoneStatus.active && !z.isDestination,
+      orElse: () => null,
+    );
+    final currentZoneId = currentZone?.id;
+    final adjacentIds = currentZoneId != null
+        ? (_edges[currentZoneId] ?? <String>[])
+        : <String>[];
+    final isAdjacent = adjacentIds.contains(zone.id);
+
+    final isAtCrossroads = currentZone?.isCrossroads ?? false;
+    // At a crossroads the player must move forward (higher tier).
+    // Any adjacent zone at the same tier or below is "behind" and unreachable.
+    final crossroadsTier = currentZone?.tier ?? 0;
+    final isForwardZone = !isAtCrossroads || zone.tier > crossroadsTier;
+
+    VoidCallback? enterCallback;
+    if (zone.status == ZoneStatus.active) {
+      // Crossroads have no local map to enter — leave enterCallback null so
+      // the sheet shows an informational "you are here" state instead.
+      if (!zone.isCrossroads) {
+        enterCallback = () {
+          Navigator.pop(context);
+          _handleEnterLocalMap(zone);
+        };
+      }
+    } else if (isAdjacent && isForwardZone &&
+        (zone.status == ZoneStatus.available ||
+            // Allow revisiting completed zones only when NOT at a crossroads.
+            (!isAtCrossroads && zone.status == ZoneStatus.completed) ||
+            (zone.status == ZoneStatus.locked &&
+                _characterLevel >= zone.levelRequirement))) {
+      enterCallback = () {
+        Navigator.pop(context);
+        _handleSetDestination(zone);
+      };
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -224,23 +302,11 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       builder: (_) => WorldMapDetailSheet(
         zone: zone,
         userLevel: _characterLevel,
-        onEnter: () async {
-          Navigator.pop(context);
-          await _handleEnterZone(zone);
-        },
+        isAdjacentToCurrentZone: isAdjacent,
+        travelProgress: zone.isDestination ? _travelProgress : null,
+        onEnter: enterCallback,
       ),
     );
-  }
-
-  Future<void> _handleEnterZone(ZoneData zone) async {
-    try {
-      await _service.setDestination(zone.id);
-    } catch (_) {
-      // Zone may not be adjacent yet — still allow exploring local map
-    }
-    if (mounted) {
-      Navigator.pop(context, {'zoneId': zone.id, 'zoneName': zone.name});
-    }
   }
 
   void _showZoneArrivalBanner(ZoneData zone) {
@@ -297,15 +363,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           ),
         ),
       ),
-    );
-  }
-
-  void _openWorldDebugPanel() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _WorldDebugPanel(service: _service, onRefresh: _load),
     );
   }
 
@@ -460,124 +517,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
             ),
           ),
 
-          // ── world debug FAB ─────────────────────────────────────────────────
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'world_debug',
-              backgroundColor: const Color(0xFF6e40c9).withOpacity(0.85),
-              onPressed: _openWorldDebugPanel,
-              child: const Text('🌐', style: TextStyle(fontSize: 16)),
-            ),
-          ),
         ],
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// World debug panel
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _WorldDebugPanel extends StatefulWidget {
-  const _WorldDebugPanel({required this.service, required this.onRefresh});
-  final WorldZoneService service;
-  final VoidCallback onRefresh;
-  @override
-  State<_WorldDebugPanel> createState() => _WorldDebugPanelState();
-}
-
-class _WorldDebugPanelState extends State<_WorldDebugPanel> {
-  bool _busy = false;
-
-  Future<void> _addDistance(double km) async {
-    setState(() => _busy = true);
-    try {
-      await widget.service.debugAddDistance(km);
-      widget.onRefresh();
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF161b22),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(top: BorderSide(color: Color(0xFF30363d))),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3a4a5a),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text('WORLD DEBUG',
-            style: TextStyle(color: Color(0xFF8b949e), fontSize: 10,
-                fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-          const SizedBox(height: 4),
-          const Text('Add travel distance toward destination zone',
-            style: TextStyle(color: Color(0xFF8b949e), fontSize: 12)),
-          const SizedBox(height: 12),
-          if (_busy)
-            const Center(child: CircularProgressIndicator())
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _DebugBtn(label: '+1 km',  onTap: () => _addDistance(1)),
-                _DebugBtn(label: '+5 km',  onTap: () => _addDistance(5)),
-                _DebugBtn(label: '+10 km', onTap: () => _addDistance(10)),
-                _DebugBtn(label: '+20 km', onTap: () => _addDistance(20)),
-                _DebugBtn(label: '+50 km', onTap: () => _addDistance(50)),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DebugBtn extends StatelessWidget {
-  const _DebugBtn({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1e2632),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF30363d)),
-        ),
-        child: Text(label,
-          style: const TextStyle(color: Color(0xFF4f9eff),
-              fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
     );
   }
 }

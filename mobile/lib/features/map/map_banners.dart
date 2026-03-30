@@ -184,7 +184,8 @@ class _ChestRewardDialogState extends State<ChestRewardDialog>
 // ─────────────────────────────────────────────────────────────────────────────
 class NodeArrivalBanner extends StatefulWidget {
   final MapNodeModel node;
-  const NodeArrivalBanner({super.key, required this.node});
+  final VoidCallback onDismiss;
+  const NodeArrivalBanner({super.key, required this.node, required this.onDismiss});
 
   @override
   State<NodeArrivalBanner> createState() => _NodeArrivalBannerState();
@@ -201,7 +202,7 @@ class _NodeArrivalBannerState extends State<NodeArrivalBanner>
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 350))..forward();
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) widget.onDismiss();
     });
   }
 
@@ -215,16 +216,16 @@ class _NodeArrivalBannerState extends State<NodeArrivalBanner>
   Widget build(BuildContext context) {
     final node = widget.node;
     final accent = mapNodeColor(node.type);
-    return Material(
-      color: Colors.transparent,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
-          child: FadeTransition(
-            opacity: _fade,
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+        child: FadeTransition(
+          opacity: _fade,
+          child: Material(
+            color: Colors.transparent,
             child: GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
+              onTap: () => widget.onDismiss(),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
@@ -273,7 +274,8 @@ class _NodeArrivalBannerState extends State<NodeArrivalBanner>
 // ─────────────────────────────────────────────────────────────────────────────
 class NodeDiscoveredBanner extends StatefulWidget {
   final MapNodeModel node;
-  const NodeDiscoveredBanner({super.key, required this.node});
+  final VoidCallback onDismiss;
+  const NodeDiscoveredBanner({super.key, required this.node, required this.onDismiss});
 
   @override
   State<NodeDiscoveredBanner> createState() => _NodeDiscoveredBannerState();
@@ -296,7 +298,7 @@ class _NodeDiscoveredBannerState extends State<NodeDiscoveredBanner>
     _scale = Tween<double>(begin: 0.85, end: 1.0)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) widget.onDismiss();
     });
   }
 
@@ -312,18 +314,18 @@ class _NodeDiscoveredBannerState extends State<NodeDiscoveredBanner>
     final accent = mapNodeColor(node.type);
     final hasXp = node.rewardXp > 0;
 
-    return Material(
-      color: Colors.transparent,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+        child: FadeTransition(
+          opacity: _fade,
+          child: ScaleTransition(
+            scale: _scale,
+            child: Material(
+              color: Colors.transparent,
               child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => widget.onDismiss(),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(

@@ -16,6 +16,7 @@ class ZoneData {
     required this.relativeX,
     required this.region,
     this.nodeCount,
+    this.completedNodeCount,
     this.totalXp,
     this.distanceKm,
     required this.levelRequirement,
@@ -34,6 +35,7 @@ class ZoneData {
   final double relativeX;
   final String region;
   final int? nodeCount;
+  final int? completedNodeCount;
   final int? totalXp;
   final int? distanceKm;
   final int levelRequirement;
@@ -47,11 +49,15 @@ class ZoneData {
 
   // ── Factory from API model ─────────────────────────────────────────────────
 
-  static ZoneData fromApiModel(WorldZoneModel m) {
+  static ZoneData fromApiModel(WorldZoneModel m, {bool isTraveling = false}) {
     final ZoneStatus status;
     final state = m.userState;
     if (state == null) {
       status = ZoneStatus.locked;
+    } else if (state.isDestination) {
+      status = ZoneStatus.active;
+    } else if (state.isCurrentZone && isTraveling) {
+      status = ZoneStatus.completed;
     } else if (state.isCurrentZone) {
       status = ZoneStatus.active;
     } else if (state.isUnlocked) {
@@ -77,6 +83,7 @@ class ZoneData {
       relativeX: relX,
       region: m.region,
       nodeCount: m.nodeCount,
+      completedNodeCount: m.completedNodeCount,
       totalXp: m.totalXp,
       distanceKm: m.totalDistanceKm.round(),
       levelRequirement: m.levelRequirement,

@@ -117,7 +117,8 @@
       "Bash(grep -r 'public interface I' /c/Users/MihaelPavlov/repos/home/Life-level/backend/src/LifeLevel.Api --include=*.cs)",
       "Bash(do echo:*)",
       "Read(//c/Users/MihaelPavlov/repos/home/Life-level/**)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(find /c/Users/MihaelPavlov/repos/Home/Life-Level -type f -path */Map/Domain/Enums*)"
     ]
   }
 }

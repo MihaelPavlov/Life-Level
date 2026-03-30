@@ -11,16 +11,21 @@ class WorldMapDetailSheet extends StatelessWidget {
     super.key,
     required this.zone,
     required this.userLevel,
-    required this.onEnter,
+    this.onEnter,
+    this.isAdjacentToCurrentZone = true,
+    this.travelProgress,
   });
 
   final ZoneData zone;
   final int userLevel;
-  final VoidCallback onEnter;
+  final VoidCallback? onEnter;
+  final bool isAdjacentToCurrentZone;
+  final double? travelProgress;
 
   // ── status display ───────────────────────────────────────────────────────────
 
   String get _statusLabel {
+    if (zone.status == ZoneStatus.active && zone.isDestination) return 'Traveling';
     switch (zone.status) {
       case ZoneStatus.completed: return 'Completed';
       case ZoneStatus.active:    return 'In Progress';
@@ -30,6 +35,7 @@ class WorldMapDetailSheet extends StatelessWidget {
   }
 
   Color get _statusColor {
+    if (zone.status == ZoneStatus.active && zone.isDestination) return AppColors.orange;
     switch (zone.status) {
       case ZoneStatus.completed: return AppColors.green;
       case ZoneStatus.active:    return AppColors.blue;
@@ -39,7 +45,6 @@ class WorldMapDetailSheet extends StatelessWidget {
   }
 
   bool get _meetsLevelReq => userLevel >= zone.levelRequirement;
-  bool get _canEnter => zone.status != ZoneStatus.locked && !zone.isCrossroads;
 
   // ── build ────────────────────────────────────────────────────────────────────
 
@@ -135,7 +140,12 @@ class WorldMapDetailSheet extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _StatChip(label: '${zone.nodeCount} Nodes', icon: '🗺️'),
+                    _StatChip(
+                      label: zone.completedNodeCount != null
+                          ? '${zone.completedNodeCount}/${zone.nodeCount} Nodes'
+                          : '${zone.nodeCount} Nodes',
+                      icon: '🗺️',
+                    ),
                     const SizedBox(width: 8),
                     _StatChip(label: '${zone.totalXp} XP', icon: '⭐'),
                     const SizedBox(width: 8),
@@ -203,34 +213,341 @@ class WorldMapDetailSheet extends StatelessWidget {
                   ),
                   if (!zone.isCrossroads) ...[
                     const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton(
-                        onPressed: _canEnter ? onEnter : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _canEnter
-                              ? AppColors.blue
-                              : const Color(0xFF2a3340),
-                          foregroundColor: _canEnter
-                              ? Colors.white
-                              : AppColors.textSecondary,
-                          disabledBackgroundColor: const Color(0xFF2a3340),
-                          disabledForegroundColor: AppColors.textSecondary,
-                          elevation: _canEnter ? 4 : 0,
-                          shadowColor: _canEnter
-                              ? AppColors.blue.withOpacity(0.35)
-                              : Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                    if (zone.status == ZoneStatus.completed && onEnter != null)
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: onEnter,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.green.withOpacity(0.15),
+                            foregroundColor: AppColors.green,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: AppColors.green.withOpacity(0.4)),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text('Revisit Zone →',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                         ),
-                        child: Text(
-                          _canEnter ? 'Enter Zone →' : 'Zone Locked',
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
+                      )
+                    else if (zone.status == ZoneStatus.completed)
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.green.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, color: AppColors.green, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Zone Completed',
+                                style: TextStyle(color: AppColors.green, fontSize: 14,
+                                    fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (zone.status == ZoneStatus.active && zone.isDestination)
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.orange.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.orange.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.route, color: AppColors.orange, size: 16),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: travelProgress ?? 0,
+                                        backgroundColor: AppColors.orange.withOpacity(0.15),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation(AppColors.orange),
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    '${((travelProgress ?? 0) * 100).round()}%',
+                                    style: const TextStyle(
+                                      color: AppColors.orange,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (onEnter != null) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: onEnter,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.blue,
+                                    foregroundColor: Colors.white,
+                                    elevation: 4,
+                                    shadowColor: AppColors.blue.withOpacity(0.35),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: const Text('Enter Zone →',
+                                      style: TextStyle(
+                                          fontSize: 14, fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
+                    else if (zone.status == ZoneStatus.active && !zone.isDestination)
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: onEnter,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.blue,
+                            foregroundColor: Colors.white,
+                            elevation: 4,
+                            shadowColor: AppColors.blue.withOpacity(0.35),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text('Enter Zone →',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        ),
+                      )
+                    else if (zone.status == ZoneStatus.available && !isAdjacentToCurrentZone)
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1e2632),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF30363d)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.lock_outline,
+                                  color: AppColors.textSecondary, size: 16),
+                              const SizedBox(width: 8),
+                              const Flexible(
+                                child: Text(
+                                  'Travel to an adjacent zone first',
+                                  style: TextStyle(
+                                      color: AppColors.textSecondary, fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: onEnter,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                onEnter != null ? AppColors.blue : const Color(0xFF2a3340),
+                            foregroundColor:
+                                onEnter != null ? Colors.white : AppColors.textSecondary,
+                            disabledBackgroundColor: const Color(0xFF2a3340),
+                            disabledForegroundColor: AppColors.textSecondary,
+                            elevation: onEnter != null ? 4 : 0,
+                            shadowColor: onEnter != null
+                                ? AppColors.blue.withOpacity(0.35)
+                                : Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            zone.status == ZoneStatus.available
+                                ? 'Set as Destination →'
+                                : 'Zone Locked',
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
-                    ),
+                  ],
+                  if (zone.isCrossroads) ...[
+                    const SizedBox(width: 12),
+                    if (zone.status == ZoneStatus.completed)
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.green.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, color: AppColors.green, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Crossroads Passed',
+                                style: TextStyle(color: AppColors.green, fontSize: 14,
+                                    fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (zone.status == ZoneStatus.active && zone.isDestination)
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.orange.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.orange.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.route, color: AppColors.orange, size: 16),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: travelProgress ?? 0,
+                                        backgroundColor: AppColors.orange.withOpacity(0.15),
+                                        valueColor: const AlwaysStoppedAnimation(AppColors.orange),
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    '${((travelProgress ?? 0) * 100).round()}%',
+                                    style: const TextStyle(
+                                      color: AppColors.orange,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (zone.status == ZoneStatus.active && !zone.isDestination)
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.green.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.green.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.my_location, color: AppColors.green, size: 16),
+                              const SizedBox(width: 8),
+                              const Flexible(
+                                child: Text(
+                                  'You are here — tap a zone to continue',
+                                  style: TextStyle(
+                                      color: AppColors.green, fontSize: 12,
+                                      fontWeight: FontWeight.w600),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (zone.status == ZoneStatus.available && !isAdjacentToCurrentZone)
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1e2632),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF30363d)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.lock_outline,
+                                  color: AppColors.textSecondary, size: 16),
+                              const SizedBox(width: 8),
+                              const Flexible(
+                                child: Text(
+                                  'Travel to an adjacent zone first',
+                                  style: TextStyle(
+                                      color: AppColors.textSecondary, fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: onEnter,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                onEnter != null ? AppColors.blue : const Color(0xFF2a3340),
+                            foregroundColor:
+                                onEnter != null ? Colors.white : AppColors.textSecondary,
+                            disabledBackgroundColor: const Color(0xFF2a3340),
+                            disabledForegroundColor: AppColors.textSecondary,
+                            elevation: onEnter != null ? 4 : 0,
+                            shadowColor: onEnter != null
+                                ? AppColors.blue.withOpacity(0.35)
+                                : Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            zone.status == ZoneStatus.available
+                                ? 'Set as Destination →'
+                                : 'Zone Locked',
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
                   ],
                 ],
               ),

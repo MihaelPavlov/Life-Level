@@ -17,6 +17,7 @@ class WorldZoneModel {
   final bool isCrossroads;
   final bool isStartZone;
   final int nodeCount;
+  final int? completedNodeCount;
   final ZoneUserState? userState;
 
   const WorldZoneModel({
@@ -34,6 +35,7 @@ class WorldZoneModel {
     required this.isCrossroads,
     required this.isStartZone,
     required this.nodeCount,
+    this.completedNodeCount,
     this.userState,
   });
 
@@ -52,6 +54,7 @@ class WorldZoneModel {
         isCrossroads: json['isCrossroads'] as bool,
         isStartZone: json['isStartZone'] as bool,
         nodeCount: json['nodeCount'] as int,
+        completedNodeCount: json['completedNodeCount'] as int?,
         userState: json['userState'] != null
             ? ZoneUserState.fromJson(json['userState'])
             : null,
