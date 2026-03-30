@@ -25,6 +25,16 @@ public class WorldSeeder(AppDbContext db)
 
         db.MapEdges.AddRange(WorldSeedData.CreateMapEdges());
         await db.SaveChangesAsync();
+
+        db.Bosses.AddRange(WorldSeedData.CreateBosses());
+        db.Chests.AddRange(WorldSeedData.CreateChests());
+        var dungeons = WorldSeedData.CreateDungeons();
+        db.DungeonPortals.AddRange(dungeons);
+        db.DungeonFloors.AddRange(dungeons.SelectMany(d => d.Floors));
+        var crossroads = WorldSeedData.CreateCrossroads();
+        db.Crossroads.AddRange(crossroads);
+        db.CrossroadsPaths.AddRange(crossroads.SelectMany(c => c.Paths));
+        await db.SaveChangesAsync();
     }
 
     /// <summary>
@@ -74,6 +84,16 @@ public class WorldSeeder(AppDbContext db)
         await db.SaveChangesAsync();
 
         db.MapEdges.AddRange(WorldSeedData.CreateMapEdges());
+        await db.SaveChangesAsync();
+
+        db.Bosses.AddRange(WorldSeedData.CreateBosses());
+        db.Chests.AddRange(WorldSeedData.CreateChests());
+        var dungeons = WorldSeedData.CreateDungeons();
+        db.DungeonPortals.AddRange(dungeons);
+        db.DungeonFloors.AddRange(dungeons.SelectMany(d => d.Floors));
+        var crossroads = WorldSeedData.CreateCrossroads();
+        db.Crossroads.AddRange(crossroads);
+        db.CrossroadsPaths.AddRange(crossroads.SelectMany(c => c.Paths));
         await db.SaveChangesAsync();
     }
 }

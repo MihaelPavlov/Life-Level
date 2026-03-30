@@ -1,6 +1,11 @@
 using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.Modules.Map.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Enums;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Entities;
+using LifeLevel.Modules.Adventure.Dungeons.Domain.Enums;
+using LifeLevel.SharedKernel.Enums;
 
 // Type alias: 'WorldZone' class name conflicts with the 'LifeLevel.Modules.WorldZone' namespace
 using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
@@ -150,6 +155,43 @@ public static class WorldSeedData
     private static readonly Guid ME34 = new("dd000034-0000-0000-0000-000000000000"); // N45→N46
     private static readonly Guid ME35 = new("dd000035-0000-0000-0000-000000000000"); // N46→N47
     private static readonly Guid ME36 = new("dd000036-0000-0000-0000-000000000000"); // N47→N48
+
+    // Boss IDs
+    private static readonly Guid B01 = new("ee000001-0000-0000-0000-000000000000");
+    private static readonly Guid B02 = new("ee000002-0000-0000-0000-000000000000");
+
+    // Chest IDs
+    private static readonly Guid CH01 = new("ff000001-0000-0000-0000-000000000000");
+    private static readonly Guid CH02 = new("ff000002-0000-0000-0000-000000000000");
+    private static readonly Guid CH03 = new("ff000003-0000-0000-0000-000000000000");
+    private static readonly Guid CH04 = new("ff000004-0000-0000-0000-000000000000");
+
+    // Dungeon portal IDs
+    private static readonly Guid D01 = new("a1000001-0000-0000-0000-000000000000");
+    private static readonly Guid D02 = new("a1000002-0000-0000-0000-000000000000");
+    private static readonly Guid D03 = new("a1000003-0000-0000-0000-000000000000");
+
+    // Dungeon floor IDs
+    private static readonly Guid DF01 = new("a2000001-0000-0000-0000-000000000000");
+    private static readonly Guid DF02 = new("a2000002-0000-0000-0000-000000000000");
+    private static readonly Guid DF03 = new("a2000003-0000-0000-0000-000000000000");
+    private static readonly Guid DF04 = new("a2000004-0000-0000-0000-000000000000");
+    private static readonly Guid DF05 = new("a2000005-0000-0000-0000-000000000000");
+    private static readonly Guid DF06 = new("a2000006-0000-0000-0000-000000000000");
+    private static readonly Guid DF07 = new("a2000007-0000-0000-0000-000000000000");
+    private static readonly Guid DF08 = new("a2000008-0000-0000-0000-000000000000");
+    private static readonly Guid DF09 = new("a2000009-0000-0000-0000-000000000000");
+    private static readonly Guid DF10 = new("a2000010-0000-0000-0000-000000000000");
+
+    // Crossroads IDs
+    private static readonly Guid CR01 = new("a3000001-0000-0000-0000-000000000000");
+    private static readonly Guid CR02 = new("a3000002-0000-0000-0000-000000000000");
+
+    // Crossroads path IDs
+    private static readonly Guid CP01 = new("a4000001-0000-0000-0000-000000000000");
+    private static readonly Guid CP02 = new("a4000002-0000-0000-0000-000000000000");
+    private static readonly Guid CP03 = new("a4000003-0000-0000-0000-000000000000");
+    private static readonly Guid CP04 = new("a4000004-0000-0000-0000-000000000000");
 
     // Edge IDs
     private static readonly Guid E01 = new("bb000001-0000-0000-0000-000000000000");
@@ -363,7 +405,7 @@ public static class WorldSeedData
             Id = N03, WorldZoneId = Z02,
             Name = "Mossy Ruins", Icon = "🏚️",
             Description = "The remains of a forgotten outpost. Something valuable might be buried here.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Chest,
             Region = MapRegion.ForestOfEndurance,
             PositionX = 180, PositionY = 500,
             LevelRequirement = 2, RewardXp = 250,
@@ -374,7 +416,7 @@ public static class WorldSeedData
             Id = N04, WorldZoneId = Z02,
             Name = "Forest Heart", Icon = "💚",
             Description = "The deepest part of the forest. Ancient power pulses here.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Boss,
             Region = MapRegion.ForestOfEndurance,
             PositionX = 280, PositionY = 700,
             LevelRequirement = 3, RewardXp = 400,
@@ -409,7 +451,7 @@ public static class WorldSeedData
             Id = N07, WorldZoneId = Z03,
             Name = "Storm Peak", Icon = "⛈️",
             Description = "Lightning strikes and howling winds. Only the strong press forward.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Crossroads,
             Region = MapRegion.MountainsOfStrength,
             PositionX = 200, PositionY = 500,
             LevelRequirement = 2, RewardXp = 250,
@@ -420,7 +462,7 @@ public static class WorldSeedData
             Id = N08, WorldZoneId = Z03,
             Name = "Summit", Icon = "🏔️",
             Description = "The roof of the world. The view from here is worth every painful step.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Boss,
             Region = MapRegion.MountainsOfStrength,
             PositionX = 150, PositionY = 700,
             LevelRequirement = 3, RewardXp = 400,
@@ -444,7 +486,7 @@ public static class WorldSeedData
             Id = N10, WorldZoneId = Z04,
             Name = "Twisted Roots", Icon = "🌿",
             Description = "Enormous roots twist above and below. Every step is a puzzle.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Chest,
             Region = MapRegion.ForestOfEndurance,
             PositionX = 310, PositionY = 300,
             LevelRequirement = 1, RewardXp = 150,
@@ -455,7 +497,7 @@ public static class WorldSeedData
             Id = N11, WorldZoneId = Z04,
             Name = "Hollow Glade", Icon = "🌑",
             Description = "A clearing where sunlight never reaches. Strange silence fills the air.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Crossroads,
             Region = MapRegion.ForestOfEndurance,
             PositionX = 180, PositionY = 500,
             LevelRequirement = 2, RewardXp = 250,
@@ -466,7 +508,7 @@ public static class WorldSeedData
             Id = N12, WorldZoneId = Z04,
             Name = "Ancient Heart", Icon = "💫",
             Description = "The oldest tree in existence. Its roots reach the core of the world.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Dungeon,
             Region = MapRegion.ForestOfEndurance,
             PositionX = 290, PositionY = 700,
             LevelRequirement = 3, RewardXp = 400,
@@ -512,7 +554,7 @@ public static class WorldSeedData
             Id = N16, WorldZoneId = Z05,
             Name = "Master's Furnace", Icon = "🔨",
             Description = "The greatest forge ever built. Only masters of strength stand before it.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Dungeon,
             Region = MapRegion.MountainsOfStrength,
             PositionX = 280, PositionY = 700,
             LevelRequirement = 3, RewardXp = 400,
@@ -547,7 +589,7 @@ public static class WorldSeedData
             Id = N19, WorldZoneId = Z07,
             Name = "Sunken Arch", Icon = "🐚",
             Description = "Ancient stone arches half-swallowed by the sea. Balance or be swept away.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Chest,
             Region = MapRegion.OceanOfBalance,
             PositionX = 185, PositionY = 500,
             LevelRequirement = 2, RewardXp = 250,
@@ -593,7 +635,7 @@ public static class WorldSeedData
             Id = N23, WorldZoneId = Z08,
             Name = "Mirage Oasis", Icon = "🌴",
             Description = "A splash of green in the endless gold. Real — but only for those who push on.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Chest,
             Region = MapRegion.Desert,
             PositionX = 180, PositionY = 500,
             LevelRequirement = 2, RewardXp = 250,
@@ -604,7 +646,7 @@ public static class WorldSeedData
             Id = N24, WorldZoneId = Z08,
             Name = "Sand Tomb", Icon = "⏳",
             Description = "Half-buried ruins of a lost civilization. The sands claim everything in time.",
-            Type = MapNodeType.Zone,
+            Type = MapNodeType.Dungeon,
             Region = MapRegion.Desert,
             PositionX = 285, PositionY = 700,
             LevelRequirement = 3, RewardXp = 400,
@@ -949,5 +991,89 @@ public static class WorldSeedData
         new MapEdge { Id = ME34, FromNodeId = N45, ToNodeId = N46, DistanceKm = 2,   IsBidirectional = true },
         new MapEdge { Id = ME35, FromNodeId = N46, ToNodeId = N47, DistanceKm = 2.5, IsBidirectional = true },
         new MapEdge { Id = ME36, FromNodeId = N47, ToNodeId = N48, DistanceKm = 3,   IsBidirectional = true },
+    ];
+
+    public static IReadOnlyList<Boss> CreateBosses() =>
+    [
+        new Boss
+        {
+            Id = B01, NodeId = N04,
+            Name = "Forest Guardian", Icon = "🐉",
+            MaxHp = 500, RewardXp = 300, TimerDays = 3, IsMini = true
+        },
+        new Boss
+        {
+            Id = B02, NodeId = N08,
+            Name = "Mountain Colossus", Icon = "👹",
+            MaxHp = 1200, RewardXp = 700, TimerDays = 7, IsMini = false
+        },
+    ];
+
+    public static IReadOnlyList<Chest> CreateChests() =>
+    [
+        new Chest { Id = CH01, NodeId = N03, Rarity = ChestRarity.Uncommon, RewardXp = 200 },
+        new Chest { Id = CH02, NodeId = N10, Rarity = ChestRarity.Common,   RewardXp = 100 },
+        new Chest { Id = CH03, NodeId = N19, Rarity = ChestRarity.Epic,     RewardXp = 600 },
+        new Chest { Id = CH04, NodeId = N23, Rarity = ChestRarity.Rare,     RewardXp = 350 },
+    ];
+
+    public static IReadOnlyList<DungeonPortal> CreateDungeons() =>
+    [
+        new DungeonPortal
+        {
+            Id = D01, NodeId = N12,
+            Name = "Ancient Roots Dungeon", TotalFloors = 3,
+            Floors =
+            [
+                new DungeonFloor { Id = DF01, DungeonPortalId = D01, FloorNumber = 1, RequiredActivity = ActivityType.Running, RequiredMinutes = 20, RewardXp = 150 },
+                new DungeonFloor { Id = DF02, DungeonPortalId = D01, FloorNumber = 2, RequiredActivity = ActivityType.Hiking,  RequiredMinutes = 30, RewardXp = 250 },
+                new DungeonFloor { Id = DF03, DungeonPortalId = D01, FloorNumber = 3, RequiredActivity = ActivityType.Yoga,    RequiredMinutes = 20, RewardXp = 200 },
+            ]
+        },
+        new DungeonPortal
+        {
+            Id = D02, NodeId = N16,
+            Name = "Iron Gauntlet", TotalFloors = 3,
+            Floors =
+            [
+                new DungeonFloor { Id = DF04, DungeonPortalId = D02, FloorNumber = 1, RequiredActivity = ActivityType.Gym,      RequiredMinutes = 30, RewardXp = 200 },
+                new DungeonFloor { Id = DF05, DungeonPortalId = D02, FloorNumber = 2, RequiredActivity = ActivityType.Gym,      RequiredMinutes = 45, RewardXp = 300 },
+                new DungeonFloor { Id = DF06, DungeonPortalId = D02, FloorNumber = 3, RequiredActivity = ActivityType.Climbing, RequiredMinutes = 30, RewardXp = 350 },
+            ]
+        },
+        new DungeonPortal
+        {
+            Id = D03, NodeId = N24,
+            Name = "Sand Tomb Depths", TotalFloors = 4,
+            Floors =
+            [
+                new DungeonFloor { Id = DF07, DungeonPortalId = D03, FloorNumber = 1, RequiredActivity = ActivityType.Running,  RequiredMinutes = 20, RewardXp = 150 },
+                new DungeonFloor { Id = DF08, DungeonPortalId = D03, FloorNumber = 2, RequiredActivity = ActivityType.Cycling,  RequiredMinutes = 30, RewardXp = 200 },
+                new DungeonFloor { Id = DF09, DungeonPortalId = D03, FloorNumber = 3, RequiredActivity = ActivityType.Yoga,     RequiredMinutes = 25, RewardXp = 200 },
+                new DungeonFloor { Id = DF10, DungeonPortalId = D03, FloorNumber = 4, RequiredActivity = ActivityType.Climbing, RequiredMinutes = 30, RewardXp = 400 },
+            ]
+        },
+    ];
+
+    public static IReadOnlyList<Crossroads> CreateCrossroads() =>
+    [
+        new Crossroads
+        {
+            Id = CR01, NodeId = N07,
+            Paths =
+            [
+                new CrossroadsPath { Id = CP01, CrossroadsId = CR01, Name = "Cliff Shortcut", DistanceKm = 1.5, Difficulty = CrossroadsPathDifficulty.Hard,    EstimatedDays = 2, RewardXp = 300, AdditionalRequirement = "Strength" },
+                new CrossroadsPath { Id = CP02, CrossroadsId = CR01, Name = "Ridge Trail",    DistanceKm = 3.0, Difficulty = CrossroadsPathDifficulty.Moderate, EstimatedDays = 4, RewardXp = 200, AdditionalRequirement = null },
+            ]
+        },
+        new Crossroads
+        {
+            Id = CR02, NodeId = N11,
+            Paths =
+            [
+                new CrossroadsPath { Id = CP03, CrossroadsId = CR02, Name = "The Dark Way",   DistanceKm = 2.0, Difficulty = CrossroadsPathDifficulty.Hard, EstimatedDays = 3, RewardXp = 350, AdditionalRequirement = null },
+                new CrossroadsPath { Id = CP04, CrossroadsId = CR02, Name = "The Light Path", DistanceKm = 2.5, Difficulty = CrossroadsPathDifficulty.Easy, EstimatedDays = 3, RewardXp = 150, AdditionalRequirement = null },
+            ]
+        },
     ];
 }

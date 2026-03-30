@@ -390,6 +390,8 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp)
             ?? throw new InvalidOperationException("Character not found.");
 
         character.Xp = Math.Max(0, xp);
+        character.Level = 1;
+        character.AvailableStatPoints = 0;
 
         while (character.Xp >= XpAtLevelStart(character.Level + 1))
         {

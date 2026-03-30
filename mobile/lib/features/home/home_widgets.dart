@@ -113,14 +113,27 @@ class HomeProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clampedProgress = progress.clamp(0.0, 1.0);
     return ClipRRect(
       borderRadius: BorderRadius.circular(height / 2),
       child: SizedBox(
         height: height,
-        child: LinearProgressIndicator(
-          value: progress,
-          backgroundColor: kHSurface2,
-          valueColor: AlwaysStoppedAnimation<Color>(colors.first),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(color: kHSurface2),
+            FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: clampedProgress,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: colors.length > 1 ? colors : [colors.first, colors.first],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
