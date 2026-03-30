@@ -6,6 +6,7 @@ import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'profile_overview_tab.dart';
+import 'tabs/equipment_tab.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ProfileScreen
@@ -90,7 +91,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               controller: _tab,
               children: [
                 ProfileOverviewTab(profile: profile),
-                const ProfilePlaceholderTab('Equipment', '🛡️'),
+                const EquipmentTab(),
                 const ProfilePlaceholderTab('Inventory', '🎒'),
                 const ProfilePlaceholderTab('Achievements', '🏆'),
               ],

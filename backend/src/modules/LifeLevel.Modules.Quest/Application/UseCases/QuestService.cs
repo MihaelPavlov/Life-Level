@@ -1,7 +1,6 @@
 using LifeLevel.Modules.Quest.Application.DTOs;
 using LifeLevel.Modules.Quest.Domain.Enums;
 using LifeLevel.SharedKernel.Enums;
-using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 using QuestEntity = LifeLevel.Modules.Quest.Domain.Entities.Quest;
@@ -9,8 +8,8 @@ using UserQuestProgressEntity = LifeLevel.Modules.Quest.Domain.Entities.UserQues
 
 namespace LifeLevel.Modules.Quest.Application.UseCases;
 
-public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
-    : IDailyQuestReadPort
+public class QuestService(DbContext db, ICharacterXpPort characterXp)
+    : IDailyQuestReadPort, IQuestProgressPort
 {
     // Far-future expiry used for special quests
     private static readonly DateTime SpecialQuestExpiry = new(2099, 12, 31, 23, 59, 59, DateTimeKind.Utc);
@@ -249,6 +248,31 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPubl
                              && p.Quest.Type == QuestType.Daily
                              && p.IsCompleted
                              && p.ExpiresAt > now, ct);
+    }
+
+    // IQuestProgressPort
+    async Task<QuestActivityResult> IQuestProgressPort.UpdateProgressFromActivityAsync(
+        Guid userId, ActivityType activityType, int durationMinutes,
+        double? distanceKm, int? calories, CancellationToken ct)
+    {
+        var r = await UpdateProgressFromActivityAsync(userId, activityType, durationMinutes, distanceKm, calories);
+        return new QuestActivityResult(
+            r.UpdatedQuests
+             .Select(q => new CompletedQuestInfo(q.QuestId, q.Title, (int)q.RewardXp))
+             .ToList(),
+            r.AllDailyCompleted,
+            r.BonusXpAwarded);
+    }
+
+    public async Task EnsureSpecialQuestsAsync(Guid userId)
+    {
+        var now = DateTime.UtcNow;
+        var hasAny = await db.Set<UserQuestProgressEntity>()
+            .AnyAsync(p => p.UserId == userId && p.Quest.Type == QuestType.Special);
+        if (hasAny) return;
+
+        await AssignSpecialQuestsAsync(userId, now);
+        await db.SaveChangesAsync();
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────

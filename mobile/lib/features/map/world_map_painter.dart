@@ -401,7 +401,20 @@ class WorldMapPainter extends CustomPainter {
   }
 
   void _drawFogOfWar(Canvas canvas, Size size) {
-    final fogStartY = size.height * kFogStartFrac;
+    // Find the highest tier that has at least one non-locked zone so the fog
+    // always starts just below the last visible zone rather than at a fixed fraction.
+    int lastVisibleTier = 0;
+    for (final z in zones) {
+      if (z.status != ZoneStatus.locked && z.tier > lastVisibleTier) {
+        lastVisibleTier = z.tier;
+      }
+    }
+
+    final lastVisibleY = kTopPadding + lastVisibleTier * kTierHeight;
+    final fogStartY = lastVisibleY + kZoneRadius + 30;
+
+    if (fogStartY >= size.height) return;
+
     final rect = Rect.fromLTWH(0, fogStartY, size.width, size.height - fogStartY);
     final gradient = LinearGradient(
       begin: Alignment.topCenter,

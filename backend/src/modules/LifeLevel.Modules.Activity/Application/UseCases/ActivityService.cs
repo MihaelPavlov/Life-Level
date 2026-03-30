@@ -14,7 +14,7 @@ public class ActivityService(
     ICharacterIdReadPort characterIdRead,
     IEventPublisher events,
     IStreakReadPort streakRead,
-    IDailyQuestReadPort dailyQuestRead)
+    IQuestProgressPort questProgress)
     : IActivityStatsReadPort
 {
     public async Task<LogActivityResult> LogActivityAsync(Guid userId, LogActivityRequest request)
@@ -49,14 +49,18 @@ public class ActivityService(
         await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(request.Type),
             $"{request.Type} workout · {request.DurationMinutes} min", xp);
 
-        // Publish event — handlers (Streak + Quest) run synchronously in-process
+        // Publish event for other listeners (streak, etc.)
         await events.PublishAsync(new ActivityLoggedEvent(
             userId, activity.Id, request.Type, request.DurationMinutes,
             request.DistanceKm ?? 0, request.Calories ?? 0));
 
-        // Read back streak and quest state for response
+        // Update quest progress and capture which quests were just completed
+        var questResult = await questProgress.UpdateProgressFromActivityAsync(
+            userId, request.Type, request.DurationMinutes,
+            request.DistanceKm, request.Calories);
+
+        // Read back streak state for response
         var streak = await streakRead.GetCurrentStreakAsync(userId);
-        var dailyQuestsCompleted = await dailyQuestRead.CountCompletedDailyQuestsAsync(userId);
 
         return new LogActivityResult
         {
@@ -69,11 +73,11 @@ public class ActivityService(
             StaGained = sta,
             LeveledUp = false,   // level-up check already runs inside AwardXpAsync
             NewLevel = null,
-            CompletedQuestsCount = dailyQuestsCompleted,
+            CompletedQuests = questResult.CompletedQuests,
             StreakUpdated = streak != null,
             CurrentStreak = streak?.Current ?? 0,
-            AllDailyQuestsCompleted = dailyQuestsCompleted >= 5,
-            BonusXpAwarded = dailyQuestsCompleted >= 5 ? 300 : 0,
+            AllDailyQuestsCompleted = questResult.AllDailyCompleted,
+            BonusXpAwarded = questResult.BonusXp,
         };
     }
 

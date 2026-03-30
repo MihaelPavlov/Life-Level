@@ -206,6 +206,7 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
                 const SizedBox(height: 8),
               ],
 
+
               // All daily quests bonus
               if (r.allDailyQuestsCompleted) ...[
                 _ResultBanner(

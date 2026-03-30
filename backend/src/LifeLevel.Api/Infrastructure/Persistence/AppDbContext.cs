@@ -18,6 +18,8 @@ using LifeLevel.Modules.Streak.Domain.Entities;
 using LifeLevel.Modules.Streak.Infrastructure;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Infrastructure;
+using LifeLevel.Modules.Items.Domain.Entities;
+using LifeLevel.Modules.Items.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -77,6 +79,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserDungeonState> UserDungeonStates => Set<UserDungeonState>();
     public DbSet<UserCrossroadsState> UserCrossroadsStates => Set<UserCrossroadsState>();
 
+    // Items
+    public DbSet<Item> Items => Set<Item>();
+    public DbSet<CharacterItem> CharacterItems => Set<CharacterItem>();
+    public DbSet<EquipmentSlot> EquipmentSlots => Set<EquipmentSlot>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ── Per-module EF configurations ──────────────────────────────────────────
@@ -90,6 +97,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MapModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EncountersModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DungeonsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ItemsModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 
@@ -223,5 +231,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<UserMapProgress>()
             .WithMany()
             .HasForeignKey(s => s.UserMapProgressId);
+
+        // Items cross-module: CharacterItem/EquipmentSlot → Character
+        modelBuilder.Entity<CharacterItem>()
+            .HasOne<Character>()
+            .WithMany()
+            .HasForeignKey(ci => ci.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<EquipmentSlot>()
+            .HasOne<Character>()
+            .WithMany()
+            .HasForeignKey(s => s.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

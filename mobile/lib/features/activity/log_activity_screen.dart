@@ -8,6 +8,7 @@ import '../streak/providers/streak_provider.dart';
 import 'activity_result_sheet.dart';
 import 'models/activity_models.dart';
 import 'providers/activity_provider.dart';
+import '../home/providers/map_journey_provider.dart';
 
 class LogActivityScreen extends ConsumerStatefulWidget {
   const LogActivityScreen({super.key});
@@ -159,6 +160,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       ref.invalidate(dailyQuestsProvider);
       ref.invalidate(weeklyQuestsProvider);
       ref.invalidate(streakProvider);
+      ref.invalidate(mapJourneyProvider);
 
       // Fire level-up overlay if applicable
       if (result.leveledUp && result.newLevel != null) {

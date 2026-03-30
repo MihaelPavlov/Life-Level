@@ -14,8 +14,9 @@ import 'home_widgets.dart';
 // ── HEADER ──────────────────────────────────────────────────────────────────────
 class HomeHeader extends StatelessWidget {
   final CharacterProfile? profile;
+  final bool nodeReached;
 
-  const HomeHeader({super.key, required this.profile});
+  const HomeHeader({super.key, required this.profile, this.nodeReached = false});
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +46,12 @@ class HomeHeader extends StatelessWidget {
                   spacing: 5,
                   children: [
                     HomeBadge('LV ${profile?.level ?? '?'}', AppColors.blue),
-                    if (profile != null) HomeBadge(profile!.rank.toUpperCase(), AppColors.purple),
-                    if (profile?.className != null) HomeBadge(profile!.className!.toUpperCase(), AppColors.orange),
+                    if (profile != null && !nodeReached)
+                      HomeBadge(profile!.rank.toUpperCase(), AppColors.purple),
+                    if (profile?.className != null && !nodeReached)
+                      HomeBadge(profile!.className!.toUpperCase(), AppColors.orange),
+                    if (nodeReached)
+                      HomeBadge('⛏️ Node reached!', const Color(0xFF3fb950)),
                   ],
                 ),
               ],
@@ -68,7 +73,9 @@ class HomeHeader extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.blue.withValues(alpha: 0.35),
+                      color: nodeReached
+                          ? const Color(0xFF3fb950).withValues(alpha: 0.35)
+                          : AppColors.blue.withValues(alpha: 0.35),
                       blurRadius: 20,
                     ),
                   ],

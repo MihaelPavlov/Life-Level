@@ -41,6 +41,7 @@ public class QuestController(QuestService questService, IUserContext userContext
     public async Task<IActionResult> GetSpecial()
     {
         var userId = userContext.UserId;
+        await questService.EnsureSpecialQuestsAsync(userId);
         var quests = await questService.GetActiveQuestsAsync(userId, QuestType.Special);
         return Ok(quests);
     }

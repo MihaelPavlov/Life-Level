@@ -1,4 +1,5 @@
 using LifeLevel.SharedKernel.Enums;
+using LifeLevel.SharedKernel.Ports;
 
 namespace LifeLevel.Modules.Activity.Application.DTOs;
 
@@ -22,7 +23,7 @@ public class LogActivityResult
     public int StaGained { get; set; }
     public bool LeveledUp { get; set; }
     public int? NewLevel { get; set; }
-    public int CompletedQuestsCount { get; set; }
+    public IReadOnlyList<CompletedQuestInfo> CompletedQuests { get; set; } = [];
     public bool StreakUpdated { get; set; }
     public int CurrentStreak { get; set; }
     public bool AllDailyQuestsCompleted { get; set; }

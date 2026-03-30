@@ -14,6 +14,7 @@ import '../../features/quests/quests_screen.dart';
 import '../../features/map/map_screen.dart';
 import '../../features/map/world_map_screen.dart';
 import '../services/map_tab_notifier.dart';
+import '../services/world_zone_refresh_notifier.dart';
 import '../../features/profile/profile_screen.dart';
 import 'shell_constants.dart';
 import 'shell_models.dart';
@@ -342,6 +343,9 @@ class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateM
                     }
                     if (_navIds[i] == 'map') {
                       MapTabNotifier.notify();
+                    }
+                    if (_navIds[i] == 'world') {
+                      WorldZoneRefreshNotifier.notify();
                     }
                   },
                 ),

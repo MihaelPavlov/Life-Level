@@ -14,6 +14,7 @@ using LifeLevel.Modules.Map.Infrastructure;
 using LifeLevel.Modules.Quest.Infrastructure;
 using LifeLevel.Modules.Streak.Infrastructure;
 using LifeLevel.Modules.WorldZone.Infrastructure;
+using LifeLevel.Modules.Items.Infrastructure;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Ports;
@@ -92,9 +93,13 @@ builder.Services.AddEncountersModule();
 // Adventure.Dungeons module (DungeonService + CrossroadsService)
 builder.Services.AddDungeonsModule();
 
+// Items module
+builder.Services.AddItemsModule();
+
 // App services (MapService stays in LifeLevel.Api)
 builder.Services.AddScoped<MapService>();
 builder.Services.AddScoped<WorldSeeder>();
+builder.Services.AddScoped<ItemSeeder>();
 
 // User context
 builder.Services.AddHttpContextAccessor();
@@ -165,6 +170,9 @@ using (var scope = app.Services.CreateScope())
 
     var seeder = scope.ServiceProvider.GetRequiredService<WorldSeeder>();
     await seeder.ClearAndReseedAsync();
+
+    var itemSeeder = scope.ServiceProvider.GetRequiredService<ItemSeeder>();
+    await itemSeeder.SeedCatalogAsync();
 }
 
 app.Run();

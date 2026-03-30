@@ -652,6 +652,117 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserRingItems");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.CharacterItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcquiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsEquipped")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("CharacterItems");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.EquipmentSlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CharacterItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SlotType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterItemId");
+
+                    b.HasIndex("CharacterId", "SlotType")
+                        .IsUnique();
+
+                    b.ToTable("EquipmentSlots");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.Item", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AgiBonus")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("EndBonus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FlxBonus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Rarity")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SlotType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("StaBonus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StrBonus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("XpBonusPct")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Items");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1488,6 +1599,39 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.CharacterItem", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Items.Domain.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.EquipmentSlot", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Items.Domain.Entities.CharacterItem", "CharacterItem")
+                        .WithMany()
+                        .HasForeignKey("CharacterItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CharacterItem");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>

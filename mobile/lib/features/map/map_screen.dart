@@ -95,16 +95,21 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (_worldZoneId == null) {
       try {
         final world = await _worldZoneService.getFullWorld();
-        final currentZoneId = world.userProgress.currentZoneId;
-        if (currentZoneId.isEmpty) {
+        // Prefer the destination zone when traveling — currentZoneId may be a
+        // crossroads (no local map nodes) even though the user has already
+        // selected their next zone.
+        final zoneId = world.userProgress.destinationZoneId?.isNotEmpty == true
+            ? world.userProgress.destinationZoneId!
+            : world.userProgress.currentZoneId;
+        if (zoneId.isEmpty) {
           setState(() { _loading = false; _data = null; });
           return;
         }
         final matchedZone = world.zones.cast<WorldZoneModel?>().firstWhere(
-          (z) => z!.id == currentZoneId,
+          (z) => z!.id == zoneId,
           orElse: () => null,
         );
-        _worldZoneId = currentZoneId;
+        _worldZoneId = zoneId;
         _zoneName = matchedZone?.name;
       } catch (e) {
         setState(() { _loading = false; _data = null; });
@@ -313,14 +318,24 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         child: WorldMapScreen(),
       ),
     );
-    if (result != null && mounted) {
+    if (!mounted) return;
+    if (result != null) {
       setState(() {
         _worldZoneId = result['zoneId'];
         _zoneName = result['zoneName'];
         _hasInitializedViewport = false;
       });
-      await _loadMap();
+    } else {
+      // WorldMap was dismissed without entering a zone (e.g. moved to a
+      // crossroads which auto-completes). Reset zone so _loadMap re-derives
+      // the current zone from the backend.
+      setState(() {
+        _worldZoneId = null;
+        _zoneName = null;
+        _hasInitializedViewport = false;
+      });
     }
+    await _loadMap();
   }
 
   void _openDebugPanel() {

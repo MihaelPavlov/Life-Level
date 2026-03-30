@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
 import 'world_map_data.dart';
 import 'world_map_detail_sheet.dart';
+import 'world_map_layout.dart';
 import 'world_map_models.dart';
 import 'world_map_painter.dart';
 import 'models/world_zone_models.dart';
@@ -29,6 +30,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   late Animation<double> _pulseAnim;
 
   final _service = WorldZoneService();
+  final _scrollController = ScrollController();
+  bool _hasScrolledToActive = false;
 
   List<ZoneData> _zones = [];
   Map<String, List<String>> _edges = {};
@@ -68,6 +71,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   void dispose() {
     _refreshSub.cancel();
     _pulseController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -94,7 +98,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         }
       }
 
-      final layoutZones = _applyTierLayout(zones);
+      final layoutZones = WorldMapLayout.applyTierLayout(zones);
 
       // ── travel state ────────────────────────────────────────────────────────
       Offset? playerOnEdge;
@@ -111,7 +115,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         final toIdx   = layoutZones.indexWhere((z) => z.id == prog.destinationZoneId);
         if (edge != null && fromIdx != -1 && toIdx != -1 && edge.distanceKm > 0) {
           final frac = (prog.distanceTraveledOnEdge / edge.distanceKm).clamp(0.0, 1.0);
-          final centres = layoutZones.map(_centreFor).toList();
+          final centres = layoutZones.map(WorldMapLayout.centreFor).toList();
           // Use a minimum visual fraction so the character is always visibly
           // on the edge (not sitting on top of the source zone node at 0%).
           final visualFrac = frac > 0 ? frac : 0.06;
@@ -124,13 +128,19 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       setState(() {
         _zones = layoutZones;
         _edges = edges;
-        _zoneCentres = layoutZones.map(_centreFor).toList();
+        _zoneCentres = layoutZones.map(WorldMapLayout.centreFor).toList();
         _characterLevel = data.characterLevel;
         _playerOnEdge   = playerOnEdge;
         _playerAnchor   = playerAnchor;
         _travelProgress = travelProgress;
         _loading = false;
       });
+
+      // Scroll to the active zone on first load
+      if (!_hasScrolledToActive) {
+        _hasScrolledToActive = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToActiveZone(layoutZones));
+      }
 
       // Detect zone arrival
       final activeZone = layoutZones.cast<ZoneData?>().firstWhere(
@@ -151,65 +161,27 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     }
   }
 
-  // ── helpers ──────────────────────────────────────────────────────────────────
-
-  Offset _centreFor(ZoneData z) {
-    final y = kTopPadding + z.tier * kTierHeight;
-    final x = z.relativeX * kCanvasWidth;
-    return Offset(x, y);
-  }
-
-  // ── tier-based layout ─────────────────────────────────────────────────────────
-  // Ignores admin-panel X coordinates and places zones evenly within each tier
-  // so they are always centered regardless of how they were positioned in the editor.
-
-  List<ZoneData> _applyTierLayout(List<ZoneData> zones) {
-    // Group indices by tier, sorted by original relativeX to preserve left/right order
-    final tierIndices = <int, List<int>>{};
-    for (int i = 0; i < zones.length; i++) {
-      tierIndices.putIfAbsent(zones[i].tier, () => []).add(i);
-    }
-    for (final ids in tierIndices.values) {
-      ids.sort((a, b) => zones[a].relativeX.compareTo(zones[b].relativeX));
-    }
-
-    final result = List<ZoneData?>.filled(zones.length, null);
-    for (final ids in tierIndices.values) {
-      final xs = _tierXPositions(ids.length);
-      for (int j = 0; j < ids.length; j++) {
-        final z = zones[ids[j]];
-        result[ids[j]] = ZoneData(
-          id: z.id,
-          name: z.name,
-          icon: z.icon,
-          status: z.status,
-          tier: z.tier,
-          relativeX: xs[j],
-          region: z.region,
-          nodeCount: z.nodeCount,
-          completedNodeCount: z.completedNodeCount,
-          totalXp: z.totalXp,
-          distanceKm: z.distanceKm,
-          levelRequirement: z.levelRequirement,
-          isCrossroads: z.isCrossroads,
-          description: z.description,
-          isDestination: z.isDestination,
-        );
-      }
-    }
-    return result.cast<ZoneData>();
-  }
-
-  List<double> _tierXPositions(int count) {
-    switch (count) {
-      case 1: return [0.5];
-      case 2: return [0.30, 0.70];
-      case 3: return [0.20, 0.50, 0.80];
-      default:
-        return [
-          for (int i = 0; i < count; i++) 0.15 + 0.70 / (count - 1) * i,
-        ];
-    }
+  void _scrollToActiveZone(List<ZoneData> zones) {
+    if (!mounted || !_scrollController.hasClients) return;
+    final activeZone = zones.cast<ZoneData?>().firstWhere(
+      (z) => z!.status == ZoneStatus.active,
+      orElse: () => zones.cast<ZoneData?>().firstWhere(
+        (z) => z!.isDestination,
+        orElse: () => null,
+      ),
+    );
+    if (activeZone == null) return;
+    final centre = WorldMapLayout.centreFor(activeZone);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final targetOffset = (centre.dy - screenHeight / 2).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _onCanvasTap(TapDownDetails details) {
@@ -437,6 +409,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           // ── scrollable map canvas ───────────────────────────────────────────
           Positioned.fill(
             child: SingleChildScrollView(
+              controller: _scrollController,
               physics: const ClampingScrollPhysics(),
               child: Center(
                 child: GestureDetector(

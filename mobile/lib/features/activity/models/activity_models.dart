@@ -1,5 +1,3 @@
-import '../../quests/models/quest_models.dart';
-
 enum ActivityType { running, cycling, gym, yoga, swimming, hiking, climbing }
 
 extension ActivityTypeExt on ActivityType {
@@ -51,6 +49,25 @@ class LogActivityRequest {
       };
 }
 
+class CompletedQuestSummary {
+  final String questId;
+  final String title;
+  final int rewardXp;
+
+  const CompletedQuestSummary({
+    required this.questId,
+    required this.title,
+    required this.rewardXp,
+  });
+
+  factory CompletedQuestSummary.fromJson(Map<String, dynamic> json) =>
+      CompletedQuestSummary(
+        questId: json['questId'] as String,
+        title: json['title'] as String,
+        rewardXp: json['rewardXp'] as int? ?? 0,
+      );
+}
+
 class LogActivityResult {
   final String activityId;
   final int xpGained;
@@ -61,7 +78,7 @@ class LogActivityResult {
   final int staGained;
   final bool leveledUp;
   final int? newLevel;
-  final List<UserQuestProgress> completedQuests;
+  final List<CompletedQuestSummary> completedQuests;
   final bool streakUpdated;
   final int currentStreak;
   final bool allDailyQuestsCompleted;
@@ -96,13 +113,14 @@ class LogActivityResult {
         leveledUp: json['leveledUp'] as bool? ?? false,
         newLevel: json['newLevel'] as int?,
         completedQuests: (json['completedQuests'] as List<dynamic>?)
-                ?.map((j) =>
-                    UserQuestProgress.fromJson(j as Map<String, dynamic>))
+                ?.map((j) => CompletedQuestSummary.fromJson(
+                    j as Map<String, dynamic>))
                 .toList() ??
             [],
         streakUpdated: json['streakUpdated'] as bool? ?? false,
         currentStreak: json['currentStreak'] as int? ?? 0,
-        allDailyQuestsCompleted: json['allDailyQuestsCompleted'] as bool? ?? false,
+        allDailyQuestsCompleted:
+            json['allDailyQuestsCompleted'] as bool? ?? false,
         bonusXpAwarded: json['bonusXpAwarded'] as int? ?? 0,
       );
 }
