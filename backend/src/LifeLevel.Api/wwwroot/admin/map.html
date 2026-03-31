@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLevel Admin — Map</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #040810; --bg2: #080e14; --surface: #161b22; --surface2: #1e2632;
+    --border: #30363d; --text: #e6edf3; --text2: #8b949e;
+    --blue: #4f9eff; --purple: #a371f7; --orange: #f5a623;
+    --red: #f85149; --green: #3fb950; --radius: 8px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; font-size: 14px; min-height: 100vh; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--blue); }
+  .nav-links { display: flex; gap: 10px; }
+  .nav-links a { color: var(--text2); font-size: 13px; text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius); transition: color .15s, border-color .15s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--blue); border-color: var(--blue); }
+  .token-row { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+  .token-row label { color: var(--text2); font-size: 12px; }
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: var(--radius); padding: 8px 12px; font-size: 13px; outline: none; transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+  #tokenInput { width: 420px; }
+  button { background: var(--blue); color: #fff; border: none; border-radius: var(--radius); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+  button:hover { opacity: .85; }
+  button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  button.danger { background: var(--red); }
+  button.sm { padding: 4px 10px; font-size: 12px; }
+  nav.tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; }
+  nav.tabs button { background: none; border: none; border-bottom: 3px solid transparent; color: var(--text2); padding: 14px 20px; font-size: 14px; font-weight: 600; border-radius: 0; cursor: pointer; transition: color .15s, border-color .15s; }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--blue); border-bottom-color: var(--blue); }
+  main { padding: 24px; max-width: 1400px; }
+  .tab-panel { display: none; } .tab-panel.active { display: block; }
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: var(--radius); font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 1000; max-width: 340px; }
+  #toast.show { opacity: 1; } #toast.ok { border-left: 4px solid var(--green); } #toast.err { border-left: 4px solid var(--red); }
+  .table-wrap { overflow-x: auto; margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--surface2); color: var(--text2); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: var(--surface2); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .section-header h2 { font-size: 16px; font-weight: 700; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+  .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; justify-content: center; align-items: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; min-width: 380px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗺️ Map Admin</h1>
+  <div class="nav-links">
+    <a href="index.html" id="linkItems">⚙️ Items</a>
+    <a href="map.html" class="active">🗺️ Map</a>
+  </div>
+  <div class="token-row">
+    <label for="tokenInput">JWT Token</label>
+    <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
+    <button onclick="saveToken()">Save</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="active" onclick="switchTab('nodes',this)">Nodes</button>
+  <button onclick="switchTab('edges',this)">Edges</button>
+  <button onclick="switchTab('bosses',this)">Bosses</button>
+</nav>
+
+<main>
+
+<!-- NODES TAB -->
+<div id="tab-nodes" class="tab-panel active">
+  <div class="section-header">
+    <h2>Map Nodes</h2>
+    <button onclick="openNodeModal()">+ Add Node</button>
+  </div>
+  <p style="color:var(--text2);font-size:13px">Zones and waypoints on the adventure map.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Icon</th><th>Name</th><th>Type</th><th>Region</th>
+        <th>Lvl Req</th><th>Reward XP</th><th>Start</th><th>Hidden</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="nodesTable"><tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- EDGES TAB -->
+<div id="tab-edges" class="tab-panel">
+  <div class="section-header">
+    <h2>Map Edges</h2>
+    <button onclick="openEdgeModal()">+ Add Edge</button>
+  </div>
+  <p style="color:var(--text2);font-size:13px">Connections between nodes with travel distance.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>From Node</th><th>To Node</th><th>Distance (km)</th><th>Bidirectional</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="edgesTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BOSSES TAB -->
+<div id="tab-bosses" class="tab-panel">
+  <div class="section-header">
+    <h2>Bosses</h2>
+    <button onclick="openBossModal()">+ Add Boss</button>
+  </div>
+  <p style="color:var(--text2);font-size:13px">Zone bosses with HP pools and rewards.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Icon</th><th>Name</th><th>Node</th><th>Max HP</th>
+        <th>Reward XP</th><th>Timer (days)</th><th>Mini</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="bossesTable"><tr><td colspan="8" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<!-- NODE MODAL -->
+<div id="nodeModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="nodeModalTitle">Add Node</h3>
+    <input type="hidden" id="nodeId">
+    <div class="form-grid">
+      <div class="form-group"><label>Name</label><input type="text" id="nodeName"></div>
+      <div class="form-group"><label>Icon (emoji)</label><input type="text" id="nodeIcon"></div>
+      <div class="form-group"><label>Type</label>
+        <select id="nodeType">
+          <option>Zone</option><option>Crossroads</option><option>Boss</option>
+          <option>Dungeon</option><option>Chest</option><option>Start</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Region</label><input type="text" id="nodeRegion"></div>
+      <div class="form-group"><label>Position X</label><input type="number" id="nodePosX" value="0" step="0.1"></div>
+      <div class="form-group"><label>Position Y</label><input type="number" id="nodePosY" value="0" step="0.1"></div>
+      <div class="form-group"><label>Level Req</label><input type="number" id="nodeLevelReq" value="1" min="1"></div>
+      <div class="form-group"><label>Reward XP</label><input type="number" id="nodeRewardXp" value="100"></div>
+      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
+        <label>Start Node</label><input type="checkbox" id="nodeIsStart">
+      </div>
+      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
+        <label>Hidden</label><input type="checkbox" id="nodeIsHidden">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label>Description</label><textarea id="nodeDescription" rows="2" style="width:100%;resize:vertical"></textarea></div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('nodeModal')">Cancel</button>
+      <button onclick="saveNode()">Save Node</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDGE MODAL -->
+<div id="edgeModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>Add Edge</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>From Node</label><select id="edgeFrom" style="width:100%"></select></div>
+      <div class="form-group"><label>To Node</label><select id="edgeTo" style="width:100%"></select></div>
+      <div class="form-group"><label>Distance (km)</label><input type="number" id="edgeDistance" value="1" step="0.1" min="0.1"></div>
+      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
+        <label>Bidirectional</label><input type="checkbox" id="edgeBidir" checked>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('edgeModal')">Cancel</button>
+      <button onclick="saveEdge()">Save Edge</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOSS MODAL -->
+<div id="bossModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="bossModalTitle">Add Boss</h3>
+    <input type="hidden" id="bossId">
+    <div class="form-grid">
+      <div class="form-group"><label>Node</label><select id="bossNode" style="width:100%"></select></div>
+      <div class="form-group"><label>Name</label><input type="text" id="bossName"></div>
+      <div class="form-group"><label>Icon (emoji)</label><input type="text" id="bossIcon"></div>
+      <div class="form-group"><label>Max HP</label><input type="number" id="bossMaxHp" value="1000"></div>
+      <div class="form-group"><label>Reward XP</label><input type="number" id="bossRewardXp" value="500"></div>
+      <div class="form-group"><label>Timer (days)</label><input type="number" id="bossTimerDays" value="7" min="1"></div>
+      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
+        <label>Mini Boss</label><input type="checkbox" id="bossIsMini">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('bossModal')">Cancel</button>
+      <button onclick="saveBoss()">Save Boss</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '';
+let allNodes = [];
+
+function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  localStorage.setItem('ll_admin_token', t);
+  toast('Token saved', 'ok');
+  loadAll();
+}
+function headers() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, { ...opts, headers: { ...headers(), ...(opts.headers || {}) } });
+  if (!res.ok) { const txt = await res.text().catch(() => res.statusText); throw new Error(txt || res.statusText); }
+  try { return await res.json(); } catch { return null; }
+}
+
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'nodes') loadNodes();
+  if (id === 'edges') loadEdges();
+  if (id === 'bosses') loadBosses();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(b => b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); }));
+
+// ── Nodes ──────────────────────────────────────────────────────────────────
+async function loadNodes() {
+  try {
+    allNodes = await apiFetch('/api/admin/map/nodes');
+    const tb = document.getElementById('nodesTable');
+    if (!allNodes.length) { tb.innerHTML = '<tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">No nodes found.</td></tr>'; return; }
+    tb.innerHTML = allNodes.map(n => `
+      <tr>
+        <td>${n.icon || ''}</td>
+        <td><strong>${esc(n.name)}</strong></td>
+        <td><span class="badge" style="background:var(--surface2);color:var(--text2)">${esc(n.type || '')}</span></td>
+        <td>${esc(n.region || '')}</td>
+        <td>${n.levelRequirement ?? ''}</td>
+        <td>${n.rewardXp ?? ''}</td>
+        <td>${n.isStartNode ? '✅' : ''}</td>
+        <td>${n.isHidden ? '🙈' : ''}</td>
+        <td>
+          <button class="sm secondary" onclick='editNode(${JSON.stringify(n)})'>Edit</button>
+          <button class="sm danger" style="margin-left:6px" onclick="deleteNode('${n.id}')">Delete</button>
+        </td>
+      </tr>`).join('');
+    populateNodeSelects();
+  } catch(e) { toast('Failed to load nodes: ' + e.message, 'err'); }
+}
+
+function openNodeModal() {
+  document.getElementById('nodeModalTitle').textContent = 'Add Node';
+  document.getElementById('nodeId').value = '';
+  ['nodeName','nodeIcon','nodeRegion','nodeDescription'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('nodeType').value = 'Zone';
+  document.getElementById('nodePosX').value = 0;
+  document.getElementById('nodePosY').value = 0;
+  document.getElementById('nodeLevelReq').value = 1;
+  document.getElementById('nodeRewardXp').value = 100;
+  document.getElementById('nodeIsStart').checked = false;
+  document.getElementById('nodeIsHidden').checked = false;
+  document.getElementById('nodeModal').classList.add('open');
+}
+
+function editNode(n) {
+  document.getElementById('nodeModalTitle').textContent = 'Edit Node';
+  document.getElementById('nodeId').value = n.id;
+  document.getElementById('nodeName').value = n.name || '';
+  document.getElementById('nodeIcon').value = n.icon || '';
+  document.getElementById('nodeType').value = n.type || 'Zone';
+  document.getElementById('nodeRegion').value = n.region || '';
+  document.getElementById('nodePosX').value = n.positionX ?? 0;
+  document.getElementById('nodePosY').value = n.positionY ?? 0;
+  document.getElementById('nodeLevelReq').value = n.levelRequirement ?? 1;
+  document.getElementById('nodeRewardXp').value = n.rewardXp ?? 100;
+  document.getElementById('nodeIsStart').checked = !!n.isStartNode;
+  document.getElementById('nodeIsHidden').checked = !!n.isHidden;
+  document.getElementById('nodeDescription').value = n.description || '';
+  document.getElementById('nodeModal').classList.add('open');
+}
+
+async function saveNode() {
+  const id = document.getElementById('nodeId').value;
+  const body = {
+    name: document.getElementById('nodeName').value.trim(),
+    description: document.getElementById('nodeDescription').value.trim() || null,
+    icon: document.getElementById('nodeIcon').value.trim(),
+    type: document.getElementById('nodeType').value,
+    region: document.getElementById('nodeRegion').value.trim(),
+    positionX: parseFloat(document.getElementById('nodePosX').value),
+    positionY: parseFloat(document.getElementById('nodePosY').value),
+    levelRequirement: parseInt(document.getElementById('nodeLevelReq').value),
+    rewardXp: parseInt(document.getElementById('nodeRewardXp').value),
+    isStartNode: document.getElementById('nodeIsStart').checked,
+    isHidden: document.getElementById('nodeIsHidden').checked,
+  };
+  try {
+    if (id) {
+      await apiFetch('/api/admin/map/nodes/' + id, { method: 'PUT', body: JSON.stringify(body) });
+      toast('Node updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/map/nodes', { method: 'POST', body: JSON.stringify(body) });
+      toast('Node created', 'ok');
+    }
+    closeModal('nodeModal');
+    loadNodes();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteNode(id) {
+  if (!confirm('Delete this node? This may affect edges and player progress.')) return;
+  try { await apiFetch('/api/admin/map/nodes/' + id, { method: 'DELETE' }); toast('Node deleted', 'ok'); loadNodes(); }
+  catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+// ── Edges ──────────────────────────────────────────────────────────────────
+async function loadEdges() {
+  try {
+    const edges = await apiFetch('/api/admin/map/edges');
+    const tb = document.getElementById('edgesTable');
+    if (!edges.length) { tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No edges found.</td></tr>'; return; }
+    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
+    tb.innerHTML = edges.map(e => {
+      const from = nodeMap[e.fromNodeId] || { name: e.fromNodeId, icon: '' };
+      const to   = nodeMap[e.toNodeId]   || { name: e.toNodeId,   icon: '' };
+      return `<tr>
+        <td>${from.icon} ${esc(from.name)}</td>
+        <td>${to.icon} ${esc(to.name)}</td>
+        <td>${e.distanceKm} km</td>
+        <td>${e.isBidirectional ? '↔️' : '→'}</td>
+        <td><button class="sm danger" onclick="deleteEdge('${e.id}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast('Failed to load edges: ' + e.message, 'err'); }
+}
+
+function openEdgeModal() {
+  populateNodeSelects();
+  document.getElementById('edgeDistance').value = 1;
+  document.getElementById('edgeBidir').checked = true;
+  document.getElementById('edgeModal').classList.add('open');
+}
+
+async function saveEdge() {
+  const body = {
+    fromNodeId: document.getElementById('edgeFrom').value,
+    toNodeId: document.getElementById('edgeTo').value,
+    distanceKm: parseFloat(document.getElementById('edgeDistance').value),
+    isBidirectional: document.getElementById('edgeBidir').checked,
+  };
+  try {
+    await apiFetch('/api/admin/map/edges', { method: 'POST', body: JSON.stringify(body) });
+    toast('Edge created', 'ok');
+    closeModal('edgeModal');
+    loadEdges();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteEdge(id) {
+  if (!confirm('Delete this edge?')) return;
+  try { await apiFetch('/api/admin/map/edges/' + id, { method: 'DELETE' }); toast('Edge deleted', 'ok'); loadEdges(); }
+  catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+// ── Bosses ─────────────────────────────────────────────────────────────────
+async function loadBosses() {
+  try {
+    const bosses = await apiFetch('/api/admin/map/bosses');
+    const tb = document.getElementById('bossesTable');
+    if (!bosses.length) { tb.innerHTML = '<tr><td colspan="8" style="color:var(--text2);text-align:center;padding:24px">No bosses found.</td></tr>'; return; }
+    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
+    tb.innerHTML = bosses.map(b => {
+      const node = nodeMap[b.nodeId] || { name: b.nodeId, icon: '' };
+      return `<tr>
+        <td>${b.icon || ''}</td>
+        <td><strong>${esc(b.name)}</strong></td>
+        <td>${node.icon} ${esc(node.name)}</td>
+        <td>${b.maxHp}</td>
+        <td>${b.rewardXp}</td>
+        <td>${b.timerDays}d</td>
+        <td>${b.isMini ? '⚡ Mini' : '💀 Full'}</td>
+        <td>
+          <button class="sm secondary" onclick='editBoss(${JSON.stringify(b)})'>Edit</button>
+          <button class="sm danger" style="margin-left:6px" onclick="deleteBoss('${b.id}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast('Failed to load bosses: ' + e.message, 'err'); }
+}
+
+function openBossModal() {
+  document.getElementById('bossModalTitle').textContent = 'Add Boss';
+  document.getElementById('bossId').value = '';
+  ['bossName','bossIcon'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('bossMaxHp').value = 1000;
+  document.getElementById('bossRewardXp').value = 500;
+  document.getElementById('bossTimerDays').value = 7;
+  document.getElementById('bossIsMini').checked = false;
+  populateNodeSelects();
+  document.getElementById('bossModal').classList.add('open');
+}
+
+function editBoss(b) {
+  document.getElementById('bossModalTitle').textContent = 'Edit Boss';
+  document.getElementById('bossId').value = b.id;
+  document.getElementById('bossName').value = b.name || '';
+  document.getElementById('bossIcon').value = b.icon || '';
+  document.getElementById('bossMaxHp').value = b.maxHp;
+  document.getElementById('bossRewardXp').value = b.rewardXp;
+  document.getElementById('bossTimerDays').value = b.timerDays;
+  document.getElementById('bossIsMini').checked = !!b.isMini;
+  populateNodeSelects();
+  document.getElementById('bossNode').value = b.nodeId;
+  document.getElementById('bossModal').classList.add('open');
+}
+
+async function saveBoss() {
+  const id = document.getElementById('bossId').value;
+  const body = {
+    nodeId: document.getElementById('bossNode').value,
+    name: document.getElementById('bossName').value.trim(),
+    icon: document.getElementById('bossIcon').value.trim(),
+    maxHp: parseInt(document.getElementById('bossMaxHp').value),
+    rewardXp: parseInt(document.getElementById('bossRewardXp').value),
+    timerDays: parseInt(document.getElementById('bossTimerDays').value),
+    isMini: document.getElementById('bossIsMini').checked,
+  };
+  try {
+    if (id) {
+      const { nodeId, ...upd } = body;
+      await apiFetch('/api/admin/map/bosses/' + id, { method: 'PUT', body: JSON.stringify(upd) });
+      toast('Boss updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/map/bosses', { method: 'POST', body: JSON.stringify(body) });
+      toast('Boss created', 'ok');
+    }
+    closeModal('bossModal');
+    loadBosses();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteBoss(id) {
+  if (!confirm('Delete this boss?')) return;
+  try { await apiFetch('/api/admin/map/bosses/' + id, { method: 'DELETE' }); toast('Boss deleted', 'ok'); loadBosses(); }
+  catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function populateNodeSelects() {
+  const opts = allNodes.map(n => `<option value="${n.id}">${n.icon || ''} ${esc(n.name)}</option>`).join('');
+  ['edgeFrom','edgeTo','bossNode'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts || '<option>No nodes loaded</option>'; });
+}
+
+function loadAll() { loadNodes(); }
+
+// ── Cross-page nav with token ──────────────────────────────────────────────
+document.getElementById('linkItems').addEventListener('click', e => {
+  const t = getToken();
+  if (t) { e.preventDefault(); window.location.href = 'index.html?token=' + encodeURIComponent(t); }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+const qToken = new URLSearchParams(window.location.search).get('token');
+if (qToken) {
+  localStorage.setItem('ll_admin_token', qToken);
+  document.getElementById('tokenInput').value = qToken;
+} else {
+  const savedToken = getToken();
+  if (savedToken) document.getElementById('tokenInput').value = savedToken;
+}
+loadNodes();
+</script>
+</body>
+</html>

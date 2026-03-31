@@ -11,6 +11,9 @@ class ItemDto {
   final int agiBonus;
   final int flxBonus;
   final int staBonus;
+  final String? characterItemId;
+  final bool isEquipped;
+  final String category;
 
   const ItemDto({
     required this.id,
@@ -25,6 +28,9 @@ class ItemDto {
     required this.agiBonus,
     required this.flxBonus,
     required this.staBonus,
+    this.characterItemId,
+    this.isEquipped = false,
+    this.category = 'Accessory',
   });
 
   factory ItemDto.fromJson(Map<String, dynamic> json) => ItemDto(
@@ -40,6 +46,9 @@ class ItemDto {
         agiBonus: json['agiBonus'] as int? ?? 0,
         flxBonus: json['flxBonus'] as int? ?? 0,
         staBonus: json['staBonus'] as int? ?? 0,
+        characterItemId: json['characterItemId'] as String?,
+        isEquipped: json['isEquipped'] as bool? ?? false,
+        category: json['category'] as String? ?? 'Accessory',
       );
 }
 

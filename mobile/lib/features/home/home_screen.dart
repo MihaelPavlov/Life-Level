@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../activity/providers/activity_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../map/models/map_models.dart';
-import '../activity/log_activity_screen.dart';
 import '../map/map_screen.dart';
 import '../map/node_detail_sheet.dart';
 import '../../core/api/api_client.dart';
@@ -36,20 +36,13 @@ class HomeScreen extends ConsumerWidget {
                 mapJourneyAsync.when(
                   data: (data) => HomeMapProgressSection(
                     data: data,
-                    onLogActivity: () async {
+                    onOpenMap: () async {
                       await Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const LogActivityScreen(),
-                          fullscreenDialog: true,
-                        ),
+                        MaterialPageRoute(builder: (_) => const MapScreen()),
                       );
                       ref.invalidate(mapJourneyProvider);
                     },
-                    onOpenMap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MapScreen()),
-                    ),
                     onActionButton: () {
                       final destId = data.userProgress.destinationNodeId;
                       if (destId == null) return;
@@ -106,8 +99,8 @@ class HomeScreen extends ConsumerWidget {
                       HomeXpCard(profile: profile),
                       const HomeStreakCard(),
                       const HomeQuestsCard(),
-                      const HomeLastActivityCard(),
-                      const HomeStatsRow(),
+                      const HomeRecentActivitiesCard(),
+                      HomeStatsRow(),
                       const HomeBossCard(),
                       const SizedBox(height: 12),
                     ],

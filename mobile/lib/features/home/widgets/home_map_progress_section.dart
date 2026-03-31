@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../map/map_history_screen.dart';
 import '../../map/models/map_models.dart';
 import '../home_widgets.dart';
 
 // ── MAP PROGRESS SECTION ───────────────────────────────────────────────────────
 class HomeMapProgressSection extends StatelessWidget {
   final MapFullData data;
-  final VoidCallback onLogActivity;
   final VoidCallback onOpenMap;
   final VoidCallback onActionButton;
   final VoidCallback? onStravaSync;
@@ -15,7 +15,6 @@ class HomeMapProgressSection extends StatelessWidget {
   const HomeMapProgressSection({
     super.key,
     required this.data,
-    required this.onLogActivity,
     required this.onOpenMap,
     required this.onActionButton,
     this.onStravaSync,
@@ -77,7 +76,6 @@ class HomeMapProgressSection extends StatelessWidget {
               children: [
                 HomeMapFeaturedCard(
                   data: data,
-                  onLogActivity: onLogActivity,
                   onOpenMap: onOpenMap,
                   onActionButton: onActionButton,
                   onStravaSync: onStravaSync,
@@ -99,7 +97,6 @@ class HomeMapProgressSection extends StatelessWidget {
 // ── FEATURED CARD ──────────────────────────────────────────────────────────────
 class HomeMapFeaturedCard extends StatelessWidget {
   final MapFullData data;
-  final VoidCallback onLogActivity;
   final VoidCallback onOpenMap;
   final VoidCallback onActionButton;
   final VoidCallback? onStravaSync;
@@ -108,7 +105,6 @@ class HomeMapFeaturedCard extends StatelessWidget {
   const HomeMapFeaturedCard({
     super.key,
     required this.data,
-    required this.onLogActivity,
     required this.onOpenMap,
     required this.onActionButton,
     this.onStravaSync,
@@ -310,48 +306,23 @@ class HomeMapFeaturedCard extends StatelessWidget {
               const SizedBox(height: 10),
               // Footer
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '${remaining.toStringAsFixed(1)} km',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF4f9eff),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'to go',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '${remaining.toStringAsFixed(1)} km',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF4f9eff),
+                    ),
                   ),
-                  GestureDetector(
-                    onTap: onLogActivity,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4f9eff), Color(0xFF6ab8ff)],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'Log Activity →',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'to go',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -546,7 +517,14 @@ class HomeMapHistoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            HomeSectionTitle(label: 'MAP HISTORY', action: 'View all →'),
+            HomeSectionTitle(
+              label: 'MAP HISTORY',
+              action: 'View all →',
+              onActionTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MapHistoryScreen()),
+              ),
+            ),
             const SizedBox(height: 4),
             ...entries.asMap().entries.map((e) {
               final isLast = e.key == entries.length - 1;

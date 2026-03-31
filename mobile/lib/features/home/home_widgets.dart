@@ -76,8 +76,9 @@ class HomeSectionTitle extends StatelessWidget {
   final String label;
   final String? action;
   final Color? actionColor;
+  final VoidCallback? onActionTap;
 
-  const HomeSectionTitle({super.key, required this.label, this.action, this.actionColor});
+  const HomeSectionTitle({super.key, required this.label, this.action, this.actionColor, this.onActionTap});
 
   @override
   Widget build(BuildContext context) {
@@ -92,11 +93,20 @@ class HomeSectionTitle extends StatelessWidget {
                 color: AppColors.textSecondary, letterSpacing: 1.2,
               )),
           if (action != null)
-            Text(action!,
-                style: TextStyle(
-                  fontSize: 10, fontWeight: FontWeight.w600,
-                  color: actionColor ?? AppColors.blue,
-                )),
+            onActionTap != null
+                ? GestureDetector(
+                    onTap: onActionTap,
+                    child: Text(action!,
+                        style: TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.w600,
+                          color: actionColor ?? AppColors.blue,
+                        )),
+                  )
+                : Text(action!,
+                    style: TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w600,
+                      color: actionColor ?? AppColors.blue,
+                    )),
         ],
       ),
     );

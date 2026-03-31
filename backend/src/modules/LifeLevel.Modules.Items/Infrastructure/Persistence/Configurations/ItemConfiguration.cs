@@ -10,6 +10,7 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
     {
         entity.HasKey(i => i.Id);
         entity.Property(i => i.Rarity).HasConversion<string>();
+        entity.Property(i => i.Category).HasConversion<string>().HasMaxLength(30);
         entity.Property(i => i.SlotType).HasConversion<string>();
         entity.Property(i => i.Name).HasMaxLength(100);
         entity.Property(i => i.Description).HasMaxLength(500);

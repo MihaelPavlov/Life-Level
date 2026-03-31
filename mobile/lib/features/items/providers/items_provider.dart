@@ -22,3 +22,18 @@ class EquipmentNotifier extends AsyncNotifier<CharacterEquipmentResponse> {
     state = await AsyncValue.guard(() => _service.unequip(slotType));
   }
 }
+
+final inventoryProvider =
+    AsyncNotifierProvider<InventoryNotifier, List<ItemDto>>(
+  InventoryNotifier.new,
+);
+
+class InventoryNotifier extends AsyncNotifier<List<ItemDto>> {
+  @override
+  Future<List<ItemDto>> build() => _service.getInventory();
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_service.getInventory);
+  }
+}

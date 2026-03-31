@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level — Strava Integration & Activity System</title>
+<style>
+  :root {
+    --bg:        #040810;
+    --surface1:  #161b22;
+    --surface2:  #1e2632;
+    --border:    #30363d;
+    --text1:     #e6edf3;
+    --text2:     #8b949e;
+    --blue:      #4f9eff;
+    --purple:    #a371f7;
+    --orange:    #f5a623;
+    --red:       #f85149;
+    --green:     #3fb950;
+    --cyan:      #58c8e8;
+    --yellow:    #e3b341;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text1);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 40px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); margin-bottom: 10px; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; background: #0d1117; padding: 2px 6px; border-radius: 4px; color: var(--cyan); }
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  .page-header {
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header p { color: var(--text2); margin-top: 6px; font-size: 15px; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  .badge-live { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-partial { background: rgba(245,166,35,0.15); color: var(--orange); border: 1px solid rgba(245,166,35,0.3); }
+  .badge-planned { background: rgba(79,158,255,0.12); color: var(--blue); border: 1px solid rgba(79,158,255,0.25); }
+
+  .section {
+    background: var(--surface1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .section-icon { font-size: 20px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ── Cards ───────────────────────────────────────────────────── */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  /* ── Tables ──────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: #0d1117;
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child  { border-radius: 0 6px 0 0; }
+  tbody tr { border-bottom: 1px solid rgba(48,54,61,0.6); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td { padding: 10px 12px; vertical-align: middle; }
+
+  /* ── Stat Pills ──────────────────────────────────────────────── */
+  .stat { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+  .stat-str { background: rgba(248,81,73,0.15); color: var(--red); }
+  .stat-end { background: rgba(63,185,80,0.15); color: var(--green); }
+  .stat-agi { background: rgba(88,200,232,0.15); color: var(--cyan); }
+  .stat-flx { background: rgba(163,113,247,0.15); color: var(--purple); }
+  .stat-sta { background: rgba(245,166,35,0.15); color: var(--orange); }
+  .stat-zero { color: var(--border); }
+
+  /* ── HTTP Methods ────────────────────────────────────────────── */
+  .method { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace; min-width: 54px; text-align: center; }
+  .method-get    { background: rgba(63,185,80,0.15); color: var(--green); }
+  .method-post   { background: rgba(79,158,255,0.15); color: var(--blue); }
+  .method-delete { background: rgba(248,81,73,0.15); color: var(--red); }
+
+  /* ── Flow Diagram ────────────────────────────────────────────── */
+  .flow-lanes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .lane {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+  .lane-label {
+    min-width: 140px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text2);
+  }
+  .lane-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+  .step {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .arrow {
+    color: var(--text2);
+    font-size: 16px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .step-manual   { background: rgba(79,158,255,0.10); border-color: rgba(79,158,255,0.35); color: var(--blue); }
+  .step-strava   { background: rgba(245,166,35,0.10); border-color: rgba(245,166,35,0.35); color: var(--orange); }
+  .step-sync     { background: rgba(163,113,247,0.10); border-color: rgba(163,113,247,0.35); color: var(--purple); }
+  .step-shared   { background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); color: var(--green); }
+  .step-output   { background: rgba(88,200,232,0.10); border-color: rgba(88,200,232,0.35); color: var(--cyan); }
+
+  /* ── Formula Box ─────────────────────────────────────────────── */
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--orange);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 2;
+    margin-bottom: 20px;
+  }
+  .formula-box .comment { color: var(--text2); font-style: italic; }
+  .formula-box .kw { color: var(--purple); }
+  .formula-box .num { color: var(--orange); }
+  .formula-box .var { color: var(--cyan); }
+  .formula-box .op  { color: var(--text2); }
+
+  /* ── Examples ────────────────────────────────────────────────── */
+  .examples { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+  .example-card {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    flex: 1;
+    min-width: 200px;
+  }
+  .example-card .ex-title { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .example-card .ex-xp { font-size: 22px; font-weight: 700; color: var(--orange); margin-bottom: 6px; }
+  .example-card .ex-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ── Dedup Flow ──────────────────────────────────────────────── */
+  .dedup-flow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+  .dedup-node {
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: 1px solid;
+    font-size: 13px;
+    font-weight: 500;
+    position: relative;
+  }
+  .dedup-start   { background: rgba(79,158,255,0.10); border-color: rgba(79,158,255,0.35); color: var(--blue); }
+  .dedup-check   { background: rgba(245,166,35,0.10); border-color: rgba(245,166,35,0.35); color: var(--orange); }
+  .dedup-skip    { background: rgba(248,81,73,0.10); border-color: rgba(248,81,73,0.35); color: var(--red); }
+  .dedup-process { background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); color: var(--green); }
+  .dedup-stuck   { background: rgba(245,166,35,0.10); border-color: rgba(245,166,35,0.35); color: var(--yellow); }
+  .dedup-connector { margin-left: 20px; height: 20px; width: 2px; background: var(--border); }
+  .dedup-branches { display: flex; gap: 20px; margin-top: 0; }
+  .dedup-branch { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+  .dedup-branch-label { font-size: 11px; color: var(--text2); padding: 4px 0 6px 4px; font-style: italic; }
+
+  /* ── Entity Block ────────────────────────────────────────────── */
+  .entity-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .entity-header {
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: monospace;
+    color: var(--purple);
+  }
+  .entity-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px;
+    border-bottom: 1px solid rgba(48,54,61,0.4);
+    font-size: 12px;
+    font-family: monospace;
+  }
+  .entity-field:last-child { border-bottom: none; }
+  .field-name { color: var(--cyan); }
+  .field-type { color: var(--text2); font-size: 11px; }
+  .field-note { color: var(--orange); font-size: 11px; font-style: italic; }
+
+  /* ── OAuth Detail ────────────────────────────────────────────── */
+  .kv-list { display: flex; flex-direction: column; gap: 6px; }
+  .kv-row { display: flex; gap: 12px; align-items: baseline; }
+  .kv-key { min-width: 160px; font-size: 12px; color: var(--text2); font-family: monospace; }
+  .kv-val { font-size: 13px; color: var(--text1); }
+
+  /* ── Mapping Table ───────────────────────────────────────────── */
+  .mapping-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.4); }
+  .mapping-row:last-child { border-bottom: none; }
+  .strava-tags { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+  .strava-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: monospace;
+    background: rgba(245,166,35,0.10);
+    border: 1px solid rgba(245,166,35,0.25);
+    color: var(--orange);
+  }
+  .map-arrow { color: var(--text2); font-size: 18px; flex-shrink: 0; }
+  .internal-type {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+  }
+  .internal-type .emoji { font-size: 18px; }
+  .internal-type .name { font-weight: 600; font-size: 13px; }
+  .default-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: rgba(88,200,232,0.10);
+    border: 1px solid rgba(88,200,232,0.25);
+    color: var(--cyan);
+    font-style: italic;
+  }
+
+  /* ── Not Implemented ─────────────────────────────────────────── */
+  .gap-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .gap-item {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: rgba(248,81,73,0.08);
+    border: 1px solid rgba(248,81,73,0.2);
+    color: #c9706d;
+  }
+
+  /* ── Multiplier badge ────────────────────────────────────────── */
+  .mult { font-weight: 700; font-family: monospace; }
+  .mult-hi  { color: var(--green); }
+  .mult-mid { color: var(--cyan); }
+  .mult-lo  { color: var(--text2); }
+
+  /* ── Dist bonus ──────────────────────────────────────────────── */
+  .dist-bonus { font-size: 12px; font-family: monospace; color: var(--yellow); }
+  .dist-none  { color: var(--border); }
+
+  td.center { text-align: center; }
+
+  /* ── Misc ────────────────────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* ── Provider Badges ─────────────────────────────────────────── */
+  .provider { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .prov-strava   { background: rgba(245,166,35,0.15); color: var(--orange); }
+  .prov-garmin   { background: rgba(63,185,80,0.15); color: var(--green); }
+  .prov-hk       { background: rgba(163,113,247,0.15); color: var(--purple); }
+  .prov-hc       { background: rgba(79,158,255,0.15); color: var(--blue); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ HEADER -->
+<div class="page-header">
+  <h1>⚡ Life-Level — Integration & Activity Engine <span class="badge badge-live">LIVE</span></h1>
+  <p>Complete map of the Strava integration, activity type system, XP/stat calculations, and data flow — as of 2026-03-31</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 1: FLOW -->
+<div class="section">
+  <h2><span class="section-icon">🔄</span> End-to-End Activity Flow</h2>
+
+  <div class="flow-lanes">
+
+    <!-- Manual -->
+    <div>
+      <h3>Path A — Manual Logging</h3>
+      <div class="lane">
+        <div class="lane-steps">
+          <div class="step step-manual">Flutter UI<br><small>Select type, duration</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-manual">POST /api/activity/log<br><small>LogActivityRequest JSON</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-shared">ActivityService<br><small>CalculateGains()</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-shared">CharacterStatPort<br><small>ApplyStatGains()</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-shared">CharacterXpPort<br><small>AwardXp()</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-output">LogActivityResult<br><small>XP + stats + quests</small></div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Webhook -->
+    <div>
+      <h3>Path B — Strava Webhook (automatic)</h3>
+      <div class="lane">
+        <div class="lane-steps">
+          <div class="step step-strava">Strava<br><small>activity.create event</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-strava">POST /strava/webhook<br><small>HMAC-SHA256 verified</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-strava">StravaWebhookService<br><small>Fetch full activity</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-strava">HealthSyncService<br><small>Dedup check</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-shared">ActivityService<br><small>LogExternalActivity()</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-output">ExternalActivityRecord<br><small>WasImported = true</small></div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Manual Sync -->
+    <div>
+      <h3>Path C — Manual Strava Sync (Flutter button)</h3>
+      <div class="lane">
+        <div class="lane-steps">
+          <div class="step step-sync">Flutter<br><small>Sync button tap</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-sync">POST /strava/sync<br><small>Triggers sync</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-strava">Strava API<br><small>/athlete/activities (30d, 50/page)</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-strava">HealthSyncService<br><small>Dedup each activity</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-shared">ActivityService<br><small>LogExternalActivity()</small></div>
+          <span class="arrow">→</span>
+          <div class="step step-output">SyncResult<br><small>Imported / Skipped / Errors</small></div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Downstream -->
+    <div>
+      <h3>Downstream (all paths trigger)</h3>
+      <div class="lane">
+        <div class="lane-steps">
+          <div class="step step-shared">ActivityLoggedEvent</div>
+          <span class="arrow">→</span>
+          <div class="step step-output">QuestProgressListener<br><small>Update quest progress</small></div>
+          <span class="arrow">&</span>
+          <div class="step step-output">StreakListener<br><small>Update streak</small></div>
+          <span class="arrow">&</span>
+          <div class="step step-output">MapDistance<br><small>distanceKm → movement</small></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 2: OAUTH -->
+<div class="section">
+  <h2><span class="section-icon">🔐</span> Strava OAuth & Webhook Security</h2>
+  <div class="grid3">
+
+    <!-- OAuth -->
+    <div class="card">
+      <h3>OAuth Token Exchange</h3>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">endpoint</span><span class="kv-val"><code>https://www.strava.com/oauth/token</code></span></div>
+        <div class="kv-row"><span class="kv-key">grant_type</span><span class="kv-val"><code>authorization_code</code></span></div>
+        <div class="kv-row"><span class="kv-key">client_id</span><span class="kv-val"><code>218444</code></span></div>
+        <div class="kv-row"><span class="kv-key">redirect_uri</span><span class="kv-val">from request</span></div>
+      </div>
+      <hr>
+      <h3 style="margin-top:10px;">Token Refresh</h3>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">grant_type</span><span class="kv-val"><code>refresh_token</code></span></div>
+        <div class="kv-row"><span class="kv-key">trigger window</span><span class="kv-val" style="color:var(--orange)">expires within <strong>5 minutes</strong></span></div>
+        <div class="kv-row"><span class="kv-key">auto-triggered</span><span class="kv-val">before any API call</span></div>
+      </div>
+    </div>
+
+    <!-- StravaConnection entity -->
+    <div class="entity-block" style="align-self:start;">
+      <div class="entity-header">StravaConnection</div>
+      <div class="entity-field"><span class="field-name">Id</span><span class="field-type">Guid PK</span></div>
+      <div class="entity-field"><span class="field-name">UserId</span><span class="field-type">Guid FK</span></div>
+      <div class="entity-field"><span class="field-name">StravaAthleteId</span><span class="field-type">long <span class="field-note">unique index</span></span></div>
+      <div class="entity-field"><span class="field-name">AthleteName</span><span class="field-type">string</span></div>
+      <div class="entity-field"><span class="field-name">AccessToken</span><span class="field-type">string</span></div>
+      <div class="entity-field"><span class="field-name">RefreshToken</span><span class="field-type">string</span></div>
+      <div class="entity-field"><span class="field-name">ExpiresAt</span><span class="field-type">DateTime UTC</span></div>
+      <div class="entity-field"><span class="field-name">IsActive</span><span class="field-type">bool</span></div>
+      <div class="entity-field"><span class="field-name">ConnectedAt</span><span class="field-type">DateTime UTC</span></div>
+    </div>
+
+    <!-- Webhook security -->
+    <div class="card">
+      <h3>Webhook Security</h3>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">challenge (GET)</span><span class="kv-val"><code>hub.verify_token</code> → <code>"lifelevel-webhook-2026"</code></span></div>
+        <div class="kv-row"><span class="kv-key">signature header</span><span class="kv-val"><code>X-Hub-Signature</code></span></div>
+        <div class="kv-row"><span class="kv-key">algorithm</span><span class="kv-val">HMAC-SHA256</span></div>
+        <div class="kv-row"><span class="kv-key">key</span><span class="kv-val">Strava <code>ClientSecret</code></span></div>
+        <div class="kv-row"><span class="kv-key">comparison</span><span class="kv-val" style="color:var(--green)">Fixed-time (timing-attack safe)</span></div>
+      </div>
+      <hr>
+      <h3 style="margin-top:10px;">Webhook Payload (Strava → us)</h3>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">object_type</span><span class="kv-val"><code>"activity"</code></span></div>
+        <div class="kv-row"><span class="kv-key">aspect_type</span><span class="kv-val"><code>"create"</code> only (update/delete ignored)</span></div>
+        <div class="kv-row"><span class="kv-key">owner_id</span><span class="kv-val">Strava athlete ID</span></div>
+        <div class="kv-row"><span class="kv-key">object_id</span><span class="kv-val">Strava activity ID</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:16px;">
+    <h3>Integration Providers (all route same pipeline)</h3>
+    <div class="pill-row">
+      <span class="provider prov-strava">Strava ✓ Live</span>
+      <span class="provider prov-garmin">Garmin ✓ Partial</span>
+      <span class="provider prov-hk">HealthKit (iOS) ✓</span>
+      <span class="provider prov-hc">HealthConnect (Android) ✓</span>
+    </div>
+    <p style="color:var(--text2); font-size:12px; margin-top:8px;">All providers produce <code>ExternalActivityDto</code> → <code>HealthSyncService</code> → <code>ActivityService</code></p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 3: MAPPING -->
+<div class="section">
+  <h2><span class="section-icon">🗺️</span> Activity Type Mapping: Strava → Internal</h2>
+  <p style="color:var(--text2); margin-bottom:16px; font-size:13px;">Handled by <code>ActivityTypeMapper.FromStrava()</code> — maps Strava <code>sport_type</code> strings to the internal <code>ActivityType</code> enum.</p>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="strava-tag">Run</span>
+      <span class="strava-tag">TrailRun</span>
+      <span class="strava-tag">VirtualRun</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">🏃</span><span class="name" style="color:var(--green)">Running</span></div>
+  </div>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="strava-tag">Ride</span>
+      <span class="strava-tag">MountainBikeRide</span>
+      <span class="strava-tag">GravelRide</span>
+      <span class="strava-tag">VirtualRide</span>
+      <span class="strava-tag">EBikeRide</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">🚴</span><span class="name" style="color:var(--cyan)">Cycling</span></div>
+  </div>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="strava-tag">Swim</span>
+      <span class="strava-tag">OpenWaterSwim</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">🏊</span><span class="name" style="color:var(--blue)">Swimming</span></div>
+  </div>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="strava-tag">Hike</span>
+      <span class="strava-tag">Walk</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">🥾</span><span class="name" style="color:var(--yellow)">Hiking</span></div>
+  </div>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="strava-tag">RockClimbing</span>
+      <span class="strava-tag">IceClimbing</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">🧗</span><span class="name" style="color:var(--red)">Climbing</span></div>
+  </div>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="strava-tag">Yoga</span>
+      <span class="strava-tag">Pilates</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">🧘</span><span class="name" style="color:var(--purple)">Yoga</span></div>
+  </div>
+
+  <div class="mapping-row">
+    <div class="strava-tags">
+      <span class="default-tag">everything else (WeightTraining, Crossfit, Soccer, etc.)</span>
+    </div>
+    <span class="map-arrow">→</span>
+    <div class="internal-type"><span class="emoji">💪</span><span class="name" style="color:var(--orange)">Gym</span></div>
+  </div>
+
+  <p style="color:var(--text2); font-size:12px; margin-top:12px;">
+    Strava fields fetched per activity: <code>id</code>, <code>sport_type</code>, <code>moving_time</code> (seconds→minutes), <code>distance</code> (meters→km), <code>calories</code>, <code>start_date_local</code>
+  </p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 4: XP ENGINE -->
+<div class="section">
+  <h2><span class="section-icon">⚡</span> XP & Stat Calculation Engine</h2>
+  <p style="color:var(--text2); margin-bottom:16px; font-size:13px;">All logic lives in <code>ActivityService.CalculateGains()</code> — hardcoded constants, no DB-driven multipliers.</p>
+
+  <div class="formula-box">
+    <span class="comment">// Step 1 — Base XP from duration</span><br>
+    <span class="var">baseXp</span> <span class="op">=</span> <span class="var">durationMinutes</span> <span class="op">×</span> <span class="num">3.0</span><br>
+    <br>
+    <span class="comment">// Step 2 — Distance bonus (activity-specific, per km)</span><br>
+    <span class="kw">if</span> (distanceKm <span class="op">&gt;</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> hasDistanceBonus)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">baseXp</span> <span class="op">+=</span> <span class="var">distanceKm</span> <span class="op">×</span> <span class="var">distanceBonusPerKm</span><br>
+    <br>
+    <span class="comment">// Step 3 — Calorie bonus</span><br>
+    <span class="kw">if</span> (calories <span class="op">&gt;</span> <span class="num">0</span>)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">baseXp</span> <span class="op">+=</span> calories <span class="op">/</span> <span class="num">10.0</span><br>
+    <br>
+    <span class="comment">// Step 4 — Apply activity type multiplier</span><br>
+    <span class="var">finalXp</span> <span class="op">=</span> Round(<span class="var">baseXp</span> <span class="op">×</span> <span class="var">typeMultiplier</span>)
+  </div>
+
+  <!-- Per-activity table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Activity</th>
+        <th>Multiplier</th>
+        <th>Distance Bonus</th>
+        <th class="center">STR</th>
+        <th class="center">END</th>
+        <th class="center">AGI</th>
+        <th class="center">FLX</th>
+        <th class="center">STA</th>
+        <th>XP Example (30 min)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🏃 Running</td>
+        <td><span class="mult mult-hi">×1.2</span></td>
+        <td><span class="dist-bonus">+10 XP/km</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-end">+2</span></td>
+        <td class="center"><span class="stat stat-agi">+1</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td><span style="color:var(--orange)">108 XP</span> <span style="color:var(--text2);font-size:11px;">(+50 per 5 km)</span></td>
+      </tr>
+      <tr>
+        <td>🚴 Cycling</td>
+        <td><span class="mult mult-hi">×1.1</span></td>
+        <td><span class="dist-bonus">+8 XP/km</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-end">+2</span></td>
+        <td class="center"><span class="stat stat-agi">+1</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td><span style="color:var(--orange)">99 XP</span> <span style="color:var(--text2);font-size:11px;">(+40 per 5 km)</span></td>
+      </tr>
+      <tr>
+        <td>💪 Gym</td>
+        <td><span class="mult mult-mid">×1.0</span></td>
+        <td><span class="dist-none">—</span></td>
+        <td class="center"><span class="stat stat-str">+3</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-sta">+1</span></td>
+        <td><span style="color:var(--orange)">90 XP</span></td>
+      </tr>
+      <tr>
+        <td>🧘 Yoga</td>
+        <td><span class="mult mult-lo">×0.8</span></td>
+        <td><span class="dist-none">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-flx">+3</span></td>
+        <td class="center"><span class="stat stat-sta">+1</span></td>
+        <td><span style="color:var(--orange)">72 XP</span></td>
+      </tr>
+      <tr>
+        <td>🏊 Swimming</td>
+        <td><span class="mult mult-hi">×1.2</span></td>
+        <td><span class="dist-none">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-end">+2</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-sta">+2</span></td>
+        <td><span style="color:var(--orange)">108 XP</span></td>
+      </tr>
+      <tr>
+        <td>🥾 Hiking</td>
+        <td><span class="mult mult-mid">×1.0</span></td>
+        <td><span class="dist-bonus">+6 XP/km</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-end">+1</span></td>
+        <td class="center"><span class="stat stat-agi">+1</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat stat-sta">+2</span></td>
+        <td><span style="color:var(--orange)">90 XP</span> <span style="color:var(--text2);font-size:11px;">(+30 per 5 km)</span></td>
+      </tr>
+      <tr>
+        <td>🧗 Climbing</td>
+        <td><span class="mult mult-hi">×1.3</span></td>
+        <td><span class="dist-none">—</span></td>
+        <td class="center"><span class="stat stat-str">+2</span></td>
+        <td class="center"><span class="stat stat-end">+1</span></td>
+        <td class="center"><span class="stat stat-agi">+1</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td class="center"><span class="stat-zero">—</span></td>
+        <td><span style="color:var(--orange)">117 XP</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Example calculations -->
+  <div class="examples">
+    <div class="example-card">
+      <div class="ex-title">🏃 30 min Run + 5 km (no calories)</div>
+      <div class="ex-xp">158 XP</div>
+      <div class="ex-stats">
+        <span class="stat stat-end">+2 END</span>
+        <span class="stat stat-agi">+1 AGI</span>
+      </div>
+      <div style="color:var(--text2); font-size:11px; margin-top:8px;">(30×3=90) × 1.2 = 108 + (5×10=50) = <strong style="color:var(--orange)">158</strong></div>
+    </div>
+    <div class="example-card">
+      <div class="ex-title">💪 30 min Gym (no distance)</div>
+      <div class="ex-xp">90 XP</div>
+      <div class="ex-stats">
+        <span class="stat stat-str">+3 STR</span>
+        <span class="stat stat-sta">+1 STA</span>
+      </div>
+      <div style="color:var(--text2); font-size:11px; margin-top:8px;">(30×3=90) × 1.0 = <strong style="color:var(--orange)">90</strong></div>
+    </div>
+    <div class="example-card">
+      <div class="ex-title">🧘 60 min Yoga (no distance)</div>
+      <div class="ex-xp">144 XP</div>
+      <div class="ex-stats">
+        <span class="stat stat-flx">+3 FLX</span>
+        <span class="stat stat-sta">+1 STA</span>
+      </div>
+      <div style="color:var(--text2); font-size:11px; margin-top:8px;">(60×3=180) × 0.8 = <strong style="color:var(--orange)">144</strong></div>
+    </div>
+    <div class="example-card">
+      <div class="ex-title">🏃 45 min Run + 8 km + 500 kcal</div>
+      <div class="ex-xp">301 XP</div>
+      <div class="ex-stats">
+        <span class="stat stat-end">+2 END</span>
+        <span class="stat stat-agi">+1 AGI</span>
+      </div>
+      <div style="color:var(--text2); font-size:11px; margin-top:8px;">(45×3=135 + 8×10=80 + 500/10=50=265) × 1.2 = <strong style="color:var(--orange)">318</strong></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 5: DATA MODELS -->
+<div class="section">
+  <h2><span class="section-icon">🗃️</span> Data Models</h2>
+  <div class="grid2">
+
+    <div>
+      <h3>Activity Entity (backend)</h3>
+      <div class="entity-block">
+        <div class="entity-header">Activity</div>
+        <div class="entity-field"><span class="field-name">Id</span><span class="field-type">Guid PK</span></div>
+        <div class="entity-field"><span class="field-name">CharacterId</span><span class="field-type">Guid FK</span></div>
+        <div class="entity-field"><span class="field-name">Type</span><span class="field-type">ActivityType enum</span></div>
+        <div class="entity-field"><span class="field-name">DurationMinutes</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">DistanceKm</span><span class="field-type">double</span></div>
+        <div class="entity-field"><span class="field-name">Calories</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">HeartRateAvg</span><span class="field-type">int? <span class="field-note">optional</span></span></div>
+        <div class="entity-field"><span class="field-name">ExternalId</span><span class="field-type">string? <span class="field-note">"strava:{id}"</span></span></div>
+        <div class="entity-field"><span class="field-name">XpGained</span><span class="field-type">long</span></div>
+        <div class="entity-field"><span class="field-name">StrGained</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">EndGained</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">AgiGained</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">FlxGained</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">StaGained</span><span class="field-type">int</span></div>
+        <div class="entity-field"><span class="field-name">LoggedAt</span><span class="field-type">DateTime UTC</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <div>
+        <h3>ExternalActivityRecord (dedup sentinel)</h3>
+        <div class="entity-block">
+          <div class="entity-header">ExternalActivityRecord</div>
+          <div class="entity-field"><span class="field-name">Id</span><span class="field-type">Guid PK</span></div>
+          <div class="entity-field"><span class="field-name">CharacterId</span><span class="field-type">Guid FK</span></div>
+          <div class="entity-field"><span class="field-name">Provider</span><span class="field-type">string <span class="field-note">"Strava" | "Garmin" | …</span></span></div>
+          <div class="entity-field"><span class="field-name">ExternalId</span><span class="field-type">string <span class="field-note">"strava:123456"</span></span></div>
+          <div class="entity-field"><span class="field-name">ActivityStartTime</span><span class="field-type">DateTime UTC</span></div>
+          <div class="entity-field"><span class="field-name">WasImported</span><span class="field-type">bool</span></div>
+          <div class="entity-field"><span class="field-name">ImportedActivityId</span><span class="field-type">Guid? → Activity.Id</span></div>
+          <div class="entity-field"><span class="field-name">SyncedAt</span><span class="field-type">DateTime UTC</span></div>
+        </div>
+        <p style="font-size:11px; color:var(--text2); margin-top:6px;">Unique index: <code>(CharacterId, Provider, ExternalId)</code> — prevents concurrent webhook double-import</p>
+      </div>
+
+      <div>
+        <h3>Flutter ActivityHistoryDto</h3>
+        <div class="entity-block">
+          <div class="entity-header">ActivityHistoryDto (Dart)</div>
+          <div class="entity-field"><span class="field-name">id</span><span class="field-type">String</span></div>
+          <div class="entity-field"><span class="field-name">type</span><span class="field-type">String (enum name)</span></div>
+          <div class="entity-field"><span class="field-name">durationMinutes</span><span class="field-type">int</span></div>
+          <div class="entity-field"><span class="field-name">distanceKm</span><span class="field-type">double</span></div>
+          <div class="entity-field"><span class="field-name">calories</span><span class="field-type">int</span></div>
+          <div class="entity-field"><span class="field-name">heartRateAvg</span><span class="field-type">int?</span></div>
+          <div class="entity-field"><span class="field-name">xpGained, str/end/agi/flx/staGained</span><span class="field-type">int</span></div>
+          <div class="entity-field"><span class="field-name">loggedAt</span><span class="field-type">DateTime</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 6: DEDUP -->
+<div class="section">
+  <h2><span class="section-icon">🔒</span> Deduplication Flow (Torn-Write Safe)</h2>
+  <div class="grid2">
+
+    <div class="dedup-flow">
+      <div class="dedup-node dedup-start">Webhook / Sync event arrives<br><small style="color:var(--text2)">(CharacterId + Provider + ExternalId known)</small></div>
+      <div class="dedup-connector"></div>
+      <div class="dedup-node dedup-check">ExternalActivityRecord exists?</div>
+      <div style="display:flex; gap:32px; margin-top:0;">
+        <!-- YES branch -->
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0;">
+          <div style="height:20px; width:2px; background:var(--border);"></div>
+          <div style="font-size:11px; color:var(--text2); padding:2px 0; font-style:italic;">YES</div>
+          <div class="dedup-node dedup-check">WasImported = true?</div>
+          <div style="display:flex; gap:16px; margin-top:0;">
+            <div style="display:flex; flex-direction:column; align-items:center;">
+              <div style="height:20px; width:2px; background:var(--border);"></div>
+              <div style="font-size:11px; color:var(--text2); font-style:italic;">YES</div>
+              <div class="dedup-node dedup-skip">SKIP ✗<br><small>Already processed</small></div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+              <div style="height:20px; width:2px; background:var(--border);"></div>
+              <div style="font-size:11px; color:var(--text2); font-style:italic;">NO</div>
+              <div class="dedup-node dedup-stuck">STUCK ⚠<br><small>Use /reprocess-stuck</small></div>
+            </div>
+          </div>
+        </div>
+        <!-- NO branch -->
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0;">
+          <div style="height:20px; width:2px; background:var(--border);"></div>
+          <div style="font-size:11px; color:var(--text2); padding:2px 0; font-style:italic;">NO</div>
+          <div class="dedup-node dedup-process">Create sentinel<br><small>WasImported = false</small></div>
+          <div class="dedup-connector"></div>
+          <div class="dedup-node dedup-process">LogExternalActivity()<br><small>Calculate XP + stats</small></div>
+          <div class="dedup-connector"></div>
+          <div class="dedup-node dedup-process">Mark WasImported = true ✓<br><small>Set ImportedActivityId</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Reprocess-Stuck Logic</h3>
+      <p style="color:var(--text2); font-size:13px; margin-bottom:12px;">Endpoint: <code>POST /integrations/health/reprocess-stuck</code></p>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+        <div style="padding:10px; background:#0d1117; border-radius:6px; border-left: 3px solid var(--yellow);">
+          <strong style="color:var(--yellow);">Scenario A — Torn write</strong><br>
+          <span style="color:var(--text2);">Sentinel exists (WasImported=false) but Activity row <em>does</em> exist for ExternalId</span><br>
+          <span style="color:var(--green);">→ Repair: set WasImported=true in-place (no XP re-awarded)</span>
+        </div>
+        <div style="padding:10px; background:#0d1117; border-radius:6px; border-left: 3px solid var(--red);">
+          <strong style="color:var(--red);">Scenario B — True failure</strong><br>
+          <span style="color:var(--text2);">Sentinel exists (WasImported=false) and no Activity row exists</span><br>
+          <span style="color:var(--red);">→ Report error — needs fresh sync from provider</span>
+        </div>
+        <div style="padding:10px; background:#0d1117; border-radius:6px; border-left: 3px solid var(--blue);">
+          <strong style="color:var(--blue);">Race condition protection</strong><br>
+          <span style="color:var(--text2);">Unique constraint on <code>(CharacterId, Provider, ExternalId)</code> blocks concurrent webhooks from creating duplicate sentinels</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 7: API ENDPOINTS -->
+<div class="section">
+  <h2><span class="section-icon">🌐</span> API Endpoints</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Path</th>
+        <th>Purpose</th>
+        <th>Request</th>
+        <th>Response</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="method method-post">POST</span></td>
+        <td><code>/api/activity/log</code></td>
+        <td>Manual activity logging</td>
+        <td><code>LogActivityRequest</code></td>
+        <td><code>LogActivityResult</code> (XP, stats, quests)</td>
+      </tr>
+      <tr>
+        <td><span class="method method-get">GET</span></td>
+        <td><code>/api/activity/history</code></td>
+        <td>Activity feed (last 20)</td>
+        <td>—</td>
+        <td><code>List&lt;ActivityHistoryDto&gt;</code></td>
+      </tr>
+      <tr>
+        <td><span class="method method-get">GET</span></td>
+        <td><code>/api/integrations/strava/status</code></td>
+        <td>Connection status</td>
+        <td>—</td>
+        <td><code>StravaStatusDto</code></td>
+      </tr>
+      <tr>
+        <td><span class="method method-post">POST</span></td>
+        <td><code>/api/integrations/strava/connect</code></td>
+        <td>OAuth callback — exchange code for tokens</td>
+        <td><code>StravaConnectRequest</code> (code, redirect_uri)</td>
+        <td><code>StravaStatusDto</code></td>
+      </tr>
+      <tr>
+        <td><span class="method method-delete">DELETE</span></td>
+        <td><code>/api/integrations/strava/disconnect</code></td>
+        <td>Revoke + remove connection</td>
+        <td>—</td>
+        <td>200 OK</td>
+      </tr>
+      <tr>
+        <td><span class="method method-post">POST</span></td>
+        <td><code>/api/integrations/strava/sync</code></td>
+        <td>Manual sync last 30 days (50 activities max)</td>
+        <td>—</td>
+        <td><code>SyncResult</code> {Imported, Skipped, Errors}</td>
+      </tr>
+      <tr>
+        <td><span class="method method-get">GET</span></td>
+        <td><code>/api/integrations/strava/webhook</code></td>
+        <td>Strava challenge handshake</td>
+        <td>Query: <code>hub.verify_token</code>, <code>hub.challenge</code></td>
+        <td><code>{"hub.challenge": "..."}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method method-post">POST</span></td>
+        <td><code>/api/integrations/strava/webhook</code></td>
+        <td>Incoming activity events (HMAC verified)</td>
+        <td><code>StravaWebhookEvent</code> JSON</td>
+        <td>200 OK (immediate)</td>
+      </tr>
+      <tr>
+        <td><span class="method method-post">POST</span></td>
+        <td><code>/api/integrations/health/sync</code></td>
+        <td>Batch sync from mobile health APIs</td>
+        <td><code>SyncBatchRequest</code></td>
+        <td><code>SyncResult</code></td>
+      </tr>
+      <tr>
+        <td><span class="method method-post">POST</span></td>
+        <td><code>/api/integrations/health/reprocess-stuck</code></td>
+        <td>Repair torn-write failed imports</td>
+        <td>—</td>
+        <td><code>SyncResult</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ SECTION 8: NOT IMPLEMENTED -->
+<div class="section">
+  <h2><span class="section-icon">🚧</span> Not Yet Implemented</h2>
+  <p style="color:var(--text2); font-size:13px; margin-bottom:14px;">Features that are recognized in the design or partially plumbed but not fully built.</p>
+  <div class="gap-list">
+    <span class="gap-item">Activity deletion / editing</span>
+    <span class="gap-item">Activity descriptions &amp; notes</span>
+    <span class="gap-item">Photo uploads per activity</span>
+    <span class="gap-item">Heart rate zone calculations</span>
+    <span class="gap-item">Calories stored as separate column (used only for XP bonus)</span>
+    <span class="gap-item">Custom / user-defined activity types</span>
+    <span class="gap-item">Activity privacy settings</span>
+    <span class="gap-item">XP Storm ×2 multiplier (backend wiring)</span>
+    <span class="gap-item">Streak Shield usage on activity log</span>
+    <span class="gap-item">DB-driven multipliers (all hardcoded)</span>
+    <span class="gap-item">Strava activity update / delete events</span>
+    <span class="gap-item">Pagination on /activity/history (currently last 20 hardcoded)</span>
+  </div>
+</div>
+
+<div style="text-align:center; padding:24px 0 8px; color:var(--text2); font-size:12px; border-top: 1px solid var(--border); margin-top:8px;">
+  Life-Level — Integration Schema · Generated 2026-03-31 · All values reflect production codebase state
+</div>
+
+</body>
+</html>

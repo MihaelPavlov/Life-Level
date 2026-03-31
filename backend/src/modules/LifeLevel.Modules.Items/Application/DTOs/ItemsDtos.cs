@@ -16,6 +16,9 @@ public class ItemDto
     public int AgiBonus { get; set; }
     public int FlxBonus { get; set; }
     public int StaBonus { get; set; }
+    public Guid? CharacterItemId { get; set; }
+    public bool IsEquipped { get; set; }
+    public string Category { get; set; } = string.Empty;
 }
 
 public class EquipmentSlotDto

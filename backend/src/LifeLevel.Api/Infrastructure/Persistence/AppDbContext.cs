@@ -85,6 +85,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Item> Items => Set<Item>();
     public DbSet<CharacterItem> CharacterItems => Set<CharacterItem>();
     public DbSet<EquipmentSlot> EquipmentSlots => Set<EquipmentSlot>();
+    public DbSet<ItemDropRule> ItemDropRules => Set<ItemDropRule>();
 
     // Integrations
     public DbSet<ExternalActivityRecord> ExternalActivityRecords => Set<ExternalActivityRecord>();

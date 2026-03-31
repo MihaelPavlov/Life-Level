@@ -68,12 +68,15 @@ class IntegrationTile extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFe6edf3),
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFe6edf3),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (isConnected) ...[

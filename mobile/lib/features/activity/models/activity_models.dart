@@ -124,3 +124,60 @@ class LogActivityResult {
         bonusXpAwarded: json['bonusXpAwarded'] as int? ?? 0,
       );
 }
+
+class ActivityHistoryDto {
+  final String id;
+  final String type;
+  final int durationMinutes;
+  final double distanceKm;
+  final int calories;
+  final int? heartRateAvg;
+  final int xpGained;
+  final int strGained;
+  final int endGained;
+  final int agiGained;
+  final int flxGained;
+  final int staGained;
+  final DateTime loggedAt;
+
+  const ActivityHistoryDto({
+    required this.id,
+    required this.type,
+    required this.durationMinutes,
+    required this.distanceKm,
+    required this.calories,
+    this.heartRateAvg,
+    required this.xpGained,
+    required this.strGained,
+    required this.endGained,
+    required this.agiGained,
+    required this.flxGained,
+    required this.staGained,
+    required this.loggedAt,
+  });
+
+  factory ActivityHistoryDto.fromJson(Map<String, dynamic> json) =>
+      ActivityHistoryDto(
+        id:              json['id'] as String,
+        type:            json['type'] as String,
+        durationMinutes: json['durationMinutes'] as int,
+        distanceKm:      (json['distanceKm'] as num).toDouble(),
+        calories:        (json['calories'] as int?) ?? 0,
+        heartRateAvg:    json['heartRateAvg'] as int?,
+        xpGained:        (json['xpGained'] as num).toInt(),
+        strGained:       (json['strGained'] as int?) ?? 0,
+        endGained:       (json['endGained'] as int?) ?? 0,
+        agiGained:       (json['agiGained'] as int?) ?? 0,
+        flxGained:       (json['flxGained'] as int?) ?? 0,
+        staGained:       (json['staGained'] as int?) ?? 0,
+        loggedAt:        DateTime.parse(json['loggedAt'] as String),
+      );
+
+  ActivityType? get activityType {
+    try {
+      return ActivityType.values.firstWhere((e) => e.apiValue == type);
+    } catch (_) {
+      return null;
+    }
+  }
+}

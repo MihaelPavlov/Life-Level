@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/level_up_overlay.dart';
-import '../activity/log_activity_screen.dart';
+import '../activity/models/activity_models.dart';
+import '../activity/providers/activity_provider.dart';
+import '../activity/screens/recent_activities_screen.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../quests/models/quest_models.dart'
     show UserQuestProgress, questCategoryEmoji, questCategoryColor;
 import '../quests/providers/quest_provider.dart';
+import '../../core/services/nav_tab_notifier.dart';
 import '../streak/providers/streak_provider.dart';
 import 'home_widgets.dart';
 
@@ -405,30 +408,18 @@ class HomeQuestsCard extends ConsumerWidget {
               );
             },
           ),
-          // "See all" link when there are more than 3 quests
-          questsAsync.whenOrNull(
-            data: (quests) {
-              if (quests.length <= 3) return null;
-              final remaining = quests.length - 3;
-              return Padding(
-                padding: const EdgeInsets.only(top: 4, bottom: 2),
-                child: GestureDetector(
-                  onTap: () {
-                    // The shell handles navigation — navigate by switching tab.
-                    // Fallback: do nothing. The user can tap the Quests tab.
-                  },
-                  child: Text(
-                    '+$remaining more — See all →',
-                    style: const TextStyle(
-                      color: AppColors.blue,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ) ?? const SizedBox.shrink(),
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: () => NavTabNotifier.switchTo('quests'),
+            child: const Text(
+              'See all quests →',
+              style: TextStyle(
+                color: AppColors.blue,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -490,105 +481,53 @@ class _QuestLoadingRows extends StatelessWidget {
   }
 }
 
-// ── LAST ACTIVITY CARD ────────────────────────────────────────────────────────────
-class HomeLastActivityCard extends StatelessWidget {
-  const HomeLastActivityCard({super.key});
+// ── RECENT ACTIVITIES CARD ────────────────────────────────────────────────────
+class HomeRecentActivitiesCard extends ConsumerWidget {
+  const HomeRecentActivitiesCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(activityHistoryProvider);
     return HomeCard(
       borderColor: AppColors.green.withValues(alpha: 0.28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           HomeSectionTitle(
-            label: 'LAST ACTIVITY',
-            action: '2 hours ago',
-          ),
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: AppColors.green.withValues(alpha: 0.1),
-                  border: Border.all(
-                      color: AppColors.green.withValues(alpha: 0.25)),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: const Center(
-                    child: Text('🏃', style: TextStyle(fontSize: 22))),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Morning Run',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '5.2 km · 28:14 · Avg 5:26/km · 156 bpm',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      children: [
-                        HomeGainChip(label: '+450 XP', color: AppColors.orange),
-                        HomeGainChip(label: '+2 END', color: AppColors.green),
-                        HomeGainChip(label: '+2 AGI', color: AppColors.blue),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Log Activity button
-          GestureDetector(
-            onTap: () => Navigator.push(
+            label: 'RECENT ACTIVITIES',
+            action: 'View all →',
+            onActionTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const LogActivityScreen(),
-                fullscreenDialog: true,
+              MaterialPageRoute(builder: (_) => const RecentActivitiesScreen()),
+            ),
+          ),
+          const SizedBox(height: 4),
+          historyAsync.when(
+            loading: () => const _ActivityLoadingRows(),
+            error: (_, __) => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'Failed to load activities.',
+                style: TextStyle(color: AppColors.red, fontSize: 12),
               ),
             ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.blue.withValues(alpha: 0.1),
-                border: Border.all(
-                    color: AppColors.blue.withValues(alpha: 0.35)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('💪', style: TextStyle(fontSize: 15)),
-                  SizedBox(width: 6),
-                  Text(
-                    'Log Activity',
-                    style: TextStyle(
-                      color: AppColors.blue,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
+            data: (history) {
+              if (history.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'No activities yet. Log your first workout!',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
-                ],
-              ),
-            ),
+                );
+              }
+              return Column(
+                children: history
+                    .take(5)
+                    .map((a) => _ActivityRow(activity: a))
+                    .toList(),
+              );
+            },
           ),
         ],
       ),
@@ -596,12 +535,127 @@ class HomeLastActivityCard extends StatelessWidget {
   }
 }
 
-// ── CHARACTER STATS ROW ───────────────────────────────────────────────────────────
-class HomeStatsRow extends StatelessWidget {
-  const HomeStatsRow({super.key});
+class _ActivityRow extends StatelessWidget {
+  final ActivityHistoryDto activity;
+
+  const _ActivityRow({required this.activity});
 
   @override
   Widget build(BuildContext context) {
+    final at = activity.activityType;
+    final emoji = at?.emoji ?? '🏃';
+    final name = at?.displayName ?? activity.type;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.green.withValues(alpha: 0.1),
+              border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 18)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _subLine(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              HomeGainChip(
+                label: '+${activity.xpGained} XP',
+                color: AppColors.orange,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                _timeAgo(activity.loggedAt),
+                style: const TextStyle(
+                  fontSize: 9,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _subLine() {
+    final parts = ['${activity.durationMinutes} min'];
+    if (activity.distanceKm > 0) {
+      parts.add('${activity.distanceKm.toStringAsFixed(1)} km');
+    }
+    return parts.join(' · ');
+  }
+
+  String _timeAgo(DateTime loggedAt) {
+    final now = DateTime.now().toUtc();
+    final utc = loggedAt.isUtc ? loggedAt : loggedAt.toUtc();
+    final diff = now.difference(utc);
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays == 1) return 'yesterday';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    return '${utc.day}/${utc.month}';
+  }
+}
+
+class _ActivityLoadingRows extends StatelessWidget {
+  const _ActivityLoadingRows();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        3,
+        (_) => Container(
+          height: 38,
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── CHARACTER STATS ROW ───────────────────────────────────────────────────────────
+class HomeStatsRow extends ConsumerWidget {
+  const HomeStatsRow({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(characterProfileProvider).valueOrNull;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
@@ -610,15 +664,15 @@ class HomeStatsRow extends StatelessWidget {
           HomeSectionTitle(label: 'CHARACTER STATS'),
           Row(
             children: [
-              HomeStatGem(value: '84', label: 'STR', color: AppColors.red),
+              HomeStatGem(value: '${profile?.strength ?? '--'}', label: 'STR', color: AppColors.red),
               const SizedBox(width: 6),
-              HomeStatGem(value: '71', label: 'END', color: AppColors.green),
+              HomeStatGem(value: '${profile?.endurance ?? '--'}', label: 'END', color: AppColors.green),
               const SizedBox(width: 6),
-              HomeStatGem(value: '92', label: 'AGI', color: AppColors.blue),
+              HomeStatGem(value: '${profile?.agility ?? '--'}', label: 'AGI', color: AppColors.blue),
               const SizedBox(width: 6),
-              HomeStatGem(value: '65', label: 'FLX', color: AppColors.purple),
+              HomeStatGem(value: '${profile?.flexibility ?? '--'}', label: 'FLX', color: AppColors.purple),
               const SizedBox(width: 6),
-              HomeStatGem(value: '78', label: 'STA', color: AppColors.orange),
+              HomeStatGem(value: '${profile?.stamina ?? '--'}', label: 'STA', color: AppColors.orange),
             ],
           ),
         ],

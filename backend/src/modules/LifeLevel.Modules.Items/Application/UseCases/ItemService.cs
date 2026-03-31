@@ -122,7 +122,7 @@ public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead)
             .Include(ci => ci.Item)
             .ToListAsync();
 
-        return items.Select(ci => MapItemDto(ci.Item)).ToList();
+        return items.Select(ci => MapInventoryItemDto(ci)).ToList();
     }
 
     private static ItemDto MapItemDto(Item item) => new()
@@ -139,5 +139,25 @@ public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead)
         AgiBonus = item.AgiBonus,
         FlxBonus = item.FlxBonus,
         StaBonus = item.StaBonus,
+        Category = item.Category.ToString(),
+    };
+
+    private static ItemDto MapInventoryItemDto(CharacterItem ci) => new()
+    {
+        Id = ci.Item.Id,
+        Name = ci.Item.Name,
+        Description = ci.Item.Description,
+        Icon = ci.Item.Icon,
+        Rarity = ci.Item.Rarity.ToString(),
+        SlotType = ci.Item.SlotType.ToString(),
+        XpBonusPct = ci.Item.XpBonusPct,
+        StrBonus = ci.Item.StrBonus,
+        EndBonus = ci.Item.EndBonus,
+        AgiBonus = ci.Item.AgiBonus,
+        FlxBonus = ci.Item.FlxBonus,
+        StaBonus = ci.Item.StaBonus,
+        CharacterItemId = ci.Id,
+        IsEquipped = ci.IsEquipped,
+        Category = ci.Item.Category.ToString(),
     };
 }

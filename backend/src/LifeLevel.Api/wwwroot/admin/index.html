@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLevel Admin — Items</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #040810;
+    --bg2:       #080e14;
+    --surface:   #161b22;
+    --surface2:  #1e2632;
+    --border:    #30363d;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --blue:      #4f9eff;
+    --purple:    #a371f7;
+    --orange:    #f5a623;
+    --red:       #f85149;
+    --green:     #3fb950;
+    --radius:    8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  header h1 { font-size: 20px; font-weight: 700; color: var(--blue); }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  .token-row label { color: var(--text2); font-size: 12px; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  select:focus,
+  textarea:focus { border-color: var(--blue); }
+
+  #tokenInput { width: 420px; }
+
+  button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  button.danger { background: var(--red); }
+  button.success { background: var(--green); }
+  button.sm { padding: 4px 10px; font-size: 12px; }
+
+  /* Tabs */
+  nav.tabs {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 24px;
+  }
+  nav.tabs button {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text2);
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  main { padding: 24px; max-width: 1400px; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: var(--radius);
+    font-size: 13px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 1000; max-width: 340px;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok { border-left: 4px solid var(--green); }
+  #toast.err { border-left: 4px solid var(--red); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:hover td { background: var(--surface2); }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+  .badge-Common    { background: #2d3f2d; color: var(--green); }
+  .badge-Uncommon  { background: #1e3240; color: var(--blue); }
+  .badge-Rare      { background: #2a2250; color: var(--purple); }
+  .badge-Epic      { background: #3d2a00; color: var(--orange); }
+  .badge-Legendary { background: #3d0c0c; color: var(--red); }
+
+  .badge-Tracker    { background: #1a2233; color: #7ec8ff; }
+  .badge-Clothing   { background: #1e2d1e; color: #7ee87e; }
+  .badge-Footwear   { background: #2d1e2d; color: #c87ef7; }
+  .badge-Accessory  { background: #2d2200; color: var(--orange); }
+  .badge-Consumable { background: #2d0e0e; color: #ff9e9e; }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .section-header h2 { font-size: 16px; font-weight: 700; }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(4,8,16,.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 540px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  /* Drop rule panel */
+  .rule-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .rule-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .rule-card .rule-info { flex: 1; }
+  .rule-card .rule-info strong { font-size: 13px; }
+  .rule-card .rule-info p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .rule-card .rule-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* Grant tab */
+  .grant-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .grant-form h2 { font-size: 16px; font-weight: 700; }
+
+  .stat { color: var(--text2); font-size: 12px; }
+  .stat span { color: var(--blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Items Admin</h1>
+  <div style="display:flex;gap:10px">
+    <a href="index.html" id="linkItems" style="color:var(--blue);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--blue);border-radius:8px">⚙️ Items</a>
+    <a href="map.html" id="linkMap" style="color:var(--text2);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:8px">🗺️ Map</a>
+  </div>
+  <div class="token-row">
+    <label for="tokenInput">JWT Token</label>
+    <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
+    <button onclick="saveToken()">Save</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="active" onclick="switchTab('items', this)">Items</button>
+  <button onclick="switchTab('droprules', this)">Drop Rules</button>
+  <button onclick="switchTab('grant', this)">Grant Item</button>
+</nav>
+
+<main>
+
+  <!-- ===== ITEMS TAB ===== -->
+  <div id="tab-items" class="tab-panel active">
+    <div class="section-header">
+      <h2>Item Catalog</h2>
+      <button onclick="openItemModal(null)">+ Add Item</button>
+      <button class="secondary" onclick="loadItems()">Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Icon</th>
+            <th>Name</th>
+            <th>Rarity</th>
+            <th>Category</th>
+            <th>Slot</th>
+            <th>XP%</th>
+            <th>STR</th>
+            <th>END</th>
+            <th>AGI</th>
+            <th>FLX</th>
+            <th>STA</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="itemsTableBody">
+          <tr><td colspan="12" style="color:var(--text2);text-align:center;padding:32px">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== DROP RULES TAB ===== -->
+  <div id="tab-droprules" class="tab-panel">
+    <div class="section-header">
+      <h2>Drop Rules</h2>
+      <select id="drItemSelect" onchange="loadDropRules()" style="width:260px">
+        <option value="">— Select an item —</option>
+      </select>
+      <button onclick="openRuleModal(null)" id="addRuleBtn" disabled>+ Add Rule</button>
+    </div>
+    <div id="ruleList" class="rule-list">
+      <p style="color:var(--text2);font-size:13px">Select an item above to view its drop rules.</p>
+    </div>
+  </div>
+
+  <!-- ===== GRANT TAB ===== -->
+  <div id="tab-grant" class="tab-panel">
+    <div class="grant-form">
+      <h2>Grant Item to User</h2>
+      <div class="field">
+        <label>User ID (GUID)</label>
+        <input type="text" id="grantUserId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </div>
+      <div class="field">
+        <label>Item</label>
+        <select id="grantItemSelect">
+          <option value="">— Select an item —</option>
+        </select>
+      </div>
+      <button class="success" onclick="grantItem()">Grant Item</button>
+      <div id="grantResult" style="font-size:13px;color:var(--text2)"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== ITEM MODAL ===== -->
+<div class="modal-backdrop" id="itemModal">
+  <div class="modal">
+    <h3 id="itemModalTitle">Add Item</h3>
+    <div class="form-grid">
+      <input type="hidden" id="im_id">
+      <div class="field full">
+        <label>Name</label>
+        <input type="text" id="im_name" placeholder="Apex GPS Pro">
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea id="im_description" rows="2" placeholder="Item description…"></textarea>
+      </div>
+      <div class="field">
+        <label>Icon (emoji)</label>
+        <input type="text" id="im_icon" placeholder="⌚">
+      </div>
+      <div class="field">
+        <label>Rarity</label>
+        <select id="im_rarity">
+          <option>Common</option>
+          <option>Uncommon</option>
+          <option>Rare</option>
+          <option>Epic</option>
+          <option>Legendary</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="im_category">
+          <option>Tracker</option>
+          <option>Clothing</option>
+          <option>Footwear</option>
+          <option>Accessory</option>
+          <option>Consumable</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Slot Type</label>
+        <select id="im_slotType">
+          <option>Head</option>
+          <option>Chest</option>
+          <option>Hands</option>
+          <option>Feet</option>
+          <option>Accessory1</option>
+          <option>Accessory2</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>XP Bonus %</label>
+        <input type="number" id="im_xpBonusPct" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>STR Bonus</label>
+        <input type="number" id="im_strBonus" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>END Bonus</label>
+        <input type="number" id="im_endBonus" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>AGI Bonus</label>
+        <input type="number" id="im_agiBonus" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>FLX Bonus</label>
+        <input type="number" id="im_flxBonus" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>STA Bonus</label>
+        <input type="number" id="im_staBonus" value="0" min="0">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('itemModal')">Cancel</button>
+      <button onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DROP RULE MODAL ===== -->
+<div class="modal-backdrop" id="ruleModal">
+  <div class="modal">
+    <h3 id="ruleModalTitle">Add Drop Rule</h3>
+    <div class="form-grid">
+      <input type="hidden" id="rm_id">
+      <div class="field">
+        <label>Trigger Type</label>
+        <select id="rm_triggerType">
+          <option>Manual</option>
+          <option>ZoneCompletion</option>
+          <option>StatMilestone</option>
+          <option>IntegrationConnect</option>
+          <option>RandomDrop</option>
+          <option>LevelReached</option>
+          <option>QuestCompletion</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Drop Chance %</label>
+        <input type="number" id="rm_dropChancePct" value="100" min="1" max="100">
+      </div>
+      <div class="field full">
+        <label>Trigger Parameters (JSON)</label>
+        <textarea id="rm_triggerParameters" rows="3" placeholder='{"level":5}'>{}</textarea>
+      </div>
+      <div class="field">
+        <label>Enabled</label>
+        <select id="rm_isEnabled">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('ruleModal')">Cancel</button>
+      <button onclick="saveRule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '';  // same origin
+
+function getToken() {
+  return localStorage.getItem('ll_admin_token') || '';
+}
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  localStorage.setItem('ll_admin_token', t);
+  toast('Token saved', 'ok');
+  loadItems();
+  populateItemSelects();
+}
+
+function headers() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, { ...opts, headers: { ...headers(), ...(opts.headers || {}) } });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => res.statusText);
+    throw new Error(txt || res.statusText);
+  }
+  try { return await res.json(); } catch { return null; }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'items') loadItems();
+  if (id === 'droprules') populateDropRuleItemSelect();
+  if (id === 'grant') populateGrantItemSelect();
+}
+
+// ── Modals ─────────────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-backdrop').forEach(b =>
+  b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); }));
+
+// ── Items tab ──────────────────────────────────────────────────────────────
+let allItems = [];
+
+async function loadItems() {
+  const tbody = document.getElementById('itemsTableBody');
+  tbody.innerHTML = '<tr><td colspan="12" style="color:var(--text2);text-align:center;padding:32px">Loading…</td></tr>';
+  try {
+    allItems = await apiFetch('/api/admin/items');
+    renderItemsTable(allItems);
+    populateItemSelects();
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="12" style="color:var(--red);text-align:center;padding:32px">${e.message}</td></tr>`;
+  }
+}
+
+function rarityBadge(r) { return `<span class="badge badge-${r}">${r}</span>`; }
+function categoryBadge(c) { return `<span class="badge badge-${c}">${c}</span>`; }
+
+function renderItemsTable(items) {
+  const tbody = document.getElementById('itemsTableBody');
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="12" style="color:var(--text2);text-align:center;padding:32px">No items found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = items.map(i => `
+    <tr>
+      <td style="font-size:20px">${i.icon}</td>
+      <td><strong>${i.name}</strong><br><span style="color:var(--text2);font-size:11px">${i.id.slice(0,8)}…</span></td>
+      <td>${rarityBadge(i.rarity)}</td>
+      <td>${categoryBadge(i.category)}</td>
+      <td style="color:var(--text2)">${i.slotType}</td>
+      <td>${i.xpBonusPct ? '<span style="color:var(--orange)">+' + i.xpBonusPct + '%</span>' : '<span style="color:var(--text2)">—</span>'}</td>
+      <td class="stat">${stat(i.strBonus)}</td>
+      <td class="stat">${stat(i.endBonus)}</td>
+      <td class="stat">${stat(i.agiBonus)}</td>
+      <td class="stat">${stat(i.flxBonus)}</td>
+      <td class="stat">${stat(i.staBonus)}</td>
+      <td>
+        <button class="sm secondary" onclick='openItemModal(${JSON.stringify(i)})'>Edit</button>
+        <button class="sm danger" style="margin-left:4px" onclick="deleteItem('${i.id}')">Del</button>
+      </td>
+    </tr>`).join('');
+}
+
+function stat(v) { return v ? `<span>${v}</span>` : '<span style="color:var(--border)">0</span>'; }
+
+function openItemModal(item) {
+  document.getElementById('itemModalTitle').textContent = item ? 'Edit Item' : 'Add Item';
+  document.getElementById('im_id').value       = item?.id ?? '';
+  document.getElementById('im_name').value     = item?.name ?? '';
+  document.getElementById('im_description').value = item?.description ?? '';
+  document.getElementById('im_icon').value     = item?.icon ?? '';
+  setSelect('im_rarity', item?.rarity ?? 'Common');
+  setSelect('im_category', item?.category ?? 'Tracker');
+  setSelect('im_slotType', item?.slotType ?? 'Accessory1');
+  document.getElementById('im_xpBonusPct').value = item?.xpBonusPct ?? 0;
+  document.getElementById('im_strBonus').value   = item?.strBonus ?? 0;
+  document.getElementById('im_endBonus').value   = item?.endBonus ?? 0;
+  document.getElementById('im_agiBonus').value   = item?.agiBonus ?? 0;
+  document.getElementById('im_flxBonus').value   = item?.flxBonus ?? 0;
+  document.getElementById('im_staBonus').value   = item?.staBonus ?? 0;
+  document.getElementById('itemModal').classList.add('open');
+}
+
+function setSelect(id, value) {
+  const sel = document.getElementById(id);
+  for (const opt of sel.options) {
+    if (opt.value === value) { sel.value = value; return; }
+  }
+}
+
+function getItemPayload() {
+  return {
+    name:        document.getElementById('im_name').value,
+    description: document.getElementById('im_description').value,
+    icon:        document.getElementById('im_icon').value,
+    rarity:      document.getElementById('im_rarity').value,
+    category:    document.getElementById('im_category').value,
+    slotType:    document.getElementById('im_slotType').value,
+    xpBonusPct:  +document.getElementById('im_xpBonusPct').value,
+    strBonus:    +document.getElementById('im_strBonus').value,
+    endBonus:    +document.getElementById('im_endBonus').value,
+    agiBonus:    +document.getElementById('im_agiBonus').value,
+    flxBonus:    +document.getElementById('im_flxBonus').value,
+    staBonus:    +document.getElementById('im_staBonus').value,
+  };
+}
+
+async function saveItem() {
+  const id = document.getElementById('im_id').value;
+  const payload = getItemPayload();
+  try {
+    if (id) {
+      await apiFetch('/api/admin/items/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+      toast('Item updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/items', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Item created', 'ok');
+    }
+    closeModal('itemModal');
+    await loadItems();
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+async function deleteItem(id) {
+  if (!confirm('Delete this item? This also deletes associated drop rules and character items.')) return;
+  try {
+    await apiFetch('/api/admin/items/' + id, { method: 'DELETE' });
+    toast('Item deleted', 'ok');
+    await loadItems();
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── Drop Rules tab ─────────────────────────────────────────────────────────
+let currentDropRuleItemId = null;
+
+function populateDropRuleItemSelect() {
+  const sel = document.getElementById('drItemSelect');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select an item —</option>';
+  allItems.forEach(i => {
+    const opt = document.createElement('option');
+    opt.value = i.id;
+    opt.textContent = i.icon + ' ' + i.name;
+    sel.appendChild(opt);
+  });
+  if (prev) { sel.value = prev; loadDropRules(); }
+}
+
+async function loadDropRules() {
+  const itemId = document.getElementById('drItemSelect').value;
+  const btn = document.getElementById('addRuleBtn');
+  if (!itemId) {
+    document.getElementById('ruleList').innerHTML = '<p style="color:var(--text2);font-size:13px">Select an item above to view its drop rules.</p>';
+    btn.disabled = true;
+    currentDropRuleItemId = null;
+    return;
+  }
+  currentDropRuleItemId = itemId;
+  btn.disabled = false;
+  const container = document.getElementById('ruleList');
+  container.innerHTML = '<p style="color:var(--text2);font-size:13px">Loading…</p>';
+  try {
+    const rules = await apiFetch('/api/admin/items/' + itemId + '/drop-rules');
+    if (!rules.length) {
+      container.innerHTML = '<p style="color:var(--text2);font-size:13px">No drop rules yet. Add one above.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    rules.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'rule-card';
+      div.innerHTML = `
+        <div class="rule-info">
+          <strong>${r.triggerType}</strong>
+          <p>Chance: <strong style="color:var(--blue)">${r.dropChancePct}%</strong> &nbsp;|&nbsp; Enabled: <strong style="color:${r.isEnabled ? 'var(--green)' : 'var(--red)'}">${r.isEnabled ? 'Yes' : 'No'}</strong></p>
+          <p style="font-family:monospace;font-size:11px;margin-top:4px;color:var(--text2)">${r.triggerParameters}</p>
+        </div>
+        <div class="rule-actions">
+          <button class="sm secondary" onclick='openRuleModal(${JSON.stringify(r)})'>Edit</button>
+          <button class="sm danger" onclick="deleteRule('${r.id}')">Del</button>
+        </div>`;
+      container.appendChild(div);
+    });
+  } catch (e) {
+    container.innerHTML = `<p style="color:var(--red);font-size:13px">${e.message}</p>`;
+  }
+}
+
+function openRuleModal(rule) {
+  document.getElementById('ruleModalTitle').textContent = rule ? 'Edit Drop Rule' : 'Add Drop Rule';
+  document.getElementById('rm_id').value = rule?.id ?? '';
+  setSelect('rm_triggerType', rule?.triggerType ?? 'Manual');
+  document.getElementById('rm_dropChancePct').value = rule?.dropChancePct ?? 100;
+  document.getElementById('rm_triggerParameters').value = rule?.triggerParameters ?? '{}';
+  setSelect('rm_isEnabled', rule ? String(rule.isEnabled) : 'true');
+  document.getElementById('ruleModal').classList.add('open');
+}
+
+async function saveRule() {
+  const id = document.getElementById('rm_id').value;
+  const payload = {
+    triggerType:       document.getElementById('rm_triggerType').value,
+    triggerParameters: document.getElementById('rm_triggerParameters').value,
+    dropChancePct:     +document.getElementById('rm_dropChancePct').value,
+    isEnabled:         document.getElementById('rm_isEnabled').value === 'true',
+  };
+  try {
+    if (id) {
+      await apiFetch('/api/admin/items/drop-rules/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+      toast('Rule updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/items/' + currentDropRuleItemId + '/drop-rules', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Rule added', 'ok');
+    }
+    closeModal('ruleModal');
+    await loadDropRules();
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+async function deleteRule(id) {
+  if (!confirm('Delete this drop rule?')) return;
+  try {
+    await apiFetch('/api/admin/items/drop-rules/' + id, { method: 'DELETE' });
+    toast('Rule deleted', 'ok');
+    await loadDropRules();
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── Grant tab ──────────────────────────────────────────────────────────────
+function populateGrantItemSelect() {
+  const sel = document.getElementById('grantItemSelect');
+  sel.innerHTML = '<option value="">— Select an item —</option>';
+  allItems.forEach(i => {
+    const opt = document.createElement('option');
+    opt.value = i.id;
+    opt.textContent = i.icon + ' ' + i.name + ' (' + i.rarity + ')';
+    sel.appendChild(opt);
+  });
+}
+
+async function grantItem() {
+  const userId = document.getElementById('grantUserId').value.trim();
+  const itemId = document.getElementById('grantItemSelect').value;
+  const resultEl = document.getElementById('grantResult');
+  if (!userId || !itemId) { toast('Fill in both User ID and Item', 'err'); return; }
+  try {
+    const res = await apiFetch('/api/admin/items/grant', { method: 'POST', body: JSON.stringify({ userId, itemId }) });
+    resultEl.innerHTML = `<span style="color:var(--green)">Granted! CharacterItem ID: ${res.id}</span>`;
+    toast('Item granted', 'ok');
+  } catch (e) {
+    resultEl.innerHTML = `<span style="color:var(--red)">${e.message}</span>`;
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── Shared helpers ─────────────────────────────────────────────────────────
+function populateItemSelects() {
+  populateDropRuleItemSelect();
+  populateGrantItemSelect();
+}
+
+// ── Cross-page nav with token ──────────────────────────────────────────────
+document.getElementById('linkMap').addEventListener('click', e => {
+  const t = getToken();
+  if (t) { e.preventDefault(); window.location.href = 'map.html?token=' + encodeURIComponent(t); }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+const qToken = new URLSearchParams(window.location.search).get('token');
+if (qToken) {
+  localStorage.setItem('ll_admin_token', qToken);
+  document.getElementById('tokenInput').value = qToken;
+} else {
+  const savedToken = getToken();
+  if (savedToken) document.getElementById('tokenInput').value = savedToken;
+}
+loadItems();
+</script>
+</body>
+</html>

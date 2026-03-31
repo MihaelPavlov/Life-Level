@@ -14,7 +14,9 @@ import '../../features/quests/quests_screen.dart';
 import '../../features/map/map_screen.dart';
 import '../../features/map/world_map_screen.dart';
 import '../services/map_tab_notifier.dart';
+import '../services/nav_tab_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
+import '../../features/home/providers/map_journey_provider.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/profile/profile_screen.dart';
 import 'shell_constants.dart';
@@ -68,6 +70,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final Animation<double>   _hintAnim;
   Timer? _hintTimer;
   late final StreamSubscription<int> _levelUpSub;
+  late final StreamSubscription<String> _navTabSub;
 
   final _fabKey = GlobalKey();
 
@@ -98,6 +101,10 @@ class _MainShellState extends ConsumerState<MainShell>
     WidgetsBinding.instance.addObserver(this);
     _levelUpSub = LevelUpNotifier.stream.listen((newLevel) {
       if (mounted) showLevelUpScreen(context, newLevel);
+    });
+    _navTabSub = NavTabNotifier.stream.listen((tabId) {
+      final navIndex = _navIds.indexOf(tabId);
+      if (navIndex != -1 && mounted) setState(() => _tabIndex = navIndex);
     });
     _ringIds = List.from(widget.initialRingIds ?? kDefaultRingIds);
     _navIds  = List.from(widget.initialNavIds  ?? kDefaultNavIds);
@@ -151,6 +158,7 @@ class _MainShellState extends ConsumerState<MainShell>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _levelUpSub.cancel();
+    _navTabSub.cancel();
     _hintTimer?.cancel();
     _openCtrl.dispose();
     _snapCtrl.dispose();
@@ -365,6 +373,7 @@ class _MainShellState extends ConsumerState<MainShell>
                     setState(() { _tabIndex = i; _worldOpen = false; });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
+                      ref.invalidate(mapJourneyProvider);
                     }
                     if (_navIds[i] == 'map') {
                       MapTabNotifier.notify();

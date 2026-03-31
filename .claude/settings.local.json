@@ -215,7 +215,23 @@
       "Bash(powershell.exe -Command \"Get-NetTCPConnection -LocalPort 5128 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \\\\$_.OwningProcess -Force -ErrorAction SilentlyContinue }; Get-Process -Name 'LifeLevel.Api' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Write-Host 'stopped'\")",
       "Bash(grep -r ActivityHistory C:/Users/MihaelPavlov/repos/Home/Life-Level/mobile/lib --include=*.dart)",
       "Bash(grep -r \"lastActivity\\\\|ActivityHistory\\\\|UserActivity\" C:/Users/MihaelPavlov/repos/Home/Life-Level --include=*.cs --include=*.dart)",
-      "Bash(find C:/Users/MihaelPavlov/repos/Home/Life-Level/backend/src/LifeLevel.Api -type f -name *activity* -o -name *Activity*)"
+      "Bash(find C:/Users/MihaelPavlov/repos/Home/Life-Level/backend/src/LifeLevel.Api -type f -name *activity* -o -name *Activity*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Levelbackend -type f -name *HealthSync* -o -name *Activity*Service*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Levelbackend -type f -name *ActivityRequest* -o -name *ActivityResponse*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Levelbackend -type f -name *ActivityType* -o -name *Enums*)",
+      "Bash(find C:UsersMihaelPavlovreposHomeLife-Levelbackend -type f -name Ports.cs -o -name *IActivity*Port*)",
+      "Bash(wmic process:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 48376 -Force -ErrorAction SilentlyContinue; Get-Process -Name 'LifeLevel.Api' -ErrorAction SilentlyContinue | Stop-Process -Force; Get-Process -Name 'dotnet' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host 'killed'\")",
+      "Bash(powershell -Command \"Get-Process -Name 'dotnet','LifeLevel.Api' -ErrorAction SilentlyContinue | Select-Object Id, Name, Path\")",
+      "Bash(powershell -Command \"Get-Process -Name 'dotnet','LifeLevel.Api' -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep 2; Write-Host 'stopped'\")",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(cmd /c \"taskkill /PID 48376 /F\")",
+      "Bash(cmd /c \"taskkill /IM LifeLevel.Api.exe /F 2>&1 && echo Killed || echo Not running\")",
+      "Bash(powershell -Command \"Get-Process -Name 'dart','flutter' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host 'stopped'\")",
+      "Bash(powershell -Command \"Get-Process -Name 'dotnet' -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime | Format-Table\")",
+      "Bash(netstat -ano)",
+      "Bash(find /c/Users/MihaelPavlov/repos/Home/Life-Level/backend/src -type f -name *BossController.cs -o -name *ActivityController.cs)",
+      "Bash(find /c/Users/MihaelPavlov/repos/Home/Life-Level/backend/src -type f \\\\\\(-name *MapController.cs -o -name *IntegrationService.cs -o -name *HealthSync* -o -name *StravaService* \\\\\\))"
     ]
   }
 }

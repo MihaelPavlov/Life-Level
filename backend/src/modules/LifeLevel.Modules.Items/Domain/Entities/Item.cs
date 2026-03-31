@@ -9,6 +9,7 @@ public class Item
     public string Description { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty; // emoji
     public ItemRarity Rarity { get; set; }
+    public ItemCategory Category { get; set; }
     public EquipmentSlotType SlotType { get; set; }
     public int XpBonusPct { get; set; }
     public int StrBonus { get; set; }

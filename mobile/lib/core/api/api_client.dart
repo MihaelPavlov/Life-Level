@@ -34,6 +34,24 @@ class ApiClient {
 
   static Future<String?> getToken() => _storage.read(key: 'jwt_token');
 
+  static String get _webBase {
+    return _baseUrl.endsWith('/api')
+        ? _baseUrl.substring(0, _baseUrl.length - 4)
+        : _baseUrl;
+  }
+
+  static Future<String> get adminPanelUrl async {
+    final token = await _storage.read(key: 'jwt_token');
+    final base = '$_webBase/admin/index.html';
+    return token != null ? '$base?token=${Uri.encodeComponent(token)}' : base;
+  }
+
+  static Future<String> get adminMapUrl async {
+    final token = await _storage.read(key: 'jwt_token');
+    final base = '$_webBase/admin/map.html';
+    return token != null ? '$base?token=${Uri.encodeComponent(token)}' : base;
+  }
+
   static Future<bool> isAdmin() async {
     final token = await _storage.read(key: 'jwt_token');
     if (token == null) return false;

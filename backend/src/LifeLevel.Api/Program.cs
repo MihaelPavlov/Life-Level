@@ -53,7 +53,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opts =>
+    opts.AddPolicy("Admin", p => p.RequireRole("Admin")));
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
@@ -162,6 +163,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -182,10 +184,11 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 
     var seeder = scope.ServiceProvider.GetRequiredService<WorldSeeder>();
-    await seeder.ClearAndReseedAsync();
+    await seeder.SeedAsync();
 
     var itemSeeder = scope.ServiceProvider.GetRequiredService<ItemSeeder>();
     await itemSeeder.SeedCatalogAsync();
+    await itemSeeder.SeedDropRulesAsync();
 }
 
 app.Run();

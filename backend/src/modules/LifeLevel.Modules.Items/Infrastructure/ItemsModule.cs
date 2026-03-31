@@ -8,6 +8,7 @@ public static class ItemsModule
     public static IServiceCollection AddItemsModule(this IServiceCollection services)
     {
         services.AddScoped<ItemService>();
+        services.AddScoped<ItemGrantService>();
         return services;
     }
 }

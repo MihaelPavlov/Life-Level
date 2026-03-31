@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
@@ -7,7 +8,9 @@ import '../integrations/screens/integrations_screen.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'profile_overview_tab.dart';
+import 'tabs/admin_tab.dart';
 import 'tabs/equipment_tab.dart';
+import 'tabs/inventory_tab.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ProfileScreen
@@ -20,18 +23,31 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
-  late final TabController _tab;
+  TabController? _tab;
+  bool _isAdmin = false;
+  bool _adminChecked = false;
 
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: kProfileTabs.length, vsync: this);
-    _tab.addListener(() => setState(() {}));
+    _initAdmin();
+  }
+
+  Future<void> _initAdmin() async {
+    final isAdmin = await ApiClient.isAdmin();
+    if (!mounted) return;
+    final count = kProfileTabs.length + (isAdmin ? 1 : 0);
+    setState(() {
+      _isAdmin = isAdmin;
+      _adminChecked = true;
+      _tab = TabController(length: count, vsync: this)
+        ..addListener(() => setState(() {}));
+    });
   }
 
   @override
   void dispose() {
-    _tab.dispose();
+    _tab?.dispose();
     super.dispose();
   }
 
@@ -40,8 +56,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final profileAsync = ref.watch(characterProfileProvider);
     final profile = profileAsync.valueOrNull;
 
-    // First load — no data yet.
-    if (profile == null) {
+    // Wait for both admin check and profile load.
+    if (!_adminChecked || profile == null) {
       if (profileAsync.hasError) {
         return Scaffold(
           backgroundColor: kPBg,
@@ -81,20 +97,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       );
     }
 
+    final tabs = [...kProfileTabs, if (_isAdmin) 'Admin'];
+
     // Profile is available — show it. Silently refreshes in background.
     return Scaffold(
       backgroundColor: kPBg,
       body: Column(
         children: [
-          ProfileHeader(tabController: _tab, profile: profile),
+          ProfileHeader(tabController: _tab!, tabs: tabs, profile: profile),
           Expanded(
             child: TabBarView(
               controller: _tab,
               children: [
                 ProfileOverviewTab(profile: profile),
                 const EquipmentTab(),
-                const ProfilePlaceholderTab('Inventory', '🎒'),
+                const InventoryTab(),
                 const ProfilePlaceholderTab('Achievements', '🏆'),
+                if (_isAdmin) const AdminTab(),
               ],
             ),
           ),
@@ -107,8 +126,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 // ── ProfileHeader ─────────────────────────────────────────────────────────────
 class ProfileHeader extends StatelessWidget {
   final TabController tabController;
+  final List<String> tabs;
   final CharacterProfile profile;
-  const ProfileHeader({super.key, required this.tabController, required this.profile});
+  const ProfileHeader({super.key, required this.tabController, required this.tabs, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +273,7 @@ class ProfileHeader extends StatelessWidget {
               indicatorWeight: 2,
               dividerColor: Colors.transparent,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              tabs: kProfileTabs.map((t) => Tab(text: t, height: 36)).toList(),
+              tabs: tabs.map((t) => Tab(text: t, height: 36)).toList(),
             ),
           ),
         ],

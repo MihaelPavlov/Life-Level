@@ -8,4 +8,11 @@ class ActivityService {
     final res = await _dio.post('/activity/log', data: request.toJson());
     return LogActivityResult.fromJson(res.data as Map<String, dynamic>);
   }
+
+  Future<List<ActivityHistoryDto>> getHistory() async {
+    final res = await _dio.get('/activity/history');
+    return (res.data as List<dynamic>)
+        .map((j) => ActivityHistoryDto.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
 }
