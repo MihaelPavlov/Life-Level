@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
+import '../integrations/screens/integrations_screen.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'profile_overview_tab.dart';
@@ -212,16 +213,24 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ),
 
-                // settings icon
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: kPSurface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kPBorder2),
+                // settings → integrations
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const IntegrationsScreen(),
+                    ),
                   ),
-                  child: const Icon(Icons.settings_outlined, size: 18, color: kPTextSec),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: kPSurface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: kPBorder2),
+                    ),
+                    child: const Icon(Icons.settings_outlined, size: 18, color: kPTextSec),
+                  ),
                 ),
               ],
             ),

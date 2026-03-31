@@ -1,0 +1,529 @@
+================================================================================
+LIFE-LEVEL — FITNESS TRACKER INTEGRATIONS PLAN
+Last updated: 2026-03-31
+================================================================================
+
+CONTEXT
+-------
+The app currently only supports manual activity logging (POST /api/activity/log).
+Goal: Exercise recorded on a real device automatically imports as an Activity →
+XP gained, quests updated, map moved, streak maintained.
+
+Devices:
+- iPhone 8         → Apple Health (HealthKit)
+- Redmi Note 8 Pro → Google Fit / Health Connect (Android)
+- Strava           → OAuth2 + server-side webhooks
+
+================================================================================
+SECTION 1 — HOW EACH INTEGRATION WORKS (THE LOGIC)
+================================================================================
+
+[A] Apple Health (iPhone 8) + Google Fit / Health Connect (Redmi Note 8 Pro)
+-----------------------------------------------------------------------------
+Both handled by a SINGLE Flutter `health` package (same Dart API on both
+platforms). Wraps HealthKit on iOS, Health Connect on Android 13+, Google Fit
+on older Android (your Redmi Note 8 Pro runs Android 10 → Google Fit path).
+
+Data flow:
+1. App opens → requests permission (one-time OS sheet)
+2. App pulls workouts since lastSyncTime via health.getHealthDataFromTypes()
+   (This is always a PULL — the device does not push to the app)
+3. Flutter maps each workout type to our ActivityType enum (see Section 2)
+4. Flutter POSTs batch to POST /api/integrations/health/sync
+5. Backend deduplicates + logs each as an Activity (same XP/stat logic as manual)
+6. lastSyncTime saved to SharedPreferences
+
+Sync triggers (MVP — no background process):
+- On app foreground resume, if now - lastSyncTime > 15 min
+- Manual "Sync Now" button on Integrations screen
+- Once at startup before home screen loads
+
+[B] Strava
+----------
+OAuth2 + server-side webhooks. Strava pushes to our backend the moment a user
+saves a run — no polling needed.
+
+OAuth connection flow:
+1. User taps "Connect Strava" → flutter_web_auth_2 opens in-app browser to:
+   https://www.strava.com/oauth/authorize?client_id=...&scope=activity:read_all
+2. User approves → Strava redirects to lifelevel://oauth/strava?code=XXXX
+3. flutter_web_auth_2 intercepts deep link, extracts code
+4. Flutter POSTs code to POST /api/integrations/strava/connect
+   (code NEVER stored client-side — secret stays on backend)
+5. Backend exchanges code for access_token + refresh_token from Strava
+6. Backend stores in StravaConnection entity (tokens encrypted)
+
+Ongoing sync via webhook:
+1. User finishes activity on Strava
+2. Strava POSTs to /api/integrations/strava/webhook:
+   { object_id, owner_id (athleteId), aspect_type: "create" }
+3. Backend verifies X-Hub-Signature, looks up StravaConnection by athleteId
+4. Refreshes token if ExpiresAt < now+5min
+5. Fetches full activity: GET https://www.strava.com/api/v3/activities/{id}
+6. Maps sport_type → ActivityType, logs via IActivityLogPort
+7. Inserts ExternalActivityRecord for deduplication
+
+================================================================================
+SECTION 2 — ACTIVITY TYPE MAPPING
+================================================================================
+
+HealthKit / Health Connect (HealthWorkoutActivityType Dart enum):
+  running                                → Running
+  cycling                                → Cycling
+  swimming                               → Swimming
+  hiking, walking                        → Hiking
+  climbing                               → Climbing
+  yoga                                   → Yoga
+  traditionalStrengthTraining,
+  functionalStrengthTraining,
+  highIntensityIntervalTraining,
+  crossTraining, elliptical, other, *    → Gym (catch-all)
+
+Strava (sport_type string field):
+  Run, TrailRun, VirtualRun             → Running
+  Ride, MountainBikeRide, GravelRide,
+  VirtualRide, EBikeRide                → Cycling
+  Swim, OpenWaterSwim, Rowing,
+  Kayaking, Surfing                     → Swimming
+  Hike, Walk                            → Hiking
+  RockClimbing, IceClimbing             → Climbing
+  Yoga, Pilates                         → Yoga
+  WeightTraining, CrossFit, Workout,
+  HIIT, everything else                 → Gym
+
+================================================================================
+SECTION 3 — DEDUPLICATION STRATEGY
+================================================================================
+
+Problem: Same workout could arrive via HealthKit AND Strava AND manual log.
+
+Solution:
+- Add nullable string ExternalId to Activity entity
+  Format: "provider:nativeId" e.g. "strava:987654321" or "healthkit:{uuid}"
+- New ExternalActivityRecord table: (CharacterId, Provider, ExternalId) unique
+- Before any external log → check ExternalActivityRecord → skip if exists
+- Manual logs have no ExternalId (no conflict with external syncs)
+- Partial unique index on Activity(CharacterId, ExternalId) WHERE ExternalId IS NOT NULL
+
+================================================================================
+SECTION 4 — BACKEND CHANGES
+================================================================================
+
+[NEW MODULE] backend/src/modules/LifeLevel.Modules.Integrations/
+  Domain/Entities/
+    StravaConnection.cs          # tokens (encrypted), athleteId, userId, expiresAt
+    ExternalActivityRecord.cs    # dedup table: charId, provider, externalId, syncedAt
+  Application/
+    DTOs/
+      ExternalActivityDto.cs     # provider, externalId, type, durationMin, distKm,
+                                 #   calories, heartRate, performedAt
+      SyncBatchRequest.cs        # List<ExternalActivityDto>
+      SyncResult.cs              # imported, skipped, errors
+      StravaConnectRequest.cs    # code, redirectUri
+      StravaStatusDto.cs         # connected, athleteName, lastSyncAt
+    UseCases/
+      HealthSyncService.cs       # dedup + calls IActivityLogPort for each
+      StravaOAuthService.cs      # connect, disconnect, status, token exchange
+      StravaWebhookService.cs    # verify signature, fetch activity, delegate
+      StravaTokenRefresher.cs    # refresh when ExpiresAt < now+5min
+  Infrastructure/
+    IntegrationsModule.cs        # DI registration
+
+[CROSS-MODULE PORT] SharedKernel/Ports/IActivityLogPort.cs
+  Task<LogActivityResult> LogExternalActivityAsync(
+      Guid userId, ActivityType type, int durationMinutes,
+      double? distanceKm, int? calories, int? heartRateAvg,
+      string externalId, DateTime performedAt, CancellationToken ct);
+  → ActivityService implements this interface
+
+[ACTIVITY ENTITY] Activity.cs — add:
+  public string? ExternalId { get; set; }
+
+[ACTIVITY CONFIG] ActivityConfiguration.cs — add partial unique index:
+  entity.HasIndex(a => new { a.CharacterId, a.ExternalId })
+        .IsUnique().HasFilter("\"ExternalId\" IS NOT NULL");
+
+[CONTROLLER] IntegrationsController.cs — 6 endpoints:
+  POST   /api/integrations/health/sync        (JWT auth)
+  GET    /api/integrations/strava/status      (JWT auth)
+  POST   /api/integrations/strava/connect     (JWT auth)
+  DELETE /api/integrations/strava/disconnect  (JWT auth)
+  GET    /api/integrations/strava/webhook     (no auth — hub.challenge handshake)
+  POST   /api/integrations/strava/webhook     (X-Hub-Signature auth)
+
+[APPDBCONTEXT] Add:
+  DbSet<StravaConnection> StravaConnections
+  DbSet<ExternalActivityRecord> ExternalActivityRecords
+
+[APPSETTINGS] Add:
+  "Strava": { "ClientId": "", "ClientSecret": "", "WebhookVerifyToken": "" }
+
+[PROGRAM.CS] Add:
+  services.AddIntegrationsModule(config);
+
+================================================================================
+SECTION 5 — FLUTTER CHANGES
+================================================================================
+
+[NEW FEATURE] mobile/lib/features/integrations/
+  models/integration_models.dart       # IntegrationStatus, ExternalActivityDto, SyncResult
+  services/
+    health_sync_service.dart           # health package + type mapping + sync logic
+    strava_service.dart                # connect/disconnect/status API calls
+  providers/integrations_provider.dart # Riverpod: healthSyncProvider, stravaStatusProvider
+  screens/
+    integrations_screen.dart           # Apple Health tile + Strava tile
+  widgets/
+    integration_tile.dart              # connected/disconnected tile
+    sync_status_banner.dart            # "Synced 3 activities" / error banner
+
+[PUBSPEC.YAML] Add:
+  health: ^11.0.0              # HealthKit + Health Connect / Google Fit
+  flutter_web_auth_2: ^4.0.0  # OAuth2 in-app browser + deep link
+  shared_preferences: ^2.3.0  # lastSyncTime persistence
+
+[iOS — Info.plist] Add:
+  NSHealthShareUsageDescription: "LifeLevel reads your workouts to award XP."
+  NSHealthUpdateUsageDescription: "LifeLevel writes activity summaries."
+  CFBundleURLSchemes: [lifelevel]   ← Strava OAuth deep link
+
+[iOS — Xcode] Add HealthKit capability to Runner target.
+
+[Android — AndroidManifest.xml] Add:
+  <queries><package android:name="com.google.android.apps.healthdata"/></queries>
+  ACTION_SHOW_PERMISSIONS_RATIONALE intent filter (Health Connect)
+  lifelevel://oauth intent filter (Strava OAuth deep link)
+
+[NAVIGATION] go_router: add /profile/integrations → IntegrationsScreen
+[PROFILE SCREEN] Add "Integrations" row in settings section
+[ROOT WIDGET / main.dart] Wire foreground-resume sync trigger
+
+================================================================================
+SECTION 6 — PRIORITY ORDER
+================================================================================
+
+PHASE 1: health package FIRST (covers BOTH devices)
+  Why:
+  - No OAuth, no secrets, no webhook infra
+  - Only backend change: 1 endpoint + 2 entities + 1 migration
+  - Testable entirely locally
+  - Proves dedup pattern before Strava
+
+PHASE 2: Strava OAuth + Webhook SECOND
+  Prerequisite: Strava developer account (https://www.strava.com/settings/api)
+  Prerequisite: Publicly accessible backend URL for webhook registration
+  (Strava validates the webhook URL during subscription — localhost won't work)
+
+================================================================================
+SECTION 7 — IMPLEMENTATION SPRINTS
+================================================================================
+
+SPRINT 1 — Backend Foundation  ✓ COMPLETE (2026-03-31)
+  [x] Add ExternalId (string?) to Activity entity
+  [x] Partial unique index on (CharacterId, ExternalId) in AppDbContext (relational)
+  [x] Create ExternalActivityRecord entity in LifeLevel.Modules.Integrations
+  [x] Migration: AddIntegrationsModule — adds ExternalId col + ExternalActivityRecords table
+  [x] Add IActivityLogPort to SharedKernel/Ports/IActivityLogPort.cs
+  [x] ActivityService implements IActivityLogPort (LogExternalActivityAsync)
+  [x] Scaffold LifeLevel.Modules.Integrations project (.csproj, IntegrationsModule.cs)
+  [x] HealthSyncService (dedup logic + calls IActivityLogPort)
+  [x] POST /api/integrations/health/sync endpoint (IntegrationsController.cs)
+  [x] Register IntegrationsModule in Program.cs + csproj reference added
+
+SPRINT 2 — Flutter Health Sync  ✓ COMPLETE (2026-03-31)
+  [x] health: ^11.0.0 + shared_preferences: ^2.3.0 added to pubspec.yaml
+  [x] flutter pub get — packages installed (health 11.1.1, shared_preferences 2.5.3)
+  [~] iOS/Android platform config: DEFERRED — no ios/ or android/ dirs yet.
+      When platforms are added:
+        iOS Info.plist: NSHealthShareUsageDescription, NSHealthUpdateUsageDescription,
+                        CFBundleURLSchemes: [lifelevel]
+        iOS Xcode: add HealthKit capability to Runner target
+        Android manifest: Health Connect queries block + intent filter
+  [x] health_sync_service.dart — requestPermissions, syncRecentWorkouts, full type mapping
+      Note: used actual health 11.1.1 API (SCREAMING_SNAKE_CASE enums, instance removeDuplicates, configure() no params)
+  [x] integration_models.dart — ExternalActivityDto, SyncBatchRequest, SyncResult, IntegrationSyncState
+  [x] integrations_provider.dart — IntegrationSyncNotifier with requestPermissions/syncNow
+  [x] integrations_screen.dart — Apple Health tile + Strava coming-soon tile + sync banner
+  [x] integration_tile.dart widget
+  [x] sync_status_banner.dart widget (auto-dismisses after 4s)
+  [x] Settings icon in ProfileHeader now navigates to IntegrationsScreen via Navigator.push
+  [x] MainShell: WidgetsBindingObserver + didChangeAppLifecycleState → foreground sync trigger (15min throttle)
+
+SPRINT 3 — Strava OAuth  ✅ COMPLETE
+  [x] Create Strava app (Client ID: 218444, App: Life-Level)
+  [x] Add flutter_web_auth_2: ^4.0.0 to pubspec.yaml
+  [ ] iOS Info.plist: add lifelevel URL scheme  (deferred — no iOS dir yet)
+  [ ] Android manifest: add lifelevel://oauth intent filter  (deferred — no Android dir yet)
+  [x] Backend: StravaConnection entity + EF config (StravaConnectionConfiguration.cs)
+  [x] Backend: migration AddStravaConnection (20260330221640_AddStravaConnection)
+  [x] Backend: StravaOAuthService (connect, disconnect, status, token exchange, RefreshTokenIfNeeded)
+  [x] Backend: strava/connect, strava/disconnect, strava/status endpoints in IntegrationsController
+  [x] Backend: StravaOptions config class bound to appsettings "Strava" section
+  [x] Backend: appsettings.json updated with ClientId/ClientSecret/WebhookVerifyToken
+  [x] Flutter: strava_service.dart (getStatus, connect, disconnect)
+  [x] Flutter: StravaStatusDto model + IntegrationSyncState extended with Strava fields
+  [x] Flutter: integrations_provider.dart: connectStrava(), disconnectStrava()
+  [x] Flutter: IntegrationsScreen: real Strava tile (Strava orange styling, connect/disconnect flow)
+
+SPRINT 4 — Strava Webhook  ✅ COMPLETE (backend code done; webhook registration pending)
+  [x] Backend: StravaWebhookService (HMAC-SHA256 signature verify, fetch activity, sport_type mapping)
+  [x] Backend: HealthSyncService.ImportSingleAsync (single-activity path reusing batch dedup logic)
+  [x] Backend: GET /api/integrations/strava/webhook (hub.challenge handshake, [AllowAnonymous])
+  [x] Backend: POST /api/integrations/strava/webhook (process events, [AllowAnonymous])
+  [ ] Start ngrok: ngrok http https://localhost:7001 (or your API port)
+  [ ] Register webhook subscription with Strava API (see Section 9 — ngrok steps)
+  [ ] End-to-end test (see Section 8)
+
+================================================================================
+SECTION 8 — TESTING & VALIDATION PLAN
+================================================================================
+
+--- UNIT TESTS ---
+
+[T1] ActivityType mapping — HealthKit
+  File: tests/LifeLevel.Api.Tests/Integrations/HealthTypeMapperTests.cs
+  Test each HealthWorkoutActivityType → expected ActivityType
+  Include edge cases: unknown type → Gym fallback
+  Test: "walking" → Hiking (not Running)
+  Test: "elliptical" → Gym
+
+[T2] ActivityType mapping — Strava
+  File: tests/LifeLevel.Api.Tests/Integrations/StravaTypeMapperTests.cs
+  Test each sport_type string → expected ActivityType
+  Test: "TrailRun" → Running
+  Test: "EBikeRide" → Cycling
+  Test: "UnknownType" → Gym fallback
+
+[T3] HealthSyncService deduplication
+  File: tests/LifeLevel.Api.Tests/Integrations/HealthSyncServiceTests.cs
+  Setup: ExternalActivityRecord already exists for (charId, "HealthKit", "healthkit:abc")
+  Call: SyncBatch with that same externalId
+  Assert: No new Activity created, SyncResult.Skipped == 1
+  Setup: Fresh record
+  Call: SyncBatch with new externalId
+  Assert: Activity created, SyncResult.Imported == 1
+
+[T4] Strava signature verification
+  File: tests/LifeLevel.Api.Tests/Integrations/StravaWebhookServiceTests.cs
+  Test: valid HMAC-SHA256 signature → passes
+  Test: tampered body → 403 Forbidden
+  Test: wrong verify token → 403 Forbidden
+
+[T5] Strava token refresh logic
+  File: tests/LifeLevel.Api.Tests/Integrations/StravaTokenRefresherTests.cs
+  Test: token expires in 10 min → returns existing token (no refresh)
+  Test: token expires in 2 min → calls Strava refresh endpoint, updates DB
+  Test: expired token → same as above
+
+[T6] IActivityLogPort integration
+  File: tests/LifeLevel.Api.Tests/Activity/ActivityServiceExternalLogTests.cs
+  Call: LogExternalActivityAsync with valid params
+  Assert: Activity saved with correct ExternalId field set
+  Assert: XP/stat gains calculated (same as manual log)
+  Assert: ActivityLoggedEvent published (streak/quest handlers fire)
+
+--- INTEGRATION TESTS (against real test DB) ---
+
+[T7] POST /api/integrations/health/sync — happy path
+  Request: batch of 3 valid ExternalActivityDtos (all new)
+  Assert: 200 OK, SyncResult { imported: 3, skipped: 0 }
+  Assert: 3 Activity rows in DB
+  Assert: 3 ExternalActivityRecord rows in DB
+
+[T8] POST /api/integrations/health/sync — duplicate batch
+  Setup: send batch once
+  Request: send exact same batch again
+  Assert: 200 OK, SyncResult { imported: 0, skipped: 3 }
+  Assert: still only 3 Activity rows (no duplicates)
+
+[T9] POST /api/integrations/health/sync — partial duplicate
+  Setup: 2 activities already synced, 1 new
+  Request: batch of all 3
+  Assert: SyncResult { imported: 1, skipped: 2 }
+
+[T10] POST /api/integrations/health/sync — requires auth
+  Request: no JWT token
+  Assert: 401 Unauthorized
+
+[T11] Strava connect → status → disconnect flow
+  POST /api/integrations/strava/connect with mock code
+  (mock Strava token endpoint using WireMock or HttpClient factory stub)
+  Assert: StravaConnection row created
+  GET /api/integrations/strava/status → { connected: true, athleteName: "..." }
+  DELETE /api/integrations/strava/disconnect
+  Assert: StravaConnection deleted
+  GET /api/integrations/strava/status → { connected: false }
+
+[T12] GET /api/integrations/strava/webhook — hub.challenge handshake
+  Request: GET /webhook?hub.mode=subscribe&hub.challenge=abc123&hub.verify_token={token}
+  Assert: 200 OK, body { "hub.challenge": "abc123" }
+  Request: wrong verify_token
+  Assert: 403 Forbidden
+
+[T13] POST /api/integrations/strava/webhook — create event
+  Setup: StravaConnection exists for athleteId 12345
+  Mock Strava API: GET /activities/987 returns run (10km, 60min, Running)
+  Request: POST /webhook with valid X-Hub-Signature
+  Assert: 200 OK (immediate response)
+  Assert: Activity created within 1 second (async processing)
+  Assert: ExternalActivityRecord inserted ("Strava", "strava:987")
+
+[T14] POST /api/integrations/strava/webhook — duplicate event
+  Setup: ExternalActivityRecord already exists for ("Strava", "strava:987")
+  Request: same webhook payload
+  Assert: 200 OK, no new Activity created
+
+[T15] POST /api/integrations/strava/webhook — unknown athlete
+  Request: webhook with owner_id that has no StravaConnection
+  Assert: 200 OK (never return 4xx to Strava), no Activity created
+
+--- FLUTTER WIDGET / INTEGRATION TESTS ---
+
+[T16] Health sync service — type mapping (Dart unit tests)
+  File: mobile/test/features/integrations/health_type_mapper_test.dart
+  Test all HealthWorkoutActivityType → ActivityType mappings
+  Test unknown type → ActivityType.gym
+
+[T17] Health sync service — permission denied
+  Mock Health package: requestAuthorization returns false
+  Call: syncRecentWorkouts()
+  Assert: returns SyncResult.empty(), no API call made
+
+[T18] Health sync service — empty results
+  Mock Health package: returns [] workouts
+  Call: syncRecentWorkouts()
+  Assert: no API call made, lastSyncTime updated
+
+[T19] IntegrationsScreen — renders correctly
+  State: Apple Health connected, Strava disconnected
+  Assert: Apple Health tile shows "Connected" badge + "Last synced: X ago"
+  Assert: Strava tile shows "Connect" button
+
+[T20] Strava connect flow
+  Mock StravaService.connectStrava()
+  Tap "Connect Strava" button
+  Assert: loading state shown during OAuth
+  Assert: on success, tile updates to "Connected"
+  Assert: on error, snackbar shown with message
+
+--- MANUAL DEVICE TESTS ---
+
+[T21] iPhone 8 — HealthKit first-time permission
+  Steps:
+  1. Fresh install app
+  2. Navigate to Profile → Integrations
+  3. Tap "Enable Apple Health"
+  Assert: iOS HealthKit permission sheet appears
+  Assert: After approval, tile shows "Connected"
+
+[T22] iPhone 8 — Real workout sync
+  Steps:
+  1. Record a 30min outdoor run using Apple Fitness or Strava iOS app
+  2. Open Life-Level
+  Assert: Activity appears in history within 15 min (or immediately if just opened)
+  Assert: XP awarded, quest progress updated, streak maintained
+  Assert: Activity type is "Running"
+  Assert: Distance, calories match the recorded workout
+
+[T23] Redmi Note 8 Pro — Google Fit sync
+  Steps:
+  1. Record a workout via Google Fit or Mi Fit (if synced to Google Fit)
+  2. Open Life-Level
+  Assert: Same as T22
+
+[T24] Deduplication — manual then sync
+  Steps:
+  1. Manually log a Running activity (30 min, 5 km)
+  2. Also have the real run in HealthKit
+  Assert: Two Activity rows exist (manual has no ExternalId)
+  Note: This is expected MVP behaviour — UI should warn user
+
+[T25] Deduplication — sync twice
+  Steps:
+  1. Force sync (tap "Sync Now")
+  2. Immediately force sync again
+  Assert: No duplicate activities created
+  Assert: Second sync shows "0 new activities"
+
+[T26] Strava webhook — real device end-to-end
+  Steps:
+  1. Connect Strava in app
+  2. Record a run on Strava (or use Strava's manual "Upload Activity")
+  3. Wait for webhook (usually < 30 seconds)
+  Assert: Activity appears in Life-Level history automatically
+  Assert: XP + stats awarded
+  Note: Requires deployed backend (not localhost)
+
+[T27] Strava token refresh — real device
+  Steps:
+  1. Connect Strava
+  2. Manually set ExpiresAt to past in DB (UPDATE StravaConnections SET ExpiresAt = NOW()-1)
+  3. Record activity on Strava → webhook fires
+  Assert: Activity still logs correctly (token was refreshed transparently)
+  Assert: StravaConnection.ExpiresAt updated in DB
+
+--- EDGE CASES TO VERIFY ---
+
+[T28] Activity logged outside supported types (e.g., "Golf" on HealthKit)
+  Assert: Maps to Gym (catch-all), still logs, no crash
+
+[T29] Zero-duration workout from HealthKit
+  Assert: Backend rejects gracefully (400 Bad Request), not 500
+
+[T30] Very large batch (50+ activities in one sync)
+  Assert: All processed correctly, no timeout
+
+[T31] Backend down during health sync
+  Assert: Flutter shows "Sync failed, try again" banner
+  Assert: lastSyncTime NOT updated (retry next time will re-attempt same range)
+
+[T32] Strava webhook arrives before StravaConnection created
+  (race condition: OAuth slow, Strava webhook fast)
+  Assert: Webhook handler returns 200 and silently ignores (T15 covers this)
+
+================================================================================
+SECTION 9 — RESUME GUIDE (IF CONTEXT RUNS OUT)
+================================================================================
+
+Current state when plan was written:
+  - Manual activity logging: fully working (POST /api/activity/log)
+  - No integration code exists anywhere (backend or Flutter)
+  - Activity entity has: Id, CharacterId, Type, DurationMinutes, DistanceKm,
+    Calories, HeartRateAvg, XpGained, StatGains, LoggedAt
+  - No ExternalId field yet (needs to be added in Sprint 1)
+  - pubspec.yaml has: dio, flutter_riverpod, url_launcher, go_router, flutter_secure_storage
+  - No `health`, `flutter_web_auth_2`, or `shared_preferences` packages yet
+
+SPRINT 1 STATUS (2026-03-31): COMPLETE
+  - Activity.ExternalId: EXISTS
+  - ExternalActivityRecord entity: EXISTS in LifeLevel.Modules.Integrations
+  - Migration AddIntegrationsModule: CREATED (applies on startup)
+  - IActivityLogPort: EXISTS at SharedKernel/Ports/IActivityLogPort.cs
+  - ActivityService.LogExternalActivityAsync: IMPLEMENTED
+  - HealthSyncService: EXISTS at LifeLevel.Modules.Integrations/Application/UseCases/
+  - POST /api/integrations/health/sync: EXISTS in IntegrationsController.cs
+  - IntegrationsModule registered in Program.cs: YES
+
+When resuming, check sprint state:
+  1. Sprint 1 done? → Does IntegrationsController.cs exist in LifeLevel.Api/Controllers/?
+  2. Sprint 2 done? → Does mobile/lib/features/integrations/ exist?
+  3. Sprint 3 done? → Does StravaOAuthService.cs exist in LifeLevel.Modules.Integrations?
+  4. Sprint 4 done? → Does StravaWebhookService.cs exist in LifeLevel.Modules.Integrations?
+
+SPRINT 2 STATUS (2026-03-31): COMPLETE
+  - features/integrations/ feature: EXISTS
+  - health_sync_service.dart: health 11.1.1 API (SCREAMING_SNAKE_CASE enums)
+  - Foreground sync trigger: in MainShell via WidgetsBindingObserver
+  - Settings icon in ProfileHeader: navigates to IntegrationsScreen
+  - Platform config (iOS/Android): DEFERRED until native platforms added
+
+NEXT: Sprint 3 — Strava OAuth
+  Prerequisites: Strava developer account at https://www.strava.com/settings/api
+  Start with: StravaConnection entity + migration on backend
+
+Complete sprints in order: 1 ✓ → 2 ✓ → 3 → 4
+Do not start Sprint 4 until backend is deployed to a public URL.
+
+================================================================================
+END OF PLAN
+================================================================================

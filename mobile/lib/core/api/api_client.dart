@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
-  static const _baseUrl = 'http://localhost:5128/api';
+  static const _baseUrl = 'https://3798-165-225-248-204.ngrok-free.app/api';
   static const _storage = FlutterSecureStorage();
 
   static Dio get instance {
@@ -11,7 +11,7 @@ class ApiClient {
       baseUrl: _baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
     ));
 
     dio.interceptors.add(InterceptorsWrapper(

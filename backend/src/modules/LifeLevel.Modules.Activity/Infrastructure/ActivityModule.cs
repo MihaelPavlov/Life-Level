@@ -10,6 +10,8 @@ public static class ActivityModule
     {
         services.AddScoped<ActivityService>();
         services.AddScoped<IActivityStatsReadPort>(sp => sp.GetRequiredService<ActivityService>());
+        services.AddScoped<IActivityLogPort>(sp => sp.GetRequiredService<ActivityService>());
+        services.AddScoped<IActivityExternalIdReadPort>(sp => sp.GetRequiredService<ActivityService>());
         return services;
     }
 }

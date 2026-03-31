@@ -13,6 +13,8 @@ public class Activity
     public int Calories { get; set; }
     public int? HeartRateAvg { get; set; }
 
+    public string? ExternalId { get; set; }
+
     public long XpGained { get; set; }
     public int StrGained { get; set; }
     public int EndGained { get; set; }

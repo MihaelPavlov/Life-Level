@@ -20,6 +20,8 @@ using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Infrastructure;
 using LifeLevel.Modules.Items.Domain.Entities;
 using LifeLevel.Modules.Items.Infrastructure;
+using LifeLevel.Modules.Integrations.Domain.Entities;
+using LifeLevel.Modules.Integrations.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -84,6 +86,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CharacterItem> CharacterItems => Set<CharacterItem>();
     public DbSet<EquipmentSlot> EquipmentSlots => Set<EquipmentSlot>();
 
+    // Integrations
+    public DbSet<ExternalActivityRecord> ExternalActivityRecords => Set<ExternalActivityRecord>();
+    public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
+    public DbSet<GarminConnection> GarminConnections => Set<GarminConnection>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ── Per-module EF configurations ──────────────────────────────────────────
@@ -98,6 +105,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EncountersModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DungeonsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ItemsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(IntegrationsModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 
@@ -112,6 +120,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<Character>()
             .WithMany()
             .HasForeignKey(a => a.CharacterId);
+
+        // Activity: partial unique index on (CharacterId, ExternalId) for deduplication
+        modelBuilder.Entity<Activity>()
+            .HasIndex(a => new { a.CharacterId, a.ExternalId })
+            .IsUnique()
+            .HasFilter("\"ExternalId\" IS NOT NULL");
 
         // Streak → User
         modelBuilder.Entity<Streak>()
@@ -243,6 +257,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<Character>()
             .WithMany()
             .HasForeignKey(s => s.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Integrations cross-module: ExternalActivityRecord → Character
+        modelBuilder.Entity<ExternalActivityRecord>()
+            .HasOne<Character>()
+            .WithMany()
+            .HasForeignKey(r => r.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Integrations cross-module: StravaConnection → User
+        modelBuilder.Entity<StravaConnection>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Integrations cross-module: GarminConnection → User
+        modelBuilder.Entity<GarminConnection>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(g => g.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

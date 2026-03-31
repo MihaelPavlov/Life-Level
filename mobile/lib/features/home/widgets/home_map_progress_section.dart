@@ -9,6 +9,7 @@ class HomeMapProgressSection extends StatelessWidget {
   final VoidCallback onLogActivity;
   final VoidCallback onOpenMap;
   final VoidCallback onActionButton;
+  final VoidCallback? onStravaSync;
   final void Function(MapNodeModel) onCarouselNodeTap;
 
   const HomeMapProgressSection({
@@ -17,6 +18,7 @@ class HomeMapProgressSection extends StatelessWidget {
     required this.onLogActivity,
     required this.onOpenMap,
     required this.onActionButton,
+    this.onStravaSync,
     required this.onCarouselNodeTap,
   });
 
@@ -78,6 +80,7 @@ class HomeMapProgressSection extends StatelessWidget {
                   onLogActivity: onLogActivity,
                   onOpenMap: onOpenMap,
                   onActionButton: onActionButton,
+                  onStravaSync: onStravaSync,
                   onCarouselNodeTap: onCarouselNodeTap,
                 ),
                 HomeMapEventCarousel(
@@ -99,6 +102,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
   final VoidCallback onLogActivity;
   final VoidCallback onOpenMap;
   final VoidCallback onActionButton;
+  final VoidCallback? onStravaSync;
   final void Function(MapNodeModel) onCarouselNodeTap;
 
   const HomeMapFeaturedCard({
@@ -107,6 +111,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     required this.onLogActivity,
     required this.onOpenMap,
     required this.onActionButton,
+    this.onStravaSync,
     required this.onCarouselNodeTap,
   });
 
@@ -135,11 +140,11 @@ class HomeMapFeaturedCard extends StatelessWidget {
     }
 
     if (isTraveling) {
-      return _buildTravelingCard(destNode, activeEdge, edgeProgress, remaining, progress);
+      return _buildTravelingCard(destNode, activeEdge, edgeProgress, remaining, progress, onStravaSync);
     }
 
     if (isArrived) {
-      return _buildArrivedCard(destNode);
+      return _buildArrivedCard(destNode, onStravaSync);
     }
 
     return _buildNoDestinationCard();
@@ -194,6 +199,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     double edgeProgress,
     double remaining,
     UserMapProgressModel progress,
+    VoidCallback? onStravaSync,
   ) {
     return HomeCard(
       borderColor: const Color(0xFF4f9eff).withValues(alpha: 0.55),
@@ -220,11 +226,17 @@ class HomeMapFeaturedCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   HomeBadge('🚶 TRAVELING', const Color(0xFF4f9eff)),
-                  const Text(
-                    '⟳ Strava',
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: AppColors.textSecondary,
+                  GestureDetector(
+                    onTap: onStravaSync,
+                    child: Text(
+                      '⟳ Strava',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: onStravaSync != null
+                            ? const Color(0xFF4f9eff)
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -351,7 +363,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     );
   }
 
-  Widget _buildArrivedCard(MapNodeModel destNode) {
+  Widget _buildArrivedCard(MapNodeModel destNode, VoidCallback? onStravaSync) {
     final challengeProgress = _challengeProgress(destNode);
 
     return HomeCard(
@@ -365,11 +377,17 @@ class HomeMapFeaturedCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               HomeBadge('✅ NODE REACHED', const Color(0xFF3fb950)),
-              const Text(
-                '⟳ Strava',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: AppColors.textSecondary,
+              GestureDetector(
+                onTap: onStravaSync,
+                child: Text(
+                  '⟳ Strava',
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: onStravaSync != null
+                        ? const Color(0xFF4f9eff)
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],

@@ -430,3 +430,4 @@ mobile/ios/Pods/
 mobile/ios/.symlinks/
 mobile/**/*.g.dart
 mobile/**/*.freezed.dart
+backend/src/LifeLevel.Api/appsettings.json

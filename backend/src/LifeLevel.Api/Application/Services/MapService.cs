@@ -15,8 +15,21 @@ using CrossroadsEntity = LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Cr
 
 namespace LifeLevel.Api.Application.Services;
 
-public class MapService(AppDbContext db, ICharacterXpPort characterXp)
+public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDistancePort
 {
+    public async Task AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
+    {
+        if (km <= 0) return;
+        try
+        {
+            await DebugAddDistanceAsync(userId, km);
+        }
+        catch (InvalidOperationException)
+        {
+            // No active destination — silently ignored.
+        }
+    }
+
     public async Task<MapFullResponse> GetFullMapAsync(Guid userId, Guid? worldZoneId = null)
     {
         var nodesQuery = db.MapNodes.AsQueryable();

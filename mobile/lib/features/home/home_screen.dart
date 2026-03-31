@@ -5,6 +5,7 @@ import '../map/models/map_models.dart';
 import '../activity/log_activity_screen.dart';
 import '../map/map_screen.dart';
 import '../map/node_detail_sheet.dart';
+import '../../core/api/api_client.dart';
 import '../../core/services/level_up_notifier.dart';
 import 'home_cards.dart';
 import 'home_widgets.dart';
@@ -60,6 +61,31 @@ class HomeScreen extends ConsumerWidget {
                         isAdjacent: true,
                         distanceKm: _distanceToNode(data, destId),
                       );
+                    },
+                    onStravaSync: () async {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Syncing Strava...')),
+                      );
+                      int imported = 0;
+                      int skipped = 0;
+                      try {
+                        final res = await ApiClient.instance.post('/integrations/strava/sync');
+                        final body = res.data as Map<String, dynamic>? ?? {};
+                        imported = (body['imported'] as int?) ?? 0;
+                        skipped = (body['skipped'] as int?) ?? 0;
+                      } catch (_) {}
+                      ref.invalidate(mapJourneyProvider);
+                      ref.invalidate(characterProfileProvider);
+                      if (context.mounted) {
+                        final msg = imported > 0
+                            ? 'Synced $imported new activit${imported == 1 ? 'y' : 'ies'}!'
+                            : skipped > 0
+                                ? 'Already up to date ($skipped synced)'
+                                : 'No new activities found';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(msg)),
+                        );
+                      }
                     },
                     onCarouselNodeTap: (node) => _openNodeDetailSheet(
                       context, ref, node, data,

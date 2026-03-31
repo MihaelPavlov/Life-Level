@@ -15,6 +15,7 @@ import '../../features/map/map_screen.dart';
 import '../../features/map/world_map_screen.dart';
 import '../services/map_tab_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
+import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/profile/profile_screen.dart';
 import 'shell_constants.dart';
 import 'shell_models.dart';
@@ -31,7 +32,8 @@ class MainShell extends ConsumerStatefulWidget {
   ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateMixin {
+class _MainShellState extends ConsumerState<MainShell>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   int _tabIndex = 0;
   bool _radialOpen = false;
   bool _worldOpen = false;
@@ -93,6 +95,7 @@ class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _levelUpSub = LevelUpNotifier.stream.listen((newLevel) {
       if (mounted) showLevelUpScreen(context, newLevel);
     });
@@ -146,12 +149,34 @@ class _MainShellState extends ConsumerState<MainShell> with TickerProviderStateM
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _levelUpSub.cancel();
     _hintTimer?.cancel();
     _openCtrl.dispose();
     _snapCtrl.dispose();
     _hintCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _triggerForegroundHealthSync();
+    }
+  }
+
+  Future<void> _triggerForegroundHealthSync() async {
+    final syncState = ref.read(integrationSyncProvider);
+    if (!syncState.isHealthConnected || syncState.isSyncing) return;
+
+    // Only sync if more than 15 minutes have passed since the last sync
+    final lastSync = syncState.lastSyncAt;
+    if (lastSync != null &&
+        DateTime.now().difference(lastSync).inMinutes < 15) {
+      return;
+    }
+
+    ref.read(integrationSyncProvider.notifier).syncNow();
   }
 
   // ── open / close ──────────────────────────────────────────────────────────

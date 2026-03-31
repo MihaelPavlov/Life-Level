@@ -31,6 +31,7 @@
     <ProjectReference Include="..\modules\LifeLevel.Modules.Adventure.Encounters\LifeLevel.Modules.Adventure.Encounters.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Adventure.Dungeons\LifeLevel.Modules.Adventure.Dungeons.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Items\LifeLevel.Modules.Items.csproj" />
+    <ProjectReference Include="..\modules\LifeLevel.Modules.Integrations\LifeLevel.Modules.Integrations.csproj" />
   </ItemGroup>
 
 </Project>

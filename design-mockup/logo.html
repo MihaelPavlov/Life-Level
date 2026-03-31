@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeLevel — Logo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #040810;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 80px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      padding: 60px 40px;
+    }
+
+    /* ─── SECTION LABEL ────────────────────────────── */
+    .section-label {
+      color: #8b949e;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: -60px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 1 — PRIMARY LOGO (Icon + Wordmark)
+    ═══════════════════════════════════════════════ */
+    .logo-primary {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    /* Shield icon */
+    .shield-wrap {
+      position: relative;
+      width: 72px;
+      height: 80px;
+    }
+
+    .shield {
+      width: 72px;
+      height: 80px;
+    }
+
+    .shield-inner {
+      position: absolute;
+      inset: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      filter: drop-shadow(0 0 8px #4f9eff88);
+    }
+
+    /* Glow ring on shield */
+    .shield-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #4f9eff22 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Wordmark */
+    .wordmark {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .wordmark-life {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e6edf3 0%, #8b949e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .wordmark-life span {
+      background: linear-gradient(135deg, #4f9eff 0%, #a371f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .wordmark-level {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #4f9eff;
+      margin-top: 2px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 2 — STACKED LOGO (centered)
+    ═══════════════════════════════════════════════ */
+    .logo-stacked {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .icon-mark {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Hexagon background */
+    .hex-bg {
+      position: absolute;
+      inset: 0;
+    }
+
+    .hex-emoji {
+      position: relative;
+      font-size: 44px;
+      filter: drop-shadow(0 0 14px #4f9effaa);
+      z-index: 1;
+    }
+
+    /* Orbit ring */
+    .orbit-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      background: linear-gradient(135deg, #4f9eff44, #a371f744, transparent) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      animation: spin 8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .stacked-wordmark {
+      text-align: center;
+      line-height: 1;
+    }
+
+    .stacked-life {
+      display: block;
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #e6edf3 10%, #c9d1d9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stacked-life .accent {
+      background: linear-gradient(135deg, #4f9eff 0%, #a371f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stacked-tagline {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: #8b949e;
+      margin-top: 6px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 3 — APP ICON (square badge)
+    ═══════════════════════════════════════════════ */
+    .logo-icon-badge {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
+      background: linear-gradient(145deg, #0d1117 0%, #161b22 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 0 1.5px #30363d,
+        0 0 32px #4f9eff33,
+        0 20px 60px #00000088;
+      overflow: hidden;
+    }
+
+    /* Corner glow */
+    .logo-icon-badge::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      left: -20px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, #4f9eff22 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .logo-icon-badge::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, #a371f722 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .badge-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge-icon {
+      font-size: 52px;
+      filter: drop-shadow(0 0 10px #4f9effbb);
+    }
+
+    .badge-text {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #4f9eff, #a371f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 4 — DARK CARD (on-surface)
+    ═══════════════════════════════════════════════ */
+    .logo-card {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 20px;
+      padding: 32px 48px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 8px 40px #00000066;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Gradient accent line top */
+    .logo-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #4f9eff, #a371f7, transparent);
+    }
+
+    .card-shield {
+      width: 56px;
+      height: 62px;
+      flex-shrink: 0;
+    }
+
+    .card-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-life {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: #e6edf3;
+    }
+
+    .card-life .ll {
+      background: linear-gradient(135deg, #4f9eff 0%, #a371f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card-sub {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .card-level-badge {
+      background: linear-gradient(90deg, #4f9eff22, #a371f722);
+      border: 1px solid #4f9eff44;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #4f9eff;
+    }
+
+    .card-tagline {
+      font-size: 12px;
+      color: #8b949e;
+      font-weight: 400;
+    }
+
+    /* XP bar decorative */
+    .xp-strip {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: #161b22;
+      overflow: hidden;
+    }
+
+    .xp-fill {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(90deg, #4f9eff, #a371f7);
+      border-radius: 0 2px 2px 0;
+      position: relative;
+    }
+
+    .xp-fill::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, #ffffff55);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    /* ═══════════════════════════════════════════════
+       SVG SHIELD PATHS
+    ═══════════════════════════════════════════════ */
+  </style>
+</head>
+<body>
+
+  <p class="section-label">Variant 1 — Horizontal Primary</p>
+
+  <!-- VARIANT 1: Horizontal -->
+  <div class="logo-primary">
+    <div class="shield-wrap">
+      <svg class="shield" viewBox="0 0 72 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="shieldGrad1" x1="0" y1="0" x2="72" y2="80" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#4f9eff"/>
+            <stop offset="100%" stop-color="#a371f7"/>
+          </linearGradient>
+          <linearGradient id="shieldFill1" x1="0" y1="0" x2="72" y2="80" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0d1521"/>
+            <stop offset="100%" stop-color="#131025"/>
+          </linearGradient>
+          <filter id="glow1">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Shield outline -->
+        <path d="M36 2 L68 14 L68 42 C68 60 52 74 36 78 C20 74 4 60 4 42 L4 14 Z"
+              fill="url(#shieldFill1)" stroke="url(#shieldGrad1)" stroke-width="2" filter="url(#glow1)"/>
+        <!-- Inner chevron accent -->
+        <path d="M36 16 L56 24 L56 42 C56 54 47 63 36 66 C25 63 16 54 16 42 L16 24 Z"
+              fill="none" stroke="#4f9eff" stroke-width="1" stroke-opacity="0.35"/>
+        <!-- Lightning bolt -->
+        <path d="M40 22 L30 40 L36 40 L32 58 L44 36 L37 36 Z"
+              fill="url(#shieldGrad1)" filter="url(#glow1)"/>
+      </svg>
+    </div>
+
+    <div class="wordmark">
+      <div class="wordmark-life">Li<span>FE</span> Level</div>
+      <div class="wordmark-level">Train in the Real World</div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <p class="section-label">Variant 2 — Stacked Centered</p>
+
+  <!-- VARIANT 2: Stacked -->
+  <div class="logo-stacked">
+    <div class="icon-mark">
+      <svg class="hex-bg" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hexGrad" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#4f9eff"/>
+            <stop offset="100%" stop-color="#a371f7"/>
+          </linearGradient>
+          <filter id="hexGlow">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Hexagon -->
+        <polygon points="48,4 88,26 88,70 48,92 8,70 8,26"
+                 fill="#0d1521" stroke="url(#hexGrad)" stroke-width="2" filter="url(#hexGlow)"/>
+        <!-- Inner hex ring -->
+        <polygon points="48,14 80,31 80,65 48,82 16,65 16,31"
+                 fill="none" stroke="#4f9eff" stroke-width="1" stroke-opacity="0.2"/>
+      </svg>
+      <div class="hex-emoji">⚡</div>
+      <div class="orbit-ring"></div>
+    </div>
+
+    <div class="stacked-wordmark">
+      <span class="stacked-life">Li<span class="accent">FE</span> Level</span>
+      <span class="stacked-tagline">Real World · Game World</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <p class="section-label">Variant 3 — App Icon Badge</p>
+
+  <!-- VARIANT 3: App Icon -->
+  <div class="logo-icon-badge">
+    <div class="badge-inner">
+      <div class="badge-icon">⚔️</div>
+      <div class="badge-text">LiFE</div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <p class="section-label">Variant 4 — Surface Card (with XP bar)</p>
+
+  <!-- VARIANT 4: Card -->
+  <div class="logo-card">
+    <svg class="card-shield" viewBox="0 0 56 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sg2" x1="0" y1="0" x2="56" y2="62" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#4f9eff"/>
+          <stop offset="100%" stop-color="#a371f7"/>
+        </linearGradient>
+        <filter id="sg2glow">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path d="M28 2 L53 11 L53 33 C53 47 42 58 28 61 C14 58 3 47 3 33 L3 11 Z"
+            fill="#0d1521" stroke="url(#sg2)" stroke-width="1.8" filter="url(#sg2glow)"/>
+      <path d="M28 10 L45 17 L45 33 C45 43 38 51 28 54 C18 51 11 43 11 33 L11 17 Z"
+            fill="none" stroke="#4f9eff" stroke-width="0.8" stroke-opacity="0.3"/>
+      <path d="M31 17 L23 31 L28 31 L25 45 L35 28 L29 28 Z"
+            fill="url(#sg2)" filter="url(#sg2glow)"/>
+    </svg>
+
+    <div class="card-text">
+      <div class="card-life">Li<span class="ll">FE</span> Level</div>
+      <div class="card-sub">
+        <span class="card-level-badge">RPG</span>
+        <span class="card-tagline">Fitness meets the Game World</span>
+      </div>
+    </div>
+
+    <div class="xp-strip">
+      <div class="xp-fill"></div>
+    </div>
+  </div>
+
+</body>
+</html>

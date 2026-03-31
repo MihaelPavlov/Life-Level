@@ -15,8 +15,11 @@ using LifeLevel.Modules.Quest.Infrastructure;
 using LifeLevel.Modules.Streak.Infrastructure;
 using LifeLevel.Modules.WorldZone.Infrastructure;
 using LifeLevel.Modules.Items.Infrastructure;
+using LifeLevel.Modules.Integrations.Application;
+using LifeLevel.Modules.Integrations.Infrastructure;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -96,8 +99,18 @@ builder.Services.AddDungeonsModule();
 // Items module
 builder.Services.AddItemsModule();
 
+// Integrations module
+builder.Services.AddIntegrationsModule();
+builder.Services.Configure<StravaOptions>(builder.Configuration.GetSection(StravaOptions.Section));
+builder.Services.AddHttpClient<LifeLevel.Modules.Integrations.Application.UseCases.StravaOAuthService>();
+builder.Services.AddHttpClient<LifeLevel.Modules.Integrations.Application.UseCases.StravaWebhookService>();
+builder.Services.Configure<GarminOptions>(builder.Configuration.GetSection(GarminOptions.Section));
+builder.Services.AddHttpClient<LifeLevel.Modules.Integrations.Application.UseCases.GarminOAuthService>();
+builder.Services.AddHttpClient<LifeLevel.Modules.Integrations.Application.UseCases.GarminWebhookService>();
+
 // App services (MapService stays in LifeLevel.Api)
 builder.Services.AddScoped<MapService>();
+builder.Services.AddScoped<IMapDistancePort>(sp => sp.GetRequiredService<MapService>());
 builder.Services.AddScoped<WorldSeeder>();
 builder.Services.AddScoped<ItemSeeder>();
 

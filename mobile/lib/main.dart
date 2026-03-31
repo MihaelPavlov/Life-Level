@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/api/api_client.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/main_shell.dart';
 import 'features/auth/login_screen.dart';
 
 void main() {
@@ -16,7 +18,43 @@ class LifeLevelApp extends StatelessWidget {
       title: 'LifeLevel',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const LoginScreen(),
+      home: const _AuthGate(),
     );
+  }
+}
+
+class _AuthGate extends StatefulWidget {
+  const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  Widget? _home;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  Future<void> _resolve() async {
+    final token = await ApiClient.getToken();
+    if (!mounted) return;
+    setState(() {
+      _home = token != null
+          ? const MainShell()
+          : const LoginScreen();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _home ??
+        const Scaffold(
+          backgroundColor: Color(0xFF040810),
+          body: Center(child: CircularProgressIndicator(color: Color(0xFF4f9eff))),
+        );
   }
 }

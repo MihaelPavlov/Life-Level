@@ -14,8 +14,9 @@ public class ActivityService(
     ICharacterIdReadPort characterIdRead,
     IEventPublisher events,
     IStreakReadPort streakRead,
-    IQuestProgressPort questProgress)
-    : IActivityStatsReadPort
+    IQuestProgressPort questProgress,
+    IMapDistancePort mapDistance)
+    : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort
 {
     public async Task<LogActivityResult> LogActivityAsync(Guid userId, LogActivityRequest request)
     {
@@ -54,6 +55,9 @@ public class ActivityService(
             userId, activity.Id, request.Type, request.DurationMinutes,
             request.DistanceKm ?? 0, request.Calories ?? 0));
 
+        if (request.DistanceKm > 0)
+            await mapDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
+
         // Update quest progress and capture which quests were just completed
         var questResult = await questProgress.UpdateProgressFromActivityAsync(
             userId, request.Type, request.DurationMinutes,
@@ -79,6 +83,62 @@ public class ActivityService(
             AllDailyQuestsCompleted = questResult.AllDailyCompleted,
             BonusXpAwarded = questResult.BonusXp,
         };
+    }
+
+    public async Task<ActivityLogPortResult> LogExternalActivityAsync(
+        Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
+        int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
+        CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        var req = new LogActivityRequest
+        {
+            Type = type,
+            DurationMinutes = durationMinutes,
+            DistanceKm = distanceKm,
+            Calories = calories,
+            HeartRateAvg = heartRateAvg,
+        };
+        var (xp, str, end, agi, flx, sta) = CalculateGains(req);
+
+        var activity = new ActivityEntity
+        {
+            Id = Guid.NewGuid(),
+            CharacterId = characterId,
+            Type = type,
+            DurationMinutes = durationMinutes,
+            DistanceKm = distanceKm ?? 0,
+            Calories = calories ?? 0,
+            HeartRateAvg = heartRateAvg,
+            XpGained = xp,
+            StrGained = str,
+            EndGained = end,
+            AgiGained = agi,
+            FlxGained = flx,
+            StaGained = sta,
+            ExternalId = externalId,
+            LoggedAt = performedAt,
+        };
+        db.Set<ActivityEntity>().Add(activity);
+        await db.SaveChangesAsync(ct);
+
+        await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta));
+        await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
+            $"{type} workout · {durationMinutes} min", xp);
+
+        await events.PublishAsync(new ActivityLoggedEvent(
+            userId, activity.Id, type, durationMinutes,
+            distanceKm ?? 0, calories ?? 0));
+
+        if (distanceKm > 0)
+            await mapDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+
+        await questProgress.UpdateProgressFromActivityAsync(
+            userId, type, durationMinutes, distanceKm, calories);
+
+        return new ActivityLogPortResult(activity.Id, xp);
     }
 
     public async Task<List<ActivityHistoryDto>> GetHistoryAsync(Guid userId)
@@ -127,6 +187,15 @@ public class ActivityService(
             WeeklyDistanceKm: activities.Sum(a => a.DistanceKm),
             WeeklyXpEarned: activities.Sum(a => a.XpGained)
         );
+    }
+
+    // IActivityExternalIdReadPort
+    public async Task<Guid?> FindActivityIdByExternalIdAsync(Guid characterId, string externalId, CancellationToken ct = default)
+    {
+        return await db.Set<ActivityEntity>()
+            .Where(a => a.CharacterId == characterId && a.ExternalId == externalId)
+            .Select(a => (Guid?)a.Id)
+            .FirstOrDefaultAsync(ct);
     }
 
     private static (int Xp, int Str, int End, int Agi, int Flx, int Sta) CalculateGains(LogActivityRequest req)
