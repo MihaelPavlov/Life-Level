@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../character/providers/character_provider.dart';
 import '../../items/models/item_models.dart';
 import '../../items/providers/items_provider.dart';
 import '../profile_stat_metadata.dart';
@@ -85,6 +86,7 @@ class _EquipmentTabState extends ConsumerState<EquipmentTab> {
                   await ref
                       .read(equipmentProvider.notifier)
                       .unequip(_selectedSlot!);
+                  ref.read(characterProfileProvider.notifier).refresh();
                   setState(() => _selectedSlot = null);
                 },
               ),

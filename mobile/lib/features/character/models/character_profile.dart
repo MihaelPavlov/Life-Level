@@ -1,3 +1,5 @@
+import '../../items/models/item_models.dart';
+
 class CharacterProfile {
   final String username;
   final String? avatarEmoji;
@@ -19,6 +21,7 @@ class CharacterProfile {
   final int currentStreak;
   final int availableStatPoints;
   final bool loginRewardAvailable;
+  final GearBonusesDto? gearBonuses;
 
   const CharacterProfile({
     required this.username,
@@ -41,6 +44,7 @@ class CharacterProfile {
     required this.currentStreak,
     required this.availableStatPoints,
     this.loginRewardAvailable = false,
+    this.gearBonuses,
   });
 
   factory CharacterProfile.fromJson(Map<String, dynamic> json) =>
@@ -65,6 +69,10 @@ class CharacterProfile {
         currentStreak: json['currentStreak'] as int,
         availableStatPoints: json['availableStatPoints'] as int? ?? 0,
         loginRewardAvailable: json['loginRewardAvailable'] as bool? ?? false,
+        gearBonuses: json['gearBonuses'] != null
+            ? GearBonusesDto.fromJson(
+                json['gearBonuses'] as Map<String, dynamic>)
+            : null,
       );
 
   double get xpProgress {

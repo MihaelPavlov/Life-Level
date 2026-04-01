@@ -16,6 +16,7 @@ using LifeLevel.Modules.Streak.Infrastructure;
 using LifeLevel.Modules.WorldZone.Infrastructure;
 using LifeLevel.Modules.Items.Infrastructure;
 using LifeLevel.Modules.Integrations.Application;
+using LifeLevel.Modules.Achievements.Infrastructure;
 using LifeLevel.Modules.Integrations.Infrastructure;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
@@ -100,6 +101,9 @@ builder.Services.AddDungeonsModule();
 // Items module
 builder.Services.AddItemsModule();
 
+// Achievements module
+builder.Services.AddAchievementsModule();
+
 // Integrations module
 builder.Services.AddIntegrationsModule();
 builder.Services.Configure<StravaOptions>(builder.Configuration.GetSection(StravaOptions.Section));
@@ -114,6 +118,8 @@ builder.Services.AddScoped<MapService>();
 builder.Services.AddScoped<IMapDistancePort>(sp => sp.GetRequiredService<MapService>());
 builder.Services.AddScoped<WorldSeeder>();
 builder.Services.AddScoped<ItemSeeder>();
+builder.Services.AddScoped<AchievementSeeder>();
+builder.Services.AddScoped<TitleSeeder>();
 
 // User context
 builder.Services.AddHttpContextAccessor();
@@ -189,6 +195,12 @@ using (var scope = app.Services.CreateScope())
     var itemSeeder = scope.ServiceProvider.GetRequiredService<ItemSeeder>();
     await itemSeeder.SeedCatalogAsync();
     await itemSeeder.SeedDropRulesAsync();
+
+    var achievementSeeder = scope.ServiceProvider.GetRequiredService<AchievementSeeder>();
+    await achievementSeeder.SeedAsync();
+
+    var titleSeeder = scope.ServiceProvider.GetRequiredService<TitleSeeder>();
+    await titleSeeder.SeedAsync();
 }
 
 app.Run();

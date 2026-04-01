@@ -105,6 +105,28 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
                             fontSize: 12,
                           ),
                         ),
+                        if (r.xpBonusApplied > 0) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.orange.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: AppColors.orange
+                                      .withValues(alpha: 0.4)),
+                            ),
+                            child: Text(
+                              '\u26a1 +${r.xpBonusApplied} XP from gear',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     );
                   },

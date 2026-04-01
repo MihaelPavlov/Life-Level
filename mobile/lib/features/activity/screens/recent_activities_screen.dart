@@ -40,10 +40,20 @@ class RecentActivitiesScreen extends ConsumerWidget {
             Expanded(
               child: historyAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const Center(
-                  child: Text(
-                    'Failed to load activities.',
-                    style: TextStyle(color: AppColors.textSecondary),
+                error: (_, __) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Failed to load activities.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => ref.invalidate(activityHistoryProvider),
+                        child: const Text('Retry', style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700)),
+                      ),
+                    ],
                   ),
                 ),
                 data: (history) {

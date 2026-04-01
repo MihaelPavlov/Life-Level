@@ -24,13 +24,13 @@ class EquipmentNotifier extends AsyncNotifier<CharacterEquipmentResponse> {
 }
 
 final inventoryProvider =
-    AsyncNotifierProvider<InventoryNotifier, List<ItemDto>>(
+    AsyncNotifierProvider<InventoryNotifier, InventoryResponse>(
   InventoryNotifier.new,
 );
 
-class InventoryNotifier extends AsyncNotifier<List<ItemDto>> {
+class InventoryNotifier extends AsyncNotifier<InventoryResponse> {
   @override
-  Future<List<ItemDto>> build() => _service.getInventory();
+  Future<InventoryResponse> build() => _service.getInventory();
 
   Future<void> refresh() async {
     state = const AsyncLoading();

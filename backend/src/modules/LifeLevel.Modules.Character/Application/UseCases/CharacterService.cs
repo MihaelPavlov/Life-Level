@@ -13,7 +13,7 @@ namespace LifeLevel.Modules.Character.Application.UseCases;
 public class CharacterService(
     DbContext db,
     IEventPublisher events)
-    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort
+    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort
 {
     private const int StarterXpReward = 500;
 
@@ -145,10 +145,21 @@ public class CharacterService(
         if (character == null) return (false, 0);
 
         bool leveled = false;
+        int previousLevel = character.Level;
         while (character.Xp >= XpAtLevelStart(character.Level + 1))
         {
             character.Level++;
             character.AvailableStatPoints++;
+            character.MaxInventorySlots = character.Level switch
+            {
+                >= 50 => 100,
+                >= 35 => 75,
+                >= 25 => 60,
+                >= 15 => 50,
+                >= 10 => 40,
+                >= 5  => 30,
+                _     => 20,
+            };
             character.UpdatedAt = DateTime.UtcNow;
             leveled = true;
         }
@@ -156,7 +167,7 @@ public class CharacterService(
         if (leveled)
         {
             await db.SaveChangesAsync(ct);
-            await events.PublishAsync(new Domain.Events.CharacterLeveledUpEvent(character.UserId, character.Level), ct);
+            await events.PublishAsync(new CharacterLeveledUpEvent(character.UserId, previousLevel, character.Level), ct);
         }
 
         return (leveled, character.Level);
@@ -217,6 +228,13 @@ public class CharacterService(
             .Where(c => c.UserId == userId)
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync(ct);
+    }
+
+    // IInventorySlotReadPort
+    public async Task<int> GetMaxInventorySlotsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct);
+        return character?.MaxInventorySlots ?? 20;
     }
 
     private static long XpAtLevelStart(int level) =>

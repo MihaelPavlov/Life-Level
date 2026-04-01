@@ -135,8 +135,9 @@ public class AdminItemsController(AppDbContext db, ItemGrantService grantService
     public async Task<IActionResult> GrantItem([FromBody] GrantItemRequest req)
     {
         var result = await grantService.GrantItemAsync(req.UserId, req.ItemId);
-        if (result == null) return BadRequest("User or item not found.");
-        return Ok(new { result.Id, result.ItemId, result.CharacterId });
+        if (result.InventoryFull) return Conflict("Inventory is full.");
+        if (result.Item == null) return BadRequest("User or item not found.");
+        return Ok(new { result.Item.Id, result.Item.ItemId, result.Item.CharacterId });
     }
 }
 

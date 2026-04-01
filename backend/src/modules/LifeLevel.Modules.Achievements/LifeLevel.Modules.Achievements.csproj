@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LifeLevel.SharedKernel\LifeLevel.SharedKernel.csproj" />
+    <ProjectReference Include="..\LifeLevel.Modules.Activity\LifeLevel.Modules.Activity.csproj" />
+    <ProjectReference Include="..\LifeLevel.Modules.Streak\LifeLevel.Modules.Streak.csproj" />
+    <ProjectReference Include="..\LifeLevel.Modules.Adventure.Encounters\LifeLevel.Modules.Adventure.Encounters.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
+  </ItemGroup>
+</Project>

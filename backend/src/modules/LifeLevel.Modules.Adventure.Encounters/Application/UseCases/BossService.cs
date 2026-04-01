@@ -1,12 +1,13 @@
 using LifeLevel.Modules.Adventure.Encounters.Application.DTOs;
 using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.Map.Domain.Entities;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 
-public class BossService(DbContext db, ICharacterXpPort characterXp)
+public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
 {
     public async Task<UserBossState> ActivateFightAsync(Guid userId, Guid bossId)
     {
@@ -95,6 +96,7 @@ public class BossService(DbContext db, ICharacterXpPort characterXp)
             var emoji = boss.IsMini ? "👹" : "💀";
             var source = boss.IsMini ? "MiniBossDefeated" : "BossDefeated";
             await characterXp.AwardXpAsync(userId, source, emoji, $"{boss.Name} defeated", boss.RewardXp);
+            await events.PublishAsync(new BossDefeatedEvent(userId, bossId));
         }
 
         return new BossDamageResult
@@ -121,7 +123,7 @@ public class BossService(DbContext db, ICharacterXpPort characterXp)
             _          => 1.0
         };
 
-        var baseDamage = durationMinutes * 2 + distanceKm * 10 + calories / 5.0;
+        var baseDamage = calories * 0.5 + durationMinutes * 1.0 + distanceKm * 3.0;
         return (int)(baseDamage * multiplier);
     }
 
@@ -155,6 +157,7 @@ public class BossService(DbContext db, ICharacterXpPort characterXp)
             var emoji = boss.IsMini ? "👹" : "💀";
             var source = boss.IsMini ? "MiniBossDefeated" : "BossDefeated";
             await characterXp.AwardXpAsync(userId, source, emoji, $"{boss.Name} defeated", boss.RewardXp);
+            await events.PublishAsync(new BossDefeatedEvent(userId, bossId));
         }
     }
 
@@ -178,6 +181,7 @@ public class BossService(DbContext db, ICharacterXpPort characterXp)
             var emoji = boss.IsMini ? "👹" : "💀";
             var source = boss.IsMini ? "MiniBossDefeated" : "BossDefeated";
             await characterXp.AwardXpAsync(userId, source, emoji, $"{boss.Name} defeated", boss.RewardXp);
+            await events.PublishAsync(new BossDefeatedEvent(userId, bossId));
         }
     }
 

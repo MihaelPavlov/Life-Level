@@ -22,6 +22,83 @@ namespace LifeLevel.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LifeLevel.Modules.Achievements.Domain.Entities.Achievement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConditionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("TargetUnit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<double>("TargetValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("XpReward")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Achievements");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Achievements.Domain.Entities.UserAchievement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AchievementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("CurrentValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AchievementId");
+
+                    b.HasIndex("UserId", "AchievementId")
+                        .IsUnique();
+
+                    b.ToTable("UserAchievements");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.Activity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -60,6 +137,9 @@ namespace LifeLevel.Api.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("StaGained")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Steps")
                         .HasColumnType("integer");
 
                     b.Property<int>("StrGained")
@@ -419,6 +499,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("Endurance")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("EquippedTitleId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Flexibility")
                         .HasColumnType("integer");
 
@@ -426,6 +509,9 @@ namespace LifeLevel.Api.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxInventorySlots")
                         .HasColumnType("integer");
 
                     b.Property<int>("Rank")
@@ -449,6 +535,8 @@ namespace LifeLevel.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClassId");
+
+                    b.HasIndex("EquippedTitleId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -560,6 +648,65 @@ namespace LifeLevel.Api.Migrations
                             StrMultiplier = 1f,
                             Tagline = "Outlast everything."
                         });
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.CharacterTitle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EarnedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TitleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TitleId");
+
+                    b.HasIndex("CharacterId", "TitleId")
+                        .IsUnique();
+
+                    b.ToTable("CharacterTitles");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.Title", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UnlockCondition")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("UnlockCriteria")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Titles");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry", b =>
@@ -1069,6 +1216,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<double>("DistanceTraveledOnEdge")
                         .HasColumnType("double precision");
 
+                    b.Property<double>("PendingDistanceKm")
+                        .HasColumnType("double precision");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1574,6 +1724,23 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("WorldZoneEdges");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Achievements.Domain.Entities.UserAchievement", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Achievements.Domain.Entities.Achievement", "Achievement")
+                        .WithMany()
+                        .HasForeignKey("AchievementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Achievement");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.Activity", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
@@ -1751,6 +1918,11 @@ namespace LifeLevel.Api.Migrations
                         .WithMany()
                         .HasForeignKey("ClassId");
 
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Title", null)
+                        .WithMany()
+                        .HasForeignKey("EquippedTitleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithOne()
                         .HasForeignKey("LifeLevel.Modules.Character.Domain.Entities.Character", "UserId")
@@ -1758,6 +1930,25 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.CharacterTitle", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Title", "Title")
+                        .WithMany()
+                        .HasForeignKey("TitleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Title");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry", b =>

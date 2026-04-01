@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life-Level — Icon Reference</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #040810;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      padding: 40px 24px 80px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #e6edf3;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #8b949e;
+      letter-spacing: 0.6px;
+      margin-bottom: 48px;
+    }
+
+    /* ── section ── */
+    .section { margin-bottom: 44px; }
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      color: #4f9eff;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #161b22;
+    }
+
+    /* ── grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+    }
+
+    /* ── icon card ── */
+    .icon-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 16px 8px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: default;
+    }
+    .icon-card:hover {
+      background: #1e2632;
+      border-color: #4f9eff44;
+    }
+
+    .icon-emoji {
+      font-size: 32px;
+      line-height: 1;
+      user-select: none;
+    }
+    .icon-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #8b949e;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .icon-tag {
+      font-size: 9px;
+      color: #4f9eff;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      background: #4f9eff18;
+      border: 1px solid #4f9eff33;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+
+    /* tag colour variants */
+    .tag-purple { color: #a371f7; background: #a371f718; border-color: #a371f733; }
+    .tag-green  { color: #3fb950; background: #3fb95018; border-color: #3fb95033; }
+    .tag-orange { color: #f5a623; background: #f5a62318; border-color: #f5a62333; }
+    .tag-red    { color: #f85149; background: #f8514918; border-color: #f8514933; }
+    .tag-gray   { color: #8b949e; background: #8b949e18; border-color: #8b949e33; }
+
+    /* ── search bar ── */
+    .search-wrap { margin-bottom: 32px; }
+    .search-input {
+      width: 100%;
+      max-width: 400px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #e6edf3;
+      outline: none;
+    }
+    .search-input::placeholder { color: #8b949e; }
+    .search-input:focus { border-color: #4f9eff55; }
+
+    /* ── hidden ── */
+    .icon-card.hidden { display: none; }
+
+    /* ── divider ── */
+    hr { border: none; border-top: 1px solid #161b22; margin: 8px 0 20px; }
+  </style>
+</head>
+<body>
+
+<h1>Life-Level — Icon Reference</h1>
+<p class="subtitle">ALL EMOJIS &amp; ICONS USED ACROSS THE APPLICATION</p>
+
+<div class="search-wrap">
+  <input class="search-input" type="text" placeholder="Search icons…" id="search" />
+</div>
+
+<!-- ── NAVIGATION ──────────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Navigation &amp; Ring Menu</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Home nav">
+      <span class="icon-emoji">🏠</span>
+      <span class="icon-label">Home</span>
+      <span class="icon-tag">nav</span>
+    </div>
+    <div class="icon-card" data-label="Quests nav">
+      <span class="icon-emoji">📜</span>
+      <span class="icon-label">Quests</span>
+      <span class="icon-tag">nav</span>
+    </div>
+    <div class="icon-card" data-label="Map nav">
+      <span class="icon-emoji">🗺️</span>
+      <span class="icon-label">Map</span>
+      <span class="icon-tag">nav</span>
+    </div>
+    <div class="icon-card" data-label="Profile nav">
+      <span class="icon-emoji">👤</span>
+      <span class="icon-label">Profile</span>
+      <span class="icon-tag">nav</span>
+    </div>
+    <div class="icon-card" data-label="Stats nav">
+      <span class="icon-emoji">📊</span>
+      <span class="icon-label">Stats</span>
+      <span class="icon-tag">nav</span>
+    </div>
+    <div class="icon-card" data-label="Guild nav ring">
+      <span class="icon-emoji">🛡️</span>
+      <span class="icon-label">Guild</span>
+      <span class="icon-tag">ring</span>
+    </div>
+    <div class="icon-card" data-label="Battle ring">
+      <span class="icon-emoji">⚔️</span>
+      <span class="icon-label">Battle</span>
+      <span class="icon-tag">ring</span>
+    </div>
+    <div class="icon-card" data-label="Boss ring">
+      <span class="icon-emoji">🐉</span>
+      <span class="icon-label">Boss</span>
+      <span class="icon-tag">ring</span>
+    </div>
+    <div class="icon-card" data-label="Titles ring">
+      <span class="icon-emoji">🏅</span>
+      <span class="icon-label">Titles</span>
+      <span class="icon-tag">ring</span>
+    </div>
+    <div class="icon-card" data-label="Leaderboard ring">
+      <span class="icon-emoji">🏆</span>
+      <span class="icon-label">Leaderboard</span>
+      <span class="icon-tag">ring</span>
+    </div>
+    <div class="icon-card" data-label="World ring nav">
+      <span class="icon-emoji">🌍</span>
+      <span class="icon-label">World</span>
+      <span class="icon-tag">ring</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHARACTER STATS ─────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Character Stats</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Strength STR stat">
+      <span class="icon-emoji">💪</span>
+      <span class="icon-label">STR · Strength</span>
+      <span class="icon-tag tag-red">stat</span>
+    </div>
+    <div class="icon-card" data-label="Endurance END stat">
+      <span class="icon-emoji">🏃</span>
+      <span class="icon-label">END · Endurance</span>
+      <span class="icon-tag tag-green">stat</span>
+    </div>
+    <div class="icon-card" data-label="Agility AGI stat">
+      <span class="icon-emoji">⚡</span>
+      <span class="icon-label">AGI · Agility</span>
+      <span class="icon-tag tag-purple">stat</span>
+    </div>
+    <div class="icon-card" data-label="Flexibility FLX stat">
+      <span class="icon-emoji">🧘</span>
+      <span class="icon-label">FLX · Flexibility</span>
+      <span class="icon-tag tag-orange">stat</span>
+    </div>
+    <div class="icon-card" data-label="Stamina STA stat">
+      <span class="icon-emoji">❤️</span>
+      <span class="icon-label">STA · Stamina</span>
+      <span class="icon-tag tag-red">stat</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── ACTIVITY TYPES ──────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Activity Types</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Running activity">
+      <span class="icon-emoji">🏃</span>
+      <span class="icon-label">Running</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Cycling activity">
+      <span class="icon-emoji">🚴</span>
+      <span class="icon-label">Cycling</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Gym workout activity">
+      <span class="icon-emoji">💪</span>
+      <span class="icon-label">Gym</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Yoga activity">
+      <span class="icon-emoji">🧘</span>
+      <span class="icon-label">Yoga</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Swimming activity">
+      <span class="icon-emoji">🏊</span>
+      <span class="icon-label">Swimming</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Hiking activity">
+      <span class="icon-emoji">🥾</span>
+      <span class="icon-label">Hiking</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Climbing activity">
+      <span class="icon-emoji">🧗</span>
+      <span class="icon-label">Climbing</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Weightlifting gym activity">
+      <span class="icon-emoji">🏋️</span>
+      <span class="icon-label">Weightlifting</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Stretching flexibility activity">
+      <span class="icon-emoji">🤸</span>
+      <span class="icon-label">Stretching</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="HIIT activity">
+      <span class="icon-emoji">⛹️</span>
+      <span class="icon-label">HIIT</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Mobility recovery activity">
+      <span class="icon-emoji">💆</span>
+      <span class="icon-label">Mobility</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Mountain cycling activity">
+      <span class="icon-emoji">🚵</span>
+      <span class="icon-label">MTB Cycling</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+    <div class="icon-card" data-label="Rock climbing activity">
+      <span class="icon-emoji">🪨</span>
+      <span class="icon-label">Rock Climb</span>
+      <span class="icon-tag tag-green">activity</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUEST CATEGORIES ────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Quest Categories</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Duration quest timer">
+      <span class="icon-emoji">⏱️</span>
+      <span class="icon-label">Duration</span>
+      <span class="icon-tag tag-orange">quest</span>
+    </div>
+    <div class="icon-card" data-label="Calories streak quest fire">
+      <span class="icon-emoji">🔥</span>
+      <span class="icon-label">Calories / Streak</span>
+      <span class="icon-tag tag-orange">quest</span>
+    </div>
+    <div class="icon-card" data-label="Distance quest pin">
+      <span class="icon-emoji">📍</span>
+      <span class="icon-label">Distance</span>
+      <span class="icon-tag tag-orange">quest</span>
+    </div>
+    <div class="icon-card" data-label="Workout count quest">
+      <span class="icon-emoji">🏋️</span>
+      <span class="icon-label">Workout Count</span>
+      <span class="icon-tag tag-orange">quest</span>
+    </div>
+    <div class="icon-card" data-label="Daily login quest calendar">
+      <span class="icon-emoji">📅</span>
+      <span class="icon-label">Daily Login</span>
+      <span class="icon-tag tag-orange">quest</span>
+    </div>
+    <div class="icon-card" data-label="General target quest">
+      <span class="icon-emoji">🎯</span>
+      <span class="icon-label">General / Target</span>
+      <span class="icon-tag tag-orange">quest</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAP ZONES ───────────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Map Zones &amp; Nodes</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Ashfield Plains zone">
+      <span class="icon-emoji">🌾</span>
+      <span class="icon-label">Ashfield Plains</span>
+      <span class="icon-tag">zone</span>
+    </div>
+    <div class="icon-card" data-label="Thornwood Forest zone">
+      <span class="icon-emoji">🌲</span>
+      <span class="icon-label">Thornwood Forest</span>
+      <span class="icon-tag">zone</span>
+    </div>
+    <div class="icon-card" data-label="Iron Peaks zone mountain">
+      <span class="icon-emoji">⛰️</span>
+      <span class="icon-label">Iron Peaks</span>
+      <span class="icon-tag">zone</span>
+    </div>
+    <div class="icon-card" data-label="Coral Coast ocean zone">
+      <span class="icon-emoji">🌊</span>
+      <span class="icon-label">Coral Coast</span>
+      <span class="icon-tag">zone</span>
+    </div>
+    <div class="icon-card" data-label="Frostbound Peaks zone snow">
+      <span class="icon-emoji">❄️</span>
+      <span class="icon-label">Frostbound Peaks</span>
+      <span class="icon-tag">zone</span>
+    </div>
+    <div class="icon-card" data-label="Desert of Trials zone">
+      <span class="icon-emoji">🏜️</span>
+      <span class="icon-label">Desert of Trials</span>
+      <span class="icon-tag">zone</span>
+    </div>
+    <div class="icon-card" data-label="First Fork crossroads zone">
+      <span class="icon-emoji">⚔️</span>
+      <span class="icon-label">First Fork</span>
+      <span class="icon-tag tag-gray">crossroads</span>
+    </div>
+    <div class="icon-card" data-label="The Convergence crossroads zone">
+      <span class="icon-emoji">🔀</span>
+      <span class="icon-label">The Convergence</span>
+      <span class="icon-tag tag-gray">crossroads</span>
+    </div>
+    <div class="icon-card" data-label="Final Approach crossroads zone">
+      <span class="icon-emoji">🔱</span>
+      <span class="icon-label">Final Approach</span>
+      <span class="icon-tag tag-gray">crossroads</span>
+    </div>
+    <div class="icon-card" data-label="Current location pin map">
+      <span class="icon-emoji">📍</span>
+      <span class="icon-label">Current Location</span>
+      <span class="icon-tag tag-gray">map ui</span>
+    </div>
+    <div class="icon-card" data-label="Destination target marker map">
+      <span class="icon-emoji">🎯</span>
+      <span class="icon-label">Destination</span>
+      <span class="icon-tag tag-gray">map ui</span>
+    </div>
+    <div class="icon-card" data-label="XP reward star map">
+      <span class="icon-emoji">⭐</span>
+      <span class="icon-label">XP Reward</span>
+      <span class="icon-tag tag-gray">map ui</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── AVATARS ─────────────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Avatars</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Wizard mage avatar unlocked">
+      <span class="icon-emoji">🧙</span>
+      <span class="icon-label">Wizard</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Sword fighter warrior avatar unlocked">
+      <span class="icon-emoji">⚔️</span>
+      <span class="icon-label">Warrior</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Archer avatar unlocked">
+      <span class="icon-emoji">🏹</span>
+      <span class="icon-label">Archer</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Shield bearer paladin avatar unlocked">
+      <span class="icon-emoji">🛡️</span>
+      <span class="icon-label">Paladin</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Monk meditating avatar unlocked">
+      <span class="icon-emoji">🧘</span>
+      <span class="icon-label">Monk</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Wolf beast avatar unlocked">
+      <span class="icon-emoji">🐺</span>
+      <span class="icon-label">Wolf</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Fox trickster avatar unlocked">
+      <span class="icon-emoji">🦊</span>
+      <span class="icon-label">Fox</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Ninja stealth avatar unlocked">
+      <span class="icon-emoji">🥷</span>
+      <span class="icon-label">Ninja</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Superhero avatar unlocked">
+      <span class="icon-emoji">🦸</span>
+      <span class="icon-label">Superhero</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Elf ranger avatar unlocked">
+      <span class="icon-emoji">🧝</span>
+      <span class="icon-label">Elf</span>
+      <span class="icon-tag tag-green">unlocked</span>
+    </div>
+    <div class="icon-card" data-label="Crown king avatar locked legendary">
+      <span class="icon-emoji">👑</span>
+      <span class="icon-label">Crown</span>
+      <span class="icon-tag tag-orange">locked</span>
+    </div>
+    <div class="icon-card" data-label="Star avatar locked legendary">
+      <span class="icon-emoji">🌟</span>
+      <span class="icon-label">Star</span>
+      <span class="icon-tag tag-orange">locked</span>
+    </div>
+    <div class="icon-card" data-label="Diamond avatar locked legendary">
+      <span class="icon-emoji">💎</span>
+      <span class="icon-label">Diamond</span>
+      <span class="icon-tag tag-orange">locked</span>
+    </div>
+    <div class="icon-card" data-label="Crystal ball mystic avatar locked legendary">
+      <span class="icon-emoji">🔮</span>
+      <span class="icon-label">Mystic</span>
+      <span class="icon-tag tag-orange">locked</span>
+    </div>
+    <div class="icon-card" data-label="Lightning storm avatar locked legendary">
+      <span class="icon-emoji">⚡</span>
+      <span class="icon-label">Lightning</span>
+      <span class="icon-tag tag-orange">locked</span>
+    </div>
+    <div class="icon-card" data-label="Moon night avatar locked legendary">
+      <span class="icon-emoji">🌙</span>
+      <span class="icon-label">Moon</span>
+      <span class="icon-tag tag-orange">locked</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── REWARDS & PROGRESSION ──────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Rewards &amp; Progression</div>
+  <div class="grid">
+    <div class="icon-card" data-label="XP reward sparkle stars">
+      <span class="icon-emoji">✨</span>
+      <span class="icon-label">XP Reward</span>
+      <span class="icon-tag tag-orange">reward</span>
+    </div>
+    <div class="icon-card" data-label="Streak shield protection">
+      <span class="icon-emoji">🛡️</span>
+      <span class="icon-label">Streak Shield</span>
+      <span class="icon-tag tag-orange">reward</span>
+    </div>
+    <div class="icon-card" data-label="XP Storm bonus lightning">
+      <span class="icon-emoji">⚡</span>
+      <span class="icon-label">XP Storm</span>
+      <span class="icon-tag tag-orange">reward</span>
+    </div>
+    <div class="icon-card" data-label="Treasure chest item loot">
+      <span class="icon-emoji">📦</span>
+      <span class="icon-label">Treasure Chest</span>
+      <span class="icon-tag tag-orange">reward</span>
+    </div>
+    <div class="icon-card" data-label="Gift grant item reward">
+      <span class="icon-emoji">🎁</span>
+      <span class="icon-label">Grant Item</span>
+      <span class="icon-tag tag-orange">reward</span>
+    </div>
+    <div class="icon-card" data-label="Daily quests completion target bonus XP">
+      <span class="icon-emoji">🎯</span>
+      <span class="icon-label">Daily Bonus</span>
+      <span class="icon-tag tag-orange">reward</span>
+    </div>
+    <div class="icon-card" data-label="New item sparkle decoration">
+      <span class="icon-emoji">✦</span>
+      <span class="icon-label">New Item ✦</span>
+      <span class="icon-tag tag-gray">ui deco</span>
+    </div>
+    <div class="icon-card" data-label="Level up rank up decoration">
+      <span class="icon-emoji">🔥</span>
+      <span class="icon-label">Streak Fire</span>
+      <span class="icon-tag tag-red">streak</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOSS & COMBAT ───────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Boss &amp; Combat</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Dragon boss encounter">
+      <span class="icon-emoji">🐉</span>
+      <span class="icon-label">Boss Dragon</span>
+      <span class="icon-tag tag-red">boss</span>
+    </div>
+    <div class="icon-card" data-label="Mountain boss Iron Peak">
+      <span class="icon-emoji">🗻</span>
+      <span class="icon-label">Iron Peak Boss</span>
+      <span class="icon-tag tag-red">boss</span>
+    </div>
+    <div class="icon-card" data-label="Damage sword dagger combat">
+      <span class="icon-emoji">🗡️</span>
+      <span class="icon-label">Damage</span>
+      <span class="icon-tag tag-red">combat</span>
+    </div>
+    <div class="icon-card" data-label="Timer countdown boss time remaining">
+      <span class="icon-emoji">⏰</span>
+      <span class="icon-label">Time Remaining</span>
+      <span class="icon-tag tag-red">combat</span>
+    </div>
+    <div class="icon-card" data-label="XP bonus gear perk stat modifier">
+      <span class="icon-emoji">⚡</span>
+      <span class="icon-label">XP Gear Bonus</span>
+      <span class="icon-tag tag-purple">perk</span>
+    </div>
+    <div class="icon-card" data-label="Armour heavy perk tank">
+      <span class="icon-emoji">🪖</span>
+      <span class="icon-label">Heavy Armour</span>
+      <span class="icon-tag tag-purple">perk</span>
+    </div>
+    <div class="icon-card" data-label="Dodge agility combat perk">
+      <span class="icon-emoji">🎯</span>
+      <span class="icon-label">Dodge Chance</span>
+      <span class="icon-tag tag-purple">perk</span>
+    </div>
+    <div class="icon-card" data-label="Map range endurance perk distance">
+      <span class="icon-emoji">🗺️</span>
+      <span class="icon-label">Map Distance</span>
+      <span class="icon-tag tag-purple">perk</span>
+    </div>
+    <div class="icon-card" data-label="Long distance quest endurance perk scroll">
+      <span class="icon-emoji">📜</span>
+      <span class="icon-label">Long Quests</span>
+      <span class="icon-tag tag-purple">perk</span>
+    </div>
+    <div class="icon-card" data-label="Recovery rest day perk sleep">
+      <span class="icon-emoji">💤</span>
+      <span class="icon-label">Recovery</span>
+      <span class="icon-tag tag-purple">perk</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── SOCIAL ──────────────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Social &amp; Profile UI</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Greeting wave welcome">
+      <span class="icon-emoji">👋</span>
+      <span class="icon-label">Greeting</span>
+      <span class="icon-tag tag-gray">ui</span>
+    </div>
+    <div class="icon-card" data-label="Character paperdoll avatar default">
+      <span class="icon-emoji">🏃</span>
+      <span class="icon-label">Character Default</span>
+      <span class="icon-tag tag-gray">ui</span>
+    </div>
+    <div class="icon-card" data-label="Node reached achievement pin">
+      <span class="icon-emoji">⛏️</span>
+      <span class="icon-label">Node Reached</span>
+      <span class="icon-tag tag-gray">ui</span>
+    </div>
+    <div class="icon-card" data-label="Login streak calendar">
+      <span class="icon-emoji">📅</span>
+      <span class="icon-label">Login Streak</span>
+      <span class="icon-tag tag-gray">ui</span>
+    </div>
+    <div class="icon-card" data-label="Setup welcome pillar real xp">
+      <span class="icon-emoji">⚡</span>
+      <span class="icon-label">Real XP Pillar</span>
+      <span class="icon-tag tag-gray">onboarding</span>
+    </div>
+    <div class="icon-card" data-label="Setup welcome adventure map pillar">
+      <span class="icon-emoji">🗺️</span>
+      <span class="icon-label">Adventure Map Pillar</span>
+      <span class="icon-tag tag-gray">onboarding</span>
+    </div>
+    <div class="icon-card" data-label="Setup welcome compete conquer pillar trophy">
+      <span class="icon-emoji">🏆</span>
+      <span class="icon-label">Compete &amp; Conquer</span>
+      <span class="icon-tag tag-gray">onboarding</span>
+    </div>
+    <div class="icon-card" data-label="Main character sword onboarding setup">
+      <span class="icon-emoji">⚔️</span>
+      <span class="icon-label">Main Character</span>
+      <span class="icon-tag tag-gray">onboarding</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN ───────────────────────────────────────────────────────────── -->
+<div class="section" data-section>
+  <div class="section-title">Admin Panel</div>
+  <div class="grid">
+    <div class="icon-card" data-label="Item catalog settings admin">
+      <span class="icon-emoji">⚙️</span>
+      <span class="icon-label">Item Catalog</span>
+      <span class="icon-tag tag-gray">admin</span>
+    </div>
+    <div class="icon-card" data-label="Drop rules target admin">
+      <span class="icon-emoji">🎯</span>
+      <span class="icon-label">Drop Rules</span>
+      <span class="icon-tag tag-gray">admin</span>
+    </div>
+    <div class="icon-card" data-label="Grant item gift admin">
+      <span class="icon-emoji">🎁</span>
+      <span class="icon-label">Grant Item</span>
+      <span class="icon-tag tag-gray">admin</span>
+    </div>
+    <div class="icon-card" data-label="Map panel admin world">
+      <span class="icon-emoji">🗺️</span>
+      <span class="icon-label">Map Panel</span>
+      <span class="icon-tag tag-gray">admin</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── SEARCH SCRIPT ───────────────────────────────────────────────────── -->
+<script>
+  const input = document.getElementById('search');
+  const cards = document.querySelectorAll('.icon-card');
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    cards.forEach(card => {
+      const label = (card.dataset.label || '').toLowerCase();
+      const text  = card.textContent.toLowerCase();
+      card.classList.toggle('hidden', q !== '' && !label.includes(q) && !text.includes(q));
+    });
+    // hide empty section headers
+    document.querySelectorAll('[data-section]').forEach(section => {
+      const visible = [...section.querySelectorAll('.icon-card')].some(c => !c.classList.contains('hidden'));
+      section.style.display = visible || q === '' ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>

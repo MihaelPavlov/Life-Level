@@ -28,10 +28,8 @@ class ItemsService {
         res.data as Map<String, dynamic>);
   }
 
-  Future<List<ItemDto>> getInventory() async {
+  Future<InventoryResponse> getInventory() async {
     final res = await _dio.get('/items/inventory');
-    return (res.data as List<dynamic>)
-        .map((e) => ItemDto.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return InventoryResponse.fromJson(res.data as Map<String, dynamic>);
   }
 }

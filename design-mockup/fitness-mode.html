@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Fitness Mode (Light)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#dde4ec;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  display:flex; align-items:flex-start; justify-content:center;
+  min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap;
+}
+
+/* Page header */
+.page-header { width:100%; text-align:center; margin-bottom:8px; }
+.page-header h1 { font-size:22px; color:#1e293b; font-weight:700; margin-bottom:6px; }
+.page-header p { font-size:13px; color:#64748b; }
+
+/* Step label above each phone */
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num {
+  display:inline-block;
+  background:#f1f5f9; border:1px solid #e2e8f0;
+  border-radius:12px; padding:3px 14px;
+  font-size:10px; color:#475569; font-weight:700; letter-spacing:0.06em;
+  margin-bottom:6px;
+}
+.step-title { font-size:14px; color:#1e293b; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#64748b; line-height:1.5; }
+
+/* Phone shell */
+.phone {
+  width:390px; height:844px; background:#f8fafc; border-radius:44px;
+  overflow:hidden; position:relative; flex-shrink:0;
+  box-shadow:0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  border:1px solid #e2e8f0;
+}
+
+/* Status bar */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100;
+  background:#f8fafc;
+}
+.st { font-size:13px; font-weight:600; color:#0f172a; }
+.si { font-size:11px; color:#64748b; }
+
+/* Bottom nav */
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#ffffff; border-top:1px solid #e2e8f0;
+  display:flex; align-items:center; padding:0 8px 12px; z-index:100;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color:#22c55e; }
+.nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color:#94a3b8; }
+
+/* Scrollable content */
+.screen-scroll {
+  position:absolute; inset:0; overflow-y:auto; padding-bottom:90px;
+  scrollbar-width:none;
+}
+.screen-scroll::-webkit-scrollbar { display:none; }
+
+/* Shared section label */
+.sec-label {
+  font-size:10px; color:#94a3b8; font-weight:700; letter-spacing:0.07em;
+  margin-bottom:8px;
+}
+
+/* Card */
+.card {
+  background:#ffffff; border-radius:14px; border:1px solid #e2e8f0;
+  box-shadow:0 1px 4px rgba(0,0,0,0.05);
+  padding:14px 16px; margin-bottom:12px;
+}
+
+/* Streak pill */
+.streak-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:#ffedd5; border-radius:20px; padding:5px 12px;
+  font-size:12px; font-weight:700; color:#ea580c;
+}
+
+/* Progress bar */
+.pbar-track {
+  height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden;
+}
+.pbar-fill {
+  height:100%; border-radius:3px;
+}
+
+/* Challenge card with left border accent */
+.challenge-card {
+  background:#ffffff; border-radius:12px; border:1px solid #e2e8f0;
+  border-left-width:3px; padding:12px 14px; margin-bottom:10px;
+}
+.challenge-card.done { border-left-color:#22c55e; opacity:0.75; }
+.challenge-card.active { border-left-color:#3b82f6; }
+.challenge-card.todo { border-left-color:#e2e8f0; }
+
+/* Activity row */
+.activity-row {
+  background:#ffffff; border-radius:12px; border:1px solid #e2e8f0;
+  border-left-width:3px; padding:12px 14px; margin-bottom:10px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+/* Filter chip */
+.chip {
+  display:inline-block; padding:5px 12px; border-radius:20px;
+  font-size:11px; font-weight:600; border:1px solid #e2e8f0;
+  background:#f1f5f9; color:#64748b; margin-right:6px; margin-bottom:6px;
+  white-space:nowrap;
+}
+.chip.active { background:#dcfce7; border-color:#86efac; color:#16a34a; }
+
+/* Journey timeline */
+.timeline { position:relative; padding:0 0 0 48px; }
+.timeline-line {
+  position:absolute; left:24px; top:12px; bottom:12px;
+  width:2px; background:#e2e8f0;
+}
+.timeline-node { position:relative; margin-bottom:28px; }
+.timeline-dot {
+  position:absolute; left:-36px; top:2px;
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+.timeline-dot.done { background:#22c55e; }
+.timeline-dot.current { background:#fff; border:2.5px solid #3b82f6; box-shadow:0 0 0 5px rgba(59,130,246,0.15); }
+.timeline-dot.future { background:#fff; border:2px solid #e2e8f0; }
+
+/* Metric ring wrapper */
+.metric-ring-wrap {
+  display:flex; align-items:center; gap:10px;
+  background:#ffffff; border-radius:12px; border:1px solid #e2e8f0;
+  padding:10px 12px;
+}
+
+/* Bar chart bar */
+.bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.bar-fill { width:100%; border-radius:3px 3px 0 0; background:#22c55e; }
+.bar-label { font-size:9px; color:#94a3b8; font-weight:600; }
+
+/* FAB */
+.fab {
+  position:absolute; bottom:98px; right:20px;
+  width:52px; height:52px; border-radius:26px;
+  background:#22c55e; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 16px rgba(34,197,94,0.35);
+  font-size:26px; color:#fff; font-weight:300; line-height:1;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Life Level — Fitness Mode</h1>
+  <p>Same features · Clean design · For athletes who prefer metrics over maps</p>
+</div>
+
+<!-- ─── PHONE 1: HOME ──────────────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">HOME</div>
+    <div class="step-title">Today's Dashboard</div>
+    <div class="step-desc">Fitness score, activity rings, streak, active challenges</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Greeting row -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px">
+          <div>
+            <div style="font-size:13px; color:#64748b; margin-bottom:2px">Wednesday, April 1</div>
+            <div style="font-size:22px; font-weight:700; color:#0f172a">Good morning, Alex 👋</div>
+          </div>
+          <div style="width:40px; height:40px; border-radius:20px; background:#22c55e; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; flex-shrink:0">A</div>
+        </div>
+
+        <!-- Fitness Score ring card -->
+        <div class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:16px">
+          <!-- SVG ring -->
+          <div style="position:relative; width:80px; height:80px; flex-shrink:0">
+            <svg width="80" height="80" style="transform:rotate(-90deg)">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#22c55e" stroke-width="8"
+                stroke-dasharray="213.6" stroke-dashoffset="53" stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center">
+              <div style="font-size:18px; font-weight:700; color:#0f172a">847</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px; font-weight:700; color:#0f172a; margin-bottom:3px">Fitness Score</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:8px">Top 18% of athletes</div>
+            <div class="streak-pill">🔥 7 day streak</div>
+          </div>
+        </div>
+
+        <!-- Activity rings row -->
+        <div class="sec-label">TODAY'S ACTIVITY</div>
+        <div style="display:flex; gap:10px; margin-bottom:16px">
+
+          <!-- Move -->
+          <div class="card" style="flex:1; padding:12px; text-align:center; margin-bottom:0">
+            <div style="position:relative; width:52px; height:52px; margin:0 auto 6px">
+              <svg width="52" height="52" style="transform:rotate(-90deg)">
+                <circle cx="26" cy="26" r="20" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="26" cy="26" r="20" fill="none" stroke="#22c55e" stroke-width="5"
+                  stroke-dasharray="125.7" stroke-dashoffset="28" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#22c55e">87%</div>
+            </div>
+            <div style="font-size:11px; font-weight:700; color:#0f172a">Move</div>
+            <div style="font-size:10px; color:#64748b">520/600 cal</div>
+          </div>
+
+          <!-- Exercise -->
+          <div class="card" style="flex:1; padding:12px; text-align:center; margin-bottom:0">
+            <div style="position:relative; width:52px; height:52px; margin:0 auto 6px">
+              <svg width="52" height="52" style="transform:rotate(-90deg)">
+                <circle cx="26" cy="26" r="20" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="26" cy="26" r="20" fill="none" stroke="#3b82f6" stroke-width="5"
+                  stroke-dasharray="125.7" stroke-dashoffset="38" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#3b82f6">70%</div>
+            </div>
+            <div style="font-size:11px; font-weight:700; color:#0f172a">Exercise</div>
+            <div style="font-size:10px; color:#64748b">28/30 min</div>
+          </div>
+
+          <!-- Steps -->
+          <div class="card" style="flex:1; padding:12px; text-align:center; margin-bottom:0">
+            <div style="position:relative; width:52px; height:52px; margin:0 auto 6px">
+              <svg width="52" height="52" style="transform:rotate(-90deg)">
+                <circle cx="26" cy="26" r="20" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="26" cy="26" r="20" fill="none" stroke="#f97316" stroke-width="5"
+                  stroke-dasharray="125.7" stroke-dashoffset="54" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#f97316">57%</div>
+            </div>
+            <div style="font-size:11px; font-weight:700; color:#0f172a">Steps</div>
+            <div style="font-size:10px; color:#64748b">7.2k/10k</div>
+          </div>
+        </div>
+
+        <!-- Active challenges -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+          <div class="sec-label" style="margin-bottom:0">ACTIVE CHALLENGES</div>
+          <div style="font-size:11px; color:#22c55e; font-weight:600">See all</div>
+        </div>
+
+        <div class="challenge-card active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
+            <div style="font-size:13px; font-weight:600; color:#0f172a">Morning Run</div>
+            <div style="font-size:11px; color:#3b82f6; font-weight:600">2/3 km</div>
+          </div>
+          <div class="pbar-track">
+            <div class="pbar-fill" style="width:67%; background:#3b82f6;"></div>
+          </div>
+        </div>
+
+        <div class="challenge-card active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
+            <div style="font-size:13px; font-weight:600; color:#0f172a">30 min Workout</div>
+            <div style="font-size:11px; color:#3b82f6; font-weight:600">18/30 min</div>
+          </div>
+          <div class="pbar-track">
+            <div class="pbar-fill" style="width:60%; background:#3b82f6;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- FAB -->
+    <div class="fab">+</div>
+    <div class="nav">
+      <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🎯</div><div class="nav-label">Challenges</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Journey</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 2: CHALLENGES ────────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">CHALLENGES</div>
+    <div class="step-title">Daily &amp; Weekly Goals</div>
+    <div class="step-desc">Left-border coding: green=done · blue=active · gray=upcoming</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px">
+          <div>
+            <div style="font-size:22px; font-weight:700; color:#0f172a">Challenges</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px">Wednesday, April 1</div>
+          </div>
+          <div class="streak-pill">🔥 7</div>
+        </div>
+
+        <!-- Tab switcher -->
+        <div style="display:flex; background:#f1f5f9; border-radius:12px; padding:4px; margin-bottom:16px">
+          <div style="flex:1; background:#ffffff; border-radius:9px; padding:7px 0; text-align:center; font-size:12px; font-weight:700; color:#0f172a; box-shadow:0 1px 3px rgba(0,0,0,0.08)">Daily</div>
+          <div style="flex:1; padding:7px 0; text-align:center; font-size:12px; font-weight:600; color:#94a3b8">Weekly</div>
+        </div>
+
+        <!-- Progress summary -->
+        <div class="card" style="display:flex; align-items:center; gap:14px; margin-bottom:16px">
+          <div style="position:relative; width:56px; height:56px; flex-shrink:0">
+            <svg width="56" height="56" style="transform:rotate(-90deg)">
+              <circle cx="28" cy="28" r="22" fill="none" stroke="#f1f5f9" stroke-width="6"/>
+              <circle cx="28" cy="28" r="22" fill="none" stroke="#22c55e" stroke-width="6"
+                stroke-dasharray="138.2" stroke-dashoffset="83" stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0f172a">2/5</div>
+          </div>
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">2 of 5 complete</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">3 challenges remaining today</div>
+            <div style="font-size:11px; color:#f97316; font-weight:600; margin-top:4px">+50 pts bonus for finishing all</div>
+          </div>
+        </div>
+
+        <div class="sec-label">TODAY'S CHALLENGES</div>
+
+        <!-- Done -->
+        <div class="challenge-card done">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:22px; height:22px; border-radius:11px; background:#dcfce7; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0">✓</div>
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#64748b; text-decoration:line-through">Log any workout</div>
+              <div style="font-size:11px; color:#94a3b8">Completed · +15 pts</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Done -->
+        <div class="challenge-card done">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:22px; height:22px; border-radius:11px; background:#dcfce7; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0">✓</div>
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#64748b; text-decoration:line-through">Burn 300 calories</div>
+              <div style="font-size:11px; color:#94a3b8">Completed · +20 pts</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active -->
+        <div class="challenge-card active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:7px">
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#0f172a">Work out 30 min</div>
+              <div style="font-size:11px; color:#64748b; margin-top:1px">Exercise · Daily</div>
+            </div>
+            <div style="font-size:12px; color:#3b82f6; font-weight:700">18/30</div>
+          </div>
+          <div class="pbar-track">
+            <div class="pbar-fill" style="width:60%; background:#3b82f6;"></div>
+          </div>
+        </div>
+
+        <!-- Active -->
+        <div class="challenge-card active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:7px">
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#0f172a">Run 3 km</div>
+              <div style="font-size:11px; color:#64748b; margin-top:1px">Running · Daily</div>
+            </div>
+            <div style="font-size:12px; color:#3b82f6; font-weight:700">2.1/3 km</div>
+          </div>
+          <div class="pbar-track">
+            <div class="pbar-fill" style="width:70%; background:#3b82f6;"></div>
+          </div>
+        </div>
+
+        <!-- Todo -->
+        <div class="challenge-card todo">
+          <div style="font-size:13px; font-weight:600; color:#94a3b8">Stretch for 10 min</div>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px">Flexibility · Daily · +10 pts</div>
+        </div>
+
+        <!-- Bonus banner -->
+        <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px 14px; margin-top:4px; display:flex; align-items:center; gap:10px">
+          <div style="font-size:20px">🎯</div>
+          <div>
+            <div style="font-size:12px; font-weight:700; color:#c2410c">Complete all 5 challenges</div>
+            <div style="font-size:11px; color:#ea580c; margin-top:1px">Earn +50 bonus points today</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🎯</div><div class="nav-label">Challenges</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Journey</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 3: JOURNEY ───────────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">JOURNEY</div>
+    <div class="step-title">Progress Timeline</div>
+    <div class="step-desc">Linear milestone route — no fantasy zones, just fitness phases</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Header -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:22px; font-weight:700; color:#0f172a">Your Journey</div>
+          <div style="font-size:12px; color:#64748b; margin-top:2px">Month 3 of 12 · Endurance Phase</div>
+        </div>
+
+        <!-- Stats strip -->
+        <div style="display:flex; gap:8px; margin-bottom:20px">
+          <div class="card" style="flex:1; padding:10px 12px; text-align:center; margin-bottom:0">
+            <div style="font-size:16px; font-weight:700; color:#0f172a">142</div>
+            <div style="font-size:10px; color:#64748b">km total</div>
+          </div>
+          <div class="card" style="flex:1; padding:10px 12px; text-align:center; margin-bottom:0">
+            <div style="font-size:16px; font-weight:700; color:#0f172a">28</div>
+            <div style="font-size:10px; color:#64748b">workouts</div>
+          </div>
+          <div class="card" style="flex:1; padding:10px 12px; text-align:center; margin-bottom:0">
+            <div style="font-size:16px; font-weight:700; color:#f97316">7🔥</div>
+            <div style="font-size:10px; color:#64748b">day streak</div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="sec-label">MILESTONES</div>
+        <div class="timeline">
+          <div class="timeline-line"></div>
+
+          <!-- Phase 1: done -->
+          <div class="timeline-node">
+            <div class="timeline-dot done">
+              <span style="font-size:11px; color:#fff">✓</span>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Foundation</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Month 1 · Build the habit</div>
+            <div style="font-size:10px; color:#22c55e; font-weight:600; margin-top:3px">Completed · 12 workouts</div>
+          </div>
+
+          <!-- Phase 2: done -->
+          <div class="timeline-node">
+            <div class="timeline-dot done">
+              <span style="font-size:11px; color:#fff">✓</span>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Consistency</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Month 2 · Stay on track</div>
+            <div style="font-size:10px; color:#22c55e; font-weight:600; margin-top:3px">Completed · 16 workouts</div>
+          </div>
+
+          <!-- Phase 3: current -->
+          <div class="timeline-node">
+            <div class="timeline-dot current"></div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Endurance <span style="font-size:10px; background:#dbeafe; color:#2563eb; border-radius:6px; padding:2px 7px; font-weight:700; margin-left:4px">You are here</span></div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Month 3 · Push your limits</div>
+            <div style="margin-top:8px">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                <div style="font-size:10px; color:#64748b">Week 3 of 4</div>
+                <div style="font-size:10px; color:#3b82f6; font-weight:600">75%</div>
+              </div>
+              <div class="pbar-track">
+                <div class="pbar-fill" style="width:75%; background:#3b82f6;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phase 4: future -->
+          <div class="timeline-node">
+            <div class="timeline-dot future"></div>
+            <div style="font-size:13px; font-weight:600; color:#94a3b8">Peak Performance</div>
+            <div style="font-size:11px; color:#cbd5e1; margin-top:2px">Month 4–6 · Max output</div>
+          </div>
+
+          <!-- Phase 5: future -->
+          <div class="timeline-node" style="margin-bottom:0">
+            <div class="timeline-dot future"></div>
+            <div style="font-size:13px; font-weight:600; color:#94a3b8">Elite Athlete</div>
+            <div style="font-size:11px; color:#cbd5e1; margin-top:2px">Month 7–12 · Mastery</div>
+          </div>
+        </div>
+
+        <!-- Current phase card -->
+        <div class="card" style="margin-top:20px; background:#f0fdf4; border-color:#bbf7d0">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+            <div style="font-size:20px">🏃</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; color:#15803d">Endurance Phase Active</div>
+              <div style="font-size:11px; color:#16a34a">+10% XP on all cardio this month</div>
+            </div>
+          </div>
+          <div style="font-size:11px; color:#64748b">Run or cycle at least 4×/week to progress through this phase faster.</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🎯</div><div class="nav-label">Challenges</div></div>
+      <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Journey</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 4: PROFILE / STATS ───────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">PROFILE</div>
+    <div class="step-title">Fitness Metrics</div>
+    <div class="step-desc">5 stat rings, 7-day bar chart, achievements — no RPG jargon</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Profile header -->
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px">
+          <div style="width:60px; height:60px; border-radius:30px; background:#22c55e; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; flex-shrink:0">AP</div>
+          <div style="flex:1">
+            <div style="font-size:18px; font-weight:700; color:#0f172a">Alex Pavlov</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px">Fitness Score <span style="color:#0f172a; font-weight:700">847</span></div>
+            <div style="margin-top:6px; display:flex; gap:6px">
+              <div style="background:#dcfce7; border-radius:6px; padding:3px 9px; font-size:10px; font-weight:700; color:#16a34a">Level 23</div>
+              <div style="background:#dbeafe; border-radius:6px; padding:3px 9px; font-size:10px; font-weight:700; color:#2563eb">Veteran</div>
+            </div>
+          </div>
+          <div style="width:36px; height:36px; border-radius:10px; background:#f1f5f9; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; font-size:16px">⚙️</div>
+        </div>
+
+        <!-- Metric rings 2-col grid -->
+        <div class="sec-label">FITNESS METRICS</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px">
+
+          <!-- Strength -->
+          <div class="metric-ring-wrap">
+            <div style="position:relative; width:48px; height:48px; flex-shrink:0">
+              <svg width="48" height="48" style="transform:rotate(-90deg)">
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#3b82f6" stroke-width="5"
+                  stroke-dasharray="119.4" stroke-dashoffset="28" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#3b82f6">76</div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:700; color:#0f172a">Strength</div>
+              <div style="font-size:10px; color:#64748b">76/100</div>
+            </div>
+          </div>
+
+          <!-- Endurance -->
+          <div class="metric-ring-wrap">
+            <div style="position:relative; width:48px; height:48px; flex-shrink:0">
+              <svg width="48" height="48" style="transform:rotate(-90deg)">
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#22c55e" stroke-width="5"
+                  stroke-dasharray="119.4" stroke-dashoffset="38" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#22c55e">68</div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:700; color:#0f172a">Endurance</div>
+              <div style="font-size:10px; color:#64748b">68/100</div>
+            </div>
+          </div>
+
+          <!-- Agility -->
+          <div class="metric-ring-wrap">
+            <div style="position:relative; width:48px; height:48px; flex-shrink:0">
+              <svg width="48" height="48" style="transform:rotate(-90deg)">
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#f97316" stroke-width="5"
+                  stroke-dasharray="119.4" stroke-dashoffset="22" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#f97316">82</div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:700; color:#0f172a">Agility</div>
+              <div style="font-size:10px; color:#64748b">82/100</div>
+            </div>
+          </div>
+
+          <!-- Flexibility -->
+          <div class="metric-ring-wrap">
+            <div style="position:relative; width:48px; height:48px; flex-shrink:0">
+              <svg width="48" height="48" style="transform:rotate(-90deg)">
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#8b5cf6" stroke-width="5"
+                  stroke-dasharray="119.4" stroke-dashoffset="54" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#8b5cf6">55</div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:700; color:#0f172a">Flexibility</div>
+              <div style="font-size:10px; color:#64748b">55/100</div>
+            </div>
+          </div>
+
+          <!-- Stamina - spans both cols -->
+          <div class="metric-ring-wrap" style="grid-column:1/-1">
+            <div style="position:relative; width:48px; height:48px; flex-shrink:0">
+              <svg width="48" height="48" style="transform:rotate(-90deg)">
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#f1f5f9" stroke-width="5"/>
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#14b8a6" stroke-width="5"
+                  stroke-dasharray="119.4" stroke-dashoffset="34" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#14b8a6">71</div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:700; color:#0f172a">Stamina</div>
+              <div style="font-size:10px; color:#64748b">71/100 · Improves with all activities</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7-day bar chart -->
+        <div class="sec-label">THIS WEEK</div>
+        <div class="card" style="padding:12px 14px">
+          <div style="display:flex; align-items:flex-end; gap:0; height:60px; margin-bottom:6px">
+            <div class="bar-col"><div class="bar-fill" style="height:38px;"></div><div class="bar-label">M</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:52px;"></div><div class="bar-label">T</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:0px; background:transparent;"></div><div class="bar-label" style="color:#e2e8f0">W</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:44px;"></div><div class="bar-label">T</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:30px; background:#dcfce7; border:1px solid #86efac; box-sizing:border-box; border-radius:3px 3px 0 0;"></div><div class="bar-label" style="color:#22c55e">F</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:0; background:transparent;"></div><div class="bar-label" style="color:#e2e8f0">S</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:0; background:transparent;"></div><div class="bar-label" style="color:#e2e8f0">S</div></div>
+          </div>
+          <div style="font-size:11px; color:#64748b">4 workouts · 3h 42min this week</div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="sec-label" style="margin-top:4px">RECENT ACHIEVEMENTS</div>
+        <div style="display:flex; gap:10px; margin-bottom:16px">
+          <div class="card" style="flex:1; padding:10px; text-align:center; margin-bottom:0">
+            <div style="font-size:22px; margin-bottom:4px">🏃</div>
+            <div style="font-size:10px; font-weight:700; color:#0f172a">First 10k</div>
+            <div style="font-size:9px; color:#64748b">Common</div>
+          </div>
+          <div class="card" style="flex:1; padding:10px; text-align:center; margin-bottom:0">
+            <div style="font-size:22px; margin-bottom:4px">🔥</div>
+            <div style="font-size:10px; font-weight:700; color:#0f172a">Week Streak</div>
+            <div style="font-size:9px; color:#64748b">Uncommon</div>
+          </div>
+          <div class="card" style="flex:1; padding:10px; text-align:center; margin-bottom:0">
+            <div style="font-size:22px; margin-bottom:4px">💪</div>
+            <div style="font-size:10px; font-weight:700; color:#0f172a">Lifter</div>
+            <div style="font-size:9px; color:#64748b">Rare</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🎯</div><div class="nav-label">Challenges</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Journey</div></div>
+      <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 5: ACTIVITY LOG ──────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">ACTIVITIES</div>
+    <div class="step-title">Log &amp; Feed</div>
+    <div class="step-desc">Filter chips, weekly volume bar chart, color-coded activity rows</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Header -->
+        <div style="font-size:22px; font-weight:700; color:#0f172a; margin-bottom:14px">Activities</div>
+
+        <!-- Filter chips -->
+        <div style="margin-bottom:14px; display:flex; flex-wrap:wrap">
+          <div class="chip active">All</div>
+          <div class="chip">Runs</div>
+          <div class="chip">Gym</div>
+          <div class="chip">Cycling</div>
+          <div class="chip">Yoga</div>
+        </div>
+
+        <!-- Weekly volume card -->
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px">
+            <div style="font-size:13px; font-weight:700; color:#0f172a">This Week</div>
+            <div style="font-size:11px; color:#64748b">3h 42min</div>
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:0; height:48px; margin-bottom:4px">
+            <div class="bar-col"><div class="bar-fill" style="height:36px;"></div><div class="bar-label">M</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:48px;"></div><div class="bar-label">T</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:0; background:transparent;"></div><div class="bar-label" style="color:#e2e8f0">W</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:40px;"></div><div class="bar-label">T</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:28px; background:#dcfce7; border:1px solid #86efac;"></div><div class="bar-label" style="color:#22c55e">F</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:0; background:transparent;"></div><div class="bar-label" style="color:#e2e8f0">S</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:0; background:transparent;"></div><div class="bar-label" style="color:#e2e8f0">S</div></div>
+          </div>
+        </div>
+
+        <div class="sec-label">RECENT ACTIVITIES</div>
+
+        <!-- Run -->
+        <div class="activity-row" style="border-left-color:#22c55e">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Morning Run</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Today · 7:15 AM · 28 min</div>
+            <div style="display:flex; gap:10px; margin-top:5px">
+              <div style="font-size:11px; color:#64748b">5.2 km</div>
+              <div style="font-size:11px; color:#64748b">512 cal</div>
+              <div style="font-size:11px; color:#64748b">5:24/km</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px; margin-bottom:2px">🏃</div>
+            <div style="font-size:10px; font-weight:700; color:#22c55e">+42 pts</div>
+          </div>
+        </div>
+
+        <!-- Gym -->
+        <div class="activity-row" style="border-left-color:#3b82f6">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Upper Body</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Yesterday · 6:30 PM · 55 min</div>
+            <div style="display:flex; gap:10px; margin-top:5px">
+              <div style="font-size:11px; color:#64748b">Gym</div>
+              <div style="font-size:11px; color:#64748b">380 cal</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px; margin-bottom:2px">🏋️</div>
+            <div style="font-size:10px; font-weight:700; color:#3b82f6">+38 pts</div>
+          </div>
+        </div>
+
+        <!-- Cycling -->
+        <div class="activity-row" style="border-left-color:#f97316">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Afternoon Ride</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Mon · 5:00 PM · 42 min</div>
+            <div style="display:flex; gap:10px; margin-top:5px">
+              <div style="font-size:11px; color:#64748b">14.8 km</div>
+              <div style="font-size:11px; color:#64748b">340 cal</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px; margin-bottom:2px">🚴</div>
+            <div style="font-size:10px; font-weight:700; color:#f97316">+31 pts</div>
+          </div>
+        </div>
+
+        <!-- Yoga -->
+        <div class="activity-row" style="border-left-color:#8b5cf6">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a">Morning Flow</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px">Mon · 7:00 AM · 30 min</div>
+            <div style="display:flex; gap:10px; margin-top:5px">
+              <div style="font-size:11px; color:#64748b">Yoga</div>
+              <div style="font-size:11px; color:#64748b">140 cal</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px; margin-bottom:2px">🧘</div>
+            <div style="font-size:10px; font-weight:700; color:#8b5cf6">+22 pts</div>
+          </div>
+        </div>
+
+        <!-- Log Activity button -->
+        <div style="background:#22c55e; border-radius:14px; padding:14px; text-align:center; margin-top:8px; margin-bottom:4px">
+          <div style="font-size:14px; font-weight:700; color:#fff">+ Log Activity</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">🎯</div><div class="nav-label">Challenges</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Journey</div></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -20,14 +20,7 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
     public async Task AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
     {
         if (km <= 0) return;
-        try
-        {
-            await DebugAddDistanceAsync(userId, km);
-        }
-        catch (InvalidOperationException)
-        {
-            // No active destination — silently ignored.
-        }
+        await DebugAddDistanceAsync(userId, km);
     }
 
     public async Task<MapFullResponse> GetFullMapAsync(Guid userId, Guid? worldZoneId = null)
@@ -160,7 +153,8 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
                 CurrentEdgeId = progress.CurrentEdgeId,
                 DistanceTraveledOnEdge = progress.DistanceTraveledOnEdge,
                 DestinationNodeId = progress.DestinationNodeId,
-                UnlockedNodeIds = unlockedIds.ToList()
+                UnlockedNodeIds = unlockedIds.ToList(),
+                PendingDistanceKm = progress.PendingDistanceKm
             }
         };
     }
@@ -182,8 +176,10 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
         if (!isAdjacent)
             throw new InvalidOperationException("Destination is not adjacent to your current node.");
 
+        var pendingKm = progress.PendingDistanceKm;
         progress.DestinationNodeId = destinationNodeId;
         progress.DistanceTraveledOnEdge = 0;
+        progress.PendingDistanceKm = 0;
         progress.UpdatedAt = DateTime.UtcNow;
 
         var edge = await db.MapEdges.FirstOrDefaultAsync(e =>
@@ -192,6 +188,10 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
         progress.CurrentEdgeId = edge?.Id;
 
         await db.SaveChangesAsync();
+
+        // Apply any banked distance to the new edge (may complete the edge instantly).
+        if (pendingKm > 0)
+            await DebugAddDistanceAsync(userId, pendingKm);
     }
 
     public async Task DebugTeleportAsync(Guid userId, Guid nodeId)
@@ -232,8 +232,15 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
             .FirstOrDefaultAsync(p => p.UserId == userId)
             ?? await InitializeUserProgressAsync(userId);
 
-        if (progress.CurrentEdgeId == null || progress.DestinationNodeId == null)
-            throw new InvalidOperationException("No active destination set. Set a destination first.");
+        if (progress.DestinationNodeId == null)
+        {
+            // No destination set — bank the distance as a reserve that will be
+            // applied automatically when the user picks their next destination.
+            progress.PendingDistanceKm += km;
+            progress.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            return;
+        }
 
         var edge = await db.MapEdges.FindAsync(progress.CurrentEdgeId)
             ?? throw new InvalidOperationException("Edge not found.");

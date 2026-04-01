@@ -1,12 +1,18 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../services/level_up_notifier.dart';
+import '../services/item_obtained_notifier.dart';
+import '../services/inventory_full_notifier.dart';
 import '../widgets/level_up_overlay.dart';
+import '../widgets/item_obtained_overlay.dart';
+import '../widgets/inventory_full_overlay.dart';
 import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/login_reward/login_reward_screen.dart';
@@ -19,6 +25,13 @@ import '../services/world_zone_refresh_notifier.dart';
 import '../../features/home/providers/map_journey_provider.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/titles/titles_ranks_screen.dart';
+import '../../features/quests/providers/quest_provider.dart';
+import '../../features/activity/providers/activity_provider.dart';
+import '../../features/streak/providers/streak_provider.dart';
+import '../../features/activity/models/activity_models.dart';
+import '../../features/items/models/item_models.dart';
+import '../../features/items/providers/items_provider.dart';
 import 'shell_constants.dart';
 import 'shell_models.dart';
 import 'widgets/ring_item_tile.dart';
@@ -39,7 +52,13 @@ class _MainShellState extends ConsumerState<MainShell>
   int _tabIndex = 0;
   bool _radialOpen = false;
   bool _worldOpen = false;
+  bool _titlesOpen = false;
   bool _loginRewardShown = false;
+
+  late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
+  bool _wasOffline = false;
+  StreamSubscription<Uri>? _deepLinkSub;
+  bool _oauthCallbackHandled = false;
 
   late final AnimationController _openCtrl;
   late final Animation<double> _openAnim;
@@ -70,7 +89,9 @@ class _MainShellState extends ConsumerState<MainShell>
   late final Animation<double>   _hintAnim;
   Timer? _hintTimer;
   late final StreamSubscription<int> _levelUpSub;
+  late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
+  late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
 
   final _fabKey = GlobalKey();
 
@@ -99,15 +120,56 @@ class _MainShellState extends ConsumerState<MainShell>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _levelUpSub = LevelUpNotifier.stream.listen((newLevel) {
-      if (mounted) showLevelUpScreen(context, newLevel);
+    Connectivity().checkConnectivity().then((results) {
+      _wasOffline = results.every((r) => r == ConnectivityResult.none);
+    });
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      final isOnline = results.any((r) => r != ConnectivityResult.none);
+      if (_wasOffline && isOnline) {
+        _invalidateAllProviders();
+      }
+      _wasOffline = !isOnline;
+    });
+    _levelUpSub = LevelUpNotifier.stream.listen((newLevel) async {
+      if (!mounted) return;
+      final oldIds = ref.read(inventoryProvider).valueOrNull?.items
+          .map((i) => i.id).toSet() ?? {};
+      showLevelUpScreen(context, newLevel);
+      ref.invalidate(inventoryProvider);
+      try {
+        final newInventory = await ref.read(inventoryProvider.future);
+        final newItems = newInventory.items
+            .where((i) => !oldIds.contains(i.id))
+            .toList();
+        for (final item in newItems) {
+          ItemObtainedNotifier.notify(item);
+        }
+      } catch (_) { /* silent — item popup is non-critical */ }
+    });
+    _itemObtainedSub = ItemObtainedNotifier.stream.listen((item) {
+      if (mounted) showItemObtainedOverlay(context, item);
     });
     _navTabSub = NavTabNotifier.stream.listen((tabId) {
       final navIndex = _navIds.indexOf(tabId);
       if (navIndex != -1 && mounted) setState(() => _tabIndex = navIndex);
     });
+    _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
+      if (mounted) {
+        final level =
+            ref.read(characterProfileProvider).valueOrNull?.level ?? 1;
+        showInventoryFullOverlay(context, item, level);
+      }
+    });
     _ringIds = List.from(widget.initialRingIds ?? kDefaultRingIds);
     _navIds  = List.from(widget.initialNavIds  ?? kDefaultNavIds);
+
+    // OAuth deep-link handling — runs for both cold starts and warm resumes.
+    // Cold start: getInitialLink() delivers the URI that launched the app.
+    // Warm start: uriLinkStream delivers it while the app is already running.
+    _deepLinkSub = AppLinks().uriLinkStream.listen(_handleDeepLink);
+    AppLinks().getInitialLink().then((uri) {
+      if (uri != null) _handleDeepLink(uri);
+    });
 
     _openCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 350));
@@ -154,11 +216,47 @@ class _MainShellState extends ConsumerState<MainShell>
     ]).animate(_hintCtrl);
   }
 
+  void _handleDeepLink(Uri uri) {
+    if (uri.scheme != 'lifelevel' || uri.host != 'oauth') return;
+    final code = uri.queryParameters['code'];
+    if (code == null || !mounted) return;
+    if (uri.pathSegments.contains('strava')) {
+      if (_oauthCallbackHandled) return;
+      _oauthCallbackHandled = true;
+      _handleStravaCallback(code);
+    }
+  }
+
+  void _handleStravaCallback(String code) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Connecting to Strava...')),
+    );
+    ref.read(integrationSyncProvider.notifier).connectStrava(code).then((error) async {
+      _oauthCallbackHandled = false;
+      await ref.read(integrationSyncProvider.notifier).refresh();
+      if (!mounted) return;
+      final connected = ref.read(integrationSyncProvider).isStravaConnected;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(connected
+              ? 'Strava connected!'
+              : 'Failed: ${error ?? 'unknown error'}'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
+    });
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _levelUpSub.cancel();
+    _itemObtainedSub.cancel();
     _navTabSub.cancel();
+    _inventoryFullSub.cancel();
+    _connectivitySub.cancel();
+    _deepLinkSub?.cancel();
     _hintTimer?.cancel();
     _openCtrl.dispose();
     _snapCtrl.dispose();
@@ -170,6 +268,7 @@ class _MainShellState extends ConsumerState<MainShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _triggerForegroundHealthSync();
+      _invalidateAllProviders();
     }
   }
 
@@ -185,6 +284,18 @@ class _MainShellState extends ConsumerState<MainShell>
     }
 
     ref.read(integrationSyncProvider.notifier).syncNow();
+  }
+
+  void _invalidateAllProviders() {
+    if (!mounted) return;
+    ref.invalidate(characterProfileProvider);
+    ref.invalidate(mapJourneyProvider);
+    ref.invalidate(dailyQuestsProvider);
+    ref.invalidate(weeklyQuestsProvider);
+    ref.invalidate(activityHistoryProvider);
+    ref.invalidate(streakProvider);
+    ref.invalidate(equipmentProvider);
+    ref.invalidate(inventoryProvider);
   }
 
   // ── open / close ──────────────────────────────────────────────────────────
@@ -281,6 +392,7 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'map':     return const MapScreen();
       case 'world':   return const WorldMapScreen();
       case 'profile': return const ProfileScreen();
+      case 'titles':  return const TitlesRanksScreen();
       default:        return Center(
         child: Text(id, style: const TextStyle(color: Colors.white38)),
       );
@@ -327,6 +439,15 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
+              // ── titles & ranks overlay ───────────────────────────────────
+              if (_titlesOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: TitlesRanksScreen(
+                    onClose: () => setState(() => _titlesOpen = false),
+                  ),
+                ),
+
               // ── backdrop ────────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
@@ -370,7 +491,7 @@ class _MainShellState extends ConsumerState<MainShell>
                   navTabs: _navItems,
                   onTap: (i) {
                     _closeRadial();
-                    setState(() { _tabIndex = i; _worldOpen = false; });
+                    setState(() { _tabIndex = i; _worldOpen = false; _titlesOpen = false; });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
                       ref.invalidate(mapJourneyProvider);
@@ -407,6 +528,10 @@ class _MainShellState extends ConsumerState<MainShell>
     _closeRadial();
     if (id == 'world') {
       setState(() => _worldOpen = true);
+      return;
+    }
+    if (id == 'titles') {
+      setState(() => _titlesOpen = true);
       return;
     }
     // If the id is already in the nav bar, switch to that tab.

@@ -91,11 +91,12 @@ const kStaMeta = StatMeta(
   ['🔥 +Streak XP multiplier', '❤️ +Max HP in raids', '🔓 Required for Champion rank'],
 );
 
-// ── runtime stat model (meta + live value) ────────────────────────────────────
+// ── runtime stat model (meta + live value + gear bonus) ──────────────────────
 class StatData {
   final StatMeta meta;
   final int value;
-  const StatData(this.meta, this.value);
+  final int gearBonus;
+  const StatData(this.meta, this.value, {this.gearBonus = 0});
 
   String get key         => meta.key;
   String get label       => meta.label;
@@ -106,10 +107,13 @@ class StatData {
   List<String> get perks      => meta.perks;
 }
 
-List<StatData> buildProfileStats(CharacterProfile p) => [
-  StatData(kStrMeta, p.strength),
-  StatData(kEndMeta, p.endurance),
-  StatData(kAgiMeta, p.agility),
-  StatData(kFlxMeta, p.flexibility),
-  StatData(kStaMeta, p.stamina),
-];
+List<StatData> buildProfileStats(CharacterProfile p) {
+  final g = p.gearBonuses;
+  return [
+    StatData(kStrMeta, p.strength, gearBonus: g?.strBonus ?? 0),
+    StatData(kEndMeta, p.endurance, gearBonus: g?.endBonus ?? 0),
+    StatData(kAgiMeta, p.agility, gearBonus: g?.agiBonus ?? 0),
+    StatData(kFlxMeta, p.flexibility, gearBonus: g?.flxBonus ?? 0),
+    StatData(kStaMeta, p.stamina, gearBonus: g?.staBonus ?? 0),
+  ];
+}

@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Modules.Items.Application.UseCases;
 
-public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead)
+public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead, IInventorySlotReadPort inventorySlotRead)
+    : IGearBonusReadPort
 {
     private static readonly EquipmentSlotType[] AllSlots =
         Enum.GetValues<EquipmentSlotType>();
@@ -112,17 +113,39 @@ public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead)
         return await GetCharacterEquipmentAsync(userId);
     }
 
-    public async Task<List<ItemDto>> GetCharacterInventoryAsync(Guid userId)
+    public async Task<InventoryResponse> GetCharacterInventoryAsync(Guid userId, CancellationToken ct = default)
     {
-        var characterId = await characterIdRead.GetCharacterIdAsync(userId);
-        if (characterId == null) return [];
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null) return new InventoryResponse([], 20);
 
         var items = await db.Set<CharacterItem>()
             .Where(ci => ci.CharacterId == characterId)
             .Include(ci => ci.Item)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        return items.Select(ci => MapInventoryItemDto(ci)).ToList();
+        var maxSlots = await inventorySlotRead.GetMaxInventorySlotsAsync(userId, ct);
+        return new InventoryResponse(items.Select(MapInventoryItemDto).ToList(), maxSlots);
+    }
+
+    /// <summary>Implements IGearBonusReadPort</summary>
+    public async Task<GearBonuses> GetEquippedBonusesAsync(Guid userId, CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null) return GearBonuses.Empty;
+
+        var equipped = await db.Set<CharacterItem>()
+            .Where(ci => ci.CharacterId == characterId && ci.IsEquipped)
+            .Include(ci => ci.Item)
+            .ToListAsync(ct);
+
+        return new GearBonuses(
+            XpBonusPct: equipped.Sum(ci => ci.Item.XpBonusPct),
+            StrBonus:   equipped.Sum(ci => ci.Item.StrBonus),
+            EndBonus:   equipped.Sum(ci => ci.Item.EndBonus),
+            AgiBonus:   equipped.Sum(ci => ci.Item.AgiBonus),
+            FlxBonus:   equipped.Sum(ci => ci.Item.FlxBonus),
+            StaBonus:   equipped.Sum(ci => ci.Item.StaBonus)
+        );
     }
 
     private static ItemDto MapItemDto(Item item) => new()

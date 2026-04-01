@@ -887,7 +887,8 @@ html, body {
         placeholder="http://localhost:5128/api/admin/map">
       <label class="api-url-label" for="token-input" style="margin-left:8px">Token:</label>
       <input type="password" id="token-input" class="api-url-input" style="width:180px"
-        placeholder="Paste JWT token here">
+        placeholder="Paste JWT or click Login →">
+      <button class="btn btn-secondary btn-sm" onclick="openLoginDialog()" title="Login to get a JWT token" style="white-space:nowrap">🔑 Login</button>
       <button class="api-status checking" id="api-status-btn" onclick="checkApiStatus()">
         <div class="status-dot pulse" id="status-dot"></div>
         <span id="status-text">Checking...</span>
@@ -1067,6 +1068,35 @@ html, body {
 <!-- ── Loading overlay ── -->
 <div id="loading-overlay">
   <div class="spinner"></div>
+</div>
+
+<!-- ── Login dialog ── -->
+<div id="login-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:28px 24px;width:340px;box-shadow:0 8px 40px #0008;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🔑 Admin Login</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:20px;">Enter credentials to get a JWT token</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Email</label>
+        <input id="login-email" type="email" class="api-url-input" style="width:100%" placeholder="admin@example.com" value="">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Password</label>
+        <input id="login-password" type="password" class="api-url-input" style="width:100%" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-error" style="color:var(--red);font-size:12px;display:none;"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeLoginDialog()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" id="login-btn" onclick="doLogin()">Login & Get Token</button>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border2);font-size:11px;color:var(--text3);">
+      No admin account? Register one via:
+      <code style="background:var(--bg2);padding:2px 5px;border-radius:4px;color:var(--text2);font-size:10px;">POST /api/auth/register</code>
+      with <code style="background:var(--bg2);padding:2px 5px;border-radius:4px;color:var(--text2);font-size:10px;">"role": 2</code>
+    </div>
+  </div>
 </div>
 
 <!-- ── Confirm dialog ── -->
@@ -3245,6 +3275,69 @@ document.addEventListener('keydown', e => {
 window.addEventListener('beforeunload', e => {
   if (isDirty) { e.preventDefault(); e.returnValue = ''; }
 });
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN DIALOG
+═══════════════════════════════════════════════════════════════ */
+function openLoginDialog() {
+  const dlg = document.getElementById('login-dialog');
+  dlg.style.display = 'flex';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-error').textContent = '';
+  setTimeout(() => document.getElementById('login-email').focus(), 50);
+}
+
+function closeLoginDialog() {
+  document.getElementById('login-dialog').style.display = 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if (!email || !password) {
+    errEl.textContent = 'Email and password are required.';
+    errEl.style.display = '';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Logging in…';
+  errEl.style.display = 'none';
+
+  try {
+    const baseUrl = getApiUrl().replace(/\/api\/admin\/map.*$/, '');
+    const res = await fetch(baseUrl + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const token = data.token || data.accessToken || data.jwt;
+    if (!token) throw new Error('No token in response');
+
+    document.getElementById('token-input').value = token;
+    closeLoginDialog();
+    showToast('success', '✅ Logged in! Loading map data…');
+    await checkApiStatus();
+    await refreshFromApi();
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.style.display = '';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Login & Get Token';
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════
    INIT

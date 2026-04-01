@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,41 +17,16 @@ class IntegrationsScreen extends ConsumerStatefulWidget {
 
 class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
   SyncResult? _bannerResult;
-  StreamSubscription<Uri>? _deepLinkSub;
   String? _pendingGarminVerifier;
 
   @override
   void initState() {
     super.initState();
-    // Re-fetch connection statuses from backend on every open
-    Future.microtask(() =>
-        ref.read(integrationSyncProvider.notifier).refresh());
-    // Listen for lifelevel://oauth/<provider>?code=... deep links
-    _deepLinkSub = AppLinks().uriLinkStream.listen((uri) {
-      debugPrint('Deep link received: $uri');
-      if (uri.scheme == 'lifelevel' && uri.host == 'oauth') {
-        final code = uri.queryParameters['code'];
-        if (code != null && mounted) {
-          if (uri.pathSegments.contains('strava')) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Connecting to Strava...')),
-            );
-            ref.read(integrationSyncProvider.notifier).connectStrava(code).then((_) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Strava connected!')),
-                );
-              }
-            });
-          }
-        }
-      }
-    });
+    // Deep link handling is owned by MainShell — do not add a second listener here.
   }
 
   @override
   void dispose() {
-    _deepLinkSub?.cancel();
     super.dispose();
   }
 

@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../main.dart' show navigatorKey;
+import '../../features/auth/login_screen.dart';
 
 class ApiClient {
-  static const _baseUrl = 'https://3798-165-225-248-204.ngrok-free.app/api';
+  static const _baseUrl = 'https://2cf2-165-225-200-145.ngrok-free.app/api';
   static const _storage = FlutterSecureStorage();
 
   static Dio get instance {
@@ -11,7 +14,10 @@ class ApiClient {
       baseUrl: _baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
     ));
 
     dio.interceptors.add(InterceptorsWrapper(
@@ -21,6 +27,16 @@ class ApiClient {
           options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
+      },
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          await _storage.delete(key: 'jwt_token');
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (_) => false,
+          );
+        }
+        handler.next(error);
       },
     ));
 

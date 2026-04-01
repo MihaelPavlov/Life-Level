@@ -332,15 +332,38 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
 
               const SizedBox(width: 10),
 
-              // value
-              SizedBox(
-                width: 28,
-                child: Text('${widget.stat.value}',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: widget.stat.color)),
+              // value (base + optional gear bonus chip)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${widget.stat.value}',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: widget.stat.color)),
+                  if (widget.stat.gearBonus > 0) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.green.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: AppColors.green.withOpacity(0.4)),
+                      ),
+                      child: Text(
+                        '+${widget.stat.gearBonus}',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.green,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
 
               // + button — only when points available

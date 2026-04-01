@@ -32,6 +32,7 @@ public class StravaOAuthService(
             ["client_id"]     = _opts.ClientId,
             ["client_secret"] = _opts.ClientSecret,
             ["code"]          = req.Code,
+            ["redirect_uri"]  = req.RedirectUri,
             ["grant_type"]    = "authorization_code",
         };
 
@@ -43,22 +44,33 @@ public class StravaOAuthService(
         var token = await response.Content.ReadFromJsonAsync<StravaTokenResponseDto>(cancellationToken: ct)
             ?? throw new InvalidOperationException("Empty token response from Strava");
 
+        // Look up by Strava athlete ID first so that if this athlete was previously
+        // linked to a different LifeLevel account, we take ownership rather than
+        // hitting the unique-index constraint.
+        var athleteId = token.Athlete?.Id ?? 0;
         var existing = await db.Set<StravaConnection>()
-            .FirstOrDefaultAsync(s => s.UserId == userId, ct);
+            .FirstOrDefaultAsync(s => s.StravaAthleteId == athleteId, ct);
+
+        if (existing is null)
+        {
+            existing = await db.Set<StravaConnection>()
+                .FirstOrDefaultAsync(s => s.UserId == userId, ct);
+        }
 
         if (existing is null)
         {
             existing = new StravaConnection
             {
                 Id = Guid.NewGuid(),
-                UserId = userId,
                 ConnectedAt = DateTime.UtcNow,
             };
             db.Set<StravaConnection>().Add(existing);
         }
 
-        existing.StravaAthleteId = token.Athlete.Id;
-        existing.AthleteName = $"{token.Athlete.Firstname} {token.Athlete.Lastname}".Trim();
+        existing.UserId = userId;
+        existing.StravaAthleteId = athleteId;
+        existing.AthleteName = token.Athlete is null ? string.Empty
+            : $"{token.Athlete.Firstname} {token.Athlete.Lastname}".Trim();
         existing.AccessToken = token.AccessToken;
         existing.RefreshToken = token.RefreshToken;
         existing.ExpiresAt = DateTimeOffset.FromUnixTimeSeconds(token.ExpiresAt).UtcDateTime;

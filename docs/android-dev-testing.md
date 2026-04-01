@@ -24,7 +24,7 @@ How to run the Life-Level Flutter app on a physical Android device (Redmi Note 8
 ## Every-session startup sequence
 
 ### Step 1 — Start the backend
-
+ 
 ```bash
 cd backend/src/LifeLevel.Api
 dotnet run --launch-profile http

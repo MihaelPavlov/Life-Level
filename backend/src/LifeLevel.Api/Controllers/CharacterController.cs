@@ -18,7 +18,8 @@ public class CharacterController(
     IStreakReadPort streakReadPort,
     ILoginRewardReadPort loginRewardReadPort,
     IDailyQuestReadPort dailyQuestReadPort,
-    IUserReadPort userReadPort) : ControllerBase
+    IUserReadPort userReadPort,
+    IGearBonusReadPort gearBonusReadPort) : ControllerBase
 {
     [HttpPost("setup")]
     public async Task<IActionResult> Setup([FromBody] CharacterSetupRequest req)
@@ -48,7 +49,9 @@ public class CharacterController(
                 HasClaimedLoginRewardToday: await loginRewardReadPort.HasClaimedTodayAsync(userId),
                 DailyQuestsCompleted: await dailyQuestReadPort.CountCompletedDailyQuestsAsync(userId)
             );
-            var result = await characterService.GetProfileAsync(userId, ctx);
+            var profile = await characterService.GetProfileAsync(userId, ctx);
+            var gearBonuses = await gearBonusReadPort.GetEquippedBonusesAsync(userId);
+            var result = profile with { GearBonuses = gearBonuses };
             return Ok(result);
         }
         catch (InvalidOperationException ex)

@@ -132,7 +132,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
         (destNode.userState?.isCurrentNode ?? false);
 
     if (destNode == null && !isTraveling) {
-      return _buildNoDestinationCard();
+      return _buildNoDestinationCard(progress.pendingDistanceKm ?? 0.0);
     }
 
     if (isTraveling) {
@@ -143,10 +143,78 @@ class HomeMapFeaturedCard extends StatelessWidget {
       return _buildArrivedCard(destNode, onStravaSync);
     }
 
-    return _buildNoDestinationCard();
+    return _buildNoDestinationCard(progress.pendingDistanceKm ?? 0.0);
   }
 
-  Widget _buildNoDestinationCard() {
+  Widget _buildNoDestinationCard(double pendingKm) {
+    if (pendingKm > 0) {
+      // Reserve card: show banked distance with a progress bar
+      final barProgress = (pendingKm / 10.0).clamp(0.0, 1.0);
+      return GestureDetector(
+        onTap: onOpenMap,
+        child: HomeCard(
+          borderColor: AppColors.purple.withValues(alpha: 0.35),
+          glowColor: AppColors.purple.withValues(alpha: 0.08),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('🏦', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '${pendingKm.toStringAsFixed(1)} km in reserve',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${(barProgress * 100).round()}%',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.purple,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              HomeProgressBar(
+                progress: barProgress,
+                colors: const [AppColors.purple, Color(0xFFc49fff)],
+                height: 7,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Set a destination to apply it',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    'Open Map →',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF4f9eff),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: onOpenMap,
       child: HomeCard(
@@ -293,6 +361,11 @@ class HomeMapFeaturedCard extends StatelessWidget {
                 height: 7,
               ),
               const SizedBox(height: 8),
+              // Reserve (pending) distance bar — shown only when km are banked
+              if ((progress.pendingDistanceKm ?? 0) > 0) ...[
+                _ReserveBarCard(pendingKm: progress.pendingDistanceKm!),
+                const SizedBox(height: 8),
+              ],
               // Activity chips
               Row(
                 children: [
@@ -893,6 +966,77 @@ String _typeLabel(MapNodeModel node) {
 extension _OpacityText on Widget {
   Widget apply({required double opacity}) {
     return Opacity(opacity: opacity, child: this);
+  }
+}
+
+// ── RESERVE BAR CARD ───────────────────────────────────────────────────────────
+/// Displays banked / pending km that have been earned from activities but not
+/// yet consumed by the active edge. Shown inside the traveling card.
+class _ReserveBarCard extends StatelessWidget {
+  final double pendingKm;
+
+  const _ReserveBarCard({required this.pendingKm});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.purple.withValues(alpha: 0.08),
+        border: Border.all(color: AppColors.purple.withValues(alpha: 0.28)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          // Icon
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.purple.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: const Text('⚡', style: TextStyle(fontSize: 13)),
+          ),
+          const SizedBox(width: 10),
+          // Labels
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'RESERVE KM',
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'Banked from recent activities',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Value
+          Text(
+            '+${pendingKm.toStringAsFixed(2)} km',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppColors.purple,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

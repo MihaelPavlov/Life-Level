@@ -33,5 +33,6 @@ public record CharacterProfileResponse(
     int LongestStreak,
     int ShieldsAvailable,
     int DailyQuestsCompleted,
-    bool LoginRewardAvailable
+    bool LoginRewardAvailable,
+    GearBonuses? GearBonuses = null
 );

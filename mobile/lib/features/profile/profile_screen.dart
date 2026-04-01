@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../auth/login_screen.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/screens/integrations_screen.dart';
@@ -10,6 +11,7 @@ import 'profile_widgets.dart';
 import 'profile_overview_tab.dart';
 import 'tabs/admin_tab.dart';
 import 'tabs/equipment_tab.dart';
+import 'tabs/achievements_tab.dart';
 import 'tabs/inventory_tab.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,7 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ProfileOverviewTab(profile: profile),
                 const EquipmentTab(),
                 const InventoryTab(),
-                const ProfilePlaceholderTab('Achievements', '🏆'),
+                const AchievementsTab(),
                 if (_isAdmin) const AdminTab(),
               ],
             ),
@@ -129,6 +131,17 @@ class ProfileHeader extends StatelessWidget {
   final List<String> tabs;
   final CharacterProfile profile;
   const ProfileHeader({super.key, required this.tabController, required this.tabs, required this.profile});
+
+  void _showSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161b22),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SettingsSheet(parentContext: context),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -233,14 +246,9 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ),
 
-                // settings → integrations
+                // settings sheet
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const IntegrationsScreen(),
-                    ),
-                  ),
+                  onTap: () => _showSettings(context),
                   child: Container(
                     width: 36,
                     height: 36,
@@ -278,6 +286,111 @@ class ProfileHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── _SettingsSheet ─────────────────────────────────────────────────────────────
+class _SettingsSheet extends StatelessWidget {
+  final BuildContext parentContext;
+  const _SettingsSheet({required this.parentContext});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // drag handle
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: kPBorder2,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: kPTextPri,
+                  ),
+                ),
+              ),
+            ),
+            _SettingsTile(
+              icon: Icons.cable_outlined,
+              label: 'Integrations',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(builder: (_) => const IntegrationsScreen()),
+                );
+              },
+            ),
+            const Divider(height: 1, indent: 20, endIndent: 20, color: kPBorder),
+            _SettingsTile(
+              icon: Icons.logout,
+              label: 'Logout',
+              labelColor: AppColors.red,
+              iconColor: AppColors.red,
+              onTap: () async {
+                Navigator.pop(context);
+                await ApiClient.clearToken();
+                if (parentContext.mounted) {
+                  Navigator.of(parentContext).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (_) => false,
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? labelColor;
+  final Color? iconColor;
+  final VoidCallback onTap;
+  const _SettingsTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.labelColor,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, size: 20, color: iconColor ?? kPTextSec),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: labelColor ?? kPTextPri,
+        ),
+      ),
+      trailing: Icon(Icons.chevron_right, size: 18, color: iconColor ?? kPTextSec),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
     );
   }
 }

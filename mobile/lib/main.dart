@@ -5,6 +5,8 @@ import 'core/theme/app_theme.dart';
 import 'core/widgets/main_shell.dart';
 import 'features/auth/login_screen.dart';
 
+final navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
   runApp(const ProviderScope(child: LifeLevelApp()));
 }
@@ -18,6 +20,7 @@ class LifeLevelApp extends StatelessWidget {
       title: 'LifeLevel',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
+      navigatorKey: navigatorKey,
       home: const _AuthGate(),
     );
   }

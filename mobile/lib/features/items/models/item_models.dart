@@ -102,6 +102,21 @@ class GearBonusesDto {
       staBonus > 0;
 }
 
+class InventoryResponse {
+  final List<ItemDto> items;
+  final int maxSlots;
+
+  const InventoryResponse({required this.items, required this.maxSlots});
+
+  factory InventoryResponse.fromJson(Map<String, dynamic> json) =>
+      InventoryResponse(
+        items: (json['items'] as List<dynamic>)
+            .map((e) => ItemDto.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        maxSlots: json['maxSlots'] as int? ?? 50,
+      );
+}
+
 class CharacterEquipmentResponse {
   final List<EquipmentSlotDto> slots;
   final GearBonusesDto totalBonuses;

@@ -19,6 +19,8 @@ public class Character
 
     public int AvailableStatPoints { get; set; } = 0;
 
+    public int MaxInventorySlots { get; set; } = 20;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -26,4 +28,6 @@ public class Character
     public CharacterClass? Class { get; set; }
     public string? AvatarEmoji { get; set; }
     public bool IsSetupComplete { get; set; } = false;
+
+    public Guid? EquippedTitleId { get; set; }
 }

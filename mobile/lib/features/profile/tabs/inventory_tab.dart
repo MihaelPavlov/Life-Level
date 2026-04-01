@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../character/providers/character_provider.dart';
 import '../../items/models/item_models.dart';
 import '../../items/providers/items_provider.dart';
 import '../../items/services/items_service.dart';
@@ -8,7 +9,6 @@ import '../profile_stat_metadata.dart';
 import '../widgets/equipment_slot_tile.dart';
 
 // ── constants ─────────────────────────────────────────────────────────────────
-const _kMaxSlots = 50;
 const _kCategories = [
   'All',
   'Tracker',
@@ -88,11 +88,11 @@ class _InventoryTabState extends ConsumerState<InventoryTab> {
           ],
         ),
       ),
-      data: (items) => _buildContent(items),
+      data: (inventory) => _buildContent(inventory.items, inventory.maxSlots),
     );
   }
 
-  Widget _buildContent(List<ItemDto> items) {
+  Widget _buildContent(List<ItemDto> items, int maxSlots) {
     final filtered = _filtered(items);
 
     return RefreshIndicator(
@@ -120,7 +120,7 @@ class _InventoryTabState extends ConsumerState<InventoryTab> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  '${items.length} / $_kMaxSlots slots',
+                  '${items.length} / $maxSlots slots',
                   style: const TextStyle(
                     fontSize: 11,
                     color: kPTextSec,
@@ -129,6 +129,17 @@ class _InventoryTabState extends ConsumerState<InventoryTab> {
                 ),
               ),
             ),
+            if (items.length / maxSlots > 0.7)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Text(
+                  '\u2b06 Level up to unlock more inventory slots',
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.orange),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             if (filtered.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
@@ -354,6 +365,7 @@ class _InventoryItemDetailState extends ConsumerState<_InventoryItemDetail> {
         ref.read(equipmentProvider.notifier).refresh(),
         ref.read(inventoryProvider.notifier).refresh(),
       ]);
+      ref.read(characterProfileProvider.notifier).refresh();
       widget.onAction();
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -365,6 +377,7 @@ class _InventoryItemDetailState extends ConsumerState<_InventoryItemDetail> {
     try {
       await ref.read(equipmentProvider.notifier).unequip(widget.item.slotType);
       await ref.read(inventoryProvider.notifier).refresh();
+      ref.read(characterProfileProvider.notifier).refresh();
       widget.onAction();
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -127,12 +127,18 @@ class UserMapProgressModel {
   final String? destinationNodeId;
   final List<String> unlockedNodeIds;
 
+  /// Distance that has been earned from activities but not yet consumed by
+  /// the current edge (i.e., banked / reserve km). Null when the backend
+  /// does not return the field.
+  final double? pendingDistanceKm;
+
   const UserMapProgressModel({
     required this.currentNodeId,
     this.currentEdgeId,
     required this.distanceTraveledOnEdge,
     this.destinationNodeId,
     required this.unlockedNodeIds,
+    this.pendingDistanceKm,
   });
 
   factory UserMapProgressModel.fromJson(Map<String, dynamic> json) =>
@@ -145,6 +151,7 @@ class UserMapProgressModel {
         unlockedNodeIds: (json['unlockedNodeIds'] as List)
             .map((e) => e.toString())
             .toList(),
+        pendingDistanceKm: (json['pendingDistanceKm'] as num?)?.toDouble(),
       );
 }
 

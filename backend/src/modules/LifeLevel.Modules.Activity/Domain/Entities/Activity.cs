@@ -22,5 +22,7 @@ public class Activity
     public int FlxGained { get; set; }
     public int StaGained { get; set; }
 
+    public int Steps { get; set; } = 0;
+
     public DateTime LoggedAt { get; set; } = DateTime.UtcNow;
 }

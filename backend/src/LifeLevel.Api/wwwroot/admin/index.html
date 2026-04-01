@@ -242,6 +242,48 @@
 
   .stat { color: var(--text2); font-size: 12px; }
   .stat span { color: var(--blue); font-weight: 600; }
+
+  /* ── Map Editor ──────────────────────────────────────────────────────────── */
+  .tool-active { background: var(--blue) !important; color: #fff !important; }
+  .map-node { cursor: pointer; }
+  .map-node:hover > .node-shape { filter: brightness(1.3); }
+  .map-node.selected > .node-shape { stroke-width: 3px !important; }
+  .map-node.edge-pending > .node-shape { stroke-dasharray: 4 2; }
+  @keyframes mapPulse {
+    0%,100% { opacity:1; }
+    50%      { opacity:0.35; }
+  }
+  .map-node.edge-pending { animation: mapPulse 1s ease-in-out infinite; }
+  .map-edge-line { cursor: pointer; stroke-width: 2; }
+  .map-edge-line:hover { stroke-width: 3.5; stroke: var(--blue); }
+
+  /* Node side panel */
+  #mapSidePanel .prop-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  #mapSidePanel .prop-section h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 10px;
+  }
+  .sub-entity-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .sub-entity-card .field label { font-size: 11px; }
+  .floor-row { display:flex;gap:6px;align-items:center;margin-bottom:6px;font-size:12px; }
+  .floor-row input, .floor-row select { width:70px;font-size:12px;padding:3px 5px; }
 </style>
 </head>
 <body>
@@ -263,6 +305,7 @@
   <button class="active" onclick="switchTab('items', this)">Items</button>
   <button onclick="switchTab('droprules', this)">Drop Rules</button>
   <button onclick="switchTab('grant', this)">Grant Item</button>
+  <button onclick="switchTab('map', this)">🗺 Map Editor</button>
 </nav>
 
 <main>
@@ -330,6 +373,95 @@
       <button class="success" onclick="grantItem()">Grant Item</button>
       <div id="grantResult" style="font-size:13px;color:var(--text2)"></div>
     </div>
+  </div>
+
+  <!-- ===== MAP EDITOR TAB ===== -->
+  <div id="tab-map" class="tab-panel">
+
+    <!-- Zone Management Bar -->
+    <div id="mapZoneBar" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <span style="font-size:14px;font-weight:700;color:var(--text1)">World Zone:</span>
+      <select id="mapZoneSelect" style="width:230px;" onchange="onZoneSelected()">
+        <option value="">— Select a zone —</option>
+      </select>
+      <button onclick="openZoneModal(null)">+ New Zone</button>
+      <button class="secondary" id="editZoneBtn" disabled onclick="editSelectedZone()">Edit Zone</button>
+      <button class="danger" id="deleteZoneBtn" disabled onclick="deleteSelectedZone()">Delete Zone</button>
+      <button class="secondary" onclick="loadMapData()">↺ Refresh</button>
+      <span id="mapZoneInfo" style="color:var(--text2);font-size:12px;margin-left:auto;"></span>
+    </div>
+
+    <!-- Canvas + Side Panel -->
+    <div id="mapWorkspace" style="display:flex;gap:14px;height:calc(100vh - 290px);min-height:400px;">
+
+      <!-- Canvas -->
+      <div style="flex:1;position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        <div style="position:absolute;top:8px;left:8px;z-index:10;display:flex;gap:6px;">
+          <button id="toolSelectBtn" class="sm tool-active" onclick="setTool('select')" title="Select / drag nodes">Select</button>
+          <button id="toolEdgeBtn" class="sm secondary" onclick="setTool('edge')" title="Click two nodes to connect">Add Edge</button>
+          <button class="sm secondary" onclick="addNodeAtCenter()" title="Place a new node in the canvas centre">+ Node</button>
+          <button class="sm secondary" onclick="resetView()">Reset View</button>
+        </div>
+        <svg id="mapSvg" width="100%" height="100%" style="cursor:default;display:block;">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#8b949e"/>
+            </marker>
+          </defs>
+          <g id="mapViewport">
+            <g id="mapEdgeLayer"></g>
+            <g id="mapNodeLayer"></g>
+          </g>
+        </svg>
+        <!-- Edge creation inline dialog -->
+        <div id="edgeDialog" style="display:none;position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;z-index:20;width:210px;box-shadow:0 4px 16px #0008;">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">New Edge</div>
+          <div class="field" style="margin-bottom:8px;">
+            <label>Distance (km)</label>
+            <input type="number" id="edgeDlgDist" min="0.1" step="0.1" value="1.0" style="width:100%">
+          </div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;margin-bottom:10px;cursor:pointer;">
+            <input type="checkbox" id="edgeDlgBidi" checked> Bidirectional
+          </label>
+          <div style="display:flex;gap:6px;">
+            <button class="sm" onclick="confirmCreateEdge()">Save</button>
+            <button class="sm secondary" onclick="cancelEdge()">Cancel</button>
+          </div>
+        </div>
+        <div id="mapCoords" style="position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--text2);pointer-events:none;"></div>
+        <div id="mapEmptyHint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text2);font-size:13px;text-align:center;pointer-events:none;">
+          Select a World Zone above to load its map nodes.
+        </div>
+      </div>
+
+      <!-- Side Panel -->
+      <div id="mapSidePanel" style="width:310px;flex-shrink:0;overflow-y:auto;">
+        <div id="mapSidePanelContent" style="color:var(--text2);font-size:13px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+          Select a node to view and edit its properties.
+        </div>
+      </div>
+    </div>
+
+    <!-- World Zone Edges Accordion -->
+    <div style="margin-top:14px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);cursor:pointer;" onclick="toggleZoneEdges()">
+        <span style="font-size:13px;font-weight:700;">World Zone Edges</span>
+        <span id="zoneEdgesToggle" style="color:var(--text2);font-size:11px;">▼ expand</span>
+        <button class="sm secondary" style="margin-left:auto" onclick="event.stopPropagation();openZoneEdgeModal(null)">+ Add Zone Edge</button>
+        <button class="sm secondary" onclick="event.stopPropagation();loadZoneEdges()">↺</button>
+      </div>
+      <div id="zoneEdgesContent" style="display:none;padding:12px 14px;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>From Zone</th><th>To Zone</th><th>Dist (km)</th><th>Bidi</th><th>Actions</th></tr></thead>
+            <tbody id="zoneEdgesTableBody">
+              <tr><td colspan="5" style="color:var(--text2);text-align:center;padding:20px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </main>
@@ -423,7 +555,7 @@
       <input type="hidden" id="rm_id">
       <div class="field">
         <label>Trigger Type</label>
-        <select id="rm_triggerType">
+        <select id="rm_triggerType" onchange="onTriggerTypeChange()">
           <option>Manual</option>
           <option>ZoneCompletion</option>
           <option>StatMilestone</option>
@@ -452,6 +584,63 @@
     <div class="modal-actions">
       <button class="secondary" onclick="closeModal('ruleModal')">Cancel</button>
       <button onclick="saveRule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ZONE MODAL ===== -->
+<div class="modal-backdrop" id="zoneModal">
+  <div class="modal" style="max-width:600px;">
+    <h3 id="zoneModalTitle">Add World Zone</h3>
+    <div class="form-grid">
+      <input type="hidden" id="zm_id">
+      <div class="field full"><label>Name</label><input type="text" id="zm_name" placeholder="Forest of Endurance"></div>
+      <div class="field full"><label>Description</label><textarea id="zm_description" rows="2" placeholder="Zone description…"></textarea></div>
+      <div class="field"><label>Icon (emoji)</label><input type="text" id="zm_icon" placeholder="🌲"></div>
+      <div class="field"><label>Region</label><input type="text" id="zm_region" placeholder="ForestOfEndurance"></div>
+      <div class="field"><label>Tier</label><input type="number" id="zm_tier" value="1" min="1"></div>
+      <div class="field"><label>Level Requirement</label><input type="number" id="zm_levelReq" value="1" min="0"></div>
+      <div class="field"><label>Total XP</label><input type="number" id="zm_totalXp" value="0" min="0"></div>
+      <div class="field"><label>Total Distance (km)</label><input type="number" id="zm_totalDist" value="0" step="0.1" min="0"></div>
+      <div class="field"><label>Position X</label><input type="number" id="zm_x" value="400" step="1"></div>
+      <div class="field"><label>Position Y</label><input type="number" id="zm_y" value="300" step="1"></div>
+      <div class="field">
+        <label>Crossroads?</label>
+        <select id="zm_isCrossroads"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="field">
+        <label>Start Zone?</label>
+        <select id="zm_isStart"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="field">
+        <label>Hidden?</label>
+        <select id="zm_isHidden"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('zoneModal')">Cancel</button>
+      <button onclick="saveZone()">Save Zone</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ZONE EDGE MODAL ===== -->
+<div class="modal-backdrop" id="zoneEdgeModal">
+  <div class="modal">
+    <h3 id="zoneEdgeModalTitle">Add Zone Edge</h3>
+    <div class="form-grid">
+      <input type="hidden" id="zem_id">
+      <div class="field full"><label>From Zone</label><select id="zem_fromZone" style="width:100%"><option value="">— select —</option></select></div>
+      <div class="field full"><label>To Zone</label><select id="zem_toZone" style="width:100%"><option value="">— select —</option></select></div>
+      <div class="field"><label>Distance (km)</label><input type="number" id="zem_dist" value="1.0" step="0.1" min="0.1"></div>
+      <div class="field">
+        <label>Bidirectional?</label>
+        <select id="zem_bidi"><option value="true">Yes</option><option value="false">No</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('zoneEdgeModal')">Cancel</button>
+      <button onclick="saveZoneEdge()">Save Edge</button>
     </div>
   </div>
 </div>
@@ -504,6 +693,7 @@ function switchTab(id, btn) {
   if (id === 'items') loadItems();
   if (id === 'droprules') populateDropRuleItemSelect();
   if (id === 'grant') populateGrantItemSelect();
+  if (id === 'map') initMapTab();
 }
 
 // ── Modals ─────────────────────────────────────────────────────────────────
@@ -686,12 +876,42 @@ async function loadDropRules() {
   }
 }
 
+const triggerParamTemplates = {
+  Manual:             null,
+  ZoneCompletion:     '{\n  "zoneId": ""\n}',
+  StatMilestone:      '{\n  "stat": "STR",\n  "minValue": 50\n}',
+  IntegrationConnect: '{\n  "integration": "Strava"\n}',
+  RandomDrop:         '{\n  "activityType": "Running"\n}',
+  LevelReached:       '{\n  "level": 10\n}',
+  QuestCompletion:    '{\n  "questId": ""\n}',
+};
+
+const triggerParamPlaceholders = {
+  Manual:             '{}  ← no parameters needed for manual grants',
+  ZoneCompletion:     '{"zoneId": "uuid-of-zone"}',
+  StatMilestone:      '{"stat": "STR", "minValue": 50}',
+  IntegrationConnect: '{"integration": "Strava"}',
+  RandomDrop:         '{"activityType": "Running"}',
+  LevelReached:       '{"level": 10}',
+  QuestCompletion:    '{"questId": "uuid-of-quest"}',
+};
+
+function onTriggerTypeChange() {
+  const type = document.getElementById('rm_triggerType').value;
+  const ta = document.getElementById('rm_triggerParameters');
+  ta.placeholder = triggerParamPlaceholders[type] ?? '{}';
+  ta.value = triggerParamTemplates[type] ?? '{}';
+}
+
 function openRuleModal(rule) {
   document.getElementById('ruleModalTitle').textContent = rule ? 'Edit Drop Rule' : 'Add Drop Rule';
   document.getElementById('rm_id').value = rule?.id ?? '';
   setSelect('rm_triggerType', rule?.triggerType ?? 'Manual');
   document.getElementById('rm_dropChancePct').value = rule?.dropChancePct ?? 100;
-  document.getElementById('rm_triggerParameters').value = rule?.triggerParameters ?? '{}';
+  const type = rule?.triggerType ?? 'Manual';
+  const ta = document.getElementById('rm_triggerParameters');
+  ta.placeholder = triggerParamPlaceholders[type] ?? '{}';
+  ta.value = rule?.triggerParameters ?? (triggerParamTemplates[type] ?? '{}');
   setSelect('rm_isEnabled', rule ? String(rule.isEnabled) : 'true');
   document.getElementById('ruleModal').classList.add('open');
 }
@@ -761,6 +981,985 @@ async function grantItem() {
 function populateItemSelects() {
   populateDropRuleItemSelect();
   populateGrantItemSelect();
+}
+
+// =============================================================================
+// MAP EDITOR TAB
+// =============================================================================
+
+// ── State ─────────────────────────────────────────────────────────────────
+let mapZones = [], mapZoneEdges = [];
+let mapNodes = [], mapEdges = [];
+let selectedZoneId = null;
+let selectedNodeId = null;
+let activeTool = 'select';
+let edgePendingFrom = null, edgePendingFromEl = null;
+let vpX = 0, vpY = 0, vpScale = 1;
+let isDragging = false, dragNodeId = null;
+let dragStartSvgX = 0, dragStartSvgY = 0, dragNodeOrigX = 0, dragNodeOrigY = 0;
+let nodeMoved = false;
+let isPanning = false, panStartX = 0, panStartY = 0, panOrigX = 0, panOrigY = 0;
+let spaceDown = false;
+
+const NODE_STYLES = {
+  Zone:       { shape: 'circle',  r: 22,     fill: '#1e3240', stroke: '#4f9eff' },
+  Boss:       { shape: 'diamond', r: 22,     fill: '#3d0c0c', stroke: '#f85149' },
+  Dungeon:    { shape: 'rect',    w: 44, h: 34, fill: '#2a2250', stroke: '#a371f7' },
+  Chest:      { shape: 'circle',  r: 16,     fill: '#3d2a00', stroke: '#f5a623' },
+  Crossroads: { shape: 'diamond', r: 20,     fill: '#1e2d1e', stroke: '#3fb950' },
+  Event:      { shape: 'circle',  r: 18,     fill: '#1a2233', stroke: '#7ec8ff' },
+};
+const NODE_EMOJIS = { Zone:'🌍', Boss:'👹', Dungeon:'🏰', Chest:'📦', Crossroads:'🔀', Event:'⚡' };
+
+// ── Init / Load ────────────────────────────────────────────────────────────
+async function initMapTab() {
+  if (mapZones.length === 0) await loadMapData();
+}
+
+async function loadMapData() {
+  try {
+    const data = await apiFetch('/api/admin/map');
+    mapZones = data.worldZones || [];
+    mapZoneEdges = data.worldEdges || [];
+    populateZoneSelect();
+    if (selectedZoneId) await loadZoneNodes(selectedZoneId);
+  } catch (e) {
+    toast('Failed to load map: ' + e.message, 'err');
+  }
+}
+
+function populateZoneSelect() {
+  const sel = document.getElementById('mapZoneSelect');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select a zone —</option>';
+  [...mapZones].sort((a, b) => a.name.localeCompare(b.name)).forEach(z => {
+    const opt = document.createElement('option');
+    opt.value = z.id;
+    opt.textContent = (z.icon || '') + ' ' + z.name + ' (T' + z.tier + ')';
+    sel.appendChild(opt);
+  });
+  if (prev) sel.value = prev;
+}
+
+async function onZoneSelected() {
+  const zoneId = document.getElementById('mapZoneSelect').value;
+  selectedZoneId = zoneId || null;
+  selectedNodeId = null;
+  document.getElementById('editZoneBtn').disabled = !zoneId;
+  document.getElementById('deleteZoneBtn').disabled = !zoneId;
+  document.getElementById('mapSidePanelContent').textContent = 'Select a node to view and edit its properties.';
+
+  if (zoneId) {
+    const zone = mapZones.find(z => z.id === zoneId);
+    document.getElementById('mapZoneInfo').textContent =
+      zone ? `Tier ${zone.tier} · Region: ${zone.region}` : '';
+    await loadZoneNodes(zoneId);
+  } else {
+    mapNodes = []; mapEdges = [];
+    document.getElementById('mapZoneInfo').textContent = '';
+    renderCanvas();
+  }
+}
+
+async function loadZoneNodes(zoneId) {
+  try {
+    const [nodes, allEdges] = await Promise.all([
+      apiFetch('/api/admin/map/nodes?zoneId=' + zoneId),
+      apiFetch('/api/admin/map/edges'),
+    ]);
+    mapNodes = nodes;
+    const nodeIds = new Set(nodes.map(n => String(n.id)));
+    mapEdges = (allEdges || []).filter(e =>
+      nodeIds.has(String(e.fromNodeId)) && nodeIds.has(String(e.toNodeId)));
+    document.getElementById('mapEmptyHint').style.display = nodes.length ? 'none' : '';
+    resetView();
+    renderCanvas();
+  } catch (e) {
+    toast('Failed to load zone nodes: ' + e.message, 'err');
+  }
+}
+
+// ── Canvas Rendering ───────────────────────────────────────────────────────
+function svgPoint(e) {
+  const svg = document.getElementById('mapSvg');
+  const rect = svg.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left - vpX) / vpScale,
+    y: (e.clientY - rect.top  - vpY) / vpScale,
+  };
+}
+
+function resetView() {
+  vpX = 60; vpY = 60; vpScale = 1;
+  applyViewport();
+}
+
+function applyViewport() {
+  document.getElementById('mapViewport').setAttribute('transform',
+    `translate(${vpX},${vpY}) scale(${vpScale})`);
+}
+
+function renderCanvas() {
+  renderEdges();
+  renderNodes();
+}
+
+function renderEdges() {
+  const layer = document.getElementById('mapEdgeLayer');
+  layer.innerHTML = '';
+  mapEdges.forEach(e => {
+    const from = mapNodes.find(n => String(n.id) === String(e.fromNodeId));
+    const to   = mapNodes.find(n => String(n.id) === String(e.toNodeId));
+    if (!from || !to) return;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', from.positionX); line.setAttribute('y1', from.positionY);
+    line.setAttribute('x2', to.positionX);   line.setAttribute('y2', to.positionY);
+    line.setAttribute('stroke', '#4a5568');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('class', 'map-edge-line');
+    line.dataset.edgeId = e.id;
+    if (!e.bidirectional && !e.isBidirectional) {
+      line.setAttribute('marker-end', 'url(#arrowhead)');
+    }
+    line.addEventListener('contextmenu', ev => {
+      ev.preventDefault();
+      if (confirm('Delete this edge?')) deleteEdge(e.id);
+    });
+    layer.appendChild(line);
+
+    // Distance label at midpoint
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lbl.setAttribute('x', (from.positionX + to.positionX) / 2);
+    lbl.setAttribute('y', (from.positionY + to.positionY) / 2 - 5);
+    lbl.setAttribute('text-anchor', 'middle');
+    lbl.setAttribute('font-size', '9');
+    lbl.setAttribute('fill', '#8b949e');
+    lbl.textContent = (e.distanceKm || e.distance_km || 0).toFixed(1) + ' km';
+    lbl.style.pointerEvents = 'none';
+    layer.appendChild(lbl);
+  });
+}
+
+function renderNodes() {
+  const layer = document.getElementById('mapNodeLayer');
+  layer.innerHTML = '';
+  mapNodes.forEach(n => renderNode(n, layer));
+}
+
+function renderNode(n, layer) {
+  const style = NODE_STYLES[n.type] || NODE_STYLES['Zone'];
+  const isSelected = String(n.id) === String(selectedNodeId);
+  const isPending  = String(n.id) === String(edgePendingFrom);
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'map-node' + (isSelected ? ' selected' : '') + (isPending ? ' edge-pending' : ''));
+  g.setAttribute('transform', `translate(${n.positionX},${n.positionY})`);
+  g.dataset.nodeId = n.id;
+
+  // Shape
+  let shape;
+  if (style.shape === 'circle') {
+    shape = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    shape.setAttribute('r', style.r);
+    shape.setAttribute('cx', 0); shape.setAttribute('cy', 0);
+  } else if (style.shape === 'diamond') {
+    shape = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const r = style.r;
+    shape.setAttribute('points', `0,${-r} ${r},0 0,${r} ${-r},0`);
+  } else {
+    shape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    shape.setAttribute('x', -style.w / 2); shape.setAttribute('y', -style.h / 2);
+    shape.setAttribute('width', style.w);  shape.setAttribute('height', style.h);
+    shape.setAttribute('rx', 5);
+  }
+  shape.setAttribute('fill', style.fill);
+  shape.setAttribute('stroke', isSelected ? '#7ec8ff' : style.stroke);
+  shape.setAttribute('stroke-width', isSelected ? 3 : 1.5);
+  shape.setAttribute('class', 'node-shape');
+  if (n.isHidden || n.is_hidden) g.setAttribute('opacity', '0.45');
+  if (n.isStartNode || n.is_start_node) {
+    shape.setAttribute('stroke', '#f5a623');
+    shape.setAttribute('stroke-dasharray', '3 1.5');
+  }
+  g.appendChild(shape);
+
+  // Emoji
+  const emoji = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  emoji.setAttribute('text-anchor', 'middle');
+  emoji.setAttribute('dominant-baseline', 'central');
+  emoji.setAttribute('font-size', style.shape === 'rect' ? '16' : '14');
+  emoji.setAttribute('y', '0');
+  emoji.style.pointerEvents = 'none';
+  emoji.textContent = n.icon || NODE_EMOJIS[n.type] || '?';
+  g.appendChild(emoji);
+
+  // Name label
+  const r = style.shape === 'circle' ? style.r : (style.shape === 'diamond' ? style.r : style.h / 2);
+  const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  lbl.setAttribute('text-anchor', 'middle');
+  lbl.setAttribute('y', r + 13);
+  lbl.setAttribute('font-size', '9');
+  lbl.setAttribute('fill', '#8b949e');
+  lbl.style.pointerEvents = 'none';
+  lbl.textContent = (n.name || '').length > 14 ? n.name.slice(0, 13) + '…' : n.name;
+  g.appendChild(lbl);
+
+  g.addEventListener('mousedown', ev => onNodeMouseDown(ev, n));
+  layer.appendChild(g);
+}
+
+// ── Input Handlers ─────────────────────────────────────────────────────────
+(function setupMapEvents() {
+  const svg = document.getElementById('mapSvg');
+  if (!svg) return;
+
+  svg.addEventListener('mousedown', ev => {
+    if (ev.button === 1 || (ev.button === 0 && spaceDown)) {
+      isPanning = true;
+      panStartX = ev.clientX; panStartY = ev.clientY;
+      panOrigX = vpX; panOrigY = vpY;
+      ev.preventDefault();
+    }
+  });
+
+  svg.addEventListener('mousemove', ev => {
+    if (isPanning) {
+      vpX = panOrigX + (ev.clientX - panStartX);
+      vpY = panOrigY + (ev.clientY - panStartY);
+      applyViewport();
+      return;
+    }
+    if (isDragging && dragNodeId) {
+      const pt = svgPoint(ev);
+      const dx = pt.x - dragStartSvgX;
+      const dy = pt.y - dragStartSvgY;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) nodeMoved = true;
+      const node = mapNodes.find(n => String(n.id) === String(dragNodeId));
+      if (node) {
+        node.positionX = dragNodeOrigX + dx;
+        node.positionY = dragNodeOrigY + dy;
+        // Move the node group directly without full re-render for performance
+        const g = document.querySelector(`[data-node-id="${dragNodeId}"]`);
+        if (g) g.setAttribute('transform', `translate(${node.positionX},${node.positionY})`);
+        // Update connected edges
+        renderEdges();
+      }
+      const rect = svg.getBoundingClientRect();
+      document.getElementById('mapCoords').textContent = `x:${Math.round(node?.positionX)} y:${Math.round(node?.positionY)}`;
+    }
+  });
+
+  svg.addEventListener('mouseup', async ev => {
+    if (isPanning) { isPanning = false; return; }
+    if (isDragging) {
+      const moved = nodeMoved;
+      isDragging = false;
+      if (moved && dragNodeId) await saveNodePosition(dragNodeId);
+      dragNodeId = null; nodeMoved = false;
+    }
+  });
+
+  svg.addEventListener('mouseleave', () => {
+    if (isDragging && nodeMoved && dragNodeId) saveNodePosition(dragNodeId);
+    isDragging = false; isPanning = false; nodeMoved = false;
+  });
+
+  svg.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    const factor = ev.deltaY < 0 ? 1.12 : 0.89;
+    const worldX = (ev.clientX - rect.left - vpX) / vpScale;
+    const worldY = (ev.clientY - rect.top  - vpY) / vpScale;
+    vpScale = Math.min(5, Math.max(0.15, vpScale * factor));
+    vpX = ev.clientX - rect.left - worldX * vpScale;
+    vpY = ev.clientY - rect.top  - worldY * vpScale;
+    applyViewport();
+  }, { passive: false });
+
+  // Click on canvas background deselects
+  svg.addEventListener('click', ev => {
+    if (ev.target === svg || ev.target.id === 'mapViewport' ||
+        ev.target.id === 'mapEdgeLayer' || ev.target.id === 'mapNodeLayer') {
+      if (activeTool === 'edge' && edgePendingFrom) {
+        cancelEdge();
+      } else {
+        selectedNodeId = null;
+        renderNodes();
+        document.getElementById('mapSidePanelContent').textContent = 'Select a node to view and edit its properties.';
+      }
+    }
+  });
+
+  document.addEventListener('keydown', ev => {
+    if (ev.code === 'Space') spaceDown = true;
+    if (ev.code === 'Escape') cancelEdge();
+  });
+  document.addEventListener('keyup', ev => {
+    if (ev.code === 'Space') spaceDown = false;
+  });
+})();
+
+function onNodeMouseDown(ev, n) {
+  ev.stopPropagation();
+  if (activeTool === 'select') {
+    isDragging = true;
+    dragNodeId = n.id;
+    const pt = svgPoint(ev);
+    dragStartSvgX = pt.x; dragStartSvgY = pt.y;
+    dragNodeOrigX = n.positionX; dragNodeOrigY = n.positionY;
+    nodeMoved = false;
+    // Select on mousedown
+    selectedNodeId = n.id;
+    renderNodes();
+    renderSidePanel(n.id);
+  } else if (activeTool === 'edge') {
+    ev.stopPropagation();
+    if (!edgePendingFrom) {
+      edgePendingFrom = n.id;
+      renderNodes(); // shows pulse animation
+      toast('Now click the destination node', 'ok');
+    } else if (String(edgePendingFrom) === String(n.id)) {
+      cancelEdge();
+    } else {
+      // Show edge dialog
+      const svg = document.getElementById('mapSvg');
+      const rect = svg.getBoundingClientRect();
+      const fromNode = mapNodes.find(x => String(x.id) === String(edgePendingFrom));
+      const toNode = n;
+      if (fromNode && toNode) {
+        const dist = Math.sqrt(
+          Math.pow(fromNode.positionX - toNode.positionX, 2) +
+          Math.pow(fromNode.positionY - toNode.positionY, 2)
+        ) / 10;
+        document.getElementById('edgeDlgDist').value = dist.toFixed(1);
+        document.getElementById('edgeDlgBidi').checked = true;
+        // Store pending to node id
+        document.getElementById('edgeDialog').dataset.toNodeId = n.id;
+        // Position dialog near midpoint
+        const midSvgX = ((fromNode.positionX + toNode.positionX) / 2) * vpScale + vpX;
+        const midSvgY = ((fromNode.positionY + toNode.positionY) / 2) * vpScale + vpY;
+        const dlg = document.getElementById('edgeDialog');
+        dlg.style.left = Math.min(midSvgX, rect.width - 230) + 'px';
+        dlg.style.top  = Math.min(midSvgY, rect.height - 160) + 'px';
+        dlg.style.display = 'block';
+      }
+    }
+  }
+}
+
+async function saveNodePosition(nodeId) {
+  const n = mapNodes.find(x => String(x.id) === String(nodeId));
+  if (!n) return;
+  try {
+    await apiFetch(`/api/admin/map/nodes/${nodeId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: n.name, description: n.description, icon: n.icon,
+        type: n.type?.toString() || 'Zone',
+        region: n.region?.toString() || 'Ashfield',
+        positionX: n.positionX, positionY: n.positionY,
+        levelRequirement: n.levelRequirement || 0,
+        rewardXp: n.rewardXp || 0,
+        isStartNode: n.isStartNode || false,
+        isHidden: n.isHidden || false,
+        worldZoneId: n.worldZoneId || selectedZoneId,
+      })
+    });
+  } catch (e) {
+    toast('Position save failed: ' + e.message, 'err');
+  }
+}
+
+// ── Tool Switching ─────────────────────────────────────────────────────────
+function setTool(tool) {
+  activeTool = tool;
+  cancelEdge();
+  document.getElementById('toolSelectBtn').classList.toggle('tool-active', tool === 'select');
+  document.getElementById('toolEdgeBtn').classList.toggle('tool-active', tool === 'edge');
+  document.getElementById('toolSelectBtn').classList.toggle('secondary', tool !== 'select');
+  document.getElementById('toolEdgeBtn').classList.toggle('secondary', tool !== 'edge');
+  document.getElementById('mapSvg').style.cursor = tool === 'edge' ? 'crosshair' : 'default';
+}
+
+function cancelEdge() {
+  edgePendingFrom = null;
+  document.getElementById('edgeDialog').style.display = 'none';
+  renderNodes();
+}
+
+async function confirmCreateEdge() {
+  const toNodeId = document.getElementById('edgeDialog').dataset.toNodeId;
+  const dist = parseFloat(document.getElementById('edgeDlgDist').value) || 1;
+  const bidi = document.getElementById('edgeDlgBidi').checked;
+  document.getElementById('edgeDialog').style.display = 'none';
+
+  try {
+    await apiFetch('/api/admin/map/edges', {
+      method: 'POST',
+      body: JSON.stringify({ fromNodeId: edgePendingFrom, toNodeId, distanceKm: dist, isBidirectional: bidi })
+    });
+    toast('Edge created', 'ok');
+    edgePendingFrom = null;
+    await loadZoneNodes(selectedZoneId);
+  } catch (e) {
+    toast('Edge error: ' + e.message, 'err');
+    edgePendingFrom = null;
+  }
+}
+
+async function deleteEdge(edgeId) {
+  try {
+    await apiFetch('/api/admin/map/edges/' + edgeId, { method: 'DELETE' });
+    toast('Edge deleted', 'ok');
+    await loadZoneNodes(selectedZoneId);
+  } catch (e) {
+    toast('Delete edge error: ' + e.message, 'err');
+  }
+}
+
+// ── Add Node ───────────────────────────────────────────────────────────────
+function addNodeAtCenter() {
+  if (!selectedZoneId) { toast('Select a zone first', 'err'); return; }
+  const svg = document.getElementById('mapSvg');
+  const rect = svg.getBoundingClientRect();
+  const worldX = Math.round((rect.width  / 2 - vpX) / vpScale);
+  const worldY = Math.round((rect.height / 2 - vpY) / vpScale);
+  document.getElementById('mapSidePanelContent').innerHTML = buildNewNodeForm(worldX, worldY);
+}
+
+function buildNewNodeForm(x, y) {
+  return `
+    <div class="prop-section">
+      <h4>New Node</h4>
+      <div class="form-grid">
+        <div class="field full"><label>Name</label><input type="text" id="nn_name" placeholder="Node name"></div>
+        <div class="field"><label>Icon (emoji)</label><input type="text" id="nn_icon" value="🌍" style="width:80px"></div>
+        <div class="field"><label>Type</label><select id="nn_type">${nodeTypeOptions('')}</select></div>
+        <div class="field"><label>Region</label><select id="nn_region">${regionOptions('')}</select></div>
+        <div class="field"><label>Level Req</label><input type="number" id="nn_levelReq" value="1" min="0"></div>
+        <div class="field"><label>Reward XP</label><input type="number" id="nn_rewardXp" value="100" min="0"></div>
+        <div class="field"><label>Position X</label><input type="number" id="nn_x" value="${x}" step="1"></div>
+        <div class="field"><label>Position Y</label><input type="number" id="nn_y" value="${y}" step="1"></div>
+        <div class="field full" style="display:flex;gap:16px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="nn_isStart"> Start Node</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="nn_isHidden"> Hidden</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="sm" onclick="createNode()">Create Node</button>
+        <button class="sm secondary" onclick="document.getElementById('mapSidePanelContent').textContent='Select a node to view and edit its properties.'">Cancel</button>
+      </div>
+    </div>`;
+}
+
+async function createNode() {
+  if (!selectedZoneId) return;
+  const payload = {
+    name: document.getElementById('nn_name').value.trim() || 'New Node',
+    description: null,
+    icon: document.getElementById('nn_icon').value.trim() || '🌍',
+    type: document.getElementById('nn_type').value,
+    region: document.getElementById('nn_region').value,
+    positionX: parseFloat(document.getElementById('nn_x').value) || 0,
+    positionY: parseFloat(document.getElementById('nn_y').value) || 0,
+    levelRequirement: parseInt(document.getElementById('nn_levelReq').value) || 0,
+    rewardXp: parseInt(document.getElementById('nn_rewardXp').value) || 0,
+    isStartNode: document.getElementById('nn_isStart').checked,
+    isHidden: document.getElementById('nn_isHidden').checked,
+    worldZoneId: selectedZoneId,
+  };
+  try {
+    const created = await apiFetch('/api/admin/map/nodes', { method: 'POST', body: JSON.stringify(payload) });
+    toast('Node created', 'ok');
+    await loadZoneNodes(selectedZoneId);
+    selectedNodeId = created.id;
+    renderNodes();
+    renderSidePanel(created.id);
+  } catch (e) {
+    toast('Create node error: ' + e.message, 'err');
+  }
+}
+
+// ── Side Panel ─────────────────────────────────────────────────────────────
+async function renderSidePanel(nodeId) {
+  const el = document.getElementById('mapSidePanelContent');
+  el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:10px">Loading…</p>';
+  try {
+    const { node, boss, chest, dungeon, crossroads } = await apiFetch('/api/admin/map/nodes/' + nodeId);
+    const style = NODE_STYLES[node.type] || NODE_STYLES['Zone'];
+    el.innerHTML = `
+      <div class="prop-section">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="font-size:26px;">${node.icon}</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;">${node.name}</div>
+            <span class="badge" style="background:${style.fill};color:${style.stroke};border:1px solid ${style.stroke}">${node.type}</span>
+            ${node.isStartNode ? '<span class="badge" style="background:#3d2a00;color:#f5a623;border:1px solid #f5a623;margin-left:4px;">Start</span>' : ''}
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field full"><label>Name</label><input type="text" id="sp_name" value="${esc(node.name)}"></div>
+          <div class="field"><label>Icon</label><input type="text" id="sp_icon" value="${esc(node.icon)}" style="width:80px"></div>
+          <div class="field"><label>Type</label><select id="sp_type">${nodeTypeOptions(node.type)}</select></div>
+          <div class="field"><label>Region</label><select id="sp_region">${regionOptions(node.region)}</select></div>
+          <div class="field"><label>Level Req</label><input type="number" id="sp_levelReq" value="${node.levelRequirement}"></div>
+          <div class="field"><label>Reward XP</label><input type="number" id="sp_rewardXp" value="${node.rewardXp}"></div>
+          <div class="field"><label>Position X</label><input type="number" id="sp_posX" value="${Math.round(node.positionX)}" onchange="syncNodePos('${nodeId}','x',this.value)"></div>
+          <div class="field"><label>Position Y</label><input type="number" id="sp_posY" value="${Math.round(node.positionY)}" onchange="syncNodePos('${nodeId}','y',this.value)"></div>
+          <div class="field full" style="display:flex;gap:16px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sp_isStart" ${node.isStartNode?'checked':''}> Start Node</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sp_isHidden" ${node.isHidden?'checked':''}> Hidden</label>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="sm" onclick="saveNodeFromPanel('${nodeId}')">Save Node</button>
+          <button class="sm danger" onclick="deleteNodeFromPanel('${nodeId}')">Delete Node</button>
+        </div>
+      </div>
+      ${buildSubEntitySection(nodeId, node.type, boss, chest, dungeon, crossroads)}
+    `;
+  } catch (e) {
+    el.innerHTML = `<p style="color:var(--red);padding:10px">${e.message}</p>`;
+  }
+}
+
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function syncNodePos(nodeId, axis, val) {
+  const n = mapNodes.find(x => String(x.id) === String(nodeId));
+  if (!n) return;
+  if (axis === 'x') n.positionX = parseFloat(val) || 0;
+  else              n.positionY = parseFloat(val) || 0;
+  renderCanvas();
+}
+
+async function saveNodeFromPanel(nodeId) {
+  const n = mapNodes.find(x => String(x.id) === String(nodeId));
+  const payload = {
+    name: document.getElementById('sp_name').value.trim(),
+    description: null,
+    icon: document.getElementById('sp_icon').value.trim(),
+    type: document.getElementById('sp_type').value,
+    region: document.getElementById('sp_region').value,
+    positionX: parseFloat(document.getElementById('sp_posX').value) || (n?.positionX ?? 0),
+    positionY: parseFloat(document.getElementById('sp_posY').value) || (n?.positionY ?? 0),
+    levelRequirement: parseInt(document.getElementById('sp_levelReq').value) || 0,
+    rewardXp: parseInt(document.getElementById('sp_rewardXp').value) || 0,
+    isStartNode: document.getElementById('sp_isStart').checked,
+    isHidden: document.getElementById('sp_isHidden').checked,
+    worldZoneId: selectedZoneId,
+  };
+  try {
+    await apiFetch('/api/admin/map/nodes/' + nodeId, { method: 'PUT', body: JSON.stringify(payload) });
+    toast('Node saved', 'ok');
+    if (n) { Object.assign(n, { name: payload.name, icon: payload.icon, type: payload.type, isHidden: payload.isHidden, isStartNode: payload.isStartNode }); }
+    renderNodes();
+    renderSidePanel(nodeId);
+  } catch (e) {
+    toast('Save error: ' + e.message, 'err');
+  }
+}
+
+async function deleteNodeFromPanel(nodeId) {
+  if (!confirm('Delete this node? This cannot be undone.')) return;
+  try {
+    await apiFetch('/api/admin/map/nodes/' + nodeId, { method: 'DELETE' });
+    toast('Node deleted', 'ok');
+    selectedNodeId = null;
+    document.getElementById('mapSidePanelContent').textContent = 'Select a node to view and edit its properties.';
+    await loadZoneNodes(selectedZoneId);
+  } catch (e) {
+    toast('Delete error: ' + e.message, 'err');
+  }
+}
+
+// ── Sub-Entity Panel Builder ───────────────────────────────────────────────
+function buildSubEntitySection(nodeId, type, boss, chest, dungeon, crossroads) {
+  if (type === 'Boss') return buildBossSection(nodeId, boss);
+  if (type === 'Chest') return buildChestSection(nodeId, chest);
+  if (type === 'Dungeon') return buildDungeonSection(nodeId, dungeon);
+  if (type === 'Crossroads') return buildCrossroadsSection(nodeId, crossroads);
+  return '';
+}
+
+function buildBossSection(nodeId, boss) {
+  if (!boss) return `<div class="prop-section"><h4>Boss</h4><p style="color:var(--text2);font-size:12px;margin-bottom:10px;">No boss attached.</p><button class="sm" onclick="attachBoss('${nodeId}')">+ Attach Boss</button></div>`;
+  return `<div class="prop-section"><h4>Boss</h4>
+    <div class="form-grid">
+      <div class="field full"><label>Name</label><input type="text" id="bs_name" value="${esc(boss.name)}"></div>
+      <div class="field"><label>Icon</label><input type="text" id="bs_icon" value="${esc(boss.icon)}" style="width:80px"></div>
+      <div class="field"><label>Max HP</label><input type="number" id="bs_maxHp" value="${boss.maxHp}"></div>
+      <div class="field"><label>Reward XP</label><input type="number" id="bs_rewardXp" value="${boss.rewardXp}"></div>
+      <div class="field"><label>Timer (days)</label><input type="number" id="bs_timer" value="${boss.timerDays}"></div>
+      <div class="field"><label>Mini Boss?</label><select id="bs_isMini"><option value="false" ${!boss.isMini?'selected':''}>No</option><option value="true" ${boss.isMini?'selected':''}>Yes</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="sm" onclick="saveBoss('${boss.id}','${nodeId}')">Save Boss</button>
+      <button class="sm danger" onclick="deleteBoss('${boss.id}','${nodeId}')">Delete Boss</button>
+    </div></div>`;
+}
+
+function buildChestSection(nodeId, chest) {
+  if (!chest) return `<div class="prop-section"><h4>Chest</h4><p style="color:var(--text2);font-size:12px;margin-bottom:10px;">No chest attached.</p><button class="sm" onclick="attachChest('${nodeId}')">+ Attach Chest</button></div>`;
+  return `<div class="prop-section"><h4>Chest</h4>
+    <div class="form-grid">
+      <div class="field"><label>Rarity</label><select id="ch_rarity">${['Common','Uncommon','Rare','Epic','Legendary'].map(r=>`<option ${chest.rarity===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="field"><label>Reward XP</label><input type="number" id="ch_rewardXp" value="${chest.rewardXp}"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="sm" onclick="saveChest('${chest.id}','${nodeId}')">Save Chest</button>
+      <button class="sm danger" onclick="deleteChest('${chest.id}','${nodeId}')">Delete Chest</button>
+    </div></div>`;
+}
+
+function buildDungeonSection(nodeId, dungeon) {
+  if (!dungeon) return `<div class="prop-section"><h4>Dungeon</h4><p style="color:var(--text2);font-size:12px;margin-bottom:10px;">No dungeon attached.</p><button class="sm" onclick="attachDungeon('${nodeId}')">+ Attach Dungeon</button></div>`;
+  const floorsHtml = (dungeon.floors || []).map(f => `
+    <div class="floor-row">
+      <span style="width:22px;text-align:right;color:var(--text2)">F${f.floorNumber}</span>
+      <select id="df_act_${f.id || f.floorNumber}" style="width:100px">${activityOptions(f.requiredActivity)}</select>
+      <input type="number" id="df_min_${f.id || f.floorNumber}" value="${f.requiredMinutes}" placeholder="min" style="width:55px">
+      <input type="number" id="df_xp_${f.id || f.floorNumber}" value="${f.rewardXp}" placeholder="xp" style="width:60px">
+      <button class="sm secondary" onclick="saveDungeonFloor('${dungeon.id}',${f.floorNumber},'${f.id||f.floorNumber}')">💾</button>
+      <button class="sm danger" onclick="deleteDungeonFloor('${dungeon.id}',${f.floorNumber},'${nodeId}')">🗑</button>
+    </div>`).join('');
+  return `<div class="prop-section"><h4>Dungeon</h4>
+    <div class="form-grid">
+      <div class="field full"><label>Portal Name</label><input type="text" id="dn_name" value="${esc(dungeon.name)}"></div>
+      <div class="field"><label>Total Floors</label><input type="number" id="dn_floors" value="${dungeon.totalFloors}" min="1"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:12px;">
+      <button class="sm" onclick="saveDungeon('${dungeon.id}','${nodeId}')">Save Dungeon</button>
+      <button class="sm danger" onclick="deleteDungeon('${dungeon.id}','${nodeId}')">Delete Dungeon</button>
+    </div>
+    <div style="font-size:11px;color:var(--text2);font-weight:700;margin-bottom:6px;">FLOORS</div>
+    ${floorsHtml}
+    <button class="sm secondary" style="margin-top:6px" onclick="addDungeonFloor('${dungeon.id}','${nodeId}')">+ Add Floor</button>
+  </div>`;
+}
+
+function buildCrossroadsSection(nodeId, crossroads) {
+  if (!crossroads) return `<div class="prop-section"><h4>Crossroads</h4><p style="color:var(--text2);font-size:12px;margin-bottom:10px;">No crossroads attached.</p><button class="sm" onclick="attachCrossroads('${nodeId}')">+ Attach Crossroads</button></div>`;
+  const pathsHtml = (crossroads.paths || []).map(p => `
+    <div class="sub-entity-card">
+      <div class="form-grid">
+        <div class="field full"><label>Path Name</label><input type="text" id="cp_name_${p.id}" value="${esc(p.name)}"></div>
+        <div class="field"><label>Distance (km)</label><input type="number" id="cp_dist_${p.id}" value="${p.distanceKm}" step="0.1"></div>
+        <div class="field"><label>Difficulty</label><select id="cp_diff_${p.id}">${['Easy','Moderate','Hard','Extreme'].map(d=>`<option ${p.difficulty===d?'selected':''}>${d}</option>`).join('')}</select></div>
+        <div class="field"><label>Est. Days</label><input type="number" id="cp_days_${p.id}" value="${p.estimatedDays}" min="1"></div>
+        <div class="field"><label>Reward XP</label><input type="number" id="cp_xp_${p.id}" value="${p.rewardXp}"></div>
+        <div class="field full"><label>Leads To Node ID</label><input type="text" id="cp_leads_${p.id}" value="${esc(p.leadsToNodeId||'')}" placeholder="optional GUID"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button class="sm" onclick="saveCrossroadsPath('${crossroads.id}','${p.id}','${nodeId}')">Save Path</button>
+        <button class="sm danger" onclick="deleteCrossroadsPath('${crossroads.id}','${p.id}','${nodeId}')">Delete</button>
+      </div>
+    </div>`).join('');
+  return `<div class="prop-section"><h4>Crossroads</h4>
+    ${pathsHtml}
+    <button class="sm secondary" onclick="addCrossroadsPath('${crossroads.id}','${nodeId}')">+ Add Path</button>
+    <button class="sm danger" style="margin-left:6px" onclick="deleteCrossroads('${crossroads.id}','${nodeId}')">Delete Crossroads</button>
+  </div>`;
+}
+
+// ── Sub-entity API Actions ─────────────────────────────────────────────────
+async function attachBoss(nodeId) {
+  try {
+    await apiFetch('/api/admin/map/bosses', { method: 'POST', body: JSON.stringify({ nodeId, name: 'New Boss', icon: '👹', maxHp: 1000, rewardXp: 500, timerDays: 7, isMini: false }) });
+    toast('Boss attached', 'ok');
+    renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function saveBoss(bossId, nodeId) {
+  const payload = {
+    name: document.getElementById('bs_name').value,
+    icon: document.getElementById('bs_icon').value,
+    maxHp: parseInt(document.getElementById('bs_maxHp').value),
+    rewardXp: parseInt(document.getElementById('bs_rewardXp').value),
+    timerDays: parseInt(document.getElementById('bs_timer').value),
+    isMini: document.getElementById('bs_isMini').value === 'true',
+  };
+  try {
+    await apiFetch('/api/admin/map/bosses/' + bossId, { method: 'PUT', body: JSON.stringify(payload) });
+    toast('Boss saved', 'ok');
+    renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function deleteBoss(bossId, nodeId) {
+  if (!confirm('Delete boss?')) return;
+  try { await apiFetch('/api/admin/map/bosses/' + bossId, { method: 'DELETE' }); toast('Boss deleted', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+
+async function attachChest(nodeId) {
+  try {
+    await apiFetch('/api/admin/map/chests', { method: 'POST', body: JSON.stringify({ nodeId, rarity: 'Common', rewardXp: 100 }) });
+    toast('Chest attached', 'ok'); renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function saveChest(chestId, nodeId) {
+  const payload = { rarity: document.getElementById('ch_rarity').value, rewardXp: parseInt(document.getElementById('ch_rewardXp').value) };
+  try { await apiFetch('/api/admin/map/chests/' + chestId, { method: 'PUT', body: JSON.stringify(payload) }); toast('Chest saved', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function deleteChest(chestId, nodeId) {
+  if (!confirm('Delete chest?')) return;
+  try { await apiFetch('/api/admin/map/chests/' + chestId, { method: 'DELETE' }); toast('Chest deleted', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+
+async function attachDungeon(nodeId) {
+  try {
+    await apiFetch('/api/admin/map/dungeons', { method: 'POST', body: JSON.stringify({ nodeId, name: 'New Dungeon', totalFloors: 3 }) });
+    toast('Dungeon attached', 'ok'); renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function saveDungeon(dungeonId, nodeId) {
+  const payload = { name: document.getElementById('dn_name').value, totalFloors: parseInt(document.getElementById('dn_floors').value) };
+  try { await apiFetch('/api/admin/map/dungeons/' + dungeonId, { method: 'PUT', body: JSON.stringify(payload) }); toast('Dungeon saved', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function deleteDungeon(dungeonId, nodeId) {
+  if (!confirm('Delete dungeon and all its floors?')) return;
+  try { await apiFetch('/api/admin/map/dungeons/' + dungeonId, { method: 'DELETE' }); toast('Dungeon deleted', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function addDungeonFloor(dungeonId, nodeId) {
+  const dungeon = await apiFetch('/api/admin/map/dungeons/' + dungeonId);
+  const nextFloor = (dungeon.floors?.length || 0) + 1;
+  try {
+    await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors`, { method: 'POST', body: JSON.stringify({ floorNumber: nextFloor, requiredActivity: 'Running', requiredMinutes: 30, rewardXp: 100 }) });
+    toast('Floor added', 'ok'); renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function saveDungeonFloor(dungeonId, floorNumber, floorKey, nodeId) {
+  const payload = {
+    requiredActivity: document.getElementById('df_act_' + floorKey).value,
+    requiredMinutes:  parseInt(document.getElementById('df_min_' + floorKey).value),
+    rewardXp:         parseInt(document.getElementById('df_xp_' + floorKey).value),
+  };
+  try { await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors/${floorNumber}`, { method: 'PUT', body: JSON.stringify(payload) }); toast('Floor saved', 'ok'); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function deleteDungeonFloor(dungeonId, floorNumber, nodeId) {
+  if (!confirm('Delete floor ' + floorNumber + '?')) return;
+  try { await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors/${floorNumber}`, { method: 'DELETE' }); toast('Floor deleted', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+
+async function attachCrossroads(nodeId) {
+  try {
+    await apiFetch('/api/admin/map/crossroads', { method: 'POST', body: JSON.stringify({ nodeId }) });
+    toast('Crossroads attached', 'ok'); renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function deleteCrossroads(crossroadsId, nodeId) {
+  if (!confirm('Delete crossroads and all its paths?')) return;
+  try { await apiFetch('/api/admin/map/crossroads/' + crossroadsId, { method: 'DELETE' }); toast('Crossroads deleted', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function addCrossroadsPath(crossroadsId, nodeId) {
+  try {
+    await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths`, { method: 'POST', body: JSON.stringify({ name: 'New Path', distanceKm: 5, difficulty: 'Easy', estimatedDays: 2, rewardXp: 200, additionalRequirement: null, leadsToNodeId: null }) });
+    toast('Path added', 'ok'); renderSidePanel(nodeId);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function saveCrossroadsPath(crossroadsId, pathId, nodeId) {
+  const payload = {
+    name: document.getElementById('cp_name_' + pathId).value,
+    distanceKm: parseFloat(document.getElementById('cp_dist_' + pathId).value),
+    difficulty: document.getElementById('cp_diff_' + pathId).value,
+    estimatedDays: parseInt(document.getElementById('cp_days_' + pathId).value),
+    rewardXp: parseInt(document.getElementById('cp_xp_' + pathId).value),
+    additionalRequirement: null,
+    leadsToNodeId: document.getElementById('cp_leads_' + pathId).value.trim() || null,
+  };
+  try { await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths/${pathId}`, { method: 'PUT', body: JSON.stringify(payload) }); toast('Path saved', 'ok'); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function deleteCrossroadsPath(crossroadsId, pathId, nodeId) {
+  if (!confirm('Delete this path?')) return;
+  try { await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths/${pathId}`, { method: 'DELETE' }); toast('Path deleted', 'ok'); renderSidePanel(nodeId); }
+  catch (e) { toast(e.message, 'err'); }
+}
+
+// ── Zone CRUD ──────────────────────────────────────────────────────────────
+function openZoneModal(zone) {
+  document.getElementById('zoneModalTitle').textContent = zone ? 'Edit World Zone' : 'Add World Zone';
+  document.getElementById('zm_id').value = zone?.id || '';
+  document.getElementById('zm_name').value = zone?.name || '';
+  document.getElementById('zm_description').value = zone?.description || '';
+  document.getElementById('zm_icon').value = zone?.icon || '🌍';
+  document.getElementById('zm_region').value = zone?.region || '';
+  document.getElementById('zm_tier').value = zone?.tier || 1;
+  document.getElementById('zm_levelReq').value = zone?.levelReq ?? 1;
+  document.getElementById('zm_totalXp').value = zone?.totalXp || 0;
+  document.getElementById('zm_totalDist').value = zone?.totalDistanceKm || 0;
+  document.getElementById('zm_x').value = zone?.x || 400;
+  document.getElementById('zm_y').value = zone?.y || 300;
+  document.getElementById('zm_isCrossroads').value = zone?.isCrossroads ? 'true' : 'false';
+  document.getElementById('zm_isStart').value = zone?.isStart ? 'true' : 'false';
+  document.getElementById('zm_isHidden').value = zone?.isHidden ? 'true' : 'false';
+  document.getElementById('zoneModal').classList.add('open');
+}
+
+function editSelectedZone() {
+  const zone = mapZones.find(z => z.id === selectedZoneId);
+  if (zone) openZoneModal(zone);
+}
+
+async function saveZone() {
+  const id = document.getElementById('zm_id').value;
+  const payload = {
+    name: document.getElementById('zm_name').value.trim(),
+    description: document.getElementById('zm_description').value.trim() || null,
+    icon: document.getElementById('zm_icon').value.trim(),
+    region: document.getElementById('zm_region').value.trim(),
+    tier: parseInt(document.getElementById('zm_tier').value) || 1,
+    x: parseFloat(document.getElementById('zm_x').value) || 400,
+    y: parseFloat(document.getElementById('zm_y').value) || 300,
+    levelReq: parseInt(document.getElementById('zm_levelReq').value) || 0,
+    totalXp: parseInt(document.getElementById('zm_totalXp').value) || 0,
+    totalDistanceKm: parseFloat(document.getElementById('zm_totalDist').value) || 0,
+    isCrossroads: document.getElementById('zm_isCrossroads').value === 'true',
+    isStart: document.getElementById('zm_isStart').value === 'true',
+    isHidden: document.getElementById('zm_isHidden').value === 'true',
+  };
+  try {
+    if (id) {
+      await apiFetch('/api/admin/map/world-zones/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+      toast('Zone updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/map/world-zones', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Zone created', 'ok');
+    }
+    closeModal('zoneModal');
+    await loadMapData();
+  } catch (e) { toast('Save zone error: ' + e.message, 'err'); }
+}
+
+async function deleteSelectedZone() {
+  if (!selectedZoneId) return;
+  const zone = mapZones.find(z => z.id === selectedZoneId);
+  if (!confirm(`Delete zone "${zone?.name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch('/api/admin/map/world-zones/' + selectedZoneId, { method: 'DELETE' });
+    toast('Zone deleted', 'ok');
+    selectedZoneId = null;
+    mapNodes = []; mapEdges = [];
+    await loadMapData();
+    document.getElementById('mapZoneSelect').value = '';
+    document.getElementById('editZoneBtn').disabled = true;
+    document.getElementById('deleteZoneBtn').disabled = true;
+    document.getElementById('mapZoneInfo').textContent = '';
+    document.getElementById('mapEmptyHint').style.display = '';
+    renderCanvas();
+  } catch (e) { toast('Delete zone error: ' + e.message, 'err'); }
+}
+
+// ── Zone Edges ─────────────────────────────────────────────────────────────
+let zoneEdgesOpen = false;
+
+function toggleZoneEdges() {
+  zoneEdgesOpen = !zoneEdgesOpen;
+  document.getElementById('zoneEdgesContent').style.display = zoneEdgesOpen ? '' : 'none';
+  document.getElementById('zoneEdgesToggle').textContent = zoneEdgesOpen ? '▲ collapse' : '▼ expand';
+  if (zoneEdgesOpen) loadZoneEdges();
+}
+
+async function loadZoneEdges() {
+  const tbody = document.getElementById('zoneEdgesTableBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:20px">Loading…</td></tr>';
+  try {
+    const edges = await apiFetch('/api/admin/map/world-zone-edges');
+    if (!edges.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:20px">No zone edges.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = edges.map(e => `
+      <tr>
+        <td>${e.fromZoneIcon || ''} ${e.fromZoneName}</td>
+        <td>${e.toZoneIcon || ''} ${e.toZoneName}</td>
+        <td>${e.distanceKm}</td>
+        <td>${e.bidirectional ? '↔' : '→'}</td>
+        <td>
+          <button class="sm secondary" onclick="openZoneEdgeModal(${JSON.stringify(e).replace(/"/g,'&quot;')})">Edit</button>
+          <button class="sm danger" onclick="deleteZoneEdge('${e.id}')">Del</button>
+        </td>
+      </tr>`).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center">${err.message}</td></tr>`;
+  }
+}
+
+function openZoneEdgeModal(edge) {
+  document.getElementById('zoneEdgeModalTitle').textContent = edge ? 'Edit Zone Edge' : 'Add Zone Edge';
+  document.getElementById('zem_id').value = edge?.id || '';
+
+  // Populate zone selects
+  const fromSel = document.getElementById('zem_fromZone');
+  const toSel   = document.getElementById('zem_toZone');
+  [fromSel, toSel].forEach(sel => {
+    sel.innerHTML = '<option value="">— select —</option>';
+    mapZones.forEach(z => {
+      const opt = document.createElement('option');
+      opt.value = z.id;
+      opt.textContent = (z.icon || '') + ' ' + z.name;
+      sel.appendChild(opt);
+    });
+  });
+  if (edge) {
+    fromSel.value = edge.fromZoneId;
+    toSel.value   = edge.toZoneId;
+    document.getElementById('zem_dist').value = edge.distanceKm;
+    document.getElementById('zem_bidi').value = edge.bidirectional ? 'true' : 'false';
+  } else {
+    fromSel.value = ''; toSel.value = '';
+    document.getElementById('zem_dist').value = '1.0';
+    document.getElementById('zem_bidi').value = 'true';
+  }
+  document.getElementById('zoneEdgeModal').classList.add('open');
+}
+
+async function saveZoneEdge() {
+  const id = document.getElementById('zem_id').value;
+  const dist = parseFloat(document.getElementById('zem_dist').value) || 1;
+  const bidi = document.getElementById('zem_bidi').value === 'true';
+  try {
+    if (id) {
+      await apiFetch('/api/admin/map/world-zone-edges/' + id, { method: 'PUT', body: JSON.stringify({ distanceKm: dist, isBidirectional: bidi }) });
+      toast('Zone edge updated', 'ok');
+    } else {
+      const fromZoneId = document.getElementById('zem_fromZone').value;
+      const toZoneId   = document.getElementById('zem_toZone').value;
+      if (!fromZoneId || !toZoneId) { toast('Select both zones', 'err'); return; }
+      await apiFetch('/api/admin/map/world-zone-edges', { method: 'POST', body: JSON.stringify({ fromZoneId, toZoneId, distanceKm: dist, isBidirectional: bidi }) });
+      toast('Zone edge created', 'ok');
+    }
+    closeModal('zoneEdgeModal');
+    await loadZoneEdges();
+  } catch (e) { toast('Save zone edge error: ' + e.message, 'err'); }
+}
+
+async function deleteZoneEdge(id) {
+  if (!confirm('Delete this zone edge?')) return;
+  try { await apiFetch('/api/admin/map/world-zone-edges/' + id, { method: 'DELETE' }); toast('Zone edge deleted', 'ok'); await loadZoneEdges(); }
+  catch (e) { toast(e.message, 'err'); }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function nodeTypeOptions(selected) {
+  return ['Zone','Boss','Dungeon','Chest','Crossroads','Event'].map(t =>
+    `<option value="${t}" ${selected===t?'selected':''}>${t}</option>`).join('');
+}
+function regionOptions(selected) {
+  return ['Ashfield','ForestOfEndurance','MountainsOfStrength','OceanOfBalance','SnowPeaks','Desert','Swamps'].map(r =>
+    `<option value="${r}" ${selected===r?'selected':''}>${r}</option>`).join('');
+}
+function activityOptions(selected) {
+  return ['Running','Gym','Cycling','Yoga','Swimming','Climbing','Hiking'].map(a =>
+    `<option value="${a}" ${selected===a?'selected':''}>${a}</option>`).join('');
 }
 
 // ── Cross-page nav with token ──────────────────────────────────────────────

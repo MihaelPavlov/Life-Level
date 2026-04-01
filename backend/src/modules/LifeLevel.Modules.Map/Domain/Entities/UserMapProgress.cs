@@ -12,6 +12,7 @@ public class UserMapProgress
     public Guid? CurrentEdgeId { get; set; }
     public MapEdge? CurrentEdge { get; set; }
     public double DistanceTraveledOnEdge { get; set; } = 0;
+    public double PendingDistanceKm { get; set; } = 0;
 
     public Guid? DestinationNodeId { get; set; }
     public MapNode? DestinationNode { get; set; }

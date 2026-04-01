@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LifeLevel — Changelog &amp; Test Plan (2026-04-02)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #040810; color: #e6edf3; font-family: Inter, -apple-system, sans-serif; padding: 32px 20px; max-width: 960px; margin: auto; line-height: 1.6; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #8b949e; font-size: 14px; margin-bottom: 36px; }
+  h2 { font-size: 20px; font-weight: 700; margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #1e2632; }
+  h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; color: #4f9eff; }
+  p, li { font-size: 14px; margin-bottom: 6px; }
+  ul { padding-left: 20px; }
+  .section { background: #0d1117; border: 1px solid #1e2632; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-right: 6px; vertical-align: middle; }
+  .tag-fix    { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+  .tag-feat   { background: rgba(79,158,255,0.15); color: #4f9eff; border: 1px solid rgba(79,158,255,0.3); }
+  .tag-ui     { background: rgba(163,113,247,0.15); color: #a371f7; border: 1px solid rgba(163,113,247,0.3); }
+  .tag-be     { background: rgba(245,166,35,0.15); color: #f5a623; border: 1px solid rgba(245,166,35,0.3); }
+  .file { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; }
+  .test-item { background: #0d1117; border: 1px solid #1e2632; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; }
+  .test-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .step { display: flex; gap: 10px; margin-bottom: 6px; font-size: 13px; }
+  .step-num { background: #4f9eff; color: #040810; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 700; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .pass { color: #3fb950; font-weight: 600; }
+  .note { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #f5a623; margin-top: 10px; }
+  .divider { border: none; border-top: 1px solid #1e2632; margin: 16px 0; }
+  code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; background: #161b22; padding: 2px 6px; border-radius: 4px; color: #a371f7; }
+</style>
+</head>
+<body>
+
+<h1>LifeLevel — Changes &amp; Test Plan</h1>
+<p class="subtitle">Session: 2026-04-02 &nbsp;·&nbsp; Branch: main</p>
+
+<!-- ═══════════════════════════════════════════ CHANGES ══════════════════════ -->
+<h2>What Changed</h2>
+
+<!-- STRAVA FIXES -->
+<div class="section">
+  <h3><span class="tag tag-fix">Fix</span> Strava OAuth — 3 Bugs Resolved</h3>
+  <ul>
+    <li><strong>Missing <code>redirect_uri</code> in token exchange</strong><br>
+      <span class="file">StravaOAuthService.cs</span> — Added <code>"redirect_uri" = req.RedirectUri</code> to the Strava token exchange form. Without it Strava can reject the exchange with an "invalid_grant" error.</li>
+    <li style="margin-top:10px"><strong>Double deep-link firing on cold launch</strong><br>
+      <span class="file">main_shell.dart</span> — Added <code>_oauthCallbackHandled</code> bool flag. Both <code>getInitialLink()</code> and <code>uriLinkStream</code> fire on a cold-launch redirect; the guard ensures the OAuth code is only consumed once.</li>
+    <li style="margin-top:10px"><strong>App navigating away from Integrations after OAuth redirect</strong><br>
+      <span class="file">main_shell.dart</span> — Removed <code>Navigator.push(IntegrationsScreen)</code> from <code>_handleStravaCallback</code>. The existing Integrations screen auto-rebuilds via Riverpod when the provider state changes to <code>isStravaConnected: true</code>.</li>
+    <li style="margin-top:10px"><strong>Unique-index crash when re-connecting same Strava account</strong><br>
+      <span class="file">StravaOAuthService.cs</span> — Changed lookup order: query by <code>StravaAthleteId</code> first. This prevents a DB unique constraint violation when the same Strava athlete reconnects or switches LifeLevel accounts.</li>
+  </ul>
+</div>
+
+<!-- ITEMS SYSTEM -->
+<div class="section">
+  <h3><span class="tag tag-feat">Feature</span><span class="tag tag-be">Backend</span> Items System — Categories &amp; Drop Rules</h3>
+  <ul>
+    <li>Added <code>ItemCategory</code> enum: <strong>Tracker, Clothing, Footwear, Accessory</strong></li>
+    <li>Expanded catalog from 8 → 21 items, organised by category, rarity Common → Legendary</li>
+    <li>New <strong>Strava Sync Badge</strong> item (Rare Tracker) — awarded automatically when Strava is connected</li>
+    <li>Added <code>AcquisitionTrigger</code> + <code>ItemDropRule</code> entity — items can now drop on events (level-up, Strava connect, distance milestones)</li>
+    <li><span class="file">ItemGrantService.cs</span> — new service that evaluates drop rules and grants items; triggered after activity logging and level-up</li>
+    <li>DB migrations applied: <code>AddItemCategoryAndDropRules</code>, <code>AddItemDropRuleTriggerParametersLength</code></li>
+  </ul>
+</div>
+
+<!-- PROFILE SCREEN -->
+<div class="section">
+  <h3><span class="tag tag-ui">UI</span> Profile Screen Overhaul</h3>
+  <ul>
+    <li><strong>Settings Sheet</strong> — The gear icon now opens a bottom sheet with two options: <em>Integrations</em> (navigates to integrations screen) and <em>Logout</em> (red, clears token and returns to login).</li>
+    <li><strong>Achievements Tab</strong> — Replaced placeholder stub with a real <code>AchievementsTab</code> widget.</li>
+    <li><strong>Admin Tab</strong> — Shown only for Admin-role users; links to the admin web panel and map editor inside a <code>WebView</code>.</li>
+    <li><strong>Admin Nav Panel</strong> — Profile header shows admin-only shortcuts when the JWT role is Admin.</li>
+    <li><strong>Gear Bonus Chips on Stats</strong> — Each stat card now shows a green <code>+N</code> chip when equipped gear adds a bonus. <span class="file">profile_stat_metadata.dart</span>, <span class="file">profile_overview_tab.dart</span></li>
+    <li><strong>Equipment unequip refreshes character profile</strong> — <span class="file">equipment_tab.dart</span> / <span class="file">inventory_tab.dart</span> both call <code>characterProfileProvider.notifier.refresh()</code> after equip/unequip so stats update instantly.</li>
+  </ul>
+</div>
+
+<!-- INVENTORY -->
+<div class="section">
+  <h3><span class="tag tag-ui">UI</span> Inventory Tab Improvements</h3>
+  <ul>
+    <li>Slot count is now dynamic (<code>maxSlots</code> from backend, not hardcoded 50)</li>
+    <li>Warning banner appears when inventory is over 70 % full: <em>"Level up to unlock more inventory slots"</em></li>
+    <li>Item detail sheet shows <code>+N XP from gear</code> badge when gear XP bonus is active</li>
+  </ul>
+</div>
+
+<!-- ACTIVITY -->
+<div class="section">
+  <h3><span class="tag tag-feat">Feature</span><span class="tag tag-ui">UI</span> Activity Logging Enhancements</h3>
+  <ul>
+    <li><strong>XP bonus from gear</strong> — Activity result sheet shows an orange <em>"⚡ +N XP from gear"</em> chip when equipped items contributed extra XP.</li>
+    <li><strong>Inventory-full notification</strong> — If an item drop is blocked (inventory full), the shell shows an <code>InventoryFullOverlay</code> toast naming the blocked item.</li>
+    <li><strong>Item obtained overlay</strong> — When an activity or level-up triggers an item drop, an <code>ItemObtainedOverlay</code> slides in from the bottom.</li>
+    <li><strong>Steps field</strong> — <code>ActivityHistoryDto</code> now includes <code>steps</code> (parsed from backend if available).</li>
+    <li><strong>Recent Activities: retry button</strong> — Error state now includes a "Retry" button that re-triggers the provider.</li>
+  </ul>
+</div>
+
+<!-- CONNECTIVITY -->
+<div class="section">
+  <h3><span class="tag tag-feat">Feature</span> Auto-Refresh on Network Reconnect</h3>
+  <ul>
+    <li><span class="file">main_shell.dart</span> — Monitors connectivity with <code>connectivity_plus</code>. When the device goes offline and comes back online, all key Riverpod providers are invalidated and re-fetched automatically (character, quests, streak, inventory, items, activity history, map).</li>
+  </ul>
+</div>
+
+<!-- MAP -->
+<div class="section">
+  <h3><span class="tag tag-feat">Feature</span><span class="tag tag-be">Backend</span> Map — Pending Distance Field</h3>
+  <ul>
+    <li><span class="file">UserMapProgress.cs</span> / <span class="file">map_node_models.dart</span> — Added <code>pendingDistanceKm</code>: distance earned from activities that has not yet been consumed by the current map edge. Displayed in the map progress section.</li>
+  </ul>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="section">
+  <h3><span class="tag tag-be">Backend</span><span class="tag tag-ui">UI</span> Admin Web Panel</h3>
+  <ul>
+    <li><span class="file">wwwroot/admin/index.html</span> — Full admin panel: manage items, view users, grant items, manage drop rules. Accessible in-app via Profile → Settings → Admin tab.</li>
+    <li><span class="file">wwwroot/admin/map.html</span> — Map node editor: create/edit nodes, edges, and zone layouts.</li>
+    <li><span class="file">AdminItemsController.cs</span> — REST endpoints for the admin items panel.</li>
+    <li><span class="file">AdminMapController.cs</span> — REST endpoints for the map editor.</li>
+  </ul>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ TEST PLAN ════════════════════ -->
+<h2>What to Test</h2>
+
+<div class="test-item">
+  <h4>1. Strava Connect — Fresh Connection</h4>
+  <div class="step"><span class="step-num">1</span><span>Open Profile → Settings (⚙) → Integrations</span></div>
+  <div class="step"><span class="step-num">2</span><span>Tap <strong>Connect Strava</strong> → browser opens Strava OAuth page</span></div>
+  <div class="step"><span class="step-num">3</span><span>Authorise in browser → app receives deep link <code>lifelevel://oauth/strava?code=…</code></span></div>
+  <div class="step"><span class="step-num">4</span><span>Observe: <em>"Connecting to Strava…"</em> snackbar appears, then <em>"Strava connected!"</em></span></div>
+  <div class="step"><span class="step-num">5</span><span>Integrations screen should show <strong>Connected</strong> status (athlete name, green badge) — <span class="pass">no redirect to Home</span></span></div>
+  <div class="note">If you see "Failed" or the screen still shows Connect, check that the backend is running and ngrok URL in <code>api_client.dart</code> is current.</div>
+</div>
+
+<div class="test-item">
+  <h4>2. Strava Disconnect → Reconnect (same account)</h4>
+  <div class="step"><span class="step-num">1</span><span>Tap <strong>Disconnect Strava</strong> on the Integrations screen</span></div>
+  <div class="step"><span class="step-num">2</span><span>Confirm status shows Disconnected</span></div>
+  <div class="step"><span class="step-num">3</span><span>Tap <strong>Connect Strava</strong> again and complete OAuth flow</span></div>
+  <div class="step"><span class="step-num">4</span><span><span class="pass">Expected:</span> Reconnects successfully — no 500 or "unique constraint" error</span></div>
+</div>
+
+<div class="test-item">
+  <h4>3. Strava Sync Badge (Item Drop on Connect)</h4>
+  <div class="step"><span class="step-num">1</span><span>If this is the first time connecting Strava on this account, an <strong>Item Obtained</strong> overlay should appear after connect</span></div>
+  <div class="step"><span class="step-num">2</span><span>Open Profile → Inventory → confirm <em>"Strava Sync Badge"</em> (🔗 Rare Tracker) is in the list</span></div>
+</div>
+
+<div class="test-item">
+  <h4>4. Settings Sheet — Integrations &amp; Logout</h4>
+  <div class="step"><span class="step-num">1</span><span>Go to Profile tab → tap the ⚙ gear icon in the header</span></div>
+  <div class="step"><span class="step-num">2</span><span><span class="pass">Expected:</span> Bottom sheet opens with "Settings" title, two rows: Integrations and Logout (red)</span></div>
+  <div class="step"><span class="step-num">3</span><span>Tap <strong>Integrations</strong> → Integrations screen opens</span></div>
+  <div class="step"><span class="step-num">4</span><span>Return, open sheet again → tap <strong>Logout</strong> → confirm it clears session and navigates to Login screen</span></div>
+</div>
+
+<div class="test-item">
+  <h4>5. Gear Stat Bonuses on Profile</h4>
+  <div class="step"><span class="step-num">1</span><span>Equip any item that has a stat bonus (e.g. Cryo Jersey: AGI+3, STA+5)</span></div>
+  <div class="step"><span class="step-num">2</span><span>Go to Profile → Overview tab → check the relevant stat cards</span></div>
+  <div class="step"><span class="step-num">3</span><span><span class="pass">Expected:</span> A small green <code>+N</code> chip appears next to the stat value</span></div>
+  <div class="step"><span class="step-num">4</span><span>Unequip the item → chip disappears and stats update immediately</span></div>
+</div>
+
+<div class="test-item">
+  <h4>6. Log Activity — Gear XP Bonus &amp; Item Drops</h4>
+  <div class="step"><span class="step-num">1</span><span>Equip an item with an XP bonus (e.g. Apex GPS Pro: +15 % XP)</span></div>
+  <div class="step"><span class="step-num">2</span><span>Log any workout</span></div>
+  <div class="step"><span class="step-num">3</span><span><span class="pass">Expected on result sheet:</span> Orange <em>"⚡ +N XP from gear"</em> badge appears</span></div>
+  <div class="step"><span class="step-num">4</span><span>If an item drop is triggered (e.g. level-up), an <strong>Item Obtained</strong> overlay slides in</span></div>
+</div>
+
+<div class="test-item">
+  <h4>7. Inventory — Dynamic Slots &amp; Near-Full Warning</h4>
+  <div class="step"><span class="step-num">1</span><span>Profile → Inventory tab → check slot counter (e.g. "3 / 20 slots")</span></div>
+  <div class="step"><span class="step-num">2</span><span>When above 70 % full, an orange message appears: <em>"⬆ Level up to unlock more inventory slots"</em></span></div>
+</div>
+
+<div class="test-item">
+  <h4>8. Auto-Refresh on Network Reconnect</h4>
+  <div class="step"><span class="step-num">1</span><span>Navigate to the Home or Profile screen</span></div>
+  <div class="step"><span class="step-num">2</span><span>Turn off Wi-Fi / mobile data</span></div>
+  <div class="step"><span class="step-num">3</span><span>Turn connectivity back on</span></div>
+  <div class="step"><span class="step-num">4</span><span><span class="pass">Expected:</span> All data refreshes automatically (no manual pull-to-refresh needed)</span></div>
+</div>
+
+<div class="test-item">
+  <h4>9. Admin Panel (Admin accounts only)</h4>
+  <div class="step"><span class="step-num">1</span><span>Login with an Admin-role account</span></div>
+  <div class="step"><span class="step-num">2</span><span>Profile → Settings → tap admin shortcuts, or look for the Admin tab on the Profile screen</span></div>
+  <div class="step"><span class="step-num">3</span><span><span class="pass">Expected:</span> Admin web panel loads in a WebView; can browse Items, Users, Drop Rules</span></div>
+  <div class="step"><span class="step-num">4</span><span>Admin Map editor accessible via separate link — can add/edit nodes and edges</span></div>
+  <div class="note">Admin tab is hidden for non-admin accounts — verify a regular user does NOT see it.</div>
+</div>
+
+<div class="test-item">
+  <h4>10. Recent Activities — Retry Button</h4>
+  <div class="step"><span class="step-num">1</span><span>Turn off connectivity, navigate to Profile → Activity History (or wherever Recent Activities loads)</span></div>
+  <div class="step"><span class="step-num">2</span><span><span class="pass">Expected:</span> Error state shows "Failed to load activities." + a <strong>Retry</strong> button</span></div>
+  <div class="step"><span class="step-num">3</span><span>Turn connectivity back on → tap Retry → list loads</span></div>
+</div>
+
+<div class="test-item">
+  <h4>11. Achievements Tab</h4>
+  <div class="step"><span class="step-num">1</span><span>Profile → Achievements tab</span></div>
+  <div class="step"><span class="step-num">2</span><span><span class="pass">Expected:</span> Real tab content renders (no more "Coming Soon" placeholder)</span></div>
+</div>
+
+<hr class="divider" />
+<p style="color:#8b949e; font-size:12px; text-align:center; margin-top:20px;">Generated 2026-04-02 · LifeLevel Dev Session</p>
+
+</body>
+</html>

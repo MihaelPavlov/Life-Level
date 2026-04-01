@@ -12,5 +12,10 @@ public class CharacterConfiguration : IEntityTypeConfiguration<Domain.Entities.C
             .WithMany()
             .HasForeignKey(c => c.ClassId)
             .IsRequired(false);
+        entity.HasOne<Domain.Entities.Title>()
+            .WithMany()
+            .HasForeignKey(c => c.EquippedTitleId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

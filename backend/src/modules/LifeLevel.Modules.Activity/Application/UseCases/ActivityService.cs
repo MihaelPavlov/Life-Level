@@ -15,7 +15,8 @@ public class ActivityService(
     IEventPublisher events,
     IStreakReadPort streakRead,
     IQuestProgressPort questProgress,
-    IMapDistancePort mapDistance)
+    IMapDistancePort mapDistance,
+    IGearBonusReadPort gearBonus)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort
 {
     public async Task<LogActivityResult> LogActivityAsync(Guid userId, LogActivityRequest request)
@@ -24,6 +25,16 @@ public class ActivityService(
             ?? throw new InvalidOperationException("Character not found.");
 
         var (xp, str, end, agi, flx, sta) = CalculateGains(request);
+
+        // Apply gear XP bonus
+        var gearBonuses = await gearBonus.GetEquippedBonusesAsync(userId);
+        int xpBonusApplied = 0;
+        if (gearBonuses.XpBonusPct > 0)
+        {
+            var boostedXp = (int)(xp * (1.0 + gearBonuses.XpBonusPct / 100.0));
+            xpBonusApplied = boostedXp - xp;
+            xp = boostedXp;
+        }
 
         var activity = new ActivityEntity
         {
@@ -40,6 +51,7 @@ public class ActivityService(
             AgiGained = agi,
             FlxGained = flx,
             StaGained = sta,
+            Steps = CalculateSteps(request.Type, request.DistanceKm ?? 0),
             LoggedAt = DateTime.UtcNow,
         };
         db.Set<ActivityEntity>().Add(activity);
@@ -82,6 +94,7 @@ public class ActivityService(
             CurrentStreak = streak?.Current ?? 0,
             AllDailyQuestsCompleted = questResult.AllDailyCompleted,
             BonusXpAwarded = questResult.BonusXp,
+            XpBonusApplied = xpBonusApplied,
         };
     }
 
@@ -118,6 +131,7 @@ public class ActivityService(
             AgiGained = agi,
             FlxGained = flx,
             StaGained = sta,
+            Steps = CalculateSteps(type, distanceKm ?? 0),
             ExternalId = externalId,
             LoggedAt = performedAt,
         };
@@ -164,6 +178,7 @@ public class ActivityService(
                 AgiGained = a.AgiGained,
                 FlxGained = a.FlxGained,
                 StaGained = a.StaGained,
+                Steps = a.Steps,
                 LoggedAt = a.LoggedAt,
             })
             .ToListAsync();
@@ -219,6 +234,14 @@ public class ActivityService(
 
         return ((int)Math.Round(baseXp), str, end, agi, flx, sta);
     }
+
+    private static int CalculateSteps(ActivityType type, double distanceKm) =>
+        type switch
+        {
+            ActivityType.Running or ActivityType.Hiking or ActivityType.Cycling
+                => (int)(distanceKm * 1250),
+            _ => 0
+        };
 
     private static string GetActivityEmoji(ActivityType type) => type switch
     {

@@ -48,3 +48,5 @@ public class EquipItemRequest
     public Guid CharacterItemId { get; set; }
     public EquipmentSlotType SlotType { get; set; }
 }
+
+public record InventoryResponse(List<ItemDto> Items, int MaxSlots);

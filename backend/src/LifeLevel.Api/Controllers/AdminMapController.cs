@@ -520,9 +520,13 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("nodes")]
-    public async Task<IActionResult> GetAllNodes()
+    public async Task<IActionResult> GetAllNodes([FromQuery] Guid? zoneId = null)
     {
-        var nodes = await db.MapNodes
+        var query = db.MapNodes.AsQueryable();
+        if (zoneId.HasValue)
+            query = query.Where(n => n.WorldZoneId == zoneId.Value);
+
+        var nodes = await query
             .Select(n => new
             {
                 n.Id,
@@ -536,7 +540,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                 n.LevelRequirement,
                 n.RewardXp,
                 n.IsStartNode,
-                n.IsHidden
+                n.IsHidden,
+                n.WorldZoneId
             })
             .OrderBy(n => n.Name)
             .ToListAsync();
@@ -561,6 +566,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             n.RewardXp,
             n.IsStartNode,
             n.IsHidden,
+            n.WorldZoneId,
             HasBoss = bossNodeIds.Contains(n.Id),
             HasChest = chestNodeIds.Contains(n.Id),
             HasDungeon = dungeonNodeIds.Any(d => d.NodeId == n.Id),
@@ -575,13 +581,62 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpGet("nodes/{id:guid}")]
     public async Task<IActionResult> GetNodeById(Guid id)
     {
-        var node = await db.MapNodes.FindAsync(id);
+        var node = await db.MapNodes
+            .Where(n => n.Id == id)
+            .Select(n => new
+            {
+                n.Id, n.Name, n.Description, n.Icon,
+                type   = n.Type.ToString(),
+                region = n.Region.ToString(),
+                n.PositionX, n.PositionY,
+                n.LevelRequirement, n.RewardXp,
+                n.IsStartNode, n.IsHidden, n.WorldZoneId
+            })
+            .FirstOrDefaultAsync();
+
         if (node is null) return NotFound();
 
-        var boss = await db.Bosses.Where(b => b.NodeId == id).FirstOrDefaultAsync();
-        var chest = await db.Chests.Where(c => c.NodeId == id).FirstOrDefaultAsync();
-        var dungeon = await db.DungeonPortals.Include(d => d.Floors).Where(d => d.NodeId == id).FirstOrDefaultAsync();
-        var crossroads = await db.Crossroads.Include(c => c.Paths).Where(c => c.NodeId == id).FirstOrDefaultAsync();
+        var boss = await db.Bosses
+            .Where(b => b.NodeId == id)
+            .Select(b => new { b.Id, b.NodeId, b.Name, b.Icon, b.MaxHp, b.RewardXp, b.TimerDays, b.IsMini })
+            .FirstOrDefaultAsync();
+
+        var chest = await db.Chests
+            .Where(c => c.NodeId == id)
+            .Select(c => new { c.Id, c.NodeId, rarity = c.Rarity.ToString(), c.RewardXp })
+            .FirstOrDefaultAsync();
+
+        var dungeon = await db.DungeonPortals
+            .Where(d => d.NodeId == id)
+            .Select(d => new
+            {
+                d.Id, d.NodeId, d.Name, d.TotalFloors,
+                floors = d.Floors.OrderBy(f => f.FloorNumber).Select(f => new
+                {
+                    f.Id, f.FloorNumber,
+                    requiredActivity = f.RequiredActivity.ToString(),
+                    f.RequiredMinutes, f.RewardXp
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        var crossroadsRaw = await db.Crossroads
+            .Include(c => c.Paths)
+            .Where(c => c.NodeId == id)
+            .FirstOrDefaultAsync();
+
+        var crossroads = crossroadsRaw is null ? null : new
+        {
+            crossroadsRaw.Id,
+            crossroadsRaw.NodeId,
+            paths = crossroadsRaw.Paths.Select(p => new
+            {
+                p.Id, p.Name,
+                difficulty = p.Difficulty.ToString(),
+                p.DistanceKm, p.EstimatedDays, p.RewardXp,
+                p.AdditionalRequirement, p.LeadsToNodeId
+            }).ToList()
+        };
 
         return Ok(new { node, boss, chest, dungeon, crossroads });
     }
@@ -608,7 +663,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             LevelRequirement = req.LevelRequirement,
             RewardXp = req.RewardXp,
             IsStartNode = req.IsStartNode,
-            IsHidden = req.IsHidden
+            IsHidden = req.IsHidden,
+            WorldZoneId = req.WorldZoneId
         };
 
         db.MapNodes.Add(node);
@@ -639,6 +695,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         node.RewardXp = req.RewardXp;
         node.IsStartNode = req.IsStartNode;
         node.IsHidden = req.IsHidden;
+        node.WorldZoneId = req.WorldZoneId;
 
         await db.SaveChangesAsync();
         return Ok(node);
@@ -665,6 +722,40 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         var hasCrossroads = await db.Crossroads.AnyAsync(c => c.NodeId == id);
         if (hasCrossroads)
             return BadRequest("Cannot delete node: a Crossroads is attached. Delete the Crossroads first.");
+
+        // Cascade: null out progress records traveling on any edge connected to this node
+        var connectedEdges = await db.MapEdges
+            .Where(e => e.FromNodeId == id || e.ToNodeId == id)
+            .ToListAsync();
+
+        if (connectedEdges.Count > 0)
+        {
+            var connectedEdgeIds = connectedEdges.Select(e => e.Id).ToList();
+            var travelingProgress = await db.UserMapProgresses
+                .Where(p => p.CurrentEdgeId.HasValue && connectedEdgeIds.Contains(p.CurrentEdgeId.Value))
+                .ToListAsync();
+            foreach (var p in travelingProgress)
+            {
+                p.CurrentEdgeId = null;
+                p.DestinationNodeId = null;
+                p.DistanceTraveledOnEdge = 0;
+            }
+            db.MapEdges.RemoveRange(connectedEdges);
+        }
+
+        // Null out progress records with this node as current or destination
+        var nodeProgress = await db.UserMapProgresses
+            .Where(p => p.CurrentNodeId == id || p.DestinationNodeId == id)
+            .ToListAsync();
+        foreach (var p in nodeProgress)
+        {
+            if (p.CurrentNodeId == id) p.CurrentNodeId = Guid.Empty;
+            if (p.DestinationNodeId == id) p.DestinationNodeId = null;
+        }
+
+        // Remove node unlocks
+        var unlocks = await db.UserNodeUnlocks.Where(u => u.MapNodeId == id).ToListAsync();
+        db.UserNodeUnlocks.RemoveRange(unlocks);
 
         db.MapNodes.Remove(node);
         await db.SaveChangesAsync();
@@ -716,6 +807,19 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         db.MapEdges.Add(edge);
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAllEdges), new { }, edge);
+    }
+
+    [HttpPut("edges/{id:guid}")]
+    public async Task<IActionResult> UpdateEdge(Guid id, [FromBody] UpdateMapEdgeRequest req)
+    {
+        var edge = await db.MapEdges.FindAsync(id);
+        if (edge is null) return NotFound();
+
+        edge.DistanceKm      = req.DistanceKm;
+        edge.IsBidirectional = req.IsBidirectional;
+
+        await db.SaveChangesAsync();
+        return Ok(new { edge.Id });
     }
 
     [HttpDelete("edges/{id:guid}")]
@@ -866,7 +970,25 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         if (dungeon is null) return NotFound();
         var node = await db.MapNodes.FindAsync(dungeon.NodeId);
-        return Ok(new { dungeon, node });
+        return Ok(new
+        {
+            dungeon = new
+            {
+                dungeon.Id,
+                dungeon.NodeId,
+                dungeon.Name,
+                dungeon.TotalFloors,
+                floors = dungeon.Floors.Select(f => new
+                {
+                    f.Id,
+                    f.FloorNumber,
+                    requiredActivity = f.RequiredActivity.ToString(),
+                    f.RequiredMinutes,
+                    f.RewardXp
+                }).ToList()
+            },
+            node = node is null ? null : new { node.Id, node.Name, node.Icon }
+        });
     }
 
     [HttpPost("dungeons")]
@@ -890,7 +1012,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         db.DungeonPortals.Add(dungeon);
         await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetDungeonById), new { id = dungeon.Id }, dungeon);
+        return CreatedAtAction(nameof(GetDungeonById), new { id = dungeon.Id },
+            new { dungeon.Id, dungeon.NodeId, dungeon.Name, dungeon.TotalFloors, floors = Array.Empty<object>() });
     }
 
     [HttpPut("dungeons/{id:guid}")]
@@ -903,7 +1026,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         dungeon.TotalFloors = req.TotalFloors;
 
         await db.SaveChangesAsync();
-        return Ok(dungeon);
+        return Ok(new { dungeon.Id, dungeon.NodeId, dungeon.Name, dungeon.TotalFloors });
     }
 
     [HttpDelete("dungeons/{id:guid}")]
@@ -949,7 +1072,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         db.DungeonFloors.Add(floor);
         await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetDungeonById), new { id }, floor);
+        return CreatedAtAction(nameof(GetDungeonById), new { id },
+            new { floor.Id, floor.DungeonPortalId, floor.FloorNumber, requiredActivity = floor.RequiredActivity.ToString(), floor.RequiredMinutes, floor.RewardXp });
     }
 
     [HttpPut("dungeons/{id:guid}/floors/{floorNumber:int}")]
@@ -972,7 +1096,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         floor.RewardXp = req.RewardXp;
 
         await db.SaveChangesAsync();
-        return Ok(floor);
+        return Ok(new { floor.Id, floor.DungeonPortalId, floor.FloorNumber, requiredActivity = floor.RequiredActivity.ToString(), floor.RequiredMinutes, floor.RewardXp });
     }
 
     [HttpDelete("dungeons/{id:guid}/floors/{floorNumber:int}")]
@@ -1118,7 +1242,26 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         if (crossroads is null) return NotFound();
         var node = await db.MapNodes.FindAsync(crossroads.NodeId);
-        return Ok(new { crossroads, node });
+        return Ok(new
+        {
+            crossroads = new
+            {
+                crossroads.Id,
+                crossroads.NodeId,
+                paths = crossroads.Paths.Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    difficulty = p.Difficulty.ToString(),
+                    p.DistanceKm,
+                    p.EstimatedDays,
+                    p.RewardXp,
+                    p.AdditionalRequirement,
+                    p.LeadsToNodeId
+                }).ToList()
+            },
+            node = node is null ? null : new { node.Id, node.Name, node.Icon }
+        });
     }
 
     [HttpPost("crossroads")]
@@ -1140,7 +1283,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         db.Crossroads.Add(crossroads);
         await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetCrossroadsById), new { id = crossroads.Id }, crossroads);
+        return CreatedAtAction(nameof(GetCrossroadsById), new { id = crossroads.Id },
+            new { crossroads.Id, crossroads.NodeId, paths = Array.Empty<object>() });
     }
 
     [HttpDelete("crossroads/{id:guid}")]
@@ -1190,7 +1334,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         db.CrossroadsPaths.Add(path);
         await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetCrossroadsById), new { id }, path);
+        return CreatedAtAction(nameof(GetCrossroadsById), new { id },
+            new { path.Id, path.CrossroadsId, path.Name, difficulty = path.Difficulty.ToString(), path.DistanceKm, path.EstimatedDays, path.RewardXp, path.AdditionalRequirement, path.LeadsToNodeId });
     }
 
     [HttpPut("crossroads/{id:guid}/paths/{pathId:guid}")]
@@ -1224,7 +1369,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         path.LeadsToNodeId = req.LeadsToNodeId;
 
         await db.SaveChangesAsync();
-        return Ok(path);
+        return Ok(new { path.Id, path.CrossroadsId, path.Name, difficulty = path.Difficulty.ToString(), path.DistanceKm, path.EstimatedDays, path.RewardXp, path.AdditionalRequirement, path.LeadsToNodeId });
     }
 
     [HttpDelete("crossroads/{id:guid}/paths/{pathId:guid}")]
@@ -1240,6 +1385,249 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         if (path is null) return NotFound();
 
         db.CrossroadsPaths.Remove(path);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // -------------------------------------------------------------------------
+    // WORLD ZONES (individual CRUD)
+    // -------------------------------------------------------------------------
+
+    [HttpGet("world-zones")]
+    public async Task<IActionResult> GetAllWorldZones()
+    {
+        var zones = await db.WorldZones
+            .OrderBy(z => z.Name)
+            .Select(z => new
+            {
+                id              = z.Id,
+                name            = z.Name,
+                description     = z.Description,
+                icon            = z.Icon,
+                region          = z.Region,
+                tier            = z.Tier,
+                x               = (double)z.PositionX,
+                y               = (double)z.PositionY,
+                levelReq        = z.LevelRequirement,
+                totalXp         = z.TotalXp,
+                totalDistanceKm = z.TotalDistanceKm,
+                isCrossroads    = z.IsCrossroads,
+                isStart         = z.IsStartZone,
+                isHidden        = z.IsHidden,
+                worldId         = z.WorldId,
+            })
+            .ToListAsync();
+        return Ok(zones);
+    }
+
+    [HttpGet("world-zones/{id:guid}")]
+    public async Task<IActionResult> GetWorldZoneById(Guid id)
+    {
+        var zone = await db.WorldZones.FindAsync(id);
+        if (zone is null) return NotFound();
+
+        var nodeCount = await db.MapNodes.CountAsync(n => n.WorldZoneId == id);
+
+        return Ok(new
+        {
+            id              = zone.Id,
+            name            = zone.Name,
+            description     = zone.Description,
+            icon            = zone.Icon,
+            region          = zone.Region,
+            tier            = zone.Tier,
+            x               = (double)zone.PositionX,
+            y               = (double)zone.PositionY,
+            levelReq        = zone.LevelRequirement,
+            totalXp         = zone.TotalXp,
+            totalDistanceKm = zone.TotalDistanceKm,
+            isCrossroads    = zone.IsCrossroads,
+            isStart         = zone.IsStartZone,
+            isHidden        = zone.IsHidden,
+            worldId         = zone.WorldId,
+            nodeCount,
+        });
+    }
+
+    [HttpPost("world-zones")]
+    public async Task<IActionResult> CreateWorldZone([FromBody] CreateWorldZoneRequest req)
+    {
+        var worldId = req.WorldId;
+        if (!worldId.HasValue || worldId == Guid.Empty)
+        {
+            worldId = await db.Worlds
+                .Where(w => w.IsActive)
+                .Select(w => (Guid?)w.Id)
+                .FirstOrDefaultAsync();
+
+            if (worldId is null)
+                return BadRequest("No active World found. Create a World first or provide a WorldId.");
+        }
+        else if (!await db.Worlds.AnyAsync(w => w.Id == worldId.Value))
+        {
+            return BadRequest("World not found.");
+        }
+
+        var zone = new WorldZoneEntity
+        {
+            Id              = Guid.NewGuid(),
+            Name            = req.Name,
+            Description     = req.Description,
+            Icon            = req.Icon,
+            Region          = req.Region,
+            Tier            = req.Tier,
+            PositionX       = (float)req.X,
+            PositionY       = (float)req.Y,
+            LevelRequirement = req.LevelReq,
+            TotalXp         = req.TotalXp,
+            TotalDistanceKm = req.TotalDistanceKm,
+            IsCrossroads    = req.IsCrossroads,
+            IsStartZone     = req.IsStart,
+            IsHidden        = req.IsHidden,
+            WorldId         = worldId.Value,
+        };
+
+        db.WorldZones.Add(zone);
+        await db.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetWorldZoneById), new { id = zone.Id }, new { zone.Id });
+    }
+
+    [HttpPut("world-zones/{id:guid}")]
+    public async Task<IActionResult> UpdateWorldZone(Guid id, [FromBody] UpdateWorldZoneRequest req)
+    {
+        var zone = await db.WorldZones.FindAsync(id);
+        if (zone is null) return NotFound();
+
+        zone.Name            = req.Name;
+        zone.Description     = req.Description;
+        zone.Icon            = req.Icon;
+        zone.Region          = req.Region;
+        zone.Tier            = req.Tier;
+        zone.PositionX       = (float)req.X;
+        zone.PositionY       = (float)req.Y;
+        zone.LevelRequirement = req.LevelReq;
+        zone.TotalXp         = req.TotalXp;
+        zone.TotalDistanceKm = req.TotalDistanceKm;
+        zone.IsCrossroads    = req.IsCrossroads;
+        zone.IsStartZone     = req.IsStart;
+        zone.IsHidden        = req.IsHidden;
+
+        await db.SaveChangesAsync();
+        return Ok(new { zone.Id });
+    }
+
+    [HttpDelete("world-zones/{id:guid}")]
+    public async Task<IActionResult> DeleteWorldZone(Guid id)
+    {
+        var zone = await db.WorldZones.FindAsync(id);
+        if (zone is null) return NotFound();
+
+        var nodeCount = await db.MapNodes.CountAsync(n => n.WorldZoneId == id);
+        if (nodeCount > 0)
+            return BadRequest($"Cannot delete zone: {nodeCount} node(s) are assigned to it. Reassign or delete them first.");
+
+        var edges = await db.WorldZoneEdges
+            .Where(e => e.FromZoneId == id || e.ToZoneId == id)
+            .ToListAsync();
+        db.WorldZoneEdges.RemoveRange(edges);
+
+        db.WorldZones.Remove(zone);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // -------------------------------------------------------------------------
+    // WORLD ZONE EDGES (individual CRUD)
+    // -------------------------------------------------------------------------
+
+    [HttpGet("world-zone-edges")]
+    public async Task<IActionResult> GetAllWorldZoneEdges([FromQuery] Guid? zoneId = null)
+    {
+        var query = db.WorldZoneEdges.AsQueryable();
+        if (zoneId.HasValue)
+            query = query.Where(e => e.FromZoneId == zoneId.Value || e.ToZoneId == zoneId.Value);
+
+        var zoneNames = await db.WorldZones
+            .Select(z => new { z.Id, z.Name, z.Icon })
+            .ToListAsync();
+
+        var edges = await query.ToListAsync();
+
+        var result = edges.Select(e => new
+        {
+            id            = e.Id,
+            fromZoneId    = e.FromZoneId,
+            fromZoneName  = zoneNames.FirstOrDefault(z => z.Id == e.FromZoneId)?.Name ?? e.FromZoneId.ToString(),
+            fromZoneIcon  = zoneNames.FirstOrDefault(z => z.Id == e.FromZoneId)?.Icon ?? "",
+            toZoneId      = e.ToZoneId,
+            toZoneName    = zoneNames.FirstOrDefault(z => z.Id == e.ToZoneId)?.Name ?? e.ToZoneId.ToString(),
+            toZoneIcon    = zoneNames.FirstOrDefault(z => z.Id == e.ToZoneId)?.Icon ?? "",
+            distanceKm      = e.DistanceKm,
+            isBidirectional = e.IsBidirectional,
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("world-zone-edges")]
+    public async Task<IActionResult> CreateWorldZoneEdge([FromBody] CreateWorldZoneEdgeRequest req)
+    {
+        if (!await db.WorldZones.AnyAsync(z => z.Id == req.FromZoneId))
+            return BadRequest("FromZoneId not found.");
+        if (!await db.WorldZones.AnyAsync(z => z.Id == req.ToZoneId))
+            return BadRequest("ToZoneId not found.");
+
+        var duplicate = await db.WorldZoneEdges.AnyAsync(e =>
+            (e.FromZoneId == req.FromZoneId && e.ToZoneId == req.ToZoneId) ||
+            (e.FromZoneId == req.ToZoneId   && e.ToZoneId == req.FromZoneId));
+        if (duplicate)
+            return BadRequest("An edge between these two zones already exists.");
+
+        var edge = new WorldZoneEdge
+        {
+            Id              = Guid.NewGuid(),
+            FromZoneId      = req.FromZoneId,
+            ToZoneId        = req.ToZoneId,
+            DistanceKm      = req.DistanceKm,
+            IsBidirectional = req.IsBidirectional,
+        };
+
+        db.WorldZoneEdges.Add(edge);
+        await db.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetAllWorldZoneEdges), new { }, new { edge.Id });
+    }
+
+    [HttpPut("world-zone-edges/{id:guid}")]
+    public async Task<IActionResult> UpdateWorldZoneEdge(Guid id, [FromBody] UpdateWorldZoneEdgeRequest req)
+    {
+        var edge = await db.WorldZoneEdges.FindAsync(id);
+        if (edge is null) return NotFound();
+
+        edge.DistanceKm      = req.DistanceKm;
+        edge.IsBidirectional = req.IsBidirectional;
+
+        await db.SaveChangesAsync();
+        return Ok(new { edge.Id });
+    }
+
+    [HttpDelete("world-zone-edges/{id:guid}")]
+    public async Task<IActionResult> DeleteWorldZoneEdge(Guid id)
+    {
+        var edge = await db.WorldZoneEdges.FindAsync(id);
+        if (edge is null) return NotFound();
+
+        // Null out CurrentEdgeId on any UserWorldProgress traversing this edge
+        var affectedProgress = await db.UserWorldProgresses
+            .Where(p => p.CurrentEdgeId == id)
+            .ToListAsync();
+        foreach (var p in affectedProgress)
+        {
+            p.CurrentEdgeId = null;
+            p.DestinationZoneId = null;
+            p.DistanceTraveledOnEdge = 0;
+        }
+
+        db.WorldZoneEdges.Remove(edge);
         await db.SaveChangesAsync();
         return NoContent();
     }
@@ -1467,7 +1855,8 @@ public record CreateMapNodeRequest(
     int LevelRequirement,
     int RewardXp,
     bool IsStartNode,
-    bool IsHidden);
+    bool IsHidden,
+    Guid? WorldZoneId = null);
 
 public record UpdateMapNodeRequest(
     string Name,
@@ -1480,12 +1869,17 @@ public record UpdateMapNodeRequest(
     int LevelRequirement,
     int RewardXp,
     bool IsStartNode,
-    bool IsHidden);
+    bool IsHidden,
+    Guid? WorldZoneId = null);
 
 // --- Map Edges ---
 public record CreateMapEdgeRequest(
     Guid FromNodeId,
     Guid ToNodeId,
+    double DistanceKm,
+    bool IsBidirectional);
+
+public record UpdateMapEdgeRequest(
     double DistanceKm,
     bool IsBidirectional);
 
@@ -1602,6 +1996,49 @@ public record SyncCrossroadsPath(
     string? Id, string? Name, double DistanceKm, string? Difficulty,
     int EstimatedDays, int RewardXp,
     string? AdditionalRequirement, string? LeadsToNodeId);
+
+// --- World Zones (individual CRUD) ---
+public record CreateWorldZoneRequest(
+    string Name,
+    string? Description,
+    string Icon,
+    string Region,
+    int Tier,
+    double X,
+    double Y,
+    int LevelReq,
+    int TotalXp,
+    double TotalDistanceKm,
+    bool IsCrossroads,
+    bool IsStart,
+    bool IsHidden,
+    Guid? WorldId = null);
+
+public record UpdateWorldZoneRequest(
+    string Name,
+    string? Description,
+    string Icon,
+    string Region,
+    int Tier,
+    double X,
+    double Y,
+    int LevelReq,
+    int TotalXp,
+    double TotalDistanceKm,
+    bool IsCrossroads,
+    bool IsStart,
+    bool IsHidden);
+
+// --- World Zone Edges (individual CRUD) ---
+public record CreateWorldZoneEdgeRequest(
+    Guid FromZoneId,
+    Guid ToZoneId,
+    double DistanceKm,
+    bool IsBidirectional);
+
+public record UpdateWorldZoneEdgeRequest(
+    double DistanceKm,
+    bool IsBidirectional);
 
 // ── World Zone sync records ───────────────────────────────────────────────────
 public class SyncWorldRequest

@@ -12,6 +12,8 @@ public class LogActivityRequest
     public int? HeartRateAvg { get; set; }
 }
 
+public record BlockedItemInfo(string ItemName, string ItemIcon);
+
 public class LogActivityResult
 {
     public Guid ActivityId { get; set; }
@@ -28,6 +30,8 @@ public class LogActivityResult
     public int CurrentStreak { get; set; }
     public bool AllDailyQuestsCompleted { get; set; }
     public int BonusXpAwarded { get; set; }
+    public int XpBonusApplied { get; init; } = 0;
+    public IReadOnlyList<BlockedItemInfo> BlockedItems { get; init; } = [];
 }
 
 public class ActivityHistoryDto
@@ -44,5 +48,6 @@ public class ActivityHistoryDto
     public int AgiGained { get; set; }
     public int FlxGained { get; set; }
     public int StaGained { get; set; }
+    public int Steps { get; set; }
     public DateTime LoggedAt { get; set; }
 }

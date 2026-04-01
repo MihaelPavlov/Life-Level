@@ -16,7 +16,12 @@ public static class CharacterModule
         services.AddScoped<ICharacterLevelReadPort>(sp => (ICharacterLevelReadPort)sp.GetRequiredService<CharacterService>());
         services.AddScoped<ICharacterInfoPort>(sp => (ICharacterInfoPort)sp.GetRequiredService<CharacterService>());
         services.AddScoped<ICharacterIdReadPort>(sp => sp.GetRequiredService<CharacterService>());
+        services.AddScoped<IInventorySlotReadPort>(sp => sp.GetRequiredService<CharacterService>());
         services.AddScoped<IEventHandler<UserRegisteredEvent>, CharacterCreatedHandler>();
+        services.AddScoped<TitleService>();
+        services.AddScoped<IEventHandler<BossDefeatedEvent>, TitleGrantHandler>();
+        services.AddScoped<IEventHandler<CharacterRankChangedEvent>, TitleGrantHandler>();
+        services.AddScoped<IEventHandler<ActivityLoggedEvent>, TitleGrantHandler>();
         return services;
     }
 }

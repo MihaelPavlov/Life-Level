@@ -68,6 +68,18 @@ class CompletedQuestSummary {
       );
 }
 
+class BlockedItemInfo {
+  final String itemName;
+  final String itemIcon;
+
+  const BlockedItemInfo({required this.itemName, required this.itemIcon});
+
+  factory BlockedItemInfo.fromJson(Map<String, dynamic> json) => BlockedItemInfo(
+        itemName: json['itemName'] as String,
+        itemIcon: json['itemIcon'] as String,
+      );
+}
+
 class LogActivityResult {
   final String activityId;
   final int xpGained;
@@ -83,6 +95,8 @@ class LogActivityResult {
   final int currentStreak;
   final bool allDailyQuestsCompleted;
   final int bonusXpAwarded;
+  final int xpBonusApplied;
+  final List<BlockedItemInfo> blockedItems;
 
   const LogActivityResult({
     required this.activityId,
@@ -99,6 +113,8 @@ class LogActivityResult {
     required this.currentStreak,
     required this.allDailyQuestsCompleted,
     required this.bonusXpAwarded,
+    this.xpBonusApplied = 0,
+    this.blockedItems = const [],
   });
 
   factory LogActivityResult.fromJson(Map<String, dynamic> json) =>
@@ -122,6 +138,10 @@ class LogActivityResult {
         allDailyQuestsCompleted:
             json['allDailyQuestsCompleted'] as bool? ?? false,
         bonusXpAwarded: json['bonusXpAwarded'] as int? ?? 0,
+        xpBonusApplied: json['xpBonusApplied'] as int? ?? 0,
+        blockedItems: (json['blockedItems'] as List<dynamic>? ?? [])
+            .map((e) => BlockedItemInfo.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 }
 
@@ -138,6 +158,7 @@ class ActivityHistoryDto {
   final int agiGained;
   final int flxGained;
   final int staGained;
+  final int steps;
   final DateTime loggedAt;
 
   const ActivityHistoryDto({
@@ -153,6 +174,7 @@ class ActivityHistoryDto {
     required this.agiGained,
     required this.flxGained,
     required this.staGained,
+    required this.steps,
     required this.loggedAt,
   });
 
@@ -170,6 +192,7 @@ class ActivityHistoryDto {
         agiGained:       (json['agiGained'] as int?) ?? 0,
         flxGained:       (json['flxGained'] as int?) ?? 0,
         staGained:       (json['staGained'] as int?) ?? 0,
+        steps:           (json['steps'] as int?) ?? 0,
         loggedAt:        DateTime.parse(json['loggedAt'] as String),
       );
 

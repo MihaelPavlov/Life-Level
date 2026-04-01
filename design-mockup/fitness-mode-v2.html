@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Clean Dark Mode</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0d1117;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  display:flex; align-items:flex-start; justify-content:center;
+  min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap;
+}
+.page-header { width:100%; text-align:center; margin-bottom:8px; }
+.page-header h1 { font-size:22px; color:#f1f5f9; font-weight:700; margin-bottom:6px; }
+.page-header p { font-size:13px; color:#64748b; }
+
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num {
+  display:inline-block;
+  background:rgba(241,245,249,0.06); border:1px solid rgba(241,245,249,0.1);
+  border-radius:12px; padding:3px 14px;
+  font-size:10px; color:#94a3b8; font-weight:700; letter-spacing:0.06em; margin-bottom:6px;
+}
+.step-title { font-size:14px; color:#f1f5f9; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#64748b; line-height:1.5; }
+
+/* Phone shell — cleaner than the RPG version */
+.phone {
+  width:390px; height:844px;
+  background:#0f172a;
+  border-radius:44px; overflow:hidden; position:relative; flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 24px 64px rgba(0,0,0,0.7);
+}
+
+/* Status bar */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:100; background:#0f172a;
+}
+.st { font-size:13px; font-weight:600; color:#f1f5f9; }
+.si { font-size:11px; color:#475569; }
+
+/* Bottom nav */
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#0f172a; border-top:1px solid rgba(255,255,255,0.07);
+  display:flex; align-items:center; padding:0 8px 12px; z-index:100;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:18px; }
+.nav-label { font-size:10px; font-weight:600; }
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color:#f1f5f9; }
+.nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color:#475569; }
+.nav-dot { width:4px; height:4px; border-radius:2px; background:#4f9eff; margin-top:2px; }
+
+/* Scrollable content */
+.screen-scroll {
+  position:absolute; inset:0; overflow-y:auto; padding-bottom:90px; scrollbar-width:none;
+}
+.screen-scroll::-webkit-scrollbar { display:none; }
+
+/* Card — clean surface, no glow */
+.card {
+  background:#1e293b;
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px; padding:14px 16px; margin-bottom:10px;
+}
+.card-sm { border-radius:10px; padding:10px 12px; }
+
+/* Section label */
+.sec {
+  font-size:10px; color:#475569; font-weight:700; letter-spacing:0.07em;
+  margin-bottom:8px;
+}
+
+/* Progress bar — thin, clean, no glow */
+.bar { height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:2px; }
+.bar-md { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+.bar-md-fill { height:100%; border-radius:3px; }
+
+/* Pill / badge */
+.pill {
+  display:inline-flex; align-items:center; gap:5px;
+  border-radius:20px; padding:4px 10px;
+  font-size:11px; font-weight:600;
+}
+.pill-blue { background:rgba(79,158,255,0.12); color:#60a5fa; border:1px solid rgba(79,158,255,0.2); }
+.pill-green { background:rgba(34,197,94,0.1); color:#4ade80; border:1px solid rgba(34,197,94,0.2); }
+.pill-orange { background:rgba(249,115,22,0.1); color:#fb923c; border:1px solid rgba(249,115,22,0.2); }
+.pill-red { background:rgba(239,68,68,0.1); color:#f87171; border:1px solid rgba(239,68,68,0.2); }
+.pill-gray { background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.08); }
+.pill-purple { background:rgba(139,92,246,0.1); color:#a78bfa; border:1px solid rgba(139,92,246,0.2); }
+
+/* Quest row */
+.quest-row {
+  background:#1e293b; border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px; padding:12px 14px; margin-bottom:8px;
+  border-left-width:2px;
+}
+.quest-row.done { border-left-color:#22c55e; opacity:0.6; }
+.quest-row.active { border-left-color:#4f9eff; }
+.quest-row.pending { border-left-color:rgba(255,255,255,0.12); }
+
+/* Zone card */
+.zone-card {
+  background:#1e293b; border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px; padding:14px 16px; margin-bottom:10px;
+  display:flex; align-items:center; gap:12px;
+}
+.zone-icon {
+  width:40px; height:40px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+
+/* Stat row */
+.stat-row {
+  display:flex; align-items:center; gap:12px; padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.stat-row:last-child { border-bottom:none; }
+
+/* Avatar */
+.avatar {
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-weight:700; flex-shrink:0;
+}
+
+/* Equipment slot */
+.eq-slot {
+  aspect-ratio:1; border-radius:8px;
+  background:#0f172a; border:1px solid rgba(255,255,255,0.08);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+}
+.eq-slot.filled { background:#1a2540; border-color:rgba(79,158,255,0.25); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Life Level — Same Features, Cleaner UI</h1>
+  <p>All the zones, quests, bosses, XP — none of the dungeon aesthetic</p>
+</div>
+
+<!-- ─── PHONE 1: HOME ──────────────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">HOME</div>
+    <div class="step-title">Dashboard</div>
+    <div class="step-desc">XP bar, current zone, streak, quest summary — no glow, no gradients</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Top row: name + avatar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+          <div>
+            <div style="font-size:13px; color:#475569; margin-bottom:3px">Good morning</div>
+            <div style="font-size:20px; font-weight:700; color:#f1f5f9">Alex Pavlov</div>
+          </div>
+          <div style="position:relative">
+            <div class="avatar" style="width:42px; height:42px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); font-size:16px; color:#f1f5f9">A</div>
+            <div style="position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:5px; background:#f97316; border:2px solid #0f172a"></div>
+          </div>
+        </div>
+
+        <!-- XP card — clean, thin bar -->
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px">
+            <div style="display:flex; align-items:center; gap:8px">
+              <div style="font-size:15px; font-weight:700; color:#f1f5f9">Level 23</div>
+              <div class="pill pill-blue" style="font-size:10px; padding:2px 8px">Iron Warrior</div>
+            </div>
+            <div style="font-size:11px; color:#475569">4,250 / 6,000 XP</div>
+          </div>
+          <div class="bar-md">
+            <div class="bar-md-fill" style="width:71%; background:#4f9eff;"></div>
+          </div>
+          <div style="font-size:10px; color:#475569; margin-top:6px">1,750 XP to Level 24</div>
+        </div>
+
+        <!-- Current zone -->
+        <div class="sec">CURRENT ZONE</div>
+        <div class="zone-card" style="margin-bottom:14px">
+          <div class="zone-icon" style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.15)">🌲</div>
+          <div style="flex:1; min-width:0">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px">
+              <div style="font-size:13px; font-weight:700; color:#f1f5f9">Forest of Endurance</div>
+              <div style="font-size:11px; color:#475569">62%</div>
+            </div>
+            <div class="bar" style="margin-bottom:5px">
+              <div class="bar-fill" style="width:62%; background:#22c55e;"></div>
+            </div>
+            <div style="font-size:11px; color:#475569">7.4 / 12 km · 3 days remaining</div>
+          </div>
+        </div>
+
+        <!-- Today summary strip -->
+        <div style="display:flex; gap:8px; margin-bottom:16px">
+          <div class="card card-sm" style="flex:1; margin-bottom:0; text-align:center">
+            <div style="font-size:18px; font-weight:700; color:#f1f5f9; margin-bottom:2px">🔥 7</div>
+            <div style="font-size:10px; color:#475569">day streak</div>
+          </div>
+          <div class="card card-sm" style="flex:1; margin-bottom:0; text-align:center">
+            <div style="font-size:18px; font-weight:700; color:#f1f5f9; margin-bottom:2px">2/5</div>
+            <div style="font-size:10px; color:#475569">quests done</div>
+          </div>
+          <div class="card card-sm" style="flex:1; margin-bottom:0; text-align:center">
+            <div style="font-size:18px; font-weight:700; color:#f1f5f9; margin-bottom:2px">+340</div>
+            <div style="font-size:10px; color:#475569">XP today</div>
+          </div>
+        </div>
+
+        <!-- Active boss alert — clean, not dramatic -->
+        <div class="sec">ACTIVE CHALLENGE</div>
+        <div class="card" style="border-color:rgba(239,68,68,0.2); margin-bottom:14px">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px">
+            <div style="width:36px; height:36px; border-radius:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.15); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0">⚔️</div>
+            <div style="flex:1">
+              <div style="display:flex; justify-content:space-between; align-items:baseline">
+                <div style="font-size:13px; font-weight:700; color:#f1f5f9">Iron Peak Warlord</div>
+                <div class="pill pill-red" style="font-size:10px; padding:2px 8px">5d 14h</div>
+              </div>
+              <div style="font-size:11px; color:#475569; margin-top:1px">Weekly Boss · Iron Peak zone</div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+            <div style="font-size:10px; color:#475569">Boss HP</div>
+            <div style="font-size:10px; color:#f87171; font-weight:600">55% remaining</div>
+          </div>
+          <div class="bar-md">
+            <div class="bar-md-fill" style="width:55%; background:#ef4444;"></div>
+          </div>
+          <div style="font-size:11px; color:#475569; margin-top:6px">Your contribution: 1,240 damage · Log activity to attack</div>
+        </div>
+
+        <!-- Last activity -->
+        <div class="sec">LAST ACTIVITY</div>
+        <div class="card" style="display:flex; align-items:center; gap:12px">
+          <div style="width:38px; height:38px; border-radius:9px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.15); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0">🏃</div>
+          <div style="flex:1">
+            <div style="font-size:13px; font-weight:600; color:#f1f5f9; margin-bottom:2px">Morning Run</div>
+            <div style="font-size:11px; color:#475569">5.2 km · 28 min · Today 7:15 AM</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:12px; font-weight:700; color:#4ade80">+90 XP</div>
+            <div style="font-size:10px; color:#475569">+1 END</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active">
+        <div class="nav-icon">⊞</div>
+        <div class="nav-label">Home</div>
+        <div class="nav-dot"></div>
+      </div>
+      <div class="nav-item"><div class="nav-icon">🗺</div><div class="nav-label">Zones</div></div>
+      <div class="nav-item"><div class="nav-icon">☑</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">◎</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 2: WORLD ZONES ───────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">ZONES</div>
+    <div class="step-title">World Map as Cards</div>
+    <div class="step-desc">Zone names preserved — presented as a clean list, not a painted fantasy map</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px">
+          <div>
+            <div style="font-size:22px; font-weight:700; color:#f1f5f9">World Map</div>
+            <div style="font-size:12px; color:#475569; margin-top:3px">3 zones · 1 active</div>
+          </div>
+          <div class="pill pill-blue">Exploring Zone 1</div>
+        </div>
+
+        <!-- Zone 1: Active -->
+        <div class="sec">ACTIVE ZONE</div>
+        <div class="zone-card" style="flex-direction:column; align-items:flex-start; gap:10px; border-color:rgba(34,197,94,0.2); margin-bottom:16px">
+          <div style="display:flex; align-items:center; gap:12px; width:100%">
+            <div class="zone-icon" style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2)">🌲</div>
+            <div style="flex:1">
+              <div style="display:flex; justify-content:space-between; align-items:center">
+                <div style="font-size:14px; font-weight:700; color:#f1f5f9">Forest of Endurance</div>
+                <div class="pill pill-green" style="font-size:10px; padding:2px 8px">Active</div>
+              </div>
+              <div style="font-size:11px; color:#475569; margin-top:2px">Region 1 · Starter zone · END + AGI</div>
+            </div>
+          </div>
+          <!-- Progress -->
+          <div style="width:100%">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+              <div style="font-size:11px; color:#475569">Zone progress</div>
+              <div style="font-size:11px; color:#4ade80; font-weight:600">62% · 7.4/12 km</div>
+            </div>
+            <div class="bar-md">
+              <div class="bar-md-fill" style="width:62%; background:#22c55e;"></div>
+            </div>
+          </div>
+          <!-- Sub-zones -->
+          <div style="width:100%; display:flex; gap:6px">
+            <div style="flex:1; background:rgba(34,197,94,0.08); border-radius:7px; border:1px solid rgba(34,197,94,0.15); padding:8px 10px">
+              <div style="font-size:10px; font-weight:700; color:#4ade80; margin-bottom:2px">✓ Cleared</div>
+              <div style="font-size:11px; color:#f1f5f9">Whispering Glen</div>
+            </div>
+            <div style="flex:1; background:rgba(79,158,255,0.08); border-radius:7px; border:1px solid rgba(79,158,255,0.15); padding:8px 10px">
+              <div style="font-size:10px; font-weight:700; color:#60a5fa; margin-bottom:2px">In progress</div>
+              <div style="font-size:11px; color:#f1f5f9">Elder's Trail</div>
+            </div>
+            <div style="flex:1; background:rgba(255,255,255,0.04); border-radius:7px; border:1px solid rgba(255,255,255,0.07); padding:8px 10px">
+              <div style="font-size:10px; font-weight:700; color:#475569; margin-bottom:2px">Locked</div>
+              <div style="font-size:11px; color:#64748b">Ancient Core</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone 2: Discovered -->
+        <div class="sec">DISCOVERED</div>
+        <div class="zone-card" style="margin-bottom:10px">
+          <div class="zone-icon" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.15)">⛰️</div>
+          <div style="flex:1">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+              <div style="font-size:13px; font-weight:700; color:#f1f5f9">Mountains of Strength</div>
+              <div class="pill pill-purple" style="font-size:10px; padding:2px 8px">Partially</div>
+            </div>
+            <div style="font-size:11px; color:#475569; margin-bottom:5px">Region 2 · STR + STA · Req: Level 15</div>
+            <div class="bar" style="margin-bottom:4px">
+              <div class="bar-fill" style="width:18%; background:#8b5cf6;"></div>
+            </div>
+            <div style="font-size:10px; color:#475569">Discovered 18% · Complete Forest first</div>
+          </div>
+        </div>
+
+        <!-- Zone 3: Locked -->
+        <div class="sec">LOCKED</div>
+        <div class="zone-card" style="opacity:0.5">
+          <div class="zone-icon" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07)">🌊</div>
+          <div style="flex:1">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+              <div style="font-size:13px; font-weight:700; color:#f1f5f9">Ocean of Balance</div>
+              <div class="pill pill-gray" style="font-size:10px; padding:2px 8px">🔒 Lvl 20</div>
+            </div>
+            <div style="font-size:11px; color:#475569">Region 3 · FLX + END + AGI</div>
+          </div>
+        </div>
+
+        <!-- Coming next hint -->
+        <div style="background:rgba(79,158,255,0.06); border:1px solid rgba(79,158,255,0.12); border-radius:10px; padding:12px 14px; margin-top:6px">
+          <div style="font-size:12px; font-weight:600; color:#60a5fa; margin-bottom:3px">Next milestone</div>
+          <div style="font-size:11px; color:#94a3b8">4.6 km remaining to clear Forest of Endurance and unlock the Mountain path.</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active">
+        <div class="nav-icon">🗺</div><div class="nav-label">Zones</div>
+        <div class="nav-dot"></div>
+      </div>
+      <div class="nav-item"><div class="nav-icon">☑</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item"><div class="nav-icon">◎</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 3: QUESTS ────────────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">QUESTS</div>
+    <div class="step-title">Daily · Weekly · Story</div>
+    <div class="step-desc">Same quest system — task-list style instead of glowing scroll cards</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Header + streak -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px">
+          <div style="font-size:22px; font-weight:700; color:#f1f5f9">Quests</div>
+          <div class="pill pill-orange">🔥 7 streak</div>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex; background:#1e293b; border-radius:10px; padding:3px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.06)">
+          <div style="flex:1; background:#334155; border-radius:8px; padding:7px 0; text-align:center; font-size:12px; font-weight:700; color:#f1f5f9">Daily</div>
+          <div style="flex:1; padding:7px 0; text-align:center; font-size:12px; font-weight:600; color:#475569">Weekly</div>
+          <div style="flex:1; padding:7px 0; text-align:center; font-size:12px; font-weight:600; color:#475569">Story</div>
+          <div style="flex:1; padding:7px 0; text-align:center; font-size:12px; font-weight:600; color:#475569">Special</div>
+        </div>
+
+        <!-- Progress summary -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px">
+          <div style="font-size:11px; color:#475569">Today's progress</div>
+          <div style="font-size:11px; color:#f1f5f9; font-weight:600">2 / 5 complete</div>
+        </div>
+        <div class="bar-md" style="margin-bottom:14px">
+          <div class="bar-md-fill" style="width:40%; background:#4f9eff;"></div>
+        </div>
+
+        <div class="sec">TODAY'S QUESTS</div>
+
+        <!-- Quest 1: completed -->
+        <div class="quest-row done">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:20px; height:20px; border-radius:10px; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.3); display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; color:#4ade80">✓</div>
+            <div style="flex:1">
+              <div style="font-size:13px; font-weight:600; color:#64748b; text-decoration:line-through">Morning Run · 3 km</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Running · +90 XP · +1 END</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quest 2: completed -->
+        <div class="quest-row done">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:20px; height:20px; border-radius:10px; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.3); display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; color:#4ade80">✓</div>
+            <div style="flex:1">
+              <div style="font-size:13px; font-weight:600; color:#64748b; text-decoration:line-through">Burn 300 Calories</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Any activity · +60 XP</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quest 3: in progress -->
+        <div class="quest-row active">
+          <div style="display:flex; align-items:flex-start; gap:10px">
+            <div style="width:20px; height:20px; border-radius:10px; background:rgba(79,158,255,0.1); border:1px solid rgba(79,158,255,0.25); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px">
+              <div style="width:8px; height:8px; border-radius:4px; background:#4f9eff;"></div>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px">
+                <div style="font-size:13px; font-weight:600; color:#f1f5f9">Strength Session · 30 min</div>
+                <div style="font-size:11px; color:#60a5fa; font-weight:600">18/30</div>
+              </div>
+              <div class="bar" style="margin-bottom:4px">
+                <div class="bar-fill" style="width:60%; background:#4f9eff;"></div>
+              </div>
+              <div style="font-size:10px; color:#475569">Gym · +150 XP · +2 STR</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quest 4: pending -->
+        <div class="quest-row pending">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:20px; height:20px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#94a3b8">Flexibility Flow · 15 min</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Yoga · +80 XP · +1 FLX</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quest 5: pending -->
+        <div class="quest-row pending">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:20px; height:20px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#94a3b8">Evening Ride · 10 km</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Cycling · +120 XP · +1 AGI</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bonus -->
+        <div style="background:rgba(245,166,35,0.07); border:1px solid rgba(245,166,35,0.15); border-radius:10px; padding:10px 14px; margin-top:4px; display:flex; align-items:center; justify-content:space-between">
+          <div style="font-size:12px; color:#fbbf24; font-weight:600">Complete all 5</div>
+          <div style="font-size:12px; font-weight:700; color:#fbbf24">+300 XP</div>
+        </div>
+
+        <!-- Story quest -->
+        <div style="margin-top:20px">
+          <div class="sec">STORY</div>
+          <div class="card" style="border-color:rgba(139,92,246,0.2)">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
+              <div>
+                <div style="font-size:12px; font-weight:700; color:#a78bfa; margin-bottom:3px">Chapter 2 · The Elder's Trial</div>
+                <div style="font-size:13px; font-weight:700; color:#f1f5f9">Cross the Great River</div>
+              </div>
+              <div class="pill pill-purple" style="font-size:10px; padding:2px 8px; flex-shrink:0">3/5</div>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.5">Run alongside riverside paths for 25 km total. The Elder says water carries strength to those who follow it.</div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+              <div style="font-size:10px; color:#475569">14.2 / 25 km</div>
+              <div style="font-size:10px; color:#a78bfa; font-weight:600">57%</div>
+            </div>
+            <div class="bar-md">
+              <div class="bar-md-fill" style="width:57%; background:#8b5cf6;"></div>
+            </div>
+            <div style="font-size:10px; color:#475569; margin-top:6px">Reward: +500 XP · Elder's Key · New zone path</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺</div><div class="nav-label">Zones</div></div>
+      <div class="nav-item active">
+        <div class="nav-icon">☑</div><div class="nav-label">Quests</div>
+        <div class="nav-dot"></div>
+      </div>
+      <div class="nav-item"><div class="nav-icon">◎</div><div class="nav-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 4: BOSS CHALLENGE ────────────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">BOSS</div>
+    <div class="step-title">Weekly Boss Challenge</div>
+    <div class="step-desc">Same mechanics — HP bar, damage log, 7-day timer. No VS arena, no battle screen</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px">
+          <div>
+            <div style="font-size:22px; font-weight:700; color:#f1f5f9">Boss Challenge</div>
+            <div style="font-size:12px; color:#475569; margin-top:3px">Iron Peak · Weekly</div>
+          </div>
+          <div class="pill pill-red">5d 14h left</div>
+        </div>
+
+        <!-- Boss summary card -->
+        <div class="card" style="border-color:rgba(239,68,68,0.18); margin-bottom:14px">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px">
+            <div style="width:52px; height:52px; border-radius:12px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0">⚔️</div>
+            <div>
+              <div style="font-size:15px; font-weight:700; color:#f1f5f9">Iron Peak Warlord</div>
+              <div style="font-size:11px; color:#475569; margin-top:2px">7-day challenge · Defeat by logging workouts</div>
+            </div>
+          </div>
+
+          <!-- HP bar -->
+          <div style="margin-bottom:10px">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+              <div style="font-size:11px; color:#475569">Boss HP</div>
+              <div style="font-size:11px; font-weight:700; color:#f87171">11,000 / 20,000</div>
+            </div>
+            <div style="height:8px; background:rgba(239,68,68,0.1); border-radius:4px; overflow:hidden">
+              <div style="height:100%; width:55%; background:#ef4444; border-radius:4px;"></div>
+            </div>
+            <div style="font-size:10px; color:#475569; margin-top:4px">9,000 HP remaining · 55% depleted</div>
+          </div>
+
+          <!-- Your damage -->
+          <div style="display:flex; gap:8px">
+            <div style="flex:1; background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 10px; border:1px solid rgba(255,255,255,0.06)">
+              <div style="font-size:14px; font-weight:700; color:#f1f5f9">1,240</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Your damage</div>
+            </div>
+            <div style="flex:1; background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 10px; border:1px solid rgba(255,255,255,0.06)">
+              <div style="font-size:14px; font-weight:700; color:#f1f5f9">3</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Activities logged</div>
+            </div>
+            <div style="flex:1; background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 10px; border:1px solid rgba(255,255,255,0.06)">
+              <div style="font-size:14px; font-weight:700; color:#f1f5f9">#4</div>
+              <div style="font-size:10px; color:#475569; margin-top:1px">Your rank</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Damage log -->
+        <div class="sec">YOUR ATTACKS</div>
+        <div class="card card-sm" style="display:flex; align-items:center; gap:10px; border-color:rgba(239,68,68,0.12); margin-bottom:8px">
+          <div style="font-size:16px; flex-shrink:0">🏃</div>
+          <div style="flex:1">
+            <div style="font-size:12px; font-weight:600; color:#f1f5f9">Morning Run · 5.2 km</div>
+            <div style="font-size:10px; color:#475569">Today 7:15 AM</div>
+          </div>
+          <div style="font-size:12px; font-weight:700; color:#f87171">−520 HP</div>
+        </div>
+        <div class="card card-sm" style="display:flex; align-items:center; gap:10px; border-color:rgba(239,68,68,0.12); margin-bottom:8px">
+          <div style="font-size:16px; flex-shrink:0">🏋️</div>
+          <div style="flex:1">
+            <div style="font-size:12px; font-weight:600; color:#f1f5f9">Upper Body · 55 min</div>
+            <div style="font-size:10px; color:#475569">Yesterday</div>
+          </div>
+          <div style="font-size:12px; font-weight:700; color:#f87171">−460 HP</div>
+        </div>
+        <div class="card card-sm" style="display:flex; align-items:center; gap:10px; border-color:rgba(239,68,68,0.12); margin-bottom:14px">
+          <div style="font-size:16px; flex-shrink:0">🚴</div>
+          <div style="flex:1">
+            <div style="font-size:12px; font-weight:600; color:#f1f5f9">Afternoon Ride · 14.8 km</div>
+            <div style="font-size:10px; color:#475569">Mon</div>
+          </div>
+          <div style="font-size:12px; font-weight:700; color:#f87171">−260 HP</div>
+        </div>
+
+        <!-- Top participants -->
+        <div class="sec">LEADERBOARD</div>
+        <div class="card" style="padding:0; overflow:hidden">
+          <div style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div style="display:flex; align-items:center; gap:10px">
+              <div style="font-size:12px; font-weight:700; color:#fbbf24; width:16px">#1</div>
+              <div style="font-size:13px; color:#f1f5f9">Marcus K.</div>
+            </div>
+            <div style="font-size:12px; font-weight:700; color:#f87171">3,840 dmg</div>
+          </div>
+          <div style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div style="display:flex; align-items:center; gap:10px">
+              <div style="font-size:12px; font-weight:700; color:#94a3b8; width:16px">#2</div>
+              <div style="font-size:13px; color:#f1f5f9">Sara L.</div>
+            </div>
+            <div style="font-size:12px; font-weight:700; color:#f87171">2,610 dmg</div>
+          </div>
+          <div style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between; background:rgba(79,158,255,0.05)">
+            <div style="display:flex; align-items:center; gap:10px">
+              <div style="font-size:12px; font-weight:700; color:#60a5fa; width:16px">#4</div>
+              <div style="font-size:13px; color:#f1f5f9">You</div>
+            </div>
+            <div style="font-size:12px; font-weight:700; color:#f87171">1,240 dmg</div>
+          </div>
+        </div>
+
+        <!-- Rewards preview -->
+        <div class="card" style="margin-top:10px; background:rgba(245,166,35,0.06); border-color:rgba(245,166,35,0.15)">
+          <div style="font-size:12px; font-weight:700; color:#fbbf24; margin-bottom:4px">Defeat rewards</div>
+          <div style="font-size:11px; color:#94a3b8">+1,200 XP · Rare Gear Drop · Mountain access unlocked</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺</div><div class="nav-label">Zones</div></div>
+      <div class="nav-item"><div class="nav-icon">☑</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item active">
+        <div class="nav-icon">◎</div><div class="nav-label">Profile</div>
+        <div class="nav-dot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHONE 5: PROFILE / CHARACTER ──────────────────────────────────────── -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">PROFILE</div>
+    <div class="step-title">Character · Stats · Equipment</div>
+    <div class="step-desc">All RPG mechanics — stats, rank, gear — surfaced as clean data, not a fantasy sheet</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="screen-scroll">
+      <div style="padding:56px 20px 0; min-height:100%">
+
+        <!-- Profile header row -->
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px">
+          <div class="avatar" style="width:56px; height:56px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); font-size:22px; color:#f1f5f9">A</div>
+          <div style="flex:1">
+            <div style="font-size:18px; font-weight:700; color:#f1f5f9">Alex Pavlov</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:5px; flex-wrap:wrap">
+              <div class="pill pill-blue" style="font-size:10px; padding:2px 8px">Level 23</div>
+              <div class="pill pill-orange" style="font-size:10px; padding:2px 8px">🔥 Iron Warrior</div>
+              <div class="pill pill-gray" style="font-size:10px; padding:2px 8px">Veteran</div>
+            </div>
+          </div>
+          <div style="width:34px; height:34px; border-radius:9px; background:#1e293b; border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0">⚙️</div>
+        </div>
+
+        <!-- XP -->
+        <div style="margin-bottom:18px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+            <div style="font-size:11px; color:#475569">XP · Level 23 → 24</div>
+            <div style="font-size:11px; color:#f1f5f9; font-weight:600">4,250 / 6,000</div>
+          </div>
+          <div class="bar-md">
+            <div class="bar-md-fill" style="width:71%; background:#4f9eff;"></div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="sec">STATS</div>
+        <div class="card" style="padding:8px 14px">
+          <!-- STR -->
+          <div class="stat-row">
+            <div style="width:28px; height:28px; border-radius:7px; background:rgba(79,158,255,0.1); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0">💪</div>
+            <div style="flex:1; min-width:0; margin-left:2px">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                <div style="font-size:12px; font-weight:600; color:#f1f5f9">Strength</div>
+                <div style="font-size:12px; font-weight:700; color:#60a5fa">34</div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="width:68%; background:#4f9eff;"></div>
+              </div>
+            </div>
+          </div>
+          <!-- END -->
+          <div class="stat-row">
+            <div style="width:28px; height:28px; border-radius:7px; background:rgba(34,197,94,0.1); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0">🏃</div>
+            <div style="flex:1; min-width:0; margin-left:2px">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                <div style="font-size:12px; font-weight:600; color:#f1f5f9">Endurance</div>
+                <div style="font-size:12px; font-weight:700; color:#4ade80">41</div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="width:82%; background:#22c55e;"></div>
+              </div>
+            </div>
+          </div>
+          <!-- AGI -->
+          <div class="stat-row">
+            <div style="width:28px; height:28px; border-radius:7px; background:rgba(249,115,22,0.1); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0">⚡</div>
+            <div style="flex:1; min-width:0; margin-left:2px">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                <div style="font-size:12px; font-weight:600; color:#f1f5f9">Agility</div>
+                <div style="font-size:12px; font-weight:700; color:#fb923c">38</div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="width:76%; background:#f97316;"></div>
+              </div>
+            </div>
+          </div>
+          <!-- FLX -->
+          <div class="stat-row">
+            <div style="width:28px; height:28px; border-radius:7px; background:rgba(139,92,246,0.1); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0">🧘</div>
+            <div style="flex:1; min-width:0; margin-left:2px">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                <div style="font-size:12px; font-weight:600; color:#f1f5f9">Flexibility</div>
+                <div style="font-size:12px; font-weight:700; color:#a78bfa">22</div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="width:44%; background:#8b5cf6;"></div>
+              </div>
+            </div>
+          </div>
+          <!-- STA -->
+          <div class="stat-row">
+            <div style="width:28px; height:28px; border-radius:7px; background:rgba(20,184,166,0.1); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0">❤️</div>
+            <div style="flex:1; min-width:0; margin-left:2px">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                <div style="font-size:12px; font-weight:600; color:#f1f5f9">Stamina</div>
+                <div style="font-size:12px; font-weight:700; color:#2dd4bf">29</div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="width:58%; background:#14b8a6;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Equipment (compact) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; margin-bottom:8px">
+          <div class="sec" style="margin-bottom:0">EQUIPMENT</div>
+          <div style="font-size:11px; color:#4f9eff">Manage</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px">
+          <div class="eq-slot filled">🥾</div>
+          <div class="eq-slot filled">🧤</div>
+          <div class="eq-slot filled">🛡️</div>
+          <div class="eq-slot">—</div>
+          <div class="eq-slot filled">💍</div>
+          <div class="eq-slot">—</div>
+          <div class="eq-slot">—</div>
+          <div class="eq-slot">—</div>
+        </div>
+
+        <!-- Gear bonuses -->
+        <div class="card" style="padding:10px 14px; margin-bottom:14px">
+          <div style="font-size:11px; color:#475569; margin-bottom:6px">Active gear bonuses</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap">
+            <div class="pill pill-green" style="font-size:10px; padding:2px 8px">+8% XP</div>
+            <div class="pill pill-blue" style="font-size:10px; padding:2px 8px">+4 STR</div>
+            <div class="pill pill-orange" style="font-size:10px; padding:2px 8px">+6 END</div>
+          </div>
+        </div>
+
+        <!-- Rank -->
+        <div class="sec">RANK</div>
+        <div class="card" style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(249,115,22,0.1); border:1px solid rgba(249,115,22,0.2); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0">🔥</div>
+          <div style="flex:1">
+            <div style="font-size:13px; font-weight:700; color:#f1f5f9">Veteran</div>
+            <div style="font-size:11px; color:#475569; margin-top:2px">Champion rank requires 8,000 total XP</div>
+            <div style="margin-top:6px">
+              <div class="bar">
+                <div class="bar-fill" style="width:53%; background:#f97316;"></div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12px; font-weight:700; color:#fb923c; flex-shrink:0">53%</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+      <div class="nav-item"><div class="nav-icon">🗺</div><div class="nav-label">Zones</div></div>
+      <div class="nav-item"><div class="nav-icon">☑</div><div class="nav-label">Quests</div></div>
+      <div class="nav-item active">
+        <div class="nav-icon">◎</div><div class="nav-label">Profile</div>
+        <div class="nav-dot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

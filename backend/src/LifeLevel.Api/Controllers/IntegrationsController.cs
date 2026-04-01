@@ -3,6 +3,7 @@ using LifeLevel.Modules.Integrations.Application.UseCases;
 using LifeLevel.SharedKernel.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Api.Controllers;
 
@@ -68,6 +69,12 @@ public class IntegrationsController(
         catch (HttpRequestException ex)
         {
             return BadRequest($"Strava token exchange failed: {ex.Message}");
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrent insert race — connection already saved by a parallel request
+            var status = await stravaOAuth.GetStatusAsync(userId, ct);
+            return Ok(status);
         }
     }
 

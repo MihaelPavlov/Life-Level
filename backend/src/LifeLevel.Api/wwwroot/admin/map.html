@@ -31,6 +31,7 @@
   button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   button.danger { background: var(--red); }
   button.sm { padding: 4px 10px; font-size: 12px; }
+  button.warning { background: var(--orange); color: #000; }
   nav.tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; }
   nav.tabs button { background: none; border: none; border-bottom: 3px solid transparent; color: var(--text2); padding: 14px 20px; font-size: 14px; font-weight: 600; border-radius: 0; cursor: pointer; transition: color .15s, border-color .15s; }
   nav.tabs button:hover { color: var(--text); }
@@ -53,10 +54,44 @@
   .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
   .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; justify-content: center; align-items: center; }
   .modal-backdrop.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; min-width: 380px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; min-width: 380px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
   .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); }
+  /* Zone filter bar */
+  .filter-bar { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; flex-wrap: wrap; }
+  .filter-bar label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+  .filter-bar select { min-width: 220px; }
+  /* Zone info chip */
+  .zone-info { font-size: 12px; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; }
+  /* Accordion sub-section */
+  .accordion-header { display: flex; align-items: center; gap: 10px; padding: 12px 0; cursor: pointer; border-top: 1px solid var(--border); margin-top: 32px; user-select: none; }
+  .accordion-header h3 { font-size: 15px; font-weight: 700; flex: 1; }
+  .accordion-header .toggle-icon { color: var(--text2); font-size: 12px; }
+  .accordion-body { display: none; }
+  .accordion-body.open { display: block; }
+  /* Zone stat pills */
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text2); margin-right: 4px; }
+  .pill.tier1 { border-color: var(--green); color: var(--green); }
+  .pill.tier2 { border-color: var(--blue); color: var(--blue); }
+  .pill.tier3 { border-color: var(--purple); color: var(--purple); }
+  .pill.tier4 { border-color: var(--orange); color: var(--orange); }
+  .pill.tier5 { border-color: var(--red); color: var(--red); }
+  /* Canvas view */
+  .view-toggle { display: flex; gap: 6px; padding: 8px 0 4px; }
+  .view-toggle button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .canvas-wrap { width: 100%; height: 640px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; position: relative; margin-top: 8px; }
+  .cv-svg { width: 100%; height: 100%; cursor: grab; }
+  .cv-svg.panning { cursor: grabbing; }
+  .cv-svg.item-drag { cursor: grabbing; }
+  .cv-node { cursor: pointer; }
+  .cv-node text { pointer-events: none; user-select: none; }
+  .cv-node.selected .cv-shape { stroke-width: 3 !important; }
+  .cv-node.saving .cv-shape { stroke: var(--orange) !important; }
+  .cv-coords { position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: var(--text2); pointer-events: none; }
+  .cv-save-status { position: absolute; top: 8px; right: 12px; font-size: 11px; pointer-events: none; }
+  .cv-toolbar { display: flex; align-items: center; gap: 8px; padding: 6px 0 0; flex-wrap: wrap; }
+  .cv-toolbar span { font-size: 11px; color: var(--text2); }
 </style>
 </head>
 <body>
@@ -78,6 +113,9 @@
   <button class="active" onclick="switchTab('nodes',this)">Nodes</button>
   <button onclick="switchTab('edges',this)">Edges</button>
   <button onclick="switchTab('bosses',this)">Bosses</button>
+  <button onclick="switchTab('zones',this)">🌍 World Zones</button>
+  <button onclick="switchTab('dungeons',this)">🏰 Dungeons</button>
+  <button onclick="switchTab('crossroads',this)">🔀 Crossroads</button>
 </nav>
 
 <main>
@@ -89,14 +127,57 @@
     <button onclick="openNodeModal()">+ Add Node</button>
   </div>
   <p style="color:var(--text2);font-size:13px">Zones and waypoints on the adventure map.</p>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Icon</th><th>Name</th><th>Type</th><th>Region</th>
-        <th>Lvl Req</th><th>Reward XP</th><th>Start</th><th>Hidden</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="nodesTable"><tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
+
+  <!-- Zone filter bar -->
+  <div class="filter-bar">
+    <label>Filter by World Zone</label>
+    <select id="nodeZoneFilter" onchange="onNodeZoneFilterChange()">
+      <option value="">— All Zones —</option>
+    </select>
+    <span id="nodeZoneInfo" class="zone-info" style="display:none"></span>
+  </div>
+
+  <!-- View toggle (only shown when a zone is selected) -->
+  <div class="view-toggle" id="nodeViewToggle" style="display:none">
+    <button id="btnTableView" class="secondary active sm" onclick="setNodeView('table')">📋 Table</button>
+    <button id="btnCanvasView" class="secondary sm" onclick="setNodeView('canvas')">🎨 Canvas</button>
+  </div>
+
+  <!-- Table view -->
+  <div id="nodeTableView">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Icon</th><th>Name</th><th>Type</th><th>Region</th>
+          <th>Lvl Req</th><th>Reward XP</th><th>Start</th><th>Hidden</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="nodesTable"><tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Canvas view -->
+  <div id="nodeCanvasView" style="display:none">
+    <div class="cv-toolbar">
+      <span>Drag nodes to reposition · Scroll to zoom · Right-drag or middle-drag to pan</span>
+      <button class="sm secondary" onclick="resetCanvasView('node')" style="margin-left:auto">⟳ Fit All</button>
+    </div>
+    <div class="canvas-wrap">
+      <svg id="nodeCanvas" class="cv-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="cvGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g id="cvViewport">
+          <g id="cvEdgeLayer"></g>
+          <g id="cvNodeLayer"></g>
+        </g>
+      </svg>
+      <div class="cv-coords" id="cvCoords">x: 0, y: 0</div>
+      <div class="cv-save-status" id="cvSaveStatus"></div>
+    </div>
   </div>
 </div>
 
@@ -135,7 +216,235 @@
   </div>
 </div>
 
+<!-- WORLD ZONES TAB -->
+<div id="tab-zones" class="tab-panel">
+  <div class="section-header">
+    <h2>World Zones</h2>
+    <button onclick="openZoneModal()">+ New Zone</button>
+    <button class="secondary" onclick="loadZones()">↺ Refresh</button>
+  </div>
+  <p style="color:var(--text2);font-size:13px">Overworld regions that contain map nodes. Each zone has tier, position, and requirements.</p>
+
+  <!-- View toggle -->
+  <div class="view-toggle">
+    <button id="btnZoneTableView" class="secondary active sm" onclick="setZoneView('table')">📋 Table</button>
+    <button id="btnZoneCanvasView" class="secondary sm" onclick="setZoneView('canvas')">🎨 Canvas</button>
+  </div>
+
+  <!-- Table view -->
+  <div id="zonesTableView">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Icon</th><th>Name</th><th>Region</th><th>Tier</th>
+          <th>Lvl Req</th><th>Total XP</th><th>Distance (km)</th>
+          <th>Flags</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="zonesTable"><tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Zone Edges sub-section -->
+    <div class="accordion-header" onclick="toggleZoneEdges()">
+      <h3>🔗 Zone Connections (World Edges)</h3>
+      <span id="zoneEdgeCount" class="zone-info"></span>
+      <button class="sm secondary" onclick="event.stopPropagation();openZoneEdgeModal()" style="margin-left:auto">+ Add Connection</button>
+      <span class="toggle-icon" id="zoneEdgeToggleIcon">▼ show</span>
+    </div>
+    <div class="accordion-body" id="zoneEdgesBody">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>From Zone</th><th>To Zone</th><th>Distance (km)</th><th>Bidirectional</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="zoneEdgesTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">Click "show" to load…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Canvas view -->
+  <div id="zonesCanvasView" style="display:none">
+    <div class="cv-toolbar">
+      <span>Drag zones to reposition · Scroll to zoom · Right-drag or middle-drag to pan · Click zone to edit</span>
+      <button class="sm warning" onclick="autoArrangeZones()" style="margin-left:auto">⚡ Auto-arrange</button>
+      <button class="sm secondary" onclick="resetCanvasView('zone')">⟳ Fit All</button>
+    </div>
+    <div class="canvas-wrap">
+      <svg id="zonesCanvas" class="cv-svg" xmlns="http://www.w3.org/2000/svg">
+        <rect id="zcBg" width="100%" height="100%" fill="#040810"/>
+        <g id="zcStars"></g>
+        <defs>
+          <filter id="zcGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="zcSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="10" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g id="zcViewport">
+          <g id="zcEdgeLayer"></g>
+          <g id="zcNodeLayer"></g>
+        </g>
+      </svg>
+      <div class="cv-coords" id="zcCoords">x: 0, y: 0</div>
+      <div class="cv-save-status" id="zcSaveStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DUNGEONS TAB -->
+<div id="tab-dungeons" class="tab-panel">
+  <div class="section-header">
+    <h2>Dungeons</h2>
+    <button onclick="openDungeonModal()">+ Add Dungeon</button>
+    <button class="secondary" onclick="loadDungeons()">↺ Refresh</button>
+  </div>
+  <p style="color:var(--text2);font-size:13px">Each dungeon is attached to a map node and has floors with activity requirements.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Name</th><th>Node</th><th>Total Floors</th><th>Configured</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="dungeonsTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <!-- Floor editor — shown below the dungeon table when a dungeon is selected -->
+  <div id="floorEditor" style="display:none;margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <h3 id="floorEditorTitle" style="font-size:15px;font-weight:700"></h3>
+      <button class="sm" onclick="openFloorModal()">+ Add Floor</button>
+      <button class="sm secondary" style="margin-left:auto" onclick="closeFloorEditor()">✕ Close</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Floor #</th><th>Activity</th><th>Required Minutes</th><th>Reward XP</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="floorsTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No floors yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CROSSROADS TAB -->
+<div id="tab-crossroads" class="tab-panel">
+  <div class="section-header">
+    <h2>Crossroads</h2>
+    <button onclick="openCrossroadsModal()">+ Add Crossroads</button>
+    <button class="secondary" onclick="loadCrossroads()">↺ Refresh</button>
+  </div>
+  <p style="color:var(--text2);font-size:13px">Branching decision points. Each crossroads is attached to a map node and has multiple paths.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Node</th><th>Paths</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="crossroadsTable"><tr><td colspan="3" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <!-- Path editor -->
+  <div id="pathEditor" style="display:none;margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <h3 id="pathEditorTitle" style="font-size:15px;font-weight:700"></h3>
+      <button class="sm" onclick="openPathModal()">+ Add Path</button>
+      <button class="sm secondary" style="margin-left:auto" onclick="closePathEditor()">✕ Close</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Difficulty</th><th>Distance (km)</th><th>Est. Days</th><th>Reward XP</th><th>Leads To</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="pathsTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 </main>
+
+<!-- DUNGEON MODAL -->
+<div id="dungeonModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="dungeonModalTitle">Add Dungeon</h3>
+    <input type="hidden" id="dungeonId">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Node</label><select id="dungeonNode" style="width:100%"></select></div>
+      <div class="form-group"><label>Dungeon Name</label><input type="text" id="dungeonName" placeholder="e.g. Crystal Caverns"></div>
+      <div class="form-group"><label>Total Floors</label><input type="number" id="dungeonTotalFloors" value="5" min="1"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('dungeonModal')">Cancel</button>
+      <button onclick="saveDungeon()">Save Dungeon</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLOOR MODAL -->
+<div id="floorModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="floorModalTitle">Add Floor</h3>
+    <input type="hidden" id="floorDungeonId">
+    <input type="hidden" id="floorNumber">
+    <div class="form-grid">
+      <div class="form-group"><label>Floor Number</label><input type="number" id="floorNum" value="1" min="1"></div>
+      <div class="form-group"><label>Required Activity</label>
+        <select id="floorActivity">
+          <option>Running</option><option>Gym</option><option>Cycling</option>
+          <option>Yoga</option><option>Swimming</option><option>Climbing</option><option>Hiking</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Required Minutes</label><input type="number" id="floorMinutes" value="30" min="1"></div>
+      <div class="form-group"><label>Reward XP</label><input type="number" id="floorXp" value="200" min="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('floorModal')">Cancel</button>
+      <button onclick="saveFloor()">Save Floor</button>
+    </div>
+  </div>
+</div>
+
+<!-- CROSSROADS MODAL -->
+<div id="crossroadsModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>Add Crossroads</h3>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Node</label><select id="crossroadsNode" style="width:100%"></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('crossroadsModal')">Cancel</button>
+      <button onclick="saveCrossroads()">Save Crossroads</button>
+    </div>
+  </div>
+</div>
+
+<!-- PATH MODAL -->
+<div id="pathModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="pathModalTitle">Add Path</h3>
+    <input type="hidden" id="pathCrossroadsId">
+    <input type="hidden" id="pathId">
+    <div class="form-grid">
+      <div class="form-group"><label>Path Name</label><input type="text" id="pathName" placeholder="e.g. The Shadow Road"></div>
+      <div class="form-group"><label>Difficulty</label>
+        <select id="pathDifficulty"><option>Easy</option><option>Moderate</option><option>Hard</option></select>
+      </div>
+      <div class="form-group"><label>Distance (km)</label><input type="number" id="pathDist" value="5" step="0.5" min="0.5"></div>
+      <div class="form-group"><label>Estimated Days</label><input type="number" id="pathDays" value="2" min="1"></div>
+      <div class="form-group"><label>Reward XP</label><input type="number" id="pathXp" value="300" min="0"></div>
+      <div class="form-group"><label>Leads To Node (optional)</label><select id="pathLeadsTo" style="width:100%"></select></div>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label>Additional Requirement (optional)</label>
+      <textarea id="pathReq" rows="2" style="width:100%;resize:vertical" placeholder="e.g. Reach level 10 first"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('pathModal')">Cancel</button>
+      <button onclick="savePath()">Save Path</button>
+    </div>
+  </div>
+</div>
 
 <!-- NODE MODAL -->
 <div id="nodeModal" class="modal-backdrop">
@@ -156,6 +465,11 @@
       <div class="form-group"><label>Position Y</label><input type="number" id="nodePosY" value="0" step="0.1"></div>
       <div class="form-group"><label>Level Req</label><input type="number" id="nodeLevelReq" value="1" min="1"></div>
       <div class="form-group"><label>Reward XP</label><input type="number" id="nodeRewardXp" value="100"></div>
+      <div class="form-group"><label>World Zone</label>
+        <select id="nodeWorldZone">
+          <option value="">— None —</option>
+        </select>
+      </div>
       <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
         <label>Start Node</label><input type="checkbox" id="nodeIsStart">
       </div>
@@ -213,11 +527,86 @@
   </div>
 </div>
 
+<!-- WORLD ZONE MODAL -->
+<div id="zoneModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="zoneModalTitle">Add World Zone</h3>
+    <input type="hidden" id="zoneId">
+    <div class="form-grid">
+      <div class="form-group"><label>Name</label><input type="text" id="zoneName" placeholder="e.g. Forest of Endurance"></div>
+      <div class="form-group"><label>Icon (emoji)</label><input type="text" id="zoneIcon" placeholder="🌲"></div>
+      <div class="form-group"><label>Region</label><input type="text" id="zoneRegion" placeholder="e.g. Northern Wilds"></div>
+      <div class="form-group"><label>Tier (1–5)</label><input type="number" id="zoneTier" value="1" min="1" max="5"></div>
+      <div class="form-group"><label>Position X</label><input type="number" id="zonePosX" value="0" step="1"></div>
+      <div class="form-group"><label>Position Y</label><input type="number" id="zonePosY" value="0" step="1"></div>
+      <div class="form-group"><label>Level Req</label><input type="number" id="zoneLevelReq" value="1" min="1"></div>
+      <div class="form-group"><label>Total XP</label><input type="number" id="zoneTotalXp" value="5000"></div>
+      <div class="form-group"><label>Total Distance (km)</label><input type="number" id="zoneTotalDist" value="50" step="0.5"></div>
+      <div class="form-group"><label>Crossroads?</label>
+        <select id="zoneIsCrossroads"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="form-group"><label>Start Zone?</label>
+        <select id="zoneIsStart"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="form-group"><label>Hidden?</label>
+        <select id="zoneIsHidden"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label>Description</label><textarea id="zoneDescription" rows="2" style="width:100%;resize:vertical" placeholder="Optional lore or notes…"></textarea></div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('zoneModal')">Cancel</button>
+      <button onclick="saveZone()">Save Zone</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZONE EDGE MODAL -->
+<div id="zoneEdgeModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="zoneEdgeModalTitle">Add Zone Connection</h3>
+    <input type="hidden" id="zoneEdgeId">
+    <div class="form-grid">
+      <div class="form-group"><label>From Zone</label><select id="zoneEdgeFrom" style="width:100%"></select></div>
+      <div class="form-group"><label>To Zone</label><select id="zoneEdgeTo" style="width:100%"></select></div>
+      <div class="form-group"><label>Distance (km)</label><input type="number" id="zoneEdgeDist" value="10" step="0.5" min="0.5"></div>
+      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
+        <label>Bidirectional</label><input type="checkbox" id="zoneEdgeBidir" checked>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="document.getElementById('zoneEdgeFrom').disabled=false;document.getElementById('zoneEdgeTo').disabled=false;closeModal('zoneEdgeModal')">Cancel</button>
+      <button onclick="saveZoneEdge()">Save Connection</button>
+    </div>
+  </div>
+</div>
+
+<!-- NODE EDGE EDIT MODAL -->
+<div id="nodeEdgeModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>Edit Node Connection</h3>
+    <input type="hidden" id="nodeEdgeId">
+    <div class="form-grid">
+      <div class="form-group"><label>Distance (km)</label><input type="number" id="nodeEdgeDist" value="10" step="0.5" min="0.1"></div>
+      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
+        <label>Bidirectional</label><input type="checkbox" id="nodeEdgeBidir" checked>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal('nodeEdgeModal')">Cancel</button>
+      <button class="danger" onclick="deleteNodeEdgeFromModal()">Delete</button>
+      <button onclick="saveNodeEdge()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 const API = '';
 let allNodes = [];
+let allZones = [];
+let zoneEdgesLoaded = false;
+let zoneEdgesOpen = false;
 
 function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
 function saveToken() {
@@ -249,15 +638,20 @@ function switchTab(id, btn) {
   if (id === 'nodes') loadNodes();
   if (id === 'edges') loadEdges();
   if (id === 'bosses') loadBosses();
+  if (id === 'zones') loadZones();
+  if (id === 'dungeons') loadDungeons();
+  if (id === 'crossroads') loadCrossroads();
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-backdrop').forEach(b => b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); }));
 
 // ── Nodes ──────────────────────────────────────────────────────────────────
-async function loadNodes() {
+async function loadNodes(zoneId) {
+  const filterZoneId = zoneId !== undefined ? zoneId : document.getElementById('nodeZoneFilter').value;
+  const url = filterZoneId ? `/api/admin/map/nodes?zoneId=${filterZoneId}` : '/api/admin/map/nodes';
   try {
-    allNodes = await apiFetch('/api/admin/map/nodes');
+    allNodes = await apiFetch(url);
     const tb = document.getElementById('nodesTable');
     if (!allNodes.length) { tb.innerHTML = '<tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">No nodes found.</td></tr>'; return; }
     tb.innerHTML = allNodes.map(n => `
@@ -276,7 +670,39 @@ async function loadNodes() {
         </td>
       </tr>`).join('');
     populateNodeSelects();
+    if (nodeViewMode === 'canvas') {
+      const zoneId = document.getElementById('nodeZoneFilter').value;
+      loadCvEdges(zoneId).then(() => renderNodeCanvas());
+    }
   } catch(e) { toast('Failed to load nodes: ' + e.message, 'err'); }
+}
+
+function onNodeZoneFilterChange() {
+  const zoneId = document.getElementById('nodeZoneFilter').value;
+  const infoEl = document.getElementById('nodeZoneInfo');
+  const toggleEl = document.getElementById('nodeViewToggle');
+  if (zoneId) {
+    const zone = allZones.find(z => z.id === zoneId);
+    if (zone) {
+      infoEl.textContent = `${zone.icon || ''} ${zone.name} — Tier ${zone.tier} · Lvl ${zone.levelReq}+`;
+      infoEl.style.display = '';
+    }
+    toggleEl.style.display = '';
+  } else {
+    infoEl.style.display = 'none';
+    toggleEl.style.display = 'none';
+    // Force back to table view when "All Zones" selected
+    setNodeView('table');
+  }
+  loadNodes(zoneId);
+}
+
+function populateNodeZoneFilter() {
+  const sel = document.getElementById('nodeZoneFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— All Zones —</option>' +
+    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
+  if (current) sel.value = current;
 }
 
 function openNodeModal() {
@@ -290,6 +716,10 @@ function openNodeModal() {
   document.getElementById('nodeRewardXp').value = 100;
   document.getElementById('nodeIsStart').checked = false;
   document.getElementById('nodeIsHidden').checked = false;
+  populateNodeWorldZoneSelect();
+  // Pre-select current filter zone if set
+  const filterZone = document.getElementById('nodeZoneFilter').value;
+  if (filterZone) document.getElementById('nodeWorldZone').value = filterZone;
   document.getElementById('nodeModal').classList.add('open');
 }
 
@@ -307,11 +737,20 @@ function editNode(n) {
   document.getElementById('nodeIsStart').checked = !!n.isStartNode;
   document.getElementById('nodeIsHidden').checked = !!n.isHidden;
   document.getElementById('nodeDescription').value = n.description || '';
+  populateNodeWorldZoneSelect(n.worldZoneId);
   document.getElementById('nodeModal').classList.add('open');
+}
+
+function populateNodeWorldZoneSelect(selectedId) {
+  const sel = document.getElementById('nodeWorldZone');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
+  if (selectedId) sel.value = selectedId;
 }
 
 async function saveNode() {
   const id = document.getElementById('nodeId').value;
+  const worldZoneId = document.getElementById('nodeWorldZone').value || null;
   const body = {
     name: document.getElementById('nodeName').value.trim(),
     description: document.getElementById('nodeDescription').value.trim() || null,
@@ -324,6 +763,7 @@ async function saveNode() {
     rewardXp: parseInt(document.getElementById('nodeRewardXp').value),
     isStartNode: document.getElementById('nodeIsStart').checked,
     isHidden: document.getElementById('nodeIsHidden').checked,
+    worldZoneId,
   };
   try {
     if (id) {
@@ -476,6 +916,236 @@ async function deleteBoss(id) {
   catch(e) { toast('Error: ' + e.message, 'err'); }
 }
 
+// ── World Zones ────────────────────────────────────────────────────────────
+async function loadZones() {
+  try {
+    allZones = await apiFetch('/api/admin/map/world-zones');
+    renderZonesTable();
+    populateNodeZoneFilter();
+    populateNodeWorldZoneSelect();
+    populateZoneEdgeSelects();
+    if (zoneEdgesOpen) loadZoneEdges();
+    if (zoneViewMode === 'canvas') {
+      loadZcEdges().then(() => renderZonesCanvas());
+    }
+  } catch(e) { toast('Failed to load world zones: ' + e.message, 'err'); }
+}
+
+function tierClass(tier) {
+  const map = { 1:'tier1', 2:'tier2', 3:'tier3', 4:'tier4', 5:'tier5' };
+  return map[tier] || '';
+}
+
+function renderZonesTable() {
+  const tb = document.getElementById('zonesTable');
+  if (!allZones.length) {
+    tb.innerHTML = '<tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">No world zones found.</td></tr>';
+    return;
+  }
+  tb.innerHTML = allZones.map(z => {
+    const flags = [
+      z.isCrossroads ? '<span class="pill" style="border-color:var(--green);color:var(--green)">⚔ Cross</span>' : '',
+      z.isStart      ? '<span class="pill" style="border-color:var(--blue);color:var(--blue)">▶ Start</span>' : '',
+      z.isHidden     ? '<span class="pill" style="border-color:var(--text2);color:var(--text2)">👁 Hidden</span>' : '',
+    ].filter(Boolean).join('');
+    return `<tr>
+      <td style="font-size:20px">${z.icon || ''}</td>
+      <td><strong>${esc(z.name)}</strong>${z.description ? `<br><span style="color:var(--text2);font-size:11px">${esc(z.description.substring(0,60))}${z.description.length>60?'…':''}</span>` : ''}</td>
+      <td>${esc(z.region || '')}</td>
+      <td><span class="pill ${tierClass(z.tier)}">T${z.tier}</span></td>
+      <td>${z.levelReq ?? z.levelRequirement ?? ''}</td>
+      <td>${(z.totalXp ?? 0).toLocaleString()}</td>
+      <td>${z.totalDistanceKm ?? 0} km</td>
+      <td>${flags || '<span style="color:var(--text2)">—</span>'}</td>
+      <td>
+        <button class="sm secondary" onclick='editZone(${JSON.stringify(z)})'>Edit</button>
+        <button class="sm danger" style="margin-left:6px" onclick="deleteZone('${z.id}','${esc(z.name)}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openZoneModal() {
+  document.getElementById('zoneModalTitle').textContent = 'Add World Zone';
+  document.getElementById('zoneId').value = '';
+  ['zoneName','zoneIcon','zoneRegion','zoneDescription'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('zoneTier').value = 1;
+  document.getElementById('zonePosX').value = 0;
+  document.getElementById('zonePosY').value = 0;
+  document.getElementById('zoneLevelReq').value = 1;
+  document.getElementById('zoneTotalXp').value = 5000;
+  document.getElementById('zoneTotalDist').value = 50;
+  document.getElementById('zoneIsCrossroads').value = 'false';
+  document.getElementById('zoneIsStart').value = 'false';
+  document.getElementById('zoneIsHidden').value = 'false';
+  document.getElementById('zoneModal').classList.add('open');
+}
+
+function editZone(z) {
+  document.getElementById('zoneModalTitle').textContent = 'Edit World Zone';
+  document.getElementById('zoneId').value = z.id;
+  document.getElementById('zoneName').value = z.name || '';
+  document.getElementById('zoneIcon').value = z.icon || '';
+  document.getElementById('zoneRegion').value = z.region || '';
+  document.getElementById('zoneDescription').value = z.description || '';
+  document.getElementById('zoneTier').value = z.tier ?? 1;
+  document.getElementById('zonePosX').value = z.x ?? z.positionX ?? 0;
+  document.getElementById('zonePosY').value = z.y ?? z.positionY ?? 0;
+  document.getElementById('zoneLevelReq').value = z.levelReq ?? z.levelRequirement ?? 1;
+  document.getElementById('zoneTotalXp').value = z.totalXp ?? 5000;
+  document.getElementById('zoneTotalDist').value = z.totalDistanceKm ?? 50;
+  document.getElementById('zoneIsCrossroads').value = z.isCrossroads ? 'true' : 'false';
+  document.getElementById('zoneIsStart').value = z.isStart ? 'true' : 'false';
+  document.getElementById('zoneIsHidden').value = z.isHidden ? 'true' : 'false';
+  document.getElementById('zoneModal').classList.add('open');
+}
+
+async function saveZone() {
+  const id = document.getElementById('zoneId').value;
+  const body = {
+    name: document.getElementById('zoneName').value.trim(),
+    description: document.getElementById('zoneDescription').value.trim() || null,
+    icon: document.getElementById('zoneIcon').value.trim(),
+    region: document.getElementById('zoneRegion').value.trim(),
+    tier: parseInt(document.getElementById('zoneTier').value),
+    x: parseFloat(document.getElementById('zonePosX').value),
+    y: parseFloat(document.getElementById('zonePosY').value),
+    levelReq: parseInt(document.getElementById('zoneLevelReq').value),
+    totalXp: parseInt(document.getElementById('zoneTotalXp').value),
+    totalDistanceKm: parseFloat(document.getElementById('zoneTotalDist').value),
+    isCrossroads: document.getElementById('zoneIsCrossroads').value === 'true',
+    isStart: document.getElementById('zoneIsStart').value === 'true',
+    isHidden: document.getElementById('zoneIsHidden').value === 'true',
+  };
+  try {
+    if (id) {
+      await apiFetch('/api/admin/map/world-zones/' + id, { method: 'PUT', body: JSON.stringify(body) });
+      toast('World zone updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/map/world-zones', { method: 'POST', body: JSON.stringify(body) });
+      toast('World zone created', 'ok');
+    }
+    closeModal('zoneModal');
+    loadZones();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteZone(id, name) {
+  if (!confirm(`Delete world zone "${name}"?\n\nThis will fail if any map nodes are still assigned to this zone.`)) return;
+  try {
+    await apiFetch('/api/admin/map/world-zones/' + id, { method: 'DELETE' });
+    toast('World zone deleted', 'ok');
+    loadZones();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+// ── Zone Edges ─────────────────────────────────────────────────────────────
+function toggleZoneEdges() {
+  zoneEdgesOpen = !zoneEdgesOpen;
+  const body = document.getElementById('zoneEdgesBody');
+  const icon = document.getElementById('zoneEdgeToggleIcon');
+  body.classList.toggle('open', zoneEdgesOpen);
+  icon.textContent = zoneEdgesOpen ? '▲ hide' : '▼ show';
+  if (zoneEdgesOpen && !zoneEdgesLoaded) loadZoneEdges();
+}
+
+async function loadZoneEdges() {
+  try {
+    const edges = await apiFetch('/api/admin/map/world-zone-edges');
+    zoneEdgesLoaded = true;
+    const count = document.getElementById('zoneEdgeCount');
+    count.textContent = `${edges.length} connection${edges.length !== 1 ? 's' : ''}`;
+    const tb = document.getElementById('zoneEdgesTable');
+    if (!edges.length) {
+      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No zone connections yet.</td></tr>';
+      return;
+    }
+    const zoneMap = Object.fromEntries(allZones.map(z => [z.id, z]));
+    tb.innerHTML = edges.map(e => {
+      const from = zoneMap[e.fromZoneId] || { name: e.fromZoneId, icon: '' };
+      const to   = zoneMap[e.toZoneId]   || { name: e.toZoneId,   icon: '' };
+      return `<tr>
+        <td>${from.icon || ''} ${esc(from.name)}</td>
+        <td>${to.icon || ''} ${esc(to.name)}</td>
+        <td>${e.distanceKm} km</td>
+        <td>${e.isBidirectional ? '↔️ Yes' : '→ No'}</td>
+        <td>
+          <button class="sm secondary" onclick='editZoneEdge(${JSON.stringify(e)})'>Edit</button>
+          <button class="sm danger" style="margin-left:6px" onclick="deleteZoneEdge('${e.id}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast('Failed to load zone connections: ' + e.message, 'err'); }
+}
+
+function populateZoneEdgeSelects(selectedFrom, selectedTo) {
+  const opts = allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
+  ['zoneEdgeFrom','zoneEdgeTo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts || '<option>No zones loaded</option>';
+  });
+  if (selectedFrom) document.getElementById('zoneEdgeFrom').value = selectedFrom;
+  if (selectedTo)   document.getElementById('zoneEdgeTo').value = selectedTo;
+}
+
+function openZoneEdgeModal() {
+  document.getElementById('zoneEdgeModalTitle').textContent = 'Add Zone Connection';
+  document.getElementById('zoneEdgeId').value = '';
+  populateZoneEdgeSelects();
+  document.getElementById('zoneEdgeDist').value = 10;
+  document.getElementById('zoneEdgeBidir').checked = true;
+  document.getElementById('zoneEdgeModal').classList.add('open');
+}
+
+function editZoneEdge(e) {
+  document.getElementById('zoneEdgeModalTitle').textContent = 'Edit Zone Connection';
+  document.getElementById('zoneEdgeId').value = e.id;
+  populateZoneEdgeSelects(e.fromZoneId, e.toZoneId);
+  document.getElementById('zoneEdgeDist').value = e.distanceKm;
+  document.getElementById('zoneEdgeBidir').checked = !!e.isBidirectional;
+  // Disable zone selects on edit — only dist/bidir are editable
+  document.getElementById('zoneEdgeFrom').disabled = true;
+  document.getElementById('zoneEdgeTo').disabled = true;
+  document.getElementById('zoneEdgeModal').classList.add('open');
+}
+
+async function saveZoneEdge() {
+  const id = document.getElementById('zoneEdgeId').value;
+  const distanceKm = parseFloat(document.getElementById('zoneEdgeDist').value);
+  const isBidirectional = document.getElementById('zoneEdgeBidir').checked;
+  try {
+    if (id) {
+      await apiFetch('/api/admin/map/world-zone-edges/' + id, {
+        method: 'PUT',
+        body: JSON.stringify({ distanceKm, isBidirectional }),
+      });
+      toast('Connection updated', 'ok');
+    } else {
+      const body = {
+        fromZoneId: document.getElementById('zoneEdgeFrom').value,
+        toZoneId: document.getElementById('zoneEdgeTo').value,
+        distanceKm,
+        isBidirectional,
+      };
+      await apiFetch('/api/admin/map/world-zone-edges', { method: 'POST', body: JSON.stringify(body) });
+      toast('Connection created', 'ok');
+    }
+    document.getElementById('zoneEdgeFrom').disabled = false;
+    document.getElementById('zoneEdgeTo').disabled = false;
+    closeModal('zoneEdgeModal');
+    loadZoneEdges();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteZoneEdge(id) {
+  if (!confirm('Delete this zone connection?')) return;
+  try {
+    await apiFetch('/api/admin/map/world-zone-edges/' + id, { method: 'DELETE' });
+    toast('Connection deleted', 'ok');
+    loadZoneEdges();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -484,12 +1154,999 @@ function populateNodeSelects() {
   ['edgeFrom','edgeTo','bossNode'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts || '<option>No nodes loaded</option>'; });
 }
 
-function loadAll() { loadNodes(); }
+async function loadAll() {
+  await loadZones();
+  await loadNodes();
+}
+
+// ── Canvas view (shared logic) ──────────────────────────────────────────────
+const NODE_STYLES = {
+  Zone:       { r: 24, fill: '#1e3240', stroke: '#4f9eff' },
+  Boss:       { r: 22, fill: '#3d0c0c', stroke: '#f85149' },
+  Dungeon:    { r: 22, fill: '#2a2250', stroke: '#a371f7' },
+  Chest:      { r: 16, fill: '#3d2a00', stroke: '#f5a623' },
+  Crossroads: { r: 20, fill: '#1e2d1e', stroke: '#3fb950' },
+  Start:      { r: 24, fill: '#1e3240', stroke: '#4f9eff' },
+  Event:      { r: 18, fill: '#1a2233', stroke: '#7ec8ff' },
+};
+
+function getNodeStyle(type) {
+  return NODE_STYLES[type] || { r: 20, fill: '#1e2632', stroke: '#8b949e' };
+}
+
+function escSvg(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Generic canvas engine factory
+function makeCanvas(cfg) {
+  // cfg: { svgId, viewportId, edgeLayerId, nodeLayerId, coordsId, saveStatusId }
+  let vpX = 0, vpY = 0, scale = 1;
+  let dragId = null, dragOffX = 0, dragOffY = 0, dragOrigX = 0, dragOrigY = 0, dragMoved = false;
+  let panning = false, panX = 0, panY = 0, panVpX = 0, panVpY = 0;
+  let selectedId = null;
+  let saveTimer = null;
+
+  function svg() { return document.getElementById(cfg.svgId); }
+  function vp()  { return document.getElementById(cfg.viewportId); }
+
+  function applyVp() {
+    const g = vp();
+    if (g) g.setAttribute('transform', `translate(${vpX},${vpY}) scale(${scale})`);
+  }
+
+  function worldPt(clientX, clientY) {
+    const rect = svg().getBoundingClientRect();
+    return { x: (clientX - rect.left - vpX) / scale, y: (clientY - rect.top - vpY) / scale };
+  }
+
+  function fitAll(items, getX, getY) {
+    if (!items.length) { vpX = 0; vpY = 0; scale = 1; applyVp(); return; }
+    const el = svg();
+    const W = el.clientWidth || 900, H = el.clientHeight || 640;
+    const xs = items.map(getX), ys = items.map(getY);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 80, rangeX = (maxX - minX) || 200, rangeY = (maxY - minY) || 200;
+    scale = Math.min((W - pad*2) / rangeX, (H - pad*2) / rangeY, 2);
+    scale = Math.max(scale, 0.05);
+    vpX = W/2 - (minX + rangeX/2) * scale;
+    vpY = H/2 - (minY + rangeY/2) * scale;
+    applyVp();
+  }
+
+  function setSave(msg, color) {
+    const el = document.getElementById(cfg.saveStatusId);
+    if (el) { el.textContent = msg; el.style.color = color; }
+    clearTimeout(saveTimer);
+    if (msg) saveTimer = setTimeout(() => setSave('', ''), 2500);
+  }
+
+  function attachItemEvents() {
+    document.querySelectorAll(`#${cfg.nodeLayerId} .cv-node`).forEach(el => {
+      el.addEventListener('mousedown', onItemDown);
+    });
+  }
+
+  function onItemDown(e) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const id = e.currentTarget.dataset.id;
+    selectedId = id;
+    cfg.onSelect(id);          // callback: re-render + possibly open edit panel
+    const item = cfg.getItem(id);
+    if (!item) return;
+    const wp = worldPt(e.clientX, e.clientY);
+    dragId = id;
+    dragOffX = wp.x - cfg.getX(item);
+    dragOffY = wp.y - cfg.getY(item);
+    dragOrigX = cfg.getX(item);
+    dragOrigY = cfg.getY(item);
+    dragMoved = false;
+    svg().classList.add('item-drag');
+  }
+
+  function onCanvasDown(e) {
+    if (e.button === 1 || e.button === 2) {
+      e.preventDefault();
+      panning = true;
+      panX = e.clientX; panY = e.clientY;
+      panVpX = vpX; panVpY = vpY;
+      svg().classList.add('panning');
+      return;
+    }
+    if (e.button === 0 && !dragId) {
+      selectedId = null;
+      cfg.onSelect(null);
+    }
+  }
+
+  function onCanvasMove(e) {
+    const wp = worldPt(e.clientX, e.clientY);
+    const coordEl = document.getElementById(cfg.coordsId);
+    if (coordEl) coordEl.textContent = `x: ${Math.round(wp.x)}, y: ${Math.round(wp.y)}`;
+
+    if (panning) {
+      vpX = panVpX + (e.clientX - panX);
+      vpY = panVpY + (e.clientY - panY);
+      applyVp(); return;
+    }
+    if (dragId) {
+      const wp2 = worldPt(e.clientX, e.clientY);
+      const item = cfg.getItem(dragId);
+      if (!item) return;
+      cfg.setX(item, Math.round(wp2.x - dragOffX));
+      cfg.setY(item, Math.round(wp2.y - dragOffY));
+      dragMoved = true;
+      const el = document.querySelector(`#${cfg.nodeLayerId} .cv-node[data-id="${dragId}"]`);
+      if (el) el.setAttribute('transform', `translate(${cfg.getX(item)},${cfg.getY(item)})`);
+      cfg.redrawEdges();
+    }
+  }
+
+  async function onCanvasUp(e) {
+    if (panning) {
+      panning = false;
+      svg().classList.remove('panning'); return;
+    }
+    svg().classList.remove('item-drag');
+    if (dragId && dragMoved) {
+      const id = dragId;
+      const item = cfg.getItem(id);
+      dragId = null; dragMoved = false;
+      const el = document.querySelector(`#${cfg.nodeLayerId} .cv-node[data-id="${id}"]`);
+      if (el) el.classList.add('saving');
+      setSave('Saving…', '#f5a623');
+      try {
+        await cfg.savePosition(item);
+        setSave('Saved ✓', '#3fb950');
+        if (el) el.classList.remove('saving');
+      } catch(err) {
+        cfg.setX(item, dragOrigX); cfg.setY(item, dragOrigY);
+        cfg.redraw();
+        setSave('Save failed', '#f85149');
+        toast('Failed to save: ' + err.message, 'err');
+      }
+    } else {
+      // Clean click (no drag) — call optional click handler
+      if (dragId && cfg.onClickItem) cfg.onClickItem(dragId);
+      dragId = null;
+    }
+  }
+
+  function onWheel(e) {
+    e.preventDefault();
+    const rect = svg().getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const f = e.deltaY < 0 ? 1.12 : 1/1.12;
+    const ns = Math.min(Math.max(scale * f, 0.05), 5);
+    vpX = mx - (mx - vpX) * (ns / scale);
+    vpY = my - (my - vpY) * (ns / scale);
+    scale = ns; applyVp();
+  }
+
+  function init() {
+    const s = svg();
+    if (!s) return;
+    s.addEventListener('mousedown', onCanvasDown);
+    s.addEventListener('mousemove', onCanvasMove);
+    s.addEventListener('mouseup', onCanvasUp);
+    s.addEventListener('mouseleave', onCanvasUp);
+    s.addEventListener('wheel', onWheel, { passive: false });
+    s.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  return { fitAll, applyVp, attachItemEvents, redrawEdges: () => cfg.redrawEdges(), init,
+           getSelectedId: () => selectedId, setSelectedId: id => { selectedId = id; } };
+}
+
+// ── Nodes canvas ────────────────────────────────────────────────────────────
+let nodeViewMode = 'table';
+let cvEdgeData = [];
+
+const nodeCanvas = makeCanvas({
+  svgId: 'nodeCanvas', viewportId: 'cvViewport',
+  edgeLayerId: 'cvEdgeLayer', nodeLayerId: 'cvNodeLayer',
+  coordsId: 'cvCoords', saveStatusId: 'cvSaveStatus',
+  getItem: id => allNodes.find(n => n.id === id),
+  getX: n => n.positionX, getY: n => n.positionY,
+  setX: (n, v) => { n.positionX = v; }, setY: (n, v) => { n.positionY = v; },
+  onSelect: id => { renderNodeCanvas(); },
+  redrawEdges: renderCvEdgesOnly,
+  redraw: renderNodeCanvas,
+  savePosition: async node => {
+    const body = {
+      name: node.name, description: node.description || null,
+      icon: node.icon, type: node.type, region: node.region,
+      positionX: node.positionX, positionY: node.positionY,
+      levelRequirement: node.levelRequirement, rewardXp: node.rewardXp,
+      isStartNode: node.isStartNode, isHidden: node.isHidden,
+      worldZoneId: node.worldZoneId || null,
+    };
+    await apiFetch('/api/admin/map/nodes/' + node.id, { method: 'PUT', body: JSON.stringify(body) });
+  },
+});
+
+function setNodeView(mode) {
+  nodeViewMode = mode;
+  document.getElementById('nodeTableView').style.display = mode === 'table' ? '' : 'none';
+  document.getElementById('nodeCanvasView').style.display = mode === 'canvas' ? '' : 'none';
+  document.getElementById('btnTableView').classList.toggle('active', mode === 'table');
+  document.getElementById('btnCanvasView').classList.toggle('active', mode === 'canvas');
+  if (mode === 'canvas') {
+    const zoneId = document.getElementById('nodeZoneFilter').value;
+    loadCvEdges(zoneId).then(() => { resetCanvasView('node'); renderNodeCanvas(); });
+  }
+}
+
+async function loadCvEdges(zoneId) {
+  try {
+    const edges = await apiFetch('/api/admin/map/edges');
+    if (zoneId) {
+      const nodeIds = new Set(allNodes.map(n => n.id));
+      cvEdgeData = edges.filter(e => nodeIds.has(e.fromNodeId) && nodeIds.has(e.toNodeId));
+    } else {
+      cvEdgeData = edges;
+    }
+  } catch { cvEdgeData = []; }
+}
+
+function renderNodeCanvas() {
+  const edgeLayer = document.getElementById('cvEdgeLayer');
+  const nodeLayer = document.getElementById('cvNodeLayer');
+  if (!edgeLayer || !nodeLayer) return;
+  renderCvEdgesOnly();
+  const selId = nodeCanvas.getSelectedId();
+  nodeLayer.innerHTML = allNodes.map(n => {
+    const s = getNodeStyle(n.type);
+    const sel = n.id === selId;
+    const opacity = n.isHidden ? 0.4 : 1;
+    const strokeW = sel ? 3 : 1.5;
+    const glowAttr = sel ? `filter="url(#cvGlow)"` : '';
+    const label = (n.icon || '') + ' ' + (n.name || '');
+    return `<g class="cv-node${sel ? ' selected' : ''}" data-id="${n.id}"
+        transform="translate(${n.positionX},${n.positionY})" opacity="${opacity}">
+      <circle class="cv-shape" cx="0" cy="0" r="${s.r}"
+        fill="${s.fill}" stroke="${s.stroke}" stroke-width="${strokeW}" ${glowAttr}/>
+      <text y="${s.r + 13}" text-anchor="middle" fill="#e6edf3" font-size="11" font-family="Inter,sans-serif">${escSvg(label)}</text>
+    </g>`;
+  }).join('');
+  nodeCanvas.applyVp();
+  nodeCanvas.attachItemEvents();
+}
+
+function renderCvEdgesOnly() {
+  const edgeLayer = document.getElementById('cvEdgeLayer');
+  if (!edgeLayer) return;
+  const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
+  edgeLayer.innerHTML = cvEdgeData.map(e => {
+    const a = nodeMap[e.fromNodeId], b = nodeMap[e.toNodeId];
+    if (!a || !b) return '';
+    const dash = e.isBidirectional ? 'none' : '6,4';
+    return `<g class="cv-edge" data-edge-id="${e.id}" style="cursor:pointer">
+      <line x1="${a.positionX}" y1="${a.positionY}" x2="${b.positionX}" y2="${b.positionY}"
+        stroke="transparent" stroke-width="14"/>
+      <line class="cv-edge-line" x1="${a.positionX}" y1="${a.positionY}" x2="${b.positionX}" y2="${b.positionY}"
+        stroke="#30363d" stroke-width="2" stroke-dasharray="${dash}" opacity="0.7"/>
+    </g>`;
+  }).join('');
+
+  edgeLayer.querySelectorAll('.cv-edge').forEach(el => {
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const edge = cvEdgeData.find(e => e.id === el.dataset.edgeId);
+      if (edge) {
+        edgeLayer.querySelectorAll('.cv-edge-line').forEach(l => l.setAttribute('opacity', '0.4'));
+        el.querySelector('.cv-edge-line').setAttribute('stroke', '#4f9eff');
+        el.querySelector('.cv-edge-line').setAttribute('opacity', '1');
+        editNodeEdge(edge);
+      }
+    });
+  });
+}
+
+function editNodeEdge(edge) {
+  document.getElementById('nodeEdgeId').value = edge.id;
+  document.getElementById('nodeEdgeDist').value = edge.distanceKm ?? edge.DistanceKm ?? 10;
+  document.getElementById('nodeEdgeBidir').checked = !!(edge.isBidirectional ?? edge.IsBidirectional);
+  document.getElementById('nodeEdgeModal').classList.add('open');
+}
+
+async function saveNodeEdge() {
+  const id = document.getElementById('nodeEdgeId').value;
+  const distanceKm = parseFloat(document.getElementById('nodeEdgeDist').value);
+  const isBidirectional = document.getElementById('nodeEdgeBidir').checked;
+  try {
+    await apiFetch('/api/admin/map/edges/' + id, {
+      method: 'PUT',
+      body: JSON.stringify({ distanceKm, isBidirectional }),
+    });
+    toast('Edge updated', 'ok');
+    closeModal('nodeEdgeModal');
+    const zoneId = document.getElementById('nodeZoneFilter')?.value || null;
+    await loadCvEdges(zoneId);
+    renderCvEdgesOnly();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteNodeEdgeFromModal() {
+  const id = document.getElementById('nodeEdgeId').value;
+  if (!confirm('Delete this edge?')) return;
+  try {
+    await apiFetch('/api/admin/map/edges/' + id, { method: 'DELETE' });
+    toast('Edge deleted', 'ok');
+    closeModal('nodeEdgeModal');
+    const zoneId = document.getElementById('nodeZoneFilter')?.value || null;
+    await loadCvEdges(zoneId);
+    renderCvEdgesOnly();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+// ── Zones canvas ────────────────────────────────────────────────────────────
+let zoneViewMode = 'table';
+let zcEdgeData = [];
+
+const zonesCanvas = makeCanvas({
+  svgId: 'zonesCanvas', viewportId: 'zcViewport',
+  edgeLayerId: 'zcEdgeLayer', nodeLayerId: 'zcNodeLayer',
+  coordsId: 'zcCoords', saveStatusId: 'zcSaveStatus',
+  getItem: id => allZones.find(z => z.id === id),
+  getX: z => z.x ?? z.positionX ?? 0,
+  getY: z => z.y ?? z.positionY ?? 0,
+  setX: (z, v) => { z.x = v; if ('positionX' in z) z.positionX = v; },
+  setY: (z, v) => { z.y = v; if ('positionY' in z) z.positionY = v; },
+  onSelect: id => { renderZonesCanvas(); },
+  onClickItem: id => { const z = allZones.find(z => z.id === id); if (z) editZone(z); },
+  redrawEdges: renderZcEdgesOnly,
+  redraw: renderZonesCanvas,
+  savePosition: async zone => {
+    const body = {
+      name: zone.name, description: zone.description || null,
+      icon: zone.icon, region: zone.region,
+      tier: zone.tier,
+      x: zone.x ?? zone.positionX ?? 0,
+      y: zone.y ?? zone.positionY ?? 0,
+      levelReq: zone.levelReq ?? zone.levelRequirement ?? 1,
+      totalXp: zone.totalXp ?? 0,
+      totalDistanceKm: zone.totalDistanceKm ?? 0,
+      isCrossroads: !!zone.isCrossroads,
+      isStart: !!zone.isStart,
+      isHidden: !!zone.isHidden,
+    };
+    await apiFetch('/api/admin/map/world-zones/' + zone.id, { method: 'PUT', body: JSON.stringify(body) });
+  },
+});
+
+function setZoneView(mode) {
+  zoneViewMode = mode;
+  document.getElementById('zonesTableView').style.display = mode === 'table' ? '' : 'none';
+  document.getElementById('zonesCanvasView').style.display = mode === 'canvas' ? '' : 'none';
+  document.getElementById('btnZoneTableView').classList.toggle('active', mode === 'table');
+  document.getElementById('btnZoneCanvasView').classList.toggle('active', mode === 'canvas');
+  if (mode === 'canvas') {
+    setTimeout(initZcStars, 0);
+    loadZcEdges().then(() => {
+      if (zonesAreClustered()) {
+        computeTierLayout();
+        toast('Zones auto-arranged — drag to reposition, then save with ⚡ Auto-arrange', 'ok');
+      }
+      resetCanvasView('zone');
+      renderZonesCanvas();
+    });
+  }
+}
+
+async function loadZcEdges() {
+  try {
+    zcEdgeData = await apiFetch('/api/admin/map/world-zone-edges');
+  } catch { zcEdgeData = []; }
+}
+
+// Zone visual style — mirrors the mobile app's rendering
+function buildZoneShape(z, sel) {
+  const isCross  = z.isCrossroads;
+  const isStart  = z.isStart;
+  const isHidden = z.isHidden;
+
+  // Determine visual "state" for admin canvas
+  // Start zone  → solid blue circle + outer glow (like app's "active" zone)
+  // Crossroads  → green/gray diamond
+  // Hidden      → grey dashed dim
+  // Normal      → orange dashed circle (app's "available" style)
+
+  let fill, stroke, strokeW, strokeDash, extraRings = '', shapeEl, glowEl = '';
+
+  if (isHidden) {
+    fill = '#0d0d0d'; stroke = '#2a2a2a'; strokeW = 1.5; strokeDash = '6,4';
+  } else if (isStart) {
+    fill = '#0d1e35'; stroke = '#4f9eff'; strokeW = 2; strokeDash = 'none';
+    // Outer glow rings matching app's active zone
+    glowEl = `
+      <circle cx="0" cy="0" r="40" fill="none" stroke="#4f9eff" stroke-width="8" opacity="0.08" filter="url(#zcSoftGlow)"/>
+      <circle cx="0" cy="0" r="33" fill="none" stroke="#4f9eff" stroke-width="1" opacity="0.3"/>`;
+  } else if (isCross) {
+    fill = '#0d2211'; stroke = '#3fb950'; strokeW = 1.5; strokeDash = 'none';
+  } else {
+    fill = '#1a1400'; stroke = '#f5a623'; strokeW = 1.5; strokeDash = '6,4';
+  }
+
+  // Selection highlight
+  if (sel) { strokeW = 3; glowEl += `<circle cx="0" cy="0" r="${isCross ? 32 : 34}" fill="none" stroke="${stroke}" stroke-width="6" opacity="0.2" filter="url(#zcGlow)"/>`; }
+
+  if (isCross) {
+    const h = 22;
+    shapeEl = `<polygon class="cv-shape"
+      points="0,${-h} ${h},0 0,${h} ${-h},0"
+      fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}"
+      stroke-dasharray="${strokeDash}"/>`;
+  } else {
+    shapeEl = `<circle class="cv-shape" cx="0" cy="0" r="26"
+      fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}"
+      stroke-dasharray="${strokeDash}"/>`;
+  }
+
+  // Icon — centered inside shape
+  const iconY = isCross ? 7 : 8;
+  const iconEl = z.icon
+    ? `<text y="${iconY}" text-anchor="middle" font-size="18" font-family="serif" opacity="${isHidden ? 0.3 : 0.9}">${escSvg(z.icon)}</text>`
+    : '';
+
+  // Name below shape
+  const nameY = isCross ? 38 : 40;
+  const nameEl = `<text y="${nameY}" text-anchor="middle"
+    fill="${isHidden ? '#3a3a3a' : '#8b949e'}" font-size="10"
+    font-family="Inter,-apple-system,sans-serif">${escSvg(z.name || '')}</text>`;
+
+  return glowEl + extraRings + shapeEl + iconEl + nameEl;
+}
+
+// Returns true when all zones are piled on the same spot
+function zonesAreClustered() {
+  if (allZones.length <= 1) return false;
+  const xs = allZones.map(z => z.x ?? z.positionX ?? 0);
+  const ys = allZones.map(z => z.y ?? z.positionY ?? 0);
+  return (Math.max(...xs) - Math.min(...xs)) < 60 &&
+         (Math.max(...ys) - Math.min(...ys)) < 60;
+}
+
+// Compute tier-based vertical layout positions (does NOT save)
+function computeTierLayout() {
+  const TIER_SPACING_Y = 150;
+  const NODE_SPACING_X = 140;
+  const tierGroups = {};
+  allZones.forEach(z => {
+    const t = z.tier ?? 0;
+    if (!tierGroups[t]) tierGroups[t] = [];
+    tierGroups[t].push(z);
+  });
+  const tiers = Object.keys(tierGroups).map(Number).sort((a, b) => a - b);
+  tiers.forEach((tier, ti) => {
+    const group = tierGroups[tier];
+    // Crossroads zones centred, others spread around them
+    group.sort((a, b) => (b.isCrossroads ? 1 : 0) - (a.isCrossroads ? 1 : 0));
+    const totalW = (group.length - 1) * NODE_SPACING_X;
+    group.forEach((z, i) => {
+      z.x = Math.round(i * NODE_SPACING_X - totalW / 2);
+      z.y = Math.round(ti * TIER_SPACING_Y);
+      if ('positionX' in z) z.positionX = z.x;
+      if ('positionY' in z) z.positionY = z.y;
+    });
+  });
+}
+
+async function autoArrangeZones() {
+  if (!allZones.length) return;
+  computeTierLayout();
+  renderZonesCanvas();
+  resetCanvasView('zone');
+
+  // Save all positions to backend
+  setSaveStatus('zcSaveStatus', 'Saving positions…', '#f5a623');
+  let failed = 0;
+  await Promise.all(allZones.map(async z => {
+    try {
+      const body = {
+        name: z.name, description: z.description || null, icon: z.icon,
+        region: z.region, tier: z.tier,
+        x: z.x ?? 0, y: z.y ?? 0,
+        levelReq: z.levelReq ?? z.levelRequirement ?? 1,
+        totalXp: z.totalXp ?? 0, totalDistanceKm: z.totalDistanceKm ?? 0,
+        isCrossroads: !!z.isCrossroads, isStart: !!z.isStart, isHidden: !!z.isHidden,
+      };
+      await apiFetch('/api/admin/map/world-zones/' + z.id, { method: 'PUT', body: JSON.stringify(body) });
+    } catch { failed++; }
+  }));
+
+  if (failed) {
+    setSaveStatus('zcSaveStatus', `${failed} failed`, '#f85149');
+    toast(`${failed} zone(s) failed to save`, 'err');
+  } else {
+    setSaveStatus('zcSaveStatus', 'All positions saved ✓', '#3fb950');
+    toast('Zones auto-arranged and saved', 'ok');
+  }
+}
+
+function setSaveStatus(elId, msg, color) {
+  const el = document.getElementById(elId);
+  if (el) { el.textContent = msg; el.style.color = color; }
+  if (msg) setTimeout(() => setSaveStatus(elId, '', ''), 3000);
+}
+
+function initZcStars() {
+  const g = document.getElementById('zcStars');
+  if (!g || g.childElementCount > 0) return;
+  const svg = document.getElementById('zonesCanvas');
+  const W = svg.clientWidth || 900, H = svg.clientHeight || 640;
+  let html = '';
+  for (let i = 0; i < 160; i++) {
+    const x = (Math.random() * W).toFixed(1);
+    const y = (Math.random() * H).toFixed(1);
+    const r = Math.random() < 0.75 ? 0.6 : 1.1;
+    const op = (0.15 + Math.random() * 0.55).toFixed(2);
+    html += `<circle cx="${x}" cy="${y}" r="${r}" fill="#e6edf3" opacity="${op}"/>`;
+  }
+  g.innerHTML = html;
+}
+
+function renderZcTierLabels() {
+  // Group zones by tier, compute average Y per tier, render left-side label
+  const tierY = {};
+  allZones.forEach(z => {
+    const t = z.tier ?? 0;
+    const y = z.y ?? z.positionY ?? 0;
+    if (tierY[t] === undefined) tierY[t] = []; tierY[t].push(y);
+  });
+  let labels = '';
+  Object.entries(tierY).forEach(([tier, ys]) => {
+    const avgY = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const minX = Math.min(...allZones.filter(z => (z.tier ?? 0) == tier).map(z => z.x ?? z.positionX ?? 0));
+    labels += `<text x="${minX - 60}" y="${avgY + 5}" text-anchor="end"
+      fill="#2a3a4a" font-size="10" font-weight="700" font-family="Inter,sans-serif"
+      letter-spacing="0.1em">TIER ${tier}</text>
+      <line x1="${minX - 52}" y1="${avgY}" x2="${minX - 36}" y2="${avgY}"
+        stroke="#1a2a3a" stroke-width="1"/>`;
+  });
+  return labels;
+}
+
+function renderZonesCanvas() {
+  const edgeLayer = document.getElementById('zcEdgeLayer');
+  const nodeLayer = document.getElementById('zcNodeLayer');
+  if (!edgeLayer || !nodeLayer) return;
+  initZcStars();
+  renderZcEdgesOnly();
+  const selId = zonesCanvas.getSelectedId();
+  const tierLabels = renderZcTierLabels();
+  nodeLayer.innerHTML = tierLabels + allZones.map(z => {
+    const x = z.x ?? z.positionX ?? 0;
+    const y = z.y ?? z.positionY ?? 0;
+    const sel = z.id === selId;
+    const opacity = z.isHidden ? 0.38 : 1;
+    return `<g class="cv-node${sel ? ' selected' : ''}" data-id="${z.id}"
+        transform="translate(${x},${y})" opacity="${opacity}">
+      ${buildZoneShape(z, sel)}
+    </g>`;
+  }).join('');
+  zonesCanvas.applyVp();
+  zonesCanvas.attachItemEvents();
+}
+
+function renderZcEdgesOnly() {
+  const edgeLayer = document.getElementById('zcEdgeLayer');
+  if (!edgeLayer) return;
+  const zoneMap = Object.fromEntries(allZones.map(z => [z.id, z]));
+  // Each edge rendered as a group: invisible thick hit-area line + visible styled line
+  edgeLayer.innerHTML = zcEdgeData.map(e => {
+    const a = zoneMap[e.fromZoneId], b = zoneMap[e.toZoneId];
+    if (!a || !b) return '';
+    const ax = a.x ?? a.positionX ?? 0, ay = a.y ?? a.positionY ?? 0;
+    const bx = b.x ?? b.positionX ?? 0, by = b.y ?? b.positionY ?? 0;
+    const dash = e.isBidirectional ? 'none' : '6,4';
+    return `<g class="zc-edge" data-edge-id="${e.id}" style="cursor:pointer" title="Edit connection: ${esc(a.name || '')} ↔ ${esc(b.name || '')}">
+      <line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="transparent" stroke-width="12"/>
+      <line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"
+        stroke="#4f9eff" stroke-width="1.5" stroke-dasharray="${dash}" opacity="0.35"
+        class="zc-edge-line"/>
+    </g>`;
+  }).join('');
+
+  // Attach click handlers
+  edgeLayer.querySelectorAll('.zc-edge').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const edgeId = el.dataset.edgeId;
+      const edge = zcEdgeData.find(ed => ed.id === edgeId);
+      if (edge) {
+        // Highlight
+        edgeLayer.querySelectorAll('.zc-edge-line').forEach(l => l.setAttribute('opacity', '0.35'));
+        el.querySelector('.zc-edge-line').setAttribute('opacity', '1');
+        editZoneEdge(edge);
+      }
+    });
+  });
+}
+
+function resetCanvasView(which) {
+  if (which === 'node') {
+    nodeCanvas.fitAll(allNodes, n => n.positionX, n => n.positionY);
+  } else {
+    zonesCanvas.fitAll(allZones, z => z.x ?? z.positionX ?? 0, z => z.y ?? z.positionY ?? 0);
+  }
+}
+
+function initCanvasEvents() {
+  nodeCanvas.init();
+  zonesCanvas.init();
+}
+
+// ── Dungeons ────────────────────────────────────────────────────────────────
+let allDungeons = [];
+let selectedDungeonId = null;
+
+async function loadDungeons() {
+  try {
+    allDungeons = await apiFetch('/api/admin/map/dungeons');
+    const tb = document.getElementById('dungeonsTable');
+    if (!allDungeons.length) {
+      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No dungeons found.</td></tr>';
+      return;
+    }
+    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
+    tb.innerHTML = allDungeons.map(d => {
+      const node = nodeMap[d.nodeId] || { name: d.nodeId, icon: '' };
+      const isSelected = d.id === selectedDungeonId;
+      return `<tr style="${isSelected ? 'background:var(--surface2)' : ''}">
+        <td><strong>${esc(d.name)}</strong></td>
+        <td>${node.icon || ''} ${esc(node.name)}</td>
+        <td style="text-align:center">${d.totalFloors}</td>
+        <td style="text-align:center">
+          <span class="badge" style="background:${d.floorCount >= d.totalFloors ? 'rgba(63,185,80,.15)' : 'rgba(245,166,35,.15)'};color:${d.floorCount >= d.totalFloors ? 'var(--green)' : 'var(--orange)'}">
+            ${d.floorCount} / ${d.totalFloors}
+          </span>
+        </td>
+        <td>
+          <button class="sm" onclick="selectDungeon('${d.id}','${esc(d.name)}')">🏗 Floors</button>
+          <button class="sm secondary" style="margin-left:4px" onclick='editDungeon(${JSON.stringify(d)})'>Edit</button>
+          <button class="sm danger" style="margin-left:4px" onclick="deleteDungeon('${d.id}','${esc(d.name)}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast('Failed to load dungeons: ' + e.message, 'err'); }
+}
+
+async function selectDungeon(id, name) {
+  selectedDungeonId = id;
+  document.getElementById('floorEditorTitle').textContent = `Floors — ${name}`;
+  document.getElementById('floorEditor').style.display = '';
+  document.getElementById('floorDungeonId').value = id;
+  await loadFloors(id);
+  loadDungeons(); // re-render to highlight selected row
+  document.getElementById('floorEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeFloorEditor() {
+  selectedDungeonId = null;
+  document.getElementById('floorEditor').style.display = 'none';
+  loadDungeons();
+}
+
+async function loadFloors(dungeonId) {
+  try {
+    const dungeon = await apiFetch('/api/admin/map/dungeons/' + dungeonId);
+    const floors = dungeon.floors || dungeon.dungeon?.floors || [];
+    const tb = document.getElementById('floorsTable');
+    if (!floors.length) {
+      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No floors yet. Add the first one above.</td></tr>';
+      return;
+    }
+    const sorted = [...floors].sort((a, b) => a.floorNumber - b.floorNumber);
+    const activityEmoji = { Running:'🏃', Gym:'🏋️', Cycling:'🚴', Yoga:'🧘', Swimming:'🏊', Climbing:'🧗', Hiking:'🥾' };
+    tb.innerHTML = sorted.map(f => `
+      <tr>
+        <td style="text-align:center"><strong>F${f.floorNumber}</strong></td>
+        <td>${activityEmoji[f.requiredActivity] || ''} ${esc(f.requiredActivity)}</td>
+        <td style="text-align:center">${f.requiredMinutes} min</td>
+        <td style="text-align:center">${f.rewardXp} XP</td>
+        <td>
+          <button class="sm secondary" onclick='editFloor(${JSON.stringify(f)})'>Edit</button>
+          <button class="sm danger" style="margin-left:4px" onclick="deleteFloor('${dungeonId}',${f.floorNumber})">Delete</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { toast('Failed to load floors: ' + e.message, 'err'); }
+}
+
+function openDungeonModal() {
+  document.getElementById('dungeonModalTitle').textContent = 'Add Dungeon';
+  document.getElementById('dungeonId').value = '';
+  document.getElementById('dungeonName').value = '';
+  document.getElementById('dungeonTotalFloors').value = 5;
+  populateDungeonNodeSelect();
+  document.getElementById('dungeonModal').classList.add('open');
+}
+
+function editDungeon(d) {
+  document.getElementById('dungeonModalTitle').textContent = 'Edit Dungeon';
+  document.getElementById('dungeonId').value = d.id;
+  document.getElementById('dungeonName').value = d.name;
+  document.getElementById('dungeonTotalFloors').value = d.totalFloors;
+  populateDungeonNodeSelect(d.nodeId);
+  document.getElementById('dungeonModal').classList.add('open');
+}
+
+function populateDungeonNodeSelect(selectedId) {
+  const sel = document.getElementById('dungeonNode');
+  sel.innerHTML = allNodes.map(n => `<option value="${n.id}">${n.icon||''} ${esc(n.name)}</option>`).join('');
+  if (selectedId) sel.value = selectedId;
+}
+
+async function saveDungeon() {
+  const id = document.getElementById('dungeonId').value;
+  try {
+    if (id) {
+      await apiFetch('/api/admin/map/dungeons/' + id, { method: 'PUT', body: JSON.stringify({
+        name: document.getElementById('dungeonName').value.trim(),
+        totalFloors: parseInt(document.getElementById('dungeonTotalFloors').value),
+      })});
+      toast('Dungeon updated', 'ok');
+    } else {
+      await apiFetch('/api/admin/map/dungeons', { method: 'POST', body: JSON.stringify({
+        nodeId: document.getElementById('dungeonNode').value,
+        name: document.getElementById('dungeonName').value.trim(),
+        totalFloors: parseInt(document.getElementById('dungeonTotalFloors').value),
+      })});
+      toast('Dungeon created', 'ok');
+    }
+    closeModal('dungeonModal');
+    loadDungeons();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteDungeon(id, name) {
+  if (!confirm(`Delete dungeon "${name}" and all its floors?`)) return;
+  try {
+    await apiFetch('/api/admin/map/dungeons/' + id, { method: 'DELETE' });
+    toast('Dungeon deleted', 'ok');
+    if (selectedDungeonId === id) closeFloorEditor();
+    else loadDungeons();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+function openFloorModal() {
+  const dungeonId = document.getElementById('floorDungeonId').value;
+  document.getElementById('floorModalTitle').textContent = 'Add Floor';
+  document.getElementById('floorNumber').value = '';
+  document.getElementById('floorNum').value = nextFloorNumber();
+  document.getElementById('floorActivity').value = 'Running';
+  document.getElementById('floorMinutes').value = 30;
+  document.getElementById('floorXp').value = 200;
+  document.getElementById('floorModal').classList.add('open');
+}
+
+function nextFloorNumber() {
+  // Suggest the next floor number from existing rows
+  const rows = document.querySelectorAll('#floorsTable tr td:first-child strong');
+  const nums = [...rows].map(el => parseInt(el.textContent.replace('F','')));
+  return nums.length ? Math.max(...nums) + 1 : 1;
+}
+
+function editFloor(f) {
+  document.getElementById('floorModalTitle').textContent = 'Edit Floor';
+  document.getElementById('floorNumber').value = f.floorNumber;
+  document.getElementById('floorNum').value = f.floorNumber;
+  document.getElementById('floorNum').disabled = true; // floor number is the key on PUT
+  document.getElementById('floorActivity').value = f.requiredActivity;
+  document.getElementById('floorMinutes').value = f.requiredMinutes;
+  document.getElementById('floorXp').value = f.rewardXp;
+  document.getElementById('floorModal').classList.add('open');
+}
+
+async function saveFloor() {
+  const dungeonId = document.getElementById('floorDungeonId').value;
+  const editingFloorNum = document.getElementById('floorNumber').value;
+  const floorNum = parseInt(document.getElementById('floorNum').value);
+  const body = {
+    requiredActivity: document.getElementById('floorActivity').value,
+    requiredMinutes: parseInt(document.getElementById('floorMinutes').value),
+    rewardXp: parseInt(document.getElementById('floorXp').value),
+  };
+  try {
+    if (editingFloorNum) {
+      await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors/${editingFloorNum}`, { method: 'PUT', body: JSON.stringify(body) });
+      toast('Floor updated', 'ok');
+    } else {
+      await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors`, { method: 'POST', body: JSON.stringify({ floorNumber: floorNum, ...body }) });
+      toast('Floor added', 'ok');
+    }
+    document.getElementById('floorNum').disabled = false;
+    closeModal('floorModal');
+    loadFloors(dungeonId);
+    loadDungeons();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteFloor(dungeonId, floorNum) {
+  if (!confirm(`Delete Floor ${floorNum}?`)) return;
+  try {
+    await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors/${floorNum}`, { method: 'DELETE' });
+    toast('Floor deleted', 'ok');
+    loadFloors(dungeonId);
+    loadDungeons();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+// ── Crossroads ───────────────────────────────────────────────────────────────
+let allCrossroads = [];
+let selectedCrossroadsId = null;
+
+async function loadCrossroads() {
+  try {
+    allCrossroads = await apiFetch('/api/admin/map/crossroads');
+    const tb = document.getElementById('crossroadsTable');
+    if (!allCrossroads.length) {
+      tb.innerHTML = '<tr><td colspan="3" style="color:var(--text2);text-align:center;padding:24px">No crossroads found.</td></tr>';
+      return;
+    }
+    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
+    tb.innerHTML = allCrossroads.map(c => {
+      const node = nodeMap[c.nodeId] || { name: c.nodeId, icon: '' };
+      return `<tr>
+        <td>${node.icon || ''} <strong>${esc(node.name)}</strong></td>
+        <td><span class="badge" style="background:var(--surface2);color:var(--text2)">${c.pathCount} path${c.pathCount !== 1 ? 's' : ''}</span></td>
+        <td>
+          <button class="sm" onclick="selectCrossroads('${c.id}','${esc(node.name)}')">🛤 Paths</button>
+          <button class="sm danger" style="margin-left:4px" onclick="deleteCrossroads('${c.id}','${esc(node.name)}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast('Failed to load crossroads: ' + e.message, 'err'); }
+}
+
+async function selectCrossroads(id, nodeName) {
+  selectedCrossroadsId = id;
+  document.getElementById('pathEditorTitle').textContent = `Paths — ${nodeName}`;
+  document.getElementById('pathEditor').style.display = '';
+  document.getElementById('pathCrossroadsId').value = id;
+  await loadPaths(id);
+  document.getElementById('pathEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closePathEditor() {
+  selectedCrossroadsId = null;
+  document.getElementById('pathEditor').style.display = 'none';
+}
+
+async function loadPaths(crossroadsId) {
+  try {
+    const cr = await apiFetch('/api/admin/map/crossroads/' + crossroadsId);
+    const paths = cr.paths || cr.crossroads?.paths || [];
+    const tb = document.getElementById('pathsTable');
+    if (!paths.length) {
+      tb.innerHTML = '<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:24px">No paths yet.</td></tr>';
+      return;
+    }
+    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
+    const diffColor = { Easy:'var(--green)', Moderate:'var(--orange)', Hard:'var(--red)' };
+    tb.innerHTML = paths.map(p => {
+      const dest = p.leadsToNodeId ? (nodeMap[p.leadsToNodeId] || { name: p.leadsToNodeId, icon: '' }) : null;
+      return `<tr>
+        <td><strong>${esc(p.name)}</strong>${p.additionalRequirement ? `<br><span style="color:var(--text2);font-size:11px">⚠ ${esc(p.additionalRequirement)}</span>` : ''}</td>
+        <td><span style="color:${diffColor[p.difficulty]||'var(--text2)'}">${esc(p.difficulty)}</span></td>
+        <td style="text-align:center">${p.distanceKm} km</td>
+        <td style="text-align:center">${p.estimatedDays}d</td>
+        <td style="text-align:center">${p.rewardXp} XP</td>
+        <td>${dest ? `${dest.icon||''} ${esc(dest.name)}` : '<span style="color:var(--text2)">—</span>'}</td>
+        <td>
+          <button class="sm secondary" onclick='editPath(${JSON.stringify(p)})'>Edit</button>
+          <button class="sm danger" style="margin-left:4px" onclick="deletePath('${crossroadsId}','${p.id}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast('Failed to load paths: ' + e.message, 'err'); }
+}
+
+function openCrossroadsModal() {
+  document.getElementById('crossroadsNode').innerHTML =
+    allNodes.map(n => `<option value="${n.id}">${n.icon||''} ${esc(n.name)}</option>`).join('');
+  document.getElementById('crossroadsModal').classList.add('open');
+}
+
+async function saveCrossroads() {
+  try {
+    await apiFetch('/api/admin/map/crossroads', { method: 'POST', body: JSON.stringify({ nodeId: document.getElementById('crossroadsNode').value }) });
+    toast('Crossroads created', 'ok');
+    closeModal('crossroadsModal');
+    loadCrossroads();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deleteCrossroads(id, nodeName) {
+  if (!confirm(`Delete crossroads on "${nodeName}" and all its paths?`)) return;
+  try {
+    await apiFetch('/api/admin/map/crossroads/' + id, { method: 'DELETE' });
+    toast('Crossroads deleted', 'ok');
+    if (selectedCrossroadsId === id) closePathEditor();
+    else loadCrossroads();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+function openPathModal() {
+  document.getElementById('pathModalTitle').textContent = 'Add Path';
+  document.getElementById('pathId').value = '';
+  ['pathName','pathReq'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pathDifficulty').value = 'Moderate';
+  document.getElementById('pathDist').value = 5;
+  document.getElementById('pathDays').value = 2;
+  document.getElementById('pathXp').value = 300;
+  populatePathLeadsTo();
+  document.getElementById('pathModal').classList.add('open');
+}
+
+function editPath(p) {
+  document.getElementById('pathModalTitle').textContent = 'Edit Path';
+  document.getElementById('pathId').value = p.id;
+  document.getElementById('pathName').value = p.name || '';
+  document.getElementById('pathDifficulty').value = p.difficulty || 'Moderate';
+  document.getElementById('pathDist').value = p.distanceKm;
+  document.getElementById('pathDays').value = p.estimatedDays;
+  document.getElementById('pathXp').value = p.rewardXp;
+  document.getElementById('pathReq').value = p.additionalRequirement || '';
+  populatePathLeadsTo(p.leadsToNodeId);
+  document.getElementById('pathModal').classList.add('open');
+}
+
+function populatePathLeadsTo(selectedId) {
+  const sel = document.getElementById('pathLeadsTo');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    allNodes.map(n => `<option value="${n.id}">${n.icon||''} ${esc(n.name)}</option>`).join('');
+  if (selectedId) sel.value = selectedId;
+}
+
+async function savePath() {
+  const crossroadsId = document.getElementById('pathCrossroadsId').value;
+  const pathId = document.getElementById('pathId').value;
+  const body = {
+    name: document.getElementById('pathName').value.trim(),
+    difficulty: document.getElementById('pathDifficulty').value,
+    distanceKm: parseFloat(document.getElementById('pathDist').value),
+    estimatedDays: parseInt(document.getElementById('pathDays').value),
+    rewardXp: parseInt(document.getElementById('pathXp').value),
+    additionalRequirement: document.getElementById('pathReq').value.trim() || null,
+    leadsToNodeId: document.getElementById('pathLeadsTo').value || null,
+  };
+  try {
+    if (pathId) {
+      await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths/${pathId}`, { method: 'PUT', body: JSON.stringify(body) });
+      toast('Path updated', 'ok');
+    } else {
+      await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths`, { method: 'POST', body: JSON.stringify(body) });
+      toast('Path added', 'ok');
+    }
+    closeModal('pathModal');
+    loadPaths(crossroadsId);
+    loadCrossroads();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function deletePath(crossroadsId, pathId) {
+  if (!confirm('Delete this path?')) return;
+  try {
+    await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths/${pathId}`, { method: 'DELETE' });
+    toast('Path deleted', 'ok');
+    loadPaths(crossroadsId);
+    loadCrossroads();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
 
 // ── Cross-page nav with token ──────────────────────────────────────────────
 document.getElementById('linkItems').addEventListener('click', e => {
   const t = getToken();
   if (t) { e.preventDefault(); window.location.href = 'index.html?token=' + encodeURIComponent(t); }
+});
+
+// Re-enable zone selects when zone edge modal closes (in case edit was cancelled)
+document.getElementById('zoneEdgeModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('zoneEdgeModal')) {
+    document.getElementById('zoneEdgeFrom').disabled = false;
+    document.getElementById('zoneEdgeTo').disabled = false;
+  }
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
@@ -501,7 +2158,8 @@ if (qToken) {
   const savedToken = getToken();
   if (savedToken) document.getElementById('tokenInput').value = savedToken;
 }
-loadNodes();
+initCanvasEvents();
+loadAll();
 </script>
 </body>
 </html>

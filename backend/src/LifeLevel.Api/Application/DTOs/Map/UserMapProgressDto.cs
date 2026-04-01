@@ -7,4 +7,5 @@ public class UserMapProgressDto
     public double DistanceTraveledOnEdge { get; set; }
     public Guid? DestinationNodeId { get; set; }
     public List<Guid> UnlockedNodeIds { get; set; } = [];
+    public double PendingDistanceKm { get; set; }
 }

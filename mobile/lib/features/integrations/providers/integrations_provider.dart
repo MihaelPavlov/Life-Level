@@ -26,8 +26,29 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
   Future<void> _loadInitialState() async {
     final granted = await _service.isPermissionGranted();
     final lastSync = await _service.getLastSyncTime();
-    final stravaStatus = await _strava.getStatus();
-    final garminStatus = await _garmin.getStatus();
+
+    // On error, preserve the last known connected state rather than resetting
+    // to false — prevents a transient failure from wiping a valid session.
+    StravaStatusDto stravaStatus;
+    try {
+      stravaStatus = await _strava.getStatus();
+    } catch (_) {
+      stravaStatus = StravaStatusDto(
+        isConnected: state.isStravaConnected,
+        athleteName: state.stravaAthleteName,
+      );
+    }
+
+    GarminStatusDto garminStatus;
+    try {
+      garminStatus = await _garmin.getStatus();
+    } catch (_) {
+      garminStatus = GarminStatusDto(
+        isConnected: state.isGarminConnected,
+        displayName: state.garminDisplayName,
+      );
+    }
+
     state = state.copyWith(
       isHealthConnected: granted,
       lastSyncAt: lastSync,
@@ -61,14 +82,18 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
     );
   }
 
-  Future<void> connectStrava(String code) async {
+  /// Returns null on success, or an error message on failure.
+  Future<String?> connectStrava(String code) async {
     try {
       final status = await _strava.connect(code);
       state = state.copyWith(
         isStravaConnected: status.isConnected,
         stravaAthleteName: status.athleteName,
       );
-    } catch (_) {}
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
   }
 
   Future<void> disconnectStrava() async {

@@ -22,6 +22,8 @@ using LifeLevel.Modules.Items.Domain.Entities;
 using LifeLevel.Modules.Items.Infrastructure;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.Modules.Integrations.Infrastructure;
+using LifeLevel.Modules.Achievements.Domain.Entities;
+using LifeLevel.Modules.Achievements.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -40,6 +42,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Character> Characters => Set<Character>();
     public DbSet<CharacterClass> CharacterClasses => Set<CharacterClass>();
     public DbSet<XpHistoryEntry> XpHistoryEntries => Set<XpHistoryEntry>();
+    public DbSet<Title> Titles => Set<Title>();
+    public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
 
     // Activity
     public DbSet<Activity> Activities => Set<Activity>();
@@ -92,6 +96,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
     public DbSet<GarminConnection> GarminConnections => Set<GarminConnection>();
 
+    // Achievements
+    public DbSet<Achievement> Achievements => Set<Achievement>();
+    public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ── Per-module EF configurations ──────────────────────────────────────────
@@ -107,6 +115,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DungeonsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ItemsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IntegrationsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AchievementsModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 
@@ -279,6 +288,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<User>()
             .WithMany()
             .HasForeignKey(g => g.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Achievements cross-module: UserAchievement → User
+        modelBuilder.Entity<UserAchievement>()
+            .HasOne<LifeLevel.Modules.Identity.Domain.Entities.User>()
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

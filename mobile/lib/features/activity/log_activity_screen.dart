@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
+import '../../core/services/inventory_full_notifier.dart';
 import '../character/providers/character_provider.dart';
 import '../quests/providers/quest_provider.dart';
 import '../streak/providers/streak_provider.dart';
@@ -165,6 +166,11 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       // Fire level-up overlay if applicable
       if (result.leveledUp && result.newLevel != null) {
         LevelUpNotifier.notify(result.newLevel!);
+      }
+
+      // Fire inventory-full warning for each item that was blocked
+      for (final blocked in result.blockedItems) {
+        InventoryFullNotifier.notify(blocked);
       }
 
       if (mounted) {

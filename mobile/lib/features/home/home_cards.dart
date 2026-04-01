@@ -257,12 +257,10 @@ class HomeStreakCard extends ConsumerWidget {
               }
 
               return [
-                Expanded(
-                  child: HomeStreakDay(
-                    icon: icon,
-                    label: _dayLabels[i],
-                    state: state,
-                  ),
+                HomeStreakDay(
+                  icon: icon,
+                  label: _dayLabels[i],
+                  state: state,
                 ),
                 if (i < 6) const SizedBox(width: 5),
               ];
@@ -504,11 +502,23 @@ class HomeRecentActivitiesCard extends ConsumerWidget {
           const SizedBox(height: 4),
           historyAsync.when(
             loading: () => const _ActivityLoadingRows(),
-            error: (_, __) => const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'Failed to load activities.',
-                style: TextStyle(color: AppColors.red, fontSize: 12),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'Failed to load activities.',
+                    style: TextStyle(color: AppColors.red, fontSize: 12),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => ref.invalidate(activityHistoryProvider),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(color: AppColors.blue, fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
               ),
             ),
             data: (history) {
