@@ -274,7 +274,15 @@
       "Bash(cmd:*)",
       "Bash(powershell:*)",
       "Bash(python -c \"import sys,json; t=json.load\\(sys.stdin\\)['tunnels']; print\\(t[0]['public_url'] if t else 'dead'\\)\")",
-      "Bash(ngrok http:*)"
+      "Bash(ngrok http:*)",
+      "Bash(grep -r \"FluentValidation\" /c/Users/MihaelPavlov/repos/hOME/Life-LEVEL/backend/src/modules/*/LifeLevel.Modules.*.csproj)",
+      "Bash(xargs -I {} head -20 {})",
+      "Bash([ -f \"C:/Users/MihaelPavlov/repos/Home/Life-Level/design-mockup/icon-comparison.html\" ])",
+      "Bash(mkdir -p boss map home profile character activity social misc)",
+      "Bash(mv boss-page.html boss-fight-flow.html boss-fight-real-gear.html mini-bosses.html guild-raids.html boss/)",
+      "Bash(mv adventure-map.html adventure-map-detailed.html adventure-map-flow.html map-interactions.html crossroads-flow.html world-map.html world-structure.html map/)",
+      "Bash(mv home.html home-v2.html home-screen.html home/)",
+      "Bash(mv profile-full.html profile-full_rpg.html achievements.html titles-ranks.html profile/)"
     ]
   }
 }
