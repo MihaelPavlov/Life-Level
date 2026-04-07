@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Project Board</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: Inter, -apple-system, sans-serif;
+    background: #040810;
+    color: #e6edf3;
+    min-height: 100vh;
+    overflow-x: auto;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #0d1117;
+    border-bottom: 1px solid #21262d;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4f9eff, #a371f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .stats {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: #8b949e;
+  }
+  header .stats span { color: #e6edf3; font-weight: 600; }
+
+  /* ── Board ── */
+  .board {
+    display: flex;
+    gap: 16px;
+    padding: 20px 24px;
+    min-height: calc(100vh - 64px);
+    align-items: flex-start;
+  }
+
+  /* ── Column ── */
+  .column {
+    min-width: 310px;
+    max-width: 310px;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 100px);
+  }
+  .column-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .column-header .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .column-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .column-header .count {
+    background: #161b22;
+    color: #8b949e;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .column-body {
+    padding: 8px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .column-body::-webkit-scrollbar { width: 4px; }
+  .column-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+  /* drag-over highlight */
+  .column.drag-over .column-body {
+    background: rgba(79, 158, 255, 0.04);
+  }
+
+  /* ── Card ── */
+  .card {
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: grab;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    user-select: none;
+  }
+  .card:hover {
+    border-color: #30363d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .card.dragging {
+    opacity: 0.4;
+    transform: rotate(2deg) scale(0.97);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .card-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Tags ── */
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .tag-backend   { background: rgba(79,158,255,0.15); color: #4f9eff; }
+  .tag-flutter   { background: rgba(63,185,80,0.15);  color: #3fb950; }
+  .tag-design    { background: rgba(163,113,247,0.15); color: #a371f7; }
+  .tag-game      { background: rgba(245,166,35,0.15);  color: #f5a623; }
+  .tag-infra     { background: rgba(248,81,73,0.15);   color: #f85149; }
+  .tag-social    { background: rgba(56,211,159,0.15);   color: #38d39f; }
+
+  /* priority stripe */
+  .card[data-priority="high"]   { border-left: 3px solid #f85149; }
+  .card[data-priority="medium"] { border-left: 3px solid #f5a623; }
+  .card[data-priority="low"]    { border-left: 3px solid #3fb950; }
+
+  /* ── Phase badge ── */
+  .phase {
+    font-size: 10px;
+    color: #484f58;
+    font-weight: 600;
+    margin-left: auto;
+  }
+
+  /* ── Add card ── */
+  .add-card-btn {
+    background: none;
+    border: 1px dashed #30363d;
+    border-radius: 8px;
+    padding: 10px;
+    color: #484f58;
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+  }
+  .add-card-btn:hover {
+    border-color: #4f9eff;
+    color: #4f9eff;
+    background: rgba(79,158,255,0.05);
+  }
+
+  /* ── Add card form ── */
+  .add-form { display: none; margin-bottom: 8px; }
+  .add-form.active { display: block; }
+  .add-form input, .add-form textarea, .add-form select {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #e6edf3;
+    font-family: inherit;
+    font-size: 13px;
+    margin-bottom: 6px;
+    outline: none;
+  }
+  .add-form input:focus, .add-form textarea:focus {
+    border-color: #4f9eff;
+  }
+  .add-form textarea { resize: vertical; min-height: 48px; }
+  .add-form .form-row { display: flex; gap: 6px; }
+  .add-form .form-row select { flex: 1; }
+  .add-form .form-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .add-form .btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+  .btn-primary { background: #4f9eff; color: #fff; }
+  .btn-primary:hover { background: #3d8be6; }
+  .btn-ghost  { background: transparent; color: #8b949e; }
+  .btn-ghost:hover { color: #e6edf3; }
+
+  /* ── Drop placeholder ── */
+  .drop-placeholder {
+    border: 2px dashed #4f9eff;
+    border-radius: 8px;
+    height: 4px;
+    margin-bottom: 8px;
+    transition: height 0.15s;
+  }
+
+  /* ── Filter bar ── */
+  .filters {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .filter-btn {
+    background: #161b22;
+    border: 1px solid #21262d;
+    color: #8b949e;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: #4f9eff;
+    color: #4f9eff;
+    background: rgba(79,158,255,0.08);
+  }
+
+  /* ── Delete zone ── */
+  .delete-zone {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 0;
+    background: rgba(248,81,73,0.12);
+    border-top: 2px dashed transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f85149;
+    transition: height 0.25s, border-color 0.25s;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .delete-zone.visible {
+    height: 64px;
+    border-color: #f85149;
+    pointer-events: all;
+  }
+  .delete-zone.over {
+    background: rgba(248,81,73,0.25);
+    height: 80px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Life Level — Project Board</h1>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="backend">Backend</button>
+    <button class="filter-btn" data-filter="flutter">Flutter</button>
+    <button class="filter-btn" data-filter="design">Design</button>
+    <button class="filter-btn" data-filter="game">Game</button>
+    <button class="filter-btn" data-filter="infra">Infra</button>
+  </div>
+  <div class="stats">
+    Total: <span id="stat-total">0</span> &nbsp;|&nbsp;
+    Done: <span id="stat-done">0</span>
+  </div>
+</header>
+
+<div class="board" id="board"></div>
+<div class="delete-zone" id="deleteZone">Drop here to delete</div>
+
+<script>
+// ── Data ──
+const COLUMNS = [
+  { id: 'backlog',     title: 'Backlog',       color: '#484f58' },
+  { id: 'todo',        title: 'To Do',         color: '#4f9eff' },
+  { id: 'in-progress', title: 'In Progress',   color: '#f5a623' },
+  { id: 'review',      title: 'Review / Test',  color: '#a371f7' },
+  { id: 'done',        title: 'Done',          color: '#3fb950' },
+];
+
+const SEED_TASKS = [
+  // ── Done (Phase 0) ──
+  { id: 't0a', col: 'done', title: 'ASP.NET Core project setup', desc: 'Solution structure, DI, base config', tags: ['backend','infra'], priority: 'high', phase: 'P0' },
+  { id: 't0b', col: 'done', title: 'JWT authentication', desc: 'Login, register, token refresh endpoints', tags: ['backend'], priority: 'high', phase: 'P0' },
+  { id: 't0c', col: 'done', title: 'EF Core + Supabase Postgres', desc: 'DbContext, connection string, initial migration', tags: ['backend','infra'], priority: 'high', phase: 'P0' },
+  { id: 't0d', col: 'done', title: 'Flutter project scaffold', desc: 'App shell, navigation, theme setup', tags: ['flutter'], priority: 'high', phase: 'P0' },
+  { id: 't0e', col: 'done', title: 'Design system & mockups', desc: 'Dark theme, color tokens, typography, phone frames', tags: ['design'], priority: 'medium', phase: 'P0' },
+  { id: 't0f', col: 'done', title: 'Strava integration', desc: 'OAuth flow, activity import from Strava API', tags: ['backend','flutter'], priority: 'medium', phase: 'P1' },
+
+  // ── Done (Phase 1 completed items) ──
+  { id: 't1a', col: 'done', title: 'Character entity & profile', desc: 'Level, XP, rank, 5 core stats (STR/END/AGI/FLX/STA)', tags: ['backend','game'], priority: 'high', phase: 'P1' },
+  { id: 't1b', col: 'done', title: 'Activity logging API', desc: 'Log workout: type, duration, distance, calories, HR', tags: ['backend'], priority: 'high', phase: 'P1' },
+  { id: 't1c', col: 'done', title: 'XP engine & stat gains', desc: 'Activity type → stat mapping, multipliers, formulas', tags: ['backend','game'], priority: 'high', phase: 'P1' },
+  { id: 't1d', col: 'done', title: 'Level-up system', desc: 'Exponential thresholds, triggers, unlock checks', tags: ['backend','game'], priority: 'high', phase: 'P1' },
+  { id: 't1e', col: 'done', title: 'Home screen UI', desc: 'XP bar, streak card, quests card, stats row, boss card', tags: ['flutter'], priority: 'high', phase: 'P1' },
+  { id: 't1f', col: 'done', title: 'Profile screen UI', desc: 'Stats, equipment, inventory, achievements tabs', tags: ['flutter'], priority: 'high', phase: 'P1' },
+  { id: 't1g', col: 'done', title: 'Level-up celebration overlay', desc: 'LevelUpNotifier global event → animated overlay', tags: ['flutter'], priority: 'medium', phase: 'P1' },
+  { id: 't1h', col: 'done', title: 'Radial FAB navigation', desc: 'Boss button, ring menu with 10 items, customization', tags: ['flutter'], priority: 'medium', phase: 'P1' },
+  { id: 't1i', col: 'done', title: 'Adventure Map SVG UI', desc: 'Zone nodes, paths, pan/zoom, tier indicators', tags: ['flutter','design'], priority: 'high', phase: 'P3' },
+  { id: 't1j', col: 'done', title: 'Titles & ranks display', desc: 'Title equip system, rank badges on profile', tags: ['flutter'], priority: 'medium', phase: 'P6' },
+  { id: 't1k', col: 'done', title: 'Achievements UI', desc: '48 achievements, tier filtering, progress tracking', tags: ['flutter'], priority: 'medium', phase: 'P6' },
+  { id: 't1l', col: 'done', title: 'Items & equipment UI', desc: 'Inventory grid, equipment slots, rarity colors', tags: ['flutter','design'], priority: 'medium', phase: 'P5' },
+  { id: 't1m', col: 'done', title: 'World zone map data & models', desc: 'ZoneData, ZoneStatus, static zone list, detail sheet', tags: ['flutter','game'], priority: 'high', phase: 'P3' },
+
+  // ── In Progress ──
+  { id: 't2a', col: 'in-progress', title: 'World zone backend API', desc: 'Zone entity, discovery state, movement calculation', tags: ['backend','game'], priority: 'high', phase: 'P3' },
+  { id: 't2b', col: 'in-progress', title: 'Recent Activities feed', desc: 'Replace hardcoded HomeLastActivityCard with real data', tags: ['flutter','backend'], priority: 'medium', phase: 'P1' },
+
+  // ── To Do ──
+  { id: 't3a', col: 'todo', title: 'Quest entity & daily generation', desc: 'Quest model, cron job to generate 5 daily quests', tags: ['backend','game'], priority: 'high', phase: 'P2' },
+  { id: 't3b', col: 'todo', title: 'Quest progress hooks', desc: 'Activity completion triggers quest progress updates', tags: ['backend','game'], priority: 'high', phase: 'P2' },
+  { id: 't3c', col: 'todo', title: 'Streak tracking backend', desc: 'Current/longest streak, shield logic, login rewards', tags: ['backend','game'], priority: 'high', phase: 'P2' },
+  { id: 't3d', col: 'todo', title: 'Quest tabs UI (daily/story/special)', desc: 'Tab view, quest cards, progress bars, bonus banner', tags: ['flutter'], priority: 'high', phase: 'P2' },
+  { id: 't3e', col: 'todo', title: 'Daily login screen & rewards', desc: '7-day reward cycle UI, streak shield display', tags: ['flutter'], priority: 'medium', phase: 'P2' },
+  { id: 't3f', col: 'todo', title: 'Zone movement from activity', desc: 'Distance → map travel calculation, path progress', tags: ['backend','game'], priority: 'high', phase: 'P3' },
+  { id: 't3g', col: 'todo', title: 'Path/crossroads system', desc: 'Branching paths, unlock requirements, difficulty tiers', tags: ['backend','game'], priority: 'medium', phase: 'P3' },
+
+  // ── Backlog ──
+  { id: 't4a', col: 'backlog', title: 'Boss entity & raid system', desc: 'Boss HP, location, damage per activity, loot', tags: ['backend','game'], priority: 'high', phase: 'P4' },
+  { id: 't4b', col: 'backlog', title: 'Mini-boss encounters', desc: '3-day timer, no travel needed, smaller rewards', tags: ['backend','game'], priority: 'medium', phase: 'P4' },
+  { id: 't4c', col: 'backlog', title: 'Guild raids (co-op)', desc: 'Shared HP pool, member contributions, bonus for top DPS', tags: ['backend','social'], priority: 'medium', phase: 'P4' },
+  { id: 't4d', col: 'backlog', title: 'Boss battle UI', desc: 'HP bar, damage animation, victory screen', tags: ['flutter','design'], priority: 'medium', phase: 'P4' },
+  { id: 't4e', col: 'backlog', title: 'Item entity & stat bonuses', desc: 'Item model, rarity tiers, equipment stat effects', tags: ['backend','game'], priority: 'medium', phase: 'P5' },
+  { id: 't4f', col: 'backlog', title: 'Achievement unlock engine', desc: 'Condition checks, tier progression, XP rewards', tags: ['backend','game'], priority: 'medium', phase: 'P6' },
+  { id: 't4g', col: 'backlog', title: 'Random events (chests, XP storm, merchant)', desc: 'Event spawner, timed windows, push notifications', tags: ['backend','game'], priority: 'low', phase: 'P7' },
+  { id: 't4h', col: 'backlog', title: 'Seasonal events & leaderboards', desc: 'Limited-time quests, 5-stage rewards, event LB', tags: ['backend','game'], priority: 'low', phase: 'P7' },
+  { id: 't4i', col: 'backlog', title: 'Friends & social feed', desc: 'Add friends, activity feed, challenges', tags: ['backend','social'], priority: 'low', phase: 'P8' },
+  { id: 't4j', col: 'backlog', title: 'Guild system', desc: 'Create/join guild, member list, guild chat', tags: ['backend','social'], priority: 'low', phase: 'P8' },
+  { id: 't4k', col: 'backlog', title: 'Leaderboard system', desc: 'Redis sorted sets, weekly/all-time, friends LB', tags: ['backend','infra'], priority: 'low', phase: 'P8' },
+  { id: 't4l', col: 'backlog', title: 'Push notifications (FCM)', desc: 'Boss spawns, XP storms, streak reminders', tags: ['infra'], priority: 'low', phase: 'P8' },
+  { id: 't4m', col: 'backlog', title: 'Google Fit / Apple Health import', desc: 'Native health API integration for activity sync', tags: ['flutter','infra'], priority: 'medium', phase: 'P8' },
+  { id: 't4n', col: 'backlog', title: 'SignalR real-time events', desc: 'Live guild raid damage, XP storm countdown', tags: ['backend','infra'], priority: 'low', phase: 'P8' },
+];
+
+// ── State ──
+let tasks = JSON.parse(localStorage.getItem('ll-board-tasks') || 'null') || SEED_TASKS;
+let activeFilter = 'all';
+let draggedCard = null;
+let nextId = tasks.length + 1;
+
+function save() {
+  localStorage.setItem('ll-board-tasks', JSON.stringify(tasks));
+}
+
+// ── Render ──
+function render() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  COLUMNS.forEach(col => {
+    const colTasks = tasks.filter(t => {
+      if (t.col !== col.id) return false;
+      if (activeFilter !== 'all' && !t.tags.includes(activeFilter)) return false;
+      return true;
+    });
+
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.col = col.id;
+
+    colEl.innerHTML = `
+      <div class="column-header">
+        <div class="dot" style="background:${col.color}"></div>
+        <h2>${col.title}</h2>
+        <span class="count">${colTasks.length}</span>
+      </div>
+      <div class="column-body" data-col="${col.id}"></div>
+    `;
+
+    const body = colEl.querySelector('.column-body');
+
+    // Add card form
+    const form = document.createElement('div');
+    form.className = 'add-form';
+    form.innerHTML = `
+      <input type="text" placeholder="Task title..." class="new-title">
+      <textarea placeholder="Description (optional)..." class="new-desc"></textarea>
+      <div class="form-row">
+        <select class="new-priority">
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+        <select class="new-tag" multiple size="1">
+          <option value="backend">Backend</option>
+          <option value="flutter">Flutter</option>
+          <option value="design">Design</option>
+          <option value="game">Game</option>
+          <option value="infra">Infra</option>
+          <option value="social">Social</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-add">Add</button>
+        <button class="btn btn-ghost btn-cancel">Cancel</button>
+      </div>
+    `;
+    body.appendChild(form);
+
+    // Add card button
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-card-btn';
+    addBtn.textContent = '+ Add task';
+    addBtn.onclick = () => {
+      form.classList.toggle('active');
+      if (form.classList.contains('active')) form.querySelector('.new-title').focus();
+    };
+    body.appendChild(addBtn);
+
+    form.querySelector('.btn-cancel').onclick = () => form.classList.remove('active');
+    form.querySelector('.btn-add').onclick = () => {
+      const title = form.querySelector('.new-title').value.trim();
+      if (!title) return;
+      const desc = form.querySelector('.new-desc').value.trim();
+      const priority = form.querySelector('.new-priority').value;
+      const tagSel = form.querySelector('.new-tag');
+      const tags = Array.from(tagSel.selectedOptions).map(o => o.value);
+      if (!tags.length) tags.push('backend');
+      tasks.push({ id: 'tn' + (nextId++), col: col.id, title, desc, tags, priority, phase: '' });
+      save();
+      render();
+    };
+
+    // Task cards
+    colTasks.forEach(task => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.draggable = true;
+      card.dataset.id = task.id;
+      card.dataset.priority = task.priority || 'medium';
+
+      const tagsHTML = task.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
+      card.innerHTML = `
+        <div class="card-title">${task.title}</div>
+        ${task.desc ? `<div class="card-desc">${task.desc}</div>` : ''}
+        <div class="card-footer">
+          ${tagsHTML}
+          ${task.phase ? `<span class="phase">${task.phase}</span>` : ''}
+        </div>
+      `;
+
+      // Drag events
+      card.addEventListener('dragstart', e => {
+        draggedCard = task.id;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        document.getElementById('deleteZone').classList.add('visible');
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        draggedCard = null;
+        document.getElementById('deleteZone').classList.remove('visible');
+        document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+        document.querySelectorAll('.drop-placeholder').forEach(p => p.remove());
+      });
+
+      body.insertBefore(card, addBtn);
+    });
+
+    // Column drop target
+    body.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      colEl.classList.add('drag-over');
+    });
+    body.addEventListener('dragleave', e => {
+      if (!body.contains(e.relatedTarget)) colEl.classList.remove('drag-over');
+    });
+    body.addEventListener('drop', e => {
+      e.preventDefault();
+      colEl.classList.remove('drag-over');
+      if (!draggedCard) return;
+      const task = tasks.find(t => t.id === draggedCard);
+      if (task) {
+        task.col = col.id;
+        save();
+        render();
+      }
+    });
+
+    board.appendChild(colEl);
+  });
+
+  updateStats();
+}
+
+// ── Delete zone ──
+const deleteZone = document.getElementById('deleteZone');
+deleteZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  deleteZone.classList.add('over');
+});
+deleteZone.addEventListener('dragleave', () => {
+  deleteZone.classList.remove('over');
+});
+deleteZone.addEventListener('drop', e => {
+  e.preventDefault();
+  deleteZone.classList.remove('over', 'visible');
+  if (!draggedCard) return;
+  tasks = tasks.filter(t => t.id !== draggedCard);
+  draggedCard = null;
+  save();
+  render();
+});
+
+// ── Filters ──
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+// ── Stats ──
+function updateStats() {
+  document.getElementById('stat-total').textContent = tasks.length;
+  document.getElementById('stat-done').textContent = tasks.filter(t => t.col === 'done').length;
+}
+
+// ── Reset button (hold Shift + click title) ──
+document.querySelector('header h1').addEventListener('click', e => {
+  if (e.shiftKey && confirm('Reset board to default tasks?')) {
+    localStorage.removeItem('ll-board-tasks');
+    tasks = [...SEED_TASKS];
+    save();
+    render();
+  }
+});
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>

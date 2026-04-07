@@ -43,13 +43,23 @@ class _AuthGateState extends State<_AuthGate> {
   }
 
   Future<void> _resolve() async {
-    final token = await ApiClient.getToken();
-    if (!mounted) return;
-    setState(() {
-      _home = token != null
-          ? const MainShell()
-          : const LoginScreen();
-    });
+    try {
+      debugPrint('[AuthGate] reading token...');
+      final token = await ApiClient.getToken();
+      debugPrint('[AuthGate] token=${token != null ? "present" : "null"}');
+      if (!mounted) return;
+      setState(() {
+        _home = token != null
+            ? const MainShell()
+            : const LoginScreen();
+      });
+      debugPrint('[AuthGate] navigated to ${token != null ? "MainShell" : "LoginScreen"}');
+    } catch (e, st) {
+      debugPrint('[AuthGate] ERROR: $e');
+      debugPrint('[AuthGate] $st');
+      if (!mounted) return;
+      setState(() => _home = const LoginScreen());
+    }
   }
 
   @override

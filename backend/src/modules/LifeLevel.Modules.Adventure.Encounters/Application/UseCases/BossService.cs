@@ -9,6 +9,56 @@ namespace LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 
 public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
 {
+    public async Task<List<BossListItemDto>> GetAllBossesForUserAsync(Guid userId)
+    {
+        var bosses = await db.Set<Boss>().ToListAsync();
+        var bossNodeIds = bosses.Select(b => b.NodeId).ToList();
+        var nodes = await db.Set<MapNode>()
+            .Where(n => bossNodeIds.Contains(n.Id))
+            .ToDictionaryAsync(n => n.Id);
+        var userStates = await db.Set<UserBossState>()
+            .Where(s => s.UserId == userId)
+            .ToDictionaryAsync(s => s.BossId);
+
+        var progress = await db.Set<UserMapProgress>()
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+        var currentNodeId = progress?.CurrentNodeId;
+
+        return bosses.Select(boss =>
+        {
+            nodes.TryGetValue(boss.NodeId, out var node);
+            userStates.TryGetValue(boss.Id, out var state);
+
+            var canFight = boss.IsMini || currentNodeId == boss.NodeId;
+
+            return new BossListItemDto
+            {
+                Id = boss.Id,
+                Name = boss.Name,
+                Icon = boss.Icon,
+                MaxHp = boss.MaxHp,
+                RewardXp = boss.RewardXp,
+                TimerDays = boss.TimerDays,
+                IsMini = boss.IsMini,
+                Region = node?.Region.ToString() ?? string.Empty,
+                NodeName = node?.Name ?? string.Empty,
+                LevelRequirement = node?.LevelRequirement ?? 0,
+                CanFight = canFight,
+                Activated = state != null,
+                HpDealt = state?.HpDealt ?? 0,
+                IsDefeated = state?.IsDefeated ?? false,
+                IsExpired = state?.IsExpired ?? false,
+                StartedAt = state?.StartedAt,
+                TimerExpiresAt = state?.StartedAt?.AddDays(boss.TimerDays),
+                DefeatedAt = state?.DefeatedAt
+            };
+        })
+        .OrderByDescending(b => b.Activated && !b.IsDefeated && !b.IsExpired) // active first
+        .ThenByDescending(b => b.IsDefeated)                                   // defeated next
+        .ThenBy(b => b.LevelRequirement)                                       // locked by level
+        .ToList();
+    }
+
     public async Task<UserBossState> ActivateFightAsync(Guid userId, Guid bossId)
     {
         var boss = await db.Set<Boss>().FindAsync(bossId)

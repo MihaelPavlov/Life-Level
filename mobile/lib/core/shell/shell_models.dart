@@ -46,6 +46,7 @@ const kAllNavItems = [
   NavTab('map',         '🗺️', 'Map'),
   NavTab('profile',     '👤', 'Profile'),
   NavTab('stats',       '📊', 'Stats'),
+  NavTab('boss',        '⚔️', 'Bosses'),
   NavTab('guild',       '🛡️', 'Guild'),
   NavTab('leaderboard', '🏆', 'Rankings'),
   NavTab('world',       '🌍', 'World'),

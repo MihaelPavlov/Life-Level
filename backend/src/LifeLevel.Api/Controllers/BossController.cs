@@ -11,6 +11,16 @@ namespace LifeLevel.Api.Controllers;
 [Authorize]
 public class BossController(BossService bossService, IUserContext userContext) : ControllerBase
 {
+    // ── List ───────────────────────────────────────────────────────────────────
+
+    /// <summary>List all bosses with the current user's state.</summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var bosses = await bossService.GetAllBossesForUserAsync(userContext.UserId);
+        return Ok(bosses);
+    }
+
     // ── Fight lifecycle ────────────────────────────────────────────────────────
 
     /// <summary>

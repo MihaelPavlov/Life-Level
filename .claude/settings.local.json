@@ -282,7 +282,29 @@
       "Bash(mv boss-page.html boss-fight-flow.html boss-fight-real-gear.html mini-bosses.html guild-raids.html boss/)",
       "Bash(mv adventure-map.html adventure-map-detailed.html adventure-map-flow.html map-interactions.html crossroads-flow.html world-map.html world-structure.html map/)",
       "Bash(mv home.html home-v2.html home-screen.html home/)",
-      "Bash(mv profile-full.html profile-full_rpg.html achievements.html titles-ranks.html profile/)"
+      "Bash(mv profile-full.html profile-full_rpg.html achievements.html titles-ranks.html profile/)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(data['tunnels'][0]['public_url']\\)\")",
+      "Bash(ngrok.cmd http:*)",
+      "Bash(export PATH=\"$PATH:/c/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools\")",
+      "Bash(grep -E \"\\\\.\\(dart\\)$\")",
+      "Bash(where sdkmanager:*)",
+      "Bash(where avdmanager:*)",
+      "Bash(where emulator:*)",
+      "Bash(C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/emulator/emulator:*)",
+      "Bash(python -c \"import sys,json; t=json.load\\(sys.stdin\\)['tunnels']; print\\(t[0]['public_url'] if t else 'no tunnels'\\)\")",
+      "Bash(C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb devices:*)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" kill-server:*)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" start-server:*)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" devices:*)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -d -s flutter,FlutterJNI,dart)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -d)",
+      "Bash(C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb:*)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 exec-out screencap -p)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -d -t 200)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -d -t 100)",
+      "Bash(adb logcat:*)",
+      "Bash(adb -s euguw86hxst4qsqw logcat -d -s flutter)",
+      "Bash(adb -s euguw86hxst4qsqw logcat -d)"
     ]
   }
 }

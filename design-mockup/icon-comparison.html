@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level — Icon Comparison</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#1a2233;color:#e6edf3;font-family:Inter,-apple-system,sans-serif;padding:24px}
+  h1{font-size:24px;font-weight:800;margin-bottom:4px;color:#e6edf3;letter-spacing:-0.5px}
+  .sub{color:#8b949e;font-size:13px;margin-bottom:28px}
+  .search{background:#232d3f;border:1px solid #33405a;border-radius:12px;padding:11px 18px;color:#e6edf3;font-size:14px;width:100%;max-width:440px;margin-bottom:32px;outline:none;transition:border .2s}
+  .search:focus{border-color:#4f9eff}
+  .section{margin-bottom:44px}
+  .section-title{font-size:11px;font-weight:700;letter-spacing:2px;color:#8b949e;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #232d3f}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+  .card{background:#151d2b;border:1px solid #232d3f;border-radius:16px;display:flex;align-items:center;overflow:hidden;transition:transform .15s}
+  .card:hover{transform:translateY(-2px)}
+  .card.hidden{display:none}
+  .before,.after{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 10px;gap:6px}
+  .before{width:36%;border-right:1px solid #232d3f;background:#151d2b}
+  .after{width:64%;background:#1a2538}
+  .emoji-big{font-size:40px;line-height:1}
+  .lbl{font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase}
+  .lbl-b{color:#4f9eff}
+  .lbl-a{color:#3fb950}
+  .icon-name{font-size:11px;color:#8b949e;font-weight:600;text-align:center;margin-top:2px}
+  .cat{font-size:9px;font-weight:700;letter-spacing:.8px;padding:2px 8px;border-radius:6px;margin-top:4px}
+  .c-n{background:rgba(79,158,255,.15);color:#4f9eff}
+  .c-s{background:rgba(63,185,80,.15);color:#3fb950}
+  .c-a{background:rgba(63,185,80,.15);color:#3fb950}
+  .c-r{background:rgba(245,166,35,.15);color:#f5a623}
+  .c-q{background:rgba(245,166,35,.15);color:#f5a623}
+  .c-z{background:rgba(63,185,80,.15);color:#3fb950}
+  .c-b{background:rgba(248,81,73,.15);color:#f85149}
+  .c-i{background:rgba(163,113,247,.15);color:#a371f7}
+  .c-x{background:rgba(79,158,255,.15);color:#4f9eff}
+  .c-u{background:rgba(139,148,158,.15);color:#8b949e}
+</style>
+</head>
+<body>
+
+<!-- hidden defs -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe680"/><stop offset="100%" stop-color="#c89020"/></linearGradient>
+  <linearGradient id="gSilver" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e0e8f4"/><stop offset="100%" stop-color="#7888a0"/></linearGradient>
+  <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff7060"/><stop offset="100%" stop-color="#b01818"/></linearGradient>
+  <linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#70c0ff"/><stop offset="100%" stop-color="#1850b0"/></linearGradient>
+  <linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60e880"/><stop offset="100%" stop-color="#107030"/></linearGradient>
+  <linearGradient id="gPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c088ff"/><stop offset="100%" stop-color="#5820a8"/></linearGradient>
+  <linearGradient id="gOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb848"/><stop offset="100%" stop-color="#c06000"/></linearGradient>
+  <linearGradient id="gTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#50e8d8"/><stop offset="100%" stop-color="#007060"/></linearGradient>
+  <linearGradient id="gRose" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff90b0"/><stop offset="100%" stop-color="#a01040"/></linearGradient>
+  <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b0e0ff"/><stop offset="100%" stop-color="#2060c0"/></linearGradient>
+  <linearGradient id="gSand" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8d888"/><stop offset="100%" stop-color="#a07028"/></linearGradient>
+  <linearGradient id="gDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#404858"/><stop offset="100%" stop-color="#181c24"/></linearGradient>
+  <linearGradient id="gFire" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ff2200"/><stop offset="45%" stop-color="#ff8800"/><stop offset="100%" stop-color="#ffee44"/></linearGradient>
+  <linearGradient id="gIce" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d0f8ff"/><stop offset="100%" stop-color="#3080d0"/></linearGradient>
+  <linearGradient id="gLeaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#90e860"/><stop offset="100%" stop-color="#206018"/></linearGradient>
+  <linearGradient id="gXp" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a371f7"/><stop offset="100%" stop-color="#4f9eff"/></linearGradient>
+  <linearGradient id="gBrown" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c09060"/><stop offset="100%" stop-color="#503018"/></linearGradient>
+  <filter id="ds"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".55"/></filter>
+  <filter id="gl-b"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#4f9eff" flood-opacity=".6"/></filter>
+  <filter id="gl-g"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#3fb950" flood-opacity=".6"/></filter>
+  <filter id="gl-r"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#f85149" flood-opacity=".6"/></filter>
+  <filter id="gl-p"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a371f7" flood-opacity=".6"/></filter>
+  <filter id="gl-o"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#f5a623" flood-opacity=".6"/></filter>
+</defs>
+</svg>
+
+<h1>Life-Level — Icon Comparison</h1>
+<p class="sub">Emoji originals vs game-art illustrated SVGs</p>
+<input class="search" type="text" placeholder="Search icons..." oninput="flt(this.value)">
+
+<!-- ═══════════════════════════════ NAVIGATION ═══════════════════════════ -->
+<div class="section" id="s-nav">
+<div class="section-title">Navigation</div>
+<div class="grid">
+
+<!-- Home -->
+<div class="card" data-n="home house">
+<div class="before"><span class="emoji-big">🏠</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Home</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <path d="M40 10 L70 36 L70 68 Q70 72 66 72 L14 72 Q10 72 10 68 L10 36 Z" fill="url(#gSand)" stroke="#8a6020" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M40 10 L70 36 L10 36 Z" fill="url(#gRed)" stroke="#901010" stroke-width="2.5" stroke-linejoin="round"/>
+  <rect x="32" y="48" width="16" height="24" rx="4" fill="url(#gBrown)" stroke="#402010" stroke-width="2"/>
+  <circle cx="44" cy="60" r="2" fill="#ffe680"/>
+  <rect x="17" y="42" width="12" height="12" rx="3" fill="url(#gSky)" stroke="#2060c0" stroke-width="1.5"/>
+  <rect x="51" y="42" width="12" height="12" rx="3" fill="url(#gSky)" stroke="#2060c0" stroke-width="1.5"/>
+  <ellipse cx="28" cy="18" rx="10" ry="6" fill="white" opacity=".28"/>
+</g></svg>
+<span class="icon-name">Home</span><span class="cat c-n">NAV</span></div></div>
+
+<!-- Map -->
+<div class="card" data-n="map world adventure">
+<div class="before"><span class="emoji-big">🗺️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Map</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="8" y="10" width="64" height="60" rx="8" fill="url(#gSand)" stroke="#8a6020" stroke-width="2.5"/>
+  <path d="M16 34 Q28 22 40 34 Q52 46 64 30" fill="none" stroke="#3fb950" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M16 50 Q32 60 48 46 Q58 38 64 50" fill="none" stroke="#4f9eff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+  <circle cx="56" cy="54" r="6" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <line x1="53" y1="51" x2="59" y2="57" stroke="white" stroke-width="2.5"/><line x1="59" y1="51" x2="53" y2="57" stroke="white" stroke-width="2.5"/>
+  <polygon points="36,22 42,38 30,38" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <ellipse cx="24" cy="16" rx="14" ry="5" fill="white" opacity=".22"/>
+</g></svg>
+<span class="icon-name">Map</span><span class="cat c-n">NAV</span></div></div>
+
+<!-- Quests -->
+<div class="card" data-n="quest scroll battle sword">
+<div class="before"><span class="emoji-big">⚔️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Quests</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="18" y="10" width="44" height="60" rx="6" fill="url(#gSand)" stroke="#8a6020" stroke-width="2.5"/>
+  <ellipse cx="18" cy="40" rx="6" ry="30" fill="#c8a848" stroke="#8a6020" stroke-width="1.5"/>
+  <ellipse cx="62" cy="40" rx="6" ry="30" fill="#c8a848" stroke="#8a6020" stroke-width="1.5"/>
+  <rect x="26" y="24" width="28" height="4" rx="2" fill="#8a6020" opacity=".5"/>
+  <rect x="26" y="32" width="22" height="3" rx="1.5" fill="#8a6020" opacity=".35"/>
+  <rect x="26" y="39" width="28" height="3" rx="1.5" fill="#8a6020" opacity=".35"/>
+  <rect x="26" y="46" width="18" height="3" rx="1.5" fill="#8a6020" opacity=".35"/>
+  <circle cx="40" cy="60" r="6" fill="url(#gRed)" stroke="#901010" stroke-width="1.5"/>
+  <polygon points="40,55 41.5,58.5 40,60 38.5,58.5" fill="white" opacity=".8"/>
+  <ellipse cx="28" cy="16" rx="10" ry="4" fill="white" opacity=".22"/>
+</g></svg>
+<span class="icon-name">Quests</span><span class="cat c-n">NAV</span></div></div>
+
+<!-- Stats -->
+<div class="card" data-n="stats chart bar analytics">
+<div class="before"><span class="emoji-big">📊</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Stats</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="6" y="6" width="68" height="68" rx="14" fill="url(#gDark)" stroke="#33405a" stroke-width="2"/>
+  <rect x="14" y="44" width="12" height="24" rx="5" fill="url(#gRed)"/><ellipse cx="20" cy="44" rx="6" ry="2.5" fill="white" opacity=".25"/>
+  <rect x="30" y="32" width="12" height="36" rx="5" fill="url(#gBlue)"/><ellipse cx="36" cy="32" rx="6" ry="2.5" fill="white" opacity=".25"/>
+  <rect x="46" y="20" width="12" height="48" rx="5" fill="url(#gGreen)"/><ellipse cx="52" cy="20" rx="6" ry="2.5" fill="white" opacity=".25"/>
+  <rect x="62" y="36" width="12" height="32" rx="5" fill="url(#gPurple)"/><ellipse cx="68" cy="36" rx="6" ry="2.5" fill="white" opacity=".25"/>
+  <ellipse cx="22" cy="12" rx="14" ry="4" fill="white" opacity=".08"/>
+</g></svg>
+<span class="icon-name">Stats</span><span class="cat c-n">NAV</span></div></div>
+
+<!-- Profile -->
+<div class="card" data-n="profile character person avatar">
+<div class="before"><span class="emoji-big">👤</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Profile</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="34" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <circle cx="40" cy="30" r="14" fill="url(#gSand)" stroke="#906830" stroke-width="2"/>
+  <ellipse cx="36" cy="26" rx="6" ry="4" fill="white" opacity=".3"/>
+  <path d="M18 68 Q18 52 40 48 Q62 52 62 68" fill="#0c2868" opacity=".7"/>
+  <circle cx="58" cy="18" r="10" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <polygon points="58,11 60,16 65,16 61,19 63,24 58,21 53,24 55,19 51,16 56,16" fill="white" opacity=".85"/>
+  <ellipse cx="28" cy="16" rx="10" ry="6" fill="white" opacity=".2"/>
+</g></svg>
+<span class="icon-name">Profile</span><span class="cat c-n">NAV</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ STATS ═══════════════════════════════ -->
+<div class="section" id="s-stats">
+<div class="section-title">Character Stats</div>
+<div class="grid">
+
+<!-- STR -->
+<div class="card" data-n="str strength muscle dumbbell">
+<div class="before"><span class="emoji-big">💪</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">STR</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gRed)" stroke="#901010" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".25"/>
+  <rect x="18" y="36" width="44" height="8" rx="4" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <rect x="10" y="28" width="14" height="24" rx="6" fill="url(#gSilver)" stroke="#506070" stroke-width="2"/>
+  <rect x="56" y="28" width="14" height="24" rx="6" fill="url(#gSilver)" stroke="#506070" stroke-width="2"/>
+  <ellipse cx="15" cy="30" rx="5" ry="3" fill="white" opacity=".3"/>
+  <ellipse cx="65" cy="30" rx="5" ry="3" fill="white" opacity=".3"/>
+  <text x="40" y="64" text-anchor="middle" font-size="10" font-weight="800" font-family="Inter,sans-serif" fill="white" opacity=".9">STR</text>
+</g></svg>
+<span class="icon-name">Strength</span><span class="cat c-s">STAT</span></div></div>
+
+<!-- END -->
+<div class="card" data-n="end endurance heart pulse cardio">
+<div class="before"><span class="emoji-big">🏃</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">END</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gGreen)" stroke="#107030" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".25"/>
+  <path d="M40 60 C26 48 14 42 14 30 C14 20 22 16 30 18 C35 19 38 22 40 26 C42 22 45 19 50 18 C58 16 66 20 66 30 C66 42 54 48 40 60Z" fill="white" stroke="white" stroke-width="1.5"/>
+  <polygon points="44,26 36,40 41,40 35,54 48,38 42,38" fill="url(#gGreen)"/>
+  <text x="40" y="74" text-anchor="middle" font-size="10" font-weight="800" font-family="Inter,sans-serif" fill="white" opacity=".9">END</text>
+</g></svg>
+<span class="icon-name">Endurance</span><span class="cat c-s">STAT</span></div></div>
+
+<!-- AGI -->
+<div class="card" data-n="agi agility lightning bolt speed">
+<div class="before"><span class="emoji-big">⚡</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">AGI</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-o)">
+  <circle cx="40" cy="40" r="32" fill="url(#gOrange)" stroke="#904800" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".25"/>
+  <polygon points="48,10 28,42 40,42 30,70 54,34 42,34" fill="white"/>
+  <polygon points="46,14 30,42 40,42 32,66 52,36 42,36" fill="#ffe880" opacity=".5"/>
+  <text x="40" y="76" text-anchor="middle" font-size="10" font-weight="800" font-family="Inter,sans-serif" fill="white" opacity=".9">AGI</text>
+</g></svg>
+<span class="icon-name">Agility</span><span class="cat c-s">STAT</span></div></div>
+
+<!-- FLX -->
+<div class="card" data-n="flx flexibility yoga lotus">
+<div class="before"><span class="emoji-big">🧘</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">FLX</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gRose)" stroke="#801040" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".25"/>
+  <ellipse cx="40" cy="44" rx="10" ry="16" fill="white" opacity=".85"/>
+  <ellipse cx="40" cy="44" rx="10" ry="16" fill="white" opacity=".85" transform="rotate(60,40,44)"/>
+  <ellipse cx="40" cy="44" rx="10" ry="16" fill="white" opacity=".85" transform="rotate(-60,40,44)"/>
+  <circle cx="40" cy="44" r="8" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <circle cx="40" cy="44" r="4" fill="white" opacity=".7"/>
+  <text x="40" y="74" text-anchor="middle" font-size="10" font-weight="800" font-family="Inter,sans-serif" fill="white" opacity=".9">FLX</text>
+</g></svg>
+<span class="icon-name">Flexibility</span><span class="cat c-s">STAT</span></div></div>
+
+<!-- STA -->
+<div class="card" data-n="sta stamina heart health hp">
+<div class="before"><span class="emoji-big">❤️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">STA</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-r)">
+  <path d="M40 68 C22 52 4 42 4 26 C4 14 14 6 26 8 C33 10 37 14 40 20 C43 14 47 10 54 8 C66 6 76 14 76 26 C76 42 58 52 40 68Z" fill="url(#gRed)" stroke="#901010" stroke-width="2.5"/>
+  <ellipse cx="26" cy="18" rx="10" ry="7" fill="white" opacity=".3"/>
+  <path d="M18 34 L24 34 L28 22 L34 46 L38 30 L42 30 L46 34 L62 34" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+  <text x="40" y="76" text-anchor="middle" font-size="10" font-weight="800" font-family="Inter,sans-serif" fill="white" opacity=".9">STA</text>
+</g></svg>
+<span class="icon-name">Stamina</span><span class="cat c-s">STAT</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ ACTIVITIES ═══════════════════════════ -->
+<div class="section" id="s-act">
+<div class="section-title">Activities</div>
+<div class="grid">
+
+<!-- Running -->
+<div class="card" data-n="running run jog sprint">
+<div class="before"><span class="emoji-big">🏃</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Running</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- shoe shape -->
+  <path d="M18 54 L24 30 Q26 24 34 28 L46 34 Q54 38 56 44 L60 54 Q62 60 56 60 L22 60 Q16 60 18 54Z" fill="white" stroke="white" stroke-width="1"/>
+  <!-- sole -->
+  <rect x="18" y="56" width="42" height="8" rx="4" fill="url(#gDark)"/>
+  <!-- swoosh line -->
+  <path d="M24 48 Q36 40 52 46" fill="none" stroke="url(#gOrange)" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- speed lines -->
+  <rect x="8" y="36" width="12" height="3" rx="1.5" fill="white" opacity=".6"/>
+  <rect x="10" y="44" width="8" height="2.5" rx="1.25" fill="white" opacity=".4"/>
+</g></svg>
+<span class="icon-name">Running</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+<!-- Gym -->
+<div class="card" data-n="gym weightlifting barbell muscle">
+<div class="before"><span class="emoji-big">🏋️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Gym</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gRed)" stroke="#901010" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <rect x="16" y="36" width="48" height="8" rx="4" fill="url(#gSilver)"/>
+  <rect x="8" y="26" width="14" height="28" rx="6" fill="white" stroke="white" stroke-width="1"/>
+  <rect x="58" y="26" width="14" height="28" rx="6" fill="white" stroke="white" stroke-width="1"/>
+  <rect x="6" y="30" width="8" height="20" rx="4" fill="white" opacity=".7"/>
+  <rect x="66" y="30" width="8" height="20" rx="4" fill="white" opacity=".7"/>
+  <ellipse cx="12" cy="28" rx="4" ry="2.5" fill="white" opacity=".3"/>
+  <ellipse cx="68" cy="28" rx="4" ry="2.5" fill="white" opacity=".3"/>
+</g></svg>
+<span class="icon-name">Gym</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+<!-- Cycling -->
+<div class="card" data-n="cycling bike bicycle">
+<div class="before"><span class="emoji-big">🚴</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Cycling</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gGreen)" stroke="#107030" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- two wheels -->
+  <circle cx="24" cy="50" r="14" fill="none" stroke="white" stroke-width="4"/>
+  <circle cx="24" cy="50" r="3" fill="white"/>
+  <circle cx="56" cy="50" r="14" fill="none" stroke="white" stroke-width="4"/>
+  <circle cx="56" cy="50" r="3" fill="white"/>
+  <!-- frame -->
+  <polygon points="24,50 38,28 56,50" fill="none" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
+  <line x1="38" y1="28" x2="52" y2="36" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="52" y1="36" x2="56" y2="50" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- seat -->
+  <ellipse cx="34" cy="26" rx="8" ry="3" fill="white" opacity=".8"/>
+</g></svg>
+<span class="icon-name">Cycling</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+<!-- Yoga -->
+<div class="card" data-n="yoga stretch pose lotus">
+<div class="before"><span class="emoji-big">🧘</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Yoga</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- figure sitting -->
+  <circle cx="40" cy="24" r="8" fill="white"/>
+  <rect x="35" y="32" width="10" height="14" rx="5" fill="white"/>
+  <!-- arms out -->
+  <line x1="35" y1="36" x2="18" y2="44" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <line x1="45" y1="36" x2="62" y2="44" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <!-- lotus legs -->
+  <path d="M35 46 Q24 52 26 58" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M45 46 Q56 52 54 58" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- chakra glow -->
+  <circle cx="40" cy="39" r="3" fill="url(#gGold)" filter="url(#gl-o)"/>
+</g></svg>
+<span class="icon-name">Yoga</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+<!-- Swimming -->
+<div class="card" data-n="swimming swim water pool">
+<div class="before"><span class="emoji-big">🏊</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Swimming</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gTeal)" stroke="#005050" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- waves -->
+  <path d="M10 50 Q20 42 30 50 Q40 58 50 50 Q60 42 70 50" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+  <path d="M10 60 Q20 52 30 60 Q40 68 50 60 Q60 52 70 60" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity=".4"/>
+  <!-- swimmer upper body -->
+  <circle cx="26" cy="36" r="8" fill="white"/>
+  <ellipse cx="40" cy="40" rx="20" ry="6" fill="white" opacity=".8"/>
+  <!-- arm reaching -->
+  <line x1="55" y1="38" x2="66" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <!-- splash drops -->
+  <circle cx="64" cy="24" r="2.5" fill="white" opacity=".7"/>
+  <circle cx="68" cy="20" r="1.5" fill="white" opacity=".5"/>
+</g></svg>
+<span class="icon-name">Swimming</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+<!-- Hiking -->
+<div class="card" data-n="hiking hike walk trail boot">
+<div class="before"><span class="emoji-big">🥾</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Hiking</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gBrown)" stroke="#402010" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- boot outline chunky -->
+  <path d="M22 22 L22 54 Q22 62 32 62 L58 62 Q66 62 66 56 L66 50 Q66 44 54 44 L40 44 L38 22 Z" fill="white" stroke="white" stroke-width="1"/>
+  <!-- sole dark -->
+  <rect x="20" y="60" width="48" height="8" rx="4" fill="url(#gDark)"/>
+  <!-- laces -->
+  <line x1="26" y1="28" x2="36" y2="30" stroke="url(#gBrown)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="26" y1="34" x2="36" y2="32" stroke="url(#gBrown)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="26" y1="40" x2="36" y2="42" stroke="url(#gBrown)" stroke-width="2" stroke-linecap="round"/>
+</g></svg>
+<span class="icon-name">Hiking</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+<!-- Climbing -->
+<div class="card" data-n="climbing rock mountain bouldering">
+<div class="before"><span class="emoji-big">🧗</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Climbing</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gSilver)" stroke="#506070" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- rock wall face -->
+  <polygon points="14,68 24,18 44,10 64,22 68,68" fill="url(#gDark)" stroke="#33405a" stroke-width="2"/>
+  <!-- climbing holds (colored orbs) -->
+  <circle cx="34" cy="26" r="6" fill="url(#gRed)" stroke="#901010" stroke-width="1.5"/>
+  <ellipse cx="32" cy="24" rx="2.5" ry="1.5" fill="white" opacity=".4"/>
+  <circle cx="52" cy="36" r="6" fill="url(#gBlue)" stroke="#1040a0" stroke-width="1.5"/>
+  <ellipse cx="50" cy="34" rx="2.5" ry="1.5" fill="white" opacity=".4"/>
+  <circle cx="28" cy="48" r="6" fill="url(#gGreen)" stroke="#107030" stroke-width="1.5"/>
+  <ellipse cx="26" cy="46" rx="2.5" ry="1.5" fill="white" opacity=".4"/>
+  <circle cx="46" cy="56" r="6" fill="url(#gOrange)" stroke="#904800" stroke-width="1.5"/>
+  <ellipse cx="44" cy="54" rx="2.5" ry="1.5" fill="white" opacity=".4"/>
+</g></svg>
+<span class="icon-name">Climbing</span><span class="cat c-a">ACTIVITY</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ REWARDS & XP ═══════════════════════ -->
+<div class="section" id="s-rew">
+<div class="section-title">Rewards &amp; XP</div>
+<div class="grid">
+
+<!-- XP Sparkle -->
+<div class="card" data-n="xp experience points sparkle star">
+<div class="before"><span class="emoji-big">✨</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">XP Gain</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-p)">
+  <polygon points="40,4 46,30 72,40 46,50 40,76 34,50 8,40 34,30" fill="url(#gXp)" stroke="#4018a0" stroke-width="2"/>
+  <polygon points="40,18 43,34 56,40 43,46 40,62 37,46 24,40 37,34" fill="white" opacity=".3"/>
+  <circle cx="40" cy="40" r="6" fill="white" opacity=".8"/>
+  <circle cx="18" cy="18" r="3" fill="url(#gPurple)"/><circle cx="62" cy="16" r="2" fill="url(#gBlue)"/>
+  <circle cx="64" cy="60" r="2.5" fill="url(#gPurple)"/><circle cx="16" cy="62" r="2" fill="url(#gBlue)"/>
+</g></svg>
+<span class="icon-name">XP Gain</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Gold Coin -->
+<div class="card" data-n="gold coin money currency treasure">
+<div class="before"><span class="emoji-big">💰</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Gold</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-o)">
+  <circle cx="40" cy="40" r="32" fill="url(#gGold)" stroke="#8a6020" stroke-width="3"/>
+  <circle cx="40" cy="40" r="26" fill="none" stroke="#c89020" stroke-width="2" opacity=".6"/>
+  <ellipse cx="28" cy="20" rx="12" ry="8" fill="white" opacity=".3"/>
+  <text x="40" y="52" text-anchor="middle" font-size="30" font-weight="900" font-family="Arial,sans-serif" fill="#8a6020" opacity=".8">$</text>
+  <path d="M14 30 Q10 40 14 50" stroke="white" stroke-width="3" fill="none" opacity=".2" stroke-linecap="round"/>
+</g></svg>
+<span class="icon-name">Gold</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Gem -->
+<div class="card" data-n="gem diamond crystal jewel rare">
+<div class="before"><span class="emoji-big">💎</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Gem</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-b)">
+  <polygon points="40,6 70,26 70,32 40,74 10,32 10,26" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <polygon points="40,6 70,26 40,30 10,26" fill="#a0d0ff" opacity=".45"/>
+  <line x1="40" y1="6" x2="40" y2="74" stroke="white" stroke-width="1" opacity=".2"/>
+  <line x1="10" y1="29" x2="70" y2="29" stroke="white" stroke-width="1" opacity=".2"/>
+  <ellipse cx="30" cy="18" rx="10" ry="6" fill="white" opacity=".3"/>
+  <circle cx="62" cy="20" r="4" fill="white" opacity=".65"/>
+  <line x1="62" y1="14" x2="62" y2="26" stroke="white" stroke-width="1.5" opacity=".7"/>
+  <line x1="56" y1="20" x2="68" y2="20" stroke="white" stroke-width="1.5" opacity=".7"/>
+</g></svg>
+<span class="icon-name">Gem</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Trophy -->
+<div class="card" data-n="trophy win achievement cup award">
+<div class="before"><span class="emoji-big">🏆</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Trophy</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="24" y="68" width="32" height="6" rx="3" fill="url(#gSilver)"/>
+  <rect x="34" y="56" width="12" height="14" rx="4" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <path d="M16 10 L20 52 Q20 58 40 58 Q60 58 60 52 L64 10 Z" fill="url(#gGold)" stroke="#8a6020" stroke-width="2.5"/>
+  <polygon points="40,18 43,28 53,28 45,34 48,44 40,38 32,44 35,34 27,28 37,28" fill="white" opacity=".7"/>
+  <path d="M16 10 Q6 14 6 26 Q6 38 18 40" fill="none" stroke="url(#gGold)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M64 10 Q74 14 74 26 Q74 38 62 40" fill="none" stroke="url(#gGold)" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="28" cy="16" rx="10" ry="5" fill="white" opacity=".28"/>
+</g></svg>
+<span class="icon-name">Trophy</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Star -->
+<div class="card" data-n="star rating special event">
+<div class="before"><span class="emoji-big">⭐</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Star</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-o)">
+  <polygon points="40,4 48,30 76,30 54,48 62,74 40,56 18,74 26,48 4,30 32,30" fill="url(#gGold)" stroke="#8a6020" stroke-width="2.5"/>
+  <polygon points="40,14 46,32 62,32 50,44 55,62 40,52 25,62 30,44 18,32 34,32" fill="white" opacity=".22"/>
+  <ellipse cx="30" cy="20" rx="8" ry="5" fill="white" opacity=".3"/>
+</g></svg>
+<span class="icon-name">Star</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Level Up -->
+<div class="card" data-n="level up arrow progress rank">
+<div class="before"><span class="emoji-big">⬆️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Level Up</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-p)">
+  <circle cx="40" cy="40" r="32" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <polygon points="40,10 60,38 50,38 50,66 30,66 30,38 20,38" fill="white"/>
+  <polygon points="40,16 55,38 48,38 48,62 40,62 40,38 25,38" fill="white" opacity=".4"/>
+</g></svg>
+<span class="icon-name">Level Up</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Streak Fire -->
+<div class="card" data-n="streak fire flame day login">
+<div class="before"><span class="emoji-big">🔥</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Streak</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-r)">
+  <path d="M40 74 C18 74 6 58 6 42 C6 28 16 20 20 12 C22 20 24 26 28 28 C28 16 34 10 40 6 C40 18 44 22 48 28 C52 22 52 14 56 18 C62 26 74 34 74 48 C74 64 58 74 40 74Z" fill="url(#gFire)" stroke="#a02000" stroke-width="2.5"/>
+  <path d="M40 66 C28 66 20 56 20 46 C20 38 26 34 28 28 C30 36 34 38 38 34 C40 28 42 24 44 30 C46 36 52 42 52 50 C52 60 48 66 40 66Z" fill="#ffee44" opacity=".45"/>
+  <ellipse cx="40" cy="56" rx="8" ry="10" fill="white" opacity=".18"/>
+  <ellipse cx="32" cy="22" rx="6" ry="4" fill="white" opacity=".2"/>
+</g></svg>
+<span class="icon-name">Streak</span><span class="cat c-r">REWARD</span></div></div>
+
+<!-- Loot Box -->
+<div class="card" data-n="gift box present loot drop reward">
+<div class="before"><span class="emoji-big">🎁</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Loot</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="10" y="36" width="60" height="36" rx="6" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="6" y="26" width="68" height="14" rx="6" fill="url(#gRose)" stroke="#901010" stroke-width="2"/>
+  <rect x="36" y="26" width="8" height="46" rx="2" fill="url(#gGold)" stroke="#8a6020" stroke-width="1"/>
+  <rect x="10" y="50" width="60" height="8" rx="2" fill="url(#gGold)" stroke="#8a6020" stroke-width="1"/>
+  <path d="M38 26 C26 10 12 14 14 22 C16 30 30 26 38 26Z" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <path d="M42 26 C54 10 68 14 66 22 C64 30 50 26 42 26Z" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <circle cx="40" cy="26" r="5" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <ellipse cx="24" cy="30" rx="12" ry="4" fill="white" opacity=".2"/>
+</g></svg>
+<span class="icon-name">Loot Box</span><span class="cat c-r">REWARD</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ QUESTS ═══════════════════════════════ -->
+<div class="section" id="s-quest">
+<div class="section-title">Quests</div>
+<div class="grid">
+
+<!-- Daily Quest -->
+<div class="card" data-n="daily quest sun sunrise morning">
+<div class="before"><span class="emoji-big">☀️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Daily Quest</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-o)">
+  <!-- rays -->
+  <line x1="40" y1="4" x2="40" y2="16" stroke="url(#gGold)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="40" y1="64" x2="40" y2="76" stroke="url(#gGold)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="4" y1="40" x2="16" y2="40" stroke="url(#gGold)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="64" y1="40" x2="76" y2="40" stroke="url(#gGold)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="14" y1="14" x2="22" y2="22" stroke="url(#gGold)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="58" y1="58" x2="66" y2="66" stroke="url(#gGold)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="66" y1="14" x2="58" y2="22" stroke="url(#gGold)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="22" y1="58" x2="14" y2="66" stroke="url(#gGold)" stroke-width="4" stroke-linecap="round"/>
+  <!-- body -->
+  <circle cx="40" cy="40" r="20" fill="url(#gGold)" stroke="#8a6020" stroke-width="2.5"/>
+  <!-- face -->
+  <circle cx="34" cy="38" r="2.5" fill="#8a6020"/><circle cx="46" cy="38" r="2.5" fill="#8a6020"/>
+  <path d="M33 46 Q40 52 47 46" fill="none" stroke="#8a6020" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="32" cy="30" rx="8" ry="5" fill="white" opacity=".3"/>
+</g></svg>
+<span class="icon-name">Daily Quest</span><span class="cat c-q">QUEST</span></div></div>
+
+<!-- Weekly Quest -->
+<div class="card" data-n="weekly quest calendar schedule">
+<div class="before"><span class="emoji-big">📅</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Weekly Quest</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="8" y="14" width="64" height="58" rx="10" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <rect x="8" y="14" width="64" height="20" rx="10" fill="#1848a0"/>
+  <rect x="8" y="28" width="64" height="6" fill="#1848a0"/>
+  <rect x="24" y="6" width="8" height="16" rx="4" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <rect x="48" y="6" width="8" height="16" rx="4" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <circle cx="18" cy="48" r="6" fill="url(#gGreen)"/><text x="18" y="51" text-anchor="middle" font-size="8" fill="white" font-weight="700">&#x2713;</text>
+  <circle cx="32" cy="48" r="6" fill="url(#gGreen)"/><text x="32" y="51" text-anchor="middle" font-size="8" fill="white" font-weight="700">&#x2713;</text>
+  <circle cx="46" cy="48" r="6" fill="url(#gGreen)"/><text x="46" y="51" text-anchor="middle" font-size="8" fill="white" font-weight="700">&#x2713;</text>
+  <circle cx="60" cy="48" r="6" fill="#1040a0" opacity=".5"/>
+  <circle cx="18" cy="62" r="6" fill="#1040a0" opacity=".5"/>
+  <circle cx="32" cy="62" r="6" fill="#1040a0" opacity=".5"/>
+  <circle cx="46" cy="62" r="6" fill="#1040a0" opacity=".5"/>
+  <ellipse cx="28" cy="18" rx="14" ry="4" fill="white" opacity=".15"/>
+</g></svg>
+<span class="icon-name">Weekly Quest</span><span class="cat c-q">QUEST</span></div></div>
+
+<!-- Story Quest -->
+<div class="card" data-n="story quest book narrative chapter">
+<div class="before"><span class="emoji-big">📖</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Story Quest</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="14" y="10" width="52" height="60" rx="6" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2.5"/>
+  <rect x="12" y="10" width="12" height="60" rx="6" fill="#6828c0" stroke="#4018a0" stroke-width="1.5"/>
+  <rect x="62" y="14" width="4" height="52" rx="2" fill="#d8d0e8"/>
+  <rect x="24" y="24" width="28" height="4" rx="2" fill="white" opacity=".5"/>
+  <rect x="28" y="32" width="20" height="3" rx="1.5" fill="white" opacity=".3"/>
+  <path d="M40 42 L30 48 L30 60 Q30 66 40 70 Q50 66 50 60 L50 48 Z" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <polygon points="40,48 42,54 40,56 38,54" fill="white" opacity=".8"/>
+  <ellipse cx="28" cy="16" rx="8" ry="4" fill="white" opacity=".2"/>
+</g></svg>
+<span class="icon-name">Story Quest</span><span class="cat c-q">QUEST</span></div></div>
+
+<!-- Special Quest -->
+<div class="card" data-n="special quest event unique legendary comet">
+<div class="before"><span class="emoji-big">🌟</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Special Quest</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-o)">
+  <path d="M10 72 Q30 50 58 24" stroke="url(#gXp)" stroke-width="8" stroke-linecap="round" opacity=".35"/>
+  <polygon points="60,8 64,22 78,22 66,30 70,44 60,36 50,44 54,30 42,22 56,22" fill="url(#gGold)" stroke="#8a6020" stroke-width="2.5"/>
+  <polygon points="60,14 63,24 72,24 65,29 68,38 60,33 52,38 55,29 48,24 57,24" fill="white" opacity=".3"/>
+  <ellipse cx="55" cy="14" rx="5" ry="3" fill="white" opacity=".35"/>
+  <circle cx="20" cy="28" r="2.5" fill="white" opacity=".5"/><circle cx="36" cy="12" r="2" fill="white" opacity=".4"/>
+</g></svg>
+<span class="icon-name">Special Quest</span><span class="cat c-q">QUEST</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ MAP ZONES ═══════════════════════════ -->
+<div class="section" id="s-zone">
+<div class="section-title">Map Zones</div>
+<div class="grid">
+
+<!-- Forest -->
+<div class="card" data-n="forest tree zone green endurance">
+<div class="before"><span class="emoji-big">🌲</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Forest</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gGreen)" stroke="#107030" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- tree silhouette -->
+  <polygon points="40,10 56,36 50,36 62,54 18,54 30,36 24,36" fill="white" opacity=".85"/>
+  <rect x="36" y="52" width="8" height="14" rx="3" fill="#8a6020" opacity=".6"/>
+  <!-- small back tree -->
+  <polygon points="58,30 66,46 50,46" fill="white" opacity=".45"/>
+  <polygon points="22,32 30,46 14,46" fill="white" opacity=".45"/>
+</g></svg>
+<span class="icon-name">Forest</span><span class="cat c-z">ZONE</span></div></div>
+
+<!-- Mountains -->
+<div class="card" data-n="mountain strength peak snow zone">
+<div class="before"><span class="emoji-big">⛰️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Mountains</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gSilver)" stroke="#506070" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <polygon points="50,14 72,62 28,62" fill="url(#gDark)" stroke="#33405a" stroke-width="1.5"/>
+  <polygon points="50,14 56,30 44,30" fill="white" opacity=".9"/>
+  <polygon points="24,22 50,62 -2,62" fill="#404858" stroke="#33405a" stroke-width="2"/>
+  <polygon points="24,22 31,38 17,38" fill="white" opacity=".95"/>
+</g></svg>
+<span class="icon-name">Mountains</span><span class="cat c-z">ZONE</span></div></div>
+
+<!-- Ocean -->
+<div class="card" data-n="ocean water sea waves blue zone">
+<div class="before"><span class="emoji-big">🌊</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Ocean</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <circle cx="56" cy="22" r="8" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <ellipse cx="53" cy="19" rx="3" ry="2" fill="white" opacity=".3"/>
+  <path d="M8 42 Q20 34 32 42 Q44 50 56 42 Q64 36 72 42" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+  <path d="M8 52 Q20 44 32 52 Q44 60 56 52 Q64 46 72 52" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>
+  <path d="M8 62 Q20 54 32 62 Q44 70 56 62 Q64 56 72 62" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".25"/>
+</g></svg>
+<span class="icon-name">Ocean</span><span class="cat c-z">ZONE</span></div></div>
+
+<!-- Desert -->
+<div class="card" data-n="desert sand dune zone hot">
+<div class="before"><span class="emoji-big">🏜️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Desert</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gSand)" stroke="#8a6020" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- sun top right -->
+  <circle cx="58" cy="20" r="10" fill="url(#gOrange)" stroke="#904800" stroke-width="1.5"/>
+  <ellipse cx="54" cy="16" rx="4" ry="3" fill="white" opacity=".3"/>
+  <!-- dunes -->
+  <path d="M8 56 Q24 40 42 50 Q58 60 72 46 L72 72 L8 72 Z" fill="#c89020" opacity=".6"/>
+  <path d="M8 64 Q22 52 40 60 Q56 68 72 54 L72 72 L8 72 Z" fill="#a07028" opacity=".5"/>
+  <!-- cactus -->
+  <rect x="20" y="42" width="6" height="22" rx="3" fill="url(#gGreen)"/>
+  <rect x="12" y="48" width="10" height="5" rx="2.5" fill="url(#gGreen)"/>
+  <rect x="22" y="38" width="10" height="5" rx="2.5" fill="url(#gGreen)"/>
+</g></svg>
+<span class="icon-name">Desert</span><span class="cat c-z">ZONE</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ BOSS & COMBAT ═══════════════════════ -->
+<div class="section" id="s-boss">
+<div class="section-title">Boss &amp; Combat</div>
+<div class="grid">
+
+<!-- Boss Skull -->
+<div class="card" data-n="boss skull enemy danger monster">
+<div class="before"><span class="emoji-big">💀</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Boss</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-r)">
+  <!-- skull orb shape inspired by reference -->
+  <circle cx="40" cy="38" r="30" fill="url(#gDark)" stroke="#33405a" stroke-width="2.5"/>
+  <ellipse cx="40" cy="74" rx="16" ry="4" fill="#000" opacity=".3"/>
+  <!-- skull face -->
+  <ellipse cx="30" cy="34" rx="9" ry="10" fill="#0c1018"/>
+  <ellipse cx="50" cy="34" rx="9" ry="10" fill="#0c1018"/>
+  <!-- glowing red eyes -->
+  <ellipse cx="30" cy="35" rx="6" ry="7" fill="url(#gRed)" opacity=".85"/>
+  <ellipse cx="50" cy="35" rx="6" ry="7" fill="url(#gRed)" opacity=".85"/>
+  <ellipse cx="28" cy="32" rx="2.5" ry="2" fill="white" opacity=".45"/>
+  <ellipse cx="48" cy="32" rx="2.5" ry="2" fill="white" opacity=".45"/>
+  <!-- nose -->
+  <path d="M38 48 L40 44 L42 48 Z" fill="#0c1018"/>
+  <!-- teeth -->
+  <rect x="28" y="52" width="6" height="8" rx="2" fill="white" opacity=".9"/>
+  <rect x="36" y="52" width="6" height="10" rx="2" fill="white" opacity=".9"/>
+  <rect x="44" y="52" width="6" height="8" rx="2" fill="white" opacity=".9"/>
+  <!-- highlight orb -->
+  <ellipse cx="28" cy="16" rx="12" ry="8" fill="white" opacity=".18"/>
+</g></svg>
+<span class="icon-name">Boss</span><span class="cat c-b">BOSS</span></div></div>
+
+<!-- Dragon -->
+<div class="card" data-n="dragon boss raid legendary monster">
+<div class="before"><span class="emoji-big">🐉</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Dragon</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <!-- dragon orb (like reference monsters) -->
+  <circle cx="40" cy="40" r="30" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2.5"/>
+  <ellipse cx="40" cy="74" rx="16" ry="4" fill="#000" opacity=".3"/>
+  <!-- horns -->
+  <polygon points="22,14 28,28 18,28" fill="url(#gSilver)"/>
+  <polygon points="58,14 62,28 52,28" fill="url(#gSilver)"/>
+  <!-- eyes -->
+  <ellipse cx="30" cy="36" rx="8" ry="8" fill="#ffe040"/>
+  <ellipse cx="30" cy="36" rx="3" ry="5" fill="#200030"/>
+  <ellipse cx="50" cy="36" rx="8" ry="8" fill="#ffe040"/>
+  <ellipse cx="50" cy="36" rx="3" ry="5" fill="#200030"/>
+  <ellipse cx="28" cy="33" rx="2.5" ry="1.5" fill="white" opacity=".5"/>
+  <ellipse cx="48" cy="33" rx="2.5" ry="1.5" fill="white" opacity=".5"/>
+  <!-- snout -->
+  <ellipse cx="40" cy="50" rx="14" ry="8" fill="#6828c0"/>
+  <circle cx="34" cy="48" r="2.5" fill="#200030"/>
+  <circle cx="46" cy="48" r="2.5" fill="#200030"/>
+  <!-- mouth grin -->
+  <path d="M30 54 Q40 60 50 54" fill="none" stroke="#200030" stroke-width="2" stroke-linecap="round"/>
+  <!-- fangs -->
+  <polygon points="32,54 35,60 29,60" fill="white"/>
+  <polygon points="48,54 51,60 45,60" fill="white"/>
+  <!-- fire breath particles -->
+  <circle cx="14" cy="52" r="4" fill="url(#gFire)" opacity=".8"/>
+  <circle cx="8" cy="48" r="3" fill="url(#gFire)" opacity=".6"/>
+  <!-- highlight orb top -->
+  <ellipse cx="28" cy="18" rx="12" ry="8" fill="white" opacity=".22"/>
+</g></svg>
+<span class="icon-name">Dragon</span><span class="cat c-b">BOSS</span></div></div>
+
+<!-- Sword -->
+<div class="card" data-n="sword weapon attack combat battle">
+<div class="before"><span class="emoji-big">⚔️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Sword</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <g transform="rotate(-45,40,40)">
+    <!-- blade -->
+    <polygon points="40,4 44,48 40,56 36,48" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+    <rect x="39" y="6" width="2" height="40" rx="1" fill="white" opacity=".3"/>
+    <!-- guard -->
+    <rect x="24" y="46" width="32" height="8" rx="4" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+    <!-- grip -->
+    <rect x="36" y="54" width="8" height="14" rx="3" fill="url(#gBrown)"/>
+    <!-- pommel -->
+    <circle cx="40" cy="72" r="5" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  </g>
+</g></svg>
+<span class="icon-name">Sword</span><span class="cat c-b">COMBAT</span></div></div>
+
+<!-- Shield -->
+<div class="card" data-n="shield defense block protect armor">
+<div class="before"><span class="emoji-big">🛡️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Shield</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <path d="M40 6 L70 18 L70 44 Q70 66 40 76 Q10 66 10 44 L10 18 Z" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <ellipse cx="28" cy="16" rx="12" ry="6" fill="white" opacity=".25"/>
+  <rect x="36" y="24" width="8" height="34" rx="3" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <rect x="22" y="36" width="36" height="8" rx="3" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <circle cx="40" cy="20" r="4" fill="url(#gRed)" stroke="#901010" stroke-width="1"/>
+  <ellipse cx="38" cy="18" rx="1.5" ry="1" fill="white" opacity=".4"/>
+</g></svg>
+<span class="icon-name">Shield</span><span class="cat c-b">COMBAT</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ ITEMS & EQUIPMENT ═══════════════════ -->
+<div class="section" id="s-item">
+<div class="section-title">Items &amp; Equipment</div>
+<div class="grid">
+
+<!-- Boots -->
+<div class="card" data-n="boot shoe equipment item speed">
+<div class="before"><span class="emoji-big">👟</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Boots</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <path d="M24 18 L24 54 Q22 64 34 64 L62 64 Q70 64 70 56 L70 50 Q70 44 58 44 L42 44 L40 18 Z" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <rect x="20" y="62" width="52" height="10" rx="5" fill="url(#gDark)" stroke="#181c24" stroke-width="1.5"/>
+  <path d="M26 50 Q38 42 56 48" fill="none" stroke="url(#gOrange)" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="28" y1="26" x2="38" y2="28" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+  <line x1="28" y1="32" x2="38" y2="30" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+  <line x1="28" y1="38" x2="38" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+  <ellipse cx="30" cy="22" rx="6" ry="3" fill="white" opacity=".25"/>
+</g></svg>
+<span class="icon-name">Boots</span><span class="cat c-i">ITEM</span></div></div>
+
+<!-- Gloves -->
+<div class="card" data-n="gloves gauntlet hands gear">
+<div class="before"><span class="emoji-big">🧤</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Gloves</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <!-- right glove chunky -->
+  <rect x="38" y="36" width="26" height="30" rx="8" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="40" y="18" width="8" height="22" rx="4" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="50" y="16" width="8" height="22" rx="4" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="60" y="20" width="7" height="20" rx="3.5" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <ellipse cx="50" cy="22" rx="6" ry="3" fill="white" opacity=".25"/>
+  <!-- left glove chunky -->
+  <rect x="10" y="36" width="26" height="30" rx="8" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="12" y="18" width="8" height="22" rx="4" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="22" y="16" width="8" height="22" rx="4" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <rect x="6" y="20" width="7" height="20" rx="3.5" fill="url(#gRed)" stroke="#901010" stroke-width="2"/>
+  <ellipse cx="20" cy="22" rx="6" ry="3" fill="white" opacity=".25"/>
+</g></svg>
+<span class="icon-name">Gloves</span><span class="cat c-i">ITEM</span></div></div>
+
+<!-- Armor -->
+<div class="card" data-n="armor chest plate gear defense">
+<div class="before"><span class="emoji-big">🛡️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Armor</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <path d="M20 18 Q20 10 40 8 Q60 10 60 18 L62 50 Q62 64 40 70 Q18 64 18 50Z" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <ellipse cx="20" cy="18" rx="10" ry="8" fill="url(#gSilver)" stroke="#506070" stroke-width="2"/>
+  <ellipse cx="60" cy="18" rx="10" ry="8" fill="url(#gSilver)" stroke="#506070" stroke-width="2"/>
+  <ellipse cx="18" cy="14" rx="4" ry="3" fill="white" opacity=".25"/>
+  <ellipse cx="58" cy="14" rx="4" ry="3" fill="white" opacity=".25"/>
+  <polygon points="40,26 44,38 40,42 36,38" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <circle cx="26" cy="32" r="3" fill="url(#gSilver)"/>
+  <circle cx="54" cy="32" r="3" fill="url(#gSilver)"/>
+  <ellipse cx="30" cy="14" rx="10" ry="5" fill="white" opacity=".22"/>
+</g></svg>
+<span class="icon-name">Armor</span><span class="cat c-i">ITEM</span></div></div>
+
+<!-- Ring -->
+<div class="card" data-n="ring accessory jewelry xp bonus">
+<div class="before"><span class="emoji-big">💍</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Ring</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-p)">
+  <circle cx="40" cy="48" r="22" fill="none" stroke="url(#gGold)" stroke-width="9"/>
+  <circle cx="40" cy="48" r="15" fill="none" stroke="#705010" stroke-width="3" opacity=".4"/>
+  <circle cx="40" cy="26" r="13" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2"/>
+  <polygon points="40,16 46,22 40,28 34,22" fill="#c088ff" opacity=".5"/>
+  <ellipse cx="36" cy="19" rx="4" ry="3" fill="white" opacity=".4"/>
+  <path d="M22 42 Q26 36 30 40" stroke="white" stroke-width="2" fill="none" opacity=".25" stroke-linecap="round"/>
+</g></svg>
+<span class="icon-name">Ring</span><span class="cat c-i">ITEM</span></div></div>
+
+<!-- Mount -->
+<div class="card" data-n="mount horse ride travel cosmetic">
+<div class="before"><span class="emoji-big">🐴</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Mount</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <!-- horse orb style (like reference monsters) -->
+  <circle cx="40" cy="40" r="30" fill="url(#gSilver)" stroke="#506070" stroke-width="2.5"/>
+  <ellipse cx="40" cy="74" rx="16" ry="4" fill="#000" opacity=".3"/>
+  <!-- horse ears -->
+  <polygon points="28,14 32,24 24,24" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <polygon points="52,14 56,24 48,24" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <!-- mane -->
+  <path d="M32 18 Q36 26 34 30 Q38 24 38 30 Q42 24 42 30" fill="#506070" stroke="none"/>
+  <!-- eyes -->
+  <circle cx="32" cy="36" r="5" fill="#181c24"/><circle cx="33" cy="35" r="2" fill="white"/>
+  <circle cx="48" cy="36" r="5" fill="#181c24"/><circle cx="49" cy="35" r="2" fill="white"/>
+  <!-- snout -->
+  <ellipse cx="40" cy="50" rx="12" ry="8" fill="#8898a8"/>
+  <ellipse cx="36" cy="49" rx="2.5" ry="2" fill="#506070"/>
+  <ellipse cx="44" cy="49" rx="2.5" ry="2" fill="#506070"/>
+  <!-- smile -->
+  <path d="M34 55 Q40 59 46 55" fill="none" stroke="#506070" stroke-width="2" stroke-linecap="round"/>
+  <!-- saddle indicator -->
+  <rect x="34" y="60" width="12" height="6" rx="3" fill="url(#gRed)" stroke="#901010" stroke-width="1"/>
+  <!-- highlight -->
+  <ellipse cx="28" cy="20" rx="10" ry="7" fill="white" opacity=".25"/>
+</g></svg>
+<span class="icon-name">Mount</span><span class="cat c-i">ITEM</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ SOCIAL ═══════════════════════════════ -->
+<div class="section" id="s-social">
+<div class="section-title">Social</div>
+<div class="grid">
+
+<!-- Guild -->
+<div class="card" data-n="guild group team raid social banner">
+<div class="before"><span class="emoji-big">👥</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Guild</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <!-- banner -->
+  <rect x="28" y="6" width="24" height="38" rx="3" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2"/>
+  <path d="M28 44 Q34 52 40 44 Q46 36 52 44" fill="url(#gPurple)" stroke="#4018a0" stroke-width="2"/>
+  <rect x="38" y="4" width="4" height="52" rx="2" fill="url(#gGold)" stroke="#8a6020" stroke-width="1"/>
+  <polygon points="40,14 42,20 48,20 43,24 45,30 40,26 35,30 37,24 32,20 38,20" fill="url(#gGold)"/>
+  <!-- 3 figure circles -->
+  <circle cx="40" cy="66" r="7" fill="url(#gBlue)" stroke="#1040a0" stroke-width="1.5"/>
+  <circle cx="24" cy="68" r="6" fill="url(#gGreen)" stroke="#107030" stroke-width="1.5"/>
+  <circle cx="56" cy="68" r="6" fill="url(#gRed)" stroke="#901010" stroke-width="1.5"/>
+  <ellipse cx="34" cy="12" rx="6" ry="4" fill="white" opacity=".22"/>
+</g></svg>
+<span class="icon-name">Guild</span><span class="cat c-x">SOCIAL</span></div></div>
+
+<!-- Leaderboard -->
+<div class="card" data-n="leaderboard rank podium first second third">
+<div class="before"><span class="emoji-big">🏅</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Leaderboard</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="6" y="66" width="68" height="10" rx="5" fill="url(#gDark)" stroke="#33405a" stroke-width="1.5"/>
+  <rect x="8" y="42" width="20" height="26" rx="4" fill="url(#gSilver)" stroke="#506070" stroke-width="2"/>
+  <text x="18" y="60" text-anchor="middle" font-size="14" font-weight="900" font-family="Arial,sans-serif" fill="#506070">2</text>
+  <rect x="30" y="24" width="20" height="44" rx="4" fill="url(#gGold)" stroke="#8a6020" stroke-width="2"/>
+  <text x="40" y="52" text-anchor="middle" font-size="16" font-weight="900" font-family="Arial,sans-serif" fill="#8a6020">1</text>
+  <!-- crown -->
+  <polygon points="40,6 34,18 38,14 40,20 42,14 46,18 52,8 54,22 26,22" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <circle cx="40" cy="9" r="3" fill="url(#gRed)"/>
+  <rect x="52" y="50" width="20" height="18" rx="4" fill="url(#gOrange)" stroke="#904800" stroke-width="2"/>
+  <text x="62" y="64" text-anchor="middle" font-size="13" font-weight="900" font-family="Arial,sans-serif" fill="#704000">3</text>
+  <ellipse cx="36" cy="26" rx="6" ry="3" fill="white" opacity=".22"/>
+</g></svg>
+<span class="icon-name">Leaderboard</span><span class="cat c-x">SOCIAL</span></div></div>
+
+<!-- Friends -->
+<div class="card" data-n="friends add follow social connect heart">
+<div class="before"><span class="emoji-big">🤝</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Friends</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gBlue)" stroke="#1040a0" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- two figures -->
+  <circle cx="28" cy="34" r="10" fill="white"/>
+  <rect x="18" y="44" width="20" height="14" rx="6" fill="white"/>
+  <circle cx="52" cy="34" r="10" fill="white"/>
+  <rect x="42" y="44" width="20" height="14" rx="6" fill="white"/>
+  <!-- heart between them -->
+  <path d="M40 28 C37 24 32 26 32 30 C32 34 36 36 40 40 C44 36 48 34 48 30 C48 26 43 24 40 28Z" fill="url(#gRed)" stroke="#901010" stroke-width="1.5"/>
+  <ellipse cx="35" cy="28" rx="3" ry="2" fill="white" opacity=".3"/>
+</g></svg>
+<span class="icon-name">Friends</span><span class="cat c-x">SOCIAL</span></div></div>
+
+</div></div>
+
+<!-- ═══════════════════════════════ UI & ADMIN ═══════════════════════════ -->
+<div class="section" id="s-ui">
+<div class="section-title">UI &amp; Admin</div>
+<div class="grid">
+
+<!-- Settings -->
+<div class="card" data-n="settings gear cog admin config">
+<div class="before"><span class="emoji-big">⚙️</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Settings</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <circle cx="40" cy="40" r="32" fill="url(#gSilver)" stroke="#506070" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".22"/>
+  <!-- simplified gear shape -->
+  <path d="M36 12 L44 12 L46 18 L52 18 L56 12 L62 16 L58 22 L62 28 L68 28 L68 36 L62 38 L62 44 L68 46 L66 54 L60 52 L56 56 L56 62 L48 64 L46 58 L42 56 L38 58 L36 64 L28 62 L28 56 L24 52 L18 54 L14 46 L20 44 L20 38 L14 36 L14 28 L20 28 L24 22 L18 16 L24 12 L30 18 L36 18 Z" fill="url(#gDark)" stroke="#33405a" stroke-width="2"/>
+  <circle cx="40" cy="38" r="10" fill="url(#gSilver)" stroke="#506070" stroke-width="2"/>
+  <ellipse cx="36" cy="34" rx="4" ry="3" fill="white" opacity=".3"/>
+</g></svg>
+<span class="icon-name">Settings</span><span class="cat c-u">ADMIN</span></div></div>
+
+<!-- Notification -->
+<div class="card" data-n="notification bell alert message ping">
+<div class="before"><span class="emoji-big">🔔</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Notification</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <path d="M40 8 C28 8 18 18 18 32 L14 56 L66 56 L62 32 C62 18 52 8 40 8Z" fill="url(#gGold)" stroke="#8a6020" stroke-width="2.5"/>
+  <rect x="36" y="2" width="8" height="10" rx="4" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+  <rect x="10" y="54" width="60" height="8" rx="4" fill="#c89020" stroke="#8a6020" stroke-width="1.5"/>
+  <ellipse cx="40" cy="64" rx="8" ry="5" fill="url(#gSilver)" stroke="#506070" stroke-width="1.5"/>
+  <circle cx="60" cy="14" r="9" fill="url(#gRed)" stroke="#901010" stroke-width="1.5"/>
+  <text x="60" y="18" text-anchor="middle" font-size="10" font-weight="800" font-family="Arial,sans-serif" fill="white">3</text>
+  <ellipse cx="28" cy="16" rx="10" ry="6" fill="white" opacity=".28"/>
+</g></svg>
+<span class="icon-name">Notification</span><span class="cat c-u">UI</span></div></div>
+
+<!-- Lock -->
+<div class="card" data-n="lock locked zone requirement closed">
+<div class="before"><span class="emoji-big">🔒</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Locked</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <rect x="14" y="36" width="52" height="38" rx="10" fill="url(#gSilver)" stroke="#506070" stroke-width="2.5"/>
+  <circle cx="40" cy="52" r="8" fill="#181c24"/>
+  <rect x="37" y="56" width="6" height="10" rx="2" fill="#181c24"/>
+  <path d="M22 36 L22 24 Q22 6 40 6 Q58 6 58 24 L58 36" fill="none" stroke="url(#gGold)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M26 36 L26 24 Q26 12 40 12 Q54 12 54 24 L54 36" fill="none" stroke="white" stroke-width="2.5" opacity=".2" stroke-linecap="round"/>
+  <ellipse cx="28" cy="42" rx="10" ry="5" fill="white" opacity=".18"/>
+  <circle cx="40" cy="52" r="4" fill="url(#gOrange)" opacity=".5"/>
+</g></svg>
+<span class="icon-name">Locked</span><span class="cat c-u">UI</span></div></div>
+
+<!-- Check -->
+<div class="card" data-n="check done complete success finish">
+<div class="before"><span class="emoji-big">✅</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Complete</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#gl-g)">
+  <circle cx="40" cy="40" r="32" fill="url(#gGreen)" stroke="#107030" stroke-width="2.5"/>
+  <ellipse cx="30" cy="20" rx="12" ry="8" fill="white" opacity=".25"/>
+  <polyline points="20,40 34,56 62,24" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</g></svg>
+<span class="icon-name">Complete</span><span class="cat c-u">UI</span></div></div>
+
+<!-- Key -->
+<div class="card" data-n="key unlock open collectible">
+<div class="before"><span class="emoji-big">🔑</span><span class="lbl lbl-b">BEFORE</span><span class="icon-name">Key</span></div>
+<div class="after"><span class="lbl lbl-a">AFTER</span>
+<svg width="68" height="68" viewBox="0 0 80 80"><g filter="url(#ds)">
+  <g transform="rotate(-45,40,40)">
+    <circle cx="28" cy="26" r="18" fill="url(#gGold)" stroke="#8a6020" stroke-width="2.5"/>
+    <circle cx="28" cy="26" r="10" fill="#1a2233" stroke="#8a6020" stroke-width="1.5"/>
+    <rect x="24" y="40" width="8" height="34" rx="3" fill="url(#gGold)" stroke="#8a6020" stroke-width="2"/>
+    <rect x="32" y="54" width="8" height="7" rx="3" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+    <rect x="32" y="64" width="6" height="6" rx="2" fill="url(#gGold)" stroke="#8a6020" stroke-width="1.5"/>
+    <ellipse cx="22" cy="18" rx="8" ry="5" fill="white" opacity=".3"/>
+    <rect x="24" y="40" width="3" height="30" rx="1.5" fill="white" opacity=".15"/>
+  </g>
+</g></svg>
+<span class="icon-name">Key</span><span class="cat c-u">UI</span></div></div>
+
+</div></div>
+
+<script>
+function flt(q){q=q.toLowerCase().trim();document.querySelectorAll('.section').forEach(s=>{let v=false;s.querySelectorAll('.card').forEach(c=>{const m=!q||c.dataset.n.includes(q);c.classList.toggle('hidden',!m);if(m)v=true});s.style.display=v?'':'none'})}
+</script>
+</body>
+</html>

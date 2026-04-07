@@ -4,7 +4,6 @@ using LifeLevel.Modules.Identity.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Application.UseCases;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
-using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +29,18 @@ file sealed class DbCharacterLevelReadPort(DbContext db) : ICharacterLevelReadPo
             .FirstOrDefaultAsync(ct);
 }
 
+file sealed class EmptyMapNodeCountPort : IMapNodeCountPort
+{
+    public Task<Dictionary<Guid, int>> GetNodeCountsByZoneIdsAsync(IEnumerable<Guid> zoneIds, CancellationToken ct = default)
+        => Task.FromResult(new Dictionary<Guid, int>());
+}
+
+file sealed class EmptyMapNodeCompletedCountPort : IMapNodeCompletedCountPort
+{
+    public Task<Dictionary<Guid, int>> GetCompletedNodeCountsByZoneIdsAsync(Guid userId, IEnumerable<Guid> zoneIds, CancellationToken ct = default)
+        => Task.FromResult(new Dictionary<Guid, int>());
+}
+
 public class WorldZoneServiceTests
 {
     private static AppDbContext CreateDb(string dbName)
@@ -41,7 +52,12 @@ public class WorldZoneServiceTests
     }
 
     private static WorldZoneService CreateService(AppDbContext db)
-        => new WorldZoneService(db, new NoOpCharacterXpPort(), new DbCharacterLevelReadPort(db));
+        => new WorldZoneService(
+            db,
+            new NoOpCharacterXpPort(),
+            new DbCharacterLevelReadPort(db),
+            new EmptyMapNodeCountPort(),
+            new EmptyMapNodeCompletedCountPort());
 
     // ──────────────────────────────────────────────────────────────────────────
     // Test 1: GetFullWorldAsync returns all zones with correct user state
@@ -313,5 +329,291 @@ public class WorldZoneServiceTests
         var zone2Unlock = await db.UserZoneUnlocks
             .FirstOrDefaultAsync(u => u.UserId == userId && u.WorldZoneId == zone2.Id);
         Assert.NotNull(zone2Unlock);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 6: SetDestinationAsync crossroads instant pass-through
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task SetDestinationAsync_CrossroadsInstantPassThrough()
+    {
+        var db = CreateDb(nameof(SetDestinationAsync_CrossroadsInstantPassThrough));
+
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Username = "test6", Email = "test6@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        var crossroads = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Crossroads", IsCrossroads = true, TotalXp = 50 };
+        db.WorldZones.AddRange(zone1, crossroads);
+
+        var edge = new WorldZoneEdge
+        {
+            Id = Guid.NewGuid(),
+            FromZoneId = zone1.Id,
+            ToZoneId = crossroads.Id,
+            DistanceKm = 3,
+            IsBidirectional = true
+        };
+        db.WorldZoneEdges.Add(edge);
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = worldId,
+            CurrentZoneId = zone1.Id
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = zone1.Id,
+            UserWorldProgressId = progress.Id
+        });
+
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+        await service.SetDestinationAsync(userId, crossroads.Id);
+
+        // Crossroads should be instant — player is now AT the crossroads, no edge travel needed
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == userId);
+        Assert.Equal(crossroads.Id, updated.CurrentZoneId);
+        Assert.Null(updated.CurrentEdgeId);
+        Assert.Null(updated.DestinationZoneId);
+        Assert.Equal(0, updated.DistanceTraveledOnEdge);
+
+        // Crossroads should be unlocked
+        var crossroadsUnlock = await db.UserZoneUnlocks
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.WorldZoneId == crossroads.Id);
+        Assert.NotNull(crossroadsUnlock);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 7: CompleteZoneAsync unlocks zone and awards XP
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task CompleteZoneAsync_UnlocksZoneAndAwardsXp()
+    {
+        var db = CreateDb(nameof(CompleteZoneAsync_UnlocksZoneAndAwardsXp));
+
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Username = "test7", Email = "test7@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        var zone2 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 2", Icon = "🏔️", TotalXp = 200 };
+        db.WorldZones.AddRange(zone1, zone2);
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = worldId,
+            CurrentZoneId = zone1.Id
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = zone1.Id,
+            UserWorldProgressId = progress.Id
+        });
+
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+        var result = await service.CompleteZoneAsync(userId, zone2.Id);
+
+        Assert.Equal("Zone 2", result.ZoneName);
+        Assert.Equal(200, result.XpAwarded);
+        Assert.False(result.AlreadyCompleted);
+
+        // Player should now be at zone2
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == userId);
+        Assert.Equal(zone2.Id, updated.CurrentZoneId);
+
+        // Zone2 should be unlocked
+        var unlock = await db.UserZoneUnlocks
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.WorldZoneId == zone2.Id);
+        Assert.NotNull(unlock);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 8: CompleteZoneAsync returns AlreadyCompleted for re-completion
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task CompleteZoneAsync_AlreadyCompleted_NoDoubleXp()
+    {
+        var db = CreateDb(nameof(CompleteZoneAsync_AlreadyCompleted_NoDoubleXp));
+
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Username = "test8", Email = "test8@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true, TotalXp = 100 };
+        db.WorldZones.Add(zone1);
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = worldId,
+            CurrentZoneId = zone1.Id
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = zone1.Id,
+            UserWorldProgressId = progress.Id
+        });
+
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+        var result = await service.CompleteZoneAsync(userId, zone1.Id);
+
+        Assert.True(result.AlreadyCompleted);
+        Assert.Equal(0, result.XpAwarded); // no double XP
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 9: AddDistanceAsync throws when no destination is set
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task AddDistanceAsync_ThrowsWhenNoDestination()
+    {
+        var db = CreateDb(nameof(AddDistanceAsync_ThrowsWhenNoDestination));
+
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Username = "test9", Email = "test9@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        db.WorldZones.Add(zone1);
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = worldId,
+            CurrentZoneId = zone1.Id
+            // No CurrentEdgeId or DestinationZoneId
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = zone1.Id,
+            UserWorldProgressId = progress.Id
+        });
+
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.AddDistanceAsync(userId, 3));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 10: AddDistanceAsync partial travel does not unlock destination
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task AddDistanceAsync_PartialTravel_DoesNotArrive()
+    {
+        var db = CreateDb(nameof(AddDistanceAsync_PartialTravel_DoesNotArrive));
+
+        var worldId = Guid.NewGuid();
+        var world = new World { Id = worldId, Name = "Test World", IsActive = true };
+        db.Worlds.Add(world);
+
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Username = "test10", Email = "test10@test.com", PasswordHash = "x" };
+        var character = new Character { Id = Guid.NewGuid(), UserId = userId, Level = 1 };
+        db.Users.Add(user);
+        db.Characters.Add(character);
+
+        var zone1 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 1", IsStartZone = true };
+        var zone2 = new WorldZoneEntity { Id = Guid.NewGuid(), WorldId = worldId, Name = "Zone 2" };
+        db.WorldZones.AddRange(zone1, zone2);
+
+        var edge = new WorldZoneEdge
+        {
+            Id = Guid.NewGuid(),
+            FromZoneId = zone1.Id,
+            ToZoneId = zone2.Id,
+            DistanceKm = 10,
+            IsBidirectional = true
+        };
+        db.WorldZoneEdges.Add(edge);
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = worldId,
+            CurrentZoneId = zone1.Id,
+            CurrentEdgeId = edge.Id,
+            DestinationZoneId = zone2.Id,
+            DistanceTraveledOnEdge = 0
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = zone1.Id,
+            UserWorldProgressId = progress.Id
+        });
+
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+        await service.AddDistanceAsync(userId, 4); // only 4 of 10 km
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == userId);
+        Assert.Equal(zone1.Id, updated.CurrentZoneId); // still at zone1
+        Assert.Equal(edge.Id, updated.CurrentEdgeId);   // still on edge
+        Assert.Equal(zone2.Id, updated.DestinationZoneId);
+        Assert.Equal(4, updated.DistanceTraveledOnEdge);
+
+        // Zone2 should NOT be unlocked yet
+        var zone2Unlock = await db.UserZoneUnlocks
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.WorldZoneId == zone2.Id);
+        Assert.Null(zone2Unlock);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 11: GetFullWorldAsync returns empty when no active world exists
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task GetFullWorldAsync_NoActiveWorld_ReturnsEmpty()
+    {
+        var db = CreateDb(nameof(GetFullWorldAsync_NoActiveWorld_ReturnsEmpty));
+
+        var service = CreateService(db);
+        var result = await service.GetFullWorldAsync(Guid.NewGuid());
+
+        Assert.Empty(result.Zones);
+        Assert.Empty(result.Edges);
+        Assert.Equal(0, result.CharacterLevel);
     }
 }

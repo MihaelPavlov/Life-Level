@@ -6,8 +6,10 @@ import '../../main.dart' show navigatorKey;
 import '../../features/auth/login_screen.dart';
 
 class ApiClient {
-  static const _baseUrl = 'https://2cf2-165-225-200-145.ngrok-free.app/api';
-  static const _storage = FlutterSecureStorage();
+  static const _baseUrl = 'https://b346-165-225-248-195.ngrok-free.app/api';
+  static final _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   static Dio get instance {
     final dio = Dio(BaseOptions(

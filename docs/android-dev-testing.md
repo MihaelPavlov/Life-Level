@@ -61,9 +61,9 @@ static const _baseUrl = 'https://XXXX.ngrok-free.app/api';
 
 The webhook subscription is bound to the ngrok URL, which changes every session.
 
-**Delete the old subscription** (ID 337974):
+**Delete the old subscription** (ID 339240):
 ```bash
-curl -X DELETE "https://www.strava.com/api/v3/push_subscriptions/337974?client_id=218444&client_secret=43b945da369ecd4364c0586eb12f691632f0f1cb"
+curl -X DELETE "https://www.strava.com/api/v3/push_subscriptions/339240?client_id=218444&client_secret=43b945da369ecd4364c0586eb12f691632f0f1cb"
 ```
 
 **Register a new subscription** with the current ngrok URL:

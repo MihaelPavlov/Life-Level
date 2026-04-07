@@ -26,6 +26,7 @@ import '../../features/home/providers/map_journey_provider.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/titles/titles_ranks_screen.dart';
+import '../../features/boss/screens/boss_screen.dart';
 import '../../features/quests/providers/quest_provider.dart';
 import '../../features/activity/providers/activity_provider.dart';
 import '../../features/streak/providers/streak_provider.dart';
@@ -53,6 +54,7 @@ class _MainShellState extends ConsumerState<MainShell>
   bool _radialOpen = false;
   bool _worldOpen = false;
   bool _titlesOpen = false;
+  bool _bossOpen = false;
   bool _loginRewardShown = false;
 
   late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
@@ -393,6 +395,7 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'world':   return const WorldMapScreen();
       case 'profile': return const ProfileScreen();
       case 'titles':  return const TitlesRanksScreen();
+      case 'boss':    return const BossScreen();
       default:        return Center(
         child: Text(id, style: const TextStyle(color: Colors.white38)),
       );
@@ -448,6 +451,15 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
+              // ── boss overlay ───────────────────────────────────────────
+              if (_bossOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: BossScreen(
+                    onClose: () => setState(() => _bossOpen = false),
+                  ),
+                ),
+
               // ── backdrop ────────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
@@ -491,7 +503,7 @@ class _MainShellState extends ConsumerState<MainShell>
                   navTabs: _navItems,
                   onTap: (i) {
                     _closeRadial();
-                    setState(() { _tabIndex = i; _worldOpen = false; _titlesOpen = false; });
+                    setState(() { _tabIndex = i; _worldOpen = false; _titlesOpen = false; _bossOpen = false; });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
                       ref.invalidate(mapJourneyProvider);
@@ -532,6 +544,10 @@ class _MainShellState extends ConsumerState<MainShell>
     }
     if (id == 'titles') {
       setState(() => _titlesOpen = true);
+      return;
+    }
+    if (id == 'boss') {
+      setState(() => _bossOpen = true);
       return;
     }
     // If the id is already in the nav bar, switch to that tab.

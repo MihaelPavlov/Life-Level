@@ -12,6 +12,8 @@ import '../quests/models/quest_models.dart'
 import '../quests/providers/quest_provider.dart';
 import '../../core/services/nav_tab_notifier.dart';
 import '../streak/providers/streak_provider.dart';
+import '../boss/providers/boss_provider.dart';
+import '../boss/models/boss_list_item.dart';
 import 'home_widgets.dart';
 
 // ── HEADER ──────────────────────────────────────────────────────────────────────
@@ -692,11 +694,31 @@ class HomeStatsRow extends ConsumerWidget {
 }
 
 // ── BOSS CARD ──────────────────────────────────────────────────────────────────────
-class HomeBossCard extends StatelessWidget {
+class HomeBossCard extends ConsumerWidget {
   const HomeBossCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bossAsync = ref.watch(bossListProvider);
+
+    return bossAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (bosses) {
+        final active = bosses.where((b) => b.isActive).toList();
+        if (active.isEmpty) return const SizedBox.shrink();
+        final boss = active.first;
+        return _buildCard(context, boss, ref);
+      },
+    );
+  }
+
+  Widget _buildCard(BuildContext context, BossListItem boss, WidgetRef ref) {
+    final remaining = boss.timeRemaining;
+    final timerText = remaining != null ? _fmtDuration(remaining) : '${boss.timerDays}d';
+    final hpRemaining = boss.maxHp - boss.hpDealt;
+    final hpPercent = boss.maxHp > 0 ? hpRemaining / boss.maxHp : 0.0;
+
     return HomeCard(
       borderColor: AppColors.red.withValues(alpha: 0.28),
       glowColor: AppColors.red.withValues(alpha: 0.07),
@@ -707,6 +729,9 @@ class HomeBossCard extends StatelessWidget {
             label: 'ACTIVE BOSS',
             action: 'Fight now →',
             actionColor: AppColors.red,
+            onActionTap: () {
+              NavTabNotifier.switchTo('boss');
+            },
           ),
           Row(
             children: [
@@ -717,21 +742,23 @@ class HomeBossCard extends StatelessWidget {
                   border: Border.all(color: AppColors.red.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Center(child: Text('🗻', style: TextStyle(fontSize: 22))),
+                child: Center(child: Text(boss.icon, style: const TextStyle(fontSize: 22))),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Iron Peak Mountain',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                  const SizedBox(height: 2),
-                  Text('⏰ 4d 12h remaining',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.red)),
-                  const SizedBox(height: 1),
-                  Text('HP: 8,420 / 12,000 · Veteran difficulty',
-                      style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(boss.name,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    const SizedBox(height: 2),
+                    Text('$timerText remaining',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.red)),
+                    const SizedBox(height: 1),
+                    Text('HP: ${_fmtNumber(hpRemaining)} / ${_fmtNumber(boss.maxHp)}',
+                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -739,24 +766,34 @@ class HomeBossCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('8,420 HP remaining',
-                  style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-              Text('70%',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.red)),
+              Text('${_fmtNumber(hpRemaining)} HP remaining',
+                  style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+              Text('${(hpPercent * 100).toStringAsFixed(0)}%',
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.red)),
             ],
           ),
           const SizedBox(height: 4),
-          HomeProgressBar(progress: 0.70, colors: [AppColors.red, AppColors.redDark]),
+          HomeProgressBar(progress: hpPercent, colors: [AppColors.red, AppColors.redDark]),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
             children: [
-              HomeBadge('🗡 You dealt 1,240 dmg', AppColors.red, fontSize: 9),
-              HomeBadge('+180 dmg / session', AppColors.orange, fontSize: 9),
+              HomeBadge('You dealt ${_fmtNumber(boss.hpDealt)} dmg', AppColors.red, fontSize: 9),
             ],
           ),
         ],
       ),
     );
+  }
+
+  static String _fmtDuration(Duration d) {
+    if (d.inDays > 0) return '${d.inDays}d ${d.inHours % 24}h';
+    if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes % 60}m';
+    return '${d.inMinutes}m';
+  }
+
+  static String _fmtNumber(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    return n.toString();
   }
 }
