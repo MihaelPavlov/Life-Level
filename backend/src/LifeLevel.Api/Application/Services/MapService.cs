@@ -252,11 +252,13 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
         if (progress.DistanceTraveledOnEdge >= edge.DistanceKm)
         {
             var destinationNodeId = progress.DestinationNodeId.Value;
+            var excessKm = progress.DistanceTraveledOnEdge - edge.DistanceKm;
 
             progress.CurrentNodeId = destinationNodeId;
             progress.CurrentEdgeId = null;
             progress.DistanceTraveledOnEdge = 0;
             progress.DestinationNodeId = null;
+            progress.PendingDistanceKm = excessKm > 0 ? excessKm : 0;
 
             var alreadyUnlocked = progress.UnlockedNodes.Any(u => u.MapNodeId == destinationNodeId);
             if (!alreadyUnlocked)

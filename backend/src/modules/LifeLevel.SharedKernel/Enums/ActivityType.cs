@@ -8,5 +8,6 @@ public enum ActivityType
     Yoga,
     Swimming,
     Climbing,
-    Hiking
+    Hiking,
+    Walking
 }

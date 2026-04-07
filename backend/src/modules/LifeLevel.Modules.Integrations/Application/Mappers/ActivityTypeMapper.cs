@@ -11,6 +11,7 @@ public static class ActivityTypeMapper
         public const string Climbing = "Climbing";
         public const string Yoga     = "Yoga";
         public const string Gym      = "Gym";
+        public const string Walking  = "Walking";
     }
 
     /// <summary>Maps a Strava sport_type string to an internal activity type.</summary>
@@ -19,7 +20,8 @@ public static class ActivityTypeMapper
         "Run" or "TrailRun" or "VirtualRun"                                           => Types.Running,
         "Ride" or "MountainBikeRide" or "GravelRide" or "VirtualRide" or "EBikeRide" => Types.Cycling,
         "Swim" or "OpenWaterSwim"                                                      => Types.Swimming,
-        "Hike" or "Walk"                                                               => Types.Hiking,
+        "Hike"                                                                             => Types.Hiking,
+        "Walk"                                                                             => Types.Walking,
         "RockClimbing" or "IceClimbing"                                                => Types.Climbing,
         "Yoga" or "Pilates"                                                            => Types.Yoga,
         _                                                                               => Types.Gym,
@@ -31,7 +33,8 @@ public static class ActivityTypeMapper
         "running" or "trail_running" or "treadmill_running" or "track_running"              => Types.Running,
         "cycling" or "road_cycling" or "mountain_biking" or "indoor_cycling" or "gravel_cycling" => Types.Cycling,
         "swimming" or "lap_swimming" or "open_water_swimming"                               => Types.Swimming,
-        "hiking" or "walking"                                                               => Types.Hiking,
+        "hiking"                                                                            => Types.Hiking,
+        "walking"                                                                           => Types.Walking,
         "rock_climbing" or "bouldering"                                                     => Types.Climbing,
         "yoga" or "pilates"                                                                 => Types.Yoga,
         _                                                                                   => Types.Gym,

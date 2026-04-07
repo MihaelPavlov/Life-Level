@@ -1,4 +1,4 @@
-enum ActivityType { running, cycling, gym, yoga, swimming, hiking, climbing }
+enum ActivityType { running, cycling, gym, yoga, swimming, hiking, climbing, walking }
 
 extension ActivityTypeExt on ActivityType {
   String get displayName => name[0].toUpperCase() + name.substring(1);
@@ -19,6 +19,8 @@ extension ActivityTypeExt on ActivityType {
         return '🥾';
       case ActivityType.climbing:
         return '🧗';
+      case ActivityType.walking:
+        return '🚶';
     }
   }
 

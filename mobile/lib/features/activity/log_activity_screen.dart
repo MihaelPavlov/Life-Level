@@ -29,6 +29,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
         ActivityType.running,
         ActivityType.cycling,
         ActivityType.hiking,
+        ActivityType.walking,
       ].contains(_selectedType);
 
   @override
@@ -64,7 +65,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
               onSelect: (t) => setState(() {
                 _selectedType = t;
                 // Reset distance when switching to non-distance type
-                if (![ActivityType.running, ActivityType.cycling, ActivityType.hiking]
+                if (![ActivityType.running, ActivityType.cycling, ActivityType.hiking, ActivityType.walking]
                     .contains(t)) {
                   _distanceKm = null;
                 }

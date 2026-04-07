@@ -140,7 +140,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     }
 
     if (isArrived) {
-      return _buildArrivedCard(destNode, onSync);
+      return _buildArrivedCard(destNode, onSync, progress.pendingDistanceKm ?? 0.0);
     }
 
     return _buildNoDestinationCard(progress.pendingDistanceKm ?? 0.0);
@@ -407,7 +407,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     );
   }
 
-  Widget _buildArrivedCard(MapNodeModel destNode, VoidCallback? onSync) {
+  Widget _buildArrivedCard(MapNodeModel destNode, VoidCallback? onSync, double pendingKm) {
     final challengeProgress = _challengeProgress(destNode);
 
     return HomeCard(
@@ -513,6 +513,10 @@ class HomeMapFeaturedCard extends StatelessWidget {
             colors: const [Color(0xFF3fb950), Color(0xFF6ddd8f)],
             height: 7,
           ),
+          if (pendingKm > 0) ...[
+            const SizedBox(height: 8),
+            _ReserveBarCard(pendingKm: pendingKm),
+          ],
           const SizedBox(height: 10),
           // Footer
           Row(
@@ -734,13 +738,28 @@ class HomeMapEventCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Upcoming locked nodes where level is met but not unlocked and not destination
-    final upcoming = data.nodes
+    final allUpcoming = data.nodes
         .where((n) =>
             n.userState?.isUnlocked == false &&
             n.userState?.isLevelMet == true &&
             n.userState?.isDestination == false)
-        .take(5)
         .toList();
+
+    // Prioritise nodes directly reachable from the current node
+    final currentId = data.userProgress.currentNodeId;
+    final adjacentIds = <String>{};
+    for (final edge in data.edges) {
+      if (edge.fromNodeId == currentId) adjacentIds.add(edge.toNodeId);
+      if (edge.toNodeId == currentId && edge.isBidirectional) {
+        adjacentIds.add(edge.fromNodeId);
+      }
+    }
+    allUpcoming.sort((a, b) {
+      final aAdj = adjacentIds.contains(a.id) ? 0 : 1;
+      final bAdj = adjacentIds.contains(b.id) ? 0 : 1;
+      return aAdj.compareTo(bAdj);
+    });
+    final upcoming = allUpcoming.take(5).toList();
 
     // Active mini-bosses
     final miniBosses = data.nodes
@@ -769,11 +788,17 @@ class HomeMapEventCarousel extends StatelessWidget {
           final node = items[index];
           final typeColor = _nodeTypeColor(node.type);
 
-          // Attempt to find distance from edges
+          // Attempt to find distance from current node first, then any edge
           double? distKm;
-          final edge = data.edges
-              .where((e) => e.toNodeId == node.id || e.fromNodeId == node.id)
+          final directEdge = data.edges
+              .where((e) =>
+                  (e.fromNodeId == currentId && e.toNodeId == node.id) ||
+                  (e.toNodeId == currentId && e.fromNodeId == node.id && e.isBidirectional))
               .firstOrNull;
+          final edge = directEdge ??
+              data.edges
+                  .where((e) => e.toNodeId == node.id || e.fromNodeId == node.id)
+                  .firstOrNull;
           if (edge != null) distKm = edge.distanceKm;
 
           // Mini-boss progress

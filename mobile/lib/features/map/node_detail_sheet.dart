@@ -171,6 +171,10 @@ class _NodeDetailSheetState extends State<NodeDetailSheet> {
                         const SizedBox(height: 16),
                       ],
                       _buildTypeContent(),
+                      if ((widget.userProgress.pendingDistanceKm ?? 0) > 0) ...[
+                        const SizedBox(height: 16),
+                        _buildReserveKmRow(),
+                      ],
                       const SizedBox(height: 16),
                       _buildDestinationButton(),
                     ],
@@ -221,6 +225,65 @@ class _NodeDetailSheetState extends State<NodeDetailSheet> {
           distanceKm: widget.distanceKm,
         );
     }
+  }
+
+  Widget _buildReserveKmRow() {
+    final km = widget.userProgress.pendingDistanceKm!;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.purple.withOpacity(0.08),
+        border: Border.all(color: AppColors.purple.withOpacity(0.28)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.purple.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: const Text('\u26a1', style: TextStyle(fontSize: 13)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'RESERVE KM',
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'Banked from recent activities',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textSecondary.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '+${km.toStringAsFixed(2)} km',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppColors.purple,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDestinationButton() {

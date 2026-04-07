@@ -8,6 +8,7 @@ abstract class ActivityTypes {
   static const climbing = 'Climbing';
   static const yoga     = 'Yoga';
   static const gym      = 'Gym';
+  static const walking  = 'Walking';
 }
 
 abstract class IntegrationProviders {
@@ -22,7 +23,7 @@ class ActivityTypeMapper {
     return switch (type) {
       HealthWorkoutActivityType.RUNNING              => ActivityTypes.running,
       HealthWorkoutActivityType.RUNNING_TREADMILL    => ActivityTypes.running,
-      HealthWorkoutActivityType.WALKING              => ActivityTypes.hiking,
+      HealthWorkoutActivityType.WALKING              => ActivityTypes.walking,
       HealthWorkoutActivityType.BIKING               => ActivityTypes.cycling,
       HealthWorkoutActivityType.SWIMMING             => ActivityTypes.swimming,
       HealthWorkoutActivityType.HIKING               => ActivityTypes.hiking,

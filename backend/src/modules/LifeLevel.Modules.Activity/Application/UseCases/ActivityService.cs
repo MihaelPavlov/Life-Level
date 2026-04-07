@@ -226,6 +226,7 @@ public class ActivityService(
             case ActivityType.Yoga:      flx = 3; sta = 1; baseXp *= 0.8; break;
             case ActivityType.Swimming:  end = 2; sta = 2; baseXp *= 1.2; break;
             case ActivityType.Hiking:    end = 1; sta = 2; agi = 1; baseXp *= 1.0; baseXp += (req.DistanceKm ?? 0) * 6; break;
+            case ActivityType.Walking:   end = 1; sta = 1;          baseXp *= 0.8; baseXp += (req.DistanceKm ?? 0) * 5; break;
             case ActivityType.Climbing:  str = 2; end = 1; agi = 1; baseXp *= 1.3; break;
         }
 
@@ -238,7 +239,7 @@ public class ActivityService(
     private static int CalculateSteps(ActivityType type, double distanceKm) =>
         type switch
         {
-            ActivityType.Running or ActivityType.Hiking or ActivityType.Cycling
+            ActivityType.Running or ActivityType.Hiking or ActivityType.Walking or ActivityType.Cycling
                 => (int)(distanceKm * 1250),
             _ => 0
         };
@@ -251,6 +252,7 @@ public class ActivityService(
         ActivityType.Yoga     => "🧘",
         ActivityType.Swimming => "🏊",
         ActivityType.Hiking   => "🥾",
+        ActivityType.Walking  => "🚶",
         ActivityType.Climbing => "🧗",
         _ => "🏋️",
     };
