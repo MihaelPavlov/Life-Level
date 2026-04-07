@@ -94,6 +94,39 @@ public class IntegrationsController(
         return Ok(result);
     }
 
+    /// <summary>POST /api/integrations/sync-all — sync all connected server-side integrations</summary>
+    [HttpPost("sync-all")]
+    public async Task<IActionResult> SyncAll(CancellationToken ct)
+    {
+        var userId = userContext.UserId;
+        var totalImported = 0;
+        var totalSkipped = 0;
+        var errors = new List<string>();
+
+        // Strava
+        try
+        {
+            var stravaStatus = await stravaOAuth.GetStatusAsync(userId, ct);
+            if (stravaStatus.IsConnected)
+            {
+                var result = await stravaWebhook.SyncRecentAsync(userId, ct);
+                totalImported += result.Imported;
+                totalSkipped += result.Skipped;
+                errors.AddRange(result.Errors);
+            }
+        }
+        catch (Exception ex) { errors.Add($"Strava: {ex.Message}"); }
+
+        // Garmin — add here when SyncRecentAsync is implemented
+
+        return Ok(new SyncResult
+        {
+            Imported = totalImported,
+            Skipped = totalSkipped,
+            Errors = errors,
+        });
+    }
+
     // ── Strava Webhook ────────────────────────────────────────────────────────
 
     /// <summary>GET /api/integrations/strava/webhook — hub.challenge handshake</summary>

@@ -68,7 +68,6 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
   }
 
   void _showBanner(SyncResult result) {
-    if (result.isEmpty) return;
     setState(() => _bannerResult = result);
   }
 

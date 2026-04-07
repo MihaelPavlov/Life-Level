@@ -304,7 +304,9 @@
       "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -d -t 100)",
       "Bash(adb logcat:*)",
       "Bash(adb -s euguw86hxst4qsqw logcat -d -s flutter)",
-      "Bash(adb -s euguw86hxst4qsqw logcat -d)"
+      "Bash(adb -s euguw86hxst4qsqw logcat -d)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -d -t 300)",
+      "Bash(\"C:/Users/MihaelPavlov/AppData/Local/Android/Sdk/platform-tools/adb\" -s emulator-5554 logcat -c)"
     ]
   }
 }

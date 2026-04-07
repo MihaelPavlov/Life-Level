@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../activity/providers/activity_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../map/models/map_models.dart';
-import '../map/map_screen.dart';
 import '../map/node_detail_sheet.dart';
 import '../../core/api/api_client.dart';
 import '../../core/services/level_up_notifier.dart';
+import '../../core/services/nav_tab_notifier.dart';
+import '../integrations/providers/integrations_provider.dart';
 import 'home_cards.dart';
 import 'home_widgets.dart';
 import 'providers/map_journey_provider.dart';
@@ -36,12 +37,8 @@ class HomeScreen extends ConsumerWidget {
                 mapJourneyAsync.when(
                   data: (data) => HomeMapProgressSection(
                     data: data,
-                    onOpenMap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const MapScreen()),
-                      );
-                      ref.invalidate(mapJourneyProvider);
+                    onOpenMap: () {
+                      NavTabNotifier.switchTo('map');
                     },
                     onActionButton: () {
                       final destId = data.userProgress.destinationNodeId;
@@ -55,20 +52,32 @@ class HomeScreen extends ConsumerWidget {
                         distanceKm: _distanceToNode(data, destId),
                       );
                     },
-                    onStravaSync: () async {
+                    onSync: () async {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Syncing Strava...')),
+                        const SnackBar(content: Text('Syncing activities...')),
                       );
                       int imported = 0;
                       int skipped = 0;
+                      // Sync all server-side integrations (Strava, Garmin, etc.)
                       try {
-                        final res = await ApiClient.instance.post('/integrations/strava/sync');
+                        final res = await ApiClient.instance.post('/integrations/sync-all');
                         final body = res.data as Map<String, dynamic>? ?? {};
-                        imported = (body['imported'] as int?) ?? 0;
-                        skipped = (body['skipped'] as int?) ?? 0;
+                        imported += (body['imported'] as int?) ?? 0;
+                        skipped += (body['skipped'] as int?) ?? 0;
+                      } catch (_) {}
+                      // Sync Health Connect (client-side, reads device data)
+                      try {
+                        final syncNotifier = ref.read(integrationSyncProvider.notifier);
+                        await syncNotifier.syncNow();
+                        final result = ref.read(integrationSyncProvider).lastResult;
+                        if (result != null) {
+                          imported += result.imported;
+                          skipped += result.skipped;
+                        }
                       } catch (_) {}
                       ref.invalidate(mapJourneyProvider);
                       ref.invalidate(characterProfileProvider);
+                      ref.invalidate(activityHistoryProvider);
                       if (context.mounted) {
                         final msg = imported > 0
                             ? 'Synced $imported new activit${imported == 1 ? 'y' : 'ies'}!'

@@ -74,11 +74,13 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
     state = state.copyWith(isSyncing: true, lastResult: null);
     final result = await _service.syncRecentWorkouts();
     final lastSync = await _service.getLastSyncTime();
+    // If permissions were revoked, the service clears the flag — re-check
+    final stillConnected = await _service.isPermissionGranted();
     state = state.copyWith(
       isSyncing: false,
       lastSyncAt: lastSync,
       lastResult: result,
-      isHealthConnected: true,
+      isHealthConnected: stillConnected,
     );
   }
 

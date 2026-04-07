@@ -9,7 +9,7 @@ class HomeMapProgressSection extends StatelessWidget {
   final MapFullData data;
   final VoidCallback onOpenMap;
   final VoidCallback onActionButton;
-  final VoidCallback? onStravaSync;
+  final VoidCallback? onSync;
   final void Function(MapNodeModel) onCarouselNodeTap;
 
   const HomeMapProgressSection({
@@ -17,7 +17,7 @@ class HomeMapProgressSection extends StatelessWidget {
     required this.data,
     required this.onOpenMap,
     required this.onActionButton,
-    this.onStravaSync,
+    this.onSync,
     required this.onCarouselNodeTap,
   });
 
@@ -78,7 +78,7 @@ class HomeMapProgressSection extends StatelessWidget {
                   data: data,
                   onOpenMap: onOpenMap,
                   onActionButton: onActionButton,
-                  onStravaSync: onStravaSync,
+                  onSync: onSync,
                   onCarouselNodeTap: onCarouselNodeTap,
                 ),
                 HomeMapEventCarousel(
@@ -99,7 +99,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
   final MapFullData data;
   final VoidCallback onOpenMap;
   final VoidCallback onActionButton;
-  final VoidCallback? onStravaSync;
+  final VoidCallback? onSync;
   final void Function(MapNodeModel) onCarouselNodeTap;
 
   const HomeMapFeaturedCard({
@@ -107,7 +107,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     required this.data,
     required this.onOpenMap,
     required this.onActionButton,
-    this.onStravaSync,
+    this.onSync,
     required this.onCarouselNodeTap,
   });
 
@@ -136,11 +136,11 @@ class HomeMapFeaturedCard extends StatelessWidget {
     }
 
     if (isTraveling) {
-      return _buildTravelingCard(destNode, activeEdge, edgeProgress, remaining, progress, onStravaSync);
+      return _buildTravelingCard(destNode, activeEdge, edgeProgress, remaining, progress, onSync);
     }
 
     if (isArrived) {
-      return _buildArrivedCard(destNode, onStravaSync);
+      return _buildArrivedCard(destNode, onSync);
     }
 
     return _buildNoDestinationCard(progress.pendingDistanceKm ?? 0.0);
@@ -263,7 +263,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     double edgeProgress,
     double remaining,
     UserMapProgressModel progress,
-    VoidCallback? onStravaSync,
+    VoidCallback? onSync,
   ) {
     return HomeCard(
       borderColor: const Color(0xFF4f9eff).withValues(alpha: 0.55),
@@ -291,12 +291,12 @@ class HomeMapFeaturedCard extends StatelessWidget {
                 children: [
                   HomeBadge('🚶 TRAVELING', const Color(0xFF4f9eff)),
                   GestureDetector(
-                    onTap: onStravaSync,
+                    onTap: onSync,
                     child: Text(
-                      '⟳ Strava',
+                      '⟳ Sync',
                       style: TextStyle(
                         fontSize: 9,
-                        color: onStravaSync != null
+                        color: onSync != null
                             ? const Color(0xFF4f9eff)
                             : AppColors.textSecondary,
                         fontWeight: FontWeight.w700,
@@ -407,7 +407,7 @@ class HomeMapFeaturedCard extends StatelessWidget {
     );
   }
 
-  Widget _buildArrivedCard(MapNodeModel destNode, VoidCallback? onStravaSync) {
+  Widget _buildArrivedCard(MapNodeModel destNode, VoidCallback? onSync) {
     final challengeProgress = _challengeProgress(destNode);
 
     return HomeCard(
@@ -422,12 +422,12 @@ class HomeMapFeaturedCard extends StatelessWidget {
             children: [
               HomeBadge('✅ NODE REACHED', const Color(0xFF3fb950)),
               GestureDetector(
-                onTap: onStravaSync,
+                onTap: onSync,
                 child: Text(
-                  '⟳ Strava',
+                  '⟳ Sync',
                   style: TextStyle(
                     fontSize: 9,
-                    color: onStravaSync != null
+                    color: onSync != null
                         ? const Color(0xFF4f9eff)
                         : AppColors.textSecondary,
                     fontWeight: FontWeight.w700,

@@ -85,9 +85,37 @@ class HealthSyncService {
   Future<SyncResult> syncRecentWorkouts() async {
     if (kIsWeb) return const SyncResult.empty();
 
-    final lastSync = await getLastSyncTime();
-    final since = lastSync ?? DateTime.now().toUtc().subtract(const Duration(days: 30));
+    // ── 1. Verify Health Connect is available & permissions are still valid ──
+    try {
+      await _health.configure();
+      final available = await _health.isHealthConnectAvailable();
+      debugPrint('[HealthSync] Health Connect available: $available');
+      if (!available) {
+        return const SyncResult(imported: 0, skipped: 0, errors: ['Health Connect is not available on this device.']);
+      }
+
+      final hasPerms = await _health.hasPermissions(
+        _readTypes,
+        permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
+      ) ?? false;
+      debugPrint('[HealthSync] permissions check: $hasPerms');
+      if (!hasPerms) {
+        // Clear cached flag so UI shows "Connect" again
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_permissionKey, false);
+        return const SyncResult(imported: 0, skipped: 0, errors: ['Health Connect permissions were revoked. Please reconnect.']);
+      }
+    } catch (e) {
+      debugPrint('[HealthSync] permission check error: $e');
+      // Non-fatal — proceed with the sync attempt anyway
+    }
+
+    // ── 2. Query Health Connect ─────────────────────────────────────────────
+    // Always look back at least 30 days to catch workouts logged before first sync
+    final since = DateTime.now().toUtc().subtract(const Duration(days: 30));
     final now = DateTime.now().toUtc();
+
+    debugPrint('[HealthSync] querying $since → $now');
 
     List<HealthDataPoint> dataPoints;
     try {
@@ -97,13 +125,22 @@ class HealthSyncService {
         types: _readTypes,
       );
     } catch (e) {
-      return SyncResult(imported: 0, skipped: 0, errors: [e.toString()]);
+      debugPrint('[HealthSync] ERROR reading health data: $e');
+      return SyncResult(imported: 0, skipped: 0, errors: ['Failed to read Health Connect data: $e']);
+    }
+
+    debugPrint('[HealthSync] raw data points: ${dataPoints.length}');
+    for (final p in dataPoints) {
+      debugPrint('[HealthSync]   point: type=${p.typeString} from=${p.dateFrom} to=${p.dateTo} '
+          'value=${p.value.runtimeType} source=${p.sourceName}');
     }
 
     final workouts = _health
         .removeDuplicates(dataPoints)
         .where((p) => p.value is WorkoutHealthValue)
         .toList();
+
+    debugPrint('[HealthSync] filtered workouts: ${workouts.length}');
 
     if (workouts.isEmpty) {
       await _saveLastSyncTime(now);
@@ -117,7 +154,13 @@ class HealthSyncService {
     for (final point in workouts) {
       final workout = point.value as WorkoutHealthValue;
       final duration = point.dateTo.difference(point.dateFrom).inMinutes;
-      if (duration <= 0) continue;
+      debugPrint('[HealthSync] workout: type=${workout.workoutActivityType} '
+          'duration=${duration}min dist=${workout.totalDistance}m '
+          'cal=${workout.totalEnergyBurned} uuid=${point.uuid}');
+      if (duration <= 0) {
+        debugPrint('[HealthSync]   skipping — zero duration');
+        continue;
+      }
 
       final activityType = ActivityTypeMapper.fromHealthConnect(workout.workoutActivityType);
       final distanceKm = workout.totalDistance != null
@@ -147,14 +190,18 @@ class HealthSyncService {
   }
 
   Future<SyncResult> _postBatch(SyncBatchRequest request) async {
+    debugPrint('[HealthSync] posting ${request.activities.length} activities to backend');
     try {
       final response = await ApiClient.instance.post(
         '/integrations/health/sync',
         data: request.toJson(),
       );
-      return SyncResult.fromJson(response.data as Map<String, dynamic>);
+      final result = SyncResult.fromJson(response.data as Map<String, dynamic>);
+      debugPrint('[HealthSync] backend response: imported=${result.imported} skipped=${result.skipped} errors=${result.errors}');
+      return result;
     } catch (e) {
-      return SyncResult(imported: 0, skipped: 0, errors: [e.toString()]);
+      debugPrint('[HealthSync] ERROR posting to backend: $e');
+      return SyncResult(imported: 0, skipped: 0, errors: ['Backend sync failed: $e']);
     }
   }
 }

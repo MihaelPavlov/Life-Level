@@ -6,7 +6,7 @@ import '../../main.dart' show navigatorKey;
 import '../../features/auth/login_screen.dart';
 
 class ApiClient {
-  static const _baseUrl = 'https://b346-165-225-248-195.ngrok-free.app/api';
+  static const _baseUrl = 'http://10.0.2.2:5128/api';
   static final _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
