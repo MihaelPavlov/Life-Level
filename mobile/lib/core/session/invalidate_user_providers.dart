@@ -18,3 +18,19 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
 }
+
+// Container-scoped variant for call sites where the calling widget may be
+// disposed before the invalidation runs (e.g., logout — the settings sheet
+// that owns the WidgetRef is unmounted once we navigate away). The root
+// ProviderContainer always outlives route transitions, so invalidating
+// through it is safe from post-frame callbacks after navigation.
+void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
+  container.invalidate(characterProfileProvider);
+  container.invalidate(mapJourneyProvider);
+  container.invalidate(dailyQuestsProvider);
+  container.invalidate(weeklyQuestsProvider);
+  container.invalidate(activityHistoryProvider);
+  container.invalidate(streakProvider);
+  container.invalidate(equipmentProvider);
+  container.invalidate(inventoryProvider);
+}

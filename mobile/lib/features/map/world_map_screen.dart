@@ -91,8 +91,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     try {
       final data = await _service.getFullWorld();
 
-      final isTraveling = data.userProgress.currentEdgeId != null;
-      final zones = data.zones.map((m) => ZoneData.fromApiModel(m, isTraveling: isTraveling)).toList();
+      final zones = data.zones.map((m) => ZoneData.fromApiModel(m)).toList();
 
       final edges = <String, List<String>>{};
       for (final e in data.edges) {

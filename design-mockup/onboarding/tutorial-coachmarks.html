@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Tutorial (Floating Bubble + Tutorials Hub)</title>
+<style>
+  :root {
+    --bg: #040810;
+    --bg-alt: #080e14;
+    --surface: #161b22;
+    --surface-2: #1e2632;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --blue: #4f9eff;
+    --purple: #a371f7;
+    --orange: #f5a623;
+    --red: #f85149;
+    --green: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 40px 24px 80px;
+    background: radial-gradient(ellipse at 50% -10%, #0a1220 0%, #040810 60%);
+    color: var(--text);
+    font: 400 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.01em;
+    text-align: center; margin: 0 0 8px;
+  }
+  .lead {
+    text-align: center; color: var(--text-dim); max-width: 780px;
+    margin: 0 auto 28px; font-size: 14px;
+  }
+  .topbar {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    max-width: 960px; margin: 0 auto 36px;
+  }
+  .topbar a {
+    padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+    color: var(--text-dim); background: var(--surface); border: 1px solid var(--border);
+  }
+  .topbar a.primary { color: var(--blue); border-color: rgba(79,158,255,0.4); }
+
+  .section-title {
+    text-align: center; font-size: 20px; font-weight: 700;
+    margin: 70px 0 6px; letter-spacing: -0.01em;
+  }
+  .section-sub { text-align: center; color: var(--text-dim); margin-bottom: 32px; font-size: 13px; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, 390px);
+    gap: 32px; justify-content: center;
+    max-width: 1360px; margin: 0 auto;
+  }
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; text-align: center;
+  }
+  .frame-label .step {
+    color: var(--blue); margin-right: 8px;
+    padding: 3px 8px; border-radius: 6px;
+    background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3);
+  }
+  .frame-label .step.purple { color: var(--purple); background: rgba(163,113,247,0.12); border-color: rgba(163,113,247,0.3); }
+  .frame-label .step.orange { color: var(--orange); background: rgba(245,166,35,0.12); border-color: rgba(245,166,35,0.3); }
+  .frame-label .step.green  { color: var(--green);  background: rgba(63,185,80,0.12); border-color: rgba(63,185,80,0.3); }
+  .frame-label .step.red    { color: var(--red);    background: rgba(248,81,73,0.12); border-color: rgba(248,81,73,0.3); }
+  .frame-label .note { display: block; font-size: 10px; color: var(--text-dim); opacity: 0.7; margin-top: 4px; text-transform: none; letter-spacing: 0; font-weight: 400;}
+
+  .phone {
+    width: 390px; height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 1px solid #1c2230;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #0a0d14;
+    overflow: hidden; position: relative;
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 30px;
+    background: #000; border-radius: 0 0 18px 18px; z-index: 100;
+  }
+
+  /* ============ Shared Home shell ============ */
+  .home-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 480px 340px at 50% -4%, rgba(79,158,255,0.10), transparent 70%),
+      var(--bg-alt);
+    padding: 52px 18px 90px; overflow: hidden;
+  }
+  .home-scroll { display: flex; flex-direction: column; gap: 12px; }
+  .home-header { display: flex; align-items: center; gap: 12px; padding: 6px 2px; }
+  .avatar-ring {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: grid; place-items: center; font-size: 22px;
+    box-shadow: 0 0 18px rgba(79,158,255,0.3);
+  }
+  .hello { flex: 1; }
+  .hello .name { font-weight: 700; font-size: 14px; }
+  .hello .sub  { color: var(--text-dim); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .bell {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 14px; position: relative;
+  }
+  .bell::after {
+    content: ''; position: absolute; top: 8px; right: 8px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+  }
+  .gear-ico {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 16px;
+  }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px;
+  }
+
+  .xp-card .top { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .xp-card .top strong { color: var(--text); font-size: 13px; }
+  .xp-bar { height: 10px; background: #0d1320; border-radius: 6px; overflow: hidden; }
+  .xp-bar > div {
+    height: 100%; width: 62%;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    box-shadow: 0 0 10px rgba(79,158,255,0.5);
+  }
+
+  .streak-strip { display: flex; gap: 6px; }
+  .streak-strip .d {
+    flex: 1; height: 36px; border-radius: 8px; background: var(--surface-2);
+    display: grid; place-items: center; font-size: 9px; color: var(--text-dim); font-weight: 700;
+    border: 1px solid var(--border);
+  }
+  .streak-strip .d.done { background: rgba(63,185,80,0.15); color: var(--green); border-color: rgba(63,185,80,0.35); }
+  .streak-strip .d.today { background: rgba(245,166,35,0.2); color: var(--orange); border-color: rgba(245,166,35,0.5); box-shadow: 0 0 10px rgba(245,166,35,0.25); }
+
+  .stat-strip { display: flex; gap: 8px; }
+  .stat-strip .gem {
+    flex: 1; padding: 10px 6px; border-radius: 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .gem .e { font-size: 16px; }
+  .gem .v { font-weight: 700; font-size: 13px; }
+  .gem .l { font-size: 8px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .quests-card .h { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+  .q-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.04); }
+  .q-row:last-child { border-bottom: 0; }
+  .q-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; }
+  .q-dot.done { background: var(--green); border-color: var(--green); }
+  .q-title { flex: 1; font-size: 12px; }
+  .q-xp { font-size: 10px; color: var(--orange); font-weight: 700; }
+
+  .boss-card {
+    background: linear-gradient(135deg, #2a0e14, #1a0a10);
+    border: 1px solid rgba(248,81,73,0.3);
+    border-radius: 16px; padding: 14px;
+  }
+  .boss-card .h { display: flex; gap: 10px; align-items: center; }
+  .boss-emoji { font-size: 28px; filter: drop-shadow(0 0 8px rgba(248,81,73,0.6)); }
+  .boss-card .hp { height: 8px; background: #0d0608; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+  .boss-card .hp > div { height: 100%; width: 48%; background: linear-gradient(90deg, #ff5a4f, var(--red)); }
+
+  /* Bottom nav & FAB */
+  .nav {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; align-items: flex-start; padding: 10px 0;
+  }
+  .nav .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-dim); text-transform: uppercase;
+  }
+  .nav .tab .icn { font-size: 18px; }
+  .nav .tab.active { color: var(--blue); }
+  .nav .spacer { flex: 1; }
+  .fab {
+    position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+    width: 62px; height: 62px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff7366, var(--red) 70%);
+    box-shadow: 0 0 24px rgba(248,81,73,0.5), 0 8px 20px rgba(0,0,0,0.5);
+    display: grid; place-items: center; font-size: 26px;
+    border: 3px solid var(--bg-alt);
+  }
+
+  /* ============ Coach-mark overlay ============ */
+  .overlay { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
+  .overlay::before { content: ''; position: absolute; inset: 0; background: rgba(4, 6, 12, 0.78); }
+
+  /* Target pulse ring (no cut-out — bubble variant relies on ring-only highlight
+     and keeps the full dim for contrast, so the target looks like a glowing spotlight) */
+  .target-ring {
+    position: absolute; border-radius: 16px;
+    box-shadow:
+      0 0 0 9999px rgba(4, 6, 12, 0.78),
+      0 0 0 2px rgba(79,158,255,0.75),
+      0 0 28px 4px rgba(79,158,255,0.4);
+    z-index: 51;
+    animation: ringPulse 1.8s ease-in-out infinite;
+  }
+  .target-ring.circle { border-radius: 50%; }
+  .target-ring.purple { box-shadow: 0 0 0 9999px rgba(4,6,12,0.78), 0 0 0 2px rgba(163,113,247,0.75), 0 0 28px 4px rgba(163,113,247,0.4); }
+  .target-ring.orange { box-shadow: 0 0 0 9999px rgba(4,6,12,0.78), 0 0 0 2px rgba(245,166,35,0.75), 0 0 28px 4px rgba(245,166,35,0.4); }
+  .target-ring.green  { box-shadow: 0 0 0 9999px rgba(4,6,12,0.78), 0 0 0 2px rgba(63,185,80,0.75), 0 0 28px 4px rgba(63,185,80,0.4); }
+  .target-ring.red    { box-shadow: 0 0 0 9999px rgba(4,6,12,0.78), 0 0 0 2px rgba(248,81,73,0.75), 0 0 28px 4px rgba(248,81,73,0.4); }
+  @keyframes ringPulse {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.3); }
+  }
+
+  /* ============ Floating BUBBLE (Variant B) ============ */
+  .bubble {
+    --bub-accent: 79, 158, 255;
+    position: absolute;
+    background: linear-gradient(180deg, var(--surface-2), #1a212c);
+    border: 1px solid rgba(var(--bub-accent), 0.45);
+    border-radius: 14px;
+    padding: 12px 14px 14px;
+    box-shadow: 0 14px 36px rgba(0,0,0,0.75), 0 0 20px rgba(var(--bub-accent), 0.18);
+    z-index: 52;
+    width: calc(100% - 36px); max-width: 320px;
+  }
+  .bubble.accent-purple { --bub-accent: 163,113,247; }
+  .bubble.accent-orange { --bub-accent: 245,166,35; }
+  .bubble.accent-green  { --bub-accent: 63,185,80; }
+  .bubble.accent-red    { --bub-accent: 248,81,73; }
+  .bubble.accent-blue   { --bub-accent: 79,158,255; }
+
+  /* Tail: rotated square positioned to clip into the bubble edge */
+  .bubble::after {
+    content: ''; position: absolute;
+    width: 14px; height: 14px;
+    background: linear-gradient(135deg, var(--surface-2), #1a212c);
+    z-index: -1;
+  }
+  .bubble.tail-up::after {
+    top: -8px; left: 40px;
+    transform: rotate(45deg);
+    border-left: 1px solid rgba(var(--bub-accent), 0.45);
+    border-top:  1px solid rgba(var(--bub-accent), 0.45);
+  }
+  .bubble.tail-up-center::after {
+    top: -8px; left: 50%; margin-left: -7px;
+    transform: rotate(45deg);
+    border-left: 1px solid rgba(var(--bub-accent), 0.45);
+    border-top:  1px solid rgba(var(--bub-accent), 0.45);
+  }
+  .bubble.tail-down::after {
+    bottom: -8px; left: 50%; margin-left: -7px;
+    transform: rotate(45deg);
+    border-right:  1px solid rgba(var(--bub-accent), 0.45);
+    border-bottom: 1px solid rgba(var(--bub-accent), 0.45);
+  }
+  .bubble.tail-down-right::after {
+    bottom: -8px; right: 34px;
+    transform: rotate(45deg);
+    border-right:  1px solid rgba(var(--bub-accent), 0.45);
+    border-bottom: 1px solid rgba(var(--bub-accent), 0.45);
+  }
+
+  .bubble .meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 6px; font-weight: 700;
+  }
+  .bubble .meta .q { color: rgba(var(--bub-accent), 1); }
+  .bubble .dots { display: flex; gap: 4px; }
+  .bubble .dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+  .bubble .dots span.a { background: rgba(var(--bub-accent), 1); box-shadow: 0 0 6px rgba(var(--bub-accent),1); }
+  .bubble .dots span.d { background: var(--green); }
+  .bubble h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; display: flex; gap: 6px; }
+  .bubble p  { margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--text); }
+  .bubble .actions { display: flex; gap: 8px; align-items: center; }
+  .bubble .btn-skip {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-dim); font-weight: 700; padding: 6px 10px;
+    background: transparent; border: 1px solid var(--border); border-radius: 8px;
+  }
+  .bubble .btn-next {
+    margin-left: auto;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    font-weight: 700; padding: 8px 14px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(var(--bub-accent),1), rgba(var(--bub-accent),0.6));
+    color: #fff; border: 0;
+    box-shadow: 0 4px 14px rgba(var(--bub-accent), 0.4);
+  }
+  .bubble .btn-next.disabled {
+    background: var(--surface); color: var(--text-dim);
+    box-shadow: none; border: 1px dashed var(--border);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .bubble .btn-next.disabled::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange);
+    animation: blink 1s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 100% {opacity:1} 50% {opacity:0.3} }
+
+  /* ============ Skip confirmation (global state) ============ */
+  .confirm-backdrop {
+    position: absolute; inset: 0; z-index: 70;
+    background: rgba(4, 6, 12, 0.6);
+    display: flex; align-items: center; justify-content: center; padding: 0 32px;
+  }
+  .confirm-card {
+    width: 100%; max-width: 320px;
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border: 1px solid rgba(248,81,73,0.3);
+    border-radius: 18px; padding: 20px;
+    box-shadow: 0 24px 60px -10px rgba(0,0,0,0.8);
+    text-align: center;
+  }
+  .confirm-card .ic {
+    width: 44px; height: 44px; margin: 0 auto 12px;
+    border-radius: 50%; background: rgba(248,81,73,0.12);
+    border: 1px solid rgba(248,81,73,0.4);
+    display: grid; place-items: center; font-size: 20px;
+  }
+  .confirm-card h4 { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
+  .confirm-card p  { margin: 0 0 16px; font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .confirm-card .row { display: flex; gap: 10px; }
+  .confirm-card .btn { flex: 1; padding: 11px; border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border: 0; }
+  .confirm-card .btn.cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .confirm-card .btn.confirm { background: linear-gradient(135deg, var(--red), #b8382f); color: #fff; }
+
+  /* ============ XP reward toast (global state) ============ */
+  .xp-toast {
+    position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
+    z-index: 80; padding: 10px 18px; border-radius: 99px;
+    background: linear-gradient(135deg, rgba(245,166,35,0.98), rgba(230,140,20,0.95));
+    color: #1a0f02; font-weight: 800; font-size: 13px; letter-spacing: 0.04em;
+    box-shadow: 0 14px 32px rgba(245,166,35,0.35), 0 0 0 1px rgba(245,166,35,0.6);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ============ Full-screen modals (intro/outro) ============ */
+  .fs-modal {
+    position: absolute; inset: 0; z-index: 60;
+    background:
+      radial-gradient(ellipse 520px 420px at 50% 24%, rgba(79,158,255,0.22), transparent 60%),
+      radial-gradient(ellipse 520px 420px at 50% 84%, rgba(163,113,247,0.18), transparent 60%),
+      var(--bg);
+    padding: 96px 28px 40px; display: flex; flex-direction: column; text-align: center;
+  }
+  .fs-modal.outro {
+    background:
+      radial-gradient(ellipse 520px 420px at 50% 24%, rgba(245,166,35,0.28), transparent 60%),
+      radial-gradient(ellipse 520px 420px at 50% 84%, rgba(63,185,80,0.2), transparent 60%),
+      var(--bg);
+  }
+  .fs-modal .hero {
+    width: 112px; height: 112px; margin: 20px auto 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(79,158,255,0.5), rgba(79,158,255,0.1) 70%);
+    border: 1.5px solid rgba(79,158,255,0.5);
+    display: grid; place-items: center; font-size: 52px;
+    box-shadow: 0 0 40px rgba(79,158,255,0.35);
+  }
+  .fs-modal.outro .hero {
+    background: radial-gradient(circle at 35% 30%, rgba(245,166,35,0.5), rgba(245,166,35,0.1) 70%);
+    border-color: rgba(245,166,35,0.6);
+    box-shadow: 0 0 40px rgba(245,166,35,0.45);
+  }
+  .fs-modal h2 { margin: 0 0 10px; font-size: 24px; font-weight: 700; }
+  .fs-modal .tag {
+    display: inline-block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--orange); font-weight: 700; margin-bottom: 16px;
+  }
+  .fs-modal p { color: var(--text-dim); font-size: 14px; line-height: 1.55; margin: 0 auto 28px; max-width: 280px; }
+  .pillars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .pillar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px; text-align: left;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .pillar .icn { font-size: 22px; }
+  .pillar .t { font-size: 13px; font-weight: 700; }
+  .pillar .d { font-size: 11px; color: var(--text-dim); }
+  .progress-dots {
+    display: flex; gap: 6px; justify-content: center; margin-bottom: 18px;
+  }
+  .progress-dots span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .progress-dots span.a { background: var(--blue); box-shadow: 0 0 8px var(--blue); border-color: var(--blue); }
+  .progress-dots span.d { background: var(--green); border-color: var(--green); }
+  .cta-btn {
+    display: block; width: 100%; padding: 15px;
+    border-radius: 14px; text-align: center; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase; border: 0;
+    background: linear-gradient(135deg, var(--blue), #2f7ad8);
+    color: #fff; box-shadow: 0 6px 20px rgba(79,158,255,0.35);
+  }
+  .fs-modal.outro .cta-btn {
+    background: linear-gradient(135deg, var(--orange), #c7831a);
+    box-shadow: 0 6px 20px rgba(245,166,35,0.4);
+  }
+  .skip-link {
+    display: block; text-align: center; margin-top: 14px;
+    font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .reward-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 8px;
+    background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.4);
+    color: var(--orange); font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  }
+  .reward-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; }
+
+  /* ============ Profile settings sheet (hub entry) ============ */
+  .profile-stage {
+    position: absolute; inset: 0;
+    background: var(--bg-alt);
+    padding: 52px 18px 90px;
+  }
+  .profile-stage .ph-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 2px 14px;
+  }
+  .profile-stage .ph-left { display: flex; align-items: center; gap: 12px; }
+  .profile-stage .avatar {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: grid; place-items: center; font-size: 24px;
+    box-shadow: 0 0 18px rgba(79,158,255,0.3);
+  }
+  .profile-stage .name { font-weight: 700; font-size: 16px; }
+  .profile-stage .rank { font-size: 10px; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+  .profile-stage .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .profile-stage .tab {
+    padding: 10px 10px 12px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .profile-stage .tab.active { color: var(--blue); border-color: var(--blue); }
+
+  .sheet-backdrop {
+    position: absolute; inset: 0; z-index: 40;
+    background: rgba(4,6,12,0.58);
+  }
+  .settings-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 12px 0 32px;
+    z-index: 45;
+    box-shadow: 0 -12px 40px rgba(0,0,0,0.6);
+  }
+  .settings-sheet .grab {
+    width: 42px; height: 4px; border-radius: 2px; background: var(--border);
+    margin: 0 auto 16px;
+  }
+  .settings-sheet h4 {
+    margin: 0 0 10px; padding: 0 20px; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim); font-weight: 700;
+  }
+  .settings-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px;
+  }
+  .settings-row .icn {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 16px; flex-shrink: 0;
+  }
+  .settings-row .t { flex: 1; font-weight: 600; }
+  .settings-row.danger .t { color: var(--red); }
+  .settings-row .ch { color: var(--text-dim); font-size: 16px; }
+  .settings-row.highlight {
+    background: linear-gradient(90deg, rgba(79,158,255,0.1), transparent);
+  }
+  .settings-row.highlight .icn {
+    background: rgba(79,158,255,0.15); border-color: rgba(79,158,255,0.4);
+    color: var(--blue);
+  }
+  .settings-row.highlight .t { color: var(--blue); }
+
+  /* ============ Tutorials Hub screen ============ */
+  .hub-stage {
+    position: absolute; inset: 0;
+    background: var(--bg-alt);
+  }
+  .hub-header {
+    padding: 52px 18px 18px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hub-back {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 16px; flex-shrink: 0;
+  }
+  .hub-title { font-size: 18px; font-weight: 700; }
+  .hub-subtitle { font-size: 11px; color: var(--text-dim); margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; }
+
+  .hub-body { padding: 18px 18px 100px; }
+
+  .hub-hero {
+    background: linear-gradient(135deg, rgba(79,158,255,0.14), rgba(163,113,247,0.1));
+    border: 1px solid rgba(79,158,255,0.4);
+    border-radius: 16px; padding: 18px;
+    margin-bottom: 18px; position: relative; overflow: hidden;
+  }
+  .hub-hero::before {
+    content: ''; position: absolute; top: -20px; right: -20px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,158,255,0.25), transparent 70%);
+  }
+  .hub-hero .hh-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; position: relative; }
+  .hub-hero .hh-ic {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    display: grid; place-items: center; font-size: 22px;
+    box-shadow: 0 8px 18px rgba(79,158,255,0.35);
+  }
+  .hub-hero .hh-t  { font-size: 15px; font-weight: 700; }
+  .hub-hero .hh-s  { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .hub-hero .hh-meta { display: flex; gap: 10px; font-size: 10px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; margin-bottom: 12px; position: relative; }
+  .hub-hero .hh-meta span { padding: 3px 8px; border-radius: 6px; background: rgba(79,158,255,0.1); border: 1px solid rgba(79,158,255,0.25); color: var(--blue); }
+  .hub-hero .hh-cta {
+    width: 100%; padding: 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; border: 0;
+    background: linear-gradient(135deg, var(--blue), #2f7ad8);
+    color: #fff; box-shadow: 0 6px 18px rgba(79,158,255,0.4); position: relative;
+  }
+
+  .hub-section-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dim); font-weight: 700; margin: 8px 4px 10px;
+  }
+
+  .topic-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 8px;
+  }
+  .topic-row .ic {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+  }
+  .topic-row .mid { flex: 1; min-width: 0; }
+  .topic-row .t { font-size: 13px; font-weight: 700; }
+  .topic-row .s { font-size: 10px; color: var(--text-dim); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+  .topic-row .status {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .topic-row .status.done {
+    background: rgba(63,185,80,0.15); color: var(--green);
+    border: 1px solid rgba(63,185,80,0.4);
+  }
+  .topic-row .status.pending {
+    background: var(--surface-2); color: var(--text-dim);
+    border: 1px dashed var(--border);
+  }
+  .topic-row.str-accent .ic { border-color: rgba(79,158,255,0.4); color: var(--blue); }
+  .topic-row.pur-accent .ic { border-color: rgba(163,113,247,0.4); color: var(--purple); }
+  .topic-row.org-accent .ic { border-color: rgba(245,166,35,0.4); color: var(--orange); }
+  .topic-row.grn-accent .ic { border-color: rgba(63,185,80,0.4);  color: var(--green); }
+  .topic-row.red-accent .ic { border-color: rgba(248,81,73,0.4);  color: var(--red); }
+
+  .hub-footer {
+    margin-top: 18px; padding: 12px;
+    background: var(--surface); border: 1px dashed var(--border);
+    border-radius: 12px; font-size: 11px; color: var(--text-dim); text-align: center; line-height: 1.55;
+  }
+  .hub-footer strong { color: var(--text); }
+
+  /* Legend */
+  .legend {
+    max-width: 960px; margin: 40px auto 0; padding: 20px 24px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .legend strong { color: var(--text); }
+  .legend .row { display: flex; gap: 10px; margin-bottom: 6px; align-items: flex-start; }
+  .legend .pill {
+    display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 6px;
+    background: rgba(79,158,255,0.15); color: var(--blue); font-weight: 700;
+    font-size: 10px; text-align: center; letter-spacing: 0.06em;
+  }
+  .legend code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+
+  /* Variant A runner-up */
+  .variant-compare {
+    display: grid; grid-template-columns: repeat(auto-fit, 390px);
+    gap: 32px; justify-content: center; max-width: 1360px; margin: 0 auto;
+  }
+  .variant-card { display: flex; flex-direction: column; align-items: center; }
+  .variant-card h4 { margin: 16px 0 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim); }
+  .variant-card .desc { color: var(--text-dim); font-size: 12px; text-align: center; max-width: 360px; margin-bottom: 8px; }
+  .legacy-callout {
+    position: absolute; left: 18px; right: 18px; bottom: 108px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid rgba(79,158,255,0.3);
+    border-radius: 18px; padding: 16px 16px 14px;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8);
+    z-index: 52;
+  }
+  .legacy-callout h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
+  .legacy-callout p  { margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--text); }
+  .legacy-callout .actions { display: flex; gap: 10px; }
+  .legacy-callout .btn {
+    padding: 11px 14px; border-radius: 12px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.04em; text-align: center; border: 0;
+  }
+  .legacy-callout .btn.skip { background: transparent; color: var(--text-dim); border: 1px solid var(--border); flex: 0 0 80px; }
+  .legacy-callout .btn.next { flex: 1; background: linear-gradient(135deg, var(--blue), #2f7ad8); color: #fff; box-shadow: 0 4px 16px rgba(79,158,255,0.4); }
+  .legacy-spot {
+    position: absolute; border-radius: 16px;
+    box-shadow: 0 0 0 9999px rgba(4,6,12,0.78), 0 0 0 2px rgba(79,158,255,0.7), 0 0 32px 4px rgba(79,158,255,0.35);
+    z-index: 51;
+  }
+</style>
+</head>
+<body>
+
+<h1>Tutorial — Floating Bubble Coach Marks + Tutorials Hub</h1>
+<p class="lead">
+  Variant B is the chosen design. Each coach mark is a floating speech-bubble tethered to its target with a tail;
+  the rest of the screen is dimmed and the target gets a pulsing accent ring. The tutorial is framed as an in-world
+  quest — first completion awards +500 XP and the Novice title. It's skippable at every step and replayable anytime
+  from <strong>Profile → Settings → Tutorials</strong>, split into five topic tutorials that can each be replayed
+  independently.
+</p>
+
+<div class="topbar">
+  <a href="#flow" class="primary">▸ Step-by-step flow</a>
+  <a href="#states">Global states</a>
+  <a href="#hub">Tutorials hub</a>
+  <a href="#runner-up">Runner-up (Variant A)</a>
+</div>
+
+<!-- ================================================================ -->
+<!-- SECTION 1 — STEP-BY-STEP FLOW                                     -->
+<!-- ================================================================ -->
+<a id="flow"></a>
+<h3 class="section-title">Step-by-step flow</h3>
+<p class="section-sub">8 states. Intro + 6 floating-bubble coach marks + outro. Each step has its own accent colour, placement, and tail direction.</p>
+
+<div class="grid">
+
+  <!-- ============ STEP 0 — INTRO MODAL ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">Step 0</span> Intro · Full-screen modal</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="fs-modal">
+        <span class="tag">⚔ First Quest</span>
+        <div class="hero">🗡</div>
+        <h2>A new adventurer arrives</h2>
+        <p>Your journey has begun. Let's learn how training in the real world makes you stronger in this one.</p>
+        <div class="pillars">
+          <div class="pillar"><div class="icn">📈</div><div><div class="t">Train → Level up</div><div class="d">Workouts earn XP and raise stats</div></div></div>
+          <div class="pillar"><div class="icn">🗺️</div><div><div class="t">Explore the world</div><div class="d">Distance moves you across zones</div></div></div>
+          <div class="pillar"><div class="icn">⚔️</div><div><div class="t">Defeat bosses</div><div class="d">Daily raids reward gear &amp; titles</div></div></div>
+        </div>
+        <div class="progress-dots">
+          <span class="a"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <button class="cta-btn">Begin the quest ▸</button>
+        <a class="skip-link">Skip tutorial</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 1 — XP BAR · BUBBLE BELOW, TAIL UP (BLUE) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">Step 1</span> XP Bar · bubble below, tail up · <span style="color:var(--blue)">+25 XP</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,240 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div></div></div>
+          </div>
+          <div class="streak-strip">
+            <div class="d done">M</div><div class="d done">T</div><div class="d done">W</div>
+            <div class="d today">T</div><div class="d">F</div><div class="d">S</div><div class="d">S</div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring" style="top: 108px; left: 18px; right: 18px; height: 62px;"></div>
+        <div class="bubble accent-blue tail-up" style="top: 198px; left: 18px; right: 18px;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 1 of 6</span>
+            <span class="dots"><span class="a"></span><span></span><span></span><span></span><span></span><span></span></span>
+          </div>
+          <h3>⚡ Your XP Bar</h3>
+          <p>Every workout fills this bar. Reach Level 2 to unlock new zones, items, and daily quests.</p>
+          <div class="actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-next">Got it ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 2 — STATS · BUBBLE BELOW, TAIL UP (PURPLE) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step purple">Step 2</span> Stats · bubble below, tail up · <span style="color:var(--purple)">+25 XP</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,265 / 2,000</strong><span>+25 earned</span></div>
+            <div class="xp-bar"><div style="width:63%"></div></div>
+          </div>
+          <div class="streak-strip">
+            <div class="d done">M</div><div class="d done">T</div><div class="d done">W</div>
+            <div class="d today">T</div><div class="d">F</div><div class="d">S</div><div class="d">S</div>
+          </div>
+          <div class="stat-strip">
+            <div class="gem"><div class="e">💪</div><div class="v">12</div><div class="l">STR</div></div>
+            <div class="gem"><div class="e">🏃</div><div class="v">18</div><div class="l">END</div></div>
+            <div class="gem"><div class="e">⚡</div><div class="v">14</div><div class="l">AGI</div></div>
+            <div class="gem"><div class="e">🧘</div><div class="v">9</div><div class="l">FLX</div></div>
+            <div class="gem"><div class="e">❤️</div><div class="v">22</div><div class="l">STA</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring purple" style="top: 226px; left: 18px; right: 18px; height: 72px;"></div>
+        <div class="bubble accent-purple tail-up-center" style="top: 316px; left: 18px; right: 18px;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 2 of 6</span>
+            <span class="dots"><span class="d"></span><span class="a"></span><span></span><span></span><span></span><span></span></span>
+          </div>
+          <h3>💎 Five Core Stats</h3>
+          <p>STR, END, AGI, FLX, STA — each activity raises different stats. Tap a gem to see what trains it.</p>
+          <div class="actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-next">Got it ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 3 — QUESTS & STREAK · BUBBLE ABOVE, TAIL DOWN (ORANGE) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step orange">Step 3</span> Quests &amp; Streak · bubble above, tail down · <span style="color:var(--orange)">+50 XP</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,290 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div style="width:64%"></div></div>
+          </div>
+          <div class="card quests-card">
+            <div class="h"><span>Today's quests</span><span style="color:var(--orange)">+300 bonus</span></div>
+            <div class="q-row"><div class="q-dot done"></div><div class="q-title">Walk 5,000 steps</div><div class="q-xp">+80 XP</div></div>
+            <div class="q-row"><div class="q-dot"></div><div class="q-title">Log a 30-min workout</div><div class="q-xp">+120 XP</div></div>
+            <div class="q-row"><div class="q-dot"></div><div class="q-title">Burn 300 calories</div><div class="q-xp">+100 XP</div></div>
+            <div class="q-row"><div class="q-dot"></div><div class="q-title">Hit a personal best</div><div class="q-xp">+200 XP</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring orange" style="top: 228px; left: 18px; right: 18px; height: 200px;"></div>
+        <div class="bubble accent-orange tail-down" style="top: 72px; left: 18px; right: 18px;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 3 of 6</span>
+            <span class="dots"><span class="d"></span><span class="d"></span><span class="a"></span><span></span><span></span><span></span></span>
+          </div>
+          <h3>📜 Daily Quests &amp; Streaks</h3>
+          <p>Five quests refresh every day. A daily workout keeps your streak alive — shields protect you on rest days.</p>
+          <div class="actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-next">Got it ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 4 — LOG FAB · BUBBLE ABOVE FAB, ACTION-GATED (BLUE) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">Step 4</span> Log Activity · action-gated · <span style="color:var(--blue)">+50 XP on real log</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,340 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div style="width:67%"></div></div>
+          </div>
+          <div class="card" style="display:flex; align-items:center; gap:12px;">
+            <div style="font-size:28px">🔥</div>
+            <div style="flex:1">
+              <div style="font-weight:700; font-size:13px">Ready to train?</div>
+              <div style="font-size:11px; color:var(--text-dim)">Tap the sword to log your first workout.</div>
+            </div>
+            <div style="font-size:10px; color:var(--orange); font-weight:700">+50 XP</div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring circle" style="bottom: 50px; left: 164px; width: 62px; height: 62px;"></div>
+        <div class="bubble accent-blue tail-down" style="bottom: 138px; left: 50px; right: 50px;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 4 of 6</span>
+            <span class="dots"><span class="d"></span><span class="d"></span><span class="d"></span><span class="a"></span><span></span><span></span></span>
+          </div>
+          <h3>🗡 Log Your First Activity</h3>
+          <p>Tap the sword. Any workout counts — even a 5-min walk. <strong>This step unlocks only when you log a real workout.</strong></p>
+          <div class="actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-next disabled">Waiting…</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 5 — MAP TAB · BUBBLE ABOVE NAV, TAIL DOWN-RIGHT (GREEN) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">Step 5</span> Map tab · bubble above nav, tail down-right · <span style="color:var(--green)">+50 XP</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,390 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div style="width:70%"></div></div>
+          </div>
+          <div class="card boss-card">
+            <div class="h">
+              <div class="boss-emoji">🐺</div>
+              <div style="flex:1">
+                <div style="font-weight:700; font-size:14px">Frost Wolf</div>
+                <div style="font-size:10px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase">Today's boss · Forest of Endurance</div>
+              </div>
+            </div>
+            <div class="hp"><div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring green" style="bottom: 18px; left: 236px; width: 68px; height: 56px; border-radius: 12px;"></div>
+        <div class="bubble accent-green tail-down-right" style="bottom: 112px; left: 60px; right: 12px;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 5 of 6</span>
+            <span class="dots"><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="a"></span><span></span></span>
+          </div>
+          <h3>🗺️ The Adventure Map</h3>
+          <p>Every km you run or ride moves you across the world. Unlock zones like <em>Forest of Endurance</em> and <em>Mountains of Strength</em>.</p>
+          <div class="actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-next">Got it ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 6 — BOSS FAB · BUBBLE ABOVE FAB, TAIL DOWN (RED) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step red">Step 6</span> Boss FAB · bubble above FAB, tail down · <span style="color:var(--red)">+50 XP</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,440 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div style="width:72%"></div></div>
+          </div>
+          <div class="card boss-card">
+            <div class="h">
+              <div class="boss-emoji">🐺</div>
+              <div style="flex:1">
+                <div style="font-weight:700; font-size:14px">Frost Wolf</div>
+                <div style="font-size:10px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase">48% HP · 2d left</div>
+              </div>
+            </div>
+            <div class="hp"><div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring red circle" style="bottom: 50px; left: 164px; width: 62px; height: 62px;"></div>
+        <div class="bubble accent-red tail-down" style="bottom: 138px; left: 50px; right: 50px;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 6 of 6</span>
+            <span class="dots"><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="a"></span></span>
+          </div>
+          <h3>🔥 Strike the Boss</h3>
+          <p>Every workout also damages today's boss. Defeat them before the 7-day timer for gear, XP, and a title.</p>
+          <div class="actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-next">Finish quest ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 7 — OUTRO MODAL ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">Step 7</span> Outro · Quest complete</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="fs-modal outro">
+        <span class="tag" style="color: var(--green)">✅ Quest complete</span>
+        <div class="hero">🏆</div>
+        <h2>Welcome, Novice Adventurer</h2>
+        <p>You learned the basics. Now go train in the real world — your next level awaits.</p>
+        <div class="reward-row">
+          <span class="reward-chip">✨ +500 XP</span>
+          <span class="reward-chip" style="color: var(--green); background: rgba(63,185,80,0.12); border-color: rgba(63,185,80,0.4)">🏅 Novice Title</span>
+        </div>
+        <div class="progress-dots">
+          <span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span>
+          <span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span>
+        </div>
+        <button class="cta-btn">Begin your adventure ▸</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================================================================ -->
+<!-- SECTION 2 — GLOBAL STATES                                         -->
+<!-- ================================================================ -->
+<a id="states"></a>
+<h3 class="section-title">Global states</h3>
+<p class="section-sub">Transition affordances and confirmation flows that sit on top of any step.</p>
+
+<div class="grid">
+
+  <!-- ============ STATE: SKIP CONFIRMATION ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step red">Skip</span> Confirmation sheet (shown above any bubble)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,240 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <!-- Step 1 bubble still there, in the background -->
+      <div class="overlay">
+        <div class="target-ring" style="top: 108px; left: 18px; right: 18px; height: 62px; opacity: 0.35;"></div>
+        <div class="bubble accent-blue tail-up" style="top: 198px; left: 18px; right: 18px; opacity: 0.35;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 1 of 6</span>
+            <span class="dots"><span class="a"></span><span></span><span></span><span></span><span></span><span></span></span>
+          </div>
+          <h3>⚡ Your XP Bar</h3>
+          <p>Every workout fills this bar. Reach Level 2 to unlock new zones.</p>
+        </div>
+      </div>
+
+      <div class="confirm-backdrop">
+        <div class="confirm-card">
+          <div class="ic">⚠️</div>
+          <h4>Skip the tutorial?</h4>
+          <p>You can replay any of these lessons anytime from <strong>Profile → Settings → Tutorials</strong>.</p>
+          <div class="row">
+            <button class="btn cancel">Cancel</button>
+            <button class="btn confirm">Skip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE: XP REWARD TOAST (between steps) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step orange">Reward</span> XP toast between steps
+      <span class="note">150ms after Got it → toast slides down, current bubble fades out, next bubble fades in</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,265 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div style="width:63%"></div></div>
+          </div>
+          <div class="streak-strip">
+            <div class="d done">M</div><div class="d done">T</div><div class="d done">W</div>
+            <div class="d today">T</div><div class="d">F</div><div class="d">S</div><div class="d">S</div>
+          </div>
+          <div class="stat-strip">
+            <div class="gem"><div class="e">💪</div><div class="v">12</div><div class="l">STR</div></div>
+            <div class="gem"><div class="e">🏃</div><div class="v">18</div><div class="l">END</div></div>
+            <div class="gem"><div class="e">⚡</div><div class="v">14</div><div class="l">AGI</div></div>
+            <div class="gem"><div class="e">🧘</div><div class="v">9</div><div class="l">FLX</div></div>
+            <div class="gem"><div class="e">❤️</div><div class="v">22</div><div class="l">STA</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="target-ring purple" style="top: 226px; left: 18px; right: 18px; height: 72px; opacity: 0.55;"></div>
+        <div class="bubble accent-purple tail-up-center" style="top: 316px; left: 18px; right: 18px; opacity: 0.55;">
+          <div class="meta">
+            <span class="q">⚔ Quest · 2 of 6</span>
+            <span class="dots"><span class="d"></span><span class="a"></span><span></span><span></span><span></span><span></span></span>
+          </div>
+          <h3>💎 Five Core Stats</h3>
+          <p>STR, END, AGI, FLX, STA — each activity raises different stats.</p>
+        </div>
+      </div>
+
+      <div class="xp-toast">✨ +25 XP · XP Bar learned</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================================================================ -->
+<!-- SECTION 3 — TUTORIALS HUB                                         -->
+<!-- ================================================================ -->
+<a id="hub"></a>
+<h3 class="section-title">Tutorials Hub — Profile → Settings → Tutorials</h3>
+<p class="section-sub">Entry point in existing settings sheet; dedicated hub screen lists "Play all" plus 5 topic tutorials, each independently replayable.</p>
+
+<div class="grid">
+
+  <!-- ============ HUB ENTRY — SETTINGS SHEET WITH TUTORIALS ROW ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">Entry</span> Profile Settings sheet<span class="note">new "Tutorials" row sits above Logout</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="profile-stage">
+        <div class="ph-header">
+          <div class="ph-left">
+            <div class="avatar">🦸</div>
+            <div>
+              <div class="name">Hero</div>
+              <div class="rank">🏅 Novice · Level 3</div>
+            </div>
+          </div>
+          <div class="gear-ico">⚙️</div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">Overview</div>
+          <div class="tab">Equipment</div>
+          <div class="tab">Inventory</div>
+          <div class="tab">Achievements</div>
+        </div>
+        <div style="padding: 16px 0; color: var(--text-dim); font-size: 12px;">— profile overview content —</div>
+      </div>
+      <div class="nav">
+        <div class="tab"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab active"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="sheet-backdrop"></div>
+      <div class="settings-sheet">
+        <div class="grab"></div>
+        <h4>Settings</h4>
+        <div class="settings-row">
+          <div class="icn">🔌</div>
+          <div class="t">Integrations</div>
+          <div class="ch">›</div>
+        </div>
+        <div class="settings-row highlight">
+          <div class="icn">📖</div>
+          <div class="t">Tutorials</div>
+          <div class="ch">›</div>
+        </div>
+        <div class="settings-row danger">
+          <div class="icn" style="color: var(--red); border-color: rgba(248,81,73,0.35)">⎋</div>
+          <div class="t">Logout</div>
+          <div class="ch">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HUB — MIXED STATE (some completed, some pending) ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">Hub</span> Tutorials list · mixed state<span class="note">2 of 5 topics completed + Play all</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="hub-stage">
+        <div class="hub-header">
+          <div class="hub-back">⭠</div>
+          <div>
+            <div class="hub-title">Tutorials</div>
+            <div class="hub-subtitle">Replay any time · no XP on replay</div>
+          </div>
+        </div>
+        <div class="hub-body">
+          <div class="hub-hero">
+            <div class="hh-top">
+              <div class="hh-ic">✨</div>
+              <div>
+                <div class="hh-t">Play all · First Quest</div>
+                <div class="hh-s">Walk through every lesson in order</div>
+              </div>
+            </div>
+            <div class="hh-meta">
+              <span>6 steps</span>
+              <span>~2 min</span>
+              <span>+0 XP on replay</span>
+            </div>
+            <button class="hh-cta">Start walkthrough ▸</button>
+          </div>
+
+          <div class="hub-section-label">Topics</div>
+
+          <div class="topic-row str-accent">
+            <div class="ic">⚡</div>
+            <div class="mid">
+              <div class="t">XP &amp; Stats</div>
+              <div class="s">2 steps · XP bar + core stats</div>
+            </div>
+            <div class="status done">✓</div>
+          </div>
+
+          <div class="topic-row org-accent">
+            <div class="ic">📜</div>
+            <div class="mid">
+              <div class="t">Quests &amp; Streaks</div>
+              <div class="s">Daily quests + streak shields</div>
+            </div>
+            <div class="status done">✓</div>
+          </div>
+
+          <div class="topic-row pur-accent">
+            <div class="ic">🗡</div>
+            <div class="mid">
+              <div class="t">Activity Logging</div>
+              <div class="s">How workouts turn into XP</div>
+            </div>
+            <div class="status pending">○</div>
+          </div>
+
+          <div class="topic-row grn-accent">
+            <div class="ic">🗺️</div>
+            <div class="mid">
+              <div class="t">World Map</div>
+              <div class="s">Zones, paths &amp; travel</div>
+            </div>
+            <div class="status pending">○</div>
+          </div>
+
+          <div class="topic-row red-accent">
+            <div class="ic">🔥</div>
+            <div class="mid">
+              <div class="t">Boss System</div>
+              <div class="s">Daily raids + damage loop</div>
+            </div>
+            <div class="status pending">○</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HUB — ALL COMPLETE ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">Hub</span> All topics complete<span class="note">power-user state · everything ✓</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="hub-stage">
+        <div class="hub-header">
+          <div class="hub-back">⭠</div>
+          <div>
+            <div class="hub-title">Tutorials</div>
+            <div class="hub-subtitle">All lessons seen · legend</div>
+          </div>
+        </div>
+        <div class="hub-body">
+          <div class="hub-hero" style="border-color: rgba(63,185,80,0.4); background: linear-gradient(135deg, rgba(63,185,80,0.14), rgba(79,158,255,0.08));">
+            <div class="hh-top">
+              <div class="hh-ic" style="background: linear-gradient(135deg, var(--green), #2e9646); box-shadow: 0 8px 18px rgba(63,185,80,0.35);">🏅</div>
+              <div>
+                <div class="hh-t">First Quest complete</div>
+                <div class="hh-s">You earned the Novice Adventurer title</div>
+              </div>
+            </div>
+            <div class="hh-meta">
+              <span style="color: var(--green); background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.25);">500 XP claimed</span>
+              <span style="color: var(--green); background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.25);">🏅 Novice</span>
+            </div>
+            <button class="hh-cta" style="background: linear-gradient(135deg, var(--green), #2e9646); box-shadow: 0 6px 18px rgba(63,185,80,0.4);">Replay full quest (no XP)</button>
+          </div>
+
+          <div class="hub-section-label">Topics — all seen</div>
+
+          <div class="topic-row str-accent"><div class="ic">⚡</div><div class="mid"><div class="t">XP &amp; Stats</div><div class="s">Replayed 3 times</div></div><div class="status done">✓</div></div>
+          <div class="topic-row org-accent"><div class="ic">📜</div><div class="mid"><div class="t">Quests &amp; Streaks</div><div class="s">Replayed 1 time</div></div><div class="status done">✓</div></div>
+          <div class="topic-row pur-accent"><div class="ic">🗡</div><div class="mid"><div class="t">Activity Logging</div><div class="s">Replayed 2 times</div></div><div class="status done">✓</div></div>
+          <div class="topic-row grn-accent"><div class="ic">🗺️</div><div class="mid"><div class="t">World Map</div><div class="s">Replayed 1 time</div></div><div class="status done">✓</div></div>
+          <div class="topic-row red-accent"><div class="ic">🔥</div><div class="mid"><div class="t">Boss System</div><div class="s">Replayed 4 times</div></div><div class="status done">✓</div></div>
+
+          <div class="hub-footer">
+            <strong>Tip:</strong> lessons from the hub run on the real Home screen. They never award XP — rewards are one-shot per account.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================================================================ -->
+<!-- SECTION 4 — RUNNER-UP (Variant A)                                 -->
+<!-- ================================================================ -->
+<a id="runner-up"></a>
+<h3 class="section-title">Runner-up considered — Variant A</h3>
+<p class="section-sub">Bottom-docked callout + elliptical spotlight cut-out. Familiar (Duolingo/Spotify) but less "game-native" than the floating bubble. Kept as an alternative reference.</p>
+
+<div class="variant-compare">
+
+  <div class="variant-card">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="home-bg">
+        <div class="home-scroll">
+          <div class="home-header">
+            <div class="avatar-ring">🦸</div>
+            <div class="hello"><div class="name">Welcome, Hero</div><div class="sub">Level 1 · Novice</div></div>
+            <div class="bell">🔔</div>
+          </div>
+          <div class="card xp-card">
+            <div class="top"><strong>XP 1,240 / 2,000</strong><span>Next: Level 2</span></div>
+            <div class="xp-bar"><div></div></div>
+          </div>
+          <div class="streak-strip">
+            <div class="d done">M</div><div class="d done">T</div><div class="d done">W</div>
+            <div class="d today">T</div><div class="d">F</div><div class="d">S</div><div class="d">S</div>
+          </div>
+          <div class="stat-strip">
+            <div class="gem"><div class="e">💪</div><div class="v">12</div><div class="l">STR</div></div>
+            <div class="gem"><div class="e">🏃</div><div class="v">18</div><div class="l">END</div></div>
+            <div class="gem"><div class="e">⚡</div><div class="v">14</div><div class="l">AGI</div></div>
+            <div class="gem"><div class="e">🧘</div><div class="v">9</div><div class="l">FLX</div></div>
+            <div class="gem"><div class="e">❤️</div><div class="v">22</div><div class="l">STA</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab active"><div class="icn">🏠</div>Home</div>
+        <div class="tab"><div class="icn">📜</div>Quests</div>
+        <div class="spacer"></div>
+        <div class="tab"><div class="icn">🗺️</div>Map</div>
+        <div class="tab"><div class="icn">👤</div>Profile</div>
+      </div>
+      <div class="fab">⚔</div>
+
+      <div class="overlay">
+        <div class="legacy-spot" style="top: 108px; left: 18px; right: 18px; height: 62px;"></div>
+        <div class="legacy-callout">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; font-weight:700;">
+            <span style="color: var(--orange)">⚔ Quest · Step 1 of 6</span>
+            <span style="display:flex; gap:4px;">
+              <span style="width:5px; height:5px; border-radius:50%; background: var(--blue); box-shadow:0 0 6px var(--blue);"></span>
+              <span style="width:5px; height:5px; border-radius:50%; background: var(--border);"></span>
+              <span style="width:5px; height:5px; border-radius:50%; background: var(--border);"></span>
+              <span style="width:5px; height:5px; border-radius:50%; background: var(--border);"></span>
+              <span style="width:5px; height:5px; border-radius:50%; background: var(--border);"></span>
+              <span style="width:5px; height:5px; border-radius:50%; background: var(--border);"></span>
+            </span>
+          </div>
+          <h3>⚡ Your XP Bar</h3>
+          <p>Every workout fills this bar. Reach Level 2 to unlock new zones.</p>
+          <div class="actions">
+            <button class="btn skip">Skip</button>
+            <button class="btn next">Got it ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h4>Variant A · Bottom callout + spotlight</h4>
+    <div class="desc">Callout docked to the bottom with step counter and actions. Great on small targets; reads as a "system" tooltip rather than in-world dialogue.</div>
+  </div>
+
+</div>
+
+<!-- ================================================================ -->
+<!-- LEGEND                                                            -->
+<!-- ================================================================ -->
+<div class="legend">
+  <div class="row"><span class="pill">FLOW</span><div><strong>8 states</strong> — Step 0 (intro full-screen) → 6 floating-bubble coach marks → Step 7 (outro full-screen). Total reward on first completion: <strong>+500 XP + Novice Adventurer title</strong>.</div></div>
+  <div class="row"><span class="pill" style="background: rgba(245,166,35,0.15); color: var(--orange)">GATE</span><div><strong>Step 4 is action-gated</strong> — the Next button is replaced by a disabled "Waiting…" pill until a real activity is logged. The <code>ActivityService</code> advances the tutorial server-side on first log.</div></div>
+  <div class="row"><span class="pill" style="background: rgba(63,185,80,0.15); color: var(--green)">HUB</span><div><strong>Tutorials hub lives in Profile → Settings → Tutorials</strong> — "Play all" runs the entire flow again (intro + 6 bubbles + outro) with zero rewards. Each topic row runs only its own bubble(s) and updates its <code>✓</code> status via <code>tutorialTopicsSeen</code> bitmask.</div></div>
+  <div class="row"><span class="pill" style="background: rgba(163,113,247,0.15); color: var(--purple)">TECH</span><div><strong>No new Flutter dependency</strong> — bubble body is a plain <code>Container</code>; tail is a <code>CustomPainter</code> triangle (~30 LOC). Placement picker reads each target's <code>GlobalKey</code> rect per frame; applies the 4-case rule: <em>above / below / above-right-offset / above-FAB</em>.</div></div>
+  <div class="row"><span class="pill" style="background: rgba(248,81,73,0.15); color: var(--red)">SKIP</span><div><strong>Skip confirmation</strong> reminds users they can replay anytime. Once skipped, <code>TutorialStep = -1</code> and the auto-start does not fire again. The hub still works (skipping never breaks replay access).</div></div>
+</div>
+
+</body>
+</html>

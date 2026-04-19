@@ -49,15 +49,11 @@ class ZoneData {
 
   // ── Factory from API model ─────────────────────────────────────────────────
 
-  static ZoneData fromApiModel(WorldZoneModel m, {bool isTraveling = false}) {
+  static ZoneData fromApiModel(WorldZoneModel m) {
     final ZoneStatus status;
     final state = m.userState;
     if (state == null) {
       status = ZoneStatus.locked;
-    } else if (state.isDestination) {
-      status = ZoneStatus.active;
-    } else if (state.isCurrentZone && isTraveling) {
-      status = ZoneStatus.completed;
     } else if (state.isCurrentZone) {
       status = ZoneStatus.active;
     } else if (state.isUnlocked) {

@@ -77,8 +77,9 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
   - [x] `log_activity_screen.dart` calls `WorldZoneRefreshNotifier.notify()` after successful log
   - [x] Tests cover both no-destination and with-destination paths
   - [ ] Manual verification: character moves along edge and detail sheet progress bar updates in real time
-- **Notes**: Root cause — `Activity → WorldZone` port never existed. `IMapDistancePort` only advanced the dungeon map, so `UserWorldProgress.DistanceTraveledOnEdge` stayed at 0, which fed directly into both the map character position (`distanceTraveledOnEdge / edge.distanceKm`) and the zone detail progress bar. Fix adds `IWorldZoneDistancePort` in SharedKernel, implemented by `WorldZoneService`, wired from `ActivityService`, and fires `WorldZoneRefreshNotifier.notify()` on mobile log so an open map reloads immediately. See plan: `.claude/plans/mutable-pondering-blum.md`.
+- **Notes**: Root cause — `Activity → WorldZone` port never existed. `IMapDistancePort` only advanced the dungeon map, so `UserWorldProgress.DistanceTraveledOnEdge` stayed at 0, which fed directly into both the map character position (`distanceTraveledOnEdge / edge.distanceKm`) and the zone detail progress bar. Fix adds `IWorldZoneDistancePort` in SharedKernel, implemented by `WorldZoneService`, wired from `ActivityService`, and fires `WorldZoneRefreshNotifier.notify()` on mobile log so an open map reloads immediately. See plan: `.claude/plans/mutable-pondering-blum.md`. **Follow-up patch (same ticket):** manual spot-check surfaced a visual-only bug — the destination zone was mapped to `ZoneStatus.active`, which drives the blue pulsing glow + dark-blue fill, while the source zone dimmed to `completed` while traveling. This made it look like the character instantly "flew" to the destination on tap. Fix in `world_map_models.dart`: removed the `isDestination → active` and `isCurrentZone && isTraveling → completed` branches so the current zone stays blue-active and the destination is marked only by the orange pulsing ring (already driven by `isDestination`). Dropped the now-unused `isTraveling` parameter.
 - **Follow-up**: Mirror `UserMapProgress.PendingDistanceKm` reserve-km banking onto `UserWorldProgress` so distance logged before setting a destination is not lost (needs entity field + EF migration). Out of scope for this ticket.
+- **Implemented**: commit pending — backend: `IWorldZoneDistancePort` added to SharedKernel, implemented by `WorldZoneService` (silent no-op when no destination), wired into `ActivityService.LogActivityAsync` and `LogActivityFromExternalAsync` when `DistanceKm > 0`; mobile: `log_activity_screen.dart` fires `WorldZoneRefreshNotifier.notify()` post-log; `world_map_models.dart` status mapping fixed so the blue-active glow stays on the source zone while traveling. Files: `ICharacterXpPort.cs`, `ActivityDtos.cs`, `ActivityService.cs`, `WorldZoneService.cs`, `WorldZoneModule.cs`, `log_activity_screen.dart`, `world_map_models.dart`, `world_map_screen.dart`.
 
 ---
 
@@ -295,6 +296,82 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
   - `MapHistoryScreen` is currently orphaned (no route points to it). Leave it in place here; a follow-up ticket can delete it once the sheet is proven.
   - Reference FABs for visual parity: `map_screen.dart:410-419` (🌍 world map, blue) and `map_screen.dart:420-429` (🛠️ debug, purple). Use orange for history so the three don't collide visually.
   - Plan file: `.claude/plans/unified-cuddling-koala.md`.
+
+### LL-032 — Backend notifications feed endpoints (`GET /api/notifications` + mark-all-read)
+- **Layer**: backend
+- **Agent**: backend
+- **Priority**: medium
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] `GET /api/notifications` returns the current user's notification list (id, category, title, body, deepLinkPath, unread, createdAt), newest-first, paginated
+  - [ ] `POST /api/notifications/mark-all-read` (or PATCH) marks every unread notification for the user as read and returns the updated count
+  - [ ] Per-row `POST /api/notifications/{id}/mark-read` for single-row interactions (mobile taps a row → deep-link + mark read)
+  - [ ] DTO shape aligned with `mobile/lib/features/notifications/models/notification_list_models.dart` (NotificationItem + NotificationCategory enum values: `bossSpawn`, `streakAtRisk`, `questComplete`, `xpStorm`, `friendActivity`, `generic` — confirm/rename as needed)
+  - [ ] Unit tests: list empty, list paginated, mark-all-read idempotency, auth isolates users
+- **Notes**: Follow-up from LL-030. Current `NotificationsController.cs` only has `register-token` / `unregister-token`. Mobile already wires to these routes with a 404 fallback — once these endpoints ship, the home bell sheet shows real data with zero mobile changes. Notifications module already exists at `backend/src/modules/LifeLevel.Modules.Notifications/` — extend it.
+
+### LL-033 — Re-home "Use Shield" action button after home-v3 streak compression
+- **Layer**: mobile
+- **Agent**: flutter-ui
+- **Priority**: low
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] Decide target surface — recommended: tap on the Shields tile in `home_stat_strip.dart` opens a bottom sheet with shield count + "Use Shield" CTA, OR a dedicated streak detail screen reachable from the Profile tab
+  - [ ] "Use Shield" flow preserved from the old `HomeStreakCard` (calls existing streak service, consumes one shield, protects today)
+  - [ ] Longest-streak stat still surfaces somewhere (Profile activity summary is a candidate)
+  - [ ] `flutter analyze` clean on changed files
+- **Notes**: Follow-up from LL-030. The v3 mockup dropped the full `HomeStreakCard` — shield *count* moved to the stat strip and the 7-day grid compressed into `HomeStreakStrip`, but the original "Use Shield to protect streak" action button has no home. Current shield count read lives in `mobile/lib/features/home/cards/home_stat_strip.dart`. Pre-v3 implementation lived in the (now-deleted) `home_cards.dart` — check git history for the exact call if needed.
+
+### LL-035 — First-time user tutorial (floating bubble coach marks + topic tutorials hub)
+- **Layer**: backend, mobile, game-engine
+- **Agent**: backend, flutter-ui, game-engine
+- **Priority**: high
+- **Phase**: P2
+- **Acceptance**:
+  - [ ] `Character` entity: `TutorialStep` (int, default 0, -1 = skipped), `TutorialCompletedAt` (DateTime?), `TutorialRewardsClaimed` (bool, default false), `TutorialTopicsSeen` (int bitmask, default 0) + EF migration
+  - [ ] `POST /api/tutorial/advance` — increments step 0→7, awards step XP only when `TutorialRewardsClaimed == false`, sets the bit for the completed topic in `TutorialTopicsSeen`, returns updated `CharacterProfile`. Wrong-step advance is a no-op.
+  - [ ] `POST /api/tutorial/skip` — sets `TutorialStep = -1`, no XP, no title
+  - [ ] `POST /api/tutorial/replay-all` — resets `TutorialStep = 0`, `TutorialCompletedAt = null`. Does NOT reset `TutorialRewardsClaimed` (rewards stay one-shot).
+  - [ ] `POST /api/tutorial/replay-topic` with `{ topic: "xp-stats" \| "quests-streaks" \| "activity-logging" \| "world-map" \| "boss-system" }` — marks the bit in `TutorialTopicsSeen` so the hub shows ✓, but does not change `TutorialStep`
+  - [ ] Game-engine: `TutorialStepRewards` static table (step 1–6 small XP, step 7 +250 + "Novice Adventurer" title). Title unlock only if `TutorialRewardsClaimed == false`.
+  - [ ] `CharacterProfile` DTO exposes `tutorialStep` and `tutorialTopicsSeen` so the mobile hub can render ✓ / ○ state
+  - [ ] `ICharacterTutorialPort.AdvanceIfOnStepAsync(characterId, expectedStep)` in SharedKernel (follows `ICharacterXpPort.cs` pattern)
+  - [ ] `ActivityService.LogActivityAsync` + `LogActivityFromExternalAsync` call `AdvanceIfOnStepAsync(characterId, 4)` after a successful log
+  - [ ] Mobile: `features/tutorial/` feature folder — `tutorial_controller.dart` (state machine, reads `GlobalKey` rects, picks bubble placement), `providers/`, `services/tutorial_service.dart` (4 API calls), `models/tutorial_step.dart` + `tutorial_topic.dart` + `tutorial_placement.dart`, `widgets/tutorial_bubble.dart`, `widgets/tutorial_bubble_tail.dart` (CustomPainter triangle), `widgets/tutorial_dim_backdrop.dart` (full-screen dim + pulse-ring painter), `widgets/tutorial_skip_sheet.dart`, `screens/tutorial_intro_screen.dart`, `screens/tutorial_outro_screen.dart`, `screens/tutorials_hub_screen.dart`
+  - [ ] Bubble is 290px wide × auto height, rounded 14px, dark surface (`#1e2632`), 1px accent border, 14px tail painted toward target, step-specific accent colour (1 blue, 2 purple, 3 orange, 4 blue, 5 green, 6 red)
+  - [ ] Bubble placement algorithm implements 4-case rule: above / below / above-right-offset / above-FAB — derived from target global rect
+  - [ ] 6 `GlobalKey`s wired on: HomeXpCard, HomeStatsRow, HomeQuestsCard (grouped with streak strip), primary Log CTA, Map nav tab, Boss FAB
+  - [ ] Tutorial auto-starts on `MainShell` first build when `tutorialStep == 0`, resumes from any intermediate step on relaunch
+  - [ ] Step 4 shows disabled "Waiting…" button until `ActivityService` server-advances; next poll / refresh resumes the flow at step 5
+  - [ ] Intro (step 0) and outro (step 7) full-screen modals reuse `character-setup.html` tokens (radial backdrop, progress dots, gradient CTA)
+  - [ ] Skip button on every bubble opens a confirmation sheet; confirmed Skip calls `/skip` endpoint
+  - [ ] Profile settings sheet gains a **"Tutorials"** row above "Logout" → pushes `TutorialsHubScreen`
+  - [ ] Hub shows: "Play all" primary row (accent blue, "6 steps · +0 XP on replay"), then 5 topic rows (XP & Stats / Quests & Streaks / Activity Logging / World Map / Boss System) with ✓ / ○ status from `tutorialTopicsSeen` bitmask
+  - [ ] Tapping "Play all" pops hub + settings and restarts the full flow from step 0 (no XP re-awarded)
+  - [ ] Tapping a topic row pops hub + settings and runs that topic's bubble(s) on Home — no outro, no XP
+  - [ ] Backend unit tests: advance happy path, advance wrong-step no-op, skip idempotent, replay-all does not re-award, replay-topic only toggles the bit, activity-gated advance only on real log
+  - [ ] `flutter analyze` clean; bubble geometry visually correct on iPhone SE (small), Pixel 6 (mid), and a large Android screen
+- **Notes**:
+  - Plan: `.claude/plans/humming-enchanting-flask.md`
+  - Design mockup: `design-mockup/onboarding/tutorial-coachmarks.html` — Variant B floating bubble frames for every step, plus Tutorials Hub, Skip Confirmation, and XP Reward Toast states. Variant A kept as runner-up reference.
+  - Obsidian doc to add: `docs/obsidian/04 - Mobile App/Features/Feature - Tutorial.md`
+  - **No new Flutter dependency** — tail is a `CustomPainter` triangle (~30 LOC).
+  - **Read `backend/ARCHITECTURE.txt` first** — confirm module boundary and port/adapter rules before adding the Tutorial module / port.
+  - Step flow: 0 intro → 1 XP bar (+25) → 2 stats (+25) → 3 quests+streak (+50) → 4 activity-log (+50, gated on real log) → 5 map (+50) → 6 boss FAB (+50) → 7 outro (+250 + Novice title). Total 500 XP on first completion. Replay grants 0 XP.
+
+---
+
+### LL-034 — Restore tap-to-open level-up recap on home avatar (post-v3)
+- **Layer**: mobile
+- **Agent**: flutter-ui
+- **Priority**: low
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] Tapping the `HomeAvatarRing` in `home_header.dart` opens the level-up recap overlay (the one `LevelUpNotifier` broadcasts on actual level-up) showing the most recent level-up's unlocks
+  - [ ] If no level-up has happened yet, tap is a no-op (or shows a subtle "Level up to see your rewards here" tooltip)
+  - [ ] Works alongside existing `LevelUpNotifier` listener in `main_shell.dart` — tap-to-replay should not double-fire if an organic level-up is already in-flight
+  - [ ] `flutter analyze` clean
+- **Notes**: Follow-up from LL-030. v3 mockup dropped `HomePulsingLvBadge` (pulsing LV badge on the avatar that opened the overlay). If we still want re-entry to the recap, add it back via the avatar ring — not the pulsing badge, which clashed with the v3 compact-header aesthetic.
 
 ---
 

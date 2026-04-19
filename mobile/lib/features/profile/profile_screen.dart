@@ -346,15 +346,31 @@ class _SettingsSheet extends ConsumerWidget {
               labelColor: AppColors.red,
               iconColor: AppColors.red,
               onTap: () async {
+                // Capture the root Riverpod container BEFORE popping/navigating.
+                // After pushAndRemoveUntil runs, this settings-sheet widget is
+                // unmounted and its `ref` is no longer usable — but the root
+                // ProviderContainer outlives any route transition, so we can
+                // invalidate through it safely from a post-frame callback.
+                final container = ProviderScope.containerOf(parentContext, listen: false);
+
                 Navigator.pop(context);
                 await ApiClient.clearToken();
-                invalidateUserScopedProviders(ref);
-                if (parentContext.mounted) {
-                  Navigator.of(parentContext).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (_) => false,
-                  );
-                }
+                if (!parentContext.mounted) return;
+
+                // Navigate FIRST, then invalidate. Invalidating while the old
+                // MainShell is still mounted forces every watching widget
+                // (including HomeAdventureHero's animated glow) to rebuild
+                // into AsyncLoading during the route transition, which
+                // visibly "pulses" the incoming LoginScreen. Pushing first
+                // removes the old subtree so the transition plays cleanly,
+                // then we clear any retained provider state one frame later.
+                Navigator.of(parentContext).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (_) => false,
+                );
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  invalidateUserScopedProvidersFromContainer(container);
+                });
               },
             ),
           ],
