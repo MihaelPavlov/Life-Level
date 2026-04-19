@@ -48,6 +48,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   String? _lastKnownZoneId;
   late StreamSubscription<void> _refreshSub;
 
+  ZoneData? _arrivalBanner;
+  Timer? _arrivalBannerTimer;
+
   // ── lifecycle ────────────────────────────────────────────────────────────────
 
   @override
@@ -70,6 +73,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   @override
   void dispose() {
     _refreshSub.cancel();
+    _arrivalBannerTimer?.cancel();
     _pulseController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -282,54 +286,70 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   }
 
   void _showZoneArrivalBanner(ZoneData zone) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 400),
-      transitionBuilder: (ctx, anim, _, child) {
-        final slide = Tween<Offset>(
-          begin: const Offset(0, -1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-        return SlideTransition(position: slide, child: child);
-      },
-      pageBuilder: (ctx, _, __) => Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 56, 16, 0),
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1e2632),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.orange.withOpacity(0.5)),
-                boxShadow: [
-                  BoxShadow(color: AppColors.orange.withOpacity(0.15), blurRadius: 16),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(zone.icon, style: const TextStyle(fontSize: 24)),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('ZONE REACHED',
-                        style: TextStyle(color: AppColors.orange, fontSize: 10,
-                            fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-                      const SizedBox(height: 2),
-                      Text(zone.name,
-                        style: const TextStyle(color: AppColors.textPrimary,
-                            fontSize: 15, fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ],
+    // Cancel any in-flight dismiss timer so rapid zone changes replace
+    // (rather than stack) the banner.
+    _arrivalBannerTimer?.cancel();
+
+    setState(() => _arrivalBanner = zone);
+
+    _arrivalBannerTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      setState(() => _arrivalBanner = null);
+    });
+  }
+
+  Widget _buildArrivalBanner() {
+    final zone = _arrivalBanner;
+    final visible = zone != null;
+    // Keep a stable child when zone is null so the fade-out animation has
+    // something to render while sliding back up.
+    final icon = zone?.icon ?? '';
+    final name = zone?.name ?? '';
+    return Positioned(
+      top: 56,
+      left: 16,
+      right: 16,
+      child: IgnorePointer(
+        ignoring: true,
+        child: AnimatedSlide(
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+          offset: visible ? Offset.zero : const Offset(0, -1.5),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            opacity: visible ? 1 : 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1e2632),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.orange.withOpacity(0.5)),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.orange.withOpacity(0.15), blurRadius: 16),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(icon, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(width: 12),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('ZONE REACHED',
+                          style: TextStyle(color: AppColors.orange, fontSize: 10,
+                              fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                        const SizedBox(height: 2),
+                        Text(name,
+                          style: const TextStyle(color: AppColors.textPrimary,
+                              fontSize: 15, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -491,6 +511,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           ),
 
         ],
+
+        // ── zone-arrival banner (top-most, pointer-transparent) ─────────────
+        _buildArrivalBanner(),
       ],
     );
   }

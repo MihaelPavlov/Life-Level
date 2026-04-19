@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
@@ -33,6 +34,7 @@
     <ProjectReference Include="..\modules\LifeLevel.Modules.Items\LifeLevel.Modules.Items.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Integrations\LifeLevel.Modules.Integrations.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Achievements\LifeLevel.Modules.Achievements.csproj" />
+    <ProjectReference Include="..\modules\LifeLevel.Modules.Notifications\LifeLevel.Modules.Notifications.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using LifeLevel.Modules.Activity.Application.DTOs;
+using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
@@ -16,7 +17,10 @@ public class ActivityService(
     IStreakReadPort streakRead,
     IQuestProgressPort questProgress,
     IMapDistancePort mapDistance,
-    IGearBonusReadPort gearBonus)
+    IWorldZoneDistancePort worldZoneDistance,
+    IGearBonusReadPort gearBonus,
+    ILevelUpItemGrantPort levelUpItemGrant,
+    IZoneUnlockReadPort zoneUnlockRead)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort
 {
     public async Task<LogActivityResult> LogActivityAsync(Guid userId, LogActivityRequest request)
@@ -59,7 +63,7 @@ public class ActivityService(
 
         // Apply stat gains and award XP via ports
         await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta));
-        await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(request.Type),
+        var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(request.Type),
             $"{request.Type} workout · {request.DurationMinutes} min", xp);
 
         // Publish event for other listeners (streak, etc.)
@@ -68,7 +72,10 @@ public class ActivityService(
             request.DistanceKm ?? 0, request.Calories ?? 0));
 
         if (request.DistanceKm > 0)
+        {
             await mapDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
+            await worldZoneDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
+        }
 
         // Update quest progress and capture which quests were just completed
         var questResult = await questProgress.UpdateProgressFromActivityAsync(
@@ -77,6 +84,19 @@ public class ActivityService(
 
         // Read back streak state for response
         var streak = await streakRead.GetCurrentStreakAsync(userId);
+
+        LevelUpUnlocksDto? levelUpUnlocks = null;
+        if (xpResult.LeveledUp)
+        {
+            var grantedItems = await levelUpItemGrant.EvaluateAndGrantAsync(
+                userId, xpResult.PreviousLevel, xpResult.NewLevel);
+            var unlockedZones = await zoneUnlockRead.GetZonesUnlockedInRangeAsync(
+                xpResult.PreviousLevel, xpResult.NewLevel);
+            levelUpUnlocks = new LevelUpUnlocksDto(
+                StatPointsGained: xpResult.NewLevel - xpResult.PreviousLevel,
+                GrantedItems: grantedItems,
+                UnlockedZones: unlockedZones);
+        }
 
         return new LogActivityResult
         {
@@ -87,14 +107,15 @@ public class ActivityService(
             AgiGained = agi,
             FlxGained = flx,
             StaGained = sta,
-            LeveledUp = false,   // level-up check already runs inside AwardXpAsync
-            NewLevel = null,
+            LeveledUp = xpResult.LeveledUp,
+            NewLevel = xpResult.LeveledUp ? xpResult.NewLevel : null,
             CompletedQuests = questResult.CompletedQuests,
             StreakUpdated = streak != null,
             CurrentStreak = streak?.Current ?? 0,
             AllDailyQuestsCompleted = questResult.AllDailyCompleted,
             BonusXpAwarded = questResult.BonusXp,
             XpBonusApplied = xpBonusApplied,
+            LevelUpUnlocks = levelUpUnlocks,
         };
     }
 
@@ -147,7 +168,10 @@ public class ActivityService(
             distanceKm ?? 0, calories ?? 0));
 
         if (distanceKm > 0)
+        {
             await mapDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+            await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+        }
 
         await questProgress.UpdateProgressFromActivityAsync(
             userId, type, durationMinutes, distanceKm, calories);

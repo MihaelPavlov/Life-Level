@@ -16,8 +16,8 @@ namespace LifeLevel.Api.Tests;
 
 file sealed class NoOpCharacterXpPort : ICharacterXpPort
 {
-    public Task AwardXpAsync(Guid u, string s, string e, string d, long xp, CancellationToken ct = default)
-        => Task.CompletedTask;
+    public Task<XpAwardResult> AwardXpAsync(Guid u, string s, string e, string d, long xp, CancellationToken ct = default)
+        => Task.FromResult(XpAwardResult.None);
 }
 
 file sealed class DbCharacterLevelReadPort(DbContext db) : ICharacterLevelReadPort
@@ -492,12 +492,12 @@ public class WorldZoneServiceTests
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Test 9: AddDistanceAsync throws when no destination is set
+    // Test 9: AddDistanceAsync is a silent no-op when no destination is set
     // ──────────────────────────────────────────────────────────────────────────
     [Fact]
-    public async Task AddDistanceAsync_ThrowsWhenNoDestination()
+    public async Task AddDistanceAsync_NoDestination_SilentNoOp()
     {
-        var db = CreateDb(nameof(AddDistanceAsync_ThrowsWhenNoDestination));
+        var db = CreateDb(nameof(AddDistanceAsync_NoDestination_SilentNoOp));
 
         var worldId = Guid.NewGuid();
         var world = new World { Id = worldId, Name = "Test World", IsActive = true };
@@ -530,8 +530,14 @@ public class WorldZoneServiceTests
 
         var service = CreateService(db);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.AddDistanceAsync(userId, 3));
+        // Should not throw — activity logging must not fail when the user isn't travelling.
+        await service.AddDistanceAsync(userId, 3);
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == userId);
+        Assert.Equal(zone1.Id, updated.CurrentZoneId);
+        Assert.Null(updated.CurrentEdgeId);
+        Assert.Null(updated.DestinationZoneId);
+        Assert.Equal(0, updated.DistanceTraveledOnEdge);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

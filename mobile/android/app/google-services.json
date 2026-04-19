@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "734427785844",
+    "project_id": "life-level-ae77f",
+    "storage_bucket": "life-level-ae77f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:734427785844:android:395822710ee235c6d0ff21",
+        "android_client_info": {
+          "package_name": "com.example.life_level"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA60sMTUhoOpqQ-jsZfCXa2QE3SbL4e2Q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

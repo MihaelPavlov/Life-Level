@@ -56,9 +56,9 @@ Previously: opening Strava OAuth from a cold-start app would fire the deep-link 
 
 External activity dedup relies on `ExternalId = "provider:nativeId"`. If two connected providers emit the same workout (e.g., Garmin also pushes to Strava), **both** will be ingested with different external IDs — one workout, two Activity rows. Future improvement: content-based dedup (duration + start time ± tolerance).
 
-## iOS HealthKit capability
+## iOS testing — multiple prerequisites pending
 
-> [!info] Not yet configured. To enable: open `ios/Runner.xcworkspace` in Xcode → Signing & Capabilities → add **HealthKit** capability.
+> [!info] Not yet configured: HealthKit capability, APNs auth key, Push Notifications capability, `GoogleService-Info.plist`. All require macOS + Xcode + an Apple Developer Program membership. See [[iOS Pre-Testing Setup]] for the full one-sitting checklist.
 
 ## `go_router` pulled but unused
 
@@ -71,3 +71,4 @@ External activity dedup relies on `ExternalId = "provider:nativeId"`. If two con
 - [[Health Connect]]
 - [[Garmin]]
 - [[Cross-Module Events]]
+- [[iOS Pre-Testing Setup]]

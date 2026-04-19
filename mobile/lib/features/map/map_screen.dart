@@ -42,7 +42,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   late final AnimationController _pulseCtrl;
   late final AnimationController _destCtrl;
   late final TransformationController _transformCtrl;
-  late final StreamSubscription<int> _levelUpSub;
+  late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<void> _mapTabSub;
 
   bool _hasInitializedViewport = false;

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../../features/activity/models/activity_models.dart';
+import '../../features/profile/widgets/equipment_slot_tile.dart' show rarityColor;
 
 // ── constants matching home_screen palette ────────────────────────────────────
 const _surface1 = Color(0xFF161b22);
-const _surface2 = Color(0xFF1e2632);
 
 /// Shows the full-screen level-up overlay as a dialog route.
-/// [level] is the new level the player reached.
-void showLevelUpScreen(BuildContext context, int level) {
+/// [level] is the new level the player reached. [unlocks] carries real
+/// per-level rewards (items, zones, stat points); when null or empty,
+/// the overlay renders a neutral fallback message.
+void showLevelUpScreen(BuildContext context, int level, {LevelUpUnlocks? unlocks}) {
   showGeneralDialog(
     context: context,
     barrierDismissible: false,
@@ -20,7 +23,7 @@ void showLevelUpScreen(BuildContext context, int level) {
         child: child,
       );
     },
-    pageBuilder: (ctx, _, __) => LevelUpOverlay(level: level),
+    pageBuilder: (ctx, _, __) => LevelUpOverlay(level: level, unlocks: unlocks),
   );
 }
 
@@ -29,7 +32,8 @@ void showLevelUpScreen(BuildContext context, int level) {
 // ─────────────────────────────────────────────────────────────────────────────
 class LevelUpOverlay extends StatefulWidget {
   final int level;
-  const LevelUpOverlay({super.key, required this.level});
+  final LevelUpUnlocks? unlocks;
+  const LevelUpOverlay({super.key, required this.level, this.unlocks});
 
   @override
   State<LevelUpOverlay> createState() => _LevelUpOverlayState();
@@ -56,6 +60,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final unlocks = widget.unlocks;
+    final hasUnlocks = unlocks != null && !unlocks.isEmpty;
+
     return Material(
       color: Colors.transparent,
       child: GestureDetector(
@@ -170,57 +177,34 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                     ),
                     const SizedBox(height: 20),
 
-                    // stat gains row
-                    Row(
-                      children: [
-                        _LuStat(val: '+2 END', lbl: 'Endurance'),
-                        const SizedBox(width: 8),
-                        _LuStat(val: '+1 AGI', lbl: 'Agility'),
-                        const SizedBox(width: 8),
-                        _LuStat(val: '+1 STA', lbl: 'Stamina'),
-                        const SizedBox(width: 8),
-                        _LuStat(val: '+5%', lbl: 'XP Gain', color: AppColors.orange),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-
-                    // unlocks
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'UNLOCKED',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 1.0,
+                    if (hasUnlocks) ...[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'UNLOCKED',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 1.0,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 7),
-                    _LuUnlock(
-                      icon: '🗺️',
-                      name: 'Iron District Zone',
-                      desc: 'Gym-based terrain · STR challenges',
-                      badgeLabel: 'ZONE',
-                      badgeColor: AppColors.blue,
-                    ),
-                    const SizedBox(height: 7),
-                    _LuUnlock(
-                      icon: '⚡',
-                      name: 'Weekly Challenges',
-                      desc: 'Harder quests with Epic gear drops',
-                      badgeLabel: 'NEW',
-                      badgeColor: AppColors.green,
-                    ),
-                    const SizedBox(height: 7),
-                    _LuUnlock(
-                      icon: '🧤',
-                      name: 'Gloves Gear Slot',
-                      desc: 'Equip gloves for +STR bonuses',
-                      badgeLabel: 'UNLOCK',
-                      badgeColor: AppColors.purple,
-                    ),
+                      const SizedBox(height: 7),
+                      ..._buildUnlockTiles(unlocks),
+                    ] else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'Keep exploring to unlock zones and gear.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
                     const SizedBox(height: 20),
 
                     // continue button
@@ -265,6 +249,60 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
         ),
       ),
     );
+  }
+
+  List<Widget> _buildUnlockTiles(LevelUpUnlocks u) {
+    final tiles = <Widget>[];
+
+    if (u.statPointsGained > 0) {
+      final s = u.statPointsGained;
+      tiles.add(_LuUnlock(
+        icon: '✨',
+        name: s == 1 ? '+1 Stat Point' : '+$s Stat Points',
+        desc: 'Spend on STR, END, AGI, FLX, or STA',
+        badgeLabel: 'POINTS',
+        badgeColor: AppColors.orange,
+      ));
+    }
+
+    for (final zone in u.unlockedZones) {
+      tiles.add(_LuUnlock(
+        icon: zone.icon.isNotEmpty ? zone.icon : '🗺️',
+        name: zone.name,
+        desc: zone.region.isEmpty
+            ? 'New zone · Lvl ${zone.levelRequirement}'
+            : '${zone.region} · Lvl ${zone.levelRequirement}',
+        badgeLabel: 'ZONE',
+        badgeColor: AppColors.blue,
+      ));
+    }
+
+    for (final item in u.grantedItems) {
+      final rColor = rarityColor(item.rarity);
+      tiles.add(_LuUnlock(
+        icon: item.icon.isNotEmpty ? item.icon : '🎁',
+        name: item.name,
+        desc: item.slot.isEmpty
+            ? _prettyRarity(item.rarity)
+            : '${_prettyRarity(item.rarity)} · ${item.slot}',
+        badgeLabel: item.rarity.isEmpty ? 'ITEM' : item.rarity.toUpperCase(),
+        badgeColor: rColor,
+      ));
+    }
+
+    return _withSpacing(tiles, const SizedBox(height: 7));
+  }
+
+  String _prettyRarity(String r) =>
+      r.isEmpty ? 'Item' : r[0].toUpperCase() + r.substring(1).toLowerCase();
+
+  List<Widget> _withSpacing(List<Widget> items, Widget gap) {
+    if (items.isEmpty) return items;
+    final out = <Widget>[items.first];
+    for (var i = 1; i < items.length; i++) {
+      out..add(gap)..add(items[i]);
+    }
+    return out;
   }
 }
 
@@ -312,34 +350,6 @@ class _PulsingRing extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _LuStat extends StatelessWidget {
-  final String val;
-  final String lbl;
-  final Color color;
-
-  const _LuStat({required this.val, required this.lbl, this.color = AppColors.green});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-        decoration: BoxDecoration(
-          color: _surface2,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            Text(val, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
-            const SizedBox(height: 2),
-            Text(lbl, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
-          ],
-        ),
-      ),
     );
   }
 }

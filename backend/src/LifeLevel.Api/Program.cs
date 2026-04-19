@@ -18,6 +18,7 @@ using LifeLevel.Modules.Items.Infrastructure;
 using LifeLevel.Modules.Integrations.Application;
 using LifeLevel.Modules.Achievements.Infrastructure;
 using LifeLevel.Modules.Integrations.Infrastructure;
+using LifeLevel.Modules.Notifications;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Events;
@@ -103,6 +104,9 @@ builder.Services.AddItemsModule();
 
 // Achievements module
 builder.Services.AddAchievementsModule();
+
+// Notifications module (FCM push, device tokens, cadence policy)
+builder.Services.AddNotificationsModule();
 
 // Integrations module
 builder.Services.AddIntegrationsModule();

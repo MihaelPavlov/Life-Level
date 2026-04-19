@@ -35,33 +35,102 @@
     -webkit-text-fill-color: transparent;
   }
   header .stats {
-    margin-left: auto;
     display: flex;
     gap: 20px;
     font-size: 13px;
     color: #8b949e;
   }
   header .stats span { color: #e6edf3; font-weight: 600; }
+  header .actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .source-state {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .source-state.loaded  { background: rgba(63,185,80,0.15);  color: #3fb950; }
+  .source-state.cached  { background: rgba(245,166,35,0.15); color: #f5a623; }
+  .source-state.error   { background: rgba(248,81,73,0.15);  color: #f85149; }
+  .source-state.linked  { background: rgba(79,158,255,0.15); color: #4f9eff; }
+
+  .btn-hdr {
+    background: #161b22;
+    border: 1px solid #30363d;
+    color: #e6edf3;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-hdr:hover { border-color: #4f9eff; color: #4f9eff; }
+  .btn-hdr.primary { background: #4f9eff; color: #fff; border-color: #4f9eff; }
+  .btn-hdr.primary:hover { background: #3d8be6; }
+  .btn-hdr.accent { background: #a371f7; color: #fff; border-color: #a371f7; }
+  .btn-hdr.accent:hover { background: #8959d6; }
+
+  /* ── Filters row ── */
+  .filter-row {
+    background: #0d1117;
+    border-bottom: 1px solid #21262d;
+    padding: 10px 24px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    overflow-x: auto;
+  }
+  .filter-btn {
+    background: #161b22;
+    border: 1px solid #21262d;
+    color: #8b949e;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: #4f9eff;
+    color: #4f9eff;
+    background: rgba(79,158,255,0.08);
+  }
+  .filter-sep {
+    width: 1px;
+    height: 20px;
+    background: #21262d;
+    margin: 0 4px;
+  }
 
   /* ── Board ── */
   .board {
     display: flex;
     gap: 16px;
     padding: 20px 24px;
-    min-height: calc(100vh - 64px);
+    min-height: calc(100vh - 120px);
     align-items: flex-start;
   }
 
   /* ── Column ── */
   .column {
-    min-width: 310px;
-    max-width: 310px;
+    min-width: 320px;
+    max-width: 320px;
     background: #0d1117;
     border: 1px solid #21262d;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 150px);
   }
   .column-header {
     padding: 14px 16px;
@@ -93,196 +162,225 @@
     padding: 8px;
     overflow-y: auto;
     flex: 1;
+    min-height: 60px;
   }
   .column-body::-webkit-scrollbar { width: 4px; }
   .column-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
 
-  /* drag-over highlight */
   .column.drag-over .column-body {
-    background: rgba(79, 158, 255, 0.04);
+    background: rgba(79,158,255,0.04);
+    border-radius: 8px;
   }
 
   /* ── Card ── */
   .card {
     background: #161b22;
     border: 1px solid #21262d;
+    border-left: 3px solid #484f58;
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px 12px;
     margin-bottom: 8px;
     cursor: grab;
-    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-    user-select: none;
+    transition: all 0.15s;
+    position: relative;
   }
   .card:hover {
     border-color: #30363d;
+    border-left-color: #4f9eff;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
-  .card.dragging {
-    opacity: 0.4;
-    transform: rotate(2deg) scale(0.97);
-  }
-  .card-title {
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
-    margin-bottom: 8px;
-  }
-  .card-desc {
-    font-size: 12px;
-    color: #8b949e;
-    line-height: 1.4;
-    margin-bottom: 10px;
-  }
-  .card-footer {
+  .card[data-priority="high"]   { border-left-color: #f85149; }
+  .card[data-priority="medium"] { border-left-color: #f5a623; }
+  .card[data-priority="low"]    { border-left-color: #8b949e; }
+  .card.dragging { opacity: 0.4; cursor: grabbing; }
+  .card-head {
     display: flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  /* ── Tags ── */
-  .tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 12px;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-  .tag-backend   { background: rgba(79,158,255,0.15); color: #4f9eff; }
-  .tag-flutter   { background: rgba(63,185,80,0.15);  color: #3fb950; }
-  .tag-design    { background: rgba(163,113,247,0.15); color: #a371f7; }
-  .tag-game      { background: rgba(245,166,35,0.15);  color: #f5a623; }
-  .tag-infra     { background: rgba(248,81,73,0.15);   color: #f85149; }
-  .tag-social    { background: rgba(56,211,159,0.15);   color: #38d39f; }
-
-  /* priority stripe */
-  .card[data-priority="high"]   { border-left: 3px solid #f85149; }
-  .card[data-priority="medium"] { border-left: 3px solid #f5a623; }
-  .card[data-priority="low"]    { border-left: 3px solid #3fb950; }
-
-  /* ── Phase badge ── */
-  .phase {
-    font-size: 10px;
-    color: #484f58;
-    font-weight: 600;
-    margin-left: auto;
-  }
-
-  /* ── Add card ── */
-  .add-card-btn {
-    background: none;
-    border: 1px dashed #30363d;
-    border-radius: 8px;
-    padding: 10px;
-    color: #484f58;
-    font-size: 13px;
-    cursor: pointer;
-    width: 100%;
-    text-align: center;
-    transition: all 0.15s;
     margin-bottom: 4px;
+  }
+  .card-id {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #8b949e;
+    background: #0d1117;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .card-phase {
+    font-size: 10px;
+    font-weight: 700;
+    color: #a371f7;
+    background: rgba(163,113,247,0.12);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+  .card-footer {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 11px;
+  }
+  .card-tag {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #8b949e;
+    background: rgba(139,148,158,0.12);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .card-tag.layer-backend    { color: #4f9eff; background: rgba(79,158,255,0.12); }
+  .card-tag.layer-mobile     { color: #a371f7; background: rgba(163,113,247,0.12); }
+  .card-tag.layer-game-engine{ color: #f5a623; background: rgba(245,166,35,0.12); }
+  .card-tag.layer-cross      { color: #3fb950; background: rgba(63,185,80,0.12); }
+
+  .card-accept {
+    margin-left: auto;
+    font-size: 11px;
+    color: #8b949e;
+    font-weight: 600;
+  }
+  .card-accept.complete { color: #3fb950; }
+
+  /* ── Add card button ── */
+  .add-card-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed #30363d;
+    color: #8b949e;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
   }
   .add-card-btn:hover {
     border-color: #4f9eff;
     color: #4f9eff;
-    background: rgba(79,158,255,0.05);
+    background: rgba(79,158,255,0.04);
   }
 
-  /* ── Add card form ── */
-  .add-form { display: none; margin-bottom: 8px; }
-  .add-form.active { display: block; }
-  .add-form input, .add-form textarea, .add-form select {
-    width: 100%;
+  /* ── Modal ── */
+  .modal-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(4,8,16,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+  .modal-scrim.open { display: flex; }
+  .modal {
     background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #e6edf3;
+  }
+  .field {
+    margin-bottom: 12px;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #8b949e;
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: #161b22;
     border: 1px solid #30363d;
     border-radius: 6px;
     padding: 8px 10px;
     color: #e6edf3;
     font-family: inherit;
     font-size: 13px;
-    margin-bottom: 6px;
     outline: none;
   }
-  .add-form input:focus, .add-form textarea:focus {
+  .field input:focus, .field textarea:focus, .field select:focus {
     border-color: #4f9eff;
   }
-  .add-form textarea { resize: vertical; min-height: 48px; }
-  .add-form .form-row { display: flex; gap: 6px; }
-  .add-form .form-row select { flex: 1; }
-  .add-form .form-actions { display: flex; gap: 6px; margin-top: 4px; }
-  .add-form .btn {
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-family: inherit;
+  .field textarea { resize: vertical; min-height: 70px; font-family: 'SF Mono', Monaco, monospace; font-size: 12px; }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
-  .btn-primary { background: #4f9eff; color: #fff; }
-  .btn-primary:hover { background: #3d8be6; }
-  .btn-ghost  { background: transparent; color: #8b949e; }
-  .btn-ghost:hover { color: #e6edf3; }
-
-  /* ── Drop placeholder ── */
-  .drop-placeholder {
-    border: 2px dashed #4f9eff;
-    border-radius: 8px;
-    height: 4px;
-    margin-bottom: 8px;
-    transition: height 0.15s;
-  }
-
-  /* ── Filter bar ── */
-  .filters {
+  .checkbox-row {
     display: flex;
-    gap: 8px;
-    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
   }
-  .filter-btn {
+  .checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     background: #161b22;
-    border: 1px solid #21262d;
-    color: #8b949e;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 600;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 10px;
     cursor: pointer;
+    font-size: 12px;
+    user-select: none;
     transition: all 0.15s;
   }
-  .filter-btn:hover, .filter-btn.active {
+  .checkbox-label:hover { border-color: #4f9eff; }
+  .checkbox-label input { margin: 0; }
+  .checkbox-label.checked {
+    background: rgba(79,158,255,0.1);
     border-color: #4f9eff;
     color: #4f9eff;
-    background: rgba(79,158,255,0.08);
   }
-
-  /* ── Delete zone ── */
-  .delete-zone {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 0;
-    background: rgba(248,81,73,0.12);
-    border-top: 2px dashed transparent;
+  .modal-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: #f85149;
-    transition: height 0.25s, border-color 0.25s;
-    z-index: 200;
-    pointer-events: none;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
   }
-  .delete-zone.visible {
-    height: 64px;
-    border-color: #f85149;
-    pointer-events: all;
-  }
-  .delete-zone.over {
-    background: rgba(248,81,73,0.25);
-    height: 80px;
+  .modal-actions .btn-hdr { padding: 8px 16px; font-size: 13px; }
+
+  /* Ticket detail */
+  .detail-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .detail-acceptance { margin: 10px 0; }
+  .detail-acceptance h4 { font-size: 12px; color: #8b949e; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .acc-item { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; font-size: 13px; line-height: 1.4; }
+  .acc-item input { margin-top: 3px; }
+  .acc-item.done span { text-decoration: line-through; color: #8b949e; }
+  .detail-notes {
+    background: #161b22;
+    border-left: 2px solid #30363d;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #b0bac3;
+    margin-top: 10px;
+    border-radius: 0 6px 6px 0;
+    line-height: 1.5;
   }
 </style>
 </head>
@@ -290,213 +388,480 @@
 
 <header>
   <h1>Life Level — Project Board</h1>
-  <div class="filters">
-    <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="backend">Backend</button>
-    <button class="filter-btn" data-filter="flutter">Flutter</button>
-    <button class="filter-btn" data-filter="design">Design</button>
-    <button class="filter-btn" data-filter="game">Game</button>
-    <button class="filter-btn" data-filter="infra">Infra</button>
-  </div>
   <div class="stats">
     Total: <span id="stat-total">0</span> &nbsp;|&nbsp;
     Done: <span id="stat-done">0</span>
   </div>
+  <div class="actions">
+    <span id="sourceState" class="source-state cached">Not loaded</span>
+    <button class="btn-hdr" id="btnConnect" title="Grant direct write access to docs/board.md (Chromium only)">🔗 Connect file</button>
+    <button class="btn-hdr" id="btnReload" title="Re-read docs/board.md">↻ Reload</button>
+    <button class="btn-hdr primary" id="btnSave" title="Write changes back to docs/board.md">💾 Save</button>
+  </div>
 </header>
 
+<div class="filter-row" id="filterRow">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <span class="filter-sep"></span>
+  <button class="filter-btn" data-filter="backend">Backend</button>
+  <button class="filter-btn" data-filter="mobile">Mobile</button>
+  <button class="filter-btn" data-filter="game-engine">Game</button>
+  <button class="filter-btn" data-filter="cross">Cross</button>
+  <span class="filter-sep"></span>
+  <button class="filter-btn" data-filter="P7">P7</button>
+  <button class="filter-btn" data-filter="P8">P8</button>
+</div>
+
 <div class="board" id="board"></div>
-<div class="delete-zone" id="deleteZone">Drop here to delete</div>
+
+<!-- Add / edit ticket modal -->
+<div class="modal-scrim" id="modalScrim">
+  <div class="modal" id="modalBody">
+    <!-- populated by JS -->
+  </div>
+</div>
 
 <script>
-// ── Data ──
-const COLUMNS = [
-  { id: 'backlog',     title: 'Backlog',       color: '#484f58' },
-  { id: 'todo',        title: 'To Do',         color: '#4f9eff' },
-  { id: 'in-progress', title: 'In Progress',   color: '#f5a623' },
-  { id: 'review',      title: 'Review / Test',  color: '#a371f7' },
-  { id: 'done',        title: 'Done',          color: '#3fb950' },
-];
+// ──────────────────────────────────────────────────────────────
+// Configuration
+// ──────────────────────────────────────────────────────────────
+const BOARD_PATH = '../docs/board.md';
 
-const SEED_TASKS = [
-  // ── Done (Phase 0) ──
-  { id: 't0a', col: 'done', title: 'ASP.NET Core project setup', desc: 'Solution structure, DI, base config', tags: ['backend','infra'], priority: 'high', phase: 'P0' },
-  { id: 't0b', col: 'done', title: 'JWT authentication', desc: 'Login, register, token refresh endpoints', tags: ['backend'], priority: 'high', phase: 'P0' },
-  { id: 't0c', col: 'done', title: 'EF Core + Supabase Postgres', desc: 'DbContext, connection string, initial migration', tags: ['backend','infra'], priority: 'high', phase: 'P0' },
-  { id: 't0d', col: 'done', title: 'Flutter project scaffold', desc: 'App shell, navigation, theme setup', tags: ['flutter'], priority: 'high', phase: 'P0' },
-  { id: 't0e', col: 'done', title: 'Design system & mockups', desc: 'Dark theme, color tokens, typography, phone frames', tags: ['design'], priority: 'medium', phase: 'P0' },
-  { id: 't0f', col: 'done', title: 'Strava integration', desc: 'OAuth flow, activity import from Strava API', tags: ['backend','flutter'], priority: 'medium', phase: 'P1' },
-
-  // ── Done (Phase 1 completed items) ──
-  { id: 't1a', col: 'done', title: 'Character entity & profile', desc: 'Level, XP, rank, 5 core stats (STR/END/AGI/FLX/STA)', tags: ['backend','game'], priority: 'high', phase: 'P1' },
-  { id: 't1b', col: 'done', title: 'Activity logging API', desc: 'Log workout: type, duration, distance, calories, HR', tags: ['backend'], priority: 'high', phase: 'P1' },
-  { id: 't1c', col: 'done', title: 'XP engine & stat gains', desc: 'Activity type → stat mapping, multipliers, formulas', tags: ['backend','game'], priority: 'high', phase: 'P1' },
-  { id: 't1d', col: 'done', title: 'Level-up system', desc: 'Exponential thresholds, triggers, unlock checks', tags: ['backend','game'], priority: 'high', phase: 'P1' },
-  { id: 't1e', col: 'done', title: 'Home screen UI', desc: 'XP bar, streak card, quests card, stats row, boss card', tags: ['flutter'], priority: 'high', phase: 'P1' },
-  { id: 't1f', col: 'done', title: 'Profile screen UI', desc: 'Stats, equipment, inventory, achievements tabs', tags: ['flutter'], priority: 'high', phase: 'P1' },
-  { id: 't1g', col: 'done', title: 'Level-up celebration overlay', desc: 'LevelUpNotifier global event → animated overlay', tags: ['flutter'], priority: 'medium', phase: 'P1' },
-  { id: 't1h', col: 'done', title: 'Radial FAB navigation', desc: 'Boss button, ring menu with 10 items, customization', tags: ['flutter'], priority: 'medium', phase: 'P1' },
-  { id: 't1i', col: 'done', title: 'Adventure Map SVG UI', desc: 'Zone nodes, paths, pan/zoom, tier indicators', tags: ['flutter','design'], priority: 'high', phase: 'P3' },
-  { id: 't1j', col: 'done', title: 'Titles & ranks display', desc: 'Title equip system, rank badges on profile', tags: ['flutter'], priority: 'medium', phase: 'P6' },
-  { id: 't1k', col: 'done', title: 'Achievements UI', desc: '48 achievements, tier filtering, progress tracking', tags: ['flutter'], priority: 'medium', phase: 'P6' },
-  { id: 't1l', col: 'done', title: 'Items & equipment UI', desc: 'Inventory grid, equipment slots, rarity colors', tags: ['flutter','design'], priority: 'medium', phase: 'P5' },
-  { id: 't1m', col: 'done', title: 'World zone map data & models', desc: 'ZoneData, ZoneStatus, static zone list, detail sheet', tags: ['flutter','game'], priority: 'high', phase: 'P3' },
-
-  // ── In Progress ──
-  { id: 't2a', col: 'in-progress', title: 'World zone backend API', desc: 'Zone entity, discovery state, movement calculation', tags: ['backend','game'], priority: 'high', phase: 'P3' },
-  { id: 't2b', col: 'in-progress', title: 'Recent Activities feed', desc: 'Replace hardcoded HomeLastActivityCard with real data', tags: ['flutter','backend'], priority: 'medium', phase: 'P1' },
-
-  // ── To Do ──
-  { id: 't3a', col: 'todo', title: 'Quest entity & daily generation', desc: 'Quest model, cron job to generate 5 daily quests', tags: ['backend','game'], priority: 'high', phase: 'P2' },
-  { id: 't3b', col: 'todo', title: 'Quest progress hooks', desc: 'Activity completion triggers quest progress updates', tags: ['backend','game'], priority: 'high', phase: 'P2' },
-  { id: 't3c', col: 'todo', title: 'Streak tracking backend', desc: 'Current/longest streak, shield logic, login rewards', tags: ['backend','game'], priority: 'high', phase: 'P2' },
-  { id: 't3d', col: 'todo', title: 'Quest tabs UI (daily/story/special)', desc: 'Tab view, quest cards, progress bars, bonus banner', tags: ['flutter'], priority: 'high', phase: 'P2' },
-  { id: 't3e', col: 'todo', title: 'Daily login screen & rewards', desc: '7-day reward cycle UI, streak shield display', tags: ['flutter'], priority: 'medium', phase: 'P2' },
-  { id: 't3f', col: 'todo', title: 'Zone movement from activity', desc: 'Distance → map travel calculation, path progress', tags: ['backend','game'], priority: 'high', phase: 'P3' },
-  { id: 't3g', col: 'todo', title: 'Path/crossroads system', desc: 'Branching paths, unlock requirements, difficulty tiers', tags: ['backend','game'], priority: 'medium', phase: 'P3' },
-
-  // ── Backlog ──
-  { id: 't4a', col: 'backlog', title: 'Boss entity & raid system', desc: 'Boss HP, location, damage per activity, loot', tags: ['backend','game'], priority: 'high', phase: 'P4' },
-  { id: 't4b', col: 'backlog', title: 'Mini-boss encounters', desc: '3-day timer, no travel needed, smaller rewards', tags: ['backend','game'], priority: 'medium', phase: 'P4' },
-  { id: 't4c', col: 'backlog', title: 'Guild raids (co-op)', desc: 'Shared HP pool, member contributions, bonus for top DPS', tags: ['backend','social'], priority: 'medium', phase: 'P4' },
-  { id: 't4d', col: 'backlog', title: 'Boss battle UI', desc: 'HP bar, damage animation, victory screen', tags: ['flutter','design'], priority: 'medium', phase: 'P4' },
-  { id: 't4e', col: 'backlog', title: 'Item entity & stat bonuses', desc: 'Item model, rarity tiers, equipment stat effects', tags: ['backend','game'], priority: 'medium', phase: 'P5' },
-  { id: 't4f', col: 'backlog', title: 'Achievement unlock engine', desc: 'Condition checks, tier progression, XP rewards', tags: ['backend','game'], priority: 'medium', phase: 'P6' },
-  { id: 't4g', col: 'backlog', title: 'Random events (chests, XP storm, merchant)', desc: 'Event spawner, timed windows, push notifications', tags: ['backend','game'], priority: 'low', phase: 'P7' },
-  { id: 't4h', col: 'backlog', title: 'Seasonal events & leaderboards', desc: 'Limited-time quests, 5-stage rewards, event LB', tags: ['backend','game'], priority: 'low', phase: 'P7' },
-  { id: 't4i', col: 'backlog', title: 'Friends & social feed', desc: 'Add friends, activity feed, challenges', tags: ['backend','social'], priority: 'low', phase: 'P8' },
-  { id: 't4j', col: 'backlog', title: 'Guild system', desc: 'Create/join guild, member list, guild chat', tags: ['backend','social'], priority: 'low', phase: 'P8' },
-  { id: 't4k', col: 'backlog', title: 'Leaderboard system', desc: 'Redis sorted sets, weekly/all-time, friends LB', tags: ['backend','infra'], priority: 'low', phase: 'P8' },
-  { id: 't4l', col: 'backlog', title: 'Push notifications (FCM)', desc: 'Boss spawns, XP storms, streak reminders', tags: ['infra'], priority: 'low', phase: 'P8' },
-  { id: 't4m', col: 'backlog', title: 'Google Fit / Apple Health import', desc: 'Native health API integration for activity sync', tags: ['flutter','infra'], priority: 'medium', phase: 'P8' },
-  { id: 't4n', col: 'backlog', title: 'SignalR real-time events', desc: 'Live guild raid damage, XP storm countdown', tags: ['backend','infra'], priority: 'low', phase: 'P8' },
-];
-
-// ── State ──
-let tasks = JSON.parse(localStorage.getItem('ll-board-tasks') || 'null') || SEED_TASKS;
+// ──────────────────────────────────────────────────────────────
+// State
+// ──────────────────────────────────────────────────────────────
+let sections = [];            // [ { title, tickets: [...] } ]
 let activeFilter = 'all';
-let draggedCard = null;
-let nextId = tasks.length + 1;
+let draggedId = null;
+let fileHandle = null;        // File System Access API handle (if granted)
+let rawPreamble = '';         // text before first ticket column
+let rawEpilogue = '';         // text after last ticket column
 
-function save() {
-  localStorage.setItem('ll-board-tasks', JSON.stringify(tasks));
+// ──────────────────────────────────────────────────────────────
+// Markdown parser
+// ──────────────────────────────────────────────────────────────
+const EXCLUDED_SECTIONS = [
+  /^format$/i,
+  /^how the agent/i,
+  /^done\s*\(summary\)/i,
+];
+
+function isExcludedSection(title) {
+  return EXCLUDED_SECTIONS.some(rx => rx.test(title));
 }
 
-// ── Render ──
+function cleanSectionTitle(raw) {
+  // Strip leading emoji + whitespace so "🟡 In Progress" → "In Progress"
+  return raw.replace(/^[^\w]+/, '').trim();
+}
+
+function parseBoardMarkdown(md) {
+  const sections = [];
+  const lines = md.split('\n');
+  let currentSection = null;
+  let currentTicket = null;
+  let currentField = null;
+  let firstSectionIndex = -1;
+  let lastLineOfSectionsIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const sectionMatch = line.match(/^## (.+?)\s*$/);
+    if (sectionMatch) {
+      const rawTitle = sectionMatch[1].trim();
+      const cleanTitle = cleanSectionTitle(rawTitle);
+      if (isExcludedSection(cleanTitle) || isExcludedSection(rawTitle)) {
+        currentSection = null;
+        currentTicket = null;
+        continue;
+      }
+      if (firstSectionIndex === -1) firstSectionIndex = i;
+      currentSection = { title: rawTitle, cleanTitle, tickets: [] };
+      sections.push(currentSection);
+      currentTicket = null;
+      currentField = null;
+      continue;
+    }
+
+    if (!currentSection) continue;
+
+    const ticketMatch = line.match(/^### (LL-\d+)\s*[—\-]\s*(.+?)\s*$/);
+    if (ticketMatch) {
+      currentTicket = {
+        id: ticketMatch[1],
+        title: ticketMatch[2].trim(),
+        layer: [],      // array of layers
+        agent: [],      // array of agents (dispatched in parallel)
+        priority: 'medium',
+        phase: '',
+        acceptance: [],
+        notes: '',
+        implemented: [],
+      };
+      currentSection.tickets.push(currentTicket);
+      currentField = null;
+      lastLineOfSectionsIndex = i;
+      continue;
+    }
+
+    if (!currentTicket) continue;
+
+    // Detect a "horizontal rule" or next section start — closes ticket parsing
+    if (line.match(/^---\s*$/)) { currentTicket = null; currentField = null; continue; }
+
+    // Metadata bullet: - **Key**: value
+    const metaMatch = line.match(/^-\s*\*\*([\w-]+)\*\*:\s*(.*)$/);
+    if (metaMatch) {
+      const key = metaMatch[1].toLowerCase();
+      const val = metaMatch[2].trim();
+      currentField = key;
+      if (key === 'acceptance') {
+        // next lines will be checklist items
+        continue;
+      }
+      if (key === 'implemented') {
+        currentTicket.implemented.push(val);
+        continue;
+      }
+      if (key === 'layer' || key === 'agent') {
+        // Back-compat: "cross" layer → backend + mobile
+        const items = val.split(',').map(s => s.trim()).filter(Boolean);
+        if (key === 'layer' && items.length === 1 && items[0].toLowerCase() === 'cross') {
+          currentTicket.layer = ['backend', 'mobile'];
+        } else {
+          currentTicket[key] = items;
+        }
+      } else if (['priority', 'phase', 'notes'].includes(key)) {
+        currentTicket[key] = val;
+      }
+      lastLineOfSectionsIndex = i;
+      continue;
+    }
+
+    // Acceptance-list item: - [ ] Criterion or - [x] Criterion (indented)
+    if (currentField === 'acceptance') {
+      const critMatch = line.match(/^\s*-\s*\[([x ])\]\s*(.+?)\s*$/);
+      if (critMatch) {
+        currentTicket.acceptance.push({ done: critMatch[1] === 'x', text: critMatch[2].trim() });
+        lastLineOfSectionsIndex = i;
+        continue;
+      }
+    }
+  }
+
+  const preamble = firstSectionIndex > 0 ? lines.slice(0, firstSectionIndex).join('\n').trim() : '';
+  const epilogue = lastLineOfSectionsIndex >= 0
+    ? lines.slice(lastLineOfSectionsIndex + 1)
+        .join('\n')
+        .replace(/^\s*/, '')
+        .trim()
+    : '';
+
+  // Filter epilogue: keep only content AFTER the last section we kept.
+  // Try to find a "---" separator or a new ## heading (Done summary, How the agent) to mark the epilogue start.
+  let epiStart = -1;
+  for (let i = lastLineOfSectionsIndex + 1; i < lines.length; i++) {
+    if (lines[i].match(/^---\s*$/) || lines[i].match(/^## /)) {
+      epiStart = i;
+      break;
+    }
+  }
+  const finalEpilogue = epiStart >= 0 ? lines.slice(epiStart).join('\n').trim() : '';
+
+  return { sections, preamble, epilogue: finalEpilogue };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Markdown serializer
+// ──────────────────────────────────────────────────────────────
+function serializeBoard(sections, preamble, epilogue) {
+  const parts = [];
+  if (preamble) parts.push(preamble);
+  parts.push('');
+
+  for (const section of sections) {
+    parts.push(`## ${section.title}`);
+    parts.push('');
+    for (const t of section.tickets) {
+      parts.push(`### ${t.id} — ${t.title}`);
+      if (t.layer && t.layer.length) parts.push(`- **Layer**: ${t.layer.join(', ')}`);
+      if (t.agent && t.agent.length) parts.push(`- **Agent**: ${t.agent.join(', ')}`);
+      if (t.priority) parts.push(`- **Priority**: ${t.priority}`);
+      if (t.phase)    parts.push(`- **Phase**: ${t.phase}`);
+      if (t.acceptance.length) {
+        parts.push(`- **Acceptance**:`);
+        for (const c of t.acceptance) {
+          parts.push(`  - [${c.done ? 'x' : ' '}] ${c.text}`);
+        }
+      }
+      if (t.notes) parts.push(`- **Notes**: ${t.notes}`);
+      for (const impl of t.implemented) {
+        parts.push(`- **Implemented**: ${impl}`);
+      }
+      parts.push('');
+    }
+  }
+
+  if (epilogue) {
+    parts.push(epilogue);
+  }
+
+  return parts.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+}
+
+// ──────────────────────────────────────────────────────────────
+// Data loading
+// ──────────────────────────────────────────────────────────────
+async function loadFromFetch() {
+  try {
+    const res = await fetch(BOARD_PATH + '?t=' + Date.now(), { cache: 'no-cache' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const md = await res.text();
+    const parsed = parseBoardMarkdown(md);
+    sections = parsed.sections;
+    rawPreamble = parsed.preamble;
+    rawEpilogue = parsed.epilogue;
+    setSourceState('loaded', 'Loaded from file');
+    return true;
+  } catch (e) {
+    console.warn('fetch failed:', e);
+    return false;
+  }
+}
+
+async function loadFromHandle() {
+  if (!fileHandle) return false;
+  try {
+    const file = await fileHandle.getFile();
+    const md = await file.text();
+    const parsed = parseBoardMarkdown(md);
+    sections = parsed.sections;
+    rawPreamble = parsed.preamble;
+    rawEpilogue = parsed.epilogue;
+    setSourceState('linked', 'Linked to file');
+    return true;
+  } catch (e) {
+    console.warn('handle read failed:', e);
+    return false;
+  }
+}
+
+async function loadFromLocalStorage() {
+  const raw = localStorage.getItem('ll-board-state');
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    sections = state.sections || [];
+    rawPreamble = state.preamble || '';
+    rawEpilogue = state.epilogue || '';
+    setSourceState('cached', 'Local cache');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('ll-board-state', JSON.stringify({
+    sections, preamble: rawPreamble, epilogue: rawEpilogue,
+  }));
+}
+
+async function initialLoad() {
+  if (await loadFromFetch()) {
+    saveToLocalStorage();
+    render();
+    return;
+  }
+  if (await loadFromLocalStorage()) {
+    setSourceState('error', 'fetch failed — using cache');
+    render();
+    return;
+  }
+  // Empty start — show one empty column
+  sections = [{ title: '🟡 In Progress', cleanTitle: 'In Progress', tickets: [] }];
+  setSourceState('error', `Could not load ${BOARD_PATH}`);
+  render();
+}
+
+// ──────────────────────────────────────────────────────────────
+// Saving
+// ──────────────────────────────────────────────────────────────
+async function saveToFile() {
+  const md = serializeBoard(sections, rawPreamble, rawEpilogue);
+
+  if (fileHandle) {
+    try {
+      const writable = await fileHandle.createWritable();
+      await writable.write(md);
+      await writable.close();
+      setSourceState('linked', 'Saved ✓ ' + new Date().toLocaleTimeString());
+      return;
+    } catch (e) {
+      console.error('direct write failed:', e);
+      setSourceState('error', 'Save failed — downloaded instead');
+      // fall through to download
+    }
+  }
+
+  // Fallback: download
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'board.md';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setSourceState('cached', 'Downloaded board.md — replace in docs/');
+}
+
+async function connectFile() {
+  if (!window.showOpenFilePicker) {
+    alert('File System Access API not available.\n\nUse Chrome, Edge, or another Chromium browser to grant direct write access.\n\nFor now, use "💾 Save" to download the file.');
+    return;
+  }
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      types: [{
+        description: 'Markdown',
+        accept: { 'text/markdown': ['.md'] },
+      }],
+      multiple: false,
+    });
+    fileHandle = handle;
+    await loadFromHandle();
+    render();
+  } catch (e) {
+    if (e.name !== 'AbortError') console.error(e);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Rendering
+// ──────────────────────────────────────────────────────────────
+const COLUMN_COLORS = {
+  'in progress':        '#f5a623',
+  'blocked':            '#f85149',
+  'discussion':         '#f85149',
+  'bugs':               '#f85149',
+  'backlog':            '#484f58',
+  'to do':              '#4f9eff',
+  'review':             '#a371f7',
+  'review / test':      '#a371f7',
+  'completed':          '#3fb950',
+  'done':               '#3fb950',
+};
+
+function colorForSection(title) {
+  const key = title.toLowerCase();
+  for (const k of Object.keys(COLUMN_COLORS)) {
+    if (key.includes(k)) return COLUMN_COLORS[k];
+  }
+  return '#484f58';
+}
+
+function ticketMatchesFilter(t) {
+  if (activeFilter === 'all') return true;
+  if (activeFilter === 'cross') {
+    return (t.layer || []).length > 1;   // "cross" = multi-layer
+  }
+  if (['backend','mobile','game-engine'].includes(activeFilter)) {
+    return (t.layer || []).map(l => l.toLowerCase()).includes(activeFilter);
+  }
+  if (activeFilter.match(/^P\d+$/)) {
+    return (t.phase || '').toUpperCase() === activeFilter;
+  }
+  return true;
+}
+
+function makeCard(ticket, sectionIdx) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.draggable = true;
+  card.dataset.id = ticket.id;
+  card.dataset.priority = (ticket.priority || 'medium').toLowerCase();
+
+  const acceptTotal = ticket.acceptance.length;
+  const acceptDone = ticket.acceptance.filter(a => a.done).length;
+  const acceptClass = (acceptTotal > 0 && acceptDone === acceptTotal) ? 'complete' : '';
+
+  const layerTags = (ticket.layer || []).map(l => {
+    const slug = l.toLowerCase().replace(/\s+/g, '-');
+    return `<span class="card-tag layer-${slug}">${escapeHtml(l)}</span>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="card-id">${escapeHtml(ticket.id)}</span>
+      ${ticket.phase ? `<span class="card-phase">${escapeHtml(ticket.phase)}</span>` : ''}
+    </div>
+    <div class="card-title">${escapeHtml(ticket.title)}</div>
+    <div class="card-footer">
+      ${layerTags}
+      ${acceptTotal > 0
+        ? `<span class="card-accept ${acceptClass}">✓ ${acceptDone}/${acceptTotal}</span>`
+        : ''}
+    </div>
+  `;
+
+  card.addEventListener('click', (e) => {
+    if (!card.classList.contains('dragging')) {
+      openTicketDetail(sectionIdx, ticket.id);
+    }
+  });
+
+  card.addEventListener('dragstart', e => {
+    draggedId = ticket.id;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    draggedId = null;
+    document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+  });
+
+  return card;
+}
+
 function render() {
   const board = document.getElementById('board');
   board.innerHTML = '';
 
-  COLUMNS.forEach(col => {
-    const colTasks = tasks.filter(t => {
-      if (t.col !== col.id) return false;
-      if (activeFilter !== 'all' && !t.tags.includes(activeFilter)) return false;
-      return true;
-    });
+  let total = 0, done = 0;
+
+  sections.forEach((section, sIdx) => {
+    const colTasks = section.tickets.filter(ticketMatchesFilter);
+    total += section.tickets.length;
+    if (/done/i.test(section.title)) done += section.tickets.length;
 
     const colEl = document.createElement('div');
     colEl.className = 'column';
-    colEl.dataset.col = col.id;
+    colEl.dataset.section = sIdx;
+
+    const dotColor = colorForSection(section.cleanTitle);
 
     colEl.innerHTML = `
       <div class="column-header">
-        <div class="dot" style="background:${col.color}"></div>
-        <h2>${col.title}</h2>
+        <div class="dot" style="background:${dotColor}"></div>
+        <h2>${escapeHtml(section.title)}</h2>
         <span class="count">${colTasks.length}</span>
       </div>
-      <div class="column-body" data-col="${col.id}"></div>
+      <div class="column-body" data-section="${sIdx}"></div>
     `;
 
     const body = colEl.querySelector('.column-body');
 
-    // Add card form
-    const form = document.createElement('div');
-    form.className = 'add-form';
-    form.innerHTML = `
-      <input type="text" placeholder="Task title..." class="new-title">
-      <textarea placeholder="Description (optional)..." class="new-desc"></textarea>
-      <div class="form-row">
-        <select class="new-priority">
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="low">Low</option>
-        </select>
-        <select class="new-tag" multiple size="1">
-          <option value="backend">Backend</option>
-          <option value="flutter">Flutter</option>
-          <option value="design">Design</option>
-          <option value="game">Game</option>
-          <option value="infra">Infra</option>
-          <option value="social">Social</option>
-        </select>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary btn-add">Add</button>
-        <button class="btn btn-ghost btn-cancel">Cancel</button>
-      </div>
-    `;
-    body.appendChild(form);
+    colTasks.forEach(t => body.appendChild(makeCard(t, sIdx)));
 
-    // Add card button
+    // + Add task button
     const addBtn = document.createElement('button');
     addBtn.className = 'add-card-btn';
-    addBtn.textContent = '+ Add task';
-    addBtn.onclick = () => {
-      form.classList.toggle('active');
-      if (form.classList.contains('active')) form.querySelector('.new-title').focus();
-    };
+    addBtn.textContent = '+ Add ticket';
+    addBtn.onclick = () => openNewTicket(sIdx);
     body.appendChild(addBtn);
 
-    form.querySelector('.btn-cancel').onclick = () => form.classList.remove('active');
-    form.querySelector('.btn-add').onclick = () => {
-      const title = form.querySelector('.new-title').value.trim();
-      if (!title) return;
-      const desc = form.querySelector('.new-desc').value.trim();
-      const priority = form.querySelector('.new-priority').value;
-      const tagSel = form.querySelector('.new-tag');
-      const tags = Array.from(tagSel.selectedOptions).map(o => o.value);
-      if (!tags.length) tags.push('backend');
-      tasks.push({ id: 'tn' + (nextId++), col: col.id, title, desc, tags, priority, phase: '' });
-      save();
-      render();
-    };
-
-    // Task cards
-    colTasks.forEach(task => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.draggable = true;
-      card.dataset.id = task.id;
-      card.dataset.priority = task.priority || 'medium';
-
-      const tagsHTML = task.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
-      card.innerHTML = `
-        <div class="card-title">${task.title}</div>
-        ${task.desc ? `<div class="card-desc">${task.desc}</div>` : ''}
-        <div class="card-footer">
-          ${tagsHTML}
-          ${task.phase ? `<span class="phase">${task.phase}</span>` : ''}
-        </div>
-      `;
-
-      // Drag events
-      card.addEventListener('dragstart', e => {
-        draggedCard = task.id;
-        card.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        document.getElementById('deleteZone').classList.add('visible');
-      });
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-        draggedCard = null;
-        document.getElementById('deleteZone').classList.remove('visible');
-        document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
-        document.querySelectorAll('.drop-placeholder').forEach(p => p.remove());
-      });
-
-      body.insertBefore(card, addBtn);
-    });
-
-    // Column drop target
+    // Drop target
     body.addEventListener('dragover', e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -508,41 +873,346 @@ function render() {
     body.addEventListener('drop', e => {
       e.preventDefault();
       colEl.classList.remove('drag-over');
-      if (!draggedCard) return;
-      const task = tasks.find(t => t.id === draggedCard);
-      if (task) {
-        task.col = col.id;
-        save();
-        render();
-      }
+      if (!draggedId) return;
+      moveTicket(draggedId, sIdx);
     });
 
     board.appendChild(colEl);
   });
 
-  updateStats();
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = done;
+
+  saveToLocalStorage();
 }
 
-// ── Delete zone ──
-const deleteZone = document.getElementById('deleteZone');
-deleteZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  deleteZone.classList.add('over');
-});
-deleteZone.addEventListener('dragleave', () => {
-  deleteZone.classList.remove('over');
-});
-deleteZone.addEventListener('drop', e => {
-  e.preventDefault();
-  deleteZone.classList.remove('over', 'visible');
-  if (!draggedCard) return;
-  tasks = tasks.filter(t => t.id !== draggedCard);
-  draggedCard = null;
-  save();
+// ──────────────────────────────────────────────────────────────
+// Ticket mutations
+// ──────────────────────────────────────────────────────────────
+function findTicket(id) {
+  for (let s = 0; s < sections.length; s++) {
+    const idx = sections[s].tickets.findIndex(t => t.id === id);
+    if (idx >= 0) return { sIdx: s, tIdx: idx, ticket: sections[s].tickets[idx] };
+  }
+  return null;
+}
+
+function moveTicket(id, targetSection) {
+  const found = findTicket(id);
+  if (!found) return;
+  if (found.sIdx === targetSection) return;
+  const [t] = sections[found.sIdx].tickets.splice(found.tIdx, 1);
+  sections[targetSection].tickets.push(t);
   render();
+}
+
+function nextId() {
+  const ids = [];
+  sections.forEach(s => s.tickets.forEach(t => {
+    const m = t.id.match(/^LL-(\d+)$/);
+    if (m) ids.push(parseInt(m[1], 10));
+  }));
+  const max = ids.length ? Math.max(...ids) : 0;
+  return 'LL-' + String(max + 1).padStart(3, '0');
+}
+
+// ──────────────────────────────────────────────────────────────
+// Modals — new + detail
+// ──────────────────────────────────────────────────────────────
+function openNewTicket(sectionIdx) {
+  const body = document.getElementById('modalBody');
+  const id = nextId();
+  body.innerHTML = `
+    <h2>New ticket in "${escapeHtml(sections[sectionIdx].title)}"</h2>
+    <div class="field">
+      <label>ID</label>
+      <input type="text" id="f-id" value="${id}" />
+    </div>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f-title" placeholder="Short imperative (e.g., Wire XP Storm multiplier)" />
+    </div>
+    <div class="field">
+      <label>Layer (pick one or more)</label>
+      <div class="checkbox-row" id="f-layer">
+        ${['backend','mobile','game-engine'].map(v => `
+          <label class="checkbox-label">
+            <input type="checkbox" value="${v}"> ${v}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Agent (pick one or more — dispatched in parallel)</label>
+      <div class="checkbox-row" id="f-agent">
+        ${['backend','flutter-ui','game-engine'].map(v => `
+          <label class="checkbox-label">
+            <input type="checkbox" value="${v}"> ${v}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Priority</label>
+        <select id="f-priority">
+          <option value="medium">medium</option>
+          <option value="high">high</option>
+          <option value="low">low</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Phase</label>
+        <input type="text" id="f-phase" placeholder="P7, P8, cleanup..." />
+      </div>
+    </div>
+    <div class="field">
+      <label>Acceptance (one per line)</label>
+      <textarea id="f-acceptance" placeholder="Endpoint returns JSON list&#10;Empty state handled&#10;Unit test covers X"></textarea>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Context, vault links, blockers..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-hdr" onclick="closeModal()">Cancel</button>
+      <button class="btn-hdr primary" id="btn-create">Create ticket</button>
+    </div>
+  `;
+  openModal();
+  wireCheckboxGroup('f-layer');
+  wireCheckboxGroup('f-agent');
+  document.getElementById('btn-create').onclick = () => {
+    const t = {
+      id: document.getElementById('f-id').value.trim(),
+      title: document.getElementById('f-title').value.trim(),
+      layer: getCheckboxGroup('f-layer'),
+      agent: getCheckboxGroup('f-agent'),
+      priority: document.getElementById('f-priority').value,
+      phase: document.getElementById('f-phase').value.trim(),
+      acceptance: document.getElementById('f-acceptance').value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(text => ({ done: false, text })),
+      notes: document.getElementById('f-notes').value.trim(),
+      implemented: [],
+    };
+    if (!t.id || !t.title) {
+      alert('ID and Title are required');
+      return;
+    }
+    if (findTicket(t.id)) {
+      alert(`Ticket ${t.id} already exists`);
+      return;
+    }
+    sections[sectionIdx].tickets.push(t);
+    closeModal();
+    render();
+  };
+  setTimeout(() => document.getElementById('f-title').focus(), 50);
+}
+
+function wireCheckboxGroup(containerId) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  cont.querySelectorAll('.checkbox-label').forEach(lbl => {
+    const cb = lbl.querySelector('input[type=checkbox]');
+    const sync = () => lbl.classList.toggle('checked', cb.checked);
+    cb.addEventListener('change', sync);
+    sync();
+  });
+}
+
+function getCheckboxGroup(containerId) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return [];
+  return Array.from(cont.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+}
+
+function setCheckboxGroup(containerId, values) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  const set = new Set(values || []);
+  cont.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.checked = set.has(cb.value);
+    cb.closest('.checkbox-label').classList.toggle('checked', cb.checked);
+  });
+}
+
+function openTicketDetail(sIdx, ticketId) {
+  const found = findTicket(ticketId);
+  if (!found) return;
+  const t = found.ticket;
+  const body = document.getElementById('modalBody');
+
+  const acceptanceHtml = t.acceptance.length
+    ? `<div class="detail-acceptance">
+        <h4>Acceptance</h4>
+        ${t.acceptance.map((a, i) => `
+          <label class="acc-item ${a.done ? 'done' : ''}">
+            <input type="checkbox" ${a.done ? 'checked' : ''} data-idx="${i}" class="acc-check" />
+            <span>${escapeHtml(a.text)}</span>
+          </label>
+        `).join('')}
+      </div>`
+    : '';
+
+  const implHtml = t.implemented.length
+    ? t.implemented.map(l => `<div class="detail-notes" style="border-left-color:#3fb950;color:#3fb950">${escapeHtml(l)}</div>`).join('')
+    : '';
+
+  const layerBadges = (t.layer || []).map(l =>
+    `<span class="card-tag layer-${l.toLowerCase().replace(/\s+/g,'-')}">${escapeHtml(l)}</span>`
+  ).join('');
+  const agentBadges = (t.agent || []).map(a =>
+    `<span class="card-tag">→ ${escapeHtml(a)}</span>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="detail-meta">
+      <span class="card-id">${escapeHtml(t.id)}</span>
+      ${t.phase ? `<span class="card-phase">${escapeHtml(t.phase)}</span>` : ''}
+      ${layerBadges}
+      ${t.priority ? `<span class="card-tag">${escapeHtml(t.priority)}</span>` : ''}
+      ${agentBadges}
+    </div>
+    <h2>${escapeHtml(t.title)}</h2>
+    ${acceptanceHtml}
+    ${t.notes ? `<div class="detail-notes">${escapeHtml(t.notes)}</div>` : ''}
+    ${implHtml}
+    <div class="modal-actions">
+      <button class="btn-hdr" id="btn-delete" style="margin-right:auto; color:#f85149; border-color:#f85149">Delete</button>
+      <button class="btn-hdr" onclick="closeModal()">Close</button>
+      <button class="btn-hdr primary" id="btn-edit">Edit</button>
+    </div>
+  `;
+  openModal();
+
+  body.querySelectorAll('.acc-check').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const i = parseInt(cb.dataset.idx, 10);
+      t.acceptance[i].done = cb.checked;
+      cb.closest('.acc-item').classList.toggle('done', cb.checked);
+      saveToLocalStorage();
+      // Update card in background
+      render();
+      // Keep modal open — re-open this ticket
+      openTicketDetail(sIdx, ticketId);
+    });
+  });
+
+  document.getElementById('btn-edit').onclick = () => openTicketEdit(sIdx, ticketId);
+  document.getElementById('btn-delete').onclick = () => {
+    if (confirm(`Delete ${t.id}?`)) {
+      const f = findTicket(ticketId);
+      if (f) sections[f.sIdx].tickets.splice(f.tIdx, 1);
+      closeModal();
+      render();
+    }
+  };
+}
+
+function openTicketEdit(sIdx, ticketId) {
+  const found = findTicket(ticketId);
+  if (!found) return;
+  const t = found.ticket;
+  const body = document.getElementById('modalBody');
+
+  body.innerHTML = `
+    <h2>Edit ${escapeHtml(t.id)}</h2>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f-title" value="${escapeAttr(t.title)}" />
+    </div>
+    <div class="field">
+      <label>Layer (pick one or more)</label>
+      <div class="checkbox-row" id="f-layer">
+        ${['backend','mobile','game-engine'].map(v => `
+          <label class="checkbox-label">
+            <input type="checkbox" value="${v}"> ${v}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Agent (pick one or more — dispatched in parallel)</label>
+      <div class="checkbox-row" id="f-agent">
+        ${['backend','flutter-ui','game-engine'].map(v => `
+          <label class="checkbox-label">
+            <input type="checkbox" value="${v}"> ${v}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Priority</label>
+        <select id="f-priority">
+          ${['medium','high','low'].map(v =>
+            `<option value="${v}" ${t.priority === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Phase</label>
+        <input type="text" id="f-phase" value="${escapeAttr(t.phase || '')}" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Acceptance (one per line, prefix with [x] if done)</label>
+      <textarea id="f-acceptance">${t.acceptance.map(a => `[${a.done ? 'x' : ' '}] ${a.text}`).join('\n')}</textarea>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes">${escapeHtml(t.notes)}</textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-hdr" onclick="closeModal()">Cancel</button>
+      <button class="btn-hdr primary" id="btn-save">Save changes</button>
+    </div>
+  `;
+  openModal();
+  wireCheckboxGroup('f-layer');
+  wireCheckboxGroup('f-agent');
+  setCheckboxGroup('f-layer', t.layer);
+  setCheckboxGroup('f-agent', t.agent);
+
+  document.getElementById('btn-save').onclick = () => {
+    t.title = document.getElementById('f-title').value.trim();
+    t.layer = getCheckboxGroup('f-layer');
+    t.agent = getCheckboxGroup('f-agent');
+    t.priority = document.getElementById('f-priority').value;
+    t.phase = document.getElementById('f-phase').value.trim();
+    t.acceptance = document.getElementById('f-acceptance').value
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const m = line.match(/^\[([x ])\]\s*(.+)$/);
+        if (m) return { done: m[1] === 'x', text: m[2].trim() };
+        return { done: false, text: line };
+      });
+    t.notes = document.getElementById('f-notes').value.trim();
+    closeModal();
+    render();
+  };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Modal helpers
+// ──────────────────────────────────────────────────────────────
+function openModal() { document.getElementById('modalScrim').classList.add('open'); }
+function closeModal() { document.getElementById('modalScrim').classList.remove('open'); }
+document.getElementById('modalScrim').addEventListener('click', e => {
+  if (e.target.id === 'modalScrim') closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
 });
 
-// ── Filters ──
+// ──────────────────────────────────────────────────────────────
+// Filters
+// ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -552,24 +1222,40 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// ── Stats ──
-function updateStats() {
-  document.getElementById('stat-total').textContent = tasks.length;
-  document.getElementById('stat-done').textContent = tasks.filter(t => t.col === 'done').length;
+// ──────────────────────────────────────────────────────────────
+// Utilities
+// ──────────────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+function setSourceState(cls, text) {
+  const el = document.getElementById('sourceState');
+  el.className = 'source-state ' + cls;
+  el.textContent = text;
 }
 
-// ── Reset button (hold Shift + click title) ──
-document.querySelector('header h1').addEventListener('click', e => {
-  if (e.shiftKey && confirm('Reset board to default tasks?')) {
-    localStorage.removeItem('ll-board-tasks');
-    tasks = [...SEED_TASKS];
-    save();
-    render();
+// ──────────────────────────────────────────────────────────────
+// Header buttons
+// ──────────────────────────────────────────────────────────────
+document.getElementById('btnSave').onclick = saveToFile;
+document.getElementById('btnReload').onclick = async () => {
+  if (fileHandle) {
+    await loadFromHandle();
+  } else {
+    await loadFromFetch();
   }
-});
+  render();
+};
+document.getElementById('btnConnect').onclick = connectFile;
 
-// ── Init ──
-render();
+// ──────────────────────────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────────────────────────
+initialLoad();
 </script>
 </body>
 </html>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/session/invalidate_user_providers.dart';
 import '../auth/login_screen.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
@@ -291,12 +292,12 @@ class ProfileHeader extends StatelessWidget {
 }
 
 // ── _SettingsSheet ─────────────────────────────────────────────────────────────
-class _SettingsSheet extends StatelessWidget {
+class _SettingsSheet extends ConsumerWidget {
   final BuildContext parentContext;
   const _SettingsSheet({required this.parentContext});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -347,6 +348,7 @@ class _SettingsSheet extends StatelessWidget {
               onTap: () async {
                 Navigator.pop(context);
                 await ApiClient.clearToken();
+                invalidateUserScopedProviders(ref);
                 if (parentContext.mounted) {
                   Navigator.of(parentContext).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),

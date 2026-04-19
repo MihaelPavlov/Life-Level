@@ -13,16 +13,15 @@ SharedKernel/
 ├── Contracts/
 │   ├── IUserContext.cs             ← current userId from HTTP context
 │   └── ICurrentClock.cs            ← DateTime.UtcNow abstraction (testability)
-├── Primitives/
-│   ├── Result.cs                   ← Result<T> — avoid exceptions as flow control
-│   └── DomainException.cs
+├── Abstractions/
+│   └── Result.cs                   ← Result<T> — avoid exceptions as flow control
 ├── Events/
 │   ├── IDomainEvent.cs
 │   ├── IEventHandler.cs
 │   ├── IEventPublisher.cs
 │   └── InProcessEventPublisher.cs
-├── CrossModulePorts/                ← interfaces implemented by owner modules
-│   └── (see below)
+├── Ports/                           ← cross-module port interfaces, implemented by owner modules
+│   └── (see full catalog below)
 └── Enums/
     ├── UserRole.cs                 ← Player, Admin
     └── ActivityType.cs             ← shared by Activity + Quest
@@ -91,6 +90,12 @@ SharedKernel/
 | Interface | Method | Purpose |
 |-----------|--------|---------|
 | `IUserReadPort` | `GetUsernameAsync(userId)` | Username for profile display (implemented via adapter in Api that bridges Identity → Character lookup) |
+
+### Notification ports (implemented by Notifications module — see [[LL-013]] / LL-013a)
+
+| Interface | Method | Purpose |
+|-----------|--------|---------|
+| `INotificationPort` | `SendToUserAsync(userId, category, title, body, data?, isCritical=false)` | Send a push to all active device tokens; applies quiet-hours + daily-cap cadence policy. Returns `NotificationSendResult(Sent, Reason)` |
 
 ## Why ports live here (not in each module)
 

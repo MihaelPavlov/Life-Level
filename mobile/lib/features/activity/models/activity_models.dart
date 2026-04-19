@@ -82,6 +82,79 @@ class BlockedItemInfo {
       );
 }
 
+class GrantedItemInfo {
+  final String itemId;
+  final String name;
+  final String icon;
+  final String rarity;
+  final String slot;
+
+  const GrantedItemInfo({
+    required this.itemId,
+    required this.name,
+    required this.icon,
+    required this.rarity,
+    required this.slot,
+  });
+
+  factory GrantedItemInfo.fromJson(Map<String, dynamic> json) => GrantedItemInfo(
+        itemId: json['itemId'] as String,
+        name: json['name'] as String,
+        icon: json['icon'] as String? ?? '',
+        rarity: json['rarity'] as String? ?? '',
+        slot: json['slot'] as String? ?? '',
+      );
+}
+
+class UnlockedZoneInfo {
+  final String zoneId;
+  final String name;
+  final String icon;
+  final String region;
+  final int levelRequirement;
+
+  const UnlockedZoneInfo({
+    required this.zoneId,
+    required this.name,
+    required this.icon,
+    required this.region,
+    required this.levelRequirement,
+  });
+
+  factory UnlockedZoneInfo.fromJson(Map<String, dynamic> json) => UnlockedZoneInfo(
+        zoneId: json['zoneId'] as String,
+        name: json['name'] as String,
+        icon: json['icon'] as String? ?? '',
+        region: json['region'] as String? ?? '',
+        levelRequirement: json['levelRequirement'] as int? ?? 1,
+      );
+}
+
+class LevelUpUnlocks {
+  final int statPointsGained;
+  final List<GrantedItemInfo> grantedItems;
+  final List<UnlockedZoneInfo> unlockedZones;
+
+  const LevelUpUnlocks({
+    required this.statPointsGained,
+    required this.grantedItems,
+    required this.unlockedZones,
+  });
+
+  bool get isEmpty =>
+      statPointsGained <= 0 && grantedItems.isEmpty && unlockedZones.isEmpty;
+
+  factory LevelUpUnlocks.fromJson(Map<String, dynamic> json) => LevelUpUnlocks(
+        statPointsGained: json['statPointsGained'] as int? ?? 0,
+        grantedItems: (json['grantedItems'] as List<dynamic>? ?? [])
+            .map((e) => GrantedItemInfo.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        unlockedZones: (json['unlockedZones'] as List<dynamic>? ?? [])
+            .map((e) => UnlockedZoneInfo.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 class LogActivityResult {
   final String activityId;
   final int xpGained;
@@ -99,6 +172,7 @@ class LogActivityResult {
   final int bonusXpAwarded;
   final int xpBonusApplied;
   final List<BlockedItemInfo> blockedItems;
+  final LevelUpUnlocks? levelUpUnlocks;
 
   const LogActivityResult({
     required this.activityId,
@@ -117,6 +191,7 @@ class LogActivityResult {
     required this.bonusXpAwarded,
     this.xpBonusApplied = 0,
     this.blockedItems = const [],
+    this.levelUpUnlocks,
   });
 
   factory LogActivityResult.fromJson(Map<String, dynamic> json) =>
@@ -144,6 +219,10 @@ class LogActivityResult {
         blockedItems: (json['blockedItems'] as List<dynamic>? ?? [])
             .map((e) => BlockedItemInfo.fromJson(e as Map<String, dynamic>))
             .toList(),
+        levelUpUnlocks: json['levelUpUnlocks'] == null
+            ? null
+            : LevelUpUnlocks.fromJson(
+                json['levelUpUnlocks'] as Map<String, dynamic>),
       );
 }
 

@@ -1,3 +1,4 @@
+using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Ports;
 
@@ -32,6 +33,7 @@ public class LogActivityResult
     public int BonusXpAwarded { get; set; }
     public int XpBonusApplied { get; init; } = 0;
     public IReadOnlyList<BlockedItemInfo> BlockedItems { get; init; } = [];
+    public LevelUpUnlocksDto? LevelUpUnlocks { get; init; }
 }
 
 public class ActivityHistoryDto

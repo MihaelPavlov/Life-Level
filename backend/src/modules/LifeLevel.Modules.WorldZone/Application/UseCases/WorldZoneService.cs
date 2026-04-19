@@ -11,6 +11,7 @@ using UserZoneUnlockEntity = LifeLevel.Modules.WorldZone.Domain.Entities.UserZon
 namespace LifeLevel.Modules.WorldZone.Application.UseCases;
 
 public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, ICharacterLevelReadPort characterLevel, IMapNodeCountPort mapNodeCount, IMapNodeCompletedCountPort mapNodeCompletedCount)
+    : IWorldZoneDistancePort
 {
     public async Task<WorldFullResponse> GetFullWorldAsync(Guid userId)
     {
@@ -165,20 +166,24 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
         await db.SaveChangesAsync();
     }
 
-    public async Task AddDistanceAsync(Guid userId, double km)
+    public async Task AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
     {
-        var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive)
-            ?? throw new InvalidOperationException("No active world found.");
+        if (km <= 0) return;
+
+        var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive, ct);
+        if (activeWorld == null) return;
 
         var progress = await db.Set<UserWorldProgressEntity>()
             .Include(p => p.UnlockedZones)
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id)
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id, ct)
             ?? await InitializeUserProgressAsync(userId, activeWorld.Id);
 
+        // Silent no-op when the user isn't traveling — activities shouldn't fail just
+        // because no destination is set.
         if (progress.CurrentEdgeId == null || progress.DestinationZoneId == null)
-            throw new InvalidOperationException("No active destination set. Set a destination first.");
+            return;
 
-        var edge = await db.Set<WorldZoneEdgeEntity>().FindAsync(progress.CurrentEdgeId)
+        var edge = await db.Set<WorldZoneEdgeEntity>().FindAsync([progress.CurrentEdgeId], ct)
             ?? throw new InvalidOperationException("Edge not found.");
 
         progress.DistanceTraveledOnEdge += km;
@@ -203,12 +208,12 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
                     UnlockedAt = DateTime.UtcNow
                 });
 
-                discoveredZone = await db.Set<WorldZoneEntity>().FindAsync(destinationZoneId);
+                discoveredZone = await db.Set<WorldZoneEntity>().FindAsync([destinationZoneId], ct);
             }
         }
 
         progress.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
 
         if (discoveredZone != null && discoveredZone.TotalXp > 0)
         {

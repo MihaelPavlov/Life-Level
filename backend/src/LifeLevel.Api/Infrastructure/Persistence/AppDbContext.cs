@@ -24,6 +24,8 @@ using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.Modules.Integrations.Infrastructure;
 using LifeLevel.Modules.Achievements.Domain.Entities;
 using LifeLevel.Modules.Achievements.Infrastructure;
+using LifeLevel.Modules.Notifications;
+using LifeLevel.Modules.Notifications.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -100,6 +102,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Achievement> Achievements => Set<Achievement>();
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
 
+    // Notifications
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ── Per-module EF configurations ──────────────────────────────────────────
@@ -116,6 +122,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ItemsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IntegrationsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AchievementsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationsModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 
@@ -295,6 +302,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<LifeLevel.Modules.Identity.Domain.Entities.User>()
             .WithMany()
             .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Notifications cross-module: DeviceToken → User
+        modelBuilder.Entity<DeviceToken>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Notifications cross-module: NotificationLog → User
+        modelBuilder.Entity<NotificationLog>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,179 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/api/api_client.dart';
+import '../../core/constants/app_colors.dart';
 import '../activity/providers/activity_provider.dart';
 import '../character/providers/character_provider.dart';
-import '../map/models/map_models.dart';
-import '../map/node_detail_sheet.dart';
-import '../../core/api/api_client.dart';
-import '../../core/services/level_up_notifier.dart';
-import '../../core/services/nav_tab_notifier.dart';
 import '../integrations/providers/integrations_provider.dart';
-import 'home_cards.dart';
-import 'home_widgets.dart';
+import 'cards/home_adventure_hero.dart';
+import 'cards/home_header.dart';
+import 'cards/home_log_workout_cta.dart';
+import 'cards/home_login_reward_chip.dart';
+import 'cards/home_seasonal_event_row.dart';
+import 'cards/home_stat_strip.dart';
+import 'cards/home_streak_strip.dart';
+import 'cards/home_todays_quests.dart';
+import 'cards/home_xp_storm_banner.dart';
 import 'providers/map_journey_provider.dart';
-import 'widgets/home_map_progress_section.dart';
 
+/// Home tab scaffold. Owns layout + the sync handler only; every card lives
+/// in its own file under `cards/`.
+///
+/// Visual layout matches `design-mockup/home/home-v3.html` screens 1–3
+/// (screen 4 is the notifications sheet, triggered from the header bell
+/// via [showNotificationsSheet]).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(characterProfileProvider).valueOrNull;
-    final mapJourneyAsync = ref.watch(mapJourneyProvider);
-    final nodeReached = mapJourneyAsync.valueOrNull != null
-        ? _isNodeReached(mapJourneyAsync.valueOrNull!)
-        : false;
 
-    return Stack(
-      children: [
-        Container(
-          color: kHBgBase,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 12),
+    // XP Storm & Seasonal event are scaffold-only — they render nothing
+    // until LL-001 / LL-012 land a real feed and start returning non-null
+    // state here.
+    const xpStormState = null;
+    const seasonalState = null;
+
+    return Container(
+      color: AppColors.backgroundAlt,
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            // Reserve room at the bottom so scrolled content never hides
+            // behind the pinned "Log workout" CTA.
+            padding: const EdgeInsets.only(bottom: 88),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                HomeHeader(profile: profile, nodeReached: nodeReached),
-                mapJourneyAsync.when(
-                  data: (data) => HomeMapProgressSection(
-                    data: data,
-                    onOpenMap: () {
-                      NavTabNotifier.switchTo('map');
-                    },
-                    onActionButton: () {
-                      final destId = data.userProgress.destinationNodeId;
-                      if (destId == null) return;
-                      final node =
-                          data.nodes.where((n) => n.id == destId).firstOrNull;
-                      if (node == null) return;
-                      _openNodeDetailSheet(
-                        context, ref, node, data,
-                        isAdjacent: true,
-                        distanceKm: _distanceToNode(data, destId),
-                      );
-                    },
-                    onSync: () async {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Syncing activities...')),
-                      );
-                      int imported = 0;
-                      int skipped = 0;
-                      // Sync all server-side integrations (Strava, Garmin, etc.)
-                      try {
-                        final res = await ApiClient.instance.post('/integrations/sync-all');
-                        final body = res.data as Map<String, dynamic>? ?? {};
-                        imported += (body['imported'] as int?) ?? 0;
-                        skipped += (body['skipped'] as int?) ?? 0;
-                      } catch (_) {}
-                      // Sync Health Connect (client-side, reads device data)
-                      try {
-                        final syncNotifier = ref.read(integrationSyncProvider.notifier);
-                        await syncNotifier.syncNow();
-                        final result = ref.read(integrationSyncProvider).lastResult;
-                        if (result != null) {
-                          imported += result.imported;
-                          skipped += result.skipped;
-                        }
-                      } catch (_) {}
-                      ref.invalidate(mapJourneyProvider);
-                      ref.invalidate(characterProfileProvider);
-                      ref.invalidate(activityHistoryProvider);
-                      if (context.mounted) {
-                        final msg = imported > 0
-                            ? 'Synced $imported new activit${imported == 1 ? 'y' : 'ies'}!'
-                            : skipped > 0
-                                ? 'Already up to date ($skipped synced)'
-                                : 'No new activities found';
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(msg)),
-                        );
-                      }
-                    },
-                    onCarouselNodeTap: (node) => _openNodeDetailSheet(
-                      context, ref, node, data,
-                      isAdjacent: _isAdjacentNode(data, node.id),
-                      distanceKm: _distanceToNode(data, node.id),
-                    ),
-                  ),
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
-                ),
+                HomeHeader(profile: profile),
+                const HomeXpStormBanner(state: xpStormState),
+                const HomeStreakStrip(),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (mapJourneyAsync.valueOrNull != null)
-                        HomeMapHistoryCard(data: mapJourneyAsync.valueOrNull!),
-                      HomeXpCard(profile: profile),
-                      const HomeStreakCard(),
-                      const HomeQuestsCard(),
-                      const HomeRecentActivitiesCard(),
-                      HomeStatsRow(),
-                      const HomeBossCard(),
-                      const SizedBox(height: 12),
-                    ],
+                  child: HomeAdventureHero(
+                    onSync: () => _handleSync(context, ref),
                   ),
                 ),
+                const HomeStatStrip(),
+                const HomeSeasonalEventRow(state: seasonalState),
+                const HomeLoginRewardChip(),
+                const HomeTodaysQuestsCard(),
+                const SizedBox(height: 16),
               ],
             ),
           ),
-        ),
-      ],
+          // Pinned CTA above the shell nav bar.
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: HomeLogWorkoutCta(),
+          ),
+        ],
+      ),
     );
   }
 
-  bool _isNodeReached(MapFullData data) {
-    final p = data.userProgress;
-    if (p.currentEdgeId != null) return false; // still traveling
-    if (p.destinationNodeId == null) return false;
-    final dest = data.nodes
-        .where((n) => n.id == p.destinationNodeId)
-        .firstOrNull;
-    return dest?.userState?.isCurrentNode ?? false;
+  // ── Sync handler (wired into the Adventure Hero "Sync" button) ──────────
+  Future<void> _handleSync(BuildContext context, WidgetRef ref) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Syncing activities...')),
+    );
+
+    int imported = 0;
+    int skipped = 0;
+
+    // Server-side integrations (Strava, Garmin, …)
+    try {
+      final res = await ApiClient.instance.post('/integrations/sync-all');
+      final body = res.data as Map<String, dynamic>? ?? {};
+      imported += (body['imported'] as int?) ?? 0;
+      skipped += (body['skipped'] as int?) ?? 0;
+    } catch (_) {/* swallow */}
+
+    // Client-side Health Connect
+    try {
+      await ref.read(integrationSyncProvider.notifier).syncNow();
+      final result = ref.read(integrationSyncProvider).lastResult;
+      if (result != null) {
+        imported += result.imported;
+        skipped += result.skipped;
+      }
+    } catch (_) {/* swallow */}
+
+    ref.invalidate(mapJourneyProvider);
+    ref.invalidate(characterProfileProvider);
+    ref.invalidate(activityHistoryProvider);
+
+    if (!context.mounted) return;
+    final msg = imported > 0
+        ? 'Synced $imported new activit${imported == 1 ? 'y' : 'ies'}!'
+        : skipped > 0
+            ? 'Already up to date ($skipped synced)'
+            : 'No new activities found';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
   }
-}
-
-// ── Private helpers ────────────────────────────────────────────────────────────
-
-bool _isAdjacentNode(MapFullData data, String nodeId) {
-  final cur = data.userProgress.currentNodeId;
-  return data.edges.any((e) =>
-      (e.fromNodeId == cur && e.toNodeId == nodeId) ||
-      (e.isBidirectional && e.toNodeId == cur && e.fromNodeId == nodeId));
-}
-
-double? _distanceToNode(MapFullData data, String nodeId) {
-  final cur = data.userProgress.currentNodeId;
-  return data.edges
-      .where((e) =>
-          (e.fromNodeId == cur && e.toNodeId == nodeId) ||
-          (e.isBidirectional && e.toNodeId == cur && e.fromNodeId == nodeId))
-      .firstOrNull
-      ?.distanceKm;
-}
-
-Future<void> _openNodeDetailSheet(
-  BuildContext context,
-  WidgetRef ref,
-  MapNodeModel node,
-  MapFullData data, {
-  bool isAdjacent = false,
-  double? distanceKm,
-}) async {
-  await showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (_) => NodeDetailSheet(
-      node: node,
-      isAdjacent: isAdjacent,
-      distanceKm: distanceKm,
-      userProgress: data.userProgress,
-      onDestinationSet: () => ref.invalidate(mapJourneyProvider),
-      onRefresh: () => ref.invalidate(mapJourneyProvider),
-      onLevelUp: (lvl) => LevelUpNotifier.notify(lvl),
-    ),
-  );
-  ref.invalidate(mapJourneyProvider);
 }

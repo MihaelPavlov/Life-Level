@@ -7,6 +7,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
+import '../session/invalidate_user_providers.dart';
+import '../services/deep_link_notifier.dart';
 import '../services/level_up_notifier.dart';
 import '../services/item_obtained_notifier.dart';
 import '../services/inventory_full_notifier.dart';
@@ -24,12 +26,10 @@ import '../services/nav_tab_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
 import '../../features/home/providers/map_journey_provider.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
+import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/titles/titles_ranks_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
-import '../../features/quests/providers/quest_provider.dart';
-import '../../features/activity/providers/activity_provider.dart';
-import '../../features/streak/providers/streak_provider.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/providers/items_provider.dart';
@@ -90,10 +90,11 @@ class _MainShellState extends ConsumerState<MainShell>
   late final AnimationController _hintCtrl;
   late final Animation<double>   _hintAnim;
   Timer? _hintTimer;
-  late final StreamSubscription<int> _levelUpSub;
+  late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
+  late final StreamSubscription<Uri> _deepLinkNotifierSub;
 
   final _fabKey = GlobalKey();
 
@@ -132,11 +133,11 @@ class _MainShellState extends ConsumerState<MainShell>
       }
       _wasOffline = !isOnline;
     });
-    _levelUpSub = LevelUpNotifier.stream.listen((newLevel) async {
+    _levelUpSub = LevelUpNotifier.stream.listen((event) async {
       if (!mounted) return;
       final oldIds = ref.read(inventoryProvider).valueOrNull?.items
           .map((i) => i.id).toSet() ?? {};
-      showLevelUpScreen(context, newLevel);
+      showLevelUpScreen(context, event.newLevel, unlocks: event.unlocks);
       ref.invalidate(inventoryProvider);
       try {
         final newInventory = await ref.read(inventoryProvider.future);
@@ -172,6 +173,14 @@ class _MainShellState extends ConsumerState<MainShell>
     AppLinks().getInitialLink().then((uri) {
       if (uri != null) _handleDeepLink(uri);
     });
+
+    // Notification-tap deep links route through the same handler so logic
+    // stays in one place (see DeepLinkNotifier + NotificationsService).
+    _deepLinkNotifierSub = DeepLinkNotifier.stream.listen(_handleDeepLink);
+
+    // FCM push notifications: request permission, fetch+register token,
+    // attach listeners. Idempotent — safe to call on every shell mount.
+    NotificationsService.instance.initialize(ref);
 
     _openCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 350));
@@ -259,6 +268,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _inventoryFullSub.cancel();
     _connectivitySub.cancel();
     _deepLinkSub?.cancel();
+    _deepLinkNotifierSub.cancel();
     _hintTimer?.cancel();
     _openCtrl.dispose();
     _snapCtrl.dispose();
@@ -290,14 +300,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
   void _invalidateAllProviders() {
     if (!mounted) return;
-    ref.invalidate(characterProfileProvider);
-    ref.invalidate(mapJourneyProvider);
-    ref.invalidate(dailyQuestsProvider);
-    ref.invalidate(weeklyQuestsProvider);
-    ref.invalidate(activityHistoryProvider);
-    ref.invalidate(streakProvider);
-    ref.invalidate(equipmentProvider);
-    ref.invalidate(inventoryProvider);
+    invalidateUserScopedProviders(ref);
   }
 
   // ── open / close ──────────────────────────────────────────────────────────

@@ -94,10 +94,10 @@ public class CharacterService(
     }
 
     /// <summary>Implements ICharacterXpPort</summary>
-    public async Task AwardXpAsync(Guid userId, string source, string sourceEmoji, string description, long xp, CancellationToken ct = default)
+    public async Task<XpAwardResult> AwardXpAsync(Guid userId, string source, string sourceEmoji, string description, long xp, CancellationToken ct = default)
     {
         var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct);
-        if (character == null) return;
+        if (character == null) return XpAwardResult.None;
 
         character.Xp += xp;
         character.UpdatedAt = DateTime.UtcNow;
@@ -113,7 +113,8 @@ public class CharacterService(
         };
         db.Set<XpHistoryEntryEntity>().Add(entry);
         await db.SaveChangesAsync(ct);
-        await CheckAndApplyLevelUpsAsync(character.Id, ct);
+        var (leveled, previousLevel, newLevel) = await CheckAndApplyLevelUpsAsync(character.Id, ct);
+        return new XpAwardResult(leveled, previousLevel, newLevel);
     }
 
     /// <summary>Implements ICharacterStatPort</summary>
@@ -139,10 +140,10 @@ public class CharacterService(
         return character?.Level ?? 1;
     }
 
-    public async Task<(bool LeveledUp, int NewLevel)> CheckAndApplyLevelUpsAsync(Guid characterId, CancellationToken ct = default)
+    public async Task<(bool LeveledUp, int PreviousLevel, int NewLevel)> CheckAndApplyLevelUpsAsync(Guid characterId, CancellationToken ct = default)
     {
         var character = await db.Set<CharacterEntity>().FindAsync([characterId], ct);
-        if (character == null) return (false, 0);
+        if (character == null) return (false, 0, 0);
 
         bool leveled = false;
         int previousLevel = character.Level;
@@ -170,7 +171,7 @@ public class CharacterService(
             await events.PublishAsync(new CharacterLeveledUpEvent(character.UserId, previousLevel, character.Level), ct);
         }
 
-        return (leveled, character.Level);
+        return (leveled, previousLevel, character.Level);
     }
 
     public async Task SpendStatPointAsync(Guid userId, string stat)
