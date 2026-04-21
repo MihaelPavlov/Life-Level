@@ -1,4 +1,6 @@
 using LifeLevel.Modules.Character.Application.DTOs;
+using LifeLevel.Modules.Character.Domain;
+using LifeLevel.Modules.Character.Domain.Data;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +14,15 @@ namespace LifeLevel.Modules.Character.Application.UseCases;
 
 public class CharacterService(
     DbContext db,
-    IEventPublisher events)
-    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort
+    IEventPublisher events,
+    ITitleUnlockPort titleUnlock)
+    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort
 {
     private const int StarterXpReward = 500;
+
+    // LL-035: final step of the 7-step onboarding tutorial. Steps are 0..7 inclusive
+    // (0 = not started, 7 = finished). -1 = user skipped.
+    private const int TutorialFinalStep = 7;
 
     public async Task<IReadOnlyList<CharacterClassResponse>> GetAllClassesAsync()
     {
@@ -89,7 +96,9 @@ public class CharacterService(
             LongestStreak: ctx.Streak?.Longest ?? 0,
             ShieldsAvailable: ctx.Streak?.ShieldsAvailable ?? 0,
             DailyQuestsCompleted: ctx.DailyQuestsCompleted,
-            LoginRewardAvailable: !ctx.HasClaimedLoginRewardToday
+            LoginRewardAvailable: !ctx.HasClaimedLoginRewardToday,
+            TutorialStep: character.TutorialStep,
+            TutorialTopicsSeen: character.TutorialTopicsSeen
         );
     }
 
@@ -236,6 +245,160 @@ public class CharacterService(
     {
         var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct);
         return character?.MaxInventorySlots ?? 20;
+    }
+
+    // ───────────────────────────────────────────────────────────────────────
+    // LL-035 Tutorial use cases
+    // ───────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Advances the tutorial when the user acknowledges a coach mark.
+    /// Rejects step 4 → 5 (that transition is port-only, triggered by a real activity log).
+    /// No-op if the character is not on the expected prior step, or if the tutorial is
+    /// already finished (step 7) or skipped (-1).
+    /// </summary>
+    public async Task<(int NewStep, int XpAwarded)> AdvanceTutorialAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        // Step 4 → 5 transition is port-only (must be triggered by an actual activity log).
+        if (character.TutorialStep == 4)
+            throw new InvalidOperationException("Step 4 advances only after logging a real activity.");
+
+        return await AdvanceFromStepInternalAsync(character, character.TutorialStep, ct);
+    }
+
+    /// <summary>
+    /// Skips the tutorial permanently. Sets TutorialStep = -1. Idempotent.
+    /// Does not award XP and does not touch TutorialRewardsClaimed / TutorialTopicsSeen.
+    /// </summary>
+    public async Task SkipTutorialAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        if (character.TutorialStep == -1) return; // already skipped — idempotent
+
+        character.TutorialStep = -1;
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Resets the tutorial so the user can replay it from the beginning.
+    /// Does NOT reset TutorialRewardsClaimed — rewards are one-shot.
+    /// Does NOT reset TutorialTopicsSeen.
+    /// </summary>
+    public async Task ReplayAllAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        character.TutorialStep = 0;
+        character.TutorialCompletedAt = null;
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Marks a single topic as seen (sets its bit in TutorialTopicsSeen).
+    /// Does not change TutorialStep. Throws when topic is unknown — the controller
+    /// translates that to a 400 response.
+    /// </summary>
+    public async Task ReplayTopicAsync(Guid userId, string topic, CancellationToken ct = default)
+    {
+        var bit = TutorialTopic.BitForTopic(topic)
+            ?? throw new InvalidOperationException($"Unknown tutorial topic '{topic}'.");
+
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        var updated = character.TutorialTopicsSeen | bit;
+        if (updated == character.TutorialTopicsSeen) return; // bit already set — no write
+
+        character.TutorialTopicsSeen = updated;
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Implements ICharacterTutorialPort — called by ActivityService after a successful log.</summary>
+    public async Task<int> AdvanceIfOnStepAsync(Guid characterId, int expectedStep, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FindAsync([characterId], ct);
+        if (character == null) return 0; // missing character — treat as no-op
+
+        if (character.TutorialStep != expectedStep)
+            return character.TutorialStep; // wrong step — no-op
+
+        var (newStep, _) = await AdvanceFromStepInternalAsync(character, expectedStep, ct);
+        return newStep;
+    }
+
+    /// <summary>
+    /// Shared advance logic used by both the controller-driven path (AdvanceTutorialAsync)
+    /// and the port-driven path (AdvanceIfOnStepAsync). Caller MUST have already verified
+    /// the character is on <paramref name="fromStep"/>.
+    /// </summary>
+    private async Task<(int NewStep, int XpAwarded)> AdvanceFromStepInternalAsync(
+        CharacterEntity character, int fromStep, CancellationToken ct)
+    {
+        // No-op when outside the advancing window (already finished or skipped).
+        if (fromStep < 0 || fromStep >= TutorialFinalStep)
+            return (character.TutorialStep, 0);
+
+        var newStep = fromStep + 1;
+        character.TutorialStep = newStep;
+
+        // Mark the topic bit for this step.
+        var topicBit = TutorialTopic.TopicBitForStepAdvance(fromStep);
+        if (topicBit != 0)
+            character.TutorialTopicsSeen |= topicBit;
+
+        // Award the step XP only on the first-ever pass through the tutorial.
+        bool firstTime = !character.TutorialRewardsClaimed;
+        int xpAwarded = firstTime ? TutorialStepRewards.GetXp(newStep) : 0;
+
+        // Finishing the tutorial: stamp completion + flip the one-shot reward flag
+        // so future replays never re-award XP or the Novice title.
+        if (newStep == TutorialFinalStep)
+        {
+            if (character.TutorialCompletedAt == null)
+                character.TutorialCompletedAt = DateTime.UtcNow;
+            if (firstTime)
+                character.TutorialRewardsClaimed = true;
+        }
+
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        // Award XP via the standard AwardXpAsync pipeline so XpHistory + level-up
+        // events fire naturally. Only when firstTime (reward is one-shot).
+        if (xpAwarded > 0)
+            await AwardXpAsync(character.UserId, "Tutorial", "🎓", $"Tutorial step {newStep}", xpAwarded, ct);
+
+        // Step-7 title hook (Novice Adventurer). Idempotent by port contract —
+        // safe to call on any step-7 pass; the adapter no-ops if already owned.
+        if (firstTime)
+        {
+            var titleKey = TutorialStepRewards.GetTitleKey(newStep);
+            if (titleKey != null)
+                await titleUnlock.UnlockAsync(character.Id, titleKey, ct);
+        }
+
+        return (newStep, xpAwarded);
+    }
+
+    /// <summary>
+    /// Lightweight read used by the tutorial controller after mutations so the client
+    /// can refresh without a full <c>/api/character/me</c> round-trip.
+    /// </summary>
+    public async Task<(int TutorialStep, int TutorialTopicsSeen)> GetTutorialStateAsync(
+        Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+        return (character.TutorialStep, character.TutorialTopicsSeen);
     }
 
     private static long XpAtLevelStart(int level) =>

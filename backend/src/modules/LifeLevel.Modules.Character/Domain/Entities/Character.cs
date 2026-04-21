@@ -30,4 +30,17 @@ public class Character
     public bool IsSetupComplete { get; set; } = false;
 
     public Guid? EquippedTitleId { get; set; }
+
+    // ─── Tutorial (LL-035) ─────────────────────────────────────────────────────
+    /// <summary>Current tutorial step. 0 = not started, 1..7 = in progress, -1 = skipped.</summary>
+    public int TutorialStep { get; set; } = 0;
+
+    /// <summary>UTC timestamp of the first successful completion of the 7-step tutorial (null until finished).</summary>
+    public DateTime? TutorialCompletedAt { get; set; }
+
+    /// <summary>True once step-completion rewards (XP, title) have been awarded. One-shot — replay does not re-award.</summary>
+    public bool TutorialRewardsClaimed { get; set; } = false;
+
+    /// <summary>Bitmask of tutorial topics the user has seen. See tutorial topic mapping in ICharacterTutorialPort / TutorialTopic.</summary>
+    public int TutorialTopicsSeen { get; set; } = 0;
 }

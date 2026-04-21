@@ -4,6 +4,7 @@ using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ActivityEntity = LifeLevel.Modules.Activity.Domain.Entities.Activity;
 
 namespace LifeLevel.Modules.Activity.Application.UseCases;
@@ -20,9 +21,28 @@ public class ActivityService(
     IWorldZoneDistancePort worldZoneDistance,
     IGearBonusReadPort gearBonus,
     ILevelUpItemGrantPort levelUpItemGrant,
-    IZoneUnlockReadPort zoneUnlockRead)
+    IZoneUnlockReadPort zoneUnlockRead,
+    ICharacterTutorialPort characterTutorial,
+    ILogger<ActivityService> logger)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort
 {
+    // LL-035: the "log your first activity" tutorial step gate. We advance the character
+    // from step 4 → 5 only when the user actually logs a real activity (port-driven).
+    private const int TutorialActivityGateStep = 4;
+
+    private async Task TryAdvanceTutorialAsync(Guid characterId, CancellationToken ct = default)
+    {
+        try
+        {
+            await characterTutorial.AdvanceIfOnStepAsync(characterId, TutorialActivityGateStep, ct);
+        }
+        catch (Exception ex)
+        {
+            // Tutorial advancement must never break activity logging.
+            logger.LogWarning(ex, "Tutorial advance failed for character {CharacterId}; activity log succeeded.", characterId);
+        }
+    }
+
     public async Task<LogActivityResult> LogActivityAsync(Guid userId, LogActivityRequest request)
     {
         var characterId = await characterIdRead.GetCharacterIdAsync(userId)

@@ -23,6 +23,7 @@ import '../../features/map/map_screen.dart';
 import '../../features/map/world_map_screen.dart';
 import '../services/map_tab_notifier.dart';
 import '../services/nav_tab_notifier.dart';
+import '../services/world_map_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
 import '../../features/home/providers/map_journey_provider.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
@@ -38,6 +39,10 @@ import 'shell_models.dart';
 import 'widgets/ring_item_tile.dart';
 import 'widgets/boss_fab.dart';
 import 'widgets/bottom_nav_bar.dart';
+import '../../features/tutorial/providers/tutorial_provider.dart';
+import '../../features/tutorial/widgets/tutorial_overlay.dart';
+import '../../features/tutorial/screens/tutorial_intro_screen.dart';
+import '../../features/tutorial/screens/tutorial_outro_screen.dart';
 
 // ── shell ─────────────────────────────────────────────────────────────────────
 class MainShell extends ConsumerStatefulWidget {
@@ -53,6 +58,7 @@ class _MainShellState extends ConsumerState<MainShell>
   int _tabIndex = 0;
   bool _radialOpen = false;
   bool _worldOpen = false;
+  ValueChanged<ZonePick>? _pendingOnZoneSelected;
   bool _titlesOpen = false;
   bool _bossOpen = false;
   bool _loginRewardShown = false;
@@ -93,10 +99,19 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
+  late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
 
   final _fabKey = GlobalKey();
+  final _mapNavKey = GlobalKey();
+
+  // LL-035 tutorial integration: hooked once, consumed every rebuild.
+  bool _tutorialKeysRegistered = false;
+  bool _tutorialHydrated = false;
+  bool _introModalShown = false;
+  bool _outroModalShown = false;
+  VoidCallback? _tutorialListener;
 
   void _checkLoginReward(AsyncValue<Object?> profileAsync) {
     if (_loginRewardShown) return;
@@ -117,6 +132,50 @@ class _MainShellState extends ConsumerState<MainShell>
         ),
       );
     });
+  }
+
+  void _syncTutorialWithProfile() {
+    if (_tutorialHydrated) return;
+    final profile = ref.read(characterProfileProvider).valueOrNull;
+    if (profile == null) return;
+    _tutorialHydrated = true;
+    final c = ref.read(tutorialControllerProvider);
+    c.hydrateFromProfile(
+      serverStep: profile.tutorialStep,
+      serverTopicsSeen: profile.tutorialTopicsSeen,
+    );
+  }
+
+  void _onTutorialStateChanged() {
+    if (!mounted) return;
+    final c = ref.read(tutorialControllerProvider);
+
+    if (c.shouldShowIntroModal && !_introModalShown) {
+      _introModalShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TutorialIntroScreen(),
+            fullscreenDialog: true,
+          ),
+        );
+        _introModalShown = false;
+      });
+    }
+    if (c.shouldShowOutroModal && !_outroModalShown) {
+      _outroModalShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TutorialOutroScreen(),
+            fullscreenDialog: true,
+          ),
+        );
+        _outroModalShown = false;
+      });
+    }
   }
 
   @override
@@ -156,6 +215,13 @@ class _MainShellState extends ConsumerState<MainShell>
       final navIndex = _navIds.indexOf(tabId);
       if (navIndex != -1 && mounted) setState(() => _tabIndex = navIndex);
     });
+    _worldMapSub = WorldMapNotifier.stream.listen((event) {
+      if (!mounted) return;
+      setState(() {
+        _pendingOnZoneSelected = event.onZoneSelected;
+        _worldOpen = true;
+      });
+    });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
       if (mounted) {
         final level =
@@ -177,6 +243,15 @@ class _MainShellState extends ConsumerState<MainShell>
     // Notification-tap deep links route through the same handler so logic
     // stays in one place (see DeepLinkNotifier + NotificationsService).
     _deepLinkNotifierSub = DeepLinkNotifier.stream.listen(_handleDeepLink);
+
+    // LL-035: attach once to the tutorial controller so intro/outro modals
+    // are pushed as routes whenever the controller state requests them.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final c = ref.read(tutorialControllerProvider);
+      _tutorialListener = _onTutorialStateChanged;
+      c.addListener(_tutorialListener!);
+    });
 
     // FCM push notifications: request permission, fetch+register token,
     // attach listeners. Idempotent — safe to call on every shell mount.
@@ -265,6 +340,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _levelUpSub.cancel();
     _itemObtainedSub.cancel();
     _navTabSub.cancel();
+    _worldMapSub.cancel();
     _inventoryFullSub.cancel();
     _connectivitySub.cancel();
     _deepLinkSub?.cancel();
@@ -273,6 +349,9 @@ class _MainShellState extends ConsumerState<MainShell>
     _openCtrl.dispose();
     _snapCtrl.dispose();
     _hintCtrl.dispose();
+    if (_tutorialListener != null) {
+      ref.read(tutorialControllerProvider).removeListener(_tutorialListener!);
+    }
     super.dispose();
   }
 
@@ -395,7 +474,10 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'home':    return const HomeScreen();
       case 'quests':  return const QuestsScreen();
       case 'map':     return const MapScreen();
-      case 'world':   return const WorldMapScreen();
+      // 'world' is never rendered inside the IndexedStack — tapping the nav
+      // tab opens the shell overlay instead. This placeholder keeps index
+      // alignment with _navIds.
+      case 'world':   return const SizedBox.shrink();
       case 'profile': return const ProfileScreen();
       case 'titles':  return const TitlesRanksScreen();
       case 'boss':    return const BossScreen();
@@ -408,8 +490,25 @@ class _MainShellState extends ConsumerState<MainShell>
   // ── build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    // Listen for the first successful profile load to check login reward.
-    ref.listen(characterProfileProvider, (_, next) => _checkLoginReward(next));
+    // Listen for the first successful profile load to check login reward + hydrate tutorial.
+    ref.listen(characterProfileProvider, (_, next) {
+      _checkLoginReward(next);
+      _syncTutorialWithProfile();
+    });
+
+    // Register shell-level tutorial targets once after the first frame paints
+    // (needs _fabKey / _mapNavKey in the tree before the controller can read rects).
+    if (!_tutorialKeysRegistered) {
+      _tutorialKeysRegistered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final c = ref.read(tutorialControllerProvider);
+        c.registerKey('bossFab', _fabKey);
+        c.registerKey('logFab', _fabKey); // step 4 shares the FAB target
+        c.registerKey('mapTab', _mapNavKey);
+        _syncTutorialWithProfile();
+      });
+    }
 
     final angles = anglesFor(_ringItems.length);
 
@@ -441,7 +540,11 @@ class _MainShellState extends ConsumerState<MainShell>
                 Positioned.fill(
                   bottom: kNavBarH,
                   child: WorldMapScreen(
-                    onClose: () => setState(() => _worldOpen = false),
+                    onZoneSelected: _pendingOnZoneSelected,
+                    onClose: () => setState(() {
+                      _worldOpen = false;
+                      _pendingOnZoneSelected = null;
+                    }),
                   ),
                 ),
 
@@ -504,8 +607,20 @@ class _MainShellState extends ConsumerState<MainShell>
                 child: ShellNavBar(
                   currentIndex: _tabIndex.clamp(0, _navItems.length - 1),
                   navTabs: _navItems,
+                  keysByTabId: {'map': _mapNavKey},
                   onTap: (i) {
                     _closeRadial();
+                    // 'world' in the nav bar opens the shell overlay instead
+                    // of switching to a full tab, so every world-map entry
+                    // point renders the same way.
+                    if (_navIds[i] == 'world') {
+                      WorldZoneRefreshNotifier.notify();
+                      setState(() {
+                        _pendingOnZoneSelected = null;
+                        _worldOpen = true;
+                      });
+                      return;
+                    }
                     setState(() { _tabIndex = i; _worldOpen = false; _titlesOpen = false; _bossOpen = false; });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
@@ -513,9 +628,6 @@ class _MainShellState extends ConsumerState<MainShell>
                     }
                     if (_navIds[i] == 'map') {
                       MapTabNotifier.notify();
-                    }
-                    if (_navIds[i] == 'world') {
-                      WorldZoneRefreshNotifier.notify();
                     }
                   },
                 ),
@@ -532,6 +644,14 @@ class _MainShellState extends ConsumerState<MainShell>
                   onLongPress: _openCustomize,
                 ),
               ),
+
+              // ── LL-035 tutorial overlay (topmost) ────────────────────────
+              const Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: false,
+                  child: TutorialOverlay(),
+                ),
+              ),
             ],
           ),
         );
@@ -542,7 +662,10 @@ class _MainShellState extends ConsumerState<MainShell>
   void _onRingItemTap(String id) {
     _closeRadial();
     if (id == 'world') {
-      setState(() => _worldOpen = true);
+      setState(() {
+        _pendingOnZoneSelected = null;
+        _worldOpen = true;
+      });
       return;
     }
     if (id == 'titles') {

@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../activity/providers/activity_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
+import '../tutorial/providers/tutorial_provider.dart';
 import 'cards/home_adventure_hero.dart';
 import 'cards/home_header.dart';
 import 'cards/home_log_workout_cta.dart';
@@ -22,12 +23,44 @@ import 'providers/map_journey_provider.dart';
 /// Visual layout matches `design-mockup/home/home-v3.html` screens 1–3
 /// (screen 4 is the notifications sheet, triggered from the header bell
 /// via [showNotificationsSheet]).
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  // LL-035: GlobalKeys attached to the three Home coach-mark targets. The
+  // tutorial controller reads their global rects to place floating bubbles.
+  final _xpCardKey = GlobalKey();
+  final _statsRowKey = GlobalKey();
+  final _questsCardKey = GlobalKey();
+  bool _tutorialKeysRegistered = false;
+
+  @override
+  void dispose() {
+    final c = ref.read(tutorialControllerProvider);
+    c.unregisterKey('xpCard');
+    c.unregisterKey('statsRow');
+    c.unregisterKey('questsCard');
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(characterProfileProvider).valueOrNull;
+
+    if (!_tutorialKeysRegistered) {
+      _tutorialKeysRegistered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final c = ref.read(tutorialControllerProvider);
+        c.registerKey('xpCard', _xpCardKey);
+        c.registerKey('statsRow', _statsRowKey);
+        c.registerKey('questsCard', _questsCardKey);
+      });
+    }
 
     // XP Storm & Seasonal event are scaffold-only — they render nothing
     // until LL-001 / LL-012 land a real feed and start returning non-null
@@ -50,15 +83,22 @@ class HomeScreen extends ConsumerWidget {
                 const HomeXpStormBanner(state: xpStormState),
                 const HomeStreakStrip(),
                 Padding(
+                  key: _xpCardKey,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: HomeAdventureHero(
                     onSync: () => _handleSync(context, ref),
                   ),
                 ),
-                const HomeStatStrip(),
+                Container(
+                  key: _statsRowKey,
+                  child: const HomeStatStrip(),
+                ),
                 const HomeSeasonalEventRow(state: seasonalState),
                 const HomeLoginRewardChip(),
-                const HomeTodaysQuestsCard(),
+                Container(
+                  key: _questsCardKey,
+                  child: const HomeTodaysQuestsCard(),
+                ),
                 const SizedBox(height: 16),
               ],
             ),

@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/map_tab_notifier.dart';
+import '../../core/services/world_map_notifier.dart';
+import '../home/providers/map_journey_provider.dart';
 import 'services/boss_service.dart';
 import 'services/world_zone_service.dart';
 import 'map_colors.dart';
+import 'map_history_sheet.dart';
 import 'map_painter.dart';
 import 'map_debug_panel.dart';
 import 'services/map_service.dart';
@@ -13,21 +17,20 @@ import 'map_banners.dart';
 import 'models/map_models.dart';
 import 'models/world_zone_models.dart';
 import 'node_detail_sheet.dart';
-import 'world_map_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MapScreen
 // ─────────────────────────────────────────────────────────────────────────────
-class MapScreen extends StatefulWidget {
+class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key, this.worldZoneId, this.zoneName});
   final String? worldZoneId;
   final String? zoneName;
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
+class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateMixin {
   final _service = MapService();
   final _bossService = BossService();
   final _worldZoneService = WorldZoneService();
@@ -277,7 +280,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       }
 
       // Open world map to show new position
-      await _openWorldMap();
+      _openWorldMap();
     } catch (e) {
       if (mounted) {
         setState(() { _loading = false; });
@@ -308,34 +311,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _openWorldMap() async {
-    final result = await showModalBottomSheet<Map<String, String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const FractionallySizedBox(
-        heightFactor: 0.95,
-        child: WorldMapScreen(),
-      ),
-    );
-    if (!mounted) return;
-    if (result != null) {
+  void _openWorldMap() {
+    WorldMapNotifier.open(onZoneSelected: (picked) {
+      if (!mounted) return;
       setState(() {
-        _worldZoneId = result['zoneId'];
-        _zoneName = result['zoneName'];
+        _worldZoneId = picked.zoneId;
+        _zoneName = picked.zoneName;
         _hasInitializedViewport = false;
       });
-    } else {
-      // WorldMap was dismissed without entering a zone (e.g. moved to a
-      // crossroads which auto-completes). Reset zone so _loadMap re-derives
-      // the current zone from the backend.
-      setState(() {
-        _worldZoneId = null;
-        _zoneName = null;
-        _hasInitializedViewport = false;
-      });
-    }
-    await _loadMap();
+      _loadMap();
+    });
   }
 
   void _openDebugPanel() {
@@ -355,6 +340,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _openHistorySheet() {
+    // Ensure the sheet sees the freshest journey data on open.
+    ref.invalidate(mapJourneyProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const FractionallySizedBox(
+        heightFactor: 0.85,
+        child: MapHistorySheet(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -363,6 +362,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         children: [
           _buildBody(),
           if (_data != null) _buildHud(),
+          if (_data != null)
+            Positioned(
+              top: 48,
+              right: 16,
+              child: FloatingActionButton.small(
+                heroTag: 'map_history_btn',
+                backgroundColor: AppColors.orange.withOpacity(0.85),
+                onPressed: _openHistorySheet,
+                child: const Icon(Icons.history, size: 20, color: Colors.white),
+              ),
+            ),
           if (_isAtLastNode && _worldZoneId != null)
             Positioned(
               bottom: 100,

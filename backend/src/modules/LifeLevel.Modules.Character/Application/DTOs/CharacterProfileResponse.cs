@@ -34,5 +34,7 @@ public record CharacterProfileResponse(
     int ShieldsAvailable,
     int DailyQuestsCompleted,
     bool LoginRewardAvailable,
+    int TutorialStep,
+    int TutorialTopicsSeen,
     GearBonuses? GearBonuses = null
 );

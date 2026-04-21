@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>World Map — Zone Click, Travel Progress & Character</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #040810;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 64px;
+    gap: 40px;
+    color: #e6edf3;
+  }
+
+  .page-title {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .page-subtitle {
+    font-size: 13px;
+    color: #8b949e;
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+    max-width: 680px;
+  }
+
+  .frames-row {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .frame-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 390px;
+  }
+  .frame-label {
+    font-size: 14px;
+    color: #8b949e;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .frame-note {
+    font-size: 11px;
+    color: #8b949e;
+    line-height: 1.6;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-left: 2px solid #4f9eff;
+    border-radius: 6px;
+    padding: 10px 12px;
+    width: 100%;
+  }
+  .frame-note b { color: #e6edf3; }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 40px;
+    border: 2px solid #30363d;
+    overflow: hidden;
+    position: relative;
+    background: #080e14;
+    flex-shrink: 0;
+  }
+
+  /* Animations */
+  @keyframes dashMove { to { stroke-dashoffset: -20; } }
+  @keyframes pulseDest {
+    0%,100% { opacity: .4; transform: scale(1); }
+    50%     { opacity: .9; transform: scale(1.15); }
+  }
+  @keyframes pulseActiveGlow {
+    0%,100% { opacity: .35; }
+    50%     { opacity: .7; }
+  }
+  @keyframes charBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes progFill {
+    0%   { width: 62%; }
+    50%  { width: 62%; }
+    100% { width: 62%; }
+  } /* static illustrative state */
+
+  /* ── shared map chrome ────────────────────────────────────── */
+  .map-screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #040810; }
+  .map-header {
+    position: absolute; top: 0; left: 0; right: 0; height: 56px;
+    background: rgba(8,14,20,0.92); border-bottom: 1px solid #21262d;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 20px; z-index: 10; backdrop-filter: blur(8px);
+  }
+  .map-hud {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; background: rgba(22,27,34,0.88);
+    border: 1px solid #30363d; border-radius: 20px;
+  }
+  .map-hud-icon { font-size: 12px; }
+  .map-hud-text { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #e6edf3; }
+  .map-hud-dot { width: 5px; height: 5px; border-radius: 50%; background: #4f9eff; }
+  .map-hud-lv { font-size: 10px; color: #8b949e; }
+
+  .map-nav {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 68px;
+    background: rgba(14,19,26,0.97); border-top: 1px solid #21262d;
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 8px; z-index: 10;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+  .nav-icon { font-size: 18px; }
+  .nav-text { font-size: 9px; font-weight: 700; color: #8b949e; letter-spacing: 0.7px; text-transform: uppercase; }
+  .nav-item.active .nav-text { color: #4f9eff; }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 4px #4f9effaa); }
+
+  .map-canvas { position: absolute; top: 56px; left: 0; right: 0; bottom: 68px; }
+
+  /* ── bottom sheet ────────────────────────────────────────── */
+  .dim-overlay { position: absolute; inset: 0; background: rgba(4,8,16,0.72); z-index: 5; }
+  .bottom-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #161b22; border-radius: 20px 20px 0 0;
+    z-index: 20; padding: 0 20px 28px;
+    border-top: 1px solid #30363d;
+    display: flex; flex-direction: column;
+    animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  .drag-handle {
+    width: 40px; height: 4px; background: #3a4a5a; border-radius: 2px;
+    margin: 12px auto 16px; flex-shrink: 0;
+  }
+  .sheet-head-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .sheet-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+  .sheet-head-text { flex: 1; min-width: 0; }
+  .sheet-zone-name {
+    font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700;
+    color: #e6edf3; letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .sheet-region { font-size: 12px; color: #8b949e; margin-top: 2px; }
+
+  .status-pill {
+    font-size: 10px; font-weight: 700;
+    padding: 4px 10px; border-radius: 10px;
+    letter-spacing: 0.4px;
+  }
+  .status-pill.traveling { color: #f5a623; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.4); }
+  .status-pill.here      { color: #3fb950; background: rgba(63,185,80,0.12);  border: 1px solid rgba(63,185,80,0.4); }
+  .status-pill.available { color: #f5a623; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.4); }
+
+  .sheet-desc {
+    font-size: 12px; color: #8b949e; line-height: 1.6;
+    margin: 14px 0 16px;
+  }
+
+  .sheet-section-label {
+    font-size: 10px; font-weight: 700; color: #8b949e;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
+  }
+
+  /* Progress card (the central element of this mockup) */
+  .progress-card {
+    background: rgba(245,166,35,0.06);
+    border: 1px solid rgba(245,166,35,0.28);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .progress-card-top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 8px;
+  }
+  .progress-card-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; color: #e6edf3;
+    letter-spacing: 0.3px;
+  }
+  .progress-card-pct {
+    font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: #f5a623;
+  }
+  .progress-bar-outer {
+    height: 8px; border-radius: 4px;
+    background: rgba(245,166,35,0.15); overflow: hidden;
+    position: relative;
+  }
+  .progress-bar-inner {
+    height: 100%; background: linear-gradient(90deg, #f5a623, #ffc861);
+    border-radius: 4px; box-shadow: 0 0 8px rgba(245,166,35,0.6);
+  }
+  .progress-card-foot {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #8b949e; margin-top: 6px;
+  }
+  .progress-card-foot b { color: #e6edf3; font-weight: 600; }
+
+  /* Action row */
+  .sheet-buttons { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-close {
+    flex: 1; height: 44px; border-radius: 12px;
+    border: 1.5px solid #30363d; background: transparent; color: #8b949e;
+    font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  }
+  .btn-primary {
+    flex: 2; height: 44px; border-radius: 12px; border: none;
+    background: #4f9eff; color: #fff; font-size: 13px; font-weight: 700;
+    font-family: 'Inter', sans-serif; letter-spacing: 0.3px;
+    box-shadow: 0 4px 14px rgba(79,158,255,0.35);
+  }
+  .btn-primary.disabled {
+    background: #2a3340; color: #5f6b78;
+    box-shadow: none; cursor: not-allowed;
+  }
+  .btn-primary.enter-local {
+    background: #3fb950; box-shadow: 0 4px 14px rgba(63,185,80,0.35);
+  }
+
+  /* "You are here" card (used in Frame 3) */
+  .here-card {
+    background: rgba(63,185,80,0.08);
+    border: 1px solid rgba(63,185,80,0.3);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .here-card-icon { font-size: 18px; color: #3fb950; }
+  .here-card-text { font-size: 12px; color: #e6edf3; line-height: 1.4; }
+  .here-card-text b { color: #3fb950; }
+
+  /* Dest-summary row in Frame 3 */
+  .dest-summary {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: #1e2632;
+    border: 1px solid #30363d; border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .dest-summary-label { font-size: 10px; color: #8b949e; letter-spacing: 1px; text-transform: uppercase; }
+  .dest-summary-value { font-size: 13px; color: #e6edf3; font-weight: 600; }
+  .dest-summary-arrow { color: #f5a623; font-size: 14px; }
+
+  /* ── reference legend ─────────────────────────────────────── */
+  .legend {
+    background: #0d1117; border: 1px solid #21262d; border-radius: 10px;
+    padding: 16px 20px; max-width: 900px; color: #c9d1d9;
+  }
+  .legend h3 { font-family: 'Cinzel', serif; font-size: 14px; color: #e6edf3; letter-spacing: 1px; margin-bottom: 10px; }
+  .legend p  { font-size: 12px; line-height: 1.7; color: #8b949e; }
+  .legend code {
+    font-family: 'Courier New', monospace; font-size: 11px;
+    background: #161b22; padding: 1px 5px; border-radius: 3px; color: #79c0ff;
+  }
+  .legend ul { margin: 6px 0 0 18px; font-size: 12px; color: #8b949e; }
+  .legend li { margin-bottom: 3px; line-height: 1.5; }
+  .legend .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    vertical-align: middle; margin-right: 4px;
+  }
+  .swatch.blue  { background: #4f9eff; }
+  .swatch.orange{ background: #f5a623; }
+  .swatch.green { background: #3fb950; }
+  .swatch.grey  { background: #555; }
+</style>
+</head>
+<body>
+
+  <div>
+    <div class="page-title">WORLD MAP · ZONE CLICK & TRAVEL PROGRESS</div>
+    <div class="page-subtitle">
+      What the user should see <b>while traveling</b> between zones, and what the bottom sheet should look like when they tap each possible zone.
+      Based on the current Flutter frontend — same colours, same layout, same components — but with the progress-and-character states redefined.
+    </div>
+  </div>
+
+  <div class="frames-row">
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 1 — Map while traveling                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="frame-wrapper">
+      <div class="phone">
+        <div class="map-screen">
+
+          <!-- Top HUD pill -->
+          <div class="map-header">
+            <div class="map-hud">
+              <span class="map-hud-icon">🌍</span>
+              <span class="map-hud-text">World Map</span>
+              <span class="map-hud-dot"></span>
+              <span class="map-hud-lv">Lv 7</span>
+            </div>
+          </div>
+
+          <!-- Map canvas -->
+          <div class="map-canvas">
+            <svg width="390" height="720" viewBox="0 0 390 720" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+              <defs>
+                <pattern id="gridA" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0d1117" stroke-width="1"/>
+                </pattern>
+                <radialGradient id="bgGlowBlue" cx="30%" cy="20%" r="60%">
+                  <stop offset="0%"  stop-color="#4f9eff22"/>
+                  <stop offset="100%" stop-color="#4f9eff00"/>
+                </radialGradient>
+                <radialGradient id="bgGlowPurple" cx="75%" cy="85%" r="65%">
+                  <stop offset="0%"  stop-color="#a371f722"/>
+                  <stop offset="100%" stop-color="#a371f700"/>
+                </radialGradient>
+                <filter id="blueGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="6"/>
+                </filter>
+                <filter id="orangeGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="6"/>
+                </filter>
+              </defs>
+
+              <rect width="390" height="720" fill="#040810"/>
+              <rect width="390" height="720" fill="url(#gridA)"/>
+              <rect width="390" height="720" fill="url(#bgGlowBlue)"/>
+              <rect width="390" height="720" fill="url(#bgGlowPurple)"/>
+
+              <!-- Tier labels -->
+              <text x="22" y="120" font-family="Inter" font-size="9" fill="#30363d" letter-spacing="2" font-weight="700">TIER 1</text>
+              <text x="22" y="290" font-family="Inter" font-size="9" fill="#30363d" letter-spacing="2" font-weight="700">TIER 2</text>
+              <text x="22" y="460" font-family="Inter" font-size="9" fill="#30363d" letter-spacing="2" font-weight="700">TIER 3</text>
+
+              <!-- Completed edge (tier 1 → 2, already traveled) -->
+              <line x1="195" y1="115" x2="195" y2="275"
+                    stroke="#3fb950" stroke-width="2" stroke-dasharray="6 5" opacity="0.55"/>
+
+              <!-- Active-travel edge (tier 2 → 3): dashed backdrop + solid progress overlay -->
+              <!-- dashed backdrop full edge -->
+              <line x1="195" y1="305" x2="120" y2="450"
+                    stroke="#4f9eff" stroke-width="2" stroke-dasharray="6 5" opacity="0.55">
+                <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="1.4s" repeatCount="indefinite"/>
+              </line>
+              <!-- solid progress line from source (195,305) to character pos (~148, 395) ~62% -->
+              <line x1="195" y1="305" x2="148" y2="395"
+                    stroke="#4f9eff" stroke-width="3" stroke-linecap="round" filter="url(#blueGlow)" opacity="0.8"/>
+              <line x1="195" y1="305" x2="148" y2="395"
+                    stroke="#4f9eff" stroke-width="2" stroke-linecap="round"/>
+
+              <!-- Other edges (tier 3 fork: forest to left boss, right boss) -->
+              <line x1="120" y1="480" x2="66"  y2="600" stroke="#444" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.3"/>
+              <line x1="120" y1="480" x2="195" y2="600" stroke="#444" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.3"/>
+
+              <!-- ── Zone: Ashfield Plains (tier 1, completed) ── -->
+              <circle cx="195" cy="100" r="24" fill="#1a3d1f" stroke="#3fb950" stroke-width="2"/>
+              <text x="195" y="106" font-family="Inter" font-size="15" fill="#3fb950" text-anchor="middle">✓</text>
+              <text x="195" y="140" font-family="Inter" font-size="10" fill="#8b949e" text-anchor="middle" font-weight="600">Ashfield Plains</text>
+
+              <!-- ── Zone: Meadowlands (tier 2, SOURCE / current zone) ── -->
+              <!-- outer active pulse halo -->
+              <circle cx="195" cy="290" r="38" fill="#4f9eff" opacity="0.4">
+                <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="r"       values="36;42;36"   dur="2s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="195" cy="290" r="26" fill="#1a2d4a" stroke="#4f9eff" stroke-width="2.5"/>
+              <text x="195" y="296" font-family="Inter" font-size="18" text-anchor="middle">🌾</text>
+              <text x="195" y="330" font-family="Inter" font-size="10" fill="#4f9eff" text-anchor="middle" font-weight="700">Meadowlands</text>
+              <text x="195" y="342" font-family="Inter" font-size="9"  fill="#8b949e" text-anchor="middle">you were here</text>
+
+              <!-- ── Zone: Thornwood Forest (tier 3, DESTINATION — available, isDestination) ── -->
+              <!-- pulsing orange destination ring (marker only — NOT active glow) -->
+              <circle cx="120" cy="465" r="38" fill="none" stroke="#f5a623" stroke-width="2" stroke-dasharray="4 4" opacity="0.85">
+                <animateTransform attributeName="transform" type="rotate" from="0 120 465" to="360 120 465" dur="8s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="120" cy="465" r="32" fill="none" stroke="#f5a623" stroke-width="1.5" opacity="0">
+                <animate attributeName="r"         values="32;52;32"       dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity"   values="0.6;0;0.6"      dur="2s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="120" cy="465" r="24" fill="#2a1d08" stroke="#f5a623" stroke-width="2"/>
+              <text x="120" y="471" font-family="Inter" font-size="16" text-anchor="middle">🌲</text>
+              <text x="120" y="505" font-family="Inter" font-size="10" fill="#f5a623" text-anchor="middle" font-weight="700">Thornwood</text>
+              <text x="120" y="518" font-family="Inter" font-size="9"  fill="#f5a623" text-anchor="middle">destination</text>
+
+              <!-- ── Non-adjacent / locked zones (for context) ── -->
+              <circle cx="66"  cy="615" r="22" fill="#141414" stroke="#3a3a3a" stroke-width="1.5" opacity="0.5"/>
+              <text x="66"  y="621" font-family="Inter" font-size="12" text-anchor="middle" opacity="0.5">🔒</text>
+              <text x="66"  y="650" font-family="Inter" font-size="9"  fill="#666" text-anchor="middle">Iron Peaks</text>
+
+              <circle cx="195" cy="615" r="22" fill="#141414" stroke="#3a3a3a" stroke-width="1.5" opacity="0.5"/>
+              <text x="195" y="621" font-family="Inter" font-size="12" text-anchor="middle" opacity="0.5">🔒</text>
+              <text x="195" y="650" font-family="Inter" font-size="9"  fill="#666" text-anchor="middle">Abyss Caves</text>
+
+              <!-- ── Traveling character on the edge (at ~62% of tier 2 → tier 3 edge) ── -->
+              <!-- soft glow behind character -->
+              <circle cx="148" cy="395" r="16" fill="#4f9eff" opacity="0.35">
+                <animate attributeName="opacity" values="0.2;0.55;0.2" dur="1.6s" repeatCount="indefinite"/>
+              </circle>
+              <g style="animation: charBob 1.6s ease-in-out infinite; transform-origin: 148px 395px;">
+                <!-- character disk -->
+                <circle cx="148" cy="395" r="12" fill="#0d1a2e" stroke="#4f9eff" stroke-width="2.5"/>
+                <text x="148" y="400" font-family="Inter" font-size="13" text-anchor="middle">🧙</text>
+              </g>
+              <!-- progress percent label near character, offset so it doesn't overlap the edge -->
+              <g>
+                <rect x="156" y="382" width="40" height="18" rx="4"
+                      fill="#0d1117" stroke="#4f9eff" stroke-width="1" opacity="0.95"/>
+                <text x="176" y="395" font-family="Inter" font-size="11" font-weight="700"
+                      fill="#4f9eff" text-anchor="middle">62%</text>
+              </g>
+
+              <!-- Distance banked readout (subtle, bottom-right of edge) -->
+              <text x="176" y="410" font-family="Inter" font-size="9" fill="#8b949e" text-anchor="middle">7.4 / 12 km</text>
+            </svg>
+          </div>
+
+          <!-- Bottom nav -->
+          <div class="map-nav">
+            <div class="nav-item"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></div>
+            <div class="nav-item active"><span class="nav-icon">🗺️</span><span class="nav-text">Map</span></div>
+            <div class="nav-item"><span class="nav-icon">⚔️</span><span class="nav-text">Battle</span></div>
+            <div class="nav-item"><span class="nav-icon">👤</span><span class="nav-text">Profile</span></div>
+          </div>
+
+        </div>
+      </div>
+      <div class="frame-label">Frame 1 · Traveling on the World Map</div>
+      <div class="frame-note">
+        <b>What's new vs today:</b><br/>
+        • <span style="color:#4f9eff;">Source zone</span> keeps its blue-active glow (it's still "current" until arrival).<br/>
+        • <span style="color:#f5a623;">Destination zone</span> marked only by an orange pulsing ring — never blue-active.<br/>
+        • Solid blue line from source → character marks the traveled portion; the rest of the edge stays dashed.<br/>
+        • Character sprite sits at <code>frac = distance / edge.km</code> along the edge.<br/>
+        • Small <b>62%</b> chip near the sprite + <b>7.4 / 12 km</b> sub-label. No more "always 1%" mystery.
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 2 — Tap the destination zone                             -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="frame-wrapper">
+      <div class="phone">
+        <div class="map-screen">
+          <!-- Reuse a dimmed version of the canvas via static markup -->
+          <div class="map-header">
+            <div class="map-hud">
+              <span class="map-hud-icon">🌍</span>
+              <span class="map-hud-text">World Map</span>
+              <span class="map-hud-dot"></span>
+              <span class="map-hud-lv">Lv 7</span>
+            </div>
+          </div>
+
+          <div class="map-canvas">
+            <svg width="390" height="720" viewBox="0 0 390 720" xmlns="http://www.w3.org/2000/svg" style="display:block;opacity:0.55;">
+              <rect width="390" height="720" fill="#040810"/>
+              <line x1="195" y1="115" x2="195" y2="275" stroke="#3fb950" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+              <line x1="195" y1="305" x2="120" y2="450" stroke="#4f9eff" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+              <line x1="195" y1="305" x2="148" y2="395" stroke="#4f9eff" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="195" cy="100" r="22" fill="#1a3d1f" stroke="#3fb950" stroke-width="2"/>
+              <circle cx="195" cy="290" r="24" fill="#1a2d4a" stroke="#4f9eff" stroke-width="2"/>
+              <text x="195" y="296" font-family="Inter" font-size="16" text-anchor="middle">🌾</text>
+              <circle cx="120" cy="465" r="22" fill="#2a1d08" stroke="#f5a623" stroke-width="2"/>
+              <text x="120" y="471" font-family="Inter" font-size="14" text-anchor="middle">🌲</text>
+              <circle cx="148" cy="395" r="11" fill="#0d1a2e" stroke="#4f9eff" stroke-width="2"/>
+              <text x="148" y="400" font-family="Inter" font-size="12" text-anchor="middle">🧙</text>
+            </svg>
+          </div>
+
+          <div class="dim-overlay"></div>
+
+          <!-- Bottom sheet — destination during travel -->
+          <div class="bottom-sheet">
+            <div class="drag-handle"></div>
+
+            <div class="sheet-head-row">
+              <span class="sheet-icon">🌲</span>
+              <div class="sheet-head-text">
+                <div class="sheet-zone-name">Thornwood Forest</div>
+                <div class="sheet-region">Wilds of Endurance</div>
+              </div>
+              <span class="status-pill traveling">Traveling</span>
+            </div>
+
+            <div class="sheet-desc">
+              A dense ancient forest shrouded in mist. Keep moving — every km you log in a running, cycling, hiking, or walking session advances your journey here.
+            </div>
+
+            <!-- THE core progress widget -->
+            <div class="sheet-section-label">Your Journey</div>
+            <div class="progress-card">
+              <div class="progress-card-top">
+                <div class="progress-card-label">
+                  <span>🚶‍♂️</span>
+                  <span>On the road to Thornwood</span>
+                </div>
+                <div class="progress-card-pct">62%</div>
+              </div>
+              <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width: 62%;"></div>
+              </div>
+              <div class="progress-card-foot">
+                <span><b>7.4 km</b> traveled</span>
+                <span><b>4.6 km</b> remaining · of 12 km total</span>
+              </div>
+            </div>
+
+            <div class="sheet-section-label">Requirements</div>
+            <div style="margin-bottom: 18px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="color:#3fb950;font-size:13px;">✓</span>
+                <span style="font-size:12px;color:#e6edf3;">Level 5+</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#3fb950;font-size:13px;">✓</span>
+                <span style="font-size:12px;color:#e6edf3;">Adjacent to current zone</span>
+              </div>
+            </div>
+
+            <div class="sheet-buttons">
+              <button class="btn-close">Close</button>
+              <button class="btn-primary disabled">🔒 Enter Zone at 100%</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="frame-label">Frame 2 · Tap Destination (during travel)</div>
+      <div class="frame-note">
+        <b>What's new vs today:</b><br/>
+        • Status pill is <b>Traveling</b> (orange), not "Available".<br/>
+        • Prominent <b>progress card</b> with percent, km traveled, km remaining.<br/>
+        • Primary button is <b>disabled until 100%</b> — at 100% it becomes <i>"Enter Zone →"</i>. Critically, it <b>never calls <code>SetDestinationAsync</code> again</b>, so tapping it cannot reset progress.<br/>
+        • No "Set as Destination" option here — you're already traveling here.
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 3 — Tap the source (current) zone during travel          -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="frame-wrapper">
+      <div class="phone">
+        <div class="map-screen">
+          <div class="map-header">
+            <div class="map-hud">
+              <span class="map-hud-icon">🌍</span>
+              <span class="map-hud-text">World Map</span>
+              <span class="map-hud-dot"></span>
+              <span class="map-hud-lv">Lv 7</span>
+            </div>
+          </div>
+
+          <div class="map-canvas">
+            <svg width="390" height="720" viewBox="0 0 390 720" xmlns="http://www.w3.org/2000/svg" style="display:block;opacity:0.55;">
+              <rect width="390" height="720" fill="#040810"/>
+              <line x1="195" y1="115" x2="195" y2="275" stroke="#3fb950" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+              <line x1="195" y1="305" x2="120" y2="450" stroke="#4f9eff" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+              <line x1="195" y1="305" x2="148" y2="395" stroke="#4f9eff" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="195" cy="100" r="22" fill="#1a3d1f" stroke="#3fb950" stroke-width="2"/>
+              <circle cx="195" cy="290" r="26" fill="#1a2d4a" stroke="#4f9eff" stroke-width="3"/>
+              <text x="195" y="296" font-family="Inter" font-size="16" text-anchor="middle">🌾</text>
+              <circle cx="120" cy="465" r="22" fill="#2a1d08" stroke="#f5a623" stroke-width="2"/>
+              <text x="120" y="471" font-family="Inter" font-size="14" text-anchor="middle">🌲</text>
+              <circle cx="148" cy="395" r="11" fill="#0d1a2e" stroke="#4f9eff" stroke-width="2"/>
+              <text x="148" y="400" font-family="Inter" font-size="12" text-anchor="middle">🧙</text>
+            </svg>
+          </div>
+
+          <div class="dim-overlay"></div>
+
+          <!-- Bottom sheet — source zone during travel ("you are here") -->
+          <div class="bottom-sheet">
+            <div class="drag-handle"></div>
+
+            <div class="sheet-head-row">
+              <span class="sheet-icon">🌾</span>
+              <div class="sheet-head-text">
+                <div class="sheet-zone-name">Meadowlands</div>
+                <div class="sheet-region">Plains of Agility</div>
+              </div>
+              <span class="status-pill here">You Are Here</span>
+            </div>
+
+            <div class="here-card">
+              <span class="here-card-icon">📍</span>
+              <div class="here-card-text">
+                You left this zone — the world is behind you. Tap <b>Enter Local Map</b> to explore this zone's nodes.
+              </div>
+            </div>
+
+            <div class="sheet-section-label">Current Journey</div>
+            <div class="dest-summary">
+              <div>
+                <div class="dest-summary-label">Heading to</div>
+                <div class="dest-summary-value">🌲 Thornwood Forest</div>
+              </div>
+              <div style="margin-left:auto;text-align:right;">
+                <div class="dest-summary-label">Progress</div>
+                <div class="dest-summary-value" style="color:#f5a623;">62% · 4.6 km left</div>
+              </div>
+            </div>
+
+            <div class="sheet-buttons">
+              <button class="btn-close">Close</button>
+              <button class="btn-primary enter-local">Enter Local Map →</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="frame-label">Frame 3 · Tap Current Zone (during travel)</div>
+      <div class="frame-note">
+        <b>What's new vs today:</b><br/>
+        • Status pill is <b>You Are Here</b> (green).<br/>
+        • A small summary row shows which zone you're traveling to + current progress — the user never has to hunt for it.<br/>
+        • Primary button opens the <b>local adventure map</b> of this zone (explore nodes, grind reserve km).<br/>
+        • No "Set Destination" button here either — you're already at this zone.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- Legend / decisions we need                                      -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div class="legend">
+    <h3>LEGEND & OPEN DECISIONS</h3>
+    <p>
+      <b>Zone colour meaning</b> (same as current code, no changes):
+    </p>
+    <ul>
+      <li><span class="swatch green"></span> <b>Completed</b> — unlocked, fully explored. Green outline, check mark.</li>
+      <li><span class="swatch blue"></span> <b>Active / current</b> — where the player <i>physically is</i>. Blue glow + halo.</li>
+      <li><span class="swatch orange"></span> <b>Destination</b> — the zone the player is traveling <i>toward</i>. Orange pulsing ring, never blue-active.</li>
+      <li><span class="swatch grey"></span> <b>Locked / unavailable</b> — level too low or not adjacent. Dim grey, lock icon.</li>
+    </ul>
+    <p style="margin-top:12px;">
+      <b>Progress formula (what drives the <code>62%</code> number):</b>
+      <code>distanceTraveledOnEdge / edge.distanceKm</code>. Both numbers come from the backend.
+      The current "always 1%" symptom suggests the backend is only ever adding ~0.1 km per activity or the edge.distanceKm is unexpectedly huge.
+      Before wiring more UI, confirm what the backend is returning for both fields against a known activity log.
+    </p>
+    <p style="margin-top:12px;">
+      <b>Open design decisions (resolve before implementation):</b>
+    </p>
+    <ul>
+      <li><b>Tap another adjacent available zone while already traveling</b> — three options: (a) block with "You're already traveling. Cancel current journey?" confirmation, (b) allow re-targeting but <i>keep</i> banked km (no reset), (c) current behavior — silently reset to 0. Mockup not yet drawn for this; pick before I sketch it.</li>
+      <li><b>Over-distance roll-over</b> — if the user logs 20 km on a 12 km edge, does the extra 8 km bank toward the next edge automatically, or is the surplus discarded? (The board has a "Follow-up" note about this already — <code>UserWorldProgress.PendingDistanceKm</code>.)</li>
+      <li><b>Reserve km surfacing</b> — should the progress card show "You have X banked km ready to spend" when there is no active destination? (Today: no. Proposed: yes, as an empty-state variant of the card.)</li>
+      <li><b>Show % on the character sprite vs. only in the sheet</b> — the mockup shows it in both. Is that too noisy for the world-map view?</li>
+    </ul>
+  </div>
+
+</body>
+</html>

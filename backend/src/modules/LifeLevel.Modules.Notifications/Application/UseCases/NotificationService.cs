@@ -113,23 +113,22 @@ public class NotificationService(
         DevicePlatform platform,
         CancellationToken ct = default)
     {
-        var existing = await repo.FindTokenAsync(userId, token, ct);
         var now = clock.UtcNow;
+
+        // IX_DeviceTokens_Token is unique on Token, so at most one row per token.
+        // Reassign ownership on re-registration (same user or device moved accounts)
+        // instead of inserting a new row, which would violate the unique constraint.
+        var existing = (await repo.FindTokenAcrossUsersAsync(token, ct)).FirstOrDefault();
 
         if (existing != null)
         {
+            existing.UserId = userId;
+            existing.Platform = platform;
             existing.LastUsedAt = now;
             existing.IsActive = true;
-            existing.Platform = platform;
         }
         else
         {
-            // Token moved to a different user account (rare, but possible on shared device).
-            // Deactivate on any previous owner so we don't double-send.
-            var others = await repo.FindTokenAcrossUsersAsync(token, ct);
-            foreach (var o in others.Where(o => o.UserId != userId))
-                o.IsActive = false;
-
             var entry = new DeviceToken
             {
                 Id = Guid.NewGuid(),

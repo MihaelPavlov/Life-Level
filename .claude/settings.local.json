@@ -311,7 +311,20 @@
       "Bash(where ngrok.exe)",
       "Bash(cmd.exe //c \"where ngrok\")",
       "Bash(cmd.exe *)",
-      "Bash(python -m http.server 8765)"
+      "Bash(python -m http.server 8765)",
+      "Bash(tasklist.exe //FI \"IMAGENAME eq dotnet.exe\")",
+      "Bash(tasklist.exe //FI \"IMAGENAME eq LifeLevel.Api.exe\")",
+      "PowerShell(adb devices *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" devices -l)",
+      "PowerShell(ngrok http *)",
+      "PowerShell(\\(Invoke-RestMethod http://127.0.0.1:4040/api/tunnels\\).tunnels | Select-Object public_url,proto; \\(Get-Process -Name ngrok -ErrorAction SilentlyContinue | Measure-Object\\).Count)",
+      "PowerShell(try { $r = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels -TimeoutSec 3; Write-Output \"TUNNELS: $\\($r.tunnels.Count\\)\"; $r.tunnels | ForEach-Object { Write-Output $_.public_url } } catch { Write-Output \"NGROK API DOWN: $\\($_.Exception.Message\\)\" }; Write-Output \"---\"; $procs = Get-Process -Name ngrok -ErrorAction SilentlyContinue; Write-Output \"NGROK PROCS: $\\($procs.Count\\)\")",
+      "PowerShell(try { \\(Invoke-WebRequest -Uri \"https://819b-165-225-201-141.ngrok-free.app/api/health\" -Headers @{\"ngrok-skip-browser-warning\"=\"true\"} -TimeoutSec 5 -UseBasicParsing\\).StatusCode } catch { Write-Output \"Status: $\\($_.Exception.Response.StatusCode\\) - reachable=$\\($_.Exception.Response -ne $null\\)\" })",
+      "PowerShell(Start-Process \"http://127.0.0.1:4040\")",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\docs\\\\board.md\")",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\design-mockup\\\\project-board.html\")",
+      "PowerShell(Start-Sleep -Milliseconds 800; Start-Process \"http://127.0.0.1:8765/design-mockup/project-board.html\")"
     ]
   }
 }

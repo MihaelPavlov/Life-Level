@@ -254,7 +254,7 @@ class WorldMapDetailSheet extends StatelessWidget {
                           ),
                         ),
                       )
-                    else if (zone.status == ZoneStatus.active && zone.isDestination)
+                    else if (zone.isDestination)
                       Expanded(
                         flex: 2,
                         child: Column(

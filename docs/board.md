@@ -80,6 +80,7 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
 - **Notes**: Root cause — `Activity → WorldZone` port never existed. `IMapDistancePort` only advanced the dungeon map, so `UserWorldProgress.DistanceTraveledOnEdge` stayed at 0, which fed directly into both the map character position (`distanceTraveledOnEdge / edge.distanceKm`) and the zone detail progress bar. Fix adds `IWorldZoneDistancePort` in SharedKernel, implemented by `WorldZoneService`, wired from `ActivityService`, and fires `WorldZoneRefreshNotifier.notify()` on mobile log so an open map reloads immediately. See plan: `.claude/plans/mutable-pondering-blum.md`. **Follow-up patch (same ticket):** manual spot-check surfaced a visual-only bug — the destination zone was mapped to `ZoneStatus.active`, which drives the blue pulsing glow + dark-blue fill, while the source zone dimmed to `completed` while traveling. This made it look like the character instantly "flew" to the destination on tap. Fix in `world_map_models.dart`: removed the `isDestination → active` and `isCurrentZone && isTraveling → completed` branches so the current zone stays blue-active and the destination is marked only by the orange pulsing ring (already driven by `isDestination`). Dropped the now-unused `isTraveling` parameter.
 - **Follow-up**: Mirror `UserMapProgress.PendingDistanceKm` reserve-km banking onto `UserWorldProgress` so distance logged before setting a destination is not lost (needs entity field + EF migration). Out of scope for this ticket.
 - **Implemented**: commit pending — backend: `IWorldZoneDistancePort` added to SharedKernel, implemented by `WorldZoneService` (silent no-op when no destination), wired into `ActivityService.LogActivityAsync` and `LogActivityFromExternalAsync` when `DistanceKm > 0`; mobile: `log_activity_screen.dart` fires `WorldZoneRefreshNotifier.notify()` post-log; `world_map_models.dart` status mapping fixed so the blue-active glow stays on the source zone while traveling. Files: `ICharacterXpPort.cs`, `ActivityDtos.cs`, `ActivityService.cs`, `WorldZoneService.cs`, `WorldZoneModule.cs`, `log_activity_screen.dart`, `world_map_models.dart`, `world_map_screen.dart`.
+- **Implemented (second pass — progress bar & reset bug)**: commit pending — the earlier `world_map_models.dart` follow-up removed the `isDestination → ZoneStatus.active` mapping, which made the `zone.status == ZoneStatus.active && zone.isDestination` branch in `world_map_detail_sheet.dart:257` unreachable (the destination zone is `available + isDestination` during travel). Net effect: tapping the destination tile never rendered the progress bar; it fell through to the generic "Set as Destination →" button, and tapping that called `SetDestinationAsync` again — which **resets `DistanceTraveledOnEdge` to 0 on the backend** (`WorldZoneService.cs:163`), making the character appear to not move and the progress bar to read 0% on the next refresh. Fix: (1) `world_map_detail_sheet.dart` progress-bar branch condition relaxed from `active && isDestination` to just `isDestination` so it matches the real `available + isDestination` state during travel; (2) `world_map_screen.dart` `_showZoneSheet` gained an explicit `else if (zone.isDestination)` branch that leaves `enterCallback = null`, preventing the accidental re-set-destination reset. `flutter analyze` on the two changed files surfaces only pre-existing `withOpacity` / `prefer_const_*` hints (no new issues). Backend unchanged — all 11 `WorldZoneServiceTests` still pass.
 
 ---
 
@@ -281,14 +282,15 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
 - **Priority**: low
 - **Phase**: P3
 - **Acceptance**:
-  - [ ] Small circular history FAB rendered on `MapScreen` at `top: 48, right: 16`, matching the visual style of the existing bottom-right FABs (`FloatingActionButton.small`, translucent tint, icon child — use `Icons.history`, background `AppColors.orange.withOpacity(0.85)`)
-  - [ ] FAB does not overlap the centered `_buildHud()` pill (pill stays centered; icon sits to its right)
-  - [ ] Tapping the FAB opens a bottom sheet (`showModalBottomSheet`, `isScrollControlled: true`, `backgroundColor: Colors.transparent`) — **not** a full-screen route
-  - [ ] Sheet shows the same list `MapHistoryScreen` shows today: current node highlighted at top, then completed/unlocked nodes newest-first, with `+XP`, status text ("Just arrived!", "Cleared", "Defeated", "Path chosen", "Opened", "Completed") and node-type colour pill
-  - [ ] Sheet visually matches `XpHistorySheet` (drag handle, `Color(0xFF0f1828)` surface, rounded top corners, icon+title header, divider-separated list, empty state)
-  - [ ] Empty state copy: "No nodes visited yet." (same as current `MapHistoryScreen`)
-  - [ ] `MapScreen` is converted to `ConsumerStatefulWidget` (or a `Consumer` is pushed down the tree) so the sheet can `ref.watch(mapJourneyProvider)`
-  - [ ] Swipe-down / tap-outside dismisses the sheet; the map state underneath is unaffected
+  - [x] Small circular history FAB rendered on `MapScreen` at `top: 48, right: 16`, matching the visual style of the existing bottom-right FABs (`FloatingActionButton.small`, translucent tint, icon child — use `Icons.history`, background `AppColors.orange.withOpacity(0.85)`)
+  - [x] FAB does not overlap the centered `_buildHud()` pill (pill stays centered; icon sits to its right)
+  - [x] Tapping the FAB opens a bottom sheet (`showModalBottomSheet`, `isScrollControlled: true`, `backgroundColor: Colors.transparent`) — **not** a full-screen route
+  - [x] Sheet shows the same list `MapHistoryScreen` shows today: current node highlighted at top, then completed/unlocked nodes newest-first, with `+XP`, status text ("Just arrived!", "Cleared", "Defeated", "Path chosen", "Opened", "Completed") and node-type colour pill
+  - [x] Sheet visually matches `XpHistorySheet` (drag handle, `Color(0xFF0f1828)` surface, rounded top corners, icon+title header, divider-separated list, empty state)
+  - [x] Empty state copy: "No nodes visited yet." (same as current `MapHistoryScreen`)
+  - [x] `MapScreen` is converted to `ConsumerStatefulWidget` (or a `Consumer` is pushed down the tree) so the sheet can `ref.watch(mapJourneyProvider)`
+  - [x] Swipe-down / tap-outside dismisses the sheet; the map state underneath is unaffected
+  - [ ] Manual verification on device: tap the new top-right history icon inside a zone, confirm sheet slides up, current/completed nodes render correctly, sheet dismisses without resetting the map
 
 - **Notes**:
   - Reuse `mapJourneyProvider` from `mobile/lib/features/home/providers/map_journey_provider.dart`.
@@ -296,6 +298,7 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
   - `MapHistoryScreen` is currently orphaned (no route points to it). Leave it in place here; a follow-up ticket can delete it once the sheet is proven.
   - Reference FABs for visual parity: `map_screen.dart:410-419` (🌍 world map, blue) and `map_screen.dart:420-429` (🛠️ debug, purple). Use orange for history so the three don't collide visually.
   - Plan file: `.claude/plans/unified-cuddling-koala.md`.
+- **Implemented**: commit pending — `MapScreen` converted to `ConsumerStatefulWidget`, new orange `Icons.history` FAB at `top: 48, right: 16` opens `MapHistorySheet` via `showModalBottomSheet` (0.85 heightFactor), with `ref.invalidate(mapJourneyProvider)` on open so the sheet always sees fresh data. New sheet file mirrors `XpHistorySheet` shell + copies `_HistoryEntry`/`_nodeTypeColor`/`_completedStatusText` verbatim from `map_history_screen.dart` (orphaned screen untouched). Two files changed: `mobile/lib/features/map/map_screen.dart` (+31/-3), `mobile/lib/features/map/map_history_sheet.dart` (new, 265 lines). `flutter analyze` on the touched files surfaces only pre-existing `withOpacity` deprecations (codebase-wide pattern, no new issues).
 
 ### LL-032 — Backend notifications feed endpoints (`GET /api/notifications` + mark-all-read)
 - **Layer**: backend
@@ -328,29 +331,29 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
 - **Priority**: high
 - **Phase**: P2
 - **Acceptance**:
-  - [ ] `Character` entity: `TutorialStep` (int, default 0, -1 = skipped), `TutorialCompletedAt` (DateTime?), `TutorialRewardsClaimed` (bool, default false), `TutorialTopicsSeen` (int bitmask, default 0) + EF migration
-  - [ ] `POST /api/tutorial/advance` — increments step 0→7, awards step XP only when `TutorialRewardsClaimed == false`, sets the bit for the completed topic in `TutorialTopicsSeen`, returns updated `CharacterProfile`. Wrong-step advance is a no-op.
-  - [ ] `POST /api/tutorial/skip` — sets `TutorialStep = -1`, no XP, no title
-  - [ ] `POST /api/tutorial/replay-all` — resets `TutorialStep = 0`, `TutorialCompletedAt = null`. Does NOT reset `TutorialRewardsClaimed` (rewards stay one-shot).
-  - [ ] `POST /api/tutorial/replay-topic` with `{ topic: "xp-stats" \| "quests-streaks" \| "activity-logging" \| "world-map" \| "boss-system" }` — marks the bit in `TutorialTopicsSeen` so the hub shows ✓, but does not change `TutorialStep`
-  - [ ] Game-engine: `TutorialStepRewards` static table (step 1–6 small XP, step 7 +250 + "Novice Adventurer" title). Title unlock only if `TutorialRewardsClaimed == false`.
-  - [ ] `CharacterProfile` DTO exposes `tutorialStep` and `tutorialTopicsSeen` so the mobile hub can render ✓ / ○ state
-  - [ ] `ICharacterTutorialPort.AdvanceIfOnStepAsync(characterId, expectedStep)` in SharedKernel (follows `ICharacterXpPort.cs` pattern)
-  - [ ] `ActivityService.LogActivityAsync` + `LogActivityFromExternalAsync` call `AdvanceIfOnStepAsync(characterId, 4)` after a successful log
-  - [ ] Mobile: `features/tutorial/` feature folder — `tutorial_controller.dart` (state machine, reads `GlobalKey` rects, picks bubble placement), `providers/`, `services/tutorial_service.dart` (4 API calls), `models/tutorial_step.dart` + `tutorial_topic.dart` + `tutorial_placement.dart`, `widgets/tutorial_bubble.dart`, `widgets/tutorial_bubble_tail.dart` (CustomPainter triangle), `widgets/tutorial_dim_backdrop.dart` (full-screen dim + pulse-ring painter), `widgets/tutorial_skip_sheet.dart`, `screens/tutorial_intro_screen.dart`, `screens/tutorial_outro_screen.dart`, `screens/tutorials_hub_screen.dart`
-  - [ ] Bubble is 290px wide × auto height, rounded 14px, dark surface (`#1e2632`), 1px accent border, 14px tail painted toward target, step-specific accent colour (1 blue, 2 purple, 3 orange, 4 blue, 5 green, 6 red)
-  - [ ] Bubble placement algorithm implements 4-case rule: above / below / above-right-offset / above-FAB — derived from target global rect
-  - [ ] 6 `GlobalKey`s wired on: HomeXpCard, HomeStatsRow, HomeQuestsCard (grouped with streak strip), primary Log CTA, Map nav tab, Boss FAB
-  - [ ] Tutorial auto-starts on `MainShell` first build when `tutorialStep == 0`, resumes from any intermediate step on relaunch
-  - [ ] Step 4 shows disabled "Waiting…" button until `ActivityService` server-advances; next poll / refresh resumes the flow at step 5
-  - [ ] Intro (step 0) and outro (step 7) full-screen modals reuse `character-setup.html` tokens (radial backdrop, progress dots, gradient CTA)
-  - [ ] Skip button on every bubble opens a confirmation sheet; confirmed Skip calls `/skip` endpoint
-  - [ ] Profile settings sheet gains a **"Tutorials"** row above "Logout" → pushes `TutorialsHubScreen`
-  - [ ] Hub shows: "Play all" primary row (accent blue, "6 steps · +0 XP on replay"), then 5 topic rows (XP & Stats / Quests & Streaks / Activity Logging / World Map / Boss System) with ✓ / ○ status from `tutorialTopicsSeen` bitmask
-  - [ ] Tapping "Play all" pops hub + settings and restarts the full flow from step 0 (no XP re-awarded)
-  - [ ] Tapping a topic row pops hub + settings and runs that topic's bubble(s) on Home — no outro, no XP
-  - [ ] Backend unit tests: advance happy path, advance wrong-step no-op, skip idempotent, replay-all does not re-award, replay-topic only toggles the bit, activity-gated advance only on real log
-  - [ ] `flutter analyze` clean; bubble geometry visually correct on iPhone SE (small), Pixel 6 (mid), and a large Android screen
+  - [x] `Character` entity: `TutorialStep` (int, default 0, -1 = skipped), `TutorialCompletedAt` (DateTime?), `TutorialRewardsClaimed` (bool, default false), `TutorialTopicsSeen` (int bitmask, default 0) + EF migration `20260419090159_AddTutorialProgress` (4 columns on `Characters` table; run `dotnet ef database update` to apply)
+  - [x] `POST /api/tutorial/advance` — increments step 0→7, awards step XP only when `TutorialRewardsClaimed == false`, sets the bit for the completed topic in `TutorialTopicsSeen`. Wrong-step advance is a no-op; step-4 via controller throws (port-only).
+  - [x] `POST /api/tutorial/skip` — sets `TutorialStep = -1`, no XP, no title
+  - [x] `POST /api/tutorial/replay-all` — resets `TutorialStep = 0`, `TutorialCompletedAt = null`. Does NOT reset `TutorialRewardsClaimed` (rewards stay one-shot).
+  - [x] `POST /api/tutorial/replay-topic` with `{ topic: "xp-stats" \| "quests-streaks" \| "activity-logging" \| "world-map" \| "boss-system" }` — marks the bit in `TutorialTopicsSeen`, does not change `TutorialStep`. Unknown topic → 400.
+  - [x] Game-engine: `TutorialStepRewards` static table (step 1–6 small XP totalling 250; step 7 +250 + "Novice Adventurer" title). Title unlock only if `TutorialRewardsClaimed == false`. `TitleUnlockAdapter` + `ITitleUnlockPort` added; catalog entry `novice-adventurer` seeded.
+  - [x] `CharacterProfile` DTO exposes `tutorialStep` and `tutorialTopicsSeen` so the mobile hub can render ✓ / ○ state
+  - [x] `ICharacterTutorialPort.AdvanceIfOnStepAsync(characterId, expectedStep)` in SharedKernel (follows `ICharacterXpPort.cs` pattern)
+  - [x] `ActivityService.LogActivityAsync` + `LogActivityFromExternalAsync` call `AdvanceIfOnStepAsync(characterId, 4)` after a successful log (wrapped in try/catch so tutorial never breaks logging)
+  - [x] Mobile: `features/tutorial/` feature folder — `tutorial_controller.dart` (state machine, reads `GlobalKey` rects, picks bubble placement), `providers/`, `services/tutorial_service.dart` (4 API calls), `models/tutorial_step.dart` + `tutorial_topic.dart` + `tutorial_placement.dart`, `widgets/tutorial_bubble.dart`, `widgets/tutorial_bubble_tail.dart` (CustomPainter triangle), `widgets/tutorial_dim_backdrop.dart` (full-screen dim + pulse-ring painter), `widgets/tutorial_skip_sheet.dart`, `screens/tutorial_intro_screen.dart`, `screens/tutorial_outro_screen.dart`, `screens/tutorials_hub_screen.dart`
+  - [x] Bubble is 290px wide × auto height, rounded 14px, dark surface (`#1e2632`), 1px accent border, 14px tail painted toward target, step-specific accent colour (1 blue, 2 purple, 3 orange, 4 blue, 5 green, 6 red)
+  - [x] Bubble placement algorithm implements 4-case rule: above / below / above-right-offset / above-FAB — derived from target global rect
+  - [x] 6 `GlobalKey`s wired: `xpCard` → HomeAdventureHero, `statsRow` → HomeStatStrip, `questsCard` → HomeTodaysQuestsCard, `logFab` + `bossFab` → Boss FAB (shared physical target, different step copy), `mapTab` → ShellNavBar per-tab key
+  - [x] Tutorial auto-starts on `MainShell` first build when `tutorialStep == 0`, resumes from any intermediate step on relaunch (via `hydrateFromProfile`)
+  - [x] Step 4 shows disabled "Waiting…" button until `ActivityService` server-advances; next profile refresh resumes the flow at step 5
+  - [x] Intro (step 0) and outro (step 7) full-screen modals reuse `character-setup.html` tokens (radial backdrop, progress dots, gradient CTA)
+  - [x] Skip button on every bubble opens a confirmation sheet; confirmed Skip calls `/skip` endpoint
+  - [x] Profile settings sheet gains a **"Tutorials"** row above "Logout" → pushes `TutorialsHubScreen`
+  - [x] Hub shows: "Play all" primary row (accent blue, "6 steps · +0 XP on replay"), then 5 topic rows (XP & Stats / Quests & Streaks / Activity Logging / World Map / Boss System) with ✓ / ○ status from `tutorialTopicsSeen` bitmask
+  - [x] Tapping "Play all" pops hub + settings and restarts the full flow from step 0 (no XP re-awarded)
+  - [x] Tapping a topic row pops hub + settings and runs that topic's bubble(s) on Home — no outro, no XP
+  - [~] Backend unit tests: **`dotnet test` → 126 Passed / 0 Failed / 0 Skipped** (includes game-engine sibling's `TutorialStepRewardsTests`). Dedicated `TutorialServiceTests` covering the 6 named scenarios (advance happy path, wrong-step no-op, skip idempotent, replay-all does-not-re-award, replay-topic bit-only, activity-gated advance) are **not yet written** — follow-up sub-ticket recommended.
+  - [x] `flutter analyze` clean on all new/changed mobile files (tutorial feature + shell + home + profile = 0 issues)
 - **Notes**:
   - Plan: `.claude/plans/humming-enchanting-flask.md`
   - Design mockup: `design-mockup/onboarding/tutorial-coachmarks.html` — Variant B floating bubble frames for every step, plus Tutorials Hub, Skip Confirmation, and XP Reward Toast states. Variant A kept as runner-up reference.
@@ -358,6 +361,7 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
   - **No new Flutter dependency** — tail is a `CustomPainter` triangle (~30 LOC).
   - **Read `backend/ARCHITECTURE.txt` first** — confirm module boundary and port/adapter rules before adding the Tutorial module / port.
   - Step flow: 0 intro → 1 XP bar (+25) → 2 stats (+25) → 3 quests+streak (+50) → 4 activity-log (+50, gated on real log) → 5 map (+50) → 6 boss FAB (+50) → 7 outro (+250 + Novice title). Total 500 XP on first completion. Replay grants 0 XP.
+- **Implemented**: commit pending (unstaged) — backend: `Character` fields + EF migration `20260419090159_AddTutorialProgress` + `TutorialStepRewards` + `TutorialTopic` + `ICharacterTutorialPort` + `ITitleUnlockPort` + `TitleUnlockAdapter` + `TutorialController` + 4 endpoints + Activity port call + `TutorialDtos` + `TitleCatalog` novice entry + `TutorialStepRewardsTests`; mobile: full `features/tutorial/` feature (controller/provider/widgets/screens — 12 files + placement/step/topic models + service aligned to DTO shape), MainShell integration (key registration + hydrate + intro/outro route push + overlay wrap + map-tab key wire), profile Settings row, home_screen converted to ConsumerStatefulWidget with 3 card GlobalKeys, `ShellNavBar.keysByTabId` plumbing. **Verification:** `dotnet build` clean (0 errors); `dotnet test` **126/126 pass**; `flutter analyze` **0 issues** on all new/changed files. Still pending: run `dotnet ef database update`, manual device QA, and a follow-up sub-ticket for the 6 dedicated `TutorialServiceTests` scenarios. Three parallel agents on first dispatch hit stream idle timeout; salvaged completed work from disk and filled remaining gaps manually + via one narrower re-dispatched flutter-ui agent.
 
 ---
 

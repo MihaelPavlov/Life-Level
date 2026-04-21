@@ -7,6 +7,7 @@ import '../auth/login_screen.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/screens/integrations_screen.dart';
+import '../tutorial/screens/tutorials_hub_screen.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'profile_overview_tab.dart';
@@ -336,6 +337,18 @@ class _SettingsSheet extends ConsumerWidget {
                 Navigator.push(
                   parentContext,
                   MaterialPageRoute(builder: (_) => const IntegrationsScreen()),
+                );
+              },
+            ),
+            const Divider(height: 1, indent: 20, endIndent: 20, color: kPBorder),
+            _SettingsTile(
+              icon: Icons.auto_stories_outlined,
+              label: 'Tutorials',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(builder: (_) => const TutorialsHubScreen()),
                 );
               },
             ),

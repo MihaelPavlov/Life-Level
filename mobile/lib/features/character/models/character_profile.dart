@@ -22,6 +22,14 @@ class CharacterProfile {
   final int availableStatPoints;
   final bool loginRewardAvailable;
   final GearBonusesDto? gearBonuses;
+  // ── Tutorial progress ──
+  /// 0 = not started (intro modal pending), 1–6 = step bubbles,
+  /// 7 = outro modal pending, -1 = skipped by user, 99 = fully completed.
+  final int tutorialStep;
+
+  /// Bitmask: bit 0 = xp-stats, bit 1 = quests-streaks, bit 2 = activity-logging,
+  /// bit 3 = world-map, bit 4 = boss-system.
+  final int tutorialTopicsSeen;
 
   const CharacterProfile({
     required this.username,
@@ -45,6 +53,8 @@ class CharacterProfile {
     required this.availableStatPoints,
     this.loginRewardAvailable = false,
     this.gearBonuses,
+    this.tutorialStep = 0,
+    this.tutorialTopicsSeen = 0,
   });
 
   factory CharacterProfile.fromJson(Map<String, dynamic> json) =>
@@ -73,6 +83,8 @@ class CharacterProfile {
             ? GearBonusesDto.fromJson(
                 json['gearBonuses'] as Map<String, dynamic>)
             : null,
+        tutorialStep: json['tutorialStep'] as int? ?? 0,
+        tutorialTopicsSeen: json['tutorialTopicsSeen'] as int? ?? 0,
       );
 
   double get xpProgress {

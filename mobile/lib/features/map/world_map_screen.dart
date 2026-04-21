@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/world_map_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
 import 'world_map_data.dart';
 import 'world_map_detail_sheet.dart';
@@ -16,9 +17,10 @@ import 'services/world_zone_service.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 class WorldMapScreen extends StatefulWidget {
-  const WorldMapScreen({super.key, this.onClose});
+  const WorldMapScreen({super.key, this.onClose, this.onZoneSelected});
 
   final VoidCallback? onClose;
+  final ValueChanged<ZonePick>? onZoneSelected;
 
   @override
   State<WorldMapScreen> createState() => _WorldMapScreenState();
@@ -128,6 +130,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _zones = layoutZones;
         _edges = edges;
@@ -157,6 +160,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         _lastKnownZoneId = activeZone.id;
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -226,9 +230,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   }
 
   void _handleEnterLocalMap(ZoneData zone) {
-    if (mounted) {
-      Navigator.pop(context, {'zoneId': zone.id, 'zoneName': zone.name});
-    }
+    if (!mounted) return;
+    widget.onZoneSelected?.call((zoneId: zone.id, zoneName: zone.name));
+    widget.onClose?.call();
   }
 
   void _showZoneSheet(ZoneData zone) {
@@ -258,6 +262,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           _handleEnterLocalMap(zone);
         };
       }
+    } else if (zone.isDestination) {
+      // Already traveling to this zone. Re-calling SetDestinationAsync would
+      // reset DistanceTraveledOnEdge to 0 on the backend — sheet shows
+      // progress bar only, no action button.
     } else if (isAdjacent && isForwardZone &&
         (zone.status == ZoneStatus.available ||
             // Allow revisiting completed zones only when NOT at a crossroads.

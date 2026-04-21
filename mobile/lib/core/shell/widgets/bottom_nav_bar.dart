@@ -6,11 +6,13 @@ class ShellNavBar extends StatelessWidget {
   final int currentIndex;
   final List<NavTab> navTabs;
   final ValueChanged<int> onTap;
+  final Map<String, GlobalKey>? keysByTabId;
   const ShellNavBar({
     super.key,
     required this.currentIndex,
     required this.navTabs,
     required this.onTap,
+    this.keysByTabId,
   });
 
   @override
@@ -30,6 +32,7 @@ class ShellNavBar extends StatelessWidget {
         children: [
           for (int i = 0; i < left.length; i++)
             ShellNavItem(
+              key: keysByTabId?[left[i].id],
               tab: left[i],
               active: currentIndex == i,
               onTap: () => onTap(i),
@@ -37,6 +40,7 @@ class ShellNavBar extends StatelessWidget {
           const Expanded(child: SizedBox()),
           for (int i = 0; i < right.length; i++)
             ShellNavItem(
+              key: keysByTabId?[right[i].id],
               tab: right[i],
               active: currentIndex == half + i,
               onTap: () => onTap(half + i),
