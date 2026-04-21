@@ -81,6 +81,7 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
 - **Follow-up**: Mirror `UserMapProgress.PendingDistanceKm` reserve-km banking onto `UserWorldProgress` so distance logged before setting a destination is not lost (needs entity field + EF migration). Out of scope for this ticket.
 - **Implemented**: commit pending — backend: `IWorldZoneDistancePort` added to SharedKernel, implemented by `WorldZoneService` (silent no-op when no destination), wired into `ActivityService.LogActivityAsync` and `LogActivityFromExternalAsync` when `DistanceKm > 0`; mobile: `log_activity_screen.dart` fires `WorldZoneRefreshNotifier.notify()` post-log; `world_map_models.dart` status mapping fixed so the blue-active glow stays on the source zone while traveling. Files: `ICharacterXpPort.cs`, `ActivityDtos.cs`, `ActivityService.cs`, `WorldZoneService.cs`, `WorldZoneModule.cs`, `log_activity_screen.dart`, `world_map_models.dart`, `world_map_screen.dart`.
 - **Implemented (second pass — progress bar & reset bug)**: commit pending — the earlier `world_map_models.dart` follow-up removed the `isDestination → ZoneStatus.active` mapping, which made the `zone.status == ZoneStatus.active && zone.isDestination` branch in `world_map_detail_sheet.dart:257` unreachable (the destination zone is `available + isDestination` during travel). Net effect: tapping the destination tile never rendered the progress bar; it fell through to the generic "Set as Destination →" button, and tapping that called `SetDestinationAsync` again — which **resets `DistanceTraveledOnEdge` to 0 on the backend** (`WorldZoneService.cs:163`), making the character appear to not move and the progress bar to read 0% on the next refresh. Fix: (1) `world_map_detail_sheet.dart` progress-bar branch condition relaxed from `active && isDestination` to just `isDestination` so it matches the real `available + isDestination` state during travel; (2) `world_map_screen.dart` `_showZoneSheet` gained an explicit `else if (zone.isDestination)` branch that leaves `enterCallback = null`, preventing the accidental re-set-destination reset. `flutter analyze` on the two changed files surfaces only pre-existing `withOpacity` / `prefer_const_*` hints (no new issues). Backend unchanged — all 11 `WorldZoneServiceTests` still pass.
+- **Implemented (third pass — full redesign per `design-mockup/map/zone-click-progress.html`)**: commit pending — follows plan at `.claude/plans/composed-waddling-island.md`. User reported "progress always 1% no matter where I am" and asked for the target mockup verbatim. Five-phase implementation: **Phase 0** added diagnostic `ILogger` calls in `WorldZoneService.AddDistanceAsync` (logs user/edge/incomingKm/oldKm/newKm/edgeKm + the three skip branches) and `ActivityService.LogActivityAsync`/`LogExternalActivityAsync` (logs raw incoming km + type) — user runs a real device scenario, reads the logs, and the root cause (unit bug / stale row / unrelated reset) identifies itself. **Phase 1** plumbed the active journey from screen to sheet as four nullable named params (`journeyDestinationName/Icon/KmTraveled/KmTotal` + derived `journeyProgress`), lifting `_currentEdge`, `_destinationZoneId`, `_kmTraveledOnEdge` into `_WorldMapScreenState` and populating them in `_load()`. **Phase 2** extended `_statusLabel` / `_statusColor` getters to return `"Traveling"` (orange) for `isDestination` and `"You Are Here"` (green) for `isCurrentZone && _hasActiveJourney`, falling through to the existing switch otherwise — preserves the no-journey default. **Phase 3** added a `{km.x} / {km.x} km` sub-label on the world-map canvas beneath the existing percent chip (new `kmTraveled/kmTotal` params on `WorldMapPainter`, rendered in `_drawTravelProgress`); also added a NaN/Inf guard on `edge.distanceKm` in `_load()` to prevent divide-by-zero on corrupt data. **Phase 4** replaced the thin inline progress bar on the destination sheet with a new prominent `_JourneyProgressCard` widget (percent, km traveled + km remaining + km total) and a permanently-disabled `🔒 Enter Zone at 100%` button (onPressed null — cannot re-fire SetDestinationAsync); stat chips hidden in this mode. **Phase 5** introduced `_YouAreHereCard` (green informational card) + `_JourneyDestSummary` (two-column `HEADING TO / PROGRESS` row showing destination name + icon + % + km remaining) + a green `Enter Local Map →` button for the source-zone sheet during an active journey; stat chips + description + requirements all hidden in this mode. **Critical non-regression:** when `!_hasActiveJourney`, every existing branch (stat chips, description, requirements, blue `Enter Zone →` / `Set as Destination →` buttons) renders exactly as before. Files changed: `WorldZoneService.cs` (logger constructor param + 4 log calls), `ActivityService.cs` (2 log calls), `world_map_screen.dart` (+3 state fields, journey computation in `_load`, 5 new sheet params, painter params, NaN/Inf guard), `world_map_detail_sheet.dart` (+5 constructor params, 3 helper getters, restructured body with 4 new conditional sections, 2 new button-row branches, 3 new helper widgets `_JourneyProgressCard` / `_YouAreHereCard` / `_JourneyDestSummary`, shared `_ProgressFootText`), `world_map_painter.dart` (+2 params, sub-label draw, shouldRepaint updated). `flutter analyze` on all 3 changed mobile files: zero new issues (62 pre-existing `withOpacity` / `prefer_const_*` hints preserved). Backend: module-level builds clean (both `LifeLevel.Modules.WorldZone.csproj` and `LifeLevel.Modules.Activity.csproj` report 0 errors); backend test run blocked by running API process locking DLLs — user must stop the running API and re-run `dotnet test` to confirm all 126 still pass. **Next step (user action):** (1) stop running API → `dotnet test` → expect 126/126 pass; (2) flash mobile → set destination on a known edge → log a 3 km running activity → tail backend logs for `WorldZone.AddDistance APPLY … incomingKm=3 oldKm=X newKm=X+3 edgeKm=Y` → this identifies the 1% root cause; (3) walk through Frame 1/2/3 on-device; (4) tick the Manual verification checkbox.
 
 ---
 
@@ -319,11 +320,12 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
 - **Priority**: low
 - **Phase**: P8
 - **Acceptance**:
-  - [ ] Decide target surface — recommended: tap on the Shields tile in `home_stat_strip.dart` opens a bottom sheet with shield count + "Use Shield" CTA, OR a dedicated streak detail screen reachable from the Profile tab
-  - [ ] "Use Shield" flow preserved from the old `HomeStreakCard` (calls existing streak service, consumes one shield, protects today)
-  - [ ] Longest-streak stat still surfaces somewhere (Profile activity summary is a candidate)
-  - [ ] `flutter analyze` clean on changed files
+  - [x] Decide target surface — recommended: tap on the Shields tile in `home_stat_strip.dart` opens a bottom sheet with shield count + "Use Shield" CTA, OR a dedicated streak detail screen reachable from the Profile tab _(picked: unified `StreakDetailSheet` reachable from both home streak strip, home header flame chip, and profile 🔥 Streak tile)_
+  - [x] "Use Shield" flow preserved from the old `HomeStreakCard` (calls existing streak service, consumes one shield, protects today) _(calls `ref.read(streakProvider.notifier).useShield()` — same API as before)_
+  - [x] Longest-streak stat still surfaces somewhere (Profile activity summary is a candidate) _(surfaced in the sheet header subtitle `"{current} days · longest {longest}"` + footer stats cell)_
+  - [x] `flutter analyze` clean on changed files
 - **Notes**: Follow-up from LL-030. The v3 mockup dropped the full `HomeStreakCard` — shield *count* moved to the stat strip and the 7-day grid compressed into `HomeStreakStrip`, but the original "Use Shield to protect streak" action button has no home. Current shield count read lives in `mobile/lib/features/home/cards/home_stat_strip.dart`. Pre-v3 implementation lived in the (now-deleted) `home_cards.dart` — check git history for the exact call if needed.
+- **Implemented**: commit pending — new `mobile/lib/features/streak/widgets/streak_detail_sheet.dart` contains a `StreakDetailSheet` + `showStreakDetailSheet(context)` helper. Body: (1) header with 🔥 + current/longest, (2) keep-alive hero card that flips between blue "Start your streak" (current=0), orange "Streak at risk · Xh Ym left" countdown (per-minute timer), green "Safe until midnight" (activity logged today), (3) next-milestone row with ladder [3, 7, 14, 30, 60, 100] and reward labels (day 7 = ×1.5 XP, day 30 = legendary cosmetic, day 100 = centurion title) + circular progress indicator, (4) shields card with count pill + Use Shield button (disabled when `shieldsAvailable == 0 || shieldUsedToday || current == 0`), (5) footer stats (total days active + last activity). Three tap surfaces wired: `HomeStreakStrip` (wrapped in `GestureDetector` in `mobile/lib/features/home/cards/home_streak_strip.dart`), `HomeStreakChip` (`onTap` passed at its call site in `mobile/lib/features/home/cards/home_header.dart`), profile 🔥 Streak tile (wrapped in `GestureDetector` in `mobile/lib/features/profile/profile_overview_tab.dart`). Also: `_Flame` in `home_streak_strip.dart` now shows "Start today" instead of "0" when `current == 0`. `flutter analyze` on the 3 streak-touched files: 0 issues; the 12 hints in `profile_overview_tab.dart` are all pre-existing `withOpacity` deprecations on untouched lines. Backend unchanged.
 
 ### LL-035 — First-time user tutorial (floating bubble coach marks + topic tutorials hub)
 - **Layer**: backend, mobile, game-engine
@@ -376,6 +378,96 @@ Each ticket is an `### LL-NNN — Title` heading with a consistent metadata bloc
   - [ ] Works alongside existing `LevelUpNotifier` listener in `main_shell.dart` — tap-to-replay should not double-fire if an organic level-up is already in-flight
   - [ ] `flutter analyze` clean
 - **Notes**: Follow-up from LL-030. v3 mockup dropped `HomePulsingLvBadge` (pulsing LV badge on the avatar that opened the overlay). If we still want re-entry to the recap, add it back via the avatar ring — not the pulsing badge, which clashed with the v3 compact-header aesthetic.
+
+---
+
+### LL-036 — Streak at-risk push notification (20h-idle)
+- **Layer**: backend
+- **Agent**: backend
+- **Priority**: medium
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] New `IHostedService` `StreakAtRiskReminderJob` in Notifications module, modeled on `backend/src/LifeLevel.Api/Application/BackgroundJobs/DailyResetJob.cs`
+  - [ ] Hourly poll: `Streaks WHERE Current > 0 AND LastActivityDate < @today AND NOT ShieldUsedToday`; at user local hour 20–22 fire `INotificationPort.SendToUserAsync(category: streakAtRisk, …)`
+  - [ ] Idempotency: do not re-fire same user + same local date
+  - [ ] Mobile `NotificationsService` + `DeepLinkNotifier` handle a `streakAtRisk` deep-link that opens home and auto-presents `StreakDetailSheet`
+  - [ ] Unit tests for the poll query + idempotency guard
+- **Notes**: Deferred follow-up from LL-033 streak detail sheet. FCM / `INotificationPort` already wired via LL-013a. The sheet's in-app countdown is the open-state UX; this is the closed-app counterpart. **Prerequisite decision**: (a) add `TimeZoneId: string` to `User` and a Settings UI, or (b) ship "20h UTC" v1. (b) is 1–2 days; (a) is 3–4 days.
+
+---
+
+### LL-037 — StreakMilestone entity + backend-driven ladder (display-only)
+- **Layer**: backend, mobile
+- **Agent**: backend, flutter-ui
+- **Priority**: low
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] New `StreakMilestone` entity (`Day: int`, `RewardLabel: string`, `Icon: string`), seeded with today's ladder `[3, 7, 14, 30, 60, 100]` + their labels
+  - [ ] `StreakDto` gains `NextMilestone: { day, remaining, label, icon }` computed in `StreakService.GetDtoAsync`
+  - [ ] `_MilestoneRow` in `streak_detail_sheet.dart` reads from DTO instead of the hard-coded `_ladder` constant
+  - [ ] `flutter analyze` clean; existing sheet behavior preserved
+- **Notes**: Deferred from LL-033. Promotes hard-coded constants in `mobile/lib/features/streak/widgets/streak_detail_sheet.dart:_MilestoneRow._ladder` + `_rewardLabel` switch to a backend-configurable table. Display-only — does NOT grant actual rewards on milestone hit. That's LL-038.
+
+---
+
+### LL-038 — Milestone-reached rewards (grant XP bonus / title / item on hit)
+- **Layer**: backend, mobile, game-engine
+- **Agent**: backend, flutter-ui, game-engine
+- **Priority**: low
+- **Phase**: P7
+- **Acceptance**:
+  - [ ] Game-design decision: what each milestone actually grants (×1.5 XP window duration, which title at day 100, which cosmetic at day 30, etc.)
+  - [ ] `StreakMilestone` entity extended with `RewardKind` (XpBonus / Title / Item / Cosmetic) + `RewardValue: string`
+  - [ ] New `StreakMilestoneReachedEvent` fires in `StreakService.RecordActivityDayAsync` when `oldCurrent < milestone.Day <= newCurrent`
+  - [ ] Handlers in respective modules (Title, Items, a new XP-bonus-window service) react to the event
+  - [ ] Mobile shows a level-up-style celebration modal reusing the `LevelUpNotifier` broadcast pattern (memory `flutter_global_event_pattern.md`)
+  - [ ] Unit tests cover the fire-on-cross-threshold logic (boundary cases: break + restart crosses day 3 again → no double-grant)
+- **Notes**: Deferred from LL-033. Depends on LL-037 (the entity it extends). Biggest unknown is whether XP bonuses should be time-windowed (×1.5 for 7 days) — if so, needs a separate `TimedXpMultiplier` mechanic in the Character module that XP awards consult. See `docs/obsidian/02 - Game Design/Streak.md` for design context.
+
+---
+
+### LL-039 — Streak history calendar heat-grid
+- **Layer**: backend, mobile
+- **Agent**: backend, flutter-ui
+- **Priority**: low
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] `GET /api/streak/history?weeks=12` returns `List<{date, active: bool, shieldUsed: bool}>` — derived from Activities table + new shield-use dates source
+  - [ ] New `ShieldUsage { UserId, Date }` table (lightweight) OR JSON column on `Streaks` to keep track of which *dates* shields were spent (current entity only has `ShieldUsedToday: bool` + `ShieldsUsed: int` counter, loses dates)
+  - [ ] New `_StreakCalendar` widget under the footer in `streak_detail_sheet.dart` — 7×12 grid of dots colored by `HomeStreakDotState` palette (reuse `home_streak_dot.dart`)
+  - [ ] Sheet switches from content-sized to `DraggableScrollableSheet` to accommodate the added height
+  - [ ] Tap a dot → tiny tooltip with that day's activity summary (optional polish)
+- **Notes**: Deferred from LL-033. Visually rich GitHub-contributions-style view. Two backend options: (a) derive from `Activities` table (no schema change, fastest); (b) dedicated `StreakDay` denormalized log (cleaner for future calendar features). Ship (a) first. Shield-date tracking is the main new data to add.
+
+---
+
+### LL-040 — Shield-accrual countdown in streak sheet
+- **Layer**: backend, mobile
+- **Agent**: backend, flutter-ui
+- **Priority**: low
+- **Phase**: P8
+- **Acceptance**:
+  - [ ] Confirm shield-accrual formula in `StreakService` (today's static copy assumes "every 7 active days" — verify)
+  - [ ] `StreakDto` gains `DaysToNextShield: int`
+  - [ ] `_ShieldsCard` in `streak_detail_sheet.dart` swaps static "Next shield earned every 7 active days" copy for live "N days to next shield" + mini circular progress ring (reuse pattern from `_MilestoneRow`)
+  - [ ] `flutter analyze` clean
+- **Notes**: Deferred from LL-033. Small polish, ~2–3 hours. First step is a 15-minute code read of `StreakService` to confirm the actual accrual rule (especially when shields are consumed — does the counter reset, or is it always `TotalDaysActive % 7`?).
+
+---
+
+### LL-041 — Broken-streak recovery modal
+- **Layer**: backend, mobile
+- **Agent**: backend, flutter-ui
+- **Priority**: medium
+- **Phase**: P2 tail
+- **Acceptance**:
+  - [ ] `Streak` entity gains `LastStreakBrokenAt: DateTime?`, `LastBrokenFromLength: int?` (set inside the break branches of `StreakService.RecordActivityDayAsync` and `DailyResetJob.CheckAndBreakExpiredStreaksAsync`)
+  - [ ] Both fields exposed on `StreakDto`
+  - [ ] Mobile `StreakBrokenNotifier` static broadcast stream (mirror of `LevelUpNotifier` — see memory `flutter_global_event_pattern.md`). Fires when a freshly-loaded streak has a `LastStreakBrokenAt` newer than the last-seen timestamp (locally cached)
+  - [ ] `MainShell` listens and renders full-screen recovery modal with motivational copy tiered by broken-from length (0–7 gentle, 8–30 empathetic, 30+ heartfelt)
+  - [ ] Modal has two CTAs: "Log an activity" (push log-activity route) and "Dismiss"
+  - [ ] Shown at most once per broken event (track `lastSeenStreakBrokenAt` in local prefs)
+- **Notes**: Deferred from LL-033. CLAUDE.md explicitly lists this as part of the streak system. Backend event `StreakBrokenEvent` already exists and fires `StreakBrokenNotificationHandler` for push (LL-013a) — no new backend event needed, only the two new fields on `Streak` + the mobile modal.
 
 ---
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/session/invalidate_user_providers.dart';
 
 class QuestErrorState extends StatelessWidget {
   final String message;
@@ -30,12 +31,26 @@ class QuestErrorState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text(
-                'Try Again',
-                style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w600),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: onRetry,
+                  child: const Text(
+                    'Try Again',
+                    style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => performLogout(context),
+                  icon: const Icon(Icons.logout, size: 16, color: AppColors.red),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

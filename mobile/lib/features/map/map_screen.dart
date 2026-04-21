@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/map_tab_notifier.dart';
 import '../../core/services/world_map_notifier.dart';
+import '../../core/widgets/api_error_state.dart';
 import '../home/providers/map_journey_provider.dart';
 import 'services/boss_service.dart';
 import 'services/world_zone_service.dart';
@@ -447,33 +448,10 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
       return const Center(child: CircularProgressIndicator(color: AppColors.blue));
     }
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🗺️', style: TextStyle(fontSize: 40)),
-              const SizedBox(height: 12),
-              const Text('Could not load the map',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              Text(_error!, textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-                ),
-                onPressed: _loadMap,
-                child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-        ),
+      return ApiErrorState(
+        title: 'Could not load the map',
+        message: _error!,
+        onRetry: _loadMap,
       );
     }
 

@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../character/models/character_profile.dart';
 import '../../notifications/providers/notification_list_provider.dart';
 import '../../notifications/widgets/notifications_sheet.dart';
+import '../../streak/widgets/streak_detail_sheet.dart';
 import '../widgets/home_avatar_ring.dart';
 import '../widgets/home_bell_button.dart';
 import '../widgets/home_streak_chip.dart';
@@ -57,7 +58,10 @@ class HomeHeader extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                HomeStreakChip(streakDays: p?.currentStreak ?? 0),
+                HomeStreakChip(
+                  streakDays: p?.currentStreak ?? 0,
+                  onTap: () => showStreakDetailSheet(context),
+                ),
               ],
             ),
           ),

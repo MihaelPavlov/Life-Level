@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/world_map_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
+import '../../core/widgets/api_error_state.dart';
 import 'world_map_data.dart';
 import 'world_map_detail_sheet.dart';
 import 'world_map_layout.dart';
@@ -43,6 +44,13 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   Offset? _playerOnEdge;   // null = player is at zone, not travelling
   Offset? _playerAnchor;   // source zone centre for the progress line
   double  _travelProgress = 0.0;
+
+  // Current active journey (non-null only when traveling). Populated by _load()
+  // and consumed by _showZoneSheet so the detail sheet can render
+  // "Traveling" / "You Are Here" layouts without re-querying.
+  WorldZoneEdgeModel? _currentEdge;
+  String? _destinationZoneId;
+  double _kmTraveledOnEdge = 0.0;
 
   bool _loading = true;
   String? _error;
@@ -109,6 +117,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       Offset? playerOnEdge;
       Offset? playerAnchor;
       double  travelProgress = 0.0;
+      WorldZoneEdgeModel? currentEdge;
+      String? destinationZoneId;
+      double kmTraveled = 0.0;
 
       final prog = data.userProgress;
       if (prog.destinationZoneId != null && prog.currentEdgeId != null) {
@@ -118,7 +129,11 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         );
         final fromIdx = layoutZones.indexWhere((z) => z.id == prog.currentZoneId);
         final toIdx   = layoutZones.indexWhere((z) => z.id == prog.destinationZoneId);
-        if (edge != null && fromIdx != -1 && toIdx != -1 && edge.distanceKm > 0) {
+        final edgeOk = edge != null
+            && edge.distanceKm > 0
+            && !edge.distanceKm.isNaN
+            && !edge.distanceKm.isInfinite;
+        if (edgeOk && fromIdx != -1 && toIdx != -1) {
           final frac = (prog.distanceTraveledOnEdge / edge.distanceKm).clamp(0.0, 1.0);
           final centres = layoutZones.map(WorldMapLayout.centreFor).toList();
           // Use a minimum visual fraction so the character is always visibly
@@ -127,6 +142,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           playerOnEdge   = Offset.lerp(centres[fromIdx], centres[toIdx], visualFrac)!;
           playerAnchor   = centres[fromIdx];
           travelProgress = frac;
+          currentEdge       = edge;
+          destinationZoneId = prog.destinationZoneId;
+          kmTraveled        = prog.distanceTraveledOnEdge;
         }
       }
 
@@ -139,6 +157,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         _playerOnEdge   = playerOnEdge;
         _playerAnchor   = playerAnchor;
         _travelProgress = travelProgress;
+        _currentEdge        = currentEdge;
+        _destinationZoneId  = destinationZoneId;
+        _kmTraveledOnEdge   = kmTraveled;
         _loading = false;
       });
 
@@ -278,6 +299,18 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       };
     }
 
+    // Resolve the active journey (destination zone metadata + km) so the sheet
+    // can render the "Traveling" / "You Are Here" layouts. Non-null only when
+    // there is an active destination and a valid edge.
+    final destinationZone = _destinationZoneId == null
+        ? null
+        : _zones.cast<ZoneData?>().firstWhere(
+            (z) => z!.id == _destinationZoneId,
+            orElse: () => null,
+          );
+    final edgeKm = _currentEdge?.distanceKm;
+    final hasJourney = destinationZone != null && edgeKm != null && edgeKm > 0;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -288,6 +321,11 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         isAdjacentToCurrentZone: isAdjacent,
         travelProgress: zone.isDestination ? _travelProgress : null,
         onEnter: enterCallback,
+        journeyDestinationName: hasJourney ? destinationZone.name : null,
+        journeyDestinationIcon: hasJourney ? destinationZone.icon : null,
+        journeyKmTraveled: hasJourney ? _kmTraveledOnEdge : null,
+        journeyKmTotal: hasJourney ? edgeKm : null,
+        journeyProgress: hasJourney ? _travelProgress : null,
       ),
     );
   }
@@ -385,52 +423,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
             ),
           )
         else if (_error != null)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('⚠️', style: TextStyle(fontSize: 32)),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Failed to load world map',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _error!,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _load,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.blue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
+          ApiErrorState(
+            title: 'Failed to load world map',
+            message: _error!,
+            onRetry: _load,
           )
         else ...[
           // ── scrollable map canvas ───────────────────────────────────────────
@@ -453,6 +449,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         playerOnEdge: _playerOnEdge,
                         playerAnchor: _playerAnchor,
                         travelProgress: _travelProgress,
+                        kmTraveled: _currentEdge == null ? null : _kmTraveledOnEdge,
+                        kmTotal: _currentEdge?.distanceKm,
                       ),
                     ),
                   ),

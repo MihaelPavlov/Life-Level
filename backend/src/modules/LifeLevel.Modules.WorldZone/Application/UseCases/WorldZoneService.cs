@@ -1,6 +1,8 @@
 using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using WorldEntity = LifeLevel.Modules.WorldZone.Domain.Entities.World;
 using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
@@ -10,7 +12,7 @@ using UserZoneUnlockEntity = LifeLevel.Modules.WorldZone.Domain.Entities.UserZon
 
 namespace LifeLevel.Modules.WorldZone.Application.UseCases;
 
-public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, ICharacterLevelReadPort characterLevel, IMapNodeCountPort mapNodeCount, IMapNodeCompletedCountPort mapNodeCompletedCount)
+public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, ICharacterLevelReadPort characterLevel, IMapNodeCountPort mapNodeCount, IMapNodeCompletedCountPort mapNodeCompletedCount, ILogger<WorldZoneService>? logger = null)
     : IWorldZoneDistancePort
 {
     public async Task<WorldFullResponse> GetFullWorldAsync(Guid userId)
@@ -168,10 +170,20 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
 
     public async Task AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
     {
-        if (km <= 0) return;
+        var log = logger ?? NullLogger<WorldZoneService>.Instance;
+
+        if (km <= 0)
+        {
+            log.LogInformation("WorldZone.AddDistance SKIP user={UserId} incomingKm={Km} reason=non-positive", userId, km);
+            return;
+        }
 
         var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive, ct);
-        if (activeWorld == null) return;
+        if (activeWorld == null)
+        {
+            log.LogInformation("WorldZone.AddDistance SKIP user={UserId} incomingKm={Km} reason=no-active-world", userId, km);
+            return;
+        }
 
         var progress = await db.Set<UserWorldProgressEntity>()
             .Include(p => p.UnlockedZones)
@@ -181,12 +193,20 @@ public class WorldZoneService(DbContext db, ICharacterXpPort characterXp, IChara
         // Silent no-op when the user isn't traveling — activities shouldn't fail just
         // because no destination is set.
         if (progress.CurrentEdgeId == null || progress.DestinationZoneId == null)
+        {
+            log.LogInformation("WorldZone.AddDistance SKIP user={UserId} incomingKm={Km} reason=no-destination currentEdgeId={EdgeId} destinationZoneId={DestId}",
+                userId, km, progress.CurrentEdgeId, progress.DestinationZoneId);
             return;
+        }
 
         var edge = await db.Set<WorldZoneEdgeEntity>().FindAsync([progress.CurrentEdgeId], ct)
             ?? throw new InvalidOperationException("Edge not found.");
 
+        var oldDist = progress.DistanceTraveledOnEdge;
         progress.DistanceTraveledOnEdge += km;
+        log.LogInformation(
+            "WorldZone.AddDistance APPLY user={UserId} edge={EdgeId} incomingKm={Km} oldKm={OldKm} newKm={NewKm} edgeKm={EdgeKm}",
+            userId, progress.CurrentEdgeId, km, oldDist, progress.DistanceTraveledOnEdge, edge.DistanceKm);
         WorldZoneEntity? discoveredZone = null;
 
         if (progress.DistanceTraveledOnEdge >= edge.DistanceKm)

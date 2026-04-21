@@ -324,7 +324,11 @@
       "PowerShell(Start-Process \"http://127.0.0.1:4040\")",
       "PowerShell(Start-Process \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\docs\\\\board.md\")",
       "PowerShell(Start-Process \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\design-mockup\\\\project-board.html\")",
-      "PowerShell(Start-Sleep -Milliseconds 800; Start-Process \"http://127.0.0.1:8765/design-mockup/project-board.html\")"
+      "PowerShell(Start-Sleep -Milliseconds 800; Start-Process \"http://127.0.0.1:8765/design-mockup/project-board.html\")",
+      "PowerShell(try { $r = Invoke-WebRequest \"http://127.0.0.1:5128/api/health\" -TimeoutSec 3 -UseBasicParsing; \"UP: $\\($r.StatusCode\\)\" } catch { \"DOWN: $\\($_.Exception.Message\\)\" }; \"NGROK TUNNEL:\"; try { \\(Invoke-RestMethod http://127.0.0.1:4040/api/tunnels -TimeoutSec 3\\).tunnels | ForEach-Object { $_.public_url } } catch { \"ngrok api down\" })",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" devices)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" -s euguw86hxst4qsqw shell pm clear com.example.life_level)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" -s euguw86hxst4qsqw install -r \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\mobile\\\\build\\\\app\\\\outputs\\\\flutter-apk\\\\app-debug.apk\")"
     ]
   }
 }

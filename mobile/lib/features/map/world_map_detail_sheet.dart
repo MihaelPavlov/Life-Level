@@ -14,6 +14,11 @@ class WorldMapDetailSheet extends StatelessWidget {
     this.onEnter,
     this.isAdjacentToCurrentZone = true,
     this.travelProgress,
+    this.journeyDestinationName,
+    this.journeyDestinationIcon,
+    this.journeyKmTraveled,
+    this.journeyKmTotal,
+    this.journeyProgress,
   });
 
   final ZoneData zone;
@@ -22,10 +27,34 @@ class WorldMapDetailSheet extends StatelessWidget {
   final bool isAdjacentToCurrentZone;
   final double? travelProgress;
 
+  // Active-journey context (non-null only when a journey is in flight).
+  // Used by the destination-tapped progress card and the source-zone
+  // "You Are Here" summary row.
+  final String? journeyDestinationName;
+  final String? journeyDestinationIcon;
+  final double? journeyKmTraveled;
+  final double? journeyKmTotal;
+  final double? journeyProgress;
+
+  bool get _hasActiveJourney =>
+      journeyDestinationName != null && journeyKmTotal != null && journeyKmTotal! > 0;
+
+  // ── travel-mode layout gates ─────────────────────────────────────────────
+  // Destination-during-travel: the user tapped the zone they're traveling to.
+  bool get _isDestinationTravel => zone.isDestination && _hasActiveJourney;
+  // Source-during-travel: the user tapped the zone they're currently standing
+  // in while a separate journey is in flight.
+  bool get _isSourceTravel =>
+      zone.status == ZoneStatus.active && !zone.isDestination && _hasActiveJourney;
+
   // ── status display ───────────────────────────────────────────────────────────
 
   String get _statusLabel {
-    if (zone.status == ZoneStatus.active && zone.isDestination) return 'Traveling';
+    // Traveling-to-this-zone takes priority over the raw zone status.
+    if (zone.isDestination) return 'Traveling';
+    // Current zone while a journey is in flight — "You Are Here" (green)
+    // instead of the generic "In Progress" blue pill.
+    if (zone.status == ZoneStatus.active && _hasActiveJourney) return 'You Are Here';
     switch (zone.status) {
       case ZoneStatus.completed: return 'Completed';
       case ZoneStatus.active:    return 'In Progress';
@@ -35,7 +64,8 @@ class WorldMapDetailSheet extends StatelessWidget {
   }
 
   Color get _statusColor {
-    if (zone.status == ZoneStatus.active && zone.isDestination) return AppColors.orange;
+    if (zone.isDestination) return AppColors.orange;
+    if (zone.status == ZoneStatus.active && _hasActiveJourney) return AppColors.green;
     switch (zone.status) {
       case ZoneStatus.completed: return AppColors.green;
       case ZoneStatus.active:    return AppColors.blue;
@@ -132,8 +162,10 @@ class WorldMapDetailSheet extends StatelessWidget {
                 ],
               ),
 
-              // Stat chips (non-crossroads only)
+              // Stat chips (non-crossroads, non-travel-mode only)
               if (!zone.isCrossroads &&
+                  !_isDestinationTravel &&
+                  !_isSourceTravel &&
                   zone.nodeCount != null &&
                   zone.totalXp != null &&
                   zone.distanceKm != null) ...[
@@ -154,8 +186,8 @@ class WorldMapDetailSheet extends StatelessWidget {
                 ),
               ],
 
-              // Description
-              if (zone.description != null) ...[
+              // Description (hidden in source-travel mode — Frame 3 has no description)
+              if (!_isSourceTravel && zone.description != null) ...[
                 const SizedBox(height: 14),
                 Text(
                   zone.description!,
@@ -167,29 +199,76 @@ class WorldMapDetailSheet extends StatelessWidget {
                 ),
               ],
 
-              // Requirements
-              const SizedBox(height: 16),
-              const Text(
-                'REQUIREMENTS',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
+              // Your Journey (destination-travel mode only)
+              if (_isDestinationTravel) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'YOUR JOURNEY',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _RequirementRow(
-                label: 'Level ${zone.levelRequirement}+',
-                met: _meetsLevelReq,
-              ),
-              if (zone.isCrossroads) ...[
-                const SizedBox(height: 6),
-                const _RequirementRow(
-                  label: 'Branching point — no entry needed',
-                  met: true,
-                  isNote: true,
+                const SizedBox(height: 8),
+                _JourneyProgressCard(
+                  destinationName: journeyDestinationName!,
+                  progress: journeyProgress ?? 0.0,
+                  kmTraveled: journeyKmTraveled ?? 0.0,
+                  kmTotal: journeyKmTotal!,
                 ),
+              ],
+
+              // You Are Here + Current Journey (source-travel mode only)
+              if (_isSourceTravel) ...[
+                const SizedBox(height: 16),
+                _YouAreHereCard(),
+                const SizedBox(height: 14),
+                const Text(
+                  'CURRENT JOURNEY',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _JourneyDestSummary(
+                  destinationName: journeyDestinationName!,
+                  destinationIcon: journeyDestinationIcon ?? '🏁',
+                  progress: journeyProgress ?? 0.0,
+                  kmRemaining: (journeyKmTotal! - (journeyKmTraveled ?? 0.0))
+                      .clamp(0.0, journeyKmTotal!),
+                ),
+              ],
+
+              // Requirements (hidden in source-travel mode)
+              if (!_isSourceTravel) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'REQUIREMENTS',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _RequirementRow(
+                  label: 'Level ${zone.levelRequirement}+',
+                  met: _meetsLevelReq,
+                ),
+                if (zone.isCrossroads) ...[
+                  const SizedBox(height: 6),
+                  const _RequirementRow(
+                    label: 'Branching point — no entry needed',
+                    met: true,
+                    isNote: true,
+                  ),
+                ],
               ],
 
               // Buttons
@@ -254,69 +333,48 @@ class WorldMapDetailSheet extends StatelessWidget {
                           ),
                         ),
                       )
-                    else if (zone.isDestination)
+                    else if (_isDestinationTravel)
+                      // Permanently disabled during travel. Auto-arrive flips
+                      // state before mobile ever sees 100%, so the enabled
+                      // counterpart is unreachable — treat this as progress
+                      // copy only. Crucially, onPressed stays null so a tap
+                      // cannot re-call SetDestinationAsync (would reset km).
                       Expanded(
                         flex: 2,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppColors.orange.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.orange.withOpacity(0.3)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.route, color: AppColors.orange, size: 16),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: LinearProgressIndicator(
-                                        value: travelProgress ?? 0,
-                                        backgroundColor: AppColors.orange.withOpacity(0.15),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation(AppColors.orange),
-                                        minHeight: 6,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    '${((travelProgress ?? 0) * 100).round()}%',
-                                    style: const TextStyle(
-                                      color: AppColors.orange,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (onEnter != null) ...[
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: onEnter,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.blue,
-                                    foregroundColor: Colors.white,
-                                    elevation: 4,
-                                    shadowColor: AppColors.blue.withOpacity(0.35),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                  ),
-                                  child: const Text('Enter Zone →',
-                                      style: TextStyle(
-                                          fontSize: 14, fontWeight: FontWeight.w600)),
-                                ),
-                              ),
-                            ],
-                          ],
+                        child: ElevatedButton(
+                          onPressed: null,
+                          style: ElevatedButton.styleFrom(
+                            disabledBackgroundColor: const Color(0xFF2a3340),
+                            disabledForegroundColor: AppColors.textSecondary,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text('🔒 Enter Zone at 100%',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        ),
+                      )
+                    else if (_isSourceTravel)
+                      // Source zone during an active journey — green "Enter
+                      // Local Map" CTA (Frame 3 of the zone-click-progress
+                      // mockup). Reuses the same onEnter callback as the
+                      // default active-zone path below.
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: onEnter,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.green,
+                            foregroundColor: Colors.white,
+                            elevation: 4,
+                            shadowColor: AppColors.green.withOpacity(0.35),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text('Enter Local Map →',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                         ),
                       )
                     else if (zone.status == ZoneStatus.active && !zone.isDestination)
@@ -652,6 +710,252 @@ class _RequirementRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Travel-mode helper widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Prominent progress card shown on the destination-zone sheet while traveling.
+/// Frame 2 of design-mockup/map/zone-click-progress.html.
+class _JourneyProgressCard extends StatelessWidget {
+  const _JourneyProgressCard({
+    required this.destinationName,
+    required this.progress,
+    required this.kmTraveled,
+    required this.kmTotal,
+  });
+
+  final String destinationName;
+  final double progress;
+  final double kmTraveled;
+  final double kmTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (progress.clamp(0.0, 1.0) * 100).round();
+    final remaining = (kmTotal - kmTraveled).clamp(0.0, kmTotal);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.orange.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.orange.withOpacity(0.28), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🚶‍♂️', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'On the road to $destinationName',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                '$pct%',
+                style: const TextStyle(
+                  color: AppColors.orange,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              backgroundColor: AppColors.orange.withOpacity(0.15),
+              valueColor: const AlwaysStoppedAnimation(AppColors.orange),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _ProgressFootText(
+                primary: '${kmTraveled.toStringAsFixed(1)} km',
+                secondary: ' traveled',
+              ),
+              _ProgressFootText(
+                primary: '${remaining.toStringAsFixed(1)} km',
+                secondary: ' remaining · of ${kmTotal.toStringAsFixed(0)} km',
+                alignEnd: true,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressFootText extends StatelessWidget {
+  const _ProgressFootText({
+    required this.primary,
+    required this.secondary,
+    this.alignEnd = false,
+  });
+
+  final String primary;
+  final String secondary;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: RichText(
+        textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+        overflow: TextOverflow.ellipsis,
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: primary,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: secondary,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Green informational card on the source-zone sheet while a separate journey
+/// is in flight. Frame 3 of design-mockup/map/zone-click-progress.html.
+class _YouAreHereCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.green.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.green.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          const Text('📍', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              "You left this zone — the world is behind you. Tap Enter Local Map to explore this zone's nodes.",
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Two-column summary row on the source-zone sheet: left shows the
+/// destination the user is heading to, right shows progress + km remaining.
+/// Frame 3 of design-mockup/map/zone-click-progress.html.
+class _JourneyDestSummary extends StatelessWidget {
+  const _JourneyDestSummary({
+    required this.destinationName,
+    required this.destinationIcon,
+    required this.progress,
+    required this.kmRemaining,
+  });
+
+  final String destinationName;
+  final String destinationIcon;
+  final double progress;
+  final double kmRemaining;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (progress.clamp(0.0, 1.0) * 100).round();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'HEADING TO',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$destinationIcon $destinationName',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text(
+                'PROGRESS',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$pct% · ${kmRemaining.toStringAsFixed(1)} km left',
+                style: const TextStyle(
+                  color: AppColors.orange,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

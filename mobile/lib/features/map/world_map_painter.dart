@@ -17,6 +17,8 @@ class WorldMapPainter extends CustomPainter {
     this.playerOnEdge,
     this.playerAnchor,
     this.travelProgress = 0.0,
+    this.kmTraveled,
+    this.kmTotal,
   });
 
   final List<ZoneData> zones;
@@ -26,6 +28,8 @@ class WorldMapPainter extends CustomPainter {
   final Offset? playerOnEdge;
   final Offset? playerAnchor;
   final double travelProgress;
+  final double? kmTraveled;
+  final double? kmTotal;
 
   // Cache id → index lookup
   late final Map<String, int> _idxById = {
@@ -215,6 +219,27 @@ class WorldMapPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, mid.translate(-tp.width / 2 - 14, -tp.height / 2));
+
+      // Sub-label: "X.X / Y km" below the percentage chip (when values are known).
+      final km = kmTraveled;
+      final tot = kmTotal;
+      if (km != null && tot != null && tot > 0) {
+        final kmText = '${km.toStringAsFixed(1)} / ${tot.toStringAsFixed(0)} km';
+        final kmTp = TextPainter(
+          text: TextSpan(
+            text: kmText,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              shadows: [Shadow(color: Colors.black.withOpacity(0.8), blurRadius: 4)],
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        // Sit just under the percent label (tp.height + 2px gap).
+        kmTp.paint(canvas, mid.translate(-kmTp.width / 2 - 14, -kmTp.height / 2 + tp.height + 2));
+      }
     }
 
     // Always draw player character at current position
@@ -438,6 +463,8 @@ class WorldMapPainter extends CustomPainter {
       old.playerOnEdge != playerOnEdge ||
       old.playerAnchor != playerAnchor ||
       old.travelProgress != travelProgress ||
+      old.kmTraveled != kmTraveled ||
+      old.kmTotal != kmTotal ||
       old.zones != zones ||
       old.centres != centres;
 }

@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
+import '../boss/providers/boss_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../quests/providers/quest_provider.dart';
 import '../streak/providers/streak_provider.dart';
@@ -164,6 +165,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       ref.invalidate(weeklyQuestsProvider);
       ref.invalidate(streakProvider);
       ref.invalidate(mapJourneyProvider);
+      ref.invalidate(bossListProvider);
 
       WorldZoneRefreshNotifier.notify();
 

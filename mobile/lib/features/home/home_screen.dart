@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../activity/providers/activity_provider.dart';
+import '../boss/providers/boss_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
 import '../tutorial/providers/tutorial_provider.dart';
@@ -145,6 +146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(mapJourneyProvider);
     ref.invalidate(characterProfileProvider);
     ref.invalidate(activityHistoryProvider);
+    ref.invalidate(bossListProvider);
 
     if (!context.mounted) return;
     final msg = imported > 0

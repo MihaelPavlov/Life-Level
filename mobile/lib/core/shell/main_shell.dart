@@ -25,7 +25,6 @@ import '../services/map_tab_notifier.dart';
 import '../services/nav_tab_notifier.dart';
 import '../services/world_map_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
-import '../../features/home/providers/map_journey_provider.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
@@ -624,7 +623,7 @@ class _MainShellState extends ConsumerState<MainShell>
                     setState(() { _tabIndex = i; _worldOpen = false; _titlesOpen = false; _bossOpen = false; });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
-                      ref.invalidate(mapJourneyProvider);
+                      invalidateUserScopedProviders(ref);
                     }
                     if (_navIds[i] == 'map') {
                       MapTabNotifier.notify();

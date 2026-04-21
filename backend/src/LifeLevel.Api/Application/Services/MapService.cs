@@ -9,13 +9,19 @@ using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.Modules.Map.Domain.Enums;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 // Type alias to avoid clash with namespace segment
 using CrossroadsEntity = LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads;
 
 namespace LifeLevel.Api.Application.Services;
 
-public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDistancePort
+public class MapService(
+    AppDbContext db,
+    ICharacterXpPort characterXp,
+    IWorldZoneDistancePort worldZoneDistance,
+    ILogger<MapService>? logger = null) : IMapDistancePort
 {
     public async Task AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
     {
@@ -227,6 +233,20 @@ public class MapService(AppDbContext db, ICharacterXpPort characterXp) : IMapDis
 
     public async Task DebugAddDistanceAsync(Guid userId, double km)
     {
+        var log = logger ?? NullLogger<MapService>.Instance;
+
+        // Cascade every incoming km to the world-zone travel as well. This is
+        // the single choke-point for local-map distance (both real activities
+        // and the debug add-distance / teleport paths flow through here), so
+        // bumping world here unifies the two systems without double-counting.
+        // IWorldZoneDistancePort.AddDistanceAsync silently no-ops when no world
+        // destination is set, so this is safe for all scenarios.
+        if (km > 0)
+        {
+            log.LogInformation("MapService.DebugAddDistance cascade-to-world user={UserId} km={Km}", userId, km);
+            await worldZoneDistance.AddDistanceAsync(userId, km);
+        }
+
         var progress = await db.UserMapProgresses
             .Include(p => p.UnlockedNodes)
             .FirstOrDefaultAsync(p => p.UserId == userId)

@@ -7,6 +7,7 @@ import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'xp_history_sheet.dart';
 import 'stat_detail_sheet.dart';
+import '../streak/widgets/streak_detail_sheet.dart';
 
 // ── ProfileOverviewTab ────────────────────────────────────────────────────────
 class ProfileOverviewTab extends StatelessWidget {
@@ -445,11 +446,15 @@ class ProfileActivitySummary extends StatelessWidget {
                 sub: 'total',
               ),
               const SizedBox(width: 10),
-              ProfileMiniCard(
-                emoji: '🔥',
-                label: 'Streak',
-                value: '${profile.currentStreak} days',
-                sub: 'current',
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => showStreakDetailSheet(context),
+                child: ProfileMiniCard(
+                  emoji: '🔥',
+                  label: 'Streak',
+                  value: '${profile.currentStreak} days',
+                  sub: 'current',
+                ),
               ),
               const SizedBox(width: 10),
               ProfileMiniCard(
