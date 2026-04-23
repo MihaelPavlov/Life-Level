@@ -52,12 +52,12 @@ class TutorialIntroScreen extends ConsumerWidget {
             ),
           ),
           SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
                   const _FirstQuestTag(),
                   const SizedBox(height: 16),
                   const _HeroCircle(
@@ -102,7 +102,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                     title: 'Defeat bosses',
                     desc: 'Daily raids reward gear & titles',
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 24),
                   const TutorialProgressDots(
                     total: 8,
                     activeIndex: 0,

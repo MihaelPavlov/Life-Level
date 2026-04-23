@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — World Map v3 · Direction B · Vertical Path</title>
+<style>
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --border-soft:#1e2632;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+  --blue:   #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red:    #f85149;
+  --green:  #3fb950;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh; padding: 48px 40px; gap: 48px; flex-wrap: wrap;
+}
+
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+.screen-wrap  { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.screen-label { text-align: center; max-width: 390px; }
+.screen-badge {
+  display: inline-block; border-radius: 12px; padding: 3px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.screen-title { font-size: 14px; color: var(--text-primary); font-weight: 700; margin-bottom: 3px; }
+.screen-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px 0; z-index: 100;
+}
+.status-bar__time  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.status-bar__icons { font-size: 11px; color: var(--text-secondary); }
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background: var(--surface-1); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 8px 12px; z-index: 100;
+}
+.nav__item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; text-decoration: none; }
+.nav__icon { font-size: 20px; }
+.nav__label { font-size: 10px; }
+.nav__item--active .nav__icon, .nav__item--active .nav__label { color: var(--blue); }
+.nav__item:not(.nav__item--active) .nav__icon, .nav__item:not(.nav__item--active) .nav__label { color: var(--text-secondary); }
+.fab {
+  position: absolute; bottom: 93px; left: 50%; transform: translateX(-50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(145deg, #ff4e4e, #c0392b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; z-index: 200;
+  box-shadow: 0 0 0 3px rgba(248,81,73,0.2), 0 0 22px rgba(248,81,73,0.5), 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; padding: 54px 0 180px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* Map header (sticky compact) */
+.pathv3-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px 12px;
+}
+.pathv3-header__region { flex: 1; min-width: 0; }
+.pathv3-header__chapter {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--blue); text-transform: uppercase; margin-bottom: 2px;
+}
+.pathv3-header__title {
+  font-size: 20px; font-weight: 800; color: var(--text-primary); line-height: 1.1;
+}
+.pathv3-header__level {
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 5px 10px; border-radius: 10px;
+  box-shadow: 0 0 12px rgba(79,158,255,0.3);
+  flex-shrink: 0;
+}
+
+/* Sticky journey strip — always visible to answer "where am I going?" */
+.pathv3-strip {
+  position: sticky; top: 0; z-index: 60;
+  margin: 0 16px 18px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(79,158,255,0.18), rgba(163,113,247,0.14));
+  border: 1px solid rgba(79,158,255,0.45);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35), 0 0 22px rgba(79,158,255,0.12);
+  cursor: pointer;
+}
+.pathv3-strip__icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: rgba(79,158,255,0.18); border: 1px solid rgba(79,158,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.pathv3-strip__body { flex: 1; min-width: 0; }
+.pathv3-strip__title {
+  font-size: 11px; font-weight: 800; color: var(--blue);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.pathv3-strip__sub {
+  font-size: 12px; color: var(--text-primary); font-weight: 700;
+  margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pathv3-strip__pips {
+  display: flex; gap: 3px; margin-top: 5px;
+}
+.pathv3-strip__pip {
+  flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.12);
+}
+.pathv3-strip__pip--done { background: var(--blue); }
+.pathv3-strip__arrow {
+  font-size: 16px; color: var(--text-primary); flex-shrink: 0;
+}
+
+/* Chapter dividers */
+.pathv3-divider {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
+  color: var(--text-muted); text-transform: uppercase;
+  margin: 8px 24px 12px;
+}
+.pathv3-divider::before, .pathv3-divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--border-soft);
+}
+.pathv3-divider--active {
+  color: var(--blue);
+}
+.pathv3-divider--active::before, .pathv3-divider--active::after { background: rgba(79,158,255,0.35); }
+
+/* The vertical node trail */
+.pathv3-trail {
+  position: relative;
+  padding: 0 0 4px;
+}
+
+/* Node row — alternates left/center/right to simulate a meandering path */
+.pathv3-node {
+  position: relative;
+  display: flex; align-items: center;
+  padding: 8px 0;
+  min-height: 80px;
+}
+.pathv3-node--left  { justify-content: flex-start; padding-left: 46px; }
+.pathv3-node--right { justify-content: flex-end;  padding-right: 46px; }
+.pathv3-node--center{ justify-content: center; }
+
+/* The connecting curve lives in a single SVG behind the trail */
+.pathv3-curve {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+
+/* Individual node bubble */
+.pathv3-bubble {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.pathv3-bubble__circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  transition: transform 0.15s;
+}
+.pathv3-bubble--completed .pathv3-bubble__circle {
+  background: rgba(63,185,80,0.15);
+  border-color: var(--green);
+  color: var(--green);
+  width: 52px; height: 52px; font-size: 22px;
+}
+.pathv3-bubble--active .pathv3-bubble__circle {
+  width: 76px; height: 76px; font-size: 34px;
+  background: linear-gradient(135deg, rgba(79,158,255,0.22), rgba(79,158,255,0.08));
+  border: 3px solid var(--blue);
+  box-shadow: 0 0 28px rgba(79,158,255,0.5), 0 0 0 6px rgba(79,158,255,0.08);
+  animation: pulse-blue 2.4s ease-in-out infinite;
+}
+@keyframes pulse-blue {
+  0%,100% { box-shadow: 0 0 28px rgba(79,158,255,0.5), 0 0 0 6px rgba(79,158,255,0.08); }
+  50%     { box-shadow: 0 0 38px rgba(79,158,255,0.7), 0 0 0 10px rgba(79,158,255,0.12); }
+}
+.pathv3-bubble--next .pathv3-bubble__circle {
+  width: 68px; height: 68px; font-size: 30px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.18), rgba(245,166,35,0.05));
+  border: 2px dashed var(--orange);
+  color: var(--orange);
+  box-shadow: 0 0 20px rgba(245,166,35,0.22);
+}
+.pathv3-bubble--locked .pathv3-bubble__circle {
+  width: 48px; height: 48px; font-size: 18px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+.pathv3-bubble--crossroads .pathv3-bubble__circle {
+  background: linear-gradient(135deg, rgba(163,113,247,0.2), rgba(163,113,247,0.06));
+  border: 2px solid var(--purple);
+  color: var(--purple);
+  transform: rotate(45deg);
+  border-radius: 14px;
+  width: 60px; height: 60px;
+}
+.pathv3-bubble--crossroads .pathv3-bubble__circle > span { transform: rotate(-45deg); display: block; }
+
+.pathv3-bubble__label {
+  font-size: 11px; font-weight: 700; color: var(--text-primary);
+  text-align: center; max-width: 120px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pathv3-bubble--locked .pathv3-bubble__label { color: var(--text-muted); }
+.pathv3-bubble__sub {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.pathv3-bubble--active .pathv3-bubble__sub   { color: var(--blue); }
+.pathv3-bubble--next .pathv3-bubble__sub     { color: var(--orange); }
+.pathv3-bubble--completed .pathv3-bubble__sub{ color: var(--green); }
+.pathv3-bubble--crossroads .pathv3-bubble__sub { color: var(--purple); }
+
+/* "You are here" floating badge */
+.pathv3-youarehere {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: -14px;
+  font-size: 8px; font-weight: 800; letter-spacing: 0.1em;
+  color: #fff;
+  background: var(--blue);
+  padding: 3px 8px; border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(79,158,255,0.5);
+}
+.pathv3-youarehere::after {
+  content: ""; position: absolute; left: 50%; bottom: -4px;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--blue);
+}
+
+/* Crossroads branch: two outgoing nodes shown side-by-side */
+.pathv3-fork {
+  display: flex; justify-content: space-around;
+  padding: 4px 24px 8px;
+  position: relative; z-index: 2;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 — VERTICAL PATH · traveling
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">DIRECTION B · SCREEN 1</div>
+    <div class="screen-title">Vertical Path — Duolingo-style node trail</div>
+    <div class="screen-desc">One node per row, connected by a curved trail. Sticky journey strip at top. Crossroads render as a visible branch. Preserves map metaphor without a 2D canvas.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="pathv3-header">
+        <div class="pathv3-header__region">
+          <div class="pathv3-header__chapter">Chapter 2 · Forest of Endurance</div>
+          <div class="pathv3-header__title">World Map</div>
+        </div>
+        <div class="pathv3-header__level">Lv 12</div>
+      </div>
+
+      <!-- Sticky journey strip -->
+      <div class="pathv3-strip">
+        <div class="pathv3-strip__icon">🏰</div>
+        <div class="pathv3-strip__body">
+          <div class="pathv3-strip__title">Traveling · 2.3 km to go</div>
+          <div class="pathv3-strip__sub">→ Ember Forge · 2.7 / 5.0 km</div>
+          <div class="pathv3-strip__pips">
+            <div class="pathv3-strip__pip pathv3-strip__pip--done"></div>
+            <div class="pathv3-strip__pip pathv3-strip__pip--done"></div>
+            <div class="pathv3-strip__pip pathv3-strip__pip--done"></div>
+            <div class="pathv3-strip__pip"></div>
+            <div class="pathv3-strip__pip"></div>
+          </div>
+        </div>
+        <div class="pathv3-strip__arrow">›</div>
+      </div>
+
+      <div class="pathv3-divider">Chapter 1 · Outlands</div>
+
+      <!-- Trail -->
+      <div class="pathv3-trail">
+        <!-- Background curve SVG: connects node centers in order -->
+        <svg class="pathv3-curve" viewBox="0 0 390 900" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="curveCompleted" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3fb950" stop-opacity="0.55"/>
+              <stop offset="1" stop-color="#3fb950" stop-opacity="0.25"/>
+            </linearGradient>
+            <linearGradient id="curveActive" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3fb950" stop-opacity="0.35"/>
+              <stop offset="1" stop-color="#4f9eff" stop-opacity="0.55"/>
+            </linearGradient>
+            <linearGradient id="curveNext" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#4f9eff" stop-opacity="0.5"/>
+              <stop offset="1" stop-color="#f5a623" stop-opacity="0.4"/>
+            </linearGradient>
+          </defs>
+          <!-- Completed → Completed (solid green) -->
+          <path d="M 120 60 C 120 110, 270 110, 270 160" stroke="url(#curveCompleted)" stroke-width="4" fill="none"/>
+          <!-- Completed → Active (gradient) -->
+          <path d="M 270 160 C 270 220, 120 220, 120 280" stroke="url(#curveActive)" stroke-width="4" fill="none"/>
+          <!-- Active → Next (dashed orange) -->
+          <path d="M 120 280 C 120 340, 270 340, 270 400" stroke="#f5a623" stroke-width="3" fill="none" stroke-dasharray="8 6" opacity="0.7"/>
+          <!-- Next → Crossroads (dimmer) -->
+          <path d="M 270 400 C 270 460, 195 460, 195 520" stroke="#30363d" stroke-width="3" fill="none" stroke-dasharray="6 8"/>
+          <!-- Crossroads branches -->
+          <path d="M 195 520 C 195 580, 110 580, 110 640" stroke="#30363d" stroke-width="2" fill="none" stroke-dasharray="5 6"/>
+          <path d="M 195 520 C 195 580, 280 580, 280 640" stroke="#30363d" stroke-width="2" fill="none" stroke-dasharray="5 6"/>
+        </svg>
+
+        <!-- Node 1: completed (left) -->
+        <div class="pathv3-node pathv3-node--left">
+          <div class="pathv3-bubble pathv3-bubble--completed">
+            <div class="pathv3-bubble__circle">✓</div>
+            <div class="pathv3-bubble__label">Whispering Grove</div>
+            <div class="pathv3-bubble__sub">+420 XP</div>
+          </div>
+        </div>
+
+        <!-- Node 2: completed (right) -->
+        <div class="pathv3-node pathv3-node--right">
+          <div class="pathv3-bubble pathv3-bubble--completed">
+            <div class="pathv3-bubble__circle">✓</div>
+            <div class="pathv3-bubble__label">Dawn Camp</div>
+            <div class="pathv3-bubble__sub">+320 XP</div>
+          </div>
+        </div>
+
+        <!-- Node 3: ACTIVE (you are here) -->
+        <div class="pathv3-node pathv3-node--left" style="padding-top: 24px;">
+          <div class="pathv3-bubble pathv3-bubble--active">
+            <div class="pathv3-youarehere">YOU ARE HERE</div>
+            <div class="pathv3-bubble__circle">🌿</div>
+            <div class="pathv3-bubble__label">Misty Pine Clearing</div>
+            <div class="pathv3-bubble__sub">Tier 3 · 180 XP</div>
+          </div>
+        </div>
+
+        <!-- Node 4: NEXT (destination) -->
+        <div class="pathv3-node pathv3-node--right">
+          <div class="pathv3-bubble pathv3-bubble--next">
+            <div class="pathv3-bubble__circle">🏰</div>
+            <div class="pathv3-bubble__label">Ember Forge</div>
+            <div class="pathv3-bubble__sub">2.3 km to go</div>
+          </div>
+        </div>
+
+        <!-- Node 5: CROSSROADS -->
+        <div class="pathv3-node pathv3-node--center">
+          <div class="pathv3-bubble pathv3-bubble--crossroads">
+            <div class="pathv3-bubble__circle"><span>✦</span></div>
+            <div class="pathv3-bubble__label">Twin Roads Fork</div>
+            <div class="pathv3-bubble__sub">Crossroads · Lv 13+</div>
+          </div>
+        </div>
+
+        <!-- Crossroads branches -->
+        <div class="pathv3-fork">
+          <div class="pathv3-bubble pathv3-bubble--locked">
+            <div class="pathv3-bubble__circle">🌊</div>
+            <div class="pathv3-bubble__label">Silver Stream</div>
+            <div class="pathv3-bubble__sub">Easy · 2 days</div>
+          </div>
+          <div class="pathv3-bubble pathv3-bubble--locked">
+            <div class="pathv3-bubble__circle">🕳️</div>
+            <div class="pathv3-bubble__label">Ruined Pass</div>
+            <div class="pathv3-bubble__sub">Hard · 4 days</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pathv3-divider pathv3-divider--active">Chapter 3 · Mountains of Strength (Lv 15)</div>
+
+      <div class="pathv3-trail" style="opacity:0.55;">
+        <div class="pathv3-node pathv3-node--center">
+          <div class="pathv3-bubble pathv3-bubble--locked">
+            <div class="pathv3-bubble__circle">🔒</div>
+            <div class="pathv3-bubble__label">Frostgate Summit</div>
+            <div class="pathv3-bubble__sub">Lv 15 · Locked</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 2 — path after choosing a crossroads branch
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);color:#a371f7">DIRECTION B · SCREEN 2</div>
+    <div class="screen-title">Past the crossroads — one branch chosen</div>
+    <div class="screen-desc">Chosen branch lights up, unchosen branch fades. Trail continues on chosen side. Demonstrates path commitment + visual clarity.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="pathv3-header">
+        <div class="pathv3-header__region">
+          <div class="pathv3-header__chapter">Chapter 2 · Forest of Endurance</div>
+          <div class="pathv3-header__title">World Map</div>
+        </div>
+        <div class="pathv3-header__level">Lv 13</div>
+      </div>
+
+      <div class="pathv3-strip" style="background:linear-gradient(135deg, rgba(245,166,35,0.18), rgba(163,113,247,0.14)); border-color:rgba(245,166,35,0.45);">
+        <div class="pathv3-strip__icon" style="background:rgba(245,166,35,0.18); border-color:rgba(245,166,35,0.4);">🕳️</div>
+        <div class="pathv3-strip__body">
+          <div class="pathv3-strip__title" style="color:var(--orange);">Hard path · day 3 of 4</div>
+          <div class="pathv3-strip__sub">→ Ruined Pass boss · 6.8 / 12 km</div>
+          <div class="pathv3-strip__pips">
+            <div class="pathv3-strip__pip" style="background:var(--orange);"></div>
+            <div class="pathv3-strip__pip" style="background:var(--orange);"></div>
+            <div class="pathv3-strip__pip" style="background:var(--orange);"></div>
+            <div class="pathv3-strip__pip"></div>
+          </div>
+        </div>
+        <div class="pathv3-strip__arrow">›</div>
+      </div>
+
+      <div class="pathv3-divider">Chapter 2 · Forest of Endurance</div>
+
+      <div class="pathv3-trail">
+        <svg class="pathv3-curve" viewBox="0 0 390 700" preserveAspectRatio="none">
+          <!-- Completed crossroads -->
+          <path d="M 195 60 C 195 120, 280 120, 280 180" stroke="#3fb950" stroke-width="4" fill="none" opacity="0.7"/>
+          <!-- Faded unchosen branch -->
+          <path d="M 195 60 C 195 120, 110 120, 110 180" stroke="#30363d" stroke-width="2" fill="none" stroke-dasharray="3 6" opacity="0.3"/>
+          <!-- Chosen branch continues -->
+          <path d="M 280 180 C 280 240, 150 240, 150 300" stroke="url(#curveActive2)" stroke-width="4" fill="none"/>
+          <path d="M 150 300 C 150 360, 280 360, 280 420" stroke="#f5a623" stroke-width="3" fill="none" stroke-dasharray="8 6" opacity="0.7"/>
+          <defs>
+            <linearGradient id="curveActive2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3fb950" stop-opacity="0.5"/>
+              <stop offset="1" stop-color="#f5a623" stop-opacity="0.7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <!-- Crossroads (completed) -->
+        <div class="pathv3-node pathv3-node--center">
+          <div class="pathv3-bubble pathv3-bubble--crossroads" style="opacity:0.75;">
+            <div class="pathv3-bubble__circle" style="background:rgba(63,185,80,0.12); border-color:var(--green); color:var(--green);"><span>✓</span></div>
+            <div class="pathv3-bubble__label">Twin Roads Fork</div>
+            <div class="pathv3-bubble__sub" style="color:var(--green);">Hard path chosen</div>
+          </div>
+        </div>
+
+        <!-- Unchosen branch (faded) -->
+        <div class="pathv3-node pathv3-node--left" style="opacity:0.3;">
+          <div class="pathv3-bubble pathv3-bubble--locked">
+            <div class="pathv3-bubble__circle" style="text-decoration: line-through;">🌊</div>
+            <div class="pathv3-bubble__label">Silver Stream</div>
+            <div class="pathv3-bubble__sub">Not taken</div>
+          </div>
+        </div>
+
+        <!-- Chosen branch - just cleared -->
+        <div class="pathv3-node pathv3-node--right">
+          <div class="pathv3-bubble pathv3-bubble--completed">
+            <div class="pathv3-bubble__circle">✓</div>
+            <div class="pathv3-bubble__label">Ruined Pass Entry</div>
+            <div class="pathv3-bubble__sub">+640 XP</div>
+          </div>
+        </div>
+
+        <!-- Active (you are here) -->
+        <div class="pathv3-node pathv3-node--left" style="padding-top: 18px;">
+          <div class="pathv3-bubble pathv3-bubble--active">
+            <div class="pathv3-youarehere">YOU ARE HERE</div>
+            <div class="pathv3-bubble__circle">🕸️</div>
+            <div class="pathv3-bubble__label">Cursed Hollow</div>
+            <div class="pathv3-bubble__sub">Tier 4 · +260 XP</div>
+          </div>
+        </div>
+
+        <!-- Boss at end of hard path -->
+        <div class="pathv3-node pathv3-node--right">
+          <div class="pathv3-bubble pathv3-bubble--next" style="border-color:var(--red); background:linear-gradient(135deg, rgba(248,81,73,0.18), rgba(248,81,73,0.05)); color:var(--red);">
+            <div class="pathv3-bubble__circle" style="border-color:var(--red); background:rgba(248,81,73,0.2); color:var(--red);">👹</div>
+            <div class="pathv3-bubble__label">Ashfang Warden</div>
+            <div class="pathv3-bubble__sub" style="color:var(--red);">Boss · 5.2 km to go</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

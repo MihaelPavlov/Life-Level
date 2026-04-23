@@ -5,6 +5,7 @@ using LifeLevel.Modules.Adventure.Encounters.Domain.Enums;
 using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.Modules.Map.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
+using LifeLevel.Modules.WorldZone.Domain.Enums;
 
 using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
 using LifeLevel.Api.Infrastructure.Persistence;
@@ -130,17 +131,16 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                 id              = z.Id.ToString(),
                 name            = z.Name,
                 description     = z.Description,
-                icon            = z.Icon,
-                region          = z.Region,
+                icon            = z.Emoji,
+                region          = z.Region.Name,
+                regionId        = z.RegionId.ToString(),
                 tier            = z.Tier,
-                x               = (double)z.PositionX,
-                y               = (double)z.PositionY,
+                type            = z.Type.ToString().ToLowerInvariant(),
                 levelReq        = z.LevelRequirement,
-                totalXp         = z.TotalXp,
-                totalDistanceKm = z.TotalDistanceKm,
-                isCrossroads    = z.IsCrossroads,
+                totalXp         = z.XpReward,
+                totalDistanceKm = z.DistanceKm,
+                isBoss          = z.IsBoss,
                 isStart         = z.IsStartZone,
-                isHidden        = z.IsHidden,
             })
             .ToListAsync();
 
@@ -516,6 +516,240 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     }
 
     // -------------------------------------------------------------------------
+    // WORLDS (CRUD)
+    // -------------------------------------------------------------------------
+
+    [HttpGet("worlds")]
+    public async Task<IActionResult> GetAllWorlds()
+    {
+        var worlds = await db.Worlds
+            .OrderByDescending(w => w.IsActive)
+            .ThenBy(w => w.Name)
+            .Select(w => new
+            {
+                id          = w.Id,
+                name        = w.Name,
+                isActive    = w.IsActive,
+                createdAt   = w.CreatedAt,
+                regionCount = db.Regions.Count(r => r.WorldId == w.Id),
+                zoneCount   = db.WorldZones.Count(z => z.Region.WorldId == w.Id),
+            })
+            .ToListAsync();
+        return Ok(worlds);
+    }
+
+    [HttpGet("worlds/{id:guid}")]
+    public async Task<IActionResult> GetWorldById(Guid id)
+    {
+        var world = await db.Worlds
+            .Where(w => w.Id == id)
+            .Select(w => new
+            {
+                id          = w.Id,
+                name        = w.Name,
+                isActive    = w.IsActive,
+                createdAt   = w.CreatedAt,
+                regionCount = db.Regions.Count(r => r.WorldId == w.Id),
+                zoneCount   = db.WorldZones.Count(z => z.Region.WorldId == w.Id),
+            })
+            .FirstOrDefaultAsync();
+        if (world is null) return NotFound();
+        return Ok(world);
+    }
+
+    [HttpPost("worlds")]
+    public async Task<IActionResult> CreateWorld([FromBody] CreateWorldRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest("Name is required.");
+
+        var world = new World
+        {
+            Id = Guid.NewGuid(),
+            Name = req.Name.Trim(),
+            IsActive = req.IsActive,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        if (req.IsActive)
+        {
+            // One-active invariant: flip all others off
+            var active = await db.Worlds.Where(w => w.IsActive).ToListAsync();
+            foreach (var w in active) w.IsActive = false;
+        }
+
+        db.Worlds.Add(world);
+        await db.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetWorldById), new { id = world.Id }, new { world.Id });
+    }
+
+    [HttpPut("worlds/{id:guid}")]
+    public async Task<IActionResult> UpdateWorld(Guid id, [FromBody] UpdateWorldRequest req)
+    {
+        var world = await db.Worlds.FindAsync(id);
+        if (world is null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest("Name is required.");
+
+        world.Name = req.Name.Trim();
+
+        if (req.IsActive && !world.IsActive)
+        {
+            // Flipping this world ON — turn all other worlds off
+            var active = await db.Worlds.Where(w => w.IsActive && w.Id != id).ToListAsync();
+            foreach (var w in active) w.IsActive = false;
+        }
+        world.IsActive = req.IsActive;
+
+        await db.SaveChangesAsync();
+        return Ok(new { world.Id });
+    }
+
+    [HttpDelete("worlds/{id:guid}")]
+    public async Task<IActionResult> DeleteWorld(Guid id)
+    {
+        var world = await db.Worlds.FindAsync(id);
+        if (world is null) return NotFound();
+
+        var regionCount = await db.Regions.CountAsync(r => r.WorldId == id);
+        if (regionCount > 0)
+            return Conflict($"Cannot delete world: {regionCount} region(s) exist. Delete them first.");
+
+        var zoneCount = await db.WorldZones.CountAsync(z => z.Region.WorldId == id);
+        if (zoneCount > 0)
+            return Conflict($"Cannot delete world: {zoneCount} zone(s) exist. Delete them first.");
+
+        var progressCount = await db.UserWorldProgresses.CountAsync(p => p.WorldId == id);
+        if (progressCount > 0)
+            return Conflict($"Cannot delete world: {progressCount} user(s) have progress in it.");
+
+        db.Worlds.Remove(world);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // -------------------------------------------------------------------------
+    // REGIONS (CRUD)
+    // -------------------------------------------------------------------------
+
+    [HttpGet("worlds/{worldId:guid}/regions")]
+    public async Task<IActionResult> GetRegionsByWorld(Guid worldId)
+    {
+        if (!await db.Worlds.AnyAsync(w => w.Id == worldId))
+            return NotFound();
+
+        var regions = await db.Regions
+            .Where(r => r.WorldId == worldId)
+            .OrderBy(r => r.ChapterIndex)
+            .ThenBy(r => r.Name)
+            .Select(r => new
+            {
+                id               = r.Id,
+                worldId          = r.WorldId,
+                name             = r.Name,
+                emoji            = r.Emoji,
+                theme            = r.Theme.ToString().ToLowerInvariant(),
+                chapterIndex     = r.ChapterIndex,
+                levelRequirement = r.LevelRequirement,
+                lore             = r.Lore,
+                zoneCount        = db.WorldZones.Count(z => z.RegionId == r.Id),
+            })
+            .ToListAsync();
+
+        return Ok(regions);
+    }
+
+    [HttpGet("regions/{id:guid}")]
+    public async Task<IActionResult> GetRegionById(Guid id)
+    {
+        var region = await db.Regions
+            .Where(r => r.Id == id)
+            .Select(r => new
+            {
+                id               = r.Id,
+                worldId          = r.WorldId,
+                name             = r.Name,
+                emoji            = r.Emoji,
+                theme            = r.Theme.ToString().ToLowerInvariant(),
+                chapterIndex     = r.ChapterIndex,
+                levelRequirement = r.LevelRequirement,
+                lore             = r.Lore,
+                zoneCount        = db.WorldZones.Count(z => z.RegionId == r.Id),
+            })
+            .FirstOrDefaultAsync();
+        if (region is null) return NotFound();
+        return Ok(region);
+    }
+
+    [HttpPost("regions")]
+    public async Task<IActionResult> CreateRegion([FromBody] CreateRegionRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest("Name is required.");
+
+        if (!await db.Worlds.AnyAsync(w => w.Id == req.WorldId))
+            return BadRequest($"World '{req.WorldId}' not found.");
+
+        if (!Enum.TryParse<RegionTheme>(req.Theme, ignoreCase: true, out var theme))
+            return BadRequest($"Invalid Theme. Valid values: {string.Join(", ", Enum.GetNames<RegionTheme>())}");
+
+        var region = new Region
+        {
+            Id = Guid.NewGuid(),
+            WorldId = req.WorldId,
+            Name = req.Name.Trim(),
+            Emoji = req.Emoji ?? string.Empty,
+            Theme = theme,
+            ChapterIndex = req.ChapterIndex,
+            LevelRequirement = req.LevelRequirement,
+            Lore = req.Lore ?? string.Empty,
+        };
+
+        db.Regions.Add(region);
+        await db.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetRegionById), new { id = region.Id }, new { region.Id });
+    }
+
+    [HttpPut("regions/{id:guid}")]
+    public async Task<IActionResult> UpdateRegion(Guid id, [FromBody] UpdateRegionRequest req)
+    {
+        var region = await db.Regions.FindAsync(id);
+        if (region is null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest("Name is required.");
+
+        if (!Enum.TryParse<RegionTheme>(req.Theme, ignoreCase: true, out var theme))
+            return BadRequest($"Invalid Theme. Valid values: {string.Join(", ", Enum.GetNames<RegionTheme>())}");
+
+        region.Name = req.Name.Trim();
+        region.Emoji = req.Emoji ?? string.Empty;
+        region.Theme = theme;
+        region.ChapterIndex = req.ChapterIndex;
+        region.LevelRequirement = req.LevelRequirement;
+        region.Lore = req.Lore ?? string.Empty;
+
+        await db.SaveChangesAsync();
+        return Ok(new { region.Id });
+    }
+
+    [HttpDelete("regions/{id:guid}")]
+    public async Task<IActionResult> DeleteRegion(Guid id)
+    {
+        var region = await db.Regions.FindAsync(id);
+        if (region is null) return NotFound();
+
+        var zoneCount = await db.WorldZones.CountAsync(z => z.RegionId == id);
+        if (zoneCount > 0)
+            return Conflict($"Cannot delete region: {zoneCount} zone(s) belong to it.");
+
+        db.Regions.Remove(region);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // -------------------------------------------------------------------------
     // MAP NODES
     // -------------------------------------------------------------------------
 
@@ -767,9 +1001,17 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("edges")]
-    public async Task<IActionResult> GetAllEdges()
+    public async Task<IActionResult> GetAllEdges([FromQuery] Guid? zoneId = null)
     {
-        var edges = await db.MapEdges
+        var query = db.MapEdges.AsQueryable();
+        if (zoneId.HasValue)
+        {
+            query = query.Where(e =>
+                e.FromNode.WorldZoneId == zoneId.Value ||
+                e.ToNode.WorldZoneId == zoneId.Value);
+        }
+
+        var edges = await query
             .Select(e => new
             {
                 e.Id,
@@ -838,9 +1080,19 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("bosses")]
-    public async Task<IActionResult> GetAllBosses()
+    public async Task<IActionResult> GetAllBosses([FromQuery] Guid? zoneId = null)
     {
-        var bosses = await db.Bosses.ToListAsync();
+        var query = db.Bosses.AsQueryable();
+        if (zoneId.HasValue)
+        {
+            var zoneNodeIds = await db.MapNodes
+                .Where(n => n.WorldZoneId == zoneId.Value)
+                .Select(n => n.Id)
+                .ToListAsync();
+            query = query.Where(b => zoneNodeIds.Contains(b.NodeId));
+        }
+
+        var bosses = await query.ToListAsync();
         var nodeIds = bosses.Select(b => b.NodeId).ToHashSet();
         var nodeNames = await db.MapNodes
             .Where(n => nodeIds.Contains(n.Id))
@@ -937,9 +1189,19 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("dungeons")]
-    public async Task<IActionResult> GetAllDungeons()
+    public async Task<IActionResult> GetAllDungeons([FromQuery] Guid? zoneId = null)
     {
-        var dungeons = await db.DungeonPortals.Include(d => d.Floors).ToListAsync();
+        var query = db.DungeonPortals.Include(d => d.Floors).AsQueryable();
+        if (zoneId.HasValue)
+        {
+            var zoneNodeIds = await db.MapNodes
+                .Where(n => n.WorldZoneId == zoneId.Value)
+                .Select(n => n.Id)
+                .ToListAsync();
+            query = query.Where(d => zoneNodeIds.Contains(d.NodeId));
+        }
+
+        var dungeons = await query.ToListAsync();
         var nodeIds = dungeons.Select(d => d.NodeId).ToHashSet();
         var nodeNames = await db.MapNodes
             .Where(n => nodeIds.Contains(n.Id))
@@ -1121,9 +1383,19 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("chests")]
-    public async Task<IActionResult> GetAllChests()
+    public async Task<IActionResult> GetAllChests([FromQuery] Guid? zoneId = null)
     {
-        var chests = await db.Chests.ToListAsync();
+        var query = db.Chests.AsQueryable();
+        if (zoneId.HasValue)
+        {
+            var zoneNodeIds = await db.MapNodes
+                .Where(n => n.WorldZoneId == zoneId.Value)
+                .Select(n => n.Id)
+                .ToListAsync();
+            query = query.Where(c => zoneNodeIds.Contains(c.NodeId));
+        }
+
+        var chests = await query.ToListAsync();
         var nodeIds = chests.Select(c => c.NodeId).ToHashSet();
         var nodeNames = await db.MapNodes
             .Where(n => nodeIds.Contains(n.Id))
@@ -1211,9 +1483,19 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("crossroads")]
-    public async Task<IActionResult> GetAllCrossroads()
+    public async Task<IActionResult> GetAllCrossroads([FromQuery] Guid? zoneId = null)
     {
-        var crossroadsList = await db.Crossroads.Include(c => c.Paths).ToListAsync();
+        var query = db.Crossroads.Include(c => c.Paths).AsQueryable();
+        if (zoneId.HasValue)
+        {
+            var zoneNodeIds = await db.MapNodes
+                .Where(n => n.WorldZoneId == zoneId.Value)
+                .Select(n => n.Id)
+                .ToListAsync();
+            query = query.Where(c => zoneNodeIds.Contains(c.NodeId));
+        }
+
+        var crossroadsList = await query.ToListAsync();
         var nodeIds = crossroadsList.Select(c => c.NodeId).ToHashSet();
         var nodeNames = await db.MapNodes
             .Where(n => nodeIds.Contains(n.Id))
@@ -1394,27 +1676,34 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     // -------------------------------------------------------------------------
 
     [HttpGet("world-zones")]
-    public async Task<IActionResult> GetAllWorldZones()
+    public async Task<IActionResult> GetAllWorldZones(
+        [FromQuery] Guid? worldId = null,
+        [FromQuery] Guid? regionId = null)
     {
-        var zones = await db.WorldZones
+        var query = db.WorldZones.AsQueryable();
+        if (worldId.HasValue)
+            query = query.Where(z => z.Region.WorldId == worldId.Value);
+        if (regionId.HasValue)
+            query = query.Where(z => z.RegionId == regionId.Value);
+
+        var zones = await query
             .OrderBy(z => z.Name)
             .Select(z => new
             {
                 id              = z.Id,
                 name            = z.Name,
                 description     = z.Description,
-                icon            = z.Icon,
-                region          = z.Region,
+                icon            = z.Emoji,
+                region          = z.Region.Name,
+                regionId        = z.RegionId,
                 tier            = z.Tier,
-                x               = (double)z.PositionX,
-                y               = (double)z.PositionY,
+                type            = z.Type.ToString().ToLowerInvariant(),
                 levelReq        = z.LevelRequirement,
-                totalXp         = z.TotalXp,
-                totalDistanceKm = z.TotalDistanceKm,
-                isCrossroads    = z.IsCrossroads,
+                totalXp         = z.XpReward,
+                totalDistanceKm = z.DistanceKm,
+                isBoss          = z.IsBoss,
                 isStart         = z.IsStartZone,
-                isHidden        = z.IsHidden,
-                worldId         = z.WorldId,
+                worldId         = z.Region.WorldId,
             })
             .ToListAsync();
         return Ok(zones);
@@ -1423,7 +1712,9 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpGet("world-zones/{id:guid}")]
     public async Task<IActionResult> GetWorldZoneById(Guid id)
     {
-        var zone = await db.WorldZones.FindAsync(id);
+        var zone = await db.WorldZones
+            .Include(z => z.Region)
+            .FirstOrDefaultAsync(z => z.Id == id);
         if (zone is null) return NotFound();
 
         var nodeCount = await db.MapNodes.CountAsync(n => n.WorldZoneId == id);
@@ -1433,18 +1724,17 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             id              = zone.Id,
             name            = zone.Name,
             description     = zone.Description,
-            icon            = zone.Icon,
-            region          = zone.Region,
+            icon            = zone.Emoji,
+            region          = zone.Region?.Name ?? string.Empty,
+            regionId        = zone.RegionId,
             tier            = zone.Tier,
-            x               = (double)zone.PositionX,
-            y               = (double)zone.PositionY,
+            type            = zone.Type.ToString().ToLowerInvariant(),
             levelReq        = zone.LevelRequirement,
-            totalXp         = zone.TotalXp,
-            totalDistanceKm = zone.TotalDistanceKm,
-            isCrossroads    = zone.IsCrossroads,
+            totalXp         = zone.XpReward,
+            totalDistanceKm = zone.DistanceKm,
+            isBoss          = zone.IsBoss,
             isStart         = zone.IsStartZone,
-            isHidden        = zone.IsHidden,
-            worldId         = zone.WorldId,
+            worldId         = zone.Region?.WorldId,
             nodeCount,
         });
     }
@@ -1468,23 +1758,56 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             return BadRequest("World not found.");
         }
 
+        // Resolve Region: prefer RegionId; fall back to lookup by (WorldId, RegionName)
+        Guid regionId;
+        if (req.RegionId.HasValue && req.RegionId != Guid.Empty)
+        {
+            var exists = await db.Regions.AnyAsync(r => r.Id == req.RegionId.Value && r.WorldId == worldId.Value);
+            if (!exists) return BadRequest($"Region '{req.RegionId}' not found in world.");
+            regionId = req.RegionId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(req.RegionName))
+        {
+            var region = await db.Regions
+                .Where(r => r.WorldId == worldId.Value && r.Name == req.RegionName)
+                .Select(r => (Guid?)r.Id)
+                .FirstOrDefaultAsync();
+            if (region is null)
+                return BadRequest($"Region '{req.RegionName}' not found in the selected world.");
+            regionId = region.Value;
+        }
+        else
+        {
+            return BadRequest("Either RegionId or RegionName must be provided.");
+        }
+
+        // Parse Type (default Entry)
+        var zoneType = WorldZoneType.Entry;
+        if (!string.IsNullOrWhiteSpace(req.Type))
+        {
+            if (!Enum.TryParse<WorldZoneType>(req.Type, ignoreCase: true, out zoneType))
+                return BadRequest($"Invalid Type. Valid values: {string.Join(", ", Enum.GetNames<WorldZoneType>())}");
+        }
+
+        // Maintain IsBoss ↔ Type==Boss consistency
+        var isBoss = req.IsBoss;
+        if (zoneType == WorldZoneType.Boss) isBoss = true;
+        else if (isBoss && string.IsNullOrWhiteSpace(req.Type)) zoneType = WorldZoneType.Boss;
+
         var zone = new WorldZoneEntity
         {
             Id              = Guid.NewGuid(),
             Name            = req.Name,
             Description     = req.Description,
-            Icon            = req.Icon,
-            Region          = req.Region,
+            Emoji           = req.Icon,
+            RegionId        = regionId,
             Tier            = req.Tier,
-            PositionX       = (float)req.X,
-            PositionY       = (float)req.Y,
+            Type            = zoneType,
             LevelRequirement = req.LevelReq,
-            TotalXp         = req.TotalXp,
-            TotalDistanceKm = req.TotalDistanceKm,
-            IsCrossroads    = req.IsCrossroads,
+            XpReward        = req.TotalXp,
+            DistanceKm      = req.TotalDistanceKm,
+            IsBoss          = isBoss,
             IsStartZone     = req.IsStart,
-            IsHidden        = req.IsHidden,
-            WorldId         = worldId.Value,
         };
 
         db.WorldZones.Add(zone);
@@ -1498,19 +1821,53 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         var zone = await db.WorldZones.FindAsync(id);
         if (zone is null) return NotFound();
 
+        // Resolve Region: allow switching by ID or by Name (within the zone's current World,
+        // reached via the zone's current Region).
+        var zoneWorldId = await db.Regions
+            .Where(r => r.Id == zone.RegionId)
+            .Select(r => r.WorldId)
+            .FirstOrDefaultAsync();
+
+        if (req.RegionId.HasValue && req.RegionId != Guid.Empty)
+        {
+            var exists = await db.Regions.AnyAsync(r => r.Id == req.RegionId.Value && r.WorldId == zoneWorldId);
+            if (!exists) return BadRequest($"Region '{req.RegionId}' not found in world.");
+            zone.RegionId = req.RegionId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(req.RegionName))
+        {
+            var region = await db.Regions
+                .Where(r => r.WorldId == zoneWorldId && r.Name == req.RegionName)
+                .Select(r => (Guid?)r.Id)
+                .FirstOrDefaultAsync();
+            if (region is null)
+                return BadRequest($"Region '{req.RegionName}' not found in the zone's world.");
+            zone.RegionId = region.Value;
+        }
+
+        // Parse Type (keep existing if not provided)
+        var zoneType = zone.Type;
+        if (!string.IsNullOrWhiteSpace(req.Type))
+        {
+            if (!Enum.TryParse<WorldZoneType>(req.Type, ignoreCase: true, out zoneType))
+                return BadRequest($"Invalid Type. Valid values: {string.Join(", ", Enum.GetNames<WorldZoneType>())}");
+        }
+
+        // Maintain IsBoss ↔ Type==Boss consistency
+        var isBoss = req.IsBoss;
+        if (zoneType == WorldZoneType.Boss) isBoss = true;
+        else if (isBoss && string.IsNullOrWhiteSpace(req.Type)) zoneType = WorldZoneType.Boss;
+
         zone.Name            = req.Name;
         zone.Description     = req.Description;
-        zone.Icon            = req.Icon;
-        zone.Region          = req.Region;
+        zone.Emoji           = req.Icon;
         zone.Tier            = req.Tier;
-        zone.PositionX       = (float)req.X;
-        zone.PositionY       = (float)req.Y;
+        zone.Type            = zoneType;
         zone.LevelRequirement = req.LevelReq;
-        zone.TotalXp         = req.TotalXp;
-        zone.TotalDistanceKm = req.TotalDistanceKm;
-        zone.IsCrossroads    = req.IsCrossroads;
+        zone.XpReward        = req.TotalXp;
+        zone.DistanceKm      = req.TotalDistanceKm;
+        zone.IsBoss          = isBoss;
         zone.IsStartZone     = req.IsStart;
-        zone.IsHidden        = req.IsHidden;
 
         await db.SaveChangesAsync();
         return Ok(new { zone.Id });
@@ -1548,7 +1905,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             query = query.Where(e => e.FromZoneId == zoneId.Value || e.ToZoneId == zoneId.Value);
 
         var zoneNames = await db.WorldZones
-            .Select(z => new { z.Id, z.Name, z.Icon })
+            .Select(z => new { z.Id, z.Name, Icon = z.Emoji })
             .ToListAsync();
 
         var edges = await query.ToListAsync();
@@ -1639,6 +1996,15 @@ public class AdminMapController(AppDbContext db) : ControllerBase
     [HttpPost("sync-world")]
     public async Task<IActionResult> SyncWorld([FromBody] SyncWorldRequest payload)
     {
+        // Bulk sync doesn't carry per-zone RegionId yet. Pick the first region
+        // in the active world as a default so new zones still get a valid FK.
+        // Individual zone CRUD endpoints let the admin reassign the region.
+        var fallbackRegionId = await db.Regions
+            .Where(r => r.World.IsActive)
+            .OrderBy(r => r.ChapterIndex)
+            .Select(r => (Guid?)r.Id)
+            .FirstOrDefaultAsync();
+
         // ── Resolve incoming zone GUIDs ────────────────────────────────────────
         var zoneIdMap = new Dictionary<string, Guid>(); // temp ID → assigned GUID
         var incomingZoneGuids = new HashSet<Guid>();
@@ -1753,41 +2119,48 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         {
             var guid = Guid.TryParse(z.Id, out var parsedGuid) ? parsedGuid : zoneIdMap[z.Id!];
 
+            // Parse Type (default Entry)
+            var zoneType = WorldZoneType.Entry;
+            if (!string.IsNullOrWhiteSpace(z.Type))
+            {
+                Enum.TryParse<WorldZoneType>(z.Type, ignoreCase: true, out zoneType);
+            }
+
+            // Maintain IsBoss ↔ Type==Boss consistency
+            var isBoss = zoneType == WorldZoneType.Boss;
+
             var existing = await db.WorldZones.FindAsync(guid);
             if (existing is not null)
             {
                 existing.Name            = z.Name ?? existing.Name;
                 existing.Description     = z.Description;
-                existing.Icon            = z.Icon ?? existing.Icon;
-                existing.Region          = z.Region ?? existing.Region;
+                existing.Emoji           = z.Icon ?? existing.Emoji;
                 existing.Tier            = z.Tier;
-                existing.PositionX       = (float)z.X;
-                existing.PositionY       = (float)z.Y;
+                existing.Type            = zoneType;
                 existing.LevelRequirement = z.LevelReq;
-                existing.TotalXp         = z.TotalXp;
-                existing.TotalDistanceKm = z.TotalDistanceKm;
-                existing.IsCrossroads    = z.IsCrossroads;
+                existing.XpReward        = z.TotalXp;
+                existing.DistanceKm      = z.TotalDistanceKm;
+                existing.IsBoss          = isBoss;
                 existing.IsStartZone     = z.IsStart;
-                existing.IsHidden        = z.IsHidden;
             }
             else
             {
+                if (fallbackRegionId is null)
+                    return BadRequest("No regions exist — seed at least one region before creating zones via sync.");
                 db.WorldZones.Add(new WorldZoneEntity
                 {
                     Id               = guid,
                     Name             = z.Name ?? "Unnamed Zone",
                     Description      = z.Description,
-                    Icon             = z.Icon ?? "❓",
-                    Region           = z.Region ?? string.Empty,
+                    Emoji            = z.Icon ?? "❓",
+                    RegionId         = fallbackRegionId.Value,
                     Tier             = z.Tier,
-                    PositionX        = (float)z.X,
-                    PositionY        = (float)z.Y,
+                    Type             = zoneType,
                     LevelRequirement = z.LevelReq,
-                    TotalXp          = z.TotalXp,
-                    TotalDistanceKm  = z.TotalDistanceKm,
-                    IsCrossroads     = z.IsCrossroads,
+                    XpReward         = z.TotalXp,
+                    DistanceKm       = z.TotalDistanceKm,
+                    IsBoss           = isBoss,
                     IsStartZone      = z.IsStart,
-                    IsHidden         = z.IsHidden,
                 });
             }
         }
@@ -1997,37 +2370,57 @@ public record SyncCrossroadsPath(
     int EstimatedDays, int RewardXp,
     string? AdditionalRequirement, string? LeadsToNodeId);
 
+// --- Worlds (individual CRUD) ---
+public record CreateWorldRequest(string Name, bool IsActive);
+public record UpdateWorldRequest(string Name, bool IsActive);
+
+// --- Regions (individual CRUD) ---
+public record CreateRegionRequest(
+    Guid WorldId,
+    string Name,
+    string? Emoji,
+    string Theme,
+    int ChapterIndex,
+    int LevelRequirement,
+    string? Lore);
+
+public record UpdateRegionRequest(
+    string Name,
+    string? Emoji,
+    string Theme,
+    int ChapterIndex,
+    int LevelRequirement,
+    string? Lore);
+
 // --- World Zones (individual CRUD) ---
 public record CreateWorldZoneRequest(
     string Name,
     string? Description,
     string Icon,
-    string Region,
+    string? RegionName,
+    Guid? RegionId,
     int Tier,
-    double X,
-    double Y,
     int LevelReq,
     int TotalXp,
     double TotalDistanceKm,
-    bool IsCrossroads,
+    bool IsBoss,
     bool IsStart,
-    bool IsHidden,
+    string? Type = null,
     Guid? WorldId = null);
 
 public record UpdateWorldZoneRequest(
     string Name,
     string? Description,
     string Icon,
-    string Region,
+    string? RegionName,
+    Guid? RegionId,
     int Tier,
-    double X,
-    double Y,
     int LevelReq,
     int TotalXp,
     double TotalDistanceKm,
-    bool IsCrossroads,
+    bool IsBoss,
     bool IsStart,
-    bool IsHidden);
+    string? Type = null);
 
 // --- World Zone Edges (individual CRUD) ---
 public record CreateWorldZoneEdgeRequest(
@@ -2053,16 +2446,12 @@ public class WorldZonePayload
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string? Icon { get; set; }
-    public string? Region { get; set; }
+    public string? Type { get; set; }
     public int Tier { get; set; }
-    public double X { get; set; }
-    public double Y { get; set; }
     public int LevelReq { get; set; }
     public int TotalXp { get; set; }
     public double TotalDistanceKm { get; set; }
-    public bool IsCrossroads { get; set; }
     public bool IsStart { get; set; }
-    public bool IsHidden { get; set; }
 }
 
 public class WorldZoneEdgePayload

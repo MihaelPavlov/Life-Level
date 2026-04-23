@@ -16,6 +16,11 @@ public class UserWorldProgress
     public Guid? DestinationZoneId { get; set; }
     public WorldZone? DestinationZone { get; set; }
 
+    // Snapshot of the region containing CurrentZone, maintained by the service
+    // whenever CurrentZoneId changes. Lets the map screen highlight "Active"
+    // region without joining through WorldZone.
+    public Guid? CurrentRegionId { get; set; }
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid WorldId { get; set; }

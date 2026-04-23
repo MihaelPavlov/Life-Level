@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>World Map — Nested Travel Model (LL-043)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #040810;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 96px;
+    gap: 56px;
+    color: #e6edf3;
+  }
+
+  .page-title {
+    font-family: 'Cinzel', serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-align: center;
+  }
+  .page-subtitle {
+    font-size: 13px;
+    color: #8b949e;
+    text-align: center;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+    max-width: 760px;
+    line-height: 1.7;
+  }
+  .page-subtitle b { color: #e6edf3; }
+
+  .section { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #e6edf3;
+    text-align: center;
+    border-top: 1px solid #21262d;
+    padding-top: 24px;
+    width: 100%;
+    max-width: 900px;
+  }
+  .section-title .num { color: #4f9eff; margin-right: 14px; }
+  .section-intro { font-size: 12px; color: #8b949e; max-width: 760px; text-align: center; line-height: 1.7; }
+
+  .frames-row {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1800px;
+  }
+  .frame-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 390px;
+  }
+  .frame-label {
+    font-size: 12px;
+    color: #e6edf3;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .frame-label .phase {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    background: rgba(79,158,255,0.12);
+    color: #4f9eff;
+    border: 1px solid rgba(79,158,255,0.3);
+  }
+  .frame-label .phase.green { background: rgba(63,185,80,0.12); color: #3fb950; border-color: rgba(63,185,80,0.35); }
+  .frame-label .phase.orange { background: rgba(245,166,35,0.12); color: #f5a623; border-color: rgba(245,166,35,0.35); }
+  .frame-note {
+    font-size: 11px;
+    color: #8b949e;
+    line-height: 1.6;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-left: 2px solid #4f9eff;
+    border-radius: 6px;
+    padding: 10px 12px;
+    width: 100%;
+  }
+  .frame-note b { color: #e6edf3; }
+  .frame-note code { font-family: 'Courier New', monospace; color: #79c0ff; background: #161b22; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 40px;
+    border: 2px solid #30363d;
+    overflow: hidden;
+    position: relative;
+    background: #080e14;
+    flex-shrink: 0;
+  }
+
+  /* ── shared app chrome ────────────────────────────────────── */
+  .app-status-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px; z-index: 11;
+    font-size: 13px; font-weight: 600; color: #e6edf3;
+  }
+  .home-header {
+    position: absolute; top: 44px; left: 0; right: 0; height: 72px;
+    display: flex; align-items: center; gap: 12px; padding: 10px 18px;
+    z-index: 10;
+  }
+  .home-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, #4f9eff, #a371f7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    border: 2px solid #30363d;
+    flex-shrink: 0;
+  }
+  .home-header-text { flex: 1; }
+  .home-header-greet { font-size: 11px; color: #8b949e; letter-spacing: 0.5px; }
+  .home-header-name { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: #e6edf3; letter-spacing: 1px; }
+  .home-bell {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #161b22; border: 1px solid #30363d;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; position: relative;
+  }
+  .home-bell::after {
+    content: ""; position: absolute; top: 8px; right: 8px;
+    width: 7px; height: 7px; border-radius: 50%; background: #f85149; border: 1px solid #080e14;
+  }
+
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+    background: rgba(14,19,26,0.97); border-top: 1px solid #21262d;
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 6px 8px 18px; z-index: 10;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+  .nav-icon { font-size: 18px; }
+  .nav-text { font-size: 9px; font-weight: 700; color: #8b949e; letter-spacing: 0.7px; text-transform: uppercase; }
+  .nav-item.active .nav-text { color: #4f9eff; }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 4px #4f9effaa); }
+  .fab {
+    position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+    width: 62px; height: 62px; border-radius: 50%;
+    background: linear-gradient(135deg, #f85149, #d63a3a);
+    border: 3px solid #080e14;
+    box-shadow: 0 6px 20px rgba(248,81,73,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; z-index: 11;
+  }
+
+  /* ── adventure hero card ──────────────────────────────────── */
+  .hero {
+    margin: 128px 16px 0;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero.blue { background: linear-gradient(160deg, rgba(79,158,255,0.16), rgba(79,158,255,0.04)); border: 1px solid rgba(79,158,255,0.35); box-shadow: 0 6px 28px rgba(79,158,255,0.12); }
+  .hero.green { background: linear-gradient(160deg, rgba(63,185,80,0.16), rgba(63,185,80,0.04)); border: 1px solid rgba(63,185,80,0.4); box-shadow: 0 6px 28px rgba(63,185,80,0.14); }
+  .hero.orange { background: linear-gradient(160deg, rgba(245,166,35,0.16), rgba(245,166,35,0.04)); border: 1px solid rgba(245,166,35,0.4); box-shadow: 0 6px 28px rgba(245,166,35,0.14); }
+
+  .hero-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .hero-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; flex-shrink: 0;
+    background: rgba(8,14,20,0.55); border: 1px solid rgba(255,255,255,0.08);
+  }
+  .hero-phase-chip {
+    font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+    padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
+    display: inline-block; margin-bottom: 4px;
+  }
+  .hero-phase-chip.blue { color: #4f9eff; background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3); }
+  .hero-phase-chip.green { color: #3fb950; background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); }
+  .hero-phase-chip.orange { color: #f5a623; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3); }
+  .hero-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: #e6edf3; letter-spacing: 1.1px; line-height: 1.2; }
+  .hero-sub { font-size: 11px; color: #8b949e; margin-top: 4px; letter-spacing: 0.3px; }
+
+  .hero-progress-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 11px; color: #8b949e; margin-bottom: 6px;
+  }
+  .hero-progress-row b { color: #e6edf3; font-weight: 700; }
+  .hero-progress-row b.blue { color: #79c0ff; }
+  .hero-progress-row b.green { color: #3fb950; }
+
+  .hero-bar-outer {
+    height: 8px; border-radius: 4px; overflow: hidden;
+    background: rgba(255,255,255,0.06);
+  }
+  .hero-bar-outer.blue { background: rgba(79,158,255,0.15); }
+  .hero-bar-outer.green { background: rgba(63,185,80,0.15); }
+
+  .hero-bar-inner {
+    height: 100%; border-radius: 4px;
+  }
+  .hero-bar-inner.blue { background: linear-gradient(90deg, #4f9eff, #79c0ff); box-shadow: 0 0 8px rgba(79,158,255,0.5); }
+  .hero-bar-inner.green { background: linear-gradient(90deg, #3fb950, #7ae08a); box-shadow: 0 0 8px rgba(63,185,80,0.5); }
+
+  .hero-cta {
+    margin-top: 14px; width: 100%; height: 42px;
+    border-radius: 12px; border: none; color: #fff;
+    font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
+    letter-spacing: 0.4px;
+  }
+  .hero-cta.blue { background: #4f9eff; box-shadow: 0 4px 14px rgba(79,158,255,0.35); }
+  .hero-cta.green { background: #3fb950; box-shadow: 0 4px 14px rgba(63,185,80,0.35); }
+  .hero-cta.orange { background: #f5a623; box-shadow: 0 4px 14px rgba(245,166,35,0.35); }
+
+  .idle-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 16px;
+    background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.35);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+    color: #f5a623; margin-top: 10px; text-transform: uppercase;
+  }
+
+  /* supporting cards below hero */
+  .supp-card {
+    margin: 14px 16px 0; padding: 14px;
+    background: #111821; border: 1px solid #21262d; border-radius: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .supp-icon { font-size: 20px; }
+  .supp-text { flex: 1; font-size: 11px; color: #8b949e; line-height: 1.5; }
+  .supp-text b { color: #e6edf3; display: block; margin-bottom: 2px; font-size: 12px; }
+
+  /* ── state machine diagram ────────────────────────────────── */
+  .diagram-row {
+    display: flex; flex-direction: row; gap: 32px;
+    align-items: flex-start; justify-content: center;
+    flex-wrap: wrap; max-width: 1280px;
+  }
+  .diagram-svg {
+    background: #0d1117; border: 1px solid #21262d; border-radius: 14px;
+    padding: 24px;
+  }
+  .invariants-panel {
+    max-width: 360px;
+    background: #0d1117; border: 1px solid #21262d; border-radius: 14px;
+    padding: 22px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .invariants-panel h3 {
+    font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 1.6px;
+    color: #e6edf3; font-weight: 700; text-transform: uppercase;
+  }
+  .invariants-panel ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .invariants-panel li {
+    font-size: 12px; color: #c9d1d9; line-height: 1.55;
+    padding-left: 20px; position: relative;
+  }
+  .invariants-panel li::before {
+    content: "■"; position: absolute; left: 0; top: 0;
+    color: #4f9eff; font-size: 10px;
+  }
+  .invariants-panel li b { color: #e6edf3; }
+  .invariants-panel li code { font-family: 'Courier New', monospace; font-size: 10px; color: #79c0ff; background: #161b22; padding: 1px 4px; border-radius: 3px; }
+
+  /* ── zone status ladder ──────────────────────────────────── */
+  .zone-canvas {
+    position: absolute; top: 44px; left: 0; right: 0; bottom: 82px;
+    overflow: hidden;
+  }
+
+  /* ── bottom sheet for rejected flows ─────────────────────── */
+  .dim-overlay { position: absolute; inset: 0; background: rgba(4,8,16,0.72); z-index: 5; }
+  .bottom-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #161b22; border-radius: 20px 20px 0 0;
+    z-index: 20; padding: 0 20px 28px;
+    border-top: 1px solid #30363d;
+    display: flex; flex-direction: column;
+  }
+  .drag-handle {
+    width: 40px; height: 4px; background: #3a4a5a; border-radius: 2px;
+    margin: 12px auto 16px; flex-shrink: 0;
+  }
+  .sheet-head-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .sheet-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+  .sheet-head-text { flex: 1; min-width: 0; }
+  .sheet-zone-name {
+    font-family: 'Cinzel', serif; font-size: 17px; font-weight: 700;
+    color: #e6edf3; letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .sheet-region { font-size: 11px; color: #8b949e; margin-top: 2px; }
+  .status-pill {
+    font-size: 9px; font-weight: 700;
+    padding: 3px 8px; border-radius: 10px;
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .status-pill.blocked { color: #f85149; background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.4); }
+  .sheet-desc { font-size: 12px; color: #8b949e; line-height: 1.6; margin: 14px 0 14px; }
+  .block-note {
+    background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.28);
+    border-left: 3px solid #f85149;
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 11px; color: #e6edf3; line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .block-note b { color: #f85149; }
+  .sheet-buttons { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-close {
+    flex: 1; height: 44px; border-radius: 12px;
+    border: 1.5px solid #30363d; background: transparent; color: #8b949e;
+    font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  }
+  .btn-cancel-trip {
+    flex: 2; height: 44px; border-radius: 12px; border: none;
+    background: #f5a623; color: #080e14; font-size: 13px; font-weight: 700;
+    font-family: 'Inter', sans-serif; letter-spacing: 0.3px;
+    box-shadow: 0 4px 14px rgba(245,166,35,0.35);
+  }
+  .btn-disabled {
+    flex: 2; height: 44px; border-radius: 12px; border: 1.5px dashed #2a3340;
+    background: transparent; color: #5f6b78; font-size: 13px; font-weight: 600;
+    font-family: 'Inter', sans-serif; letter-spacing: 0.3px;
+  }
+
+  /* ── legend strip ────────────────────────────────────────── */
+  .legend-strip {
+    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+    max-width: 900px; padding: 16px 24px;
+    background: #0d1117; border: 1px solid #21262d; border-radius: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #c9d1d9; }
+  .legend-swatch { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
+  .legend-swatch.locked { background: #1e2632; border: 2px solid #30363d; }
+  .legend-swatch.available { background: transparent; border: 2px dashed #f5a623; }
+  .legend-swatch.active { background: #4f9eff; border: 2px solid #79c0ff; box-shadow: 0 0 8px #4f9effaa; }
+  .legend-swatch.discovered { background: transparent; border: 2px solid #3fb950; }
+  .legend-swatch.completed { background: #3fb950; border: 2px solid #7ae08a; box-shadow: 0 0 8px #3fb95088; display: flex; align-items: center; justify-content: center; color: #080e14; font-weight: 900; font-size: 12px; }
+  .legend-label { display: flex; flex-direction: column; gap: 1px; }
+  .legend-label b { color: #e6edf3; font-size: 12px; font-weight: 700; }
+  .legend-label span { color: #8b949e; font-size: 10px; }
+
+  /* ── animations ──────────────────────────────────────────── */
+  @keyframes pulseRing {
+    0%, 100% { transform: scale(1); opacity: 0.55; }
+    50%     { transform: scale(1.22); opacity: 0.95; }
+  }
+  @keyframes dashMove { to { stroke-dashoffset: -20; } }
+  @keyframes charBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+</style>
+</head>
+<body>
+
+  <div>
+    <div class="page-title">WORLD MAP · NESTED TRAVEL MODEL</div>
+    <div class="page-subtitle">
+      A redesign of the travel loop. <b>World-zone travel</b> and <b>local-map-node travel</b> become nested layers with a single active edge at a time — you travel to a zone first, <i>then</i> explore its nodes. Distance overflow on arrival banks into <b>IdleKm</b> and is consumed by the next edge. A zone reaches <b>Completed</b> only after every node inside it is unlocked. Ticket: <b>LL-043</b>.
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 1 — State Machine                                          -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-title"><span class="num">01</span>STATE MACHINE</div>
+    <div class="section-intro">
+      The player is always in exactly one of four phases. Transitions happen on <i>set destination</i> or <i>arrival</i>. Distance from an activity advances <b>only the currently-active edge</b> — never both layers at once.
+    </div>
+
+    <div class="diagram-row">
+      <svg class="diagram-svg" width="680" height="420" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b949e"/>
+          </marker>
+          <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f9eff"/>
+          </marker>
+          <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3fb950"/>
+          </marker>
+        </defs>
+
+        <!-- AT_ZONE node (top-left) -->
+        <g transform="translate(60,40)">
+          <rect width="220" height="88" rx="14" fill="#1e2632" stroke="#f5a623" stroke-width="1.5"/>
+          <text x="110" y="30" text-anchor="middle" fill="#f5a623" font-family="Cinzel" font-size="12" font-weight="700" letter-spacing="2">AT_ZONE</text>
+          <text x="110" y="52" text-anchor="middle" fill="#e6edf3" font-family="Inter" font-size="11" font-weight="600">You're at zone X</text>
+          <text x="110" y="70" text-anchor="middle" fill="#8b949e" font-family="Inter" font-size="10">No active edge · ready to plan</text>
+        </g>
+
+        <!-- TRAVELING_WORLD node (top-right) -->
+        <g transform="translate(400,40)">
+          <rect width="220" height="88" rx="14" fill="#1e2632" stroke="#4f9eff" stroke-width="1.5"/>
+          <text x="110" y="30" text-anchor="middle" fill="#4f9eff" font-family="Cinzel" font-size="12" font-weight="700" letter-spacing="2">TRAVELING_WORLD</text>
+          <text x="110" y="52" text-anchor="middle" fill="#e6edf3" font-family="Inter" font-size="11" font-weight="600">X → Y on the world edge</text>
+          <text x="110" y="70" text-anchor="middle" fill="#8b949e" font-family="Inter" font-size="10">Distance → world edge</text>
+        </g>
+
+        <!-- TRAVELING_LOCAL node (bottom-right) -->
+        <g transform="translate(400,280)">
+          <rect width="220" height="88" rx="14" fill="#1e2632" stroke="#4f9eff" stroke-width="1.5"/>
+          <text x="110" y="30" text-anchor="middle" fill="#4f9eff" font-family="Cinzel" font-size="12" font-weight="700" letter-spacing="2">TRAVELING_LOCAL</text>
+          <text x="110" y="52" text-anchor="middle" fill="#e6edf3" font-family="Inter" font-size="11" font-weight="600">Heading to node N in Y</text>
+          <text x="110" y="70" text-anchor="middle" fill="#8b949e" font-family="Inter" font-size="10">Distance → local edge</text>
+        </g>
+
+        <!-- AT_NODE node (bottom-left) -->
+        <g transform="translate(60,280)">
+          <rect width="220" height="88" rx="14" fill="#1e2632" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="110" y="30" text-anchor="middle" fill="#3fb950" font-family="Cinzel" font-size="12" font-weight="700" letter-spacing="2">AT_NODE</text>
+          <text x="110" y="52" text-anchor="middle" fill="#e6edf3" font-family="Inter" font-size="11" font-weight="600">At node N · challenge ready</text>
+          <text x="110" y="70" text-anchor="middle" fill="#8b949e" font-family="Inter" font-size="10">Zone completes on last node</text>
+        </g>
+
+        <!-- AT_ZONE → TRAVELING_WORLD (top arrow, rightward) -->
+        <line x1="280" y1="84" x2="400" y2="84" stroke="#4f9eff" stroke-width="2" marker-end="url(#arrowBlue)"/>
+        <text x="340" y="76" text-anchor="middle" fill="#4f9eff" font-family="Inter" font-size="10" font-weight="600">set zone Y</text>
+
+        <!-- TRAVELING_WORLD → AT_ZONE(Y) (returning arrow below, leftward) -->
+        <path d="M 400 110 Q 340 180 280 110" fill="none" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+        <text x="340" y="150" text-anchor="middle" fill="#8b949e" font-family="Inter" font-size="10">arrive · overflow → IdleKm</text>
+
+        <!-- AT_ZONE(Y) / TRAVELING_LOCAL: vertical arrow down-right side on same node (AT_ZONE is top-left, we reuse AT_ZONE semantically: player is AT_ZONE again but in Y). Draw AT_ZONE(top-left) → TRAVELING_LOCAL(bottom-right) as diagonal meaning "pick node from the zone you just arrived at" -->
+        <line x1="280" y1="120" x2="400" y2="300" stroke="#4f9eff" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrowBlue)"/>
+        <text x="360" y="230" text-anchor="start" fill="#4f9eff" font-family="Inter" font-size="10" font-weight="600">pick node N</text>
+
+        <!-- TRAVELING_LOCAL → AT_NODE (bottom, rightward→leftward) -->
+        <line x1="400" y1="336" x2="280" y2="336" stroke="#3fb950" stroke-width="2" marker-end="url(#arrowGreen)"/>
+        <text x="340" y="328" text-anchor="middle" fill="#3fb950" font-family="Inter" font-size="10" font-weight="600">arrive</text>
+
+        <!-- AT_NODE → TRAVELING_LOCAL again (loop back up) -->
+        <path d="M 170 336 Q 170 240 170 128" fill="none" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+        <text x="100" y="220" text-anchor="start" fill="#8b949e" font-family="Inter" font-size="10">pick next node · or next zone</text>
+
+        <!-- legend caption at bottom -->
+        <text x="340" y="402" text-anchor="middle" fill="#5f6b78" font-family="Inter" font-size="10" font-style="italic">
+          Boss encounters layer on top of any phase; defeating the boss does not change phase.
+        </text>
+      </svg>
+
+      <aside class="invariants-panel">
+        <h3>Invariants</h3>
+        <ul>
+          <li><b>One active edge</b>. Never both <code>WorldProgress.CurrentEdgeId</code> and <code>MapProgress.CurrentEdgeId</code> at the same time.</li>
+          <li><b>Distance routes, doesn't cascade</b>. <code>MapService.DebugAddDistanceAsync</code> picks the active layer and forwards; the other layer stays still.</li>
+          <li><b>IdleKm banks overflow</b>. On arrival, extra km from the activity are saved on <code>UserWorldProgress.IdleKm</code> (or <code>UserMapProgress.IdleKm</code>) and consumed at the top of the next add-distance call.</li>
+          <li><b>No chain arrival</b>. One call resolves at most one edge. Overflow always banks, never auto-advances the next edge.</li>
+          <li><b>Zone completes on last node</b>. After every node unlock, count nodes vs unlocked. If equal, flip <code>UserZoneUnlock.IsCompleted = true</code> and award <i>ZoneCompletion</i> XP exactly once.</li>
+          <li><b>Guards on set-destination</b>. Server rejects a second world trip while already on a world edge. Server rejects a node destination if the node's zone ≠ <code>CurrentZoneId</code>, or if the user is mid-world-travel.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 2 — Home Card Variants                                     -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-title"><span class="num">02</span>HOME CARD VARIANTS</div>
+    <div class="section-intro">
+      <code style="font-family:'Courier New',monospace;color:#79c0ff;background:#161b22;padding:1px 6px;border-radius:3px;font-size:11px;">HomeAdventureHero</code> picks a variant from a derived <b>travelPhaseProvider</b> that reads both world and map progress. Boss takes precedence when an active boss exists (not shown here). The four travel variants below cover the four phases end-to-end.
+    </div>
+
+    <div class="frames-row">
+
+      <!-- ─── VARIANT 1: _TravelingWorldVariant ─── -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="home-header">
+            <div class="home-avatar">🧙</div>
+            <div class="home-header-text">
+              <div class="home-header-greet">Welcome back</div>
+              <div class="home-header-name">HEROFLOW</div>
+            </div>
+            <div class="home-bell">🔔</div>
+          </div>
+
+          <div class="hero blue">
+            <div class="hero-head">
+              <div class="hero-icon">⛰️</div>
+              <div>
+                <div class="hero-phase-chip blue">Traveling · World</div>
+                <div class="hero-title">Mountains of Strength</div>
+                <div class="hero-sub">Crossing the world edge from Forest of Endurance</div>
+              </div>
+            </div>
+
+            <div class="hero-progress-row">
+              <span>Edge progress</span>
+              <span><b class="blue">7.2</b> / 12 km · <b>4.8 km left</b></span>
+            </div>
+            <div class="hero-bar-outer blue">
+              <div class="hero-bar-inner blue" style="width: 60%;"></div>
+            </div>
+            <button class="hero-cta blue">View world map</button>
+          </div>
+
+          <div class="supp-card">
+            <span class="supp-icon">🧭</span>
+            <div class="supp-text">
+              <b>On the road</b>
+              Local nodes inside the destination zone are locked until you arrive.
+            </div>
+          </div>
+
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">1 · Traveling World <span class="phase">TRAVELING_WORLD</span></div>
+        <div class="frame-note">
+          Picked when <code>WorldProgress.CurrentEdgeId != null</code>. Label reads <b>destination zone name</b>, not node name. Km left from the <i>world</i> edge. CTA deep-links to the world map so the user can watch their character advance.
+        </div>
+      </div>
+
+      <!-- ─── VARIANT 2: _AtZoneVariant ─── -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="home-header">
+            <div class="home-avatar">🧙</div>
+            <div class="home-header-text">
+              <div class="home-header-greet">Welcome back</div>
+              <div class="home-header-name">HEROFLOW</div>
+            </div>
+            <div class="home-bell">🔔</div>
+          </div>
+
+          <div class="hero orange">
+            <div class="hero-head">
+              <div class="hero-icon">🏔️</div>
+              <div>
+                <div class="hero-phase-chip orange">Arrived · At Zone</div>
+                <div class="hero-title">Mountains of Strength</div>
+                <div class="hero-sub">You made it. Pick a node to explore.</div>
+              </div>
+            </div>
+
+            <div class="hero-progress-row">
+              <span>Zone progress</span>
+              <span><b>0</b> / 5 nodes visited</span>
+            </div>
+            <div class="hero-bar-outer" style="background: rgba(245,166,35,0.15);">
+              <div class="hero-bar-inner" style="width: 0%; background: linear-gradient(90deg,#f5a623,#ffc861); box-shadow: 0 0 8px rgba(245,166,35,0.5);"></div>
+            </div>
+            <div class="idle-chip">💰 +3.2 km banked · IdleKm</div>
+            <button class="hero-cta orange">Explore map →</button>
+          </div>
+
+          <div class="supp-card">
+            <span class="supp-icon">📍</span>
+            <div class="supp-text">
+              <b>Forest of Endurance · Completed ✓</b>
+              ZoneCompletion XP was awarded when you cleared the last node.
+            </div>
+          </div>
+
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">2 · At Zone <span class="phase orange">AT_ZONE</span></div>
+        <div class="frame-note">
+          Picked when no edge is active and no node destination is set. This is the <b>plan-next-step</b> moment — the only phase that shows <b>IdleKm</b> prominently, since it's about to be consumed by the next edge. Zone progress counts <i>local nodes visited</i>, not km.
+        </div>
+      </div>
+
+      <!-- ─── VARIANT 3: _TravelingLocalVariant ─── -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="home-header">
+            <div class="home-avatar">🧙</div>
+            <div class="home-header-text">
+              <div class="home-header-greet">Welcome back</div>
+              <div class="home-header-name">HEROFLOW</div>
+            </div>
+            <div class="home-bell">🔔</div>
+          </div>
+
+          <div class="hero blue">
+            <div class="hero-head">
+              <div class="hero-icon">🗿</div>
+              <div>
+                <div class="hero-phase-chip blue">Traveling · Local</div>
+                <div class="hero-title">Stone Spire</div>
+                <div class="hero-sub">Inside Mountains of Strength</div>
+              </div>
+            </div>
+
+            <div class="hero-progress-row">
+              <span>Edge progress</span>
+              <span><b class="blue">1.1</b> / 2.0 km · <b>0.9 km left</b></span>
+            </div>
+            <div class="hero-bar-outer blue">
+              <div class="hero-bar-inner blue" style="width: 55%;"></div>
+            </div>
+            <button class="hero-cta blue">View local map</button>
+          </div>
+
+          <div class="supp-card">
+            <span class="supp-icon">🏔️</span>
+            <div class="supp-text">
+              <b>2 / 5 nodes in this zone</b>
+              Unlock the remaining 3 to complete Mountains of Strength.
+            </div>
+          </div>
+
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">3 · Traveling Local <span class="phase">TRAVELING_LOCAL</span></div>
+        <div class="frame-note">
+          Picked when <code>MapProgress.CurrentEdgeId != null</code>. Visually similar to today's traveling card, but the <b>sub-label now reads "Inside &lt;zone name&gt;"</b> — making the nested relationship explicit. Supporting card surfaces zone completion progress.
+        </div>
+      </div>
+
+      <!-- ─── VARIANT 4: _AtNodeVariant ─── -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="home-header">
+            <div class="home-avatar">🧙</div>
+            <div class="home-header-text">
+              <div class="home-header-greet">Welcome back</div>
+              <div class="home-header-name">HEROFLOW</div>
+            </div>
+            <div class="home-bell">🔔</div>
+          </div>
+
+          <div class="hero green">
+            <div class="hero-head">
+              <div class="hero-icon">🗿</div>
+              <div>
+                <div class="hero-phase-chip green">Arrived · At Node</div>
+                <div class="hero-title">Stone Spire</div>
+                <div class="hero-sub">Challenge unlocked · Mountains of Strength</div>
+              </div>
+            </div>
+
+            <div class="hero-progress-row">
+              <span>Node status</span>
+              <span><b class="green">Ready ✓</b></span>
+            </div>
+            <div class="hero-bar-outer green">
+              <div class="hero-bar-inner green" style="width: 100%;"></div>
+            </div>
+            <button class="hero-cta green">Start challenge</button>
+          </div>
+
+          <div class="supp-card">
+            <span class="supp-icon">🏆</span>
+            <div class="supp-text">
+              <b>3 / 5 nodes visited</b>
+              2 more and this zone flips to <span style="color:#3fb950;font-weight:600;">Completed</span>.
+            </div>
+          </div>
+
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">4 · At Node <span class="phase green">AT_NODE</span></div>
+        <div class="frame-note">
+          Picked when the user has arrived at a node and no new destination is queued. CTA jumps straight into the node's challenge. Supporting card is the <b>zone-completion nudge</b> — the only place this ladder is shown mid-play.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 3 — World Map Zone Statuses                                -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-title"><span class="num">03</span>ZONE STATUS LADDER</div>
+    <div class="section-intro">
+      Today's map only distinguishes <i>Locked · Available · Active (arrived)</i>. The new model adds <b>Discovered</b> (arrived, but not all nodes cleared) and <b>Completed</b> (all nodes cleared). The <i>arrived</i> state itself disappears — it's a transient moment, not a map-level status.
+    </div>
+
+    <div class="frames-row">
+
+      <!-- BEFORE -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="zone-canvas" style="background: radial-gradient(ellipse at 30% 20%, #4f9eff14, #04081000 60%), #040810;">
+            <svg width="390" height="718" viewBox="0 0 390 718" xmlns="http://www.w3.org/2000/svg">
+              <!-- connectors -->
+              <line x1="195" y1="120" x2="195" y2="260" stroke="#3fb950" stroke-width="2" stroke-dasharray="6 5" opacity="0.55"/>
+              <line x1="195" y1="305" x2="100" y2="440" stroke="#4f9eff" stroke-width="2" stroke-dasharray="6 5" opacity="0.6"/>
+              <line x1="195" y1="305" x2="290" y2="440" stroke="#30363d" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+              <line x1="100" y1="480" x2="100" y2="600" stroke="#30363d" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+
+              <!-- Zone nodes -->
+              <!-- Zone 1: completed (today = just "unlocked") -->
+              <circle cx="195" cy="90" r="30" fill="#3fb950" stroke="#7ae08a" stroke-width="2" opacity="0.65"/>
+              <text x="195" y="95" text-anchor="middle" font-size="22">🌲</text>
+              <text x="195" y="150" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#e6edf3">Forest</text>
+              <text x="195" y="165" text-anchor="middle" font-family="Inter" font-size="9" fill="#3fb950" letter-spacing="1" font-weight="700">UNLOCKED</text>
+
+              <!-- Zone 2: active (today = at this zone) -->
+              <circle cx="195" cy="282" r="34" fill="#4f9eff" stroke="#79c0ff" stroke-width="2"/>
+              <text x="195" y="287" text-anchor="middle" font-size="24">⛰️</text>
+              <text x="195" y="345" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#e6edf3">Mountains</text>
+              <text x="195" y="360" text-anchor="middle" font-family="Inter" font-size="9" fill="#4f9eff" letter-spacing="1" font-weight="700">ACTIVE</text>
+
+              <!-- Zone 3: available (today) - orange dashed ring -->
+              <circle cx="100" cy="460" r="28" fill="transparent" stroke="#f5a623" stroke-width="2" stroke-dasharray="5 3" opacity="0.9"/>
+              <text x="100" y="465" text-anchor="middle" font-size="20" opacity="0.8">🌊</text>
+              <text x="100" y="515" text-anchor="middle" font-family="Inter" font-size="10" font-weight="700" fill="#e6edf3">Ocean</text>
+              <text x="100" y="528" text-anchor="middle" font-family="Inter" font-size="9" fill="#f5a623" letter-spacing="1" font-weight="700">AVAILABLE</text>
+
+              <!-- Zone 4: locked -->
+              <circle cx="290" cy="460" r="26" fill="#1e2632" stroke="#30363d" stroke-width="2"/>
+              <text x="290" y="465" text-anchor="middle" font-size="18" opacity="0.35">🏜️</text>
+              <text x="290" y="515" text-anchor="middle" font-family="Inter" font-size="10" font-weight="700" fill="#5f6b78">Desert</text>
+              <text x="290" y="528" text-anchor="middle" font-family="Inter" font-size="9" fill="#5f6b78" letter-spacing="1" font-weight="700">LOCKED</text>
+
+              <!-- Zone 5: locked -->
+              <circle cx="100" cy="620" r="26" fill="#1e2632" stroke="#30363d" stroke-width="2"/>
+              <text x="100" y="625" text-anchor="middle" font-size="18" opacity="0.35">❄️</text>
+              <text x="100" y="672" text-anchor="middle" font-family="Inter" font-size="9" fill="#5f6b78" letter-spacing="1" font-weight="700">LV 12</text>
+            </svg>
+          </div>
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">Before · today's model</div>
+        <div class="frame-note">
+          Only <b>3 states</b> on the map: Locked / Available / Active. "Unlocked" zones (i.e., arrived-at) are rendered identically whether you've cleared the nodes inside or not — no affordance for zone-level progress. No "completed" terminal state.
+        </div>
+      </div>
+
+      <!-- AFTER -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+
+          <!-- traveling banner at top of map (new) -->
+          <div style="position:absolute; top:44px; left:12px; right:12px; z-index:6; background: rgba(79,158,255,0.14); border: 1px solid rgba(79,158,255,0.4); border-radius: 12px; padding: 10px 14px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:16px;">⛰️</span>
+            <div style="flex:1;">
+              <div style="font-size:10px; color:#79c0ff; letter-spacing:1.2px; font-weight:700; text-transform:uppercase;">Traveling · World</div>
+              <div style="font-size:11px; color:#e6edf3; font-weight:600; margin-top:1px;">Mountains of Strength · 4.8 km left</div>
+            </div>
+            <button style="height:28px; padding:0 10px; border-radius:8px; border:1px solid #f5a623; background:transparent; color:#f5a623; font-size:10px; font-weight:700; letter-spacing:0.5px;">CANCEL</button>
+          </div>
+
+          <div class="zone-canvas" style="top: 108px; background: radial-gradient(ellipse at 30% 20%, #4f9eff14, #04081000 60%), #040810;">
+            <svg width="390" height="654" viewBox="0 0 390 654" xmlns="http://www.w3.org/2000/svg">
+              <!-- connectors -->
+              <line x1="195" y1="100" x2="195" y2="220" stroke="#3fb950" stroke-width="2" stroke-dasharray="6 5" opacity="0.55"/>
+              <line x1="195" y1="263" x2="100" y2="390" stroke="#4f9eff" stroke-width="2.2" stroke-dasharray="6 5">
+                <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="1.4s" repeatCount="indefinite"/>
+              </line>
+              <line x1="195" y1="263" x2="290" y2="390" stroke="#30363d" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+              <line x1="100" y1="430" x2="100" y2="540" stroke="#30363d" stroke-width="2" stroke-dasharray="6 5" opacity="0.5"/>
+
+              <!-- Zone 1: COMPLETED (new state!) - full green + check -->
+              <circle cx="195" cy="72" r="30" fill="#3fb950" stroke="#7ae08a" stroke-width="2.5"/>
+              <text x="195" y="78" text-anchor="middle" font-size="20">🌲</text>
+              <circle cx="220" cy="52" r="11" fill="#080e14" stroke="#3fb950" stroke-width="1.5"/>
+              <text x="220" y="57" text-anchor="middle" font-size="12" fill="#3fb950" font-weight="900">✓</text>
+              <text x="195" y="128" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#e6edf3">Forest</text>
+              <text x="195" y="143" text-anchor="middle" font-family="Inter" font-size="9" fill="#3fb950" letter-spacing="1" font-weight="700">COMPLETED · 5/5</text>
+
+              <!-- Zone 2: DISCOVERED (new state!) - outlined green, not filled -->
+              <circle cx="195" cy="243" r="30" fill="transparent" stroke="#3fb950" stroke-width="2.5"/>
+              <text x="195" y="249" text-anchor="middle" font-size="20" opacity="0.9">⛰️</text>
+              <!-- mini progress ring showing 2/5 inside -->
+              <circle cx="195" cy="243" r="36" fill="transparent" stroke="#3fb95055" stroke-width="1"/>
+              <circle cx="195" cy="243" r="36" fill="transparent" stroke="#3fb950" stroke-width="1.5"
+                      stroke-dasharray="90 226" transform="rotate(-90 195 243)"/>
+              <text x="195" y="299" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#e6edf3">Mountains</text>
+              <text x="195" y="314" text-anchor="middle" font-family="Inter" font-size="9" fill="#3fb950" letter-spacing="1" font-weight="700">DISCOVERED · 2/5</text>
+
+              <!-- Zone 3: traveling destination (pulsing orange ring) - available but actively traveled -->
+              <circle cx="100" cy="410" r="36" fill="transparent" stroke="#f5a623" stroke-width="2" opacity="0.6">
+                <animate attributeName="r" values="34;42;34" dur="1.6s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.85;0.35;0.85" dur="1.6s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="100" cy="410" r="28" fill="transparent" stroke="#f5a623" stroke-width="2" stroke-dasharray="5 3"/>
+              <text x="100" y="415" text-anchor="middle" font-size="20" opacity="0.85">🌊</text>
+              <text x="100" y="462" text-anchor="middle" font-family="Inter" font-size="10" font-weight="700" fill="#e6edf3">Ocean</text>
+              <text x="100" y="475" text-anchor="middle" font-family="Inter" font-size="9" fill="#f5a623" letter-spacing="1" font-weight="700">DESTINATION</text>
+
+              <!-- character on edge between Mountains and Ocean (60% along) -->
+              <g transform="translate(157,320)">
+                <circle cx="0" cy="0" r="12" fill="#080e14" stroke="#79c0ff" stroke-width="2"/>
+                <text x="0" y="4" text-anchor="middle" font-size="14">🧙</text>
+                <animateTransform attributeName="transform" attributeType="XML" type="translate"
+                                  values="157,320; 157,317; 157,320" dur="1.2s" repeatCount="indefinite"/>
+              </g>
+
+              <!-- Zone 4: locked -->
+              <circle cx="290" cy="410" r="26" fill="#1e2632" stroke="#30363d" stroke-width="2"/>
+              <text x="290" y="415" text-anchor="middle" font-size="18" opacity="0.35">🏜️</text>
+              <text x="290" y="465" text-anchor="middle" font-family="Inter" font-size="10" font-weight="700" fill="#5f6b78">Desert</text>
+              <text x="290" y="478" text-anchor="middle" font-family="Inter" font-size="9" fill="#5f6b78" letter-spacing="1" font-weight="700">LOCKED</text>
+
+              <!-- Zone 5: locked -->
+              <circle cx="100" cy="560" r="26" fill="#1e2632" stroke="#30363d" stroke-width="2"/>
+              <text x="100" y="565" text-anchor="middle" font-size="18" opacity="0.35">❄️</text>
+              <text x="100" y="612" text-anchor="middle" font-family="Inter" font-size="9" fill="#5f6b78" letter-spacing="1" font-weight="700">LV 12</text>
+            </svg>
+          </div>
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">After · nested model</div>
+        <div class="frame-note">
+          <b>5 states</b>: Locked · Available · Destination · Discovered · Completed. "Discovered" shows an outlined ring with a <b>mini progress arc</b> (nodes unlocked / total). "Completed" adds a checkmark badge. A persistent <b>traveling banner</b> at the top makes it obvious which zone you're en-route to, with a one-tap <i>Cancel</i> that banks progress into IdleKm.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legend-strip">
+      <div class="legend-item"><div class="legend-swatch locked"></div><div class="legend-label"><b>Locked</b><span>Level not met</span></div></div>
+      <div class="legend-item"><div class="legend-swatch available"></div><div class="legend-label"><b>Available</b><span>Adjacent, unlocked</span></div></div>
+      <div class="legend-item"><div class="legend-swatch active"></div><div class="legend-label"><b>Destination</b><span>Currently traveling here</span></div></div>
+      <div class="legend-item"><div class="legend-swatch discovered"></div><div class="legend-label"><b>Discovered</b><span>Arrived · nodes remaining</span></div></div>
+      <div class="legend-item"><div class="legend-swatch completed">✓</div><div class="legend-label"><b>Completed</b><span>All nodes unlocked</span></div></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 4 — Rejected Interaction Flows                             -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-title"><span class="num">04</span>REJECTED INTERACTIONS</div>
+    <div class="section-intro">
+      The server enforces the <i>one active edge</i> invariant. The UI must preview these rejections so a tap never feels broken — both detail sheets surface the reason and offer the only valid next step.
+    </div>
+
+    <div class="frames-row">
+
+      <!-- Zone sheet while already traveling world -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="zone-canvas" style="background:#040810;"></div>
+          <div class="dim-overlay"></div>
+          <div class="bottom-sheet">
+            <div class="drag-handle"></div>
+            <div class="sheet-head-row">
+              <span class="sheet-icon">🏜️</span>
+              <div class="sheet-head-text">
+                <div class="sheet-zone-name">Dunes of Agility</div>
+                <div class="sheet-region">Available · Tier 2</div>
+              </div>
+              <span class="status-pill blocked">Blocked</span>
+            </div>
+            <div class="sheet-desc">Swift travelers thrive here. Dexterity trials reward agile stats.</div>
+            <div class="block-note">
+              <b>Can't start a second trip.</b> You're already traveling to <b>Mountains of Strength</b> (4.8 km left). Cancel that trip to plan a new one — partial progress will bank into IdleKm.
+            </div>
+            <div class="sheet-buttons">
+              <button class="btn-close">Close</button>
+              <button class="btn-cancel-trip">Cancel current trip</button>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">World zone · already traveling</div>
+        <div class="frame-note">
+          <code>world_map_detail_sheet.dart</code>. Travel button is replaced by a <b>Cancel trip</b> primary action that calls <code>POST /api/world/cancel-trip</code>, clearing <code>CurrentEdgeId</code> and banking <code>DistanceTraveledOnEdge</code> into <code>IdleKm</code>.
+        </div>
+      </div>
+
+      <!-- Node sheet while not in the zone -->
+      <div class="frame-wrapper">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="zone-canvas" style="background:#040810;"></div>
+          <div class="dim-overlay"></div>
+          <div class="bottom-sheet">
+            <div class="drag-handle"></div>
+            <div class="sheet-head-row">
+              <span class="sheet-icon">🗿</span>
+              <div class="sheet-head-text">
+                <div class="sheet-zone-name">Stone Spire</div>
+                <div class="sheet-region">Inside Mountains of Strength · 2 km from entrance</div>
+              </div>
+              <span class="status-pill blocked">Blocked</span>
+            </div>
+            <div class="sheet-desc">A vertical boulder climb. Grants STR on first clear.</div>
+            <div class="block-note">
+              <b>You're not in this zone yet.</b> Nodes unlock only while you're <b>inside</b> their zone. Travel to <b>Mountains of Strength</b> on the world map first.
+            </div>
+            <div class="sheet-buttons">
+              <button class="btn-close">Close</button>
+              <button class="btn-disabled">Set destination</button>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">Node · wrong zone / world-traveling</div>
+        <div class="frame-note">
+          <code>node_detail_sheet.dart</code>. Set-destination is greyed with a dashed outline. Same state shows when the phase is <code>travelingWorld</code> — the inline note swaps to "<i>Arrive first, then pick a node</i>". Server-side: <code>UserMapProgressService.SetDestinationAsync</code> throws on both conditions.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 5 — IdleKm Bank                                            -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-title"><span class="num">05</span>IDLEKM BANK</div>
+    <div class="section-intro">
+      When an activity's distance overshoots the current edge, the excess banks onto <code>UserWorldProgress.IdleKm</code> (or the local equivalent) and is <b>consumed at the top of the next <code>AddDistanceAsync</code> call</b>. Never lost. Never auto-applies to an edge the user hasn't chosen.
+    </div>
+
+    <div class="frames-row">
+
+      <!-- Bank illustration -->
+      <div class="frame-wrapper" style="width: 420px;">
+        <div class="phone">
+          <div class="app-status-bar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="home-header">
+            <div class="home-avatar">🧙</div>
+            <div class="home-header-text">
+              <div class="home-header-greet">Workout logged</div>
+              <div class="home-header-name">+20 KM RUN</div>
+            </div>
+            <div class="home-bell">🔔</div>
+          </div>
+
+          <!-- arrival event card -->
+          <div class="hero green" style="margin-top:128px;">
+            <div class="hero-head">
+              <div class="hero-icon">🎉</div>
+              <div>
+                <div class="hero-phase-chip green">Arrival · Zone unlocked</div>
+                <div class="hero-title">Mountains of Strength</div>
+                <div class="hero-sub">+120 ZoneDiscovery XP</div>
+              </div>
+            </div>
+
+            <div style="background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 12px; margin-top: 4px;">
+              <div style="font-size: 10px; color: #8b949e; letter-spacing: 1.4px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">Distance math</div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; color:#e6edf3; margin-bottom:6px;">
+                <span style="color:#8b949e;">Activity</span>
+                <span><b>20.0 km</b></span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; color:#e6edf3; margin-bottom:6px;">
+                <span style="color:#8b949e;">Edge remaining</span>
+                <span>− 5.0 km</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; color:#e6edf3; margin-bottom:6px; padding-bottom:6px; border-bottom:1px dashed #21262d;">
+                <span style="color:#8b949e;">Applied to edge</span>
+                <span style="color:#3fb950;"><b>5.0 km → arrive ✓</b></span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:#f5a623; font-weight:700;">
+                <span>Banked IdleKm</span>
+                <span><b>+15.0 km</b></span>
+              </div>
+            </div>
+
+            <button class="hero-cta orange" style="margin-top: 14px;">Pick your next step →</button>
+          </div>
+
+          <div class="supp-card">
+            <span class="supp-icon">💡</span>
+            <div class="supp-text">
+              <b>IdleKm applies automatically</b>
+              Next destination you set — world or local — will draw from this 15 km before counting new activity.
+            </div>
+          </div>
+
+          <div class="fab">🗡️</div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-text">Home</div></div>
+            <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-text">Map</div></div>
+            <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-text">Quests</div></div>
+            <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-text">Profile</div></div>
+          </div>
+        </div>
+        <div class="frame-label">Arrival + bank math</div>
+        <div class="frame-note">
+          Shown right after the activity resolves. Illustrates the split: <b>5 km closed the edge</b>, <b>15 km banked</b>. No second-edge auto-advance — the user chooses the next destination, and only then does IdleKm start consuming. Simpler state, no surprise.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</body>
+</html>

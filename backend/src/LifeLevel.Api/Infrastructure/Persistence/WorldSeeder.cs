@@ -9,91 +9,81 @@ public class WorldSeeder(AppDbContext db)
     /// </summary>
     public async Task SeedAsync()
     {
-        if (await db.Worlds.AnyAsync()) return;
+        if (!await db.Worlds.AnyAsync())
+        {
+            var world = WorldSeedData.CreateWorld();
+            db.Worlds.Add(world);
+            await db.SaveChangesAsync();
 
-        var world = WorldSeedData.CreateWorld();
-        db.Worlds.Add(world);
+            db.Regions.AddRange(WorldSeedData.CreateRegions(world.Id));
+            await db.SaveChangesAsync();
 
-        db.WorldZones.AddRange(WorldSeedData.CreateZones(world.Id));
-        await db.SaveChangesAsync();
+            db.WorldZones.AddRange(WorldSeedData.CreateZones());
+            await db.SaveChangesAsync();
 
-        db.WorldZoneEdges.AddRange(WorldSeedData.CreateEdges(world.Id));
-        await db.SaveChangesAsync();
+            db.WorldZoneEdges.AddRange(WorldSeedData.CreateEdges());
+            await db.SaveChangesAsync();
+        }
 
-        db.MapNodes.AddRange(WorldSeedData.CreateMapNodes());
-        await db.SaveChangesAsync();
-
-        db.MapEdges.AddRange(WorldSeedData.CreateMapEdges());
-        await db.SaveChangesAsync();
-
-        db.Bosses.AddRange(WorldSeedData.CreateBosses());
-        db.Chests.AddRange(WorldSeedData.CreateChests());
-        var dungeons = WorldSeedData.CreateDungeons();
-        db.DungeonPortals.AddRange(dungeons);
-        db.DungeonFloors.AddRange(dungeons.SelectMany(d => d.Floors));
-        var crossroads = WorldSeedData.CreateCrossroads();
-        db.Crossroads.AddRange(crossroads);
-        db.CrossroadsPaths.AddRange(crossroads.SelectMany(c => c.Paths));
-        await db.SaveChangesAsync();
+        // Minimal local-map seed: one start node per WorldZone so activity
+        // logging and MapService.InitializeUserProgressAsync succeed. The full
+        // per-zone node graph (Boss / Chest / DungeonPortal / Crossroads) is a
+        // follow-up when those adventure modules are re-designed. Top up
+        // independently of World so older DBs get patched on startup.
+        if (!await db.MapNodes.AnyAsync())
+        {
+            db.MapNodes.AddRange(WorldSeedData.CreateMapStartNodes());
+            await db.SaveChangesAsync();
+        }
     }
 
     /// <summary>
-    /// Dev-only: wipes all world/zone/map data and reseeds from scratch.
-    /// Deletes in FK dependency order to avoid constraint violations.
+    /// Dev-only: wipes world/region/zone data and reseeds from scratch. Leaves
+    /// sub-map (MapNode/Boss/Chest/...) tables alone — they're no longer seeded
+    /// and will be empty on a fresh install.
     /// </summary>
     public async Task ClearAndReseedAsync()
     {
         // Delete in dependency order (leaf tables first, then parents)
-        // User state tables that reference content nodes
+        // Sub-map state first (if any legacy rows exist).
         await db.UserBossStates.ExecuteDeleteAsync();
         await db.UserChestStates.ExecuteDeleteAsync();
         await db.UserDungeonStates.ExecuteDeleteAsync();
         await db.UserCrossroadsStates.ExecuteDeleteAsync();
-        // User map progress tables that reference MapNodes
         await db.UserNodeUnlocks.ExecuteDeleteAsync();
         await db.UserMapProgresses.ExecuteDeleteAsync();
-        // Content child tables
         await db.DungeonFloors.ExecuteDeleteAsync();
         await db.CrossroadsPaths.ExecuteDeleteAsync();
-        // Content tables referencing MapNodes
         await db.Bosses.ExecuteDeleteAsync();
         await db.Chests.ExecuteDeleteAsync();
         await db.DungeonPortals.ExecuteDeleteAsync();
         await db.Crossroads.ExecuteDeleteAsync();
-        // Map structure
         await db.MapEdges.ExecuteDeleteAsync();
         await db.MapNodes.ExecuteDeleteAsync();
-        // World zone user state (must come before WorldZoneEdges due to CurrentEdgeId FK)
+
+        // World-zone user state (before edges — CurrentEdgeId FK).
         await db.UserZoneUnlocks.ExecuteDeleteAsync();
         await db.UserWorldProgresses.ExecuteDeleteAsync();
-        // World zone structure
         await db.WorldZoneEdges.ExecuteDeleteAsync();
         await db.WorldZones.ExecuteDeleteAsync();
+        await db.Regions.ExecuteDeleteAsync();
         await db.Worlds.ExecuteDeleteAsync();
 
-        // Seed fresh
+        // Seed fresh.
         var world = WorldSeedData.CreateWorld();
         db.Worlds.Add(world);
-        db.WorldZones.AddRange(WorldSeedData.CreateZones(world.Id));
         await db.SaveChangesAsync();
 
-        db.WorldZoneEdges.AddRange(WorldSeedData.CreateEdges(world.Id));
+        db.Regions.AddRange(WorldSeedData.CreateRegions(world.Id));
         await db.SaveChangesAsync();
 
-        db.MapNodes.AddRange(WorldSeedData.CreateMapNodes());
+        db.WorldZones.AddRange(WorldSeedData.CreateZones());
         await db.SaveChangesAsync();
 
-        db.MapEdges.AddRange(WorldSeedData.CreateMapEdges());
+        db.WorldZoneEdges.AddRange(WorldSeedData.CreateEdges());
         await db.SaveChangesAsync();
 
-        db.Bosses.AddRange(WorldSeedData.CreateBosses());
-        db.Chests.AddRange(WorldSeedData.CreateChests());
-        var dungeons = WorldSeedData.CreateDungeons();
-        db.DungeonPortals.AddRange(dungeons);
-        db.DungeonFloors.AddRange(dungeons.SelectMany(d => d.Floors));
-        var crossroads = WorldSeedData.CreateCrossroads();
-        db.Crossroads.AddRange(crossroads);
-        db.CrossroadsPaths.AddRange(crossroads.SelectMany(c => c.Paths));
+        db.MapNodes.AddRange(WorldSeedData.CreateMapStartNodes());
         await db.SaveChangesAsync();
     }
 }

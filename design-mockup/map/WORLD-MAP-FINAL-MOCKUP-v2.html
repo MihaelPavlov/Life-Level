@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — World Map · v2 · Atlas of Ardent Realms</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═════════════════════════════════════════════════════════════
+   v2 · 180° REDESIGN — "Atlas of Ardent Realms"
+   Flip vs v1:
+     - v1: dark dashboard · card feed · vertical serpentine · bottom sheet
+     - v2: parchment atlas · illustrated continent · horizontal trail · full takeover
+═════════════════════════════════════════════════════════════ */
+:root {
+  /* Parchment / ink palette */
+  --ink-void:      #0c0807;
+  --parch-deep:    #14100c;
+  --parch-base:    #1d1713;
+  --parch-mid:     #2a2119;
+  --parch-hi:      #3a2e22;
+  --parch-line:    #4d3d2d;
+
+  --ink:           #f3e4c8;
+  --ink-soft:      #c8b696;
+  --ink-muted:    #8a7659;
+  --ink-faded:    #5a4c38;
+
+  --gold:          #d4a94a;
+  --gold-hi:       #f5c876;
+  --gold-dim:      #8e6f2c;
+
+  --crimson:       #a33832;
+  --crimson-hi:    #d8534b;
+  --forest:        #5a8a48;
+  --forest-hi:     #8bc06d;
+  --royal:         #4a5c9c;
+  --royal-hi:      #7d8fd0;
+  --amethyst:      #7c5a9c;
+  --amethyst-hi:   #b088d4;
+
+  /* Subtle warm glow for ambient */
+  --glow-warm:     rgba(245, 200, 118, 0.18);
+  --glow-gold:     rgba(212, 169, 74, 0.35);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background:
+    radial-gradient(ellipse at 30% 10%, rgba(212,169,74,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(74,92,156,0.05) 0%, transparent 55%),
+    var(--ink-void);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh;
+  padding: 56px 32px;
+  gap: 44px;
+  flex-wrap: wrap;
+  color: var(--ink);
+}
+
+/* Subtle parchment paper texture behind everything */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(212,169,74,0.03) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(163,56,50,0.02) 0%, transparent 40%);
+  mix-blend-mode: screen;
+}
+
+/* ═════ Phone shell ═════ */
+.phone {
+  width: 390px; height: 844px;
+  background: var(--parch-deep);
+  border-radius: 44px;
+  overflow: hidden; position: relative;
+  box-shadow:
+    0 0 0 1px rgba(212,169,74,0.1),
+    0 0 0 2px rgba(0,0,0,0.6),
+    0 32px 80px rgba(0,0,0,0.9),
+    0 0 60px rgba(212,169,74,0.06);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.screen-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; z-index: 1; }
+.screen-label { text-align: center; max-width: 390px; }
+
+.screen-badge {
+  display: inline-block; border-radius: 2px; padding: 4px 16px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.22em;
+  font-family: 'Cinzel', serif; text-transform: uppercase;
+  margin-bottom: 8px;
+  position: relative;
+}
+.screen-badge::before,
+.screen-badge::after {
+  content: "◆"; position: absolute; top: 50%; transform: translateY(-50%);
+  font-size: 6px; color: var(--gold);
+}
+.screen-badge::before { left: 4px; }
+.screen-badge::after  { right: 4px; }
+
+.screen-title {
+  font-family: 'Cinzel', serif;
+  font-size: 16px; color: var(--ink); font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.screen-desc {
+  font-size: 11px; color: var(--ink-soft);
+  line-height: 1.55;
+  font-style: italic;
+}
+
+/* ═════ Status bar ═════ */
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px 0; z-index: 100;
+}
+.status-bar__time  { font-size: 13px; font-weight: 600; color: var(--ink); }
+.status-bar__icons { font-size: 11px; color: var(--ink-soft); }
+
+/* ═════ Nav bar (ornate parchment ribbon) ═════ */
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background:
+    linear-gradient(180deg, rgba(212,169,74,0.08) 0%, transparent 8%),
+    linear-gradient(180deg, var(--parch-base), var(--parch-deep));
+  border-top: 1px solid var(--gold-dim);
+  box-shadow:
+    inset 0 1px 0 rgba(245,200,118,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.4);
+  display: flex; align-items: center; padding: 0 8px 12px; z-index: 100;
+}
+.nav::before {
+  content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(212,169,74,0.6) 20%, rgba(245,200,118,0.8) 50%,
+    rgba(212,169,74,0.6) 80%, transparent 100%);
+}
+.nav__item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding-top: 10px; text-decoration: none;
+}
+.nav__icon { font-size: 20px; }
+.nav__label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.nav__item--active .nav__icon,
+.nav__item--active .nav__label { color: var(--gold-hi); }
+.nav__item--active .nav__icon { filter: drop-shadow(0 0 8px rgba(245,200,118,0.5)); }
+.nav__item:not(.nav__item--active) .nav__icon,
+.nav__item:not(.nav__item--active) .nav__label { color: var(--ink-muted); }
+
+/* ═════ FAB (sword emblem) ═════ */
+.fab {
+  position: absolute; bottom: 93px; left: 50%; transform: translateX(-50%);
+  width: 60px; height: 60px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(245,200,118,0.4) 0%, transparent 50%),
+    linear-gradient(145deg, var(--crimson-hi), var(--crimson) 50%, #6a1f1c);
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; z-index: 200;
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,0.5),
+    0 0 0 4px rgba(212,169,74,0.25),
+    0 0 26px rgba(248,81,73,0.4),
+    0 4px 12px rgba(0,0,0,0.6);
+}
+
+.scroll {
+  position: absolute; inset: 0; overflow-y: auto;
+  padding: 0 0 110px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ═════ Doc title bar ═════ */
+.doc-title {
+  width: 100%; text-align: center; margin-bottom: 28px;
+  padding: 0 20px;
+}
+.doc-title__name {
+  font-family: 'Cinzel', serif;
+  font-size: 26px; font-weight: 900; color: var(--gold-hi);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+  text-shadow: 0 0 20px rgba(212,169,74,0.4);
+}
+.doc-title__ornament {
+  color: var(--gold);
+  font-size: 14px;
+  letter-spacing: 0.5em;
+  margin-bottom: 12px;
+}
+.doc-title__sub {
+  font-size: 12px; color: var(--ink-soft);
+  max-width: 760px; margin: 0 auto; line-height: 1.6;
+  font-style: italic;
+}
+.doc-title__flow {
+  display: flex; gap: 6px; justify-content: center;
+  margin-top: 18px; flex-wrap: wrap;
+}
+.doc-title__step {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+  padding: 5px 14px; border-radius: 2px;
+  background: linear-gradient(180deg, rgba(212,169,74,0.12), rgba(212,169,74,0.04));
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-hi); text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(245,200,118,0.1);
+}
+.doc-title__step + .doc-title__step::before {
+  content: "⚜"; margin-right: 12px; color: var(--gold-dim); font-size: 10px;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   SHARED · ORNATE CHROME ELEMENTS
+═════════════════════════════════════════════════════════════ */
+
+/* Ornate corner filigree for panels */
+.filigree {
+  position: absolute;
+  width: 18px; height: 18px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.filigree svg { width: 100%; height: 100%; }
+.filigree--tl { top: 4px; left: 4px; }
+.filigree--tr { top: 4px; right: 4px; transform: rotate(90deg); }
+.filigree--bl { bottom: 4px; left: 4px; transform: rotate(-90deg); }
+.filigree--br { bottom: 4px; right: 4px; transform: rotate(180deg); }
+
+/* Compass HUD (persistent top-right) */
+.compass {
+  position: absolute; top: 52px; right: 14px;
+  width: 62px; height: 62px;
+  z-index: 50;
+  background:
+    radial-gradient(circle at center, rgba(20,16,12,0.9) 0%, rgba(12,8,7,0.95) 100%);
+  border: 2px solid var(--gold-dim);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,0.5),
+    0 4px 16px rgba(0,0,0,0.6),
+    inset 0 0 12px rgba(212,169,74,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif;
+}
+.compass__ring {
+  position: absolute; inset: 4px;
+  border: 1px solid rgba(212,169,74,0.3);
+  border-radius: 50%;
+}
+.compass__ring::before,
+.compass__ring::after {
+  content: ""; position: absolute; background: rgba(212,169,74,0.6);
+}
+.compass__ring::before {
+  top: -1px; left: 50%; width: 1px; height: 6px;
+  transform: translateX(-50%);
+}
+.compass__ring::after {
+  bottom: -1px; left: 50%; width: 1px; height: 6px;
+  transform: translateX(-50%);
+}
+.compass__letter {
+  position: absolute; font-size: 8px; font-weight: 700; color: var(--gold-hi);
+  font-family: 'Cinzel', serif;
+}
+.compass__letter--n { top: 3px; left: 50%; transform: translateX(-50%); }
+.compass__letter--s { bottom: 3px; left: 50%; transform: translateX(-50%); }
+.compass__letter--e { right: 4px; top: 50%; transform: translateY(-50%); }
+.compass__letter--w { left: 4px; top: 50%; transform: translateY(-50%); }
+.compass__needle {
+  width: 2px; height: 26px;
+  background: linear-gradient(180deg, var(--crimson-hi) 50%, var(--ink-soft) 50%);
+  transform: rotate(35deg);
+  transform-origin: center;
+  border-radius: 1px;
+  box-shadow: 0 0 4px rgba(248,81,73,0.5);
+}
+.compass__hub {
+  position: absolute; top: 50%; left: 50%;
+  width: 6px; height: 6px; background: var(--gold);
+  border-radius: 50%; transform: translate(-50%,-50%);
+  box-shadow: 0 0 4px var(--gold-hi);
+}
+
+/* Compass active-journey banner (beneath compass) */
+.compass-tag {
+  position: absolute; top: 118px; right: 14px; z-index: 50;
+  width: 62px;
+  font-family: 'Cinzel', serif;
+  font-size: 8px; font-weight: 700;
+  text-align: center;
+  padding: 4px 6px;
+  background: linear-gradient(180deg, rgba(163,56,50,0.9), rgba(107,31,28,0.95));
+  border: 1px solid var(--crimson);
+  border-radius: 3px;
+  color: var(--ink);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.compass-tag__km {
+  font-size: 11px; color: var(--gold-hi); font-weight: 900;
+  letter-spacing: 0.04em; margin-top: 1px;
+}
+
+/* Ornate divider with gold inline */
+.ornate-hr {
+  height: 1px; background: var(--gold-dim);
+  position: relative; margin: 14px 0;
+  opacity: 0.6;
+}
+.ornate-hr::before {
+  content: "❖";
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  background: var(--parch-deep); padding: 0 8px;
+  font-size: 10px; color: var(--gold);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   SCREEN 1 · WORLD ATLAS (illustrated continent, not a card feed)
+═════════════════════════════════════════════════════════════ */
+
+.atlas-header {
+  position: absolute; top: 44px; left: 0; right: 0; z-index: 20;
+  padding: 12px 16px 10px;
+  background:
+    linear-gradient(180deg, rgba(12,8,7,0.95) 0%, rgba(12,8,7,0.6) 70%, transparent 100%);
+  display: flex; align-items: center; gap: 12px;
+}
+.atlas-header__medallion {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(245,200,118,0.4), transparent 50%),
+    linear-gradient(145deg, var(--parch-mid), var(--parch-deep));
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 0 12px rgba(212,169,74,0.3),
+    inset 0 0 8px rgba(245,200,118,0.1);
+}
+.atlas-header__body { flex: 1; min-width: 0; }
+.atlas-header__chapter {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 2px;
+}
+.atlas-header__title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px; font-weight: 900; color: var(--ink);
+  letter-spacing: 0.08em; line-height: 1.1;
+}
+.atlas-header__lv {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
+  color: var(--gold-hi);
+}
+
+/* The continent map itself */
+.atlas-canvas {
+  position: absolute; inset: 0;
+  padding-top: 114px; padding-bottom: 106px;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(74,92,156,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 70%, rgba(90,68,50,0.12) 0%, transparent 50%),
+    linear-gradient(180deg, #1a1410 0%, #0c0807 100%);
+}
+.atlas-canvas::before {
+  /* parchment grain */
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(212,169,74,0.015) 0, rgba(212,169,74,0.015) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(212,169,74,0.015) 0, rgba(212,169,74,0.015) 1px, transparent 1px, transparent 4px);
+  opacity: 0.6; pointer-events: none;
+}
+
+.atlas-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  padding-top: 114px; padding-bottom: 106px;
+}
+
+/* Region medallions positioned absolutely */
+.atlas-region {
+  position: absolute; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer;
+}
+.atlas-region__seal {
+  width: 62px; height: 62px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(245,200,118,0.25), transparent 50%),
+    linear-gradient(145deg, var(--parch-mid), var(--parch-deep));
+  border: 2px solid var(--gold-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 4px 12px rgba(0,0,0,0.5);
+  position: relative;
+}
+.atlas-region__seal::before {
+  content: ""; position: absolute; inset: -6px;
+  border: 1px dashed var(--gold-dim); border-radius: 50%;
+  opacity: 0.4;
+}
+
+.atlas-region--active .atlas-region__seal {
+  border-color: var(--forest-hi);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 0 24px rgba(139,192,109,0.4),
+    0 4px 12px rgba(0,0,0,0.5);
+  animation: seal-pulse 3s ease-in-out infinite;
+}
+@keyframes seal-pulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 0 24px rgba(139,192,109,0.4), 0 4px 12px rgba(0,0,0,0.5); }
+  50%     { box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 0 34px rgba(139,192,109,0.65), 0 4px 12px rgba(0,0,0,0.5); }
+}
+
+.atlas-region--complete .atlas-region__seal {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(245,200,118,0.35), transparent 50%),
+    linear-gradient(145deg, rgba(212,169,74,0.2), rgba(142,111,44,0.25));
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 0 18px rgba(212,169,74,0.35),
+    0 4px 12px rgba(0,0,0,0.5);
+}
+
+.atlas-region--locked .atlas-region__seal {
+  filter: grayscale(0.8) brightness(0.5);
+  border-color: var(--ink-faded);
+}
+.atlas-region--locked::after {
+  content: "🔒";
+  position: absolute; top: -6px; right: -6px;
+  width: 22px; height: 22px;
+  background: var(--parch-deep); border: 1px solid var(--gold-dim);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  z-index: 11;
+}
+
+.atlas-region__banner {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: linear-gradient(180deg, rgba(20,16,12,0.95), rgba(12,8,7,0.98));
+  border: 1px solid var(--gold-dim);
+  padding: 3px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  position: relative;
+}
+.atlas-region__banner::before,
+.atlas-region__banner::after {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  width: 0; height: 0;
+  border-style: solid;
+}
+.atlas-region__banner::before {
+  left: -4px;
+  border-width: 9px 4px 9px 0;
+  border-color: transparent var(--gold-dim) transparent transparent;
+}
+.atlas-region__banner::after {
+  right: -4px;
+  border-width: 9px 0 9px 4px;
+  border-color: transparent transparent transparent var(--gold-dim);
+}
+
+.atlas-region__sublevel {
+  font-size: 8px; font-weight: 700;
+  color: var(--ink-muted); letter-spacing: 0.16em;
+  margin-top: 1px;
+}
+
+.atlas-region--active .atlas-region__banner  { border-color: var(--forest-hi); color: var(--forest-hi); }
+.atlas-region--complete .atlas-region__banner{ border-color: var(--gold-hi); color: var(--gold-hi); }
+
+/* Player pin on the map */
+.atlas-pin {
+  position: absolute; z-index: 14;
+  width: 24px;
+  transform: translate(-50%, -100%);
+}
+.atlas-pin__flag {
+  width: 24px; height: 18px;
+  background: linear-gradient(90deg, var(--crimson), var(--crimson-hi) 50%, var(--crimson));
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--gold-hi);
+  border: 1px solid var(--gold);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+.atlas-pin__flag::after {
+  content: ""; position: absolute; right: -6px; top: 0; bottom: 0;
+  width: 0; height: 0;
+  border-style: solid; border-width: 9px 0 9px 6px;
+  border-color: transparent transparent transparent var(--crimson-hi);
+}
+.atlas-pin__stick {
+  width: 2px; height: 14px;
+  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dim) 100%);
+  margin-left: 1px;
+}
+.atlas-pin__base {
+  width: 10px; height: 3px;
+  background: var(--crimson);
+  border-radius: 50%;
+  margin-left: -3px;
+  opacity: 0.7;
+  filter: blur(1px);
+}
+
+/* Expedition ribbon at bottom */
+.atlas-ribbon {
+  position: absolute; bottom: 102px; left: 12px; right: 12px;
+  z-index: 20;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6), 0 0 20px rgba(212,169,74,0.15);
+}
+.atlas-ribbon__inner {
+  background: linear-gradient(135deg, rgba(20,16,12,0.98), rgba(30,22,16,0.98));
+  border-radius: 3px;
+  padding: 10px 12px;
+  display: flex; align-items: center; gap: 12px;
+}
+.atlas-ribbon__seal {
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  background: radial-gradient(circle at 30% 30%, rgba(245,200,118,0.4), rgba(90,68,50,0.3) 60%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 12px rgba(212,169,74,0.25);
+}
+.atlas-ribbon__body { flex: 1; min-width: 0; }
+.atlas-ribbon__title {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
+  color: var(--gold-hi); text-transform: uppercase;
+  margin-bottom: 1px;
+}
+.atlas-ribbon__route {
+  font-size: 12px; color: var(--ink); font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.atlas-ribbon__meta {
+  font-size: 10px; color: var(--ink-soft); font-style: italic;
+  margin-top: 2px;
+}
+.atlas-ribbon__percent {
+  font-family: 'Cinzel', serif;
+  font-size: 18px; font-weight: 900; color: var(--gold-hi);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(245,200,118,0.4);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   SCREEN 2 / 4 · REGION VISTA (horizontal trail, ambient hero)
+═════════════════════════════════════════════════════════════ */
+
+.vista-hero {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, transparent 0%, var(--parch-deep) 95%);
+}
+.vista-hero__bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    linear-gradient(180deg,
+      #0f1a12 0%,
+      #1a2e1d 40%,
+      #2d3e24 70%,
+      #3d4a26 100%);
+}
+.vista-hero__sky {
+  position: absolute; top: 0; left: 0; right: 0; height: 60%;
+  background:
+    radial-gradient(ellipse at 70% 10%, rgba(245,200,118,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 30%, rgba(163,113,247,0.08) 0%, transparent 50%);
+}
+.vista-hero__sun {
+  position: absolute; top: 30%; right: 15%;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,200,118,0.6) 0%, rgba(245,200,118,0.1) 70%, transparent 100%);
+  filter: blur(1px);
+}
+.vista-hero__trees {
+  position: absolute; bottom: -4px; left: 0; right: 0;
+  height: 60%;
+  background-image:
+    /* far trees */
+    radial-gradient(ellipse 40px 60px at 40px 80%, rgba(26,46,29,0.9) 0%, transparent 70%),
+    radial-gradient(ellipse 50px 70px at 110px 75%, rgba(26,46,29,0.85) 0%, transparent 70%),
+    radial-gradient(ellipse 40px 55px at 180px 80%, rgba(26,46,29,0.9) 0%, transparent 70%),
+    radial-gradient(ellipse 60px 80px at 260px 70%, rgba(26,46,29,0.85) 0%, transparent 70%),
+    radial-gradient(ellipse 45px 65px at 340px 75%, rgba(26,46,29,0.9) 0%, transparent 70%);
+}
+.vista-hero__trees-near {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 45%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(15,26,18,0.8) 100%),
+    radial-gradient(ellipse 70px 85px at 20px 90%, rgba(10,20,12,0.95) 0%, transparent 65%),
+    radial-gradient(ellipse 90px 110px at 130px 85%, rgba(10,20,12,0.92) 0%, transparent 65%),
+    radial-gradient(ellipse 80px 95px at 250px 88%, rgba(10,20,12,0.95) 0%, transparent 65%),
+    radial-gradient(ellipse 70px 90px at 370px 85%, rgba(10,20,12,0.92) 0%, transparent 65%);
+}
+.vista-hero__back {
+  position: absolute; top: 52px; left: 14px; z-index: 5;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(20,16,12,0.85);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-hi); font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+  font-family: 'Cinzel', serif;
+}
+.vista-hero__body {
+  position: absolute; bottom: 16px; left: 0; right: 0;
+  padding: 0 20px; z-index: 4;
+}
+.vista-hero__chapter {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.22em;
+  color: var(--forest-hi); text-transform: uppercase;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+.vista-hero__name {
+  font-family: 'Cinzel', serif;
+  font-size: 28px; font-weight: 900; color: var(--ink);
+  letter-spacing: 0.06em; line-height: 1.05;
+  text-shadow:
+    0 0 18px rgba(0,0,0,0.9),
+    0 2px 6px rgba(0,0,0,1);
+  margin-bottom: 4px;
+}
+.vista-hero__lore {
+  font-size: 11px; color: var(--ink-soft);
+  font-style: italic; line-height: 1.5;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  max-width: 320px;
+}
+
+/* 3-stone medallion summary row */
+.vista-stones {
+  display: flex; gap: 10px;
+  padding: 14px 16px 0;
+}
+.vista-stone {
+  flex: 1;
+  background: linear-gradient(145deg, rgba(42,33,25,0.9), rgba(20,16,12,0.95));
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  padding: 10px 12px;
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(245,200,118,0.1),
+    0 3px 8px rgba(0,0,0,0.4);
+}
+.vista-stone__top {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Cinzel', serif;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--ink-muted); text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.vista-stone__val {
+  font-family: 'Cinzel', serif;
+  font-size: 18px; font-weight: 900; color: var(--ink);
+  line-height: 1;
+}
+.vista-stone__val--forest { color: var(--forest-hi); }
+.vista-stone__val--gold   { color: var(--gold-hi); }
+.vista-stone__val--red    { color: var(--crimson-hi); }
+
+/* Section title (Cinzel with ornate brackets) */
+.vista-section {
+  font-family: 'Cinzel', serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.22em;
+  color: var(--gold-hi); text-transform: uppercase;
+  margin: 22px 16px 14px;
+  text-align: center;
+  position: relative;
+}
+.vista-section::before,
+.vista-section::after {
+  content: "⚜"; color: var(--gold-dim);
+  font-size: 12px; margin: 0 12px;
+}
+
+/* HORIZONTAL TRAIL (180° opposite from v1's vertical serpentine) */
+.trail {
+  position: relative;
+  padding: 20px 0 18px;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+}
+.trail::-webkit-scrollbar { display: none; }
+.trail__inner {
+  position: relative;
+  display: flex; align-items: center; gap: 40px;
+  padding: 0 28px;
+  min-height: 160px;
+  width: max-content;
+}
+
+/* Dashed ink path line through the trail */
+.trail__path-svg {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  width: 100%; height: 100%;
+}
+
+.trail-node {
+  position: relative; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.trail-node__label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; font-weight: 700; color: var(--ink);
+  letter-spacing: 0.08em; text-align: center;
+  max-width: 100px; line-height: 1.2;
+}
+.trail-node__sub {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--ink-muted); text-transform: uppercase;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+}
+
+.trail-circle {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(145deg, var(--parch-hi), var(--parch-deep));
+  border: 2px solid var(--parch-line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    inset 0 2px 0 rgba(245,200,118,0.08),
+    0 4px 10px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.trail-node--completed .trail-circle {
+  background: linear-gradient(145deg, rgba(90,138,72,0.3), rgba(30,40,20,0.9));
+  border-color: var(--forest-hi);
+  color: var(--forest-hi);
+}
+.trail-node--completed .trail-node__sub { color: var(--forest-hi); }
+
+.trail-node--active .trail-circle {
+  width: 72px; height: 72px; font-size: 30px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(245,200,118,0.3), transparent 55%),
+    linear-gradient(145deg, rgba(74,92,156,0.3), rgba(20,16,12,0.95));
+  border: 3px solid var(--gold);
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,0.6),
+    0 0 24px rgba(212,169,74,0.5),
+    0 0 0 6px rgba(212,169,74,0.12),
+    inset 0 0 12px rgba(245,200,118,0.15);
+  animation: trail-pulse 2.6s ease-in-out infinite;
+}
+@keyframes trail-pulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(0,0,0,0.6), 0 0 24px rgba(212,169,74,0.5), 0 0 0 6px rgba(212,169,74,0.12), inset 0 0 12px rgba(245,200,118,0.15); }
+  50%     { box-shadow: 0 0 0 2px rgba(0,0,0,0.6), 0 0 36px rgba(245,200,118,0.7), 0 0 0 10px rgba(212,169,74,0.2), inset 0 0 14px rgba(245,200,118,0.25); }
+}
+.trail-node--active .trail-node__label { color: var(--gold-hi); }
+.trail-node--active .trail-node__sub   { color: var(--gold); }
+
+.trail-node--next .trail-circle {
+  border: 2px dashed var(--gold);
+  background:
+    linear-gradient(145deg, rgba(212,169,74,0.12), rgba(20,16,12,0.9));
+  color: var(--gold-hi);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.5),
+    0 0 18px rgba(212,169,74,0.25);
+}
+.trail-node--next .trail-node__sub { color: var(--gold-hi); }
+
+.trail-node--destination .trail-circle {
+  border: 3px solid var(--crimson-hi);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(216,83,75,0.25), transparent 55%),
+    linear-gradient(145deg, rgba(163,56,50,0.2), rgba(20,16,12,0.95));
+  color: var(--crimson-hi);
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,0.6),
+    0 0 22px rgba(216,83,75,0.45),
+    0 0 0 6px rgba(216,83,75,0.1);
+  animation: trail-pulse-r 2s ease-in-out infinite;
+}
+@keyframes trail-pulse-r {
+  0%,100% { box-shadow: 0 0 0 2px rgba(0,0,0,0.6), 0 0 22px rgba(216,83,75,0.45), 0 0 0 6px rgba(216,83,75,0.1); }
+  50%     { box-shadow: 0 0 0 2px rgba(0,0,0,0.6), 0 0 32px rgba(216,83,75,0.65), 0 0 0 10px rgba(216,83,75,0.18); }
+}
+.trail-node--destination .trail-node__label { color: var(--crimson-hi); }
+.trail-node--destination .trail-node__sub   { color: var(--crimson-hi); }
+
+.trail-node--locked .trail-circle {
+  filter: grayscale(0.7) brightness(0.5);
+  opacity: 0.7;
+  width: 48px; height: 48px; font-size: 18px;
+}
+.trail-node--locked .trail-node__label { color: var(--ink-muted); }
+
+.trail-node--crossroads .trail-circle {
+  width: 64px; height: 64px;
+  transform: rotate(45deg);
+  border-radius: 12px;
+  border: 2px solid var(--amethyst-hi);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(176,136,212,0.2), transparent 55%),
+    linear-gradient(145deg, rgba(124,90,156,0.2), rgba(20,16,12,0.95));
+  color: var(--amethyst-hi);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 0 18px rgba(176,136,212,0.35);
+}
+.trail-node--crossroads .trail-circle > span {
+  transform: rotate(-45deg); display: block;
+}
+.trail-node--crossroads .trail-node__sub { color: var(--amethyst-hi); }
+
+.trail-node--boss .trail-circle {
+  width: 68px; height: 68px; font-size: 28px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(216,83,75,0.35), transparent 55%),
+    linear-gradient(145deg, rgba(163,56,50,0.35), rgba(20,16,12,0.95));
+  border: 3px solid var(--crimson-hi);
+  color: var(--crimson-hi);
+  animation: trail-pulse-r 2.4s ease-in-out infinite;
+}
+.trail-node--boss .trail-node__sub { color: var(--crimson-hi); }
+
+.trail-youarehere {
+  position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 7px; font-weight: 800; letter-spacing: 0.16em;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  padding: 3px 8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  position: relative;
+}
+.trail-youarehere::before,
+.trail-youarehere::after {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  width: 0; height: 0;
+  border-style: solid;
+}
+.trail-youarehere::before {
+  left: -3px;
+  border-width: 8px 3px 8px 0;
+  border-color: transparent var(--gold-dim) transparent transparent;
+}
+.trail-youarehere::after {
+  right: -3px;
+  border-width: 8px 0 8px 3px;
+  border-color: transparent transparent transparent var(--gold-dim);
+}
+
+.trail-swipe-hint {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--ink-muted); text-transform: uppercase;
+  text-align: center;
+  margin: -6px 0 6px;
+  opacity: 0.7;
+}
+
+/* Travelling traveler icon walking the path */
+.trail-traveler {
+  position: absolute; z-index: 4;
+  font-size: 14px;
+  filter: drop-shadow(0 0 6px rgba(245,200,118,0.6));
+  animation: walk 1.4s ease-in-out infinite alternate;
+}
+@keyframes walk {
+  0%   { transform: translateY(-2px); }
+  100% { transform: translateY(2px); }
+}
+
+/* Journey parchment footer (when traveling) */
+.vista-journey {
+  margin: 18px 16px 8px;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  border-radius: 4px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+}
+.vista-journey__inner {
+  background: linear-gradient(135deg, rgba(20,16,12,0.98), rgba(42,33,25,0.98));
+  border-radius: 3px;
+  padding: 12px 14px;
+}
+.vista-journey__row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.vista-journey__label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--gold-hi); text-transform: uppercase;
+}
+.vista-journey__val {
+  font-family: 'Cinzel', serif;
+  font-size: 14px; font-weight: 900; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.vista-journey__bar {
+  height: 8px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--parch-line);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.vista-journey__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--crimson), var(--gold) 50%, var(--gold-hi));
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(212,169,74,0.4);
+  position: relative;
+}
+.vista-journey__bar-fill::after {
+  content: ""; position: absolute; right: 0; top: 50%;
+  width: 6px; height: 6px;
+  background: var(--gold-hi);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  box-shadow: 0 0 8px var(--gold-hi);
+}
+.vista-journey__sub {
+  margin-top: 8px;
+  font-size: 10px; color: var(--ink-soft);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   SCREEN 3 / 5 / 6 · ZONE TAKEOVER (full-screen, not bottom sheet!)
+═════════════════════════════════════════════════════════════ */
+
+.takeover {
+  position: absolute; inset: 0;
+  z-index: 15;
+  background: var(--parch-deep);
+  display: flex; flex-direction: column;
+  animation: takeover-in 0.3s ease-out;
+}
+@keyframes takeover-in {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Top cinematic hero banner */
+.takeover-hero {
+  position: relative;
+  height: 310px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.takeover-hero__bg {
+  position: absolute; inset: 0; z-index: 0;
+}
+/* Forge variant */
+.takeover-hero__bg--forge {
+  background:
+    radial-gradient(ellipse at 50% 60%, rgba(245,100,40,0.35) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 95%, rgba(248,81,73,0.5) 0%, transparent 50%),
+    linear-gradient(180deg, #180a06 0%, #2a1408 30%, #4a1f0a 60%, #2a1408 100%);
+}
+.takeover-hero__bg--forge::after {
+  content: "🏰";
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  font-size: 180px;
+  opacity: 0.35;
+  filter: drop-shadow(0 0 40px rgba(245,100,40,0.8));
+}
+/* Crossroads variant */
+.takeover-hero__bg--fork {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(176,136,212,0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 100%, rgba(124,90,156,0.4) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 100%, rgba(163,113,247,0.4) 0%, transparent 45%),
+    linear-gradient(180deg, #14101c 0%, #201633 40%, #2e1f4a 80%, #1a1228 100%);
+}
+.takeover-hero__bg--fork::after {
+  content: "✦";
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 160px;
+  color: rgba(176,136,212,0.4);
+  filter: drop-shadow(0 0 40px rgba(176,136,212,0.8));
+}
+
+.takeover-hero__overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background:
+    linear-gradient(180deg, transparent 40%, rgba(20,16,12,0.5) 80%, var(--parch-deep) 100%);
+}
+
+.takeover-hero__grain {
+  position: absolute; inset: 0; z-index: 3;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(212,169,74,0.03) 0, rgba(212,169,74,0.03) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(212,169,74,0.03) 0, rgba(212,169,74,0.03) 1px, transparent 1px, transparent 4px);
+  pointer-events: none;
+}
+
+.takeover-close {
+  position: absolute; top: 52px; right: 16px; z-index: 20;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(20,16,12,0.9);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-hi);
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.takeover-hero__crest {
+  position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+  z-index: 5;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(245,200,118,0.5), transparent 50%),
+    linear-gradient(145deg, rgba(42,33,25,0.95), rgba(20,16,12,0.95));
+  border: 3px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,0.6),
+    0 0 28px rgba(212,169,74,0.4),
+    0 8px 20px rgba(0,0,0,0.6);
+}
+.takeover-hero__crest--fork {
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 16px;
+  border-color: var(--amethyst-hi);
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,0.6),
+    0 0 28px rgba(176,136,212,0.5),
+    0 8px 20px rgba(0,0,0,0.6);
+}
+.takeover-hero__crest--fork > span {
+  transform: rotate(-45deg); display: block;
+}
+
+.takeover-hero__foot {
+  position: absolute; bottom: 14px; left: 0; right: 0;
+  padding: 0 22px; z-index: 5; text-align: center;
+}
+.takeover-hero__chapter {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.22em;
+  color: var(--ink-soft); text-transform: uppercase;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+}
+.takeover-hero__title {
+  font-family: 'Cinzel', serif;
+  font-size: 26px; font-weight: 900; color: var(--ink);
+  letter-spacing: 0.08em; line-height: 1.05;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  margin-bottom: 6px;
+}
+.takeover-pill {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.2em;
+  padding: 4px 12px;
+  text-transform: uppercase;
+  border: 1px solid;
+  background: rgba(20,16,12,0.7);
+  backdrop-filter: blur(6px);
+}
+.takeover-pill--next        { color: var(--gold-hi); border-color: var(--gold); }
+.takeover-pill--traveling   { color: var(--crimson-hi); border-color: var(--crimson-hi); }
+.takeover-pill--crossroads  { color: var(--amethyst-hi); border-color: var(--amethyst-hi); }
+
+/* Body — ornate parchment content */
+.takeover-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 28px;
+  scrollbar-width: none;
+}
+.takeover-body::-webkit-scrollbar { display: none; }
+
+/* Shield triangular stat row */
+.takeover-shields {
+  display: flex; justify-content: center; gap: 16px;
+  margin-bottom: 22px;
+}
+.shield {
+  width: 78px;
+  text-align: center;
+}
+.shield__stone {
+  position: relative;
+  width: 64px; height: 72px;
+  margin: 0 auto 6px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(245,200,118,0.2), transparent 50%),
+    linear-gradient(145deg, var(--parch-hi), var(--parch-deep));
+  border: 2px solid var(--gold-dim);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.5),
+    inset 0 2px 0 rgba(245,200,118,0.1);
+}
+.shield__stone::before {
+  content: ""; position: absolute; inset: 4px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  border: 1px solid rgba(212,169,74,0.3);
+  pointer-events: none;
+}
+.shield__val {
+  font-family: 'Cinzel', serif;
+  font-size: 13px; font-weight: 900;
+  color: var(--ink);
+  position: relative; z-index: 1;
+}
+.shield__val--ok   { color: var(--forest-hi); }
+.shield__val--gold { color: var(--gold-hi); }
+.shield__label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.16em;
+  color: var(--ink-muted); text-transform: uppercase;
+}
+
+/* Parchment note (for crossroads, etc) */
+.takeover-note {
+  padding: 12px 16px;
+  background:
+    linear-gradient(135deg, rgba(124,90,156,0.12), rgba(124,90,156,0.04));
+  border: 1px dashed var(--amethyst-hi);
+  border-radius: 4px;
+  font-size: 12px; color: var(--ink-soft);
+  font-style: italic; line-height: 1.5;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+  position: relative;
+}
+.takeover-note__sigil {
+  font-size: 18px; color: var(--amethyst-hi);
+  flex-shrink: 0;
+}
+
+/* Description text */
+.takeover-desc {
+  font-size: 13px; color: var(--ink);
+  line-height: 1.65;
+  padding: 0 4px;
+  margin-bottom: 22px;
+  font-style: italic;
+}
+.takeover-desc::first-letter {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--gold-hi);
+  float: left;
+  line-height: 1;
+  padding: 2px 6px 0 0;
+  text-shadow: 0 0 10px rgba(245,200,118,0.3);
+}
+
+/* Journey scroll (traveling-to state) */
+.takeover-scroll {
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  border-radius: 4px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+  margin-bottom: 22px;
+}
+.takeover-scroll__inner {
+  background:
+    linear-gradient(135deg, rgba(20,16,12,0.98), rgba(42,33,25,0.98));
+  border-radius: 3px;
+  padding: 14px 16px;
+}
+.takeover-scroll__row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.takeover-scroll__label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--gold-hi); text-transform: uppercase;
+}
+.takeover-scroll__val {
+  font-family: 'Cinzel', serif;
+  font-size: 16px; font-weight: 900; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.takeover-scroll__bar {
+  height: 10px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--parch-line);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  position: relative;
+}
+.takeover-scroll__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--crimson), var(--gold) 60%, var(--gold-hi));
+  box-shadow: 0 0 10px rgba(212,169,74,0.5);
+  border-radius: 2px;
+}
+.takeover-scroll__foot {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* Primary CTA (ornate banner button) */
+.takeover-cta {
+  display: block;
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid;
+  background-clip: padding-box;
+  font-family: 'Cinzel', serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+  position: relative;
+  color: var(--ink);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+}
+.takeover-cta::before,
+.takeover-cta::after {
+  content: "⚜"; color: inherit;
+  margin: 0 12px;
+  opacity: 0.7;
+}
+.takeover-cta--gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim) 60%, #6a4e1a);
+  border-color: var(--gold-hi);
+  color: var(--ink-void);
+  text-shadow: 0 1px 0 rgba(245,200,118,0.4);
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.5),
+    0 0 24px rgba(212,169,74,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.takeover-cta--purple {
+  background: linear-gradient(135deg, var(--amethyst), #5c3e7c 60%, #3e2a54);
+  border-color: var(--amethyst-hi);
+  color: var(--ink);
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.5),
+    0 0 24px rgba(176,136,212,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.takeover-cta--disabled {
+  background: linear-gradient(135deg, var(--parch-hi), var(--parch-deep));
+  border-color: var(--ink-faded);
+  color: var(--ink-muted);
+  cursor: not-allowed;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* ═════ Flow arrow between screens ═════ */
+.flow-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 844px;
+  padding: 0 4px;
+}
+.flow-arrow__label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--ink-soft); text-align: center;
+  max-width: 80px; line-height: 1.5;
+  margin-bottom: 10px; text-transform: uppercase;
+}
+.flow-arrow__line {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(20,16,12,0.8);
+  border: 1px solid var(--gold-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--gold-hi);
+  box-shadow: 0 0 12px rgba(212,169,74,0.2);
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     DOC TITLE — the illuminated manuscript header
+═══════════════════════════════════════════════════════════════════ -->
+<div class="doc-title">
+  <div class="doc-title__name">Atlas of Ardent Realms</div>
+  <div class="doc-title__ornament">⚜ ❖ ⚜ ❖ ⚜</div>
+  <div class="doc-title__sub">
+    <strong style="color: var(--gold-hi)">v2 · 180° Redesign.</strong> Dashboard feed → illustrated atlas. Vertical serpentine → horizontal trail. Bottom sheet → full-screen cinematic takeover.
+    Dark flat-UI → parchment &amp; gold leaf. Same 6-screen story, opposite aesthetic and interaction model.
+  </div>
+  <div class="doc-title__flow">
+    <span class="doc-title__step">1 · Atlas</span>
+    <span class="doc-title__step">2 · Vista · idle</span>
+    <span class="doc-title__step">3 · Takeover · Available</span>
+    <span class="doc-title__step">4 · Vista · traveling</span>
+    <span class="doc-title__step">5 · Takeover · Traveling-to</span>
+    <span class="doc-title__step">6 · Takeover · Crossroads</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 · WORLD ATLAS
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="color: var(--gold-hi); border: 1px solid var(--gold-dim); background: rgba(212,169,74,0.08)">1 / 6 · ATLAS</div>
+    <div class="screen-title">World Atlas — illuminated continent</div>
+    <div class="screen-desc">Full-bleed illustrated continent, no card feed. Region medallions placed geographically. Player banner flies over current zone. Expedition ribbon parchment-strip at the foot.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="atlas-canvas">
+      <!-- SVG continent -->
+      <svg class="atlas-svg" viewBox="0 0 390 624" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="continent-g" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#3d2f23" stop-opacity="1"/>
+            <stop offset="70%" stop-color="#2a2119" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#1d1713" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="sea-g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1a1a2e" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#0a0a14" stop-opacity="0.2"/>
+          </linearGradient>
+          <filter id="fog">
+            <feGaussianBlur stdDeviation="6"/>
+          </filter>
+        </defs>
+
+        <!-- Sea background grid lines (longitude) -->
+        <g opacity="0.12" stroke="#d4a94a" stroke-width="0.5" fill="none">
+          <line x1="0" y1="80"  x2="390" y2="80"/>
+          <line x1="0" y1="200" x2="390" y2="200"/>
+          <line x1="0" y1="320" x2="390" y2="320"/>
+          <line x1="0" y1="440" x2="390" y2="440"/>
+          <line x1="60"  y1="0" x2="60"  y2="624"/>
+          <line x1="200" y1="0" x2="200" y2="624"/>
+          <line x1="340" y1="0" x2="340" y2="624"/>
+        </g>
+
+        <!-- Continent shape (illustrated blob) -->
+        <path d="M 60 180 Q 30 120, 90 80 Q 180 40, 240 90 Q 310 70, 340 140
+                 Q 360 220, 320 280 Q 340 360, 290 420 Q 250 480, 180 470
+                 Q 110 480, 80 420 Q 40 360, 70 300 Q 40 240, 60 180 Z"
+              fill="url(#continent-g)"
+              stroke="#8e6f2c" stroke-width="1.5" stroke-opacity="0.5"/>
+
+        <!-- Darker coast detail -->
+        <path d="M 60 180 Q 30 120, 90 80 Q 180 40, 240 90 Q 310 70, 340 140
+                 Q 360 220, 320 280 Q 340 360, 290 420 Q 250 480, 180 470
+                 Q 110 480, 80 420 Q 40 360, 70 300 Q 40 240, 60 180 Z"
+              fill="none" stroke="#d4a94a" stroke-width="0.8" stroke-opacity="0.35"
+              stroke-dasharray="3 2"/>
+
+        <!-- Rivers / paths (ink strokes) -->
+        <path d="M 130 180 Q 180 220, 220 270 Q 240 320, 210 380"
+              stroke="#4a5c9c" stroke-width="1.5" fill="none" opacity="0.4"/>
+        <path d="M 220 270 Q 260 250, 300 240"
+              stroke="#4a5c9c" stroke-width="1.2" fill="none" opacity="0.3"/>
+
+        <!-- Mountains cluster (illustrated triangles) -->
+        <g opacity="0.6">
+          <polygon points="270,130 285,160 255,160" fill="#5a4432" stroke="#d4a94a" stroke-width="0.4"/>
+          <polygon points="290,120 308,155 272,155" fill="#5a4432" stroke="#d4a94a" stroke-width="0.4"/>
+          <polygon points="250,135 265,158 235,158" fill="#3d2f23" stroke="#d4a94a" stroke-width="0.4"/>
+        </g>
+
+        <!-- Forest dots -->
+        <g opacity="0.5" fill="#5a8a48">
+          <circle cx="110" cy="260" r="3"/>
+          <circle cx="130" cy="250" r="4"/>
+          <circle cx="150" cy="275" r="3"/>
+          <circle cx="120" cy="290" r="3"/>
+          <circle cx="160" cy="260" r="3"/>
+          <circle cx="90"  cy="290" r="3"/>
+          <circle cx="180" cy="290" r="3"/>
+        </g>
+
+        <!-- Volcanic caldera (red glow circle) -->
+        <circle cx="310" cy="380" r="18" fill="#a33832" opacity="0.2" filter="url(#fog)"/>
+        <circle cx="310" cy="380" r="10" fill="#d8534b" opacity="0.3"/>
+
+        <!-- Ocean waves pattern (bottom left) -->
+        <g opacity="0.4" stroke="#4a5c9c" stroke-width="1" fill="none">
+          <path d="M 70 430 q 6 -4, 12 0 t 12 0 t 12 0 t 12 0"/>
+          <path d="M 60 444 q 6 -4, 12 0 t 12 0 t 12 0"/>
+        </g>
+
+        <!-- Fog overlay on locked regions -->
+        <ellipse cx="280" cy="140" rx="40" ry="30" fill="#1d1713" opacity="0.65" filter="url(#fog)"/>
+        <ellipse cx="305" cy="380" rx="35" ry="30" fill="#1d1713" opacity="0.65" filter="url(#fog)"/>
+
+        <!-- Ink route from current zone (Forest · Misty Pine) to destination (Ember Forge) -->
+        <path d="M 125 275 Q 160 275, 175 270"
+              stroke="#d4a94a" stroke-width="1.5" fill="none"
+              stroke-dasharray="3 3" opacity="0.85"/>
+
+        <!-- Compass rose (decorative) -->
+        <g transform="translate(330, 520)" opacity="0.35">
+          <circle r="22" fill="none" stroke="#d4a94a" stroke-width="0.5"/>
+          <polygon points="0,-18 3,0 0,18 -3,0" fill="#d4a94a"/>
+          <polygon points="-18,0 0,3 18,0 0,-3" fill="#d4a94a" opacity="0.6"/>
+          <text x="0" y="-26" text-anchor="middle" fill="#d4a94a" font-size="7" font-family="Cinzel">N</text>
+        </g>
+      </svg>
+
+      <!-- Region medallions positioned on the continent -->
+      <div class="atlas-region atlas-region--active" style="top: 208px; left: 24px;">
+        <div class="atlas-region__seal">🌲</div>
+        <div class="atlas-region__banner">Forest of Endurance</div>
+        <div class="atlas-region__sublevel">Chapter II · 4/7</div>
+      </div>
+
+      <div class="atlas-region atlas-region--complete" style="top: 380px; left: 38px;">
+        <div class="atlas-region__seal">🌊</div>
+        <div class="atlas-region__banner">Ocean of Balance</div>
+        <div class="atlas-region__sublevel">Chapter I · ✓ Complete</div>
+      </div>
+
+      <div class="atlas-region atlas-region--locked" style="top: 108px; right: 26px;">
+        <div class="atlas-region__seal">⛰️</div>
+        <div class="atlas-region__banner">Mountains of Strength</div>
+        <div class="atlas-region__sublevel">Sealed · Lv 15</div>
+      </div>
+
+      <div class="atlas-region atlas-region--locked" style="top: 356px; right: 18px;">
+        <div class="atlas-region__seal">🌋</div>
+        <div class="atlas-region__banner">Ashen Caldera</div>
+        <div class="atlas-region__sublevel">Sealed · Lv 25</div>
+      </div>
+
+      <!-- Player pin on current zone -->
+      <div class="atlas-pin" style="top: 268px; left: 105px;">
+        <div class="atlas-pin__flag">⚔</div>
+        <div class="atlas-pin__stick"></div>
+        <div class="atlas-pin__base"></div>
+      </div>
+    </div>
+
+    <!-- Atlas header (floats over the canvas) -->
+    <div class="atlas-header">
+      <div class="atlas-header__medallion">🧙</div>
+      <div class="atlas-header__body">
+        <div class="atlas-header__chapter">Explorer Kai</div>
+        <div class="atlas-header__title">Ardent Realms</div>
+      </div>
+      <div class="atlas-header__lv">Lv 12</div>
+    </div>
+
+    <!-- Expedition ribbon (active journey) -->
+    <div class="atlas-ribbon">
+      <div class="atlas-ribbon__inner">
+        <div class="atlas-ribbon__seal">🏰</div>
+        <div class="atlas-ribbon__body">
+          <div class="atlas-ribbon__title">Expedition in progress</div>
+          <div class="atlas-ribbon__route">Misty Pine → Ember Forge</div>
+          <div class="atlas-ribbon__meta">2.7 of 5.0 leagues · Forest of Endurance</div>
+        </div>
+        <div class="atlas-ribbon__percent">54%</div>
+      </div>
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Atlas</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Hero</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 2 · REGION VISTA (idle)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="color: var(--forest-hi); border: 1px solid var(--forest); background: rgba(90,138,72,0.1)">2 / 6 · VISTA</div>
+    <div class="screen-title">Forest Vista — idle</div>
+    <div class="screen-desc">Tap the Forest medallion → zoom-in cinematic vista. Ambient parallax backdrop replaces generic banner. The path is now <strong>horizontal</strong> — swipe left-right through the chapter.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+      <!-- Cinematic hero (illustrated forest silhouette) -->
+      <div class="vista-hero">
+        <div class="vista-hero__bg"></div>
+        <div class="vista-hero__sky"></div>
+        <div class="vista-hero__sun"></div>
+        <div class="vista-hero__trees"></div>
+        <div class="vista-hero__trees-near"></div>
+        <div class="vista-hero__back">‹</div>
+        <div class="vista-hero__body">
+          <div class="vista-hero__chapter">Chapter II · Active Realm</div>
+          <div class="vista-hero__name">Forest of Endurance</div>
+          <div class="vista-hero__lore">Endless woodlands where every league logged feeds the trail. Defeat the Forest Warden to unseal the Mountains.</div>
+        </div>
+      </div>
+
+      <!-- Stone tablet summary -->
+      <div class="vista-stones">
+        <div class="vista-stone">
+          <div class="vista-stone__top">🗝 Zones</div>
+          <div class="vista-stone__val vista-stone__val--forest">4 / 7</div>
+        </div>
+        <div class="vista-stone">
+          <div class="vista-stone__top">⭐ XP earned</div>
+          <div class="vista-stone__val vista-stone__val--gold">1,240</div>
+        </div>
+        <div class="vista-stone">
+          <div class="vista-stone__top">👹 Boss</div>
+          <div class="vista-stone__val vista-stone__val--red">2 away</div>
+        </div>
+      </div>
+
+      <div class="vista-section">Chapter Path</div>
+
+      <!-- HORIZONTAL trail (swipe-scroll) -->
+      <div class="trail">
+        <div class="trail__inner">
+          <svg class="trail__path-svg" viewBox="0 0 900 160" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="trail2" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0"   stop-color="#5a8a48" stop-opacity="0.7"/>
+                <stop offset="0.5" stop-color="#d4a94a" stop-opacity="0.6"/>
+                <stop offset="1"   stop-color="#3d2f23" stop-opacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <!-- green completed section to active -->
+            <path d="M 52 80 Q 130 40, 200 80 T 352 80"
+                  stroke="#5a8a48" stroke-width="3" fill="none" opacity="0.6"/>
+            <!-- gold dashed section (active → next) -->
+            <path d="M 352 80 Q 420 40, 500 80"
+                  stroke="#d4a94a" stroke-width="3" fill="none"
+                  stroke-dasharray="6 5" opacity="0.8"/>
+            <!-- faded future -->
+            <path d="M 500 80 Q 600 120, 670 80 T 832 80"
+                  stroke="#5a4c38" stroke-width="2" fill="none"
+                  stroke-dasharray="4 6" opacity="0.5"/>
+          </svg>
+
+          <div class="trail-node trail-node--completed">
+            <div class="trail-circle">✓</div>
+            <div class="trail-node__label">Whispering Grove</div>
+            <div class="trail-node__sub">+420 XP</div>
+          </div>
+
+          <div class="trail-node trail-node--completed">
+            <div class="trail-circle">✓</div>
+            <div class="trail-node__label">Dawn Camp</div>
+            <div class="trail-node__sub">+320 XP</div>
+          </div>
+
+          <div class="trail-node trail-node--active">
+            <div class="trail-youarehere">You Are Here</div>
+            <div class="trail-circle">🌿</div>
+            <div class="trail-node__label">Misty Pine</div>
+            <div class="trail-node__sub">Tier 3 · Current</div>
+          </div>
+
+          <div class="trail-node trail-node--next">
+            <div class="trail-circle">🏰</div>
+            <div class="trail-node__label">Ember Forge</div>
+            <div class="trail-node__sub">Next · 5.0 km</div>
+          </div>
+
+          <div class="trail-node trail-node--crossroads">
+            <div class="trail-circle"><span>✦</span></div>
+            <div class="trail-node__label">Twin Roads Fork</div>
+            <div class="trail-node__sub">Crossroads</div>
+          </div>
+
+          <div class="trail-node trail-node--boss">
+            <div class="trail-circle">👹</div>
+            <div class="trail-node__label">Forest Warden</div>
+            <div class="trail-node__sub">Boss · Chapter end</div>
+          </div>
+        </div>
+      </div>
+      <div class="trail-swipe-hint">← swipe the chapter →</div>
+
+      <div class="ornate-hr"></div>
+
+      <div style="text-align: center; padding: 6px 20px 12px; font-size: 11px; color: var(--ink-soft); font-style: italic;">
+        No expedition set. Tap a node to study the zone and set your heading.
+      </div>
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Atlas</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Hero</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 3 · ZONE TAKEOVER · Available (cinematic, not a bottom sheet)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="color: var(--gold-hi); border: 1px solid var(--gold-dim); background: rgba(212,169,74,0.08)">3 / 6 · TAKEOVER</div>
+    <div class="screen-title">Zone Takeover — Available</div>
+    <div class="screen-desc">Tap Ember Forge → <strong>full-screen cinematic takeover</strong> (not a bottom sheet). Hero image up top · illuminated capital · shield-stones for stats · banner CTA.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="takeover">
+      <!-- Cinematic hero -->
+      <div class="takeover-hero">
+        <div class="takeover-hero__bg takeover-hero__bg--forge"></div>
+        <div class="takeover-hero__overlay"></div>
+        <div class="takeover-hero__grain"></div>
+
+        <div class="takeover-close">✕</div>
+        <div class="takeover-hero__crest">🏰</div>
+
+        <div class="takeover-hero__foot">
+          <div class="takeover-hero__chapter">Forest of Endurance · Tier 3</div>
+          <div class="takeover-hero__title">Ember Forge</div>
+          <span class="takeover-pill takeover-pill--next">Available · 5.0 km away</span>
+        </div>
+      </div>
+
+      <div class="takeover-body">
+        <!-- Shield-stone triforce -->
+        <div class="takeover-shields">
+          <div class="shield">
+            <div class="shield__stone">
+              <div class="shield__val shield__val--ok">Lv 10 ✓</div>
+            </div>
+            <div class="shield__label">Level req</div>
+          </div>
+          <div class="shield">
+            <div class="shield__stone">
+              <div class="shield__val">5.0</div>
+            </div>
+            <div class="shield__label">km</div>
+          </div>
+          <div class="shield">
+            <div class="shield__stone">
+              <div class="shield__val shield__val--gold">+600</div>
+            </div>
+            <div class="shield__label">XP reward</div>
+          </div>
+        </div>
+
+        <p class="takeover-desc">Ancient forge powered by endurance. Five nodes of ember-flecked stone guard the Flame Rune within — defeat the Ember Warden to claim it and seal the chapter's heat.</p>
+
+        <button class="takeover-cta takeover-cta--gold">Set as destination</button>
+      </div>
+
+      <div class="nav">
+        <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+        <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Atlas</div></a>
+        <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+        <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Hero</div></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 4 · REGION VISTA (traveling — compass HUD active)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="color: var(--crimson-hi); border: 1px solid var(--crimson); background: rgba(163,56,50,0.12)">4 / 6 · VISTA</div>
+    <div class="screen-title">Forest Vista — traveling</div>
+    <div class="screen-desc">Destination locked. <strong>Compass HUD</strong> top-right pulses with heading + km. Traveler figure walks the horizontal trail between Misty Pine → Ember Forge. Journey scroll slides up at the foot.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:47</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <!-- Persistent compass HUD + tag (only when traveling) -->
+    <div class="compass">
+      <div class="compass__ring"></div>
+      <div class="compass__letter compass__letter--n">N</div>
+      <div class="compass__letter compass__letter--s">S</div>
+      <div class="compass__letter compass__letter--e">E</div>
+      <div class="compass__letter compass__letter--w">W</div>
+      <div class="compass__needle"></div>
+      <div class="compass__hub"></div>
+    </div>
+    <div class="compass-tag">
+      ETA
+      <div class="compass-tag__km">2.3 km</div>
+    </div>
+
+    <div class="scroll">
+      <div class="vista-hero">
+        <div class="vista-hero__bg"></div>
+        <div class="vista-hero__sky"></div>
+        <div class="vista-hero__sun"></div>
+        <div class="vista-hero__trees"></div>
+        <div class="vista-hero__trees-near"></div>
+        <div class="vista-hero__back">‹</div>
+        <div class="vista-hero__body">
+          <div class="vista-hero__chapter">Chapter II · On the trail</div>
+          <div class="vista-hero__name">Forest of Endurance</div>
+          <div class="vista-hero__lore">The path narrows. 2.3 km of woodland stand between you and the forge fires.</div>
+        </div>
+      </div>
+
+      <div class="vista-stones">
+        <div class="vista-stone">
+          <div class="vista-stone__top">🗝 Zones</div>
+          <div class="vista-stone__val vista-stone__val--forest">4 / 7</div>
+        </div>
+        <div class="vista-stone">
+          <div class="vista-stone__top">⭐ XP earned</div>
+          <div class="vista-stone__val vista-stone__val--gold">1,240</div>
+        </div>
+        <div class="vista-stone">
+          <div class="vista-stone__top">👹 Boss</div>
+          <div class="vista-stone__val vista-stone__val--red">2 away</div>
+        </div>
+      </div>
+
+      <div class="vista-section">Chapter Path</div>
+
+      <div class="trail">
+        <div class="trail__inner">
+          <svg class="trail__path-svg" viewBox="0 0 900 160" preserveAspectRatio="none">
+            <path d="M 52 80 Q 130 40, 200 80 T 352 80"
+                  stroke="#5a8a48" stroke-width="3" fill="none" opacity="0.6"/>
+            <!-- active to destination — animated flow -->
+            <path d="M 352 80 Q 420 60, 500 80"
+                  stroke="#d8534b" stroke-width="4" fill="none" opacity="0.9"/>
+            <path d="M 352 80 Q 420 60, 500 80"
+                  stroke="#f5c876" stroke-width="1.5" fill="none"
+                  stroke-dasharray="4 4" opacity="0.9"/>
+            <path d="M 500 80 Q 600 120, 670 80 T 832 80"
+                  stroke="#5a4c38" stroke-width="2" fill="none"
+                  stroke-dasharray="4 6" opacity="0.5"/>
+          </svg>
+
+          <div class="trail-node trail-node--completed">
+            <div class="trail-circle">✓</div>
+            <div class="trail-node__label">Whispering Grove</div>
+            <div class="trail-node__sub">+420 XP</div>
+          </div>
+
+          <div class="trail-node trail-node--completed">
+            <div class="trail-circle">✓</div>
+            <div class="trail-node__label">Dawn Camp</div>
+            <div class="trail-node__sub">+320 XP</div>
+          </div>
+
+          <div class="trail-node trail-node--active">
+            <div class="trail-youarehere">Departing</div>
+            <div class="trail-circle">🌿</div>
+            <div class="trail-node__label">Misty Pine</div>
+            <div class="trail-node__sub">Left · 2.7 km ago</div>
+          </div>
+
+          <!-- traveler walking between nodes -->
+          <div class="trail-traveler" style="left: 52%; top: 40%;">🚶</div>
+
+          <div class="trail-node trail-node--destination">
+            <div class="trail-circle">🏰</div>
+            <div class="trail-node__label">Ember Forge</div>
+            <div class="trail-node__sub">Destination · 2.3 km</div>
+          </div>
+
+          <div class="trail-node trail-node--crossroads">
+            <div class="trail-circle"><span>✦</span></div>
+            <div class="trail-node__label">Twin Roads Fork</div>
+            <div class="trail-node__sub">Crossroads</div>
+          </div>
+
+          <div class="trail-node trail-node--boss">
+            <div class="trail-circle">👹</div>
+            <div class="trail-node__label">Forest Warden</div>
+            <div class="trail-node__sub">Boss · Chapter end</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vista-journey">
+        <div class="vista-journey__inner">
+          <div class="vista-journey__row">
+            <div class="vista-journey__label">Your journey</div>
+            <div class="vista-journey__val">2.7 / 5.0 km · 54%</div>
+          </div>
+          <div class="vista-journey__bar">
+            <div class="vista-journey__bar-fill" style="width: 54%;"></div>
+          </div>
+          <div class="vista-journey__sub">Log a run or ride to advance the trail — arrival grants +600 XP.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Atlas</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Hero</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 5 · ZONE TAKEOVER · Traveling-to
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="color: var(--crimson-hi); border: 1px solid var(--crimson); background: rgba(163,56,50,0.12)">5 / 6 · TAKEOVER</div>
+    <div class="screen-title">Zone Takeover — Traveling-to</div>
+    <div class="screen-desc">Tap Ember Forge mid-journey. Same cinematic takeover component. Shield-stones replaced by an ornate journey scroll. CTA disables into a weary "Log a workout" state.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:47</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="takeover">
+      <div class="takeover-hero">
+        <div class="takeover-hero__bg takeover-hero__bg--forge"></div>
+        <div class="takeover-hero__overlay"></div>
+        <div class="takeover-hero__grain"></div>
+
+        <div class="takeover-close">✕</div>
+        <div class="takeover-hero__crest" style="border-color: var(--crimson-hi); box-shadow: 0 0 0 2px rgba(0,0,0,0.6), 0 0 28px rgba(216,83,75,0.5), 0 8px 20px rgba(0,0,0,0.6);">🏰</div>
+
+        <div class="takeover-hero__foot">
+          <div class="takeover-hero__chapter">Forest of Endurance · Tier 3</div>
+          <div class="takeover-hero__title">Ember Forge</div>
+          <span class="takeover-pill takeover-pill--traveling">⏳ Traveling · 2.3 km to go</span>
+        </div>
+      </div>
+
+      <div class="takeover-body">
+        <!-- Journey scroll replaces the shield row when traveling -->
+        <div class="takeover-scroll">
+          <div class="takeover-scroll__inner">
+            <div class="takeover-scroll__row">
+              <div class="takeover-scroll__label">Your Journey</div>
+              <div class="takeover-scroll__val">2.7 / 5.0 km</div>
+            </div>
+            <div class="takeover-scroll__bar">
+              <div class="takeover-scroll__fill" style="width: 54%;"></div>
+            </div>
+            <div class="takeover-scroll__foot">
+              <span>From · Misty Pine</span>
+              <span>Arrival · +600 XP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="takeover-shields" style="margin-bottom: 14px;">
+          <div class="shield">
+            <div class="shield__stone">
+              <div class="shield__val shield__val--ok">Lv 10 ✓</div>
+            </div>
+            <div class="shield__label">Level req</div>
+          </div>
+          <div class="shield">
+            <div class="shield__stone">
+              <div class="shield__val">5.0</div>
+            </div>
+            <div class="shield__label">km total</div>
+          </div>
+          <div class="shield">
+            <div class="shield__stone">
+              <div class="shield__val shield__val--gold">+600</div>
+            </div>
+            <div class="shield__label">XP reward</div>
+          </div>
+        </div>
+
+        <button class="takeover-cta takeover-cta--disabled">⏳ Log a workout to advance</button>
+      </div>
+
+      <div class="nav">
+        <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+        <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Atlas</div></a>
+        <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+        <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Hero</div></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 6 · ZONE TAKEOVER · Crossroads
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="color: var(--amethyst-hi); border: 1px solid var(--amethyst); background: rgba(124,90,156,0.12)">6 / 6 · TAKEOVER</div>
+    <div class="screen-title">Zone Takeover — Crossroads</div>
+    <div class="screen-desc">Tap Twin Roads Fork. Purple veil · arcane sigil crest · branching-point parchment note · dramatic "Choose your path" banner CTA opens the crossroads flow.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:47</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="takeover">
+      <div class="takeover-hero">
+        <div class="takeover-hero__bg takeover-hero__bg--fork"></div>
+        <div class="takeover-hero__overlay"></div>
+        <div class="takeover-hero__grain"></div>
+
+        <div class="takeover-close">✕</div>
+        <div class="takeover-hero__crest takeover-hero__crest--fork"><span>✦</span></div>
+
+        <div class="takeover-hero__foot">
+          <div class="takeover-hero__chapter">Forest of Endurance · Tier 3</div>
+          <div class="takeover-hero__title">Twin Roads Fork</div>
+          <span class="takeover-pill takeover-pill--crossroads">Crossroads</span>
+        </div>
+      </div>
+
+      <div class="takeover-body">
+        <div class="takeover-note">
+          <span class="takeover-note__sigil">✦</span>
+          A branching point. No entry required — cross to the other side when you are ready to commit to one of the two paths.
+        </div>
+
+        <p class="takeover-desc">Two roads diverge in the deep wood. The <strong style="color: var(--forest-hi)">Valley Road</strong> (easy · 2 days · +400 XP) winds down through safe meadows. The <strong style="color: var(--crimson-hi)">Ruined Pass</strong> (hard · 4 days · +900 XP + rare loot) climbs into ancient bones. Choice locks the moment you commit.</p>
+
+        <button class="takeover-cta takeover-cta--purple">Choose your path</button>
+      </div>
+
+      <div class="nav">
+        <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+        <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Atlas</div></a>
+        <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+        <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Hero</div></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

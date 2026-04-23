@@ -62,6 +62,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     // WorldZone (overworld)
     public DbSet<World> Worlds => Set<World>();
+    public DbSet<Region> Regions => Set<Region>();
     public DbSet<WorldZoneEntity> WorldZones => Set<WorldZoneEntity>();
     public DbSet<WorldZoneEdge> WorldZoneEdges => Set<WorldZoneEdge>();
     public DbSet<UserWorldProgress> UserWorldProgresses => Set<UserWorldProgress>();

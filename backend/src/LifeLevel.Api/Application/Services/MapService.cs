@@ -249,8 +249,16 @@ public class MapService(
 
         var progress = await db.UserMapProgresses
             .Include(p => p.UnlockedNodes)
-            .FirstOrDefaultAsync(p => p.UserId == userId)
-            ?? await InitializeUserProgressAsync(userId);
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (progress == null)
+        {
+            // New users have no local-map progress — the legacy per-zone MapNode
+            // graph is initialised lazily when the user opens the local map.
+            // World-zone distance was already cascaded above, which is the
+            // canonical progression surface now, so silently skip.
+            return;
+        }
 
         if (progress.DestinationNodeId == null)
         {

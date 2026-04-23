@@ -7,6 +7,6 @@ public class World
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<WorldZone> Zones { get; set; } = [];
+    public ICollection<Region> Regions { get; set; } = [];
     public ICollection<UserWorldProgress> UserProgresses { get; set; } = [];
 }

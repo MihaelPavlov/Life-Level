@@ -48,6 +48,7 @@ class NotificationsService {
   /// Fetches the current FCM token, caching it after the first call.
   Future<String?> getToken() async {
     if (_cachedToken != null) return _cachedToken;
+    if (kIsWeb) return null;
     try {
       _cachedToken = await FirebaseMessaging.instance.getToken();
       return _cachedToken;
@@ -67,6 +68,10 @@ class NotificationsService {
   Future<bool> initialize(WidgetRef? ref) async {
     if (_initialized) return true;
     _initialized = true;
+
+    // No FCM on web (Firebase not wired). Silent no-op so the rest of the
+    // app boots normally in Chrome for admin/preview work.
+    if (kIsWeb) return false;
 
     try {
       final messaging = FirebaseMessaging.instance;

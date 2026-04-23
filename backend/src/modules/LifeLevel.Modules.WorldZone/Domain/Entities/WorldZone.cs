@@ -1,3 +1,5 @@
+using LifeLevel.Modules.WorldZone.Domain.Enums;
+
 namespace LifeLevel.Modules.WorldZone.Domain.Entities;
 
 public class WorldZone
@@ -5,22 +7,24 @@ public class WorldZone
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string Icon { get; set; } = string.Empty;
-    public string Region { get; set; } = string.Empty;
+    public string Emoji { get; set; } = string.Empty;
     public int Tier { get; set; }
-    public float PositionX { get; set; }
-    public float PositionY { get; set; }
     public int LevelRequirement { get; set; } = 1;
-    public int TotalXp { get; set; } = 0;
-    public double TotalDistanceKm { get; set; } = 0;
-    public bool IsCrossroads { get; set; } = false;
+    public int XpReward { get; set; } = 0;
+    public double DistanceKm { get; set; } = 0;
     public bool IsStartZone { get; set; } = false;
-    public bool IsHidden { get; set; } = false;
+    public bool IsBoss { get; set; } = false;
+    public WorldZoneType Type { get; set; } = WorldZoneType.Entry;
 
-    public Guid WorldId { get; set; }
-    public World World { get; set; } = null!;
+    // Zone-level progress/lore counters (nullable so unconfigured zones stay null).
+    public int? LoreTotal { get; set; }
+    public int? LoreCollected { get; set; }
+    public int? NodesTotal { get; set; }
+    public int? NodesCompleted { get; set; }
 
-    // No ICollection<MapNode> Nodes — MapNode is in a different module
+    public Guid RegionId { get; set; }
+    public Region Region { get; set; } = null!;
+
     public ICollection<WorldZoneEdge> EdgesFrom { get; set; } = [];
     public ICollection<WorldZoneEdge> EdgesTo { get; set; } = [];
     public ICollection<UserZoneUnlock> UnlockedByUsers { get; set; } = [];

@@ -1,0 +1,12 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LifeLevel Admin — autologin</title>
+<script>
+  // Stash ?t=<jwt> into the same localStorage key map.html reads, then hop.
+  const params = new URLSearchParams(location.search);
+  const token = params.get('t');
+  if (token) {
+    localStorage.setItem('ll_admin_token', token);
+  }
+  location.replace('map.html');
+</script>

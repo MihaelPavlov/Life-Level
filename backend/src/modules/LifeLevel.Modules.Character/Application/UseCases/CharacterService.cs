@@ -149,6 +149,7 @@ public class CharacterService(
         return character?.Level ?? 1;
     }
 
+
     public async Task<(bool LeveledUp, int PreviousLevel, int NewLevel)> CheckAndApplyLevelUpsAsync(Guid characterId, CancellationToken ct = default)
     {
         var character = await db.Set<CharacterEntity>().FindAsync([characterId], ct);

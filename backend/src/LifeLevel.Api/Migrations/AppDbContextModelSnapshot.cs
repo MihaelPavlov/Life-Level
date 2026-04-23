@@ -1649,6 +1649,68 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Streaks");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.Region", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BossName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("BossStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("ChapterIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DefaultStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("LevelRequirement")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Lore")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PinsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Regions");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1656,6 +1718,9 @@ namespace LifeLevel.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CurrentEdgeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CurrentRegionId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CurrentZoneId")
@@ -1742,16 +1807,18 @@ namespace LifeLevel.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
-                    b.Property<string>("Icon")
+                    b.Property<double>("DistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Emoji")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
-                    b.Property<bool>("IsCrossroads")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsHidden")
+                    b.Property<bool>("IsBoss")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsStartZone")
@@ -1760,35 +1827,38 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("LevelRequirement")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("LoreCollected")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("LoreTotal")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
-                    b.Property<float>("PositionX")
-                        .HasColumnType("real");
+                    b.Property<int?>("NodesCompleted")
+                        .HasColumnType("integer");
 
-                    b.Property<float>("PositionY")
-                        .HasColumnType("real");
+                    b.Property<int?>("NodesTotal")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Region")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Tier")
                         .HasColumnType("integer");
 
-                    b.Property<double>("TotalDistanceKm")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("TotalXp")
+                    b.Property<int>("Type")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("WorldId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("XpReward")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorldId");
+                    b.HasIndex("RegionId", "Tier");
 
                     b.ToTable("WorldZones");
                 });
@@ -2274,6 +2344,17 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.Region", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.World", "World")
+                        .WithMany("Regions")
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("World");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZoneEdge", "CurrentEdge")
@@ -2340,13 +2421,13 @@ namespace LifeLevel.Api.Migrations
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", b =>
                 {
-                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.World", "World")
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.Region", "Region")
                         .WithMany("Zones")
-                        .HasForeignKey("WorldId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("World");
+                    b.Navigation("Region");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZoneEdge", b =>
@@ -2414,6 +2495,11 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("UserProgress");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.Region", b =>
+                {
+                    b.Navigation("Zones");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>
                 {
                     b.Navigation("UnlockedZones");
@@ -2421,9 +2507,9 @@ namespace LifeLevel.Api.Migrations
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.World", b =>
                 {
-                    b.Navigation("UserProgresses");
+                    b.Navigation("Regions");
 
-                    b.Navigation("Zones");
+                    b.Navigation("UserProgresses");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone", b =>

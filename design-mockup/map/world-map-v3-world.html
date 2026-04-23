@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — World Map v3 · Direction C · Region Hub</title>
+<style>
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --border-soft:#1e2632;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+  --blue:   #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red:    #f85149;
+  --green:  #3fb950;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh; padding: 48px 40px; gap: 48px; flex-wrap: wrap;
+}
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+.screen-wrap  { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.screen-label { text-align: center; max-width: 390px; }
+.screen-badge {
+  display: inline-block; border-radius: 12px; padding: 3px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.screen-title { font-size: 14px; color: var(--text-primary); font-weight: 700; margin-bottom: 3px; }
+.screen-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px 0; z-index: 100;
+}
+.status-bar__time  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.status-bar__icons { font-size: 11px; color: var(--text-secondary); }
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background: var(--surface-1); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 8px 12px; z-index: 100;
+}
+.nav__item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; text-decoration: none; }
+.nav__icon { font-size: 20px; }
+.nav__label { font-size: 10px; }
+.nav__item--active .nav__icon, .nav__item--active .nav__label { color: var(--blue); }
+.nav__item:not(.nav__item--active) .nav__icon, .nav__item:not(.nav__item--active) .nav__label { color: var(--text-secondary); }
+.fab {
+  position: absolute; bottom: 93px; left: 50%; transform: translateX(-50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(145deg, #ff4e4e, #c0392b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; z-index: 200;
+  box-shadow: 0 0 0 3px rgba(248,81,73,0.2), 0 0 22px rgba(248,81,73,0.5), 0 4px 12px rgba(0,0,0,0.4);
+}
+.scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; padding: 54px 16px 110px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+.progress { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.progress--thick { height: 10px; border-radius: 5px; }
+.progress__fill { height: 100%; border-radius: inherit; }
+.progress__fill--xp    { background: linear-gradient(to right, var(--blue), var(--purple)); }
+.progress__fill--green { background: var(--green); }
+.progress__fill--orange{ background: var(--orange); }
+.section-title {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-secondary); letter-spacing: 0.08em;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+/* ═════ Header ═════ */
+.wv3-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.wv3-header__region { flex: 1; min-width: 0; }
+.wv3-header__chapter {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--blue); text-transform: uppercase; margin-bottom: 2px;
+}
+.wv3-header__title {
+  font-size: 20px; font-weight: 800; color: var(--text-primary); line-height: 1.1;
+}
+.wv3-header__level {
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 5px 10px; border-radius: 10px;
+  box-shadow: 0 0 12px rgba(79,158,255,0.3);
+  flex-shrink: 0;
+}
+
+/* ═════ Journey strip (small, clickable) ═════ */
+.wv3-strip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(79,158,255,0.15), rgba(163,113,247,0.1));
+  border: 1px solid rgba(79,158,255,0.4);
+  border-radius: 14px;
+  box-shadow: 0 0 18px rgba(79,158,255,0.1);
+  cursor: pointer;
+}
+.wv3-strip__icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: rgba(79,158,255,0.18); border: 1px solid rgba(79,158,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.wv3-strip__body { flex: 1; min-width: 0; }
+.wv3-strip__title {
+  font-size: 10px; font-weight: 800; color: var(--blue);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.wv3-strip__sub {
+  font-size: 12px; color: var(--text-primary); font-weight: 700; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wv3-strip__percent {
+  font-size: 14px; font-weight: 800; color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═════ Region hero card ═════ */
+.wv3-region {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0;
+  margin-bottom: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+.wv3-region--active {
+  border-color: rgba(63,185,80,0.5);
+  box-shadow: 0 0 28px rgba(63,185,80,0.14), inset 0 0 40px rgba(63,185,80,0.04);
+}
+.wv3-region--locked { opacity: 0.55; }
+
+/* Region banner (colored top strip) */
+.wv3-region__banner {
+  height: 72px;
+  background: linear-gradient(135deg, rgba(63,185,80,0.22), rgba(79,158,255,0.14));
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; padding: 0 16px;
+}
+.wv3-region--forest   .wv3-region__banner { background: linear-gradient(135deg, rgba(63,185,80,0.28), rgba(79,158,255,0.1)); }
+.wv3-region--mountain .wv3-region__banner { background: linear-gradient(135deg, rgba(163,113,247,0.22), rgba(79,158,255,0.16)); }
+.wv3-region--ocean    .wv3-region__banner { background: linear-gradient(135deg, rgba(79,158,255,0.25), rgba(0,0,0,0.2)); }
+.wv3-region--frost    .wv3-region__banner { background: linear-gradient(135deg, rgba(79,158,255,0.14), rgba(230,237,243,0.08)); }
+.wv3-region--volcano  .wv3-region__banner { background: linear-gradient(135deg, rgba(248,81,73,0.2), rgba(245,166,35,0.18)); }
+
+.wv3-region__banner::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 50%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+.wv3-region__emoji {
+  font-size: 44px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  z-index: 1; position: relative;
+}
+.wv3-region__stat-badge {
+  margin-left: auto; z-index: 1; position: relative;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.08em;
+  color: #fff; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 8px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(4px);
+}
+.wv3-region__stat-badge--active   { background: rgba(63,185,80,0.5); border-color: rgba(63,185,80,0.6); }
+.wv3-region__stat-badge--complete { background: rgba(63,185,80,0.3); border-color: rgba(63,185,80,0.5); }
+.wv3-region__stat-badge--locked   { background: rgba(139,148,158,0.3); color: var(--text-secondary); }
+
+.wv3-region__body { padding: 12px 16px 14px; }
+.wv3-region__name {
+  font-size: 16px; font-weight: 800; color: var(--text-primary);
+  line-height: 1.1; margin-bottom: 2px;
+}
+.wv3-region__lore {
+  font-size: 11px; color: var(--text-secondary);
+  line-height: 1.45; margin-bottom: 10px;
+}
+.wv3-region__bar-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; font-size: 10px;
+}
+.wv3-region__bar-label { color: var(--text-secondary); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.wv3-region__bar-val   { color: var(--text-primary); font-weight: 800; }
+.wv3-region__cta-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+}
+.wv3-region__meta {
+  flex: 1;
+  font-size: 10px; color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+.wv3-region__btn {
+  padding: 8px 14px; border-radius: 10px; border: 1px solid;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  cursor: pointer; flex-shrink: 0;
+}
+.wv3-region__btn--enter {
+  background: linear-gradient(135deg, var(--green), #2ea043);
+  border-color: rgba(63,185,80,0.6); color: #fff;
+  box-shadow: 0 0 14px rgba(63,185,80,0.3);
+}
+.wv3-region__btn--ghost {
+  background: var(--surface-2); border-color: var(--border);
+  color: var(--text-primary);
+}
+.wv3-region__btn--locked {
+  background: transparent; border-color: var(--border);
+  color: var(--text-muted);
+}
+
+/* Mini-icons on banner: shows current sub-zone, boss, etc */
+.wv3-region__pins {
+  position: absolute; bottom: 4px; left: 16px; right: 16px;
+  display: flex; gap: 4px; z-index: 1;
+}
+.wv3-region__pin {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.04em;
+  color: #fff; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 5px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.wv3-region__pin--active { background: rgba(79,158,255,0.45); border-color: rgba(79,158,255,0.55); }
+.wv3-region__pin--boss   { background: rgba(248,81,73,0.45);  border-color: rgba(248,81,73,0.55); }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 — WORLD VIEW (region hubs)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">DIRECTION C · SCREEN 1</div>
+    <div class="screen-title">World level — region cards</div>
+    <div class="screen-desc">Each region is one hero card: emoji banner, lore, progress bar, enter CTA. Zones hidden until you enter a region. Best for scaling to many zones.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="wv3-header">
+        <div class="wv3-header__region">
+          <div class="wv3-header__chapter">Explorer Kai</div>
+          <div class="wv3-header__title">World Map</div>
+        </div>
+        <div class="wv3-header__level">Lv 12</div>
+      </div>
+
+      <!-- Active journey strip -->
+      <div class="wv3-strip">
+        <div class="wv3-strip__icon">🏰</div>
+        <div class="wv3-strip__body">
+          <div class="wv3-strip__title">Traveling · Forest of Endurance</div>
+          <div class="wv3-strip__sub">→ Ember Forge · 2.7 / 5.0 km</div>
+        </div>
+        <div class="wv3-strip__percent">54%</div>
+      </div>
+
+      <div class="section-title"><span>REGIONS · 2 UNLOCKED</span></div>
+
+      <!-- Active region -->
+      <div class="wv3-region wv3-region--active wv3-region--forest">
+        <div class="wv3-region__banner">
+          <div class="wv3-region__emoji">🌲</div>
+          <div class="wv3-region__stat-badge wv3-region__stat-badge--active">Active</div>
+          <div class="wv3-region__pins">
+            <div class="wv3-region__pin wv3-region__pin--active">You are here · Misty Pine</div>
+            <div class="wv3-region__pin">🗝 6 zones</div>
+          </div>
+        </div>
+        <div class="wv3-region__body">
+          <div class="wv3-region__name">Forest of Endurance</div>
+          <div class="wv3-region__lore">Endless woodlands that reward every km logged. Run and cycle to carve your path.</div>
+          <div class="wv3-region__bar-row">
+            <span class="wv3-region__bar-label">Progress</span>
+            <span class="wv3-region__bar-val">4 / 7 zones</span>
+          </div>
+          <div class="progress"><div class="progress__fill progress__fill--green" style="width:57%"></div></div>
+          <div class="wv3-region__cta-row">
+            <div class="wv3-region__meta">+2,840 XP · 2 zones left to boss</div>
+            <button class="wv3-region__btn wv3-region__btn--enter">Enter →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed region -->
+      <div class="wv3-region wv3-region--ocean">
+        <div class="wv3-region__banner">
+          <div class="wv3-region__emoji">🌊</div>
+          <div class="wv3-region__stat-badge wv3-region__stat-badge--complete">Completed ✓</div>
+          <div class="wv3-region__pins">
+            <div class="wv3-region__pin">🏆 5 / 5 zones</div>
+            <div class="wv3-region__pin">⭐ +1,820 XP earned</div>
+          </div>
+        </div>
+        <div class="wv3-region__body">
+          <div class="wv3-region__name">Ocean of Balance</div>
+          <div class="wv3-region__lore">Tidal islands linked by swims and yoga flows. Revisit for daily XP.</div>
+          <div class="wv3-region__bar-row">
+            <span class="wv3-region__bar-label">Progress</span>
+            <span class="wv3-region__bar-val">5 / 5 zones · ✓</span>
+          </div>
+          <div class="progress"><div class="progress__fill progress__fill--green" style="width:100%"></div></div>
+          <div class="wv3-region__cta-row">
+            <div class="wv3-region__meta">Rewards cleared · revisit anytime</div>
+            <button class="wv3-region__btn wv3-region__btn--ghost">Revisit →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Locked region — high level -->
+      <div class="wv3-region wv3-region--locked wv3-region--mountain">
+        <div class="wv3-region__banner">
+          <div class="wv3-region__emoji">⛰️</div>
+          <div class="wv3-region__stat-badge wv3-region__stat-badge--locked">🔒 Lv 15</div>
+          <div class="wv3-region__pins">
+            <div class="wv3-region__pin">🔒 Unlock at Lv 15</div>
+            <div class="wv3-region__pin">💪 STR-tagged zones</div>
+          </div>
+        </div>
+        <div class="wv3-region__body">
+          <div class="wv3-region__name">Mountains of Strength</div>
+          <div class="wv3-region__lore">Jagged peaks conquered by gym sessions and climbs. Reward: +15% STR gain.</div>
+          <div class="wv3-region__bar-row">
+            <span class="wv3-region__bar-label">Unlock progress</span>
+            <span class="wv3-region__bar-val">Lv 12 / 15</span>
+          </div>
+          <div class="progress"><div class="progress__fill progress__fill--orange" style="width:80%"></div></div>
+          <div class="wv3-region__cta-row">
+            <div class="wv3-region__meta">3 levels to go · ~580 XP per level</div>
+            <button class="wv3-region__btn wv3-region__btn--locked">🔒 Locked</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teaser region -->
+      <div class="wv3-region wv3-region--locked wv3-region--volcano">
+        <div class="wv3-region__banner">
+          <div class="wv3-region__emoji">🌋</div>
+          <div class="wv3-region__stat-badge wv3-region__stat-badge--locked">🔒 Lv 25</div>
+          <div class="wv3-region__pins">
+            <div class="wv3-region__pin wv3-region__pin--boss">👹 Endgame boss · Molten King</div>
+          </div>
+        </div>
+        <div class="wv3-region__body">
+          <div class="wv3-region__name">Ashen Caldera</div>
+          <div class="wv3-region__lore">Endgame volcanic region. HIIT + cardio unlock legendary loot.</div>
+          <div class="wv3-region__bar-row">
+            <span class="wv3-region__bar-label">Unlock progress</span>
+            <span class="wv3-region__bar-val">Lv 12 / 25</span>
+          </div>
+          <div class="progress"><div class="progress__fill progress__fill--orange" style="width:48%"></div></div>
+          <div class="wv3-region__cta-row">
+            <div class="wv3-region__meta">Beat Ashfang (Mountains) to unlock</div>
+            <button class="wv3-region__btn wv3-region__btn--locked">🔒 Locked</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

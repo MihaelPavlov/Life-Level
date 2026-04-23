@@ -18,6 +18,10 @@ class WorldZoneModel {
   final bool isStartZone;
   final int nodeCount;
   final int? completedNodeCount;
+  // Typed-zone metadata introduced with the typed-zones backend. Lowercase
+  // enum name: "zone" (default), "entry", "boss", "dungeon", "chest",
+  // "crossroads". Defaults to "zone" when the backend omits the field.
+  final String type;
   final ZoneUserState? userState;
 
   const WorldZoneModel({
@@ -36,6 +40,7 @@ class WorldZoneModel {
     required this.isStartZone,
     required this.nodeCount,
     this.completedNodeCount,
+    this.type = 'zone',
     this.userState,
   });
 
@@ -55,6 +60,7 @@ class WorldZoneModel {
         isStartZone: json['isStartZone'] as bool,
         nodeCount: json['nodeCount'] as int,
         completedNodeCount: json['completedNodeCount'] as int?,
+        type: (json['type'] as String?) ?? 'zone',
         userState: json['userState'] != null
             ? ZoneUserState.fromJson(json['userState'])
             : null,
@@ -113,6 +119,10 @@ class WorldUserProgress {
   final double distanceTraveledOnEdge;
   final String? destinationZoneId;
   final List<String> unlockedZoneIds;
+  // ID of the region the user's CurrentZone belongs to. Set by the backend
+  // (WorldMapDto.CurrentRegionId) once the typed-zones overview DTO is live;
+  // null if unknown or when the user has no current zone yet.
+  final String? currentRegionId;
 
   const WorldUserProgress({
     required this.currentZoneId,
@@ -120,6 +130,7 @@ class WorldUserProgress {
     required this.distanceTraveledOnEdge,
     this.destinationZoneId,
     required this.unlockedZoneIds,
+    this.currentRegionId,
   });
 
   factory WorldUserProgress.fromJson(Map<String, dynamic> json) =>
@@ -132,6 +143,7 @@ class WorldUserProgress {
         unlockedZoneIds: (json['unlockedZoneIds'] as List)
             .map((e) => e.toString())
             .toList(),
+        currentRegionId: json['currentRegionId'] as String?,
       );
 }
 

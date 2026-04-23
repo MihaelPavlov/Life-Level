@@ -23,11 +23,11 @@ class WelcomeSetupScreen extends StatelessWidget {
             ),
           ),
           SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 children: [
-                  const Spacer(flex: 2),
+                  const SizedBox(height: 32),
                   // Logo ring
                   Container(
                     width: 90,
@@ -122,7 +122,7 @@ class WelcomeSetupScreen extends StatelessWidget {
                     'Compete & Conquer',
                     'Join guild raids, take on weekly challenges, and climb the leaderboard.',
                   ),
-                  const Spacer(flex: 3),
+                  const SizedBox(height: 28),
                   // Progress dots
                   setupProgressDots(current: 0, total: 4),
                   const SizedBox(height: 24),

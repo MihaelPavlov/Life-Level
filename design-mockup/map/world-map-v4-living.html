@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — World Map v4 · Living Path</title>
+<style>
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --border-soft:#1e2632;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+  --blue:   #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red:    #f85149;
+  --green:  #3fb950;
+  --gold:   #e3b341;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh; padding: 48px 40px; gap: 48px; flex-wrap: wrap;
+}
+
+/* ═════ Phone shell + chrome (shared with v3) ═════ */
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+.screen-wrap  { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.screen-label { text-align: center; max-width: 390px; }
+.screen-badge {
+  display: inline-block; border-radius: 12px; padding: 3px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.screen-title { font-size: 14px; color: var(--text-primary); font-weight: 700; margin-bottom: 3px; }
+.screen-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px 0; z-index: 100;
+}
+.status-bar__time  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.status-bar__icons { font-size: 11px; color: var(--text-secondary); }
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background: var(--surface-1); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 8px 12px; z-index: 100;
+}
+.nav__item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; text-decoration: none; }
+.nav__icon { font-size: 20px; }
+.nav__label { font-size: 10px; }
+.nav__item--active .nav__icon, .nav__item--active .nav__label { color: var(--blue); }
+.nav__item:not(.nav__item--active) .nav__icon, .nav__item:not(.nav__item--active) .nav__label { color: var(--text-secondary); }
+.fab {
+  position: absolute; bottom: 93px; left: 50%; transform: translateX(-50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(145deg, #ff4e4e, #c0392b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; z-index: 200;
+  box-shadow: 0 0 0 3px rgba(248,81,73,0.2), 0 0 22px rgba(248,81,73,0.5), 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; padding: 54px 0 146px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ═════ Header ═════ */
+.lv4-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px 10px;
+}
+.lv4-header__body { flex: 1; min-width: 0; }
+.lv4-header__chapter {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--blue); text-transform: uppercase; margin-bottom: 2px;
+}
+.lv4-header__title {
+  font-size: 18px; font-weight: 800; color: var(--text-primary); line-height: 1.1;
+}
+.lv4-header__level {
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 5px 10px; border-radius: 10px;
+  box-shadow: 0 0 12px rgba(79,158,255,0.3);
+  flex-shrink: 0;
+}
+.lv4-header__bell {
+  position: relative; width: 34px; height: 34px;
+  border-radius: 10px; background: var(--surface-1); border: 1px solid var(--border);
+  color: var(--text-primary); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.lv4-header__bell-dot {
+  position: absolute; top: -3px; right: -3px;
+  min-width: 14px; height: 14px; padding: 0 3px;
+  background: var(--red); color: #fff;
+  font-size: 8px; font-weight: 800;
+  border-radius: 7px; border: 2px solid var(--bg-base);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ═════ Live event banner ═════ */
+.lv4-event {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin: 0 16px 8px;
+  border-radius: 12px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+}
+.lv4-event--storm {
+  background: linear-gradient(135deg, rgba(245,166,35,0.22), rgba(163,113,247,0.28));
+  border: 1px solid rgba(245,166,35,0.5);
+  box-shadow: 0 0 22px rgba(245,166,35,0.22), inset 0 0 18px rgba(163,113,247,0.1);
+}
+.lv4-event--boss {
+  background: linear-gradient(135deg, rgba(248,81,73,0.2), rgba(163,113,247,0.18));
+  border: 1px solid rgba(248,81,73,0.5);
+  box-shadow: 0 0 22px rgba(248,81,73,0.22);
+}
+.lv4-event--merchant {
+  background: linear-gradient(135deg, rgba(79,158,255,0.18), rgba(63,185,80,0.14));
+  border: 1px solid rgba(79,158,255,0.45);
+  box-shadow: 0 0 22px rgba(79,158,255,0.15);
+}
+.lv4-event::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.07) 50%, transparent 70%);
+  pointer-events: none;
+  animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.lv4-event__icon {
+  font-size: 20px; flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+  position: relative; z-index: 1;
+}
+.lv4-event__body { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.lv4-event__title {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.lv4-event--storm    .lv4-event__title { color: var(--orange); }
+.lv4-event--boss     .lv4-event__title { color: var(--red); }
+.lv4-event--merchant .lv4-event__title { color: var(--blue); }
+.lv4-event__sub {
+  font-size: 11px; color: var(--text-primary);
+  font-weight: 600; margin-top: 2px;
+}
+.lv4-event__timer {
+  font-size: 13px; font-weight: 800; color: #fff;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px; padding: 4px 9px;
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+
+/* ═════ Sticky journey strip (upgraded with avatar+mount chip) ═════ */
+.lv4-journey {
+  position: sticky; top: 0; z-index: 60;
+  margin: 0 16px 8px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px 10px 12px;
+  background: linear-gradient(135deg, rgba(79,158,255,0.2), rgba(163,113,247,0.14));
+  border: 1px solid rgba(79,158,255,0.45);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35), 0 0 22px rgba(79,158,255,0.12);
+}
+.lv4-journey__dest {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(79,158,255,0.18); border: 1px solid rgba(79,158,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.lv4-journey__body { flex: 1; min-width: 0; }
+.lv4-journey__title {
+  font-size: 10px; font-weight: 800; color: var(--blue);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.lv4-journey__sub {
+  font-size: 12px; color: var(--text-primary); font-weight: 700; margin-top: 1px;
+}
+.lv4-journey__pips { display: flex; gap: 3px; margin-top: 5px; }
+.lv4-journey__pip {
+  flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1);
+}
+.lv4-journey__pip--done { background: var(--blue); box-shadow: 0 0 4px rgba(79,158,255,0.6); }
+.lv4-journey__hero {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px; padding: 4px 8px;
+  gap: 2px; flex-shrink: 0;
+}
+.lv4-journey__hero-avatar { font-size: 16px; }
+.lv4-journey__hero-mount  { font-size: 14px; }
+
+/* ═════ Activity ticker (scrolling) ═════ */
+.lv4-ticker {
+  position: relative; overflow: hidden;
+  margin: 0 16px 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+.lv4-ticker__track {
+  display: inline-flex; white-space: nowrap;
+  animation: ticker-scroll 40s linear infinite;
+}
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.lv4-ticker__item {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0 18px;
+  display: inline-flex; align-items: center; gap: 5px;
+  border-right: 1px solid var(--border-soft);
+}
+.lv4-ticker__item span.hi { color: var(--text-primary); font-weight: 700; }
+
+/* ═════ Chapter dividers ═════ */
+.lv4-chapter {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
+  color: var(--text-muted); text-transform: uppercase;
+  margin: 8px 24px 10px;
+}
+.lv4-chapter::before, .lv4-chapter::after {
+  content: ""; flex: 1; height: 1px; background: var(--border-soft);
+}
+.lv4-chapter--active { color: var(--blue); }
+.lv4-chapter--active::before, .lv4-chapter--active::after { background: rgba(79,158,255,0.35); }
+
+/* ═════ Vertical trail (nodes + chests) ═════ */
+.lv4-trail {
+  position: relative;
+  padding: 0 0 4px;
+}
+.lv4-curve {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+
+.lv4-node {
+  position: relative; z-index: 2;
+  display: flex; align-items: center;
+  padding: 6px 0;
+  min-height: 74px;
+}
+.lv4-node--left  { justify-content: flex-start; padding-left: 46px; }
+.lv4-node--right { justify-content: flex-end;   padding-right: 46px; }
+.lv4-node--center{ justify-content: center; }
+
+.lv4-bubble {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.lv4-bubble__circle {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+}
+.lv4-bubble--completed .lv4-bubble__circle {
+  background: rgba(63,185,80,0.15);
+  border-color: var(--green); color: var(--green);
+  width: 48px; height: 48px; font-size: 20px;
+}
+.lv4-bubble--active .lv4-bubble__circle {
+  width: 72px; height: 72px; font-size: 30px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.2), rgba(245,166,35,0.06));
+  border: 2px dashed var(--orange); color: var(--orange);
+  box-shadow: 0 0 24px rgba(245,166,35,0.4), 0 0 0 5px rgba(245,166,35,0.08);
+  animation: pulse-orange 2.4s ease-in-out infinite;
+}
+@keyframes pulse-orange {
+  0%,100% { box-shadow: 0 0 24px rgba(245,166,35,0.4), 0 0 0 5px rgba(245,166,35,0.08); }
+  50%     { box-shadow: 0 0 36px rgba(245,166,35,0.65), 0 0 0 9px rgba(245,166,35,0.14); }
+}
+.lv4-bubble--locked .lv4-bubble__circle {
+  width: 44px; height: 44px; font-size: 17px;
+  color: var(--text-muted); opacity: 0.7;
+}
+.lv4-bubble--crossroads .lv4-bubble__circle {
+  transform: rotate(45deg); border-radius: 12px;
+  border-color: var(--purple); color: var(--purple);
+  background: linear-gradient(135deg, rgba(163,113,247,0.18), rgba(163,113,247,0.06));
+  width: 58px; height: 58px;
+}
+.lv4-bubble--crossroads .lv4-bubble__circle > span { transform: rotate(-45deg); display: block; }
+.lv4-bubble__label {
+  font-size: 11px; font-weight: 700; color: var(--text-primary);
+  max-width: 140px; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lv4-bubble--locked .lv4-bubble__label { color: var(--text-muted); }
+.lv4-bubble__sub {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.lv4-bubble--completed .lv4-bubble__sub  { color: var(--green); }
+.lv4-bubble--active .lv4-bubble__sub     { color: var(--orange); }
+.lv4-bubble--crossroads .lv4-bubble__sub { color: var(--purple); }
+
+/* Reward preview sparkle on active node */
+.lv4-bubble__sparkle {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-top: 3px;
+  font-size: 9px; font-weight: 800;
+  color: var(--orange);
+  background: rgba(245,166,35,0.14);
+  border: 1px solid rgba(245,166,35,0.4);
+  padding: 2px 7px; border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 0 8px rgba(245,166,35,0.25);
+}
+
+/* Guildmate ghost chip on completed node */
+.lv4-ghost {
+  position: absolute; top: -6px; right: -10px;
+  display: flex; align-items: center; gap: 2px;
+  background: rgba(163,113,247,0.18);
+  border: 1px solid rgba(163,113,247,0.45);
+  color: var(--purple);
+  font-size: 8px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 2px 5px; border-radius: 6px;
+}
+.lv4-ghost__face {
+  font-size: 10px;
+  filter: grayscale(0.4) brightness(0.9);
+}
+
+/* Codex chip on completed node */
+.lv4-codex {
+  position: absolute; bottom: -8px; left: -14px;
+  background: rgba(79,158,255,0.14);
+  border: 1px solid rgba(79,158,255,0.4);
+  color: var(--blue);
+  font-size: 8px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 2px 5px; border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ═════ Chest row (between nodes) ═════ */
+.lv4-chest {
+  display: flex; align-items: center; gap: 10px;
+  margin: -4px 44px 2px;
+  padding: 8px 12px;
+  background: var(--surface-1);
+  border: 1px solid;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative; z-index: 3;
+}
+.lv4-chest--daily {
+  border-color: rgba(227,179,65,0.55);
+  background: linear-gradient(135deg, rgba(227,179,65,0.14), rgba(245,166,35,0.06));
+  box-shadow: 0 0 18px rgba(227,179,65,0.18);
+  animation: pulse-gold 2.6s ease-in-out infinite;
+}
+@keyframes pulse-gold {
+  0%,100% { box-shadow: 0 0 18px rgba(227,179,65,0.18); }
+  50%     { box-shadow: 0 0 28px rgba(227,179,65,0.35); }
+}
+.lv4-chest--milestone {
+  border-color: rgba(163,113,247,0.4);
+  background: linear-gradient(135deg, rgba(163,113,247,0.1), rgba(79,158,255,0.06));
+  opacity: 0.75;
+}
+.lv4-chest--mystery {
+  border-color: rgba(248,81,73,0.4);
+  background: linear-gradient(135deg, rgba(248,81,73,0.1), rgba(245,166,35,0.06));
+}
+
+.lv4-chest__icon-wrap {
+  position: relative; width: 40px; height: 40px; flex-shrink: 0;
+}
+.lv4-chest__ring {
+  position: absolute; inset: 0;
+}
+.lv4-chest__icon {
+  position: absolute; inset: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 50%;
+}
+.lv4-chest__body { flex: 1; min-width: 0; }
+.lv4-chest__title {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.lv4-chest--daily     .lv4-chest__title { color: var(--gold); }
+.lv4-chest--milestone .lv4-chest__title { color: var(--purple); }
+.lv4-chest--mystery   .lv4-chest__title { color: var(--red); }
+.lv4-chest__sub {
+  font-size: 11px; color: var(--text-primary);
+  font-weight: 600; margin-top: 1px;
+}
+.lv4-chest__hint {
+  font-size: 10px; color: var(--text-muted);
+  font-weight: 600; margin-top: 2px;
+}
+.lv4-chest__cta {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 6px 10px; border-radius: 8px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--gold), #c99414);
+  border: 1px solid rgba(227,179,65,0.6);
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(227,179,65,0.3);
+}
+.lv4-chest__cta--locked {
+  background: var(--surface-2); border-color: var(--border);
+  color: var(--text-muted); box-shadow: none;
+}
+
+/* ═════ Walker sprite (avatar + mount on trail) ═════ */
+.lv4-walker {
+  position: relative; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  margin: -2px 16px;
+  padding: 10px 14px;
+}
+.lv4-walker__trail {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  gap: 4px;
+  font-size: 7px; color: var(--blue); letter-spacing: 0.2em;
+  opacity: 0.7;
+}
+.lv4-walker__sprite {
+  position: relative;
+  display: flex; align-items: flex-end; gap: 2px;
+  padding: 6px 10px;
+  background: rgba(79,158,255,0.14);
+  border: 1px solid rgba(79,158,255,0.45);
+  border-radius: 14px;
+  box-shadow: 0 0 18px rgba(79,158,255,0.25);
+  animation: bob 1.6s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-3px); }
+}
+.lv4-walker__avatar { font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.lv4-walker__mount  { font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.lv4-walker__badge {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: #fff;
+  font-size: 8px; font-weight: 800; letter-spacing: 0.1em;
+  padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(79,158,255,0.5);
+}
+.lv4-walker__meta {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; padding: 3px 8px;
+  white-space: nowrap;
+}
+
+/* ═════ World-boss node (crossroads variant) ═════ */
+.lv4-boss-node {
+  position: relative; z-index: 2;
+  margin: 0 16px 8px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(248,81,73,0.12), rgba(163,113,247,0.06));
+  border: 1px solid rgba(248,81,73,0.4);
+  border-radius: 14px;
+  display: flex; gap: 12px; align-items: center;
+  box-shadow: 0 0 20px rgba(248,81,73,0.15);
+}
+.lv4-boss-node__icon {
+  width: 54px; height: 54px; border-radius: 14px;
+  background: rgba(248,81,73,0.2); border: 1px solid rgba(248,81,73,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+  animation: pulse-red 2.4s ease-in-out infinite;
+}
+@keyframes pulse-red {
+  0%,100% { box-shadow: 0 0 18px rgba(248,81,73,0.3); }
+  50%     { box-shadow: 0 0 28px rgba(248,81,73,0.55); }
+}
+.lv4-boss-node__body { flex: 1; min-width: 0; }
+.lv4-boss-node__tag {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
+  color: var(--red); text-transform: uppercase;
+}
+.lv4-boss-node__name {
+  font-size: 14px; font-weight: 800; color: var(--text-primary);
+  margin-top: 1px;
+}
+.lv4-boss-node__sub {
+  font-size: 10px; color: var(--text-secondary); font-weight: 600;
+  margin-top: 3px;
+}
+.lv4-boss-node__hp {
+  height: 5px; background: rgba(0,0,0,0.35);
+  border-radius: 3px; margin-top: 6px; overflow: hidden;
+}
+.lv4-boss-node__hp-fill {
+  height: 100%; background: linear-gradient(to right, var(--red), #c0392b);
+  border-radius: 3px;
+}
+.lv4-boss-node__timer {
+  font-size: 13px; font-weight: 800; color: #fff;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(248,81,73,0.5);
+  border-radius: 10px; padding: 6px 10px;
+  flex-shrink: 0;
+}
+
+/* ═════ Reward ladder drawer tab (collapsed) ═════ */
+.lv4-ladder-tab {
+  position: absolute; left: 16px; right: 16px; bottom: 98px;
+  z-index: 70;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(163,113,247,0.18), rgba(245,166,35,0.14));
+  border: 1px solid rgba(163,113,247,0.5);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(163,113,247,0.28), 0 0 22px rgba(245,166,35,0.15);
+  cursor: pointer;
+}
+.lv4-ladder-tab__icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: rgba(163,113,247,0.22); border: 1px solid rgba(163,113,247,0.45);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.lv4-ladder-tab__body { flex: 1; min-width: 0; }
+.lv4-ladder-tab__label {
+  font-size: 9px; font-weight: 800; color: var(--purple);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.lv4-ladder-tab__next {
+  font-size: 12px; color: var(--text-primary); font-weight: 700; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lv4-ladder-tab__chev {
+  font-size: 14px; color: var(--text-primary); flex-shrink: 0;
+}
+
+/* ═════ Reward ladder expanded sheet ═════ */
+.lv4-backdrop {
+  position: absolute; inset: 0; z-index: 80;
+  background: rgba(4,8,16,0.66);
+  backdrop-filter: blur(2px);
+}
+.lv4-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  z-index: 90;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 16px 24px;
+  box-shadow: 0 -18px 40px rgba(0,0,0,0.55);
+  max-height: 78%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.lv4-sheet::-webkit-scrollbar { display: none; }
+.lv4-sheet__grabber {
+  width: 42px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 4px auto 14px;
+}
+.lv4-sheet__header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.lv4-sheet__title {
+  font-size: 16px; font-weight: 800;
+  color: var(--text-primary); letter-spacing: 0.02em;
+}
+.lv4-sheet__title span {
+  display: block; font-size: 9px; font-weight: 800;
+  color: var(--purple); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 2px;
+}
+.lv4-sheet__timer {
+  background: rgba(248,81,73,0.12);
+  border: 1px solid rgba(248,81,73,0.4);
+  color: var(--red);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  padding: 4px 8px; border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.lv4-sheet__progress {
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 14px;
+}
+.lv4-sheet__progress-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; font-size: 11px;
+}
+.lv4-sheet__progress-label {
+  color: var(--text-secondary);
+  font-weight: 700; letter-spacing: 0.06em;
+  font-size: 10px; text-transform: uppercase;
+}
+.lv4-sheet__progress-val {
+  color: var(--text-primary); font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.lv4-sheet__progress-bar {
+  height: 8px; background: rgba(0,0,0,0.35);
+  border-radius: 4px; overflow: hidden;
+}
+.lv4-sheet__progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--blue), var(--purple), var(--orange));
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(163,113,247,0.35);
+}
+
+/* Tier rows */
+.lv4-tier {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 6px;
+}
+.lv4-tier--claimed {
+  opacity: 0.65;
+  border-style: solid;
+  border-color: rgba(63,185,80,0.3);
+}
+.lv4-tier--available {
+  border-color: rgba(245,166,35,0.5);
+  background: linear-gradient(135deg, rgba(245,166,35,0.1), var(--surface-2));
+  box-shadow: 0 0 16px rgba(245,166,35,0.2);
+}
+.lv4-tier--locked { opacity: 0.55; }
+.lv4-tier--legendary {
+  border-color: rgba(245,166,35,0.55);
+  background: linear-gradient(135deg, rgba(245,166,35,0.12), rgba(163,113,247,0.12));
+  box-shadow: 0 0 20px rgba(245,166,35,0.22), inset 0 0 14px rgba(163,113,247,0.08);
+}
+.lv4-tier__num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--bg-base); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.lv4-tier--legendary .lv4-tier__num {
+  color: var(--gold); border-color: rgba(227,179,65,0.5);
+  background: linear-gradient(135deg, rgba(227,179,65,0.15), rgba(163,113,247,0.08));
+}
+.lv4-tier__icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.lv4-tier--legendary .lv4-tier__icon {
+  background: rgba(245,166,35,0.18); border-color: rgba(245,166,35,0.5);
+}
+.lv4-tier__body { flex: 1; min-width: 0; }
+.lv4-tier__name {
+  font-size: 12px; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lv4-tier__threshold {
+  font-size: 10px; color: var(--text-secondary); margin-top: 1px;
+}
+.lv4-tier__status {
+  font-size: 9px; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 8px; border-radius: 6px;
+  flex-shrink: 0;
+}
+.lv4-tier__status--claimed   { color: var(--green);  background: rgba(63,185,80,0.1);  border: 1px solid rgba(63,185,80,0.35); }
+.lv4-tier__status--available { color: #fff; background: linear-gradient(135deg, var(--orange), #d4881a); border: 1px solid rgba(245,166,35,0.6); box-shadow: 0 0 10px rgba(245,166,35,0.4); cursor: pointer; }
+.lv4-tier__status--locked    { color: var(--text-muted); background: var(--bg-base); border: 1px solid var(--border); }
+
+.lv4-tier__rarity {
+  font-size: 8px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 1px 5px; border-radius: 4px;
+  margin-right: 6px;
+}
+.lv4-tier__rarity--legendary { color: var(--gold);  background: rgba(227,179,65,0.15);  border: 1px solid rgba(227,179,65,0.45); }
+.lv4-tier__rarity--epic      { color: var(--purple); background: rgba(163,113,247,0.12); border: 1px solid rgba(163,113,247,0.4); }
+.lv4-tier__rarity--rare      { color: var(--blue);   background: rgba(79,158,255,0.1);   border: 1px solid rgba(79,158,255,0.35); }
+
+.lv4-sheet__close {
+  position: absolute; top: 14px; right: 14px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-secondary); font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 — LIVING PATH · default view
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">v4 · LIVING PATH</div>
+    <div class="screen-title">Gamified evolution of Direction B</div>
+    <div class="screen-desc">Live event banner · scrolling activity ticker · avatar+mount walking the trail · daily/milestone chests · world-boss node · seasonal reward-ladder drawer.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <!-- Header -->
+      <div class="lv4-header">
+        <div class="lv4-header__body">
+          <div class="lv4-header__chapter">Chapter 2 · Forest of Endurance</div>
+          <div class="lv4-header__title">World Map</div>
+        </div>
+        <div class="lv4-header__level">Lv 12</div>
+        <button class="lv4-header__bell">🔔<span class="lv4-header__bell-dot">3</span></button>
+      </div>
+
+      <!-- LIVE EVENT — Storm (primary urgent signal) -->
+      <div class="lv4-event lv4-event--storm">
+        <div class="lv4-event__icon">⚡</div>
+        <div class="lv4-event__body">
+          <div class="lv4-event__title">XP Storm · ×2 bonus</div>
+          <div class="lv4-event__sub">Every workout earns double XP</div>
+        </div>
+        <div class="lv4-event__timer">01:23</div>
+      </div>
+
+      <!-- Sticky journey strip (with avatar + mount mini chip) -->
+      <div class="lv4-journey">
+        <div class="lv4-journey__dest">🏰</div>
+        <div class="lv4-journey__body">
+          <div class="lv4-journey__title">Traveling · 2.3 km to go</div>
+          <div class="lv4-journey__sub">→ Ember Forge · 2.7 / 5.0 km</div>
+          <div class="lv4-journey__pips">
+            <div class="lv4-journey__pip lv4-journey__pip--done"></div>
+            <div class="lv4-journey__pip lv4-journey__pip--done"></div>
+            <div class="lv4-journey__pip lv4-journey__pip--done"></div>
+            <div class="lv4-journey__pip"></div>
+            <div class="lv4-journey__pip"></div>
+          </div>
+        </div>
+        <div class="lv4-journey__hero">
+          <span class="lv4-journey__hero-avatar">🧙</span>
+          <span class="lv4-journey__hero-mount">🐺</span>
+        </div>
+      </div>
+
+      <!-- Activity ticker (scrolling) -->
+      <div class="lv4-ticker">
+        <div class="lv4-ticker__track">
+          <div class="lv4-ticker__item">🏆 <span class="hi">Riven</span> passed Frostgate · 2m</div>
+          <div class="lv4-ticker__item">⚔️ Guild dealt <span class="hi">1,240 dmg</span> to Ashfang · 8m</div>
+          <div class="lv4-ticker__item">🎁 Daily chest respawned near <span class="hi">Silver Stream</span> · 12m</div>
+          <div class="lv4-ticker__item">🌟 <span class="hi">Nyx</span> unlocked Direwolf mount · 26m</div>
+          <div class="lv4-ticker__item">🔥 <span class="hi">Ward</span> hit a 30-day streak · 1h</div>
+          <!-- duplicated for seamless loop -->
+          <div class="lv4-ticker__item">🏆 <span class="hi">Riven</span> passed Frostgate · 2m</div>
+          <div class="lv4-ticker__item">⚔️ Guild dealt <span class="hi">1,240 dmg</span> to Ashfang · 8m</div>
+          <div class="lv4-ticker__item">🎁 Daily chest respawned near <span class="hi">Silver Stream</span> · 12m</div>
+          <div class="lv4-ticker__item">🌟 <span class="hi">Nyx</span> unlocked Direwolf mount · 26m</div>
+          <div class="lv4-ticker__item">🔥 <span class="hi">Ward</span> hit a 30-day streak · 1h</div>
+        </div>
+      </div>
+
+      <div class="lv4-chapter">Chapter 1 · Outlands cleared</div>
+
+      <!-- Trail -->
+      <div class="lv4-trail">
+        <svg class="lv4-curve" viewBox="0 0 390 760" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lvGreen" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3fb950" stop-opacity="0.55"/>
+              <stop offset="1" stop-color="#3fb950" stop-opacity="0.3"/>
+            </linearGradient>
+            <linearGradient id="lvActive" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3fb950" stop-opacity="0.35"/>
+              <stop offset="1" stop-color="#f5a623" stop-opacity="0.7"/>
+            </linearGradient>
+          </defs>
+          <!-- 1 → 2 completed -->
+          <path d="M 115 45 C 115 90, 275 90, 275 135" stroke="url(#lvGreen)" stroke-width="4" fill="none"/>
+          <!-- 2 → 3 completed -->
+          <path d="M 275 135 C 275 190, 115 190, 115 245" stroke="url(#lvGreen)" stroke-width="4" fill="none"/>
+          <!-- 3 → 4 active (with walker on it) -->
+          <path d="M 115 245 C 115 320, 275 320, 275 395" stroke="url(#lvActive)" stroke-width="4" fill="none"/>
+          <!-- 4 → milestone chest → crossroads -->
+          <path d="M 275 395 C 275 460, 195 460, 195 525" stroke="#30363d" stroke-width="3" fill="none" stroke-dasharray="6 7" opacity="0.7"/>
+          <!-- crossroads → locked -->
+          <path d="M 195 600 C 195 650, 195 660, 195 690" stroke="#30363d" stroke-width="2" fill="none" stroke-dasharray="4 6" opacity="0.5"/>
+        </svg>
+
+        <!-- Node 1 completed (left) — with guildmate ghost -->
+        <div class="lv4-node lv4-node--left">
+          <div class="lv4-bubble lv4-bubble--completed">
+            <div class="lv4-bubble__circle">✓
+              <div class="lv4-ghost"><span class="lv4-ghost__face">🧝</span> +2</div>
+            </div>
+            <div class="lv4-bubble__label">Whispering Grove</div>
+            <div class="lv4-bubble__sub">+420 XP</div>
+          </div>
+        </div>
+
+        <!-- Daily chest between node 1 and node 2 -->
+        <div class="lv4-chest lv4-chest--daily">
+          <div class="lv4-chest__icon-wrap">
+            <svg class="lv4-chest__ring" viewBox="0 0 40 40" width="40" height="40">
+              <circle cx="20" cy="20" r="18" fill="none" stroke="rgba(227,179,65,0.25)" stroke-width="2"/>
+              <circle cx="20" cy="20" r="18" fill="none" stroke="#e3b341" stroke-width="2"
+                stroke-dasharray="113" stroke-dashoffset="40" stroke-linecap="round"
+                transform="rotate(-90 20 20)"/>
+            </svg>
+            <div class="lv4-chest__icon">🎁</div>
+          </div>
+          <div class="lv4-chest__body">
+            <div class="lv4-chest__title">Daily chest · Ready</div>
+            <div class="lv4-chest__sub">+80 XP · 1 lore page · respawns in 17h</div>
+          </div>
+          <button class="lv4-chest__cta">Claim</button>
+        </div>
+
+        <!-- Node 2 completed (right) -->
+        <div class="lv4-node lv4-node--right">
+          <div class="lv4-bubble lv4-bubble--completed">
+            <div class="lv4-bubble__circle">✓</div>
+            <div class="lv4-bubble__label">Dawn Camp</div>
+            <div class="lv4-bubble__sub">+320 XP</div>
+            <div class="lv4-codex">📖 3 / 5 lore</div>
+          </div>
+        </div>
+
+        <!-- Node 3 last-cleared (left) -->
+        <div class="lv4-node lv4-node--left">
+          <div class="lv4-bubble lv4-bubble--completed">
+            <div class="lv4-bubble__circle">🌿</div>
+            <div class="lv4-bubble__label">Misty Pine</div>
+            <div class="lv4-bubble__sub">Departed · +180 XP</div>
+          </div>
+        </div>
+
+        <!-- WALKER — avatar + mount on the curve at 54% -->
+        <div class="lv4-walker">
+          <div class="lv4-walker__trail">· · ·</div>
+          <div class="lv4-walker__sprite">
+            <div class="lv4-walker__badge">YOU · 2.7 KM</div>
+            <span class="lv4-walker__avatar">🧙</span>
+            <span class="lv4-walker__mount">🐺</span>
+          </div>
+          <div class="lv4-walker__meta">54%</div>
+        </div>
+
+        <!-- Node 4 ACTIVE destination (right) with reward preview -->
+        <div class="lv4-node lv4-node--right">
+          <div class="lv4-bubble lv4-bubble--active">
+            <div class="lv4-bubble__circle">🏰</div>
+            <div class="lv4-bubble__label">Ember Forge</div>
+            <div class="lv4-bubble__sub">Destination · 2.3 km</div>
+            <div class="lv4-bubble__sparkle">✨ +600 XP · 🎁 Flame Rune</div>
+          </div>
+        </div>
+
+        <!-- Milestone chest (locked) -->
+        <div class="lv4-chest lv4-chest--milestone">
+          <div class="lv4-chest__icon-wrap">
+            <svg class="lv4-chest__ring" viewBox="0 0 40 40" width="40" height="40">
+              <circle cx="20" cy="20" r="18" fill="none" stroke="rgba(163,113,247,0.2)" stroke-width="2"/>
+              <circle cx="20" cy="20" r="18" fill="none" stroke="#a371f7" stroke-width="2"
+                stroke-dasharray="113" stroke-dashoffset="73" stroke-linecap="round"
+                transform="rotate(-90 20 20)"/>
+            </svg>
+            <div class="lv4-chest__icon" style="opacity:0.6;">💰</div>
+          </div>
+          <div class="lv4-chest__body">
+            <div class="lv4-chest__title">Milestone · 2,000 XP</div>
+            <div class="lv4-chest__sub">Epic item · 320 XP to unlock</div>
+            <div class="lv4-chest__hint">Tap workouts to push the bar</div>
+          </div>
+          <button class="lv4-chest__cta lv4-chest__cta--locked">🔒 Locked</button>
+        </div>
+
+        <!-- Crossroads / world-boss variant (replaces plain crossroads) -->
+        <div class="lv4-node lv4-node--center">
+          <div class="lv4-bubble lv4-bubble--crossroads">
+            <div class="lv4-bubble__circle"><span>✦</span></div>
+            <div class="lv4-bubble__label">Twin Roads Fork</div>
+            <div class="lv4-bubble__sub">Crossroads · Lv 13+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- World-boss spawn card (attached after crossroads) -->
+      <div class="lv4-boss-node">
+        <div class="lv4-boss-node__icon">👹</div>
+        <div class="lv4-boss-node__body">
+          <div class="lv4-boss-node__tag">World boss · guild raid</div>
+          <div class="lv4-boss-node__name">Ashfang, Dungeon Warden</div>
+          <div class="lv4-boss-node__sub">Spawns past the fork · HP 6,400 / 10,000 · 2d 14h left</div>
+          <div class="lv4-boss-node__hp"><div class="lv4-boss-node__hp-fill" style="width:64%"></div></div>
+        </div>
+        <div class="lv4-boss-node__timer">02:14</div>
+      </div>
+
+      <div class="lv4-chapter">Chapter 3 · Mountains of Strength · Lv 15</div>
+
+      <!-- Locked chapter stub -->
+      <div class="lv4-trail" style="opacity:0.5;">
+        <div class="lv4-node lv4-node--center">
+          <div class="lv4-bubble lv4-bubble--locked">
+            <div class="lv4-bubble__circle">🔒</div>
+            <div class="lv4-bubble__label">Frostgate Summit</div>
+            <div class="lv4-bubble__sub">Lv 15 · Locked</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /scroll -->
+
+    <!-- Reward ladder drawer tab (collapsed) -->
+    <div class="lv4-ladder-tab">
+      <div class="lv4-ladder-tab__icon">🎖</div>
+      <div class="lv4-ladder-tab__body">
+        <div class="lv4-ladder-tab__label">Season track · Lv 7 of 10</div>
+        <div class="lv4-ladder-tab__next">NEXT: 🐺 Direwolf Mount · 260 XP to go</div>
+      </div>
+      <div class="lv4-ladder-tab__chev">▲</div>
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 2 — REWARD LADDER · expanded bottom sheet
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);color:#a371f7">v4 · REWARD LADDER</div>
+    <div class="screen-title">Ladder tab tapped · battle-pass style sheet</div>
+    <div class="screen-desc">10 tiers of seasonal rewards (XP boosts, titles, cosmetics, mounts). Legendary Phoenix Mount at tier 10. Claim the one orange AVAILABLE tier.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <!-- Dimmed map peeking behind -->
+    <div class="scroll" style="filter:brightness(0.5) saturate(0.85);">
+      <div class="lv4-header">
+        <div class="lv4-header__body">
+          <div class="lv4-header__chapter">Chapter 2 · Forest of Endurance</div>
+          <div class="lv4-header__title">World Map</div>
+        </div>
+        <div class="lv4-header__level">Lv 12</div>
+      </div>
+      <div class="lv4-event lv4-event--storm">
+        <div class="lv4-event__icon">⚡</div>
+        <div class="lv4-event__body">
+          <div class="lv4-event__title">XP Storm · ×2 bonus</div>
+          <div class="lv4-event__sub">Every workout earns double XP</div>
+        </div>
+        <div class="lv4-event__timer">01:23</div>
+      </div>
+    </div>
+
+    <div class="lv4-backdrop"></div>
+
+    <!-- Expanded reward-ladder sheet -->
+    <div class="lv4-sheet">
+      <div class="lv4-sheet__grabber"></div>
+      <div class="lv4-sheet__close">✕</div>
+
+      <div class="lv4-sheet__header">
+        <div class="lv4-sheet__title">
+          <span>Season 3</span>
+          Forest Run
+        </div>
+        <div class="lv4-sheet__timer">14 days left</div>
+      </div>
+
+      <div class="lv4-sheet__progress">
+        <div class="lv4-sheet__progress-row">
+          <div class="lv4-sheet__progress-label">Track XP</div>
+          <div class="lv4-sheet__progress-val">3,240 / 3,500</div>
+        </div>
+        <div class="lv4-sheet__progress-bar">
+          <div class="lv4-sheet__progress-fill" style="width:92%"></div>
+        </div>
+      </div>
+
+      <!-- Tier rows (top-down: legendary at top) -->
+      <div class="lv4-tier lv4-tier--legendary lv4-tier--locked">
+        <div class="lv4-tier__num">10</div>
+        <div class="lv4-tier__icon">🦅</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name"><span class="lv4-tier__rarity lv4-tier__rarity--legendary">Legendary</span>Phoenix Mount</div>
+          <div class="lv4-tier__threshold">Reach 5,000 XP · 1,760 to go</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--locked">Locked</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--locked">
+        <div class="lv4-tier__num">9</div>
+        <div class="lv4-tier__icon">🏵️</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name"><span class="lv4-tier__rarity lv4-tier__rarity--epic">Epic</span>Title: Forest Sovereign</div>
+          <div class="lv4-tier__threshold">Reach 4,400 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--locked">Locked</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--locked">
+        <div class="lv4-tier__num">8</div>
+        <div class="lv4-tier__icon">🐺</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name"><span class="lv4-tier__rarity lv4-tier__rarity--epic">Epic</span>Direwolf Mount</div>
+          <div class="lv4-tier__threshold">Reach 3,500 XP · 260 to go</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--locked">Next</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--available">
+        <div class="lv4-tier__num">7</div>
+        <div class="lv4-tier__icon">🧥</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name"><span class="lv4-tier__rarity lv4-tier__rarity--rare">Rare</span>Endurance Cloak</div>
+          <div class="lv4-tier__threshold">Reached 3,000 XP · ready now</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--available">Claim</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--claimed">
+        <div class="lv4-tier__num">6</div>
+        <div class="lv4-tier__icon">✨</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name">+10% XP boost · 7 days</div>
+          <div class="lv4-tier__threshold">Claimed · 2,500 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--claimed">✓ Claimed</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--claimed">
+        <div class="lv4-tier__num">5</div>
+        <div class="lv4-tier__icon">🏅</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name">Title: Forest Wanderer</div>
+          <div class="lv4-tier__threshold">Claimed · 2,000 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--claimed">✓ Claimed</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--claimed">
+        <div class="lv4-tier__num">4</div>
+        <div class="lv4-tier__icon">🎁</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name">Mystery chest · rare drop</div>
+          <div class="lv4-tier__threshold">Claimed · 1,500 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--claimed">✓ Claimed</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--claimed">
+        <div class="lv4-tier__num">3</div>
+        <div class="lv4-tier__icon">🛡</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name">Streak shield</div>
+          <div class="lv4-tier__threshold">Claimed · 1,000 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--claimed">✓ Claimed</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--claimed">
+        <div class="lv4-tier__num">2</div>
+        <div class="lv4-tier__icon">🔥</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name">+100 bonus XP</div>
+          <div class="lv4-tier__threshold">Claimed · 600 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--claimed">✓ Claimed</div>
+      </div>
+
+      <div class="lv4-tier lv4-tier--claimed">
+        <div class="lv4-tier__num">1</div>
+        <div class="lv4-tier__icon">🌿</div>
+        <div class="lv4-tier__body">
+          <div class="lv4-tier__name">Avatar emblem · Sapling</div>
+          <div class="lv4-tier__threshold">Claimed · 200 XP</div>
+        </div>
+        <div class="lv4-tier__status lv4-tier__status--claimed">✓ Claimed</div>
+      </div>
+
+    </div>
+
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

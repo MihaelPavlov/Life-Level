@@ -20,7 +20,7 @@ import '../../features/home/home_screen.dart';
 import '../../features/login_reward/login_reward_screen.dart';
 import '../../features/quests/quests_screen.dart';
 import '../../features/map/map_screen.dart';
-import '../../features/map/world_map_screen.dart';
+import '../../features/map/screens/world_hub_screen.dart';
 import '../services/map_tab_notifier.dart';
 import '../services/nav_tab_notifier.dart';
 import '../services/world_map_notifier.dart';
@@ -535,11 +535,14 @@ class _MainShellState extends ConsumerState<MainShell>
               ),
 
               // ── world map overlay ───────────────────────────────────────
+              // Note: the new WorldHubScreen uses push-based region navigation
+              // instead of the old onZoneSelected callback. Legacy callers
+              // (e.g. MapScreen._openWorldMap) will lose the pick-a-zone
+              // shortcut; to be reworked when the local-map is migrated.
               if (_worldOpen)
                 Positioned.fill(
                   bottom: kNavBarH,
-                  child: WorldMapScreen(
-                    onZoneSelected: _pendingOnZoneSelected,
+                  child: WorldHubScreen(
                     onClose: () => setState(() {
                       _worldOpen = false;
                       _pendingOnZoneSelected = null;

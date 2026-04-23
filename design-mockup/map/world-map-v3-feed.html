@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — World Map v3 · Direction A · Journey Feed</title>
+<style>
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --border-soft:#1e2632;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+  --blue:   #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red:    #f85149;
+  --green:  #3fb950;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh; padding: 48px 40px; gap: 48px; flex-wrap: wrap;
+}
+
+/* ═════ Phone shell (copied from home-v3) ═════ */
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+.screen-wrap  { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.screen-label { text-align: center; max-width: 390px; }
+.screen-badge {
+  display: inline-block; border-radius: 12px; padding: 3px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.screen-title { font-size: 14px; color: var(--text-primary); font-weight: 700; margin-bottom: 3px; }
+.screen-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px 0; z-index: 100;
+}
+.status-bar__time  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.status-bar__icons { font-size: 11px; color: var(--text-secondary); }
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background: var(--surface-1); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 8px 12px; z-index: 100;
+}
+.nav__item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; text-decoration: none; }
+.nav__icon  { font-size: 20px; }
+.nav__label { font-size: 10px; }
+.nav__item--active .nav__icon, .nav__item--active .nav__label { color: var(--blue); }
+.nav__item:not(.nav__item--active) .nav__icon, .nav__item:not(.nav__item--active) .nav__label { color: var(--text-secondary); }
+.fab {
+  position: absolute; bottom: 93px; left: 50%; transform: translateX(-50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(145deg, #ff4e4e, #c0392b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; z-index: 200;
+  box-shadow: 0 0 0 3px rgba(248,81,73,0.2), 0 0 22px rgba(248,81,73,0.5), 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; padding: 54px 16px 110px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative; overflow: hidden;
+}
+.section-title {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-secondary); letter-spacing: 0.08em;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-title__action {
+  font-size: 10px; font-weight: 600;
+  color: var(--blue); letter-spacing: 0; text-transform: none;
+  text-decoration: none;
+}
+.progress { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.progress--thick { height: 10px; border-radius: 5px; }
+.progress__fill  { height: 100%; border-radius: inherit; }
+.progress__fill--xp     { background: linear-gradient(to right, var(--blue), var(--purple)); }
+.progress__fill--green  { background: var(--green); }
+.progress__fill--orange { background: var(--orange); }
+
+/* ═════ Map-v3 compact header (mirrors home-v3 but swaps avatar for map identity) ═════ */
+.mv3-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.mv3-header__region {
+  flex: 1; min-width: 0;
+}
+.mv3-header__chapter {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--blue); text-transform: uppercase; margin-bottom: 2px;
+}
+.mv3-header__title {
+  font-size: 20px; font-weight: 800;
+  color: var(--text-primary); line-height: 1.1;
+}
+.mv3-header__level {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 5px 10px; border-radius: 10px;
+  box-shadow: 0 0 12px rgba(79,158,255,0.3);
+}
+.mv3-header__back {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  color: var(--text-primary); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+}
+
+/* ═════ Journey hero (destination card with progress bar) ═════ */
+.mv3-hero {
+  padding: 16px 16px 14px;
+  margin-bottom: 14px;
+}
+.mv3-hero--blue   { border-color: rgba(79,158,255,0.35); box-shadow: 0 0 28px rgba(79,158,255,0.12), inset 0 0 40px rgba(79,158,255,0.04); }
+.mv3-hero--green  { border-color: rgba(63,185,80,0.4);  box-shadow: 0 0 28px rgba(63,185,80,0.14),  inset 0 0 40px rgba(63,185,80,0.05); }
+.mv3-hero--orange { border-color: rgba(245,166,35,0.4); box-shadow: 0 0 28px rgba(245,166,35,0.14), inset 0 0 40px rgba(245,166,35,0.05); }
+
+.mv3-hero__label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--blue); margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.mv3-hero--green .mv3-hero__label  { color: var(--green); }
+.mv3-hero--orange .mv3-hero__label { color: var(--orange); }
+
+.mv3-hero__row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.mv3-hero__emoji {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(145deg, rgba(79,158,255,0.18), rgba(163,113,247,0.12));
+  border: 1px solid rgba(79,158,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0;
+}
+.mv3-hero--green .mv3-hero__emoji  { background: linear-gradient(145deg, rgba(63,185,80,0.2), rgba(63,185,80,0.08)); border-color: rgba(63,185,80,0.35); }
+.mv3-hero--orange .mv3-hero__emoji { background: linear-gradient(145deg, rgba(245,166,35,0.2), rgba(245,166,35,0.08)); border-color: rgba(245,166,35,0.35); }
+.mv3-hero__body { flex: 1; min-width: 0; }
+.mv3-hero__title {
+  font-size: 18px; font-weight: 800;
+  color: var(--text-primary); line-height: 1.15; margin-bottom: 3px;
+}
+.mv3-hero__region {
+  font-size: 11px; color: var(--text-secondary); font-weight: 600;
+}
+.mv3-hero__bar-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; font-size: 11px;
+}
+.mv3-hero__bar-label { color: var(--text-secondary); font-weight: 600; }
+.mv3-hero__bar-val   { color: var(--text-primary);  font-weight: 700; }
+.mv3-hero__actions { display: flex; gap: 8px; margin-top: 14px; }
+.mv3-btn {
+  flex: 1; padding: 10px 14px;
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-primary);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.mv3-btn--ghost { color: var(--text-secondary); }
+.mv3-btn--solid-blue {
+  flex: 1.3;
+  background: linear-gradient(135deg, var(--blue), #3a88e6);
+  border-color: rgba(79,158,255,0.5); color: #fff;
+  box-shadow: 0 0 16px rgba(79,158,255,0.25);
+}
+.mv3-btn--solid-green {
+  flex: 1.3;
+  background: linear-gradient(135deg, var(--green), #2ea043);
+  border-color: rgba(63,185,80,0.55); color: #fff;
+  box-shadow: 0 0 16px rgba(63,185,80,0.3);
+}
+.mv3-btn--solid-orange {
+  flex: 1.3;
+  background: linear-gradient(135deg, var(--orange), #d4881a);
+  border-color: rgba(245,166,35,0.55); color: #fff;
+  box-shadow: 0 0 16px rgba(245,166,35,0.3);
+}
+
+/* ═════ Zone list row (large tappable card per zone) ═════ */
+.mv3-zone {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  position: relative;
+}
+.mv3-zone--active {
+  border-color: rgba(79,158,255,0.5);
+  background: linear-gradient(135deg, rgba(79,158,255,0.08), var(--surface-1));
+  box-shadow: 0 0 18px rgba(79,158,255,0.12);
+}
+.mv3-zone--next {
+  border-color: rgba(245,166,35,0.45);
+  background: linear-gradient(135deg, rgba(245,166,35,0.06), var(--surface-1));
+}
+.mv3-zone--locked { opacity: 0.55; }
+.mv3-zone--crossroads {
+  border-color: rgba(163,113,247,0.45);
+  background: linear-gradient(135deg, rgba(163,113,247,0.06), var(--surface-1));
+}
+
+.mv3-zone__icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.mv3-zone--active .mv3-zone__icon {
+  background: rgba(79,158,255,0.15);
+  border-color: rgba(79,158,255,0.45);
+  box-shadow: 0 0 14px rgba(79,158,255,0.25);
+}
+.mv3-zone--next .mv3-zone__icon {
+  background: rgba(245,166,35,0.12);
+  border-color: rgba(245,166,35,0.4);
+  border-style: dashed;
+}
+.mv3-zone--completed .mv3-zone__icon {
+  background: rgba(63,185,80,0.1);
+  border-color: rgba(63,185,80,0.3);
+}
+.mv3-zone--crossroads .mv3-zone__icon {
+  background: rgba(163,113,247,0.12);
+  border-color: rgba(163,113,247,0.4);
+  border-radius: 8px;
+  transform: rotate(45deg);
+}
+.mv3-zone--crossroads .mv3-zone__icon > span { transform: rotate(-45deg); }
+
+.mv3-zone__body { flex: 1; min-width: 0; }
+.mv3-zone__head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 3px;
+}
+.mv3-zone__name {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mv3-zone__pill {
+  font-size: 8px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px; border-radius: 6px;
+  flex-shrink: 0;
+}
+.mv3-zone__pill--active    { color: var(--blue);   background: rgba(79,158,255,0.12);  border: 1px solid rgba(79,158,255,0.4); }
+.mv3-zone__pill--next      { color: var(--orange); background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.4); }
+.mv3-zone__pill--completed { color: var(--green);  background: rgba(63,185,80,0.1);   border: 1px solid rgba(63,185,80,0.35); }
+.mv3-zone__pill--locked    { color: var(--text-muted); background: var(--surface-2); border: 1px solid var(--border); }
+.mv3-zone__pill--crossroads{ color: var(--purple); background: rgba(163,113,247,0.12); border: 1px solid rgba(163,113,247,0.4); }
+
+.mv3-zone__sub {
+  font-size: 11px; color: var(--text-secondary); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mv3-zone__meta {
+  display: flex; gap: 10px; margin-top: 4px;
+  font-size: 10px; color: var(--text-muted); font-weight: 600;
+}
+.mv3-zone__meta span { display: inline-flex; align-items: center; gap: 3px; }
+.mv3-zone__chev {
+  flex-shrink: 0; color: var(--text-muted); font-size: 14px;
+}
+
+/* Collapsed completed row */
+.mv3-zone--completed-slim {
+  padding: 8px 12px;
+  border-color: var(--border-soft);
+  background: transparent;
+  opacity: 0.75;
+}
+.mv3-zone--completed-slim .mv3-zone__icon {
+  width: 32px; height: 32px; font-size: 16px;
+  border-radius: 10px;
+}
+.mv3-zone--completed-slim .mv3-zone__name { font-size: 12px; }
+
+/* Region divider between zone clusters */
+.mv3-divider {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
+  color: var(--text-muted); text-transform: uppercase;
+  margin: 14px 0 8px;
+}
+.mv3-divider::before, .mv3-divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--border-soft);
+}
+
+/* Crossroads expanded preview (two paths inline) */
+.mv3-fork {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+.mv3-fork__path {
+  flex: 1;
+  padding: 10px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.mv3-fork__path--rec { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.06); }
+.mv3-fork__path-title {
+  font-size: 11px; font-weight: 800; color: var(--text-primary);
+  margin-bottom: 3px;
+}
+.mv3-fork__path-meta {
+  font-size: 10px; color: var(--text-secondary); font-weight: 600;
+}
+.mv3-fork__tag {
+  display: inline-block; font-size: 8px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 5px;
+  background: rgba(63,185,80,0.12); color: var(--green);
+  border: 1px solid rgba(63,185,80,0.35);
+  margin-bottom: 4px;
+}
+
+/* "Show N more" expand toggle */
+.mv3-expand {
+  width: 100%; padding: 10px;
+  background: transparent; border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  cursor: pointer; margin-top: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 — MAP FEED · DEFAULT (traveling to Ember Forge)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">DIRECTION A · SCREEN 1</div>
+    <div class="screen-title">Journey Feed — default state</div>
+    <div class="screen-desc">No canvas. Map = vertical feed: journey hero on top, zones as large tappable cards grouped by region, completed cluster collapses at the top.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="mv3-header">
+        <div class="mv3-header__region">
+          <div class="mv3-header__chapter">Chapter 2 · Forest of Endurance</div>
+          <div class="mv3-header__title">World Map</div>
+        </div>
+        <div class="mv3-header__level">Lv 12</div>
+      </div>
+
+      <!-- Journey hero -->
+      <div class="card mv3-hero mv3-hero--blue">
+        <div class="mv3-hero__label">
+          <span>TRAVELING · 2.3 KM TO GO</span>
+          <span>54%</span>
+        </div>
+        <div class="mv3-hero__row">
+          <div class="mv3-hero__emoji">🏰</div>
+          <div class="mv3-hero__body">
+            <div class="mv3-hero__title">Ember Forge</div>
+            <div class="mv3-hero__region">Forest of Endurance · Tier 3</div>
+          </div>
+        </div>
+        <div class="mv3-hero__bar-row">
+          <span class="mv3-hero__bar-label">Distance travelled</span>
+          <span class="mv3-hero__bar-val">2.7 / 5.0 km</span>
+        </div>
+        <div class="progress progress--thick"><div class="progress__fill progress__fill--xp" style="width:54%"></div></div>
+        <div class="mv3-hero__actions">
+          <button class="mv3-btn mv3-btn--ghost">Cancel trip</button>
+          <button class="mv3-btn mv3-btn--solid-blue">Log workout →</button>
+        </div>
+      </div>
+
+      <!-- Completed (collapsed cluster) -->
+      <div class="section-title"><span>COMPLETED · 4 ZONES</span><a class="section-title__action" href="#">Show all</a></div>
+      <div class="mv3-zone mv3-zone--completed mv3-zone--completed-slim">
+        <div class="mv3-zone__icon"><span>🌲</span></div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__name">Whispering Grove</div>
+          <div class="mv3-zone__sub">Tier 2 · +420 XP · 4.2 km logged</div>
+        </div>
+        <div class="mv3-zone__chev" style="color:var(--green);">✓</div>
+      </div>
+      <div class="mv3-zone mv3-zone--completed mv3-zone--completed-slim">
+        <div class="mv3-zone__icon"><span>🏕️</span></div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__name">Dawn Camp</div>
+          <div class="mv3-zone__sub">Tier 2 · +320 XP · 3.1 km logged</div>
+        </div>
+        <div class="mv3-zone__chev" style="color:var(--green);">✓</div>
+      </div>
+      <button class="mv3-expand">＋ Show 2 more completed</button>
+
+      <div class="mv3-divider">Chapter 2 · Forest of Endurance</div>
+
+      <!-- Active zone (where player currently stands, pre-travel node) -->
+      <div class="mv3-zone mv3-zone--active">
+        <div class="mv3-zone__icon">🌿</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Misty Pine Clearing</div>
+            <span class="mv3-zone__pill mv3-zone__pill--active">You are here</span>
+          </div>
+          <div class="mv3-zone__sub">Tier 3 · 3 of 5 nodes · +180 XP ready to claim</div>
+          <div class="mv3-zone__meta">
+            <span>📍 Standing at</span><span>⭐ 180 XP</span><span>📏 Explored 2.1 km</span>
+          </div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+      <!-- Next up (destination of current travel) -->
+      <div class="mv3-zone mv3-zone--next">
+        <div class="mv3-zone__icon">🏰</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Ember Forge</div>
+            <span class="mv3-zone__pill mv3-zone__pill--next">Traveling</span>
+          </div>
+          <div class="mv3-zone__sub">Tier 3 · Reach in 2.3 km · +600 XP on arrival</div>
+          <div class="progress" style="margin-top:6px;"><div class="progress__fill progress__fill--orange" style="width:54%"></div></div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+      <!-- Crossroads -->
+      <div class="mv3-zone mv3-zone--crossroads">
+        <div class="mv3-zone__icon"><span>✦</span></div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Twin Roads Fork</div>
+            <span class="mv3-zone__pill mv3-zone__pill--crossroads">Crossroads</span>
+          </div>
+          <div class="mv3-zone__sub">Choose a path after reaching Ember Forge</div>
+          <div class="mv3-fork">
+            <div class="mv3-fork__path mv3-fork__path--rec">
+              <div class="mv3-fork__tag">Recommended</div>
+              <div class="mv3-fork__path-title">Valley Road</div>
+              <div class="mv3-fork__path-meta">Easy · 2 days · +400 XP</div>
+            </div>
+            <div class="mv3-fork__path">
+              <div class="mv3-fork__path-title">Ruined Pass</div>
+              <div class="mv3-fork__path-meta">Hard · 4 days · +900 XP · rare loot</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Locked -->
+      <div class="mv3-zone mv3-zone--locked">
+        <div class="mv3-zone__icon">⛰️</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Frostgate Summit</div>
+            <span class="mv3-zone__pill mv3-zone__pill--locked">🔒 Lv 15</span>
+          </div>
+          <div class="mv3-zone__sub">Mountains of Strength · reach Lv 15 to unlock</div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+      <div class="mv3-divider">Chapter 3 · Mountains of Strength</div>
+
+      <div class="mv3-zone mv3-zone--locked">
+        <div class="mv3-zone__icon">🗿</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Stonewarden Hall</div>
+            <span class="mv3-zone__pill mv3-zone__pill--locked">🔒 Lv 18</span>
+          </div>
+          <div class="mv3-zone__sub">Tier 5 · unlock via strength-tagged activities</div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 2 — ARRIVED · no active travel
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);color:#3fb950">DIRECTION A · SCREEN 2</div>
+    <div class="screen-title">Arrived · idle (no journey set)</div>
+    <div class="screen-desc">Hero flips to green "Arrived" state. Next-up zone card becomes the primary CTA to set a new destination.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status-bar"><span class="status-bar__time">9:41</span><span class="status-bar__icons">●●● 🔋</span></div>
+
+    <div class="scroll">
+
+      <div class="mv3-header">
+        <div class="mv3-header__region">
+          <div class="mv3-header__chapter">Chapter 2 · Forest of Endurance</div>
+          <div class="mv3-header__title">World Map</div>
+        </div>
+        <div class="mv3-header__level">Lv 12</div>
+      </div>
+
+      <!-- Arrived hero -->
+      <div class="card mv3-hero mv3-hero--green">
+        <div class="mv3-hero__label">
+          <span>ARRIVED · CLAIM REWARDS</span>
+          <span>✓ 5.0 km</span>
+        </div>
+        <div class="mv3-hero__row">
+          <div class="mv3-hero__emoji">🏰</div>
+          <div class="mv3-hero__body">
+            <div class="mv3-hero__title">Ember Forge</div>
+            <div class="mv3-hero__region">Forest of Endurance · Tier 3</div>
+          </div>
+        </div>
+        <div class="mv3-hero__bar-row">
+          <span class="mv3-hero__bar-label">Distance travelled</span>
+          <span class="mv3-hero__bar-val">5.0 / 5.0 km ✓</span>
+        </div>
+        <div class="progress progress--thick"><div class="progress__fill progress__fill--green" style="width:100%"></div></div>
+        <div class="mv3-hero__actions">
+          <button class="mv3-btn mv3-btn--ghost">View zone</button>
+          <button class="mv3-btn mv3-btn--solid-green">Enter zone →</button>
+        </div>
+      </div>
+
+      <div class="section-title"><span>NEXT DESTINATIONS</span></div>
+
+      <!-- Two selectable next zones (pick destination) -->
+      <div class="mv3-zone mv3-zone--next">
+        <div class="mv3-zone__icon">✦</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Twin Roads Fork</div>
+            <span class="mv3-zone__pill mv3-zone__pill--crossroads">Crossroads</span>
+          </div>
+          <div class="mv3-zone__sub">1.8 km · branching point · no entry needed</div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+      <div class="mv3-zone">
+        <div class="mv3-zone__icon">🌊</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Silver Stream Bend</div>
+          </div>
+          <div class="mv3-zone__sub">Tier 4 · 4.5 km · +520 XP</div>
+          <div class="mv3-zone__meta">
+            <span>📏 4.5 km</span><span>⭐ 520 XP</span><span>🗝 5 nodes</span>
+          </div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+      <div class="mv3-zone mv3-zone--locked">
+        <div class="mv3-zone__icon">⛰️</div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__head">
+            <div class="mv3-zone__name">Frostgate Summit</div>
+            <span class="mv3-zone__pill mv3-zone__pill--locked">🔒 Lv 15</span>
+          </div>
+          <div class="mv3-zone__sub">3 levels away · 580 XP to next level</div>
+        </div>
+        <div class="mv3-zone__chev">›</div>
+      </div>
+
+      <div class="section-title" style="margin-top:14px;"><span>COMPLETED · 5 ZONES</span><a class="section-title__action" href="#">Show all</a></div>
+      <div class="mv3-zone mv3-zone--completed mv3-zone--completed-slim">
+        <div class="mv3-zone__icon"><span>🏰</span></div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__name">Ember Forge</div>
+          <div class="mv3-zone__sub">Just arrived · claim reward above</div>
+        </div>
+        <div class="mv3-zone__chev" style="color:var(--orange);">★</div>
+      </div>
+      <div class="mv3-zone mv3-zone--completed mv3-zone--completed-slim">
+        <div class="mv3-zone__icon"><span>🌿</span></div>
+        <div class="mv3-zone__body">
+          <div class="mv3-zone__name">Misty Pine Clearing</div>
+          <div class="mv3-zone__sub">Tier 3 · +180 XP · 2.1 km</div>
+        </div>
+        <div class="mv3-zone__chev" style="color:var(--green);">✓</div>
+      </div>
+
+    </div>
+
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <a href="#" class="nav__item"><div class="nav__icon">⊞</div><div class="nav__label">Home</div></a>
+      <a href="#" class="nav__item nav__item--active"><div class="nav__icon">🗺️</div><div class="nav__label">Map</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">📊</div><div class="nav__label">Stats</div></a>
+      <a href="#" class="nav__item"><div class="nav__icon">👤</div><div class="nav__label">Profile</div></a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

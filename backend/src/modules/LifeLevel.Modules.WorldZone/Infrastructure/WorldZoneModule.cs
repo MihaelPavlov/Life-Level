@@ -10,6 +10,7 @@ public static class WorldZoneModule
     public static IServiceCollection AddWorldZoneModule(this IServiceCollection services)
     {
         services.AddScoped<WorldZoneService>();
+        services.AddScoped<MapReadService>();
         services.AddScoped<IZoneUnlockReadPort, ZoneUnlockReadPortAdapter>();
         services.AddScoped<IWorldZoneDistancePort>(sp => sp.GetRequiredService<WorldZoneService>());
         return services;

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Zone Sheet v3 · Simplified (5 states)</title>
+<style>
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --border-soft:#1e2632;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+  --blue:   #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red:    #f85149;
+  --green:  #3fb950;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 100vh; padding: 48px 40px; gap: 48px; flex-wrap: wrap;
+}
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+.screen-wrap  { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.screen-label { text-align: center; max-width: 390px; }
+.screen-badge {
+  display: inline-block; border-radius: 12px; padding: 3px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.screen-title { font-size: 14px; color: var(--text-primary); font-weight: 700; margin-bottom: 3px; }
+.screen-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+/* Dim background to represent map underneath */
+.sheet-backdrop {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(79,158,255,0.08) 0%, transparent 40%),
+    radial-gradient(circle at 70% 20%, rgba(163,113,247,0.06) 0%, transparent 40%),
+    var(--bg-base);
+  filter: brightness(0.55);
+}
+.sheet-backdrop::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(4,8,16,0.55);
+  backdrop-filter: blur(2px);
+}
+
+/* The sheet itself, anchored to bottom */
+.zsv3 {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  z-index: 10;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 20px 24px;
+  box-shadow: 0 -18px 40px rgba(0,0,0,0.55);
+  max-height: 82%;
+}
+.zsv3__grabber {
+  width: 42px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 4px auto 14px;
+}
+.zsv3__close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-secondary); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+/* Header row: emoji + name + region + status pill */
+.zsv3__head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 14px;
+}
+.zsv3__emoji {
+  width: 60px; height: 60px; border-radius: 16px;
+  background: linear-gradient(145deg, rgba(79,158,255,0.18), rgba(163,113,247,0.12));
+  border: 1px solid rgba(79,158,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; flex-shrink: 0;
+}
+.zsv3__emoji--green  { background: linear-gradient(145deg, rgba(63,185,80,0.2), rgba(63,185,80,0.08)); border-color: rgba(63,185,80,0.35); }
+.zsv3__emoji--orange { background: linear-gradient(145deg, rgba(245,166,35,0.2), rgba(245,166,35,0.08)); border-color: rgba(245,166,35,0.35); }
+.zsv3__emoji--purple { background: linear-gradient(145deg, rgba(163,113,247,0.2), rgba(163,113,247,0.08)); border-color: rgba(163,113,247,0.4); transform: rotate(45deg); border-radius: 12px; }
+.zsv3__emoji--purple > span { transform: rotate(-45deg); display: block; }
+.zsv3__emoji--gray   { background: var(--surface-2); border-color: var(--border); opacity: 0.7; }
+.zsv3__body { flex: 1; min-width: 0; }
+.zsv3__name {
+  font-size: 20px; font-weight: 800; color: var(--text-primary);
+  line-height: 1.1; margin-bottom: 4px;
+}
+.zsv3__region {
+  font-size: 11px; color: var(--text-secondary); font-weight: 600;
+}
+
+/* Single status pill */
+.zsv3__pill {
+  display: inline-block;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.08em;
+  padding: 3px 8px; border-radius: 7px;
+  text-transform: uppercase; margin-top: 5px;
+}
+.zsv3__pill--active    { color: var(--blue);   background: rgba(79,158,255,0.12);  border: 1px solid rgba(79,158,255,0.4); }
+.zsv3__pill--next      { color: var(--orange); background: rgba(245,166,35,0.12);  border: 1px solid rgba(245,166,35,0.4); }
+.zsv3__pill--completed { color: var(--green);  background: rgba(63,185,80,0.1);    border: 1px solid rgba(63,185,80,0.35); }
+.zsv3__pill--locked    { color: var(--text-muted); background: var(--surface-2); border: 1px solid var(--border); }
+.zsv3__pill--crossroads{ color: var(--purple); background: rgba(163,113,247,0.12); border: 1px solid rgba(163,113,247,0.4); }
+
+/* One info row: 3 chips */
+.zsv3__chips {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.zsv3__chip {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0;
+}
+.zsv3__chip-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--text-secondary); text-transform: uppercase;
+}
+.zsv3__chip-val {
+  font-size: 13px; font-weight: 800; color: var(--text-primary); line-height: 1.1;
+}
+.zsv3__chip-val--ok   { color: var(--green); }
+.zsv3__chip-val--fail { color: var(--red); }
+.zsv3__chip-val--warn { color: var(--orange); }
+
+/* Crossroads: replaces chips with single-line note */
+.zsv3__note {
+  font-size: 11px; color: var(--text-secondary);
+  padding: 10px 12px;
+  background: rgba(163,113,247,0.06);
+  border: 1px dashed rgba(163,113,247,0.3);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.zsv3__note--icon { color: var(--purple); font-size: 14px; }
+
+/* Body (dynamic: description / travel-progress / you-are-here) */
+.zsv3__body-section { margin-bottom: 14px; }
+.zsv3__desc {
+  font-size: 12px; color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Inline journey progress block */
+.zsv3__journey {
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.1), rgba(245,166,35,0.04));
+  border: 1px solid rgba(245,166,35,0.4);
+  border-radius: 12px;
+}
+.zsv3__journey-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; font-size: 11px;
+}
+.zsv3__journey-label {
+  color: var(--orange); font-weight: 800;
+  letter-spacing: 0.08em; font-size: 10px; text-transform: uppercase;
+}
+.zsv3__journey-val   { color: var(--text-primary); font-weight: 700; }
+.zsv3__journey-bar   { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+.zsv3__journey-fill  { height: 100%; background: var(--orange); border-radius: 4px; }
+.zsv3__journey-foot  {
+  font-size: 10px; color: var(--text-secondary);
+  margin-top: 6px; display: flex; justify-content: space-between;
+}
+
+/* You are here banner (when zone is source of current travel) */
+.zsv3__here {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(63,185,80,0.08);
+  border: 1px solid rgba(63,185,80,0.35);
+  border-radius: 10px;
+  font-size: 11px; color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.zsv3__here-icon { font-size: 14px; color: var(--green); }
+
+.zsv3__dest-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+.zsv3__dest-icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: rgba(79,158,255,0.15);
+  border: 1px solid rgba(79,158,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.zsv3__dest-body { flex: 1; min-width: 0; }
+.zsv3__dest-label {
+  font-size: 9px; font-weight: 800; color: var(--text-secondary);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.zsv3__dest-name {
+  font-size: 13px; font-weight: 700; color: var(--text-primary); margin-top: 1px;
+}
+.zsv3__dest-meta {
+  font-size: 10px; color: var(--orange); font-weight: 700; flex-shrink: 0;
+}
+
+/* Single primary CTA */
+.zsv3__cta {
+  width: 100%;
+  padding: 14px; border-radius: 12px; border: 1px solid;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.03em;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.zsv3__cta--blue {
+  background: linear-gradient(135deg, var(--blue), #3a88e6);
+  border-color: rgba(79,158,255,0.55); color: #fff;
+  box-shadow: 0 0 16px rgba(79,158,255,0.3);
+}
+.zsv3__cta--green {
+  background: linear-gradient(135deg, var(--green), #2ea043);
+  border-color: rgba(63,185,80,0.6); color: #fff;
+  box-shadow: 0 0 16px rgba(63,185,80,0.3);
+}
+.zsv3__cta--orange {
+  background: linear-gradient(135deg, var(--orange), #d4881a);
+  border-color: rgba(245,166,35,0.6); color: #fff;
+  box-shadow: 0 0 16px rgba(245,166,35,0.3);
+}
+.zsv3__cta--purple {
+  background: linear-gradient(135deg, var(--purple), #7c4ee0);
+  border-color: rgba(163,113,247,0.6); color: #fff;
+  box-shadow: 0 0 16px rgba(163,113,247,0.3);
+}
+.zsv3__cta--locked {
+  background: var(--surface-2); border-color: var(--border);
+  color: var(--text-muted); cursor: not-allowed;
+}
+.zsv3__cta--disabled {
+  background: var(--surface-2); border-color: var(--border);
+  color: var(--text-secondary); cursor: not-allowed;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STATE 1 — IDLE AVAILABLE (set as destination)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.4);color:#4f9eff">STATE 1 · AVAILABLE</div>
+    <div class="screen-title">Zone tapped · no active journey</div>
+    <div class="screen-desc">Description body · single orange CTA "Set as destination".</div>
+  </div>
+
+  <div class="phone">
+    <div class="sheet-backdrop"></div>
+    <div class="zsv3">
+      <div class="zsv3__grabber"></div>
+      <div class="zsv3__close">✕</div>
+
+      <div class="zsv3__head">
+        <div class="zsv3__emoji">🏰</div>
+        <div class="zsv3__body">
+          <div class="zsv3__name">Ember Forge</div>
+          <div class="zsv3__region">Forest of Endurance · Tier 3</div>
+          <div class="zsv3__pill zsv3__pill--next">Available · 5.0 km</div>
+        </div>
+      </div>
+
+      <div class="zsv3__chips">
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Level req</div>
+          <div class="zsv3__chip-val zsv3__chip-val--ok">Lv 10+ ✓</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Distance</div>
+          <div class="zsv3__chip-val">5.0 km</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">XP reward</div>
+          <div class="zsv3__chip-val zsv3__chip-val--warn">+600</div>
+        </div>
+      </div>
+
+      <div class="zsv3__body-section">
+        <div class="zsv3__desc">Ancient forge powered by endurance. Complete 5 nodes and defeat the Ember Warden to earn the Flame Rune reward.</div>
+      </div>
+
+      <button class="zsv3__cta zsv3__cta--orange">→ Set as destination</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STATE 2 — TRAVELING-TO (this zone is active destination)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.4);color:#f5a623">STATE 2 · TRAVELING TO</div>
+    <div class="screen-title">Zone is the active destination</div>
+    <div class="screen-desc">Journey progress card replaces description. CTA becomes disabled "Traveling · log workout to advance".</div>
+  </div>
+
+  <div class="phone">
+    <div class="sheet-backdrop"></div>
+    <div class="zsv3">
+      <div class="zsv3__grabber"></div>
+      <div class="zsv3__close">✕</div>
+
+      <div class="zsv3__head">
+        <div class="zsv3__emoji zsv3__emoji--orange">🏰</div>
+        <div class="zsv3__body">
+          <div class="zsv3__name">Ember Forge</div>
+          <div class="zsv3__region">Forest of Endurance · Tier 3</div>
+          <div class="zsv3__pill zsv3__pill--next">Traveling · 2.3 km to go</div>
+        </div>
+      </div>
+
+      <div class="zsv3__chips">
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Level req</div>
+          <div class="zsv3__chip-val zsv3__chip-val--ok">Lv 10+ ✓</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Distance</div>
+          <div class="zsv3__chip-val">5.0 km</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">XP reward</div>
+          <div class="zsv3__chip-val zsv3__chip-val--warn">+600</div>
+        </div>
+      </div>
+
+      <div class="zsv3__body-section">
+        <div class="zsv3__journey">
+          <div class="zsv3__journey-row">
+            <div class="zsv3__journey-label">Your journey</div>
+            <div class="zsv3__journey-val">2.7 / 5.0 km · 54%</div>
+          </div>
+          <div class="zsv3__journey-bar"><div class="zsv3__journey-fill" style="width:54%"></div></div>
+          <div class="zsv3__journey-foot">
+            <span>From · Misty Pine</span>
+            <span>Arrival · +600 XP</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="zsv3__cta zsv3__cta--disabled">⏳ Traveling · log workout to advance</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STATE 3 — TRAVELING-FROM (this zone is source, you are here)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);color:#3fb950">STATE 3 · YOU ARE HERE</div>
+    <div class="screen-title">Zone is the source of active journey</div>
+    <div class="screen-desc">"You are here" banner + compact destination row. CTA is secondary "Cancel trip" (journey can be aborted).</div>
+  </div>
+
+  <div class="phone">
+    <div class="sheet-backdrop"></div>
+    <div class="zsv3">
+      <div class="zsv3__grabber"></div>
+      <div class="zsv3__close">✕</div>
+
+      <div class="zsv3__head">
+        <div class="zsv3__emoji zsv3__emoji--green">🌿</div>
+        <div class="zsv3__body">
+          <div class="zsv3__name">Misty Pine Clearing</div>
+          <div class="zsv3__region">Forest of Endurance · Tier 3</div>
+          <div class="zsv3__pill zsv3__pill--active">You are here</div>
+        </div>
+      </div>
+
+      <div class="zsv3__chips">
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Nodes</div>
+          <div class="zsv3__chip-val zsv3__chip-val--ok">3 / 5</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Explored</div>
+          <div class="zsv3__chip-val">2.1 km</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">XP pool</div>
+          <div class="zsv3__chip-val zsv3__chip-val--warn">+180</div>
+        </div>
+      </div>
+
+      <div class="zsv3__body-section">
+        <div class="zsv3__here">
+          <span class="zsv3__here-icon">📍</span>
+          You're standing at Misty Pine · currently traveling to a new destination.
+        </div>
+        <div class="zsv3__dest-row">
+          <div class="zsv3__dest-icon">🏰</div>
+          <div class="zsv3__dest-body">
+            <div class="zsv3__dest-label">Traveling to</div>
+            <div class="zsv3__dest-name">Ember Forge · 2.3 km left</div>
+          </div>
+          <div class="zsv3__dest-meta">54%</div>
+        </div>
+      </div>
+
+      <button class="zsv3__cta zsv3__cta--disabled">✕ Cancel trip</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STATE 4 — CROSSROADS (branching point)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.4);color:#a371f7">STATE 4 · CROSSROADS</div>
+    <div class="screen-title">Branching point tapped</div>
+    <div class="screen-desc">No XP chips. Single dashed note "Branching point — no entry needed". Primary CTA "Choose a path".</div>
+  </div>
+
+  <div class="phone">
+    <div class="sheet-backdrop"></div>
+    <div class="zsv3">
+      <div class="zsv3__grabber"></div>
+      <div class="zsv3__close">✕</div>
+
+      <div class="zsv3__head">
+        <div class="zsv3__emoji zsv3__emoji--purple"><span>✦</span></div>
+        <div class="zsv3__body">
+          <div class="zsv3__name">Twin Roads Fork</div>
+          <div class="zsv3__region">Forest of Endurance · Tier 3</div>
+          <div class="zsv3__pill zsv3__pill--crossroads">Crossroads</div>
+        </div>
+      </div>
+
+      <div class="zsv3__note">
+        <span class="zsv3__note--icon">✦</span>
+        Branching point · no entry required. Cross to choose a path.
+      </div>
+
+      <div class="zsv3__body-section">
+        <div class="zsv3__desc">Two roads diverge: the Valley Road (easy · 2 days · +400 XP) or the Ruined Pass (hard · 4 days · +900 XP + rare loot). Choice locks once committed.</div>
+      </div>
+
+      <button class="zsv3__cta zsv3__cta--purple">⚖ Choose a path</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STATE 5 — LOCKED (level gate)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-label">
+    <div class="screen-badge" style="background:rgba(139,148,158,0.14);border:1px solid rgba(139,148,158,0.4);color:#8b949e">STATE 5 · LOCKED</div>
+    <div class="screen-title">Zone tapped · level requirement not met</div>
+    <div class="screen-desc">Red chip highlights failed requirement. CTA disabled "🔒 Lv 15 required".</div>
+  </div>
+
+  <div class="phone">
+    <div class="sheet-backdrop"></div>
+    <div class="zsv3">
+      <div class="zsv3__grabber"></div>
+      <div class="zsv3__close">✕</div>
+
+      <div class="zsv3__head">
+        <div class="zsv3__emoji zsv3__emoji--gray">⛰️</div>
+        <div class="zsv3__body">
+          <div class="zsv3__name">Frostgate Summit</div>
+          <div class="zsv3__region">Mountains of Strength · Tier 5</div>
+          <div class="zsv3__pill zsv3__pill--locked">🔒 Locked</div>
+        </div>
+      </div>
+
+      <div class="zsv3__chips">
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Level req</div>
+          <div class="zsv3__chip-val zsv3__chip-val--fail">Lv 15 ✕</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">Distance</div>
+          <div class="zsv3__chip-val">8.4 km</div>
+        </div>
+        <div class="zsv3__chip">
+          <div class="zsv3__chip-label">XP reward</div>
+          <div class="zsv3__chip-val zsv3__chip-val--warn">+1,200</div>
+        </div>
+      </div>
+
+      <div class="zsv3__body-section">
+        <div class="zsv3__desc">Frozen summit guarded by the Frostwarden. Unlock at Lv 15 · you are Lv 12 · 3 levels to go.</div>
+      </div>
+
+      <button class="zsv3__cta zsv3__cta--locked">🔒 Lv 15 required</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

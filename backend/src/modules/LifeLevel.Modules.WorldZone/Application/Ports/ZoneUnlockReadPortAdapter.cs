@@ -1,4 +1,3 @@
-using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +12,11 @@ public class ZoneUnlockReadPortAdapter(DbContext db) : IZoneUnlockReadPort
         if (newLevel <= previousLevel) return [];
 
         return await db.Set<Domain.Entities.WorldZone>()
-            .Where(z => !z.IsHidden
-                        && z.LevelRequirement > previousLevel
+            .Where(z => z.LevelRequirement > previousLevel
                         && z.LevelRequirement <= newLevel)
             .OrderBy(z => z.LevelRequirement)
             .Select(z => new UnlockedZoneInfo(
-                z.Id, z.Name, z.Icon, z.Region, z.LevelRequirement))
+                z.Id, z.Name, z.Emoji, z.Region.Name, z.LevelRequirement))
             .ToListAsync(ct);
     }
 }
