@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
+import '../../character/providers/character_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
 import '../widgets/world_map_theme.dart';
 import '../widgets/zone_detail_sheet.dart';
-import '../widgets/zone_node_tile.dart';
+import '../widgets/zone_trail.dart';
 
 /// Region detail — banner, 3 summary tiles, vertical zone-node trail.
 /// Matches screens 2 + 4 of `design-mockup/map/WORLD-MAP-FINAL-MOCKUP.html`.
-class RegionDetailScreen extends StatefulWidget {
+class RegionDetailScreen extends ConsumerStatefulWidget {
   final String regionId;
 
   /// When the hub embeds this screen inline (so the shell nav bar stays
@@ -21,10 +23,10 @@ class RegionDetailScreen extends StatefulWidget {
   const RegionDetailScreen({super.key, required this.regionId, this.onBack});
 
   @override
-  State<RegionDetailScreen> createState() => _RegionDetailScreenState();
+  ConsumerState<RegionDetailScreen> createState() => _RegionDetailScreenState();
 }
 
-class _RegionDetailScreenState extends State<RegionDetailScreen> {
+class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
 
@@ -34,6 +36,9 @@ class _RegionDetailScreenState extends State<RegionDetailScreen> {
   // alone doesn't carry journey info.
   ActiveJourney? _activeJourney;
   String? _activeDestinationZoneId;
+  // Derived from the world map region list so the boss bubble can render
+  // "Boss · Unlocks X" without a dedicated backend field.
+  String? _nextRegionName;
   int _userLevel = 1;
   bool _loading = true;
   String? _error;
@@ -71,6 +76,7 @@ class _RegionDetailScreenState extends State<RegionDetailScreen> {
         _region = region;
         _activeJourney = world.activeJourney;
         _activeDestinationZoneId = _findDestinationZoneId(region, world);
+        _nextRegionName = _findNextRegionName(region, world);
         _userLevel = world.user.level;
         _loading = false;
       });
@@ -93,6 +99,14 @@ class _RegionDetailScreenState extends State<RegionDetailScreen> {
           orElse: () => null,
         );
     return match?.id;
+  }
+
+  String? _findNextRegionName(RegionDetail region, WorldMapData world) {
+    final ordered = [...world.regions]
+      ..sort((a, b) => a.chapterIndex.compareTo(b.chapterIndex));
+    final idx = ordered.indexWhere((r) => r.id == region.id);
+    if (idx < 0 || idx + 1 >= ordered.length) return null;
+    return ordered[idx + 1].name;
   }
 
   Future<void> _handleSetDestination(ZoneNode node) async {
@@ -168,6 +182,7 @@ class _RegionDetailScreenState extends State<RegionDetailScreen> {
 
   Widget _buildContent(RegionDetail region) {
     final theme = RegionThemeColors.of(region.theme);
+    final avatar = ref.watch(characterProfileProvider).valueOrNull?.avatarEmoji;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -192,18 +207,13 @@ class _RegionDetailScreenState extends State<RegionDetailScreen> {
             ),
           ),
         ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, i) {
-              final node = region.nodes[i];
-              return ZoneNodeTile(
-                node: node,
-                isFirst: i == 0,
-                isLast: i == region.nodes.length - 1,
-                onTap: () => _showNodeSheet(node),
-              );
-            },
-            childCount: region.nodes.length,
+        SliverToBoxAdapter(
+          child: ZoneTrail(
+            nodes: region.nodes,
+            journey: _activeJourney,
+            nextRegionName: _nextRegionName,
+            avatarEmoji: avatar,
+            onTap: _showNodeSheet,
           ),
         ),
         if (_activeJourney != null)

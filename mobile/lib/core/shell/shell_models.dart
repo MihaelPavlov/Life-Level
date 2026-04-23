@@ -49,7 +49,7 @@ const kAllNavItems = [
   NavTab('boss',        '⚔️', 'Bosses'),
   NavTab('guild',       '🛡️', 'Guild'),
   NavTab('leaderboard', '🏆', 'Rankings'),
-  NavTab('world',       '🌍', 'World'),
+  NavTab('world',       '🗺️', 'Map'),
 ];
 
-const kDefaultNavIds = ['home', 'quests', 'map', 'profile'];
+const kDefaultNavIds = ['home', 'quests', 'world', 'profile'];

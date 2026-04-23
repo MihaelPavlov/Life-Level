@@ -609,7 +609,7 @@ class _MainShellState extends ConsumerState<MainShell>
                 child: ShellNavBar(
                   currentIndex: _tabIndex.clamp(0, _navItems.length - 1),
                   navTabs: _navItems,
-                  keysByTabId: {'map': _mapNavKey},
+                  keysByTabId: {'world': _mapNavKey},
                   onTap: (i) {
                     _closeRadial();
                     // 'world' in the nav bar opens the shell overlay instead
@@ -628,7 +628,7 @@ class _MainShellState extends ConsumerState<MainShell>
                       ref.read(characterProfileProvider.notifier).refresh();
                       invalidateUserScopedProviders(ref);
                     }
-                    if (_navIds[i] == 'map') {
+                    if (_navIds[i] == 'world') {
                       MapTabNotifier.notify();
                     }
                   },
