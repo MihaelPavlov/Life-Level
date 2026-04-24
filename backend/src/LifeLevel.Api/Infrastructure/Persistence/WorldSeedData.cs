@@ -12,11 +12,14 @@ namespace LifeLevel.Api.Infrastructure.Persistence;
 /// Deterministic seed data for the v3 World Map:
 ///   • 1 World
 ///   • 15 Regions (4 hand-authored hero regions + 11 templated)
-///   • ~80 WorldZones (hero regions: 5–7 zones; templated: 5 zones)
-///   • ~90 WorldZoneEdges (intra-region path + inter-region boss→entry)
+///   • ~110 WorldZones (hero regions: 7-9 zones; templated: 7 zones, includes
+///     2 branch zones per crossroads)
+///   • ~130 WorldZoneEdges (intra-region linear + fork-and-rejoin + inter-region boss→entry)
 ///
-/// Regions 5..15 are templated so the seed stays readable; we can always
-/// hand-author more later by inserting them into the list.
+/// Crossroads fork topology:
+///   ... → Crossroads → [BranchA (easy), BranchB (hard)] → Rejoin → ...
+///   Crossroads gets one edge to each branch; each branch rejoins the linear
+///   chain via a zero-distance edge (see CreateEdges for details).
 ///
 /// ID-prefix encoding (16-bit slot per entity kind):
 ///   c1_rr___ — Regions                rr = chapter index (1..15)
@@ -49,8 +52,11 @@ public static class WorldSeedData
     private static Guid EdgeId(int n) => new($"bb00{n:x4}-0000-0000-0000-000000000000");
 
     // ── Region & zone specs ──────────────────────────────────────────────────
+    // BranchOfName: when non-null, this zone is a branch of the zone in the
+    // same region whose Name matches. Resolved at zone-creation time.
     private sealed record ZoneSpec(
-        string Name, string Emoji, WorldZoneType Type, double DistanceKm, int XpReward, string Description);
+        string Name, string Emoji, WorldZoneType Type, double DistanceKm, int XpReward, string Description,
+        string? BranchOfName = null);
 
     private sealed record RegionSpec(
         Guid Id, string Name, string Emoji, RegionTheme Theme, int LevelReq,
@@ -68,6 +74,8 @@ public static class WorldSeedData
             new("Misty Pine",       "🌲", WorldZoneType.Standard,   4.2, 420,  "Towering pines wrapped in mist. You are here."),
             new("Ember Forge",      "🏰", WorldZoneType.Standard,   5.0, 600,  "An ancient forge hidden deep in the forest."),
             new("Twin Roads Fork",  "🔀", WorldZoneType.Crossroads, 2.0, 0,    "Two paths diverge. Choose wisely."),
+            new("Valley Road",      "🌾", WorldZoneType.Standard,   8.0, 450,  "Easy route — scenic + longer.",  BranchOfName: "Twin Roads Fork"),
+            new("Ruined Pass",      "🏚️", WorldZoneType.Standard,   5.0, 700,  "Shortcut — punishing but rich.", BranchOfName: "Twin Roads Fork"),
             new("Hollow Thicket",   "🍂", WorldZoneType.Standard,   4.5, 520,  "A shadowed thicket where wild things roam."),
             new("Forest Warden",    "🐺", WorldZoneType.Boss,       6.0, 1200, "The Warden stands between you and the Mountains."),
         ],
@@ -83,6 +91,8 @@ public static class WorldSeedData
             new("Coral Shallows",       "🪸", WorldZoneType.Standard,   3.5, 360,  "Gentle currents teach your breath a new rhythm."),
             new("Whispering Currents",  "🌊", WorldZoneType.Standard,   4.8, 480,  "Deep swells carry echoes from below."),
             new("Sunken Temple",        "🔀", WorldZoneType.Crossroads, 3.0, 0,    "An ancient temple half-drowned at the fork of the sea."),
+            new("Lagoon Drift",         "🐬", WorldZoneType.Standard,   5.5, 460,  "Easy tide — gentle currents.", BranchOfName: "Sunken Temple"),
+            new("Abyssal Cleft",        "🌀", WorldZoneType.Standard,   3.5, 760,  "Hard dive — icy pressure.",    BranchOfName: "Sunken Temple"),
             new("Tide Sovereign",       "🐙", WorldZoneType.Boss,       6.5, 1400, "The crown of the deep waits in the storm's eye."),
         ],
         [new RegionPin("+10% STA", "region bonus"), new RegionPin("Daily XP", "")]);
@@ -93,11 +103,13 @@ public static class WorldSeedData
         "Stone Titan",
         "Jagged peaks conquered by gym sessions and climbs. Reward: +15% STR gain.",
         [
-            new("Basecamp Trail",   "⛺", WorldZoneType.Entry,       0,   0,   "The last safe camp before the climb begins."),
-            new("Switchback Ridge", "🪨", WorldZoneType.Standard,   4.0, 400,  "A punishing set of switchbacks. Every step is earned."),
-            new("Iron Pass",        "🔀", WorldZoneType.Crossroads, 2.5, 0,    "The pass splits around a fallen titan's bones."),
-            new("Summit Approach",  "🏔️", WorldZoneType.Standard,   5.5, 620,  "Thin air, hard wind. The summit is close."),
-            new("Stone Titan",      "🗿", WorldZoneType.Boss,       7.0, 1600, "The mountain wakes. The titan will not step aside."),
+            new("Basecamp Trail",       "⛺", WorldZoneType.Entry,       0,   0,   "The last safe camp before the climb begins."),
+            new("Switchback Ridge",     "🪨", WorldZoneType.Standard,   4.0, 400,  "A punishing set of switchbacks. Every step is earned."),
+            new("Iron Pass",            "🔀", WorldZoneType.Crossroads, 2.5, 0,    "The pass splits around a fallen titan's bones."),
+            new("Shepherd's Switchback", "🐐", WorldZoneType.Standard,   7.0, 520,  "Easy ascent — winding mule path.", BranchOfName: "Iron Pass"),
+            new("Cliff Face",           "🧗", WorldZoneType.Standard,   4.2, 820,  "Hard climb — sheer granite.",       BranchOfName: "Iron Pass"),
+            new("Summit Approach",      "🏔️", WorldZoneType.Standard,   5.5, 620,  "Thin air, hard wind. The summit is close."),
+            new("Stone Titan",          "🗿", WorldZoneType.Boss,       7.0, 1600, "The mountain wakes. The titan will not step aside."),
         ],
         [new RegionPin("+15% STR", "region bonus"), new RegionPin("Gym", "")]);
 
@@ -110,13 +122,15 @@ public static class WorldSeedData
             new("Ash Outpost",     "🏚️", WorldZoneType.Entry,       0,   0,   "The last standing outpost before the caldera's heat."),
             new("Obsidian Flats",  "🪨", WorldZoneType.Standard,   4.5, 520,  "Black glass underfoot. Every breath tastes of sulfur."),
             new("Lava Chasm",      "🔀", WorldZoneType.Crossroads, 3.0, 0,    "A glowing chasm splits the path in two."),
+            new("Cooled Flow",     "🪨", WorldZoneType.Standard,   6.5, 620,  "Easy walk — hardened magma.",   BranchOfName: "Lava Chasm"),
+            new("Inferno Bridge",  "🌋", WorldZoneType.Standard,   3.8, 920,  "Hard crossing — molten lake.",  BranchOfName: "Lava Chasm"),
             new("Molten Spire",    "🗼", WorldZoneType.Standard,   5.8, 680,  "A spire of living rock climbing from the flames."),
             new("Molten King",     "👑", WorldZoneType.Boss,       8.0, 1800, "The caldera's crown awaits — and it burns."),
         ],
         [new RegionPin("+20% ALL", "region bonus"), new RegionPin("Endgame", "")]);
 
     // Templated regions 5..15. Theme rotation, escalating level requirements,
-    // 5 zones each (Entry + Standard + Crossroads + Standard + Boss).
+    // 7 zones each (Entry + Standard + Crossroads + 2 branches + Standard + Boss).
     private sealed record TemplateInput(
         Guid Id, string Name, string Emoji, RegionTheme Theme, int LevelReq,
         int ChapterIndex, string BossName, string Lore);
@@ -147,14 +161,27 @@ public static class WorldSeedData
         return baseXp;
     }
 
+    // Branch XP/km: shared base from slot 2 of the template with +/- difficulty tilt.
+    private static int TemplateBranchXp(int levelReq, bool hard)
+    {
+        int baseXp = TemplateXp(levelReq, WorldZoneType.Standard, 2);
+        return hard ? (int)Math.Round(baseXp * 1.55) : (int)Math.Round(baseXp * 0.95);
+    }
+
     private static IReadOnlyList<ZoneSpec> TemplateZones(TemplateInput t)
     {
         string themeWord = t.Theme.ToString();
+        const string crossroadsName = "Broken Fork";
+        double branchBaseKm = TemplateKm(t.LevelReq, 2);
+        double easyKm  = Math.Round(branchBaseKm * 1.4, 1);
+        double hardKm  = Math.Round(branchBaseKm * 0.7, 1);
         return
         [
             new($"{t.Name} Gate",       "🚪", WorldZoneType.Entry,       0,                              0,                           $"The threshold of {t.Name}. Step through at your own risk."),
             new($"{themeWord} Expanse", "🌫️", WorldZoneType.Standard,   TemplateKm(t.LevelReq, 1),     TemplateXp(t.LevelReq, WorldZoneType.Standard, 1), $"A vast stretch of {themeWord.ToLowerInvariant()} pulling you onward."),
-            new("Broken Fork",          "🔀", WorldZoneType.Crossroads, TemplateKm(t.LevelReq, 2) - 1, 0,                           $"An old ruin splits the path of {t.Name}."),
+            new(crossroadsName,          "🔀", WorldZoneType.Crossroads, Math.Max(1.0, TemplateKm(t.LevelReq, 2) - 1), 0,            $"An old ruin splits the path of {t.Name}."),
+            new($"{t.Name} Lowroad",    "🌾", WorldZoneType.Standard,   easyKm,                        TemplateBranchXp(t.LevelReq, false), $"Easy road — longer but forgiving across {t.Name}.", BranchOfName: crossroadsName),
+            new($"{t.Name} Highroad",   "⛰️", WorldZoneType.Standard,   hardKm,                        TemplateBranchXp(t.LevelReq, true),  $"Hard road — short but brutal across {t.Name}.",     BranchOfName: crossroadsName),
             new($"{t.Name} Heart",      "✨", WorldZoneType.Standard,   TemplateKm(t.LevelReq, 3),     TemplateXp(t.LevelReq, WorldZoneType.Standard, 3), $"The beating core of {t.Name}, thick with XP."),
             new(t.BossName,             "👹", WorldZoneType.Boss,       TemplateKm(t.LevelReq, 4) + 1, TemplateXp(t.LevelReq, WorldZoneType.Boss,     4), $"The champion of {t.Name} stands between you and the next chapter."),
         ];
@@ -213,11 +240,31 @@ public static class WorldSeedData
         for (int regionIdx = 0; regionIdx < Regions.Count; regionIdx++)
         {
             var region = Regions[regionIdx];
-            int tier = 1;
             bool isStarter = regionIdx == 0;
-            for (int slot = 0; slot < region.Zones.Count; slot++, tier++)
+
+            // Compute tier per slot. Branches at slot S share the tier of the
+            // previous non-branch slot + 1. Post-branch zones get bumped by 1
+            // after each branch pair to preserve the original linear-chain tier
+            // for Entry + Boss.
+            var tiers = ComputeTiers(region.Zones);
+
+            // Resolve BranchOfName → BranchOfId within this region.
+            var byName = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+            for (int slot = 0; slot < region.Zones.Count; slot++)
+            {
+                byName[region.Zones[slot].Name] = ZoneId(regionIdx + 1, slot + 1);
+            }
+
+            for (int slot = 0; slot < region.Zones.Count; slot++)
             {
                 var z = region.Zones[slot];
+                Guid? branchOf = null;
+                if (!string.IsNullOrEmpty(z.BranchOfName)
+                    && byName.TryGetValue(z.BranchOfName!, out var crossroadsId))
+                {
+                    branchOf = crossroadsId;
+                }
+
                 list.Add(new WorldZoneEntity
                 {
                     Id               = ZoneId(regionIdx + 1, slot + 1),
@@ -225,17 +272,59 @@ public static class WorldSeedData
                     Name             = z.Name,
                     Description      = z.Description,
                     Emoji            = z.Emoji,
-                    Tier             = tier,
-                    LevelRequirement = region.LevelReq + (slot > 0 ? 0 : 0), // flat per-region; designed to match the region gate
+                    Tier             = tiers[slot],
+                    LevelRequirement = region.LevelReq,
                     XpReward         = z.XpReward,
                     DistanceKm       = z.DistanceKm,
                     IsStartZone      = isStarter && z.Type == WorldZoneType.Entry,
                     IsBoss           = z.Type == WorldZoneType.Boss,
                     Type             = z.Type,
+                    BranchOfId       = branchOf,
                 });
             }
         }
         return list;
+    }
+
+    /// <summary>
+    /// Walk the zone list and assign each a tier. A branch zone shares a tier
+    /// with its sibling (both tier = crossroads.Tier + 1). Post-branch zones
+    /// resume at crossroads.Tier + 2. Plain linear zones increment by 1.
+    /// </summary>
+    private static int[] ComputeTiers(IReadOnlyList<ZoneSpec> zones)
+    {
+        var tiers = new int[zones.Count];
+        int nextTier = 1;
+        int? crossroadsTier = null;
+
+        for (int i = 0; i < zones.Count; i++)
+        {
+            var z = zones[i];
+            if (z.BranchOfName != null)
+            {
+                // Both branches share crossroads.Tier + 1. No tier advance
+                // between siblings.
+                tiers[i] = (crossroadsTier ?? nextTier - 1) + 1;
+                // After emitting the final branch, the next zone should be
+                // crossroads.Tier + 2. Do NOT advance nextTier on each branch —
+                // we'll set it when we leave the branch block.
+                bool nextIsBranch = (i + 1 < zones.Count) && zones[i + 1].BranchOfName != null;
+                if (!nextIsBranch)
+                {
+                    nextTier = (crossroadsTier ?? tiers[i]) + 2;
+                    crossroadsTier = null;
+                }
+                continue;
+            }
+
+            tiers[i] = nextTier++;
+            if (z.Type == WorldZoneType.Crossroads)
+            {
+                crossroadsTier = tiers[i];
+            }
+        }
+
+        return tiers;
     }
 
     public static IReadOnlyList<WorldZoneEdge> CreateEdges()
@@ -249,38 +338,92 @@ public static class WorldSeedData
             int count = region.Zones.Count;
             if (count < 2) continue;
 
-            // Linear chain (bidirectional) Entry -> slot2 -> ... -> Boss.
-            for (int slot = 0; slot < count - 1; slot++)
+            // Walk the zone list in order. Non-branch consecutive pairs get a
+            // linear bidirectional edge. Crossroads → branch(es) → rejoin forms
+            // a fork where the crossroads linear edge to the rejoin is replaced
+            // by two branch edges + two 0-km rejoin edges.
+            int i = 0;
+            while (i < count - 1)
             {
-                var nextZone = region.Zones[slot + 1];
-                list.Add(new WorldZoneEdge
-                {
-                    Id              = EdgeId(n++),
-                    FromZoneId      = ZoneId(regionIdx + 1, slot + 1),
-                    ToZoneId        = ZoneId(regionIdx + 1, slot + 2),
-                    // Edge cost = destination zone's DistanceKm (entry cost).
-                    DistanceKm      = nextZone.DistanceKm > 0 ? nextZone.DistanceKm : 1.0,
-                    IsBidirectional = true,
-                });
-            }
+                var current = region.Zones[i];
+                bool currentIsBranch = current.BranchOfName != null;
+                var next = region.Zones[i + 1];
+                bool nextIsBranch = next.BranchOfName != null;
 
-            // Add a secondary crossroads branch: for any Crossroads slot, add
-            // an edge back to the previous-previous zone to create a loop
-            // (visualizes as a fork).
-            for (int slot = 0; slot < count; slot++)
-            {
-                if (region.Zones[slot].Type != WorldZoneType.Crossroads) continue;
-                // Target the penultimate standard zone if available (slot-2).
-                int targetSlot = slot >= 2 ? slot - 2 : -1;
-                if (targetSlot < 0 || targetSlot >= count) continue;
+                if (current.Type == WorldZoneType.Crossroads && nextIsBranch)
+                {
+                    // Collect the contiguous run of branch siblings (expect 2).
+                    int firstBranch = i + 1;
+                    int lastBranch = firstBranch;
+                    while (lastBranch + 1 < count && region.Zones[lastBranch + 1].BranchOfName != null)
+                        lastBranch++;
+
+                    // Crossroads → each branch. Edge distance = branch.DistanceKm.
+                    for (int b = firstBranch; b <= lastBranch; b++)
+                    {
+                        var branchZone = region.Zones[b];
+                        list.Add(new WorldZoneEdge
+                        {
+                            Id              = EdgeId(n++),
+                            FromZoneId      = ZoneId(regionIdx + 1, i + 1),
+                            ToZoneId        = ZoneId(regionIdx + 1, b + 1),
+                            DistanceKm      = branchZone.DistanceKm > 0 ? branchZone.DistanceKm : 1.0,
+                            IsBidirectional = false,
+                        });
+                    }
+
+                    // Rejoin is the first non-branch zone after the branch run.
+                    int rejoinSlot = lastBranch + 1;
+                    if (rejoinSlot < count)
+                    {
+                        for (int b = firstBranch; b <= lastBranch; b++)
+                        {
+                            list.Add(new WorldZoneEdge
+                            {
+                                Id              = EdgeId(n++),
+                                FromZoneId      = ZoneId(regionIdx + 1, b + 1),
+                                ToZoneId        = ZoneId(regionIdx + 1, rejoinSlot + 1),
+                                DistanceKm      = 0,
+                                IsBidirectional = false,
+                            });
+                        }
+                    }
+
+                    // Advance past the whole fork block. Next loop iteration
+                    // starts at the rejoin zone (which will then emit normal
+                    // linear edges to its successors).
+                    i = rejoinSlot;
+                    continue;
+                }
+
+                if (currentIsBranch)
+                {
+                    // Skip — branch edges are authored by the crossroads block above.
+                    // (This case only triggers when a branch is followed by another
+                    // non-branch zone that isn't the rejoin — shouldn't happen with
+                    // the current seed, but we guard against it.)
+                    i++;
+                    continue;
+                }
+
+                if (nextIsBranch)
+                {
+                    // Non-crossroads → branch: nothing to emit here; the branch
+                    // edges come from the crossroads pass above.
+                    i++;
+                    continue;
+                }
+
+                // Normal linear pair: emit bidirectional edge.
                 list.Add(new WorldZoneEdge
                 {
                     Id              = EdgeId(n++),
-                    FromZoneId      = ZoneId(regionIdx + 1, slot + 1),
-                    ToZoneId        = ZoneId(regionIdx + 1, targetSlot + 1),
-                    DistanceKm      = 2.0,
+                    FromZoneId      = ZoneId(regionIdx + 1, i + 1),
+                    ToZoneId        = ZoneId(regionIdx + 1, i + 2),
+                    DistanceKm      = next.DistanceKm > 0 ? next.DistanceKm : 1.0,
                     IsBidirectional = true,
                 });
+                i++;
             }
         }
 
@@ -290,7 +433,6 @@ public static class WorldSeedData
         for (int regionIdx = 0; regionIdx < Regions.Count - 1; regionIdx++)
         {
             var fromRegion = Regions[regionIdx];
-            var toRegion = Regions[regionIdx + 1];
             var fromBossSlot = fromRegion.Zones.Count; // last slot (1-based)
             var toEntrySlot = 1;
             list.Add(new WorldZoneEdge

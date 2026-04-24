@@ -36,6 +36,16 @@ class CrossRegionSwitchException implements Exception {
       'CrossRegionSwitchException(from: $currentRegionName, to: $destRegionName)';
 }
 
+/// Thrown by [WorldZoneService.setDestination] when the target zone is a
+/// branch of a crossroads whose sibling was already chosen (backend 409 with
+/// error code `PATH_ALREADY_CHOSEN`). The user has to stick with their pick.
+class PathAlreadyChosenException implements Exception {
+  final String message;
+  const PathAlreadyChosenException(this.message);
+  @override
+  String toString() => 'PathAlreadyChosenException($message)';
+}
+
 class WorldZoneService {
   /// World hub data — list of regions + user + optional active journey.
   /// Backed by the rebuilt `GET /api/map/world` endpoint.
@@ -60,9 +70,22 @@ class WorldZoneService {
   }
 
   Future<void> setDestination(String destinationZoneId) async {
-    await ApiClient.instance.put('/world/destination', data: {
-      'destinationZoneId': destinationZoneId,
-    });
+    try {
+      await ApiClient.instance.put('/world/destination', data: {
+        'destinationZoneId': destinationZoneId,
+      });
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        final data = e.response?.data;
+        final map = data is Map ? data : const {};
+        if (map['error'] == 'PATH_ALREADY_CHOSEN') {
+          throw PathAlreadyChosenException(
+            map['message'] as String? ?? 'You already chose a different path.',
+          );
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> completeZone(String zoneId) async {

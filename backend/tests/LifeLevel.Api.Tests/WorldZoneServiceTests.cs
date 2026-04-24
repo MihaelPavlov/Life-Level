@@ -5,6 +5,7 @@ using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Application.UseCases;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
+using LifeLevel.Modules.WorldZone.Domain.Exceptions;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -550,4 +551,216 @@ public class WorldZoneServiceTests
         Assert.Empty(result.Edges);
         Assert.Equal(0, result.CharacterLevel);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Helper: seed a fork topology (crossroads → [branchA, branchB] → rejoin).
+    // Returns the ids so individual tests can reason about them.
+    // ──────────────────────────────────────────────────────────────────────────
+    private record ForkSetup(
+        Guid UserId,
+        World World,
+        Region Region,
+        WorldZoneEntity Crossroads,
+        WorldZoneEntity BranchA,
+        WorldZoneEntity BranchB,
+        WorldZoneEntity Rejoin,
+        UserWorldProgressEntity Progress);
+
+    private static async Task<ForkSetup> SeedForkAsync(AppDbContext db, string testName)
+    {
+        var (world, region) = SeedWorld(db, testName);
+
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Username = testName, Email = $"{testName}@test.com", PasswordHash = "x" };
+        var character = new Character { Id = Guid.NewGuid(), UserId = userId, Level = 10 };
+        db.Users.Add(user);
+        db.Characters.Add(character);
+
+        var crossroads = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(),
+            RegionId = region.Id,
+            Name = "Fork",
+            Emoji = "🔀",
+            Type = WorldZoneType.Crossroads,
+            Tier = 1,
+            LevelRequirement = 1,
+        };
+        var branchA = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(),
+            RegionId = region.Id,
+            Name = "Branch A",
+            Emoji = "🌾",
+            Type = WorldZoneType.Standard,
+            Tier = 2,
+            DistanceKm = 5,
+            XpReward = 400,
+            LevelRequirement = 1,
+            BranchOfId = null, // set below once ids are stable
+        };
+        var branchB = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(),
+            RegionId = region.Id,
+            Name = "Branch B",
+            Emoji = "⛰️",
+            Type = WorldZoneType.Standard,
+            Tier = 2,
+            DistanceKm = 3,
+            XpReward = 600,
+            LevelRequirement = 1,
+            BranchOfId = null,
+        };
+        branchA.BranchOfId = crossroads.Id;
+        branchB.BranchOfId = crossroads.Id;
+
+        var rejoin = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(),
+            RegionId = region.Id,
+            Name = "Rejoin",
+            Emoji = "🍂",
+            Type = WorldZoneType.Standard,
+            Tier = 3,
+            DistanceKm = 4,
+            XpReward = 500,
+            LevelRequirement = 1,
+        };
+
+        db.WorldZones.AddRange(crossroads, branchA, branchB, rejoin);
+
+        // Edges: crossroads → branchA, crossroads → branchB, each branch → rejoin.
+        db.WorldZoneEdges.AddRange(
+            new WorldZoneEdge { Id = Guid.NewGuid(), FromZoneId = crossroads.Id, ToZoneId = branchA.Id, DistanceKm = branchA.DistanceKm, IsBidirectional = false },
+            new WorldZoneEdge { Id = Guid.NewGuid(), FromZoneId = crossroads.Id, ToZoneId = branchB.Id, DistanceKm = branchB.DistanceKm, IsBidirectional = false },
+            new WorldZoneEdge { Id = Guid.NewGuid(), FromZoneId = branchA.Id,    ToZoneId = rejoin.Id,  DistanceKm = 0,                  IsBidirectional = false },
+            new WorldZoneEdge { Id = Guid.NewGuid(), FromZoneId = branchB.Id,    ToZoneId = rejoin.Id,  DistanceKm = 0,                  IsBidirectional = false }
+        );
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = world.Id,
+            CurrentZoneId = crossroads.Id,
+            CurrentRegionId = region.Id,
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = crossroads.Id,
+            UserWorldProgressId = progress.Id,
+        });
+
+        await db.SaveChangesAsync();
+        return new ForkSetup(userId, world, region, crossroads, branchA, branchB, rejoin, progress);
+    }
+
+    private static MapReadService CreateMapReadService(AppDbContext db)
+        => new MapReadService(db, new DbCharacterLevelReadPort(db), new StaticUsernameReadPort("Tester"));
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 12: SetDestination on a branch with no prior choice records a
+    // UserPathChoice row.
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task SetDestination_Branch_FirstChoice_CreatesPathChoice()
+    {
+        var db = CreateDb(nameof(SetDestination_Branch_FirstChoice_CreatesPathChoice));
+        var setup = await SeedForkAsync(db, "fork_first_choice");
+
+        var service = CreateService(db);
+        await service.SetDestinationAsync(setup.UserId, setup.BranchA.Id);
+
+        var choices = await db.UserPathChoices
+            .Where(c => c.UserId == setup.UserId)
+            .ToListAsync();
+
+        Assert.Single(choices);
+        Assert.Equal(setup.Crossroads.Id, choices[0].CrossroadsZoneId);
+        Assert.Equal(setup.BranchA.Id, choices[0].ChosenBranchZoneId);
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == setup.UserId);
+        Assert.Equal(setup.BranchA.Id, updated.DestinationZoneId);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 13: Attempting to pick the sibling after a choice exists throws
+    // PathAlreadyChosenException.
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task SetDestination_Branch_OtherPath_ThrowsPathAlreadyChosen()
+    {
+        var db = CreateDb(nameof(SetDestination_Branch_OtherPath_ThrowsPathAlreadyChosen));
+        var setup = await SeedForkAsync(db, "fork_already_chosen");
+
+        // Pre-seed: user has committed to branch A.
+        db.UserPathChoices.Add(new UserPathChoice
+        {
+            Id = Guid.NewGuid(),
+            UserId = setup.UserId,
+            CrossroadsZoneId = setup.Crossroads.Id,
+            ChosenBranchZoneId = setup.BranchA.Id,
+            ChosenAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+
+        await Assert.ThrowsAsync<PathAlreadyChosenException>(
+            () => service.SetDestinationAsync(setup.UserId, setup.BranchB.Id));
+
+        // Destination must remain unchanged from the pre-test state.
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == setup.UserId);
+        Assert.Null(updated.DestinationZoneId);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test 14: After a path choice, GetRegionDetail reports the sibling branch
+    // as status "locked".
+    // ──────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task GetRegionDetail_AfterChoice_SiblingBranchLocked()
+    {
+        var db = CreateDb(nameof(GetRegionDetail_AfterChoice_SiblingBranchLocked));
+        var setup = await SeedForkAsync(db, "fork_detail_locked");
+
+        // User commits to branch A.
+        db.UserPathChoices.Add(new UserPathChoice
+        {
+            Id = Guid.NewGuid(),
+            UserId = setup.UserId,
+            CrossroadsZoneId = setup.Crossroads.Id,
+            ChosenBranchZoneId = setup.BranchA.Id,
+            ChosenAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var mapRead = CreateMapReadService(db);
+        var detail = await mapRead.GetRegionDetailAsync(setup.UserId, setup.Region.Id);
+
+        Assert.NotNull(detail);
+        var branchBNode = detail!.Nodes.Single(n => n.Id == setup.BranchB.Id);
+        Assert.Equal("locked", branchBNode.Status);
+
+        var branchANode = detail.Nodes.Single(n => n.Id == setup.BranchA.Id);
+        Assert.NotEqual("locked", branchANode.Status); // chosen branch remains open
+
+        Assert.Contains(detail.PathChoices, pc =>
+            pc.CrossroadsZoneId == setup.Crossroads.Id && pc.ChosenZoneId == setup.BranchA.Id);
+
+        // BranchOf wiring round-trips on the DTO.
+        Assert.Equal(setup.Crossroads.Id, branchANode.BranchOf);
+        Assert.Equal(setup.Crossroads.Id, branchBNode.BranchOf);
+    }
+}
+
+// Supporting stub: MapReadService needs a username read port. Tests don't care
+// about the actual username so return a constant.
+file sealed class StaticUsernameReadPort(string name) : IUserReadPort
+{
+    public Task<string?> GetUsernameAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult<string?>(name);
 }

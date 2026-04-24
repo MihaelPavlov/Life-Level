@@ -67,6 +67,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorldZoneEdge> WorldZoneEdges => Set<WorldZoneEdge>();
     public DbSet<UserWorldProgress> UserWorldProgresses => Set<UserWorldProgress>();
     public DbSet<UserZoneUnlock> UserZoneUnlocks => Set<UserZoneUnlock>();
+    public DbSet<UserPathChoice> UserPathChoices => Set<UserPathChoice>();
 
     // Map
     public DbSet<MapNode> MapNodes => Set<MapNode>();

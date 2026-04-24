@@ -16,6 +16,12 @@ class ZoneDetailSheet extends StatelessWidget {
   final bool isDestination;
   final VoidCallback? onSetDestination;
 
+  /// Callback for the crossroads `⚖ Choose a path` CTA. When non-null on a
+  /// crossroads node, tapping the CTA dismisses this sheet and opens the
+  /// two-branch choice sheet. Null on non-crossroads taps and on crossroads
+  /// taps without seeded branches (CTA falls back to disabled).
+  final VoidCallback? onChooseCrossroadsPath;
+
   const ZoneDetailSheet({
     super.key,
     required this.node,
@@ -24,6 +30,7 @@ class ZoneDetailSheet extends StatelessWidget {
     required this.activeJourney,
     required this.isDestination,
     required this.onSetDestination,
+    this.onChooseCrossroadsPath,
   });
 
   bool get _hasActiveJourney =>
@@ -91,6 +98,7 @@ class ZoneDetailSheet extends StatelessWidget {
                 levelMet: _levelMet,
                 showTravelingView: _showTravelingView,
                 onSetDestination: onSetDestination,
+                onChooseCrossroadsPath: onChooseCrossroadsPath,
               ),
             ],
           ),
@@ -426,11 +434,13 @@ class _Cta extends StatelessWidget {
   final bool levelMet;
   final bool showTravelingView;
   final VoidCallback? onSetDestination;
+  final VoidCallback? onChooseCrossroadsPath;
   const _Cta({
     required this.node,
     required this.levelMet,
     required this.showTravelingView,
     required this.onSetDestination,
+    required this.onChooseCrossroadsPath,
   });
 
   @override
@@ -439,16 +449,8 @@ class _Cta extends StatelessWidget {
       return _CtaButton(
         label: '⚖ Choose a path',
         color: AppColors.purple,
-        onTap: null, // crossroads flow wiring is out of scope for this pass
-        disabled: true,
-      );
-    }
-    if (showTravelingView) {
-      return const _CtaButton(
-        label: '⏳ Traveling · log a workout to advance',
-        color: AppColors.textSecondary,
-        onTap: null,
-        disabled: true,
+        onTap: onChooseCrossroadsPath,
+        disabled: onChooseCrossroadsPath == null,
       );
     }
     if (node.status == ZoneNodeStatus.active) {
@@ -473,6 +475,17 @@ class _Cta extends StatelessWidget {
         color: AppColors.textMuted,
         onTap: null,
         disabled: true,
+      );
+    }
+    // Current destination + mid-journey → idempotent re-affirm CTA. Taps
+    // are no-op server-side (same destination, progress preserved) but the
+    // button stays enabled so the UI never feels frozen.
+    if (showTravelingView) {
+      return _CtaButton(
+        label: '✓ Heading here',
+        color: AppColors.orange,
+        onTap: onSetDestination,
+        disabled: onSetDestination == null,
       );
     }
     return _CtaButton(

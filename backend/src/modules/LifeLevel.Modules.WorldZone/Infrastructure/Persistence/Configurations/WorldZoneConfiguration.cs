@@ -26,5 +26,10 @@ public class WorldZoneConfiguration : IEntityTypeConfiguration<WorldZoneEntity>
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(z => new { z.RegionId, z.Tier });
+
+        // Branch → Crossroads: nullable scalar (no nav property; using the id directly
+        // keeps seed + DTOs simple). Indexed for branch-lookup queries.
+        builder.Property(z => z.BranchOfId);
+        builder.HasIndex(z => z.BranchOfId);
     }
 }

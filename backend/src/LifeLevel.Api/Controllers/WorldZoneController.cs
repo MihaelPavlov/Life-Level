@@ -30,6 +30,14 @@ public class WorldZoneController(WorldZoneService worldZoneService, IUserContext
             await worldZoneService.SetDestinationAsync(userId, request.DestinationZoneId);
             return NoContent();
         }
+        catch (PathAlreadyChosenException ex)
+        {
+            return Conflict(new
+            {
+                error = "PATH_ALREADY_CHOSEN",
+                message = ex.Message
+            });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });

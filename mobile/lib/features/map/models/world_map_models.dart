@@ -184,6 +184,11 @@ class RegionDetail extends RegionCard {
   final List<ZoneNode> nodes;
   final List<ZoneEdge> edges;
 
+  /// Map of crossroadsZoneId → chosenBranchZoneId. Populated when the user
+  /// has already picked a fork at a crossroads; the chosen branch follows
+  /// normal progression rules, the sibling is permanently locked.
+  final Map<String, String> pathChoices;
+
   const RegionDetail({
     required super.id,
     required super.name,
@@ -202,10 +207,17 @@ class RegionDetail extends RegionCard {
     required super.pins,
     required this.nodes,
     required this.edges,
+    required this.pathChoices,
   });
 
   factory RegionDetail.fromJson(Map<String, dynamic> json) {
     final base = RegionCard.fromJson(json);
+    final choicesList = (json['pathChoices'] as List?) ?? const [];
+    final choices = <String, String>{
+      for (final raw in choicesList)
+        if (raw is Map<String, dynamic>)
+          raw['crossroadsZoneId'] as String: raw['chosenZoneId'] as String,
+    };
     return RegionDetail(
       id: base.id,
       name: base.name,
@@ -230,6 +242,7 @@ class RegionDetail extends RegionCard {
               ?.map((e) => ZoneEdge.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      pathChoices: choices,
     );
   }
 }
@@ -248,6 +261,11 @@ class ZoneNode {
   final ZoneNodeStatus status;
   final bool isCrossroads;
   final bool isBoss;
+
+  /// When non-null, this zone is one branch of a crossroads. All siblings
+  /// share the same `branchOf` value — the id of the parent crossroads zone.
+  final String? branchOf;
+
   final int? nodesCompleted;
   final int? nodesTotal;
   final int? loreCollected;
@@ -265,6 +283,7 @@ class ZoneNode {
     required this.status,
     required this.isCrossroads,
     required this.isBoss,
+    this.branchOf,
     this.nodesCompleted,
     this.nodesTotal,
     this.loreCollected,
@@ -283,6 +302,7 @@ class ZoneNode {
         status: zoneNodeStatusFromString(json['status'] as String?),
         isCrossroads: json['isCrossroads'] as bool? ?? false,
         isBoss: json['isBoss'] as bool? ?? false,
+        branchOf: json['branchOf'] as String?,
         nodesCompleted: (json['nodesCompleted'] as num?)?.toInt(),
         nodesTotal: (json['nodesTotal'] as num?)?.toInt(),
         loreCollected: (json['loreCollected'] as num?)?.toInt(),

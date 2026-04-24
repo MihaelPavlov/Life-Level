@@ -10,6 +10,7 @@ import 'zone_node_tile.dart';
 /// curve layer sits behind them.
 class ZoneTrail extends StatelessWidget {
   final List<ZoneNode> nodes;
+  final List<ZoneEdge> edges;
   final ActiveJourney? journey;
   final String? nextRegionName;
 
@@ -22,6 +23,7 @@ class ZoneTrail extends StatelessWidget {
   const ZoneTrail({
     super.key,
     required this.nodes,
+    required this.edges,
     required this.journey,
     required this.nextRegionName,
     required this.avatarEmoji,
@@ -38,7 +40,13 @@ class ZoneTrail extends StatelessWidget {
     }
 
     final layouts = _buildLayouts(nodes);
-    final totalHeight = _rowHeight * nodes.length + _tailSpace;
+    // Total height comes from how many tier-rows we actually used, not how
+    // many nodes — branch rows pack two nodes into one row.
+    final rowCount = layouts
+            .map((l) => l.yCenter)
+            .toSet()
+            .length;
+    final totalHeight = _rowHeight * rowCount + _tailSpace;
     final traveling = journey != null;
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -55,7 +63,11 @@ class ZoneTrail extends StatelessWidget {
           children: [
             Positioned.fill(
               child: CustomPaint(
-                painter: _TrailPainter(layouts: layouts, traveling: traveling),
+                painter: _TrailPainter(
+                  layouts: layouts,
+                  edges: edges,
+                  traveling: traveling,
+                ),
               ),
             ),
             for (int i = 0; i < nodes.length; i++)
@@ -92,25 +104,66 @@ class ZoneTrail extends StatelessWidget {
     });
   }
 
+  /// Groups nodes by `tier`. Single-node tiers alternate left / right (with
+  /// boss / crossroads forced to centre); two-node tiers — the branches of a
+  /// crossroads — render side-by-side at `left` and `right` slots.
+  ///
+  /// Returned list is aligned to `nodes` by index so the caller's `for (i..)`
+  /// loop can pair node[i] with layouts[i].
   static List<_Layout> _buildLayouts(List<ZoneNode> nodes) {
-    final out = <_Layout>[];
-    int standardSlotIndex = 0; // counter for non-centered nodes
+    // Group by tier, preserving original order within each tier.
+    final byTier = <int, List<int>>{}; // tier → list of node indices
     for (int i = 0; i < nodes.length; i++) {
-      final n = nodes[i];
-      _Slot slot;
-      if (n.isBoss || n.isCrossroads) {
-        slot = _Slot.center;
-      } else {
-        slot = standardSlotIndex.isEven ? _Slot.left : _Slot.right;
-        standardSlotIndex++;
-      }
-      out.add(_Layout(
-        slot: slot,
-        yCenter: _rowHeight * (i + 0.5),
-        status: n.status,
-      ));
+      byTier.putIfAbsent(nodes[i].tier, () => []).add(i);
     }
-    return out;
+    final tiersSorted = byTier.keys.toList()..sort();
+
+    final layouts = List<_Layout?>.filled(nodes.length, null);
+    int standardSlotIndex = 0; // alternation counter for single-node rows
+    int rowIndex = 0;
+
+    for (final tier in tiersSorted) {
+      final row = byTier[tier]!;
+      final y = _rowHeight * (rowIndex + 0.5);
+
+      if (row.length == 1) {
+        final idx = row.first;
+        final n = nodes[idx];
+        _Slot slot;
+        if (n.isBoss || n.isCrossroads) {
+          slot = _Slot.center;
+        } else {
+          slot = standardSlotIndex.isEven ? _Slot.left : _Slot.right;
+          standardSlotIndex++;
+        }
+        layouts[idx] = _Layout(
+          zoneId: n.id,
+          slot: slot,
+          yCenter: y,
+          status: n.status,
+        );
+      } else {
+        // Branch row — expect exactly two siblings. Place them at left / right
+        // and do NOT advance `standardSlotIndex` so the trail's alternation
+        // rhythm resumes cleanly after rejoin.
+        for (int k = 0; k < row.length; k++) {
+          final idx = row[k];
+          final n = nodes[idx];
+          final slot = k == 0 ? _Slot.left : _Slot.right;
+          layouts[idx] = _Layout(
+            zoneId: n.id,
+            slot: slot,
+            yCenter: y,
+            status: n.status,
+          );
+        }
+      }
+      rowIndex++;
+    }
+
+    // All slots are guaranteed filled because every node belongs to some
+    // tier bucket — cast to non-null.
+    return layouts.cast<_Layout>();
   }
 }
 
@@ -119,10 +172,12 @@ class ZoneTrail extends StatelessWidget {
 enum _Slot { left, right, center }
 
 class _Layout {
+  final String zoneId;
   final _Slot slot;
   final double yCenter;
   final ZoneNodeStatus status;
   const _Layout({
+    required this.zoneId,
     required this.slot,
     required this.yCenter,
     required this.status,
@@ -222,21 +277,29 @@ class _SlotAlign extends StatelessWidget {
 
 class _TrailPainter extends CustomPainter {
   final List<_Layout> layouts;
+  final List<ZoneEdge> edges;
   final bool traveling;
 
-  _TrailPainter({required this.layouts, required this.traveling});
+  _TrailPainter({
+    required this.layouts,
+    required this.edges,
+    required this.traveling,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (layouts.length < 2) return;
+    if (layouts.length < 2 || edges.isEmpty) return;
 
-    // Walk nodes pairwise. Track how many locked segments we've emitted so
-    // later ones fade further (8/6 dash at first, then 5/6 opacity 0.5).
-    int lockedStepsSoFar = 0;
+    // Index layouts by zone id for O(1) edge lookup.
+    final byId = <String, _Layout>{
+      for (final l in layouts) l.zoneId: l,
+    };
 
-    for (int i = 0; i < layouts.length - 1; i++) {
-      final a = layouts[i];
-      final b = layouts[i + 1];
+    for (final edge in edges) {
+      final a = byId[edge.fromId];
+      final b = byId[edge.toId];
+      if (a == null || b == null) continue;
+
       final x0 = _xFor(a.slot, size.width);
       final y0 = a.yCenter;
       final x1 = _xFor(b.slot, size.width);
@@ -247,15 +310,11 @@ class _TrailPainter extends CustomPainter {
         ..moveTo(x0, y0)
         ..cubicTo(x0, midY, x1, midY, x1, y1);
 
-      // Read the underlying node status for the transition decision. The
-      // painter doesn't need the full node, just the bits relevant to the
-      // colouring rules.
-      final fromStatus = _statusAt(i);
-      final toStatus = _statusAt(i + 1);
+      final fromStatus = a.status;
+      final toStatus = b.status;
       final unlocked = _isUnlocked(fromStatus) && _isUnlocked(toStatus);
 
       if (unlocked) {
-        // Solid gradient. Colour depends on the transition.
         final isActiveToNext = fromStatus == ZoneNodeStatus.active &&
             toStatus == ZoneNodeStatus.next;
         final paint = Paint()
@@ -269,7 +328,6 @@ class _TrailPainter extends CustomPainter {
           ).createShader(Rect.fromLTRB(0, y0, size.width, y1));
         canvas.drawPath(path, paint);
 
-        // A soft halo behind the active→next curve sells the glow.
         if (isActiveToNext) {
           final halo = Paint()
             ..style = PaintingStyle.stroke
@@ -279,27 +337,26 @@ class _TrailPainter extends CustomPainter {
                 .withOpacity(0.12);
           canvas.drawPath(path, halo);
         }
-        lockedStepsSoFar = 0; // reset on re-entering the unlocked chain
       } else {
-        final firstLocked = lockedStepsSoFar == 0;
+        // Dashed grey for any edge touching an un-entered / locked zone.
+        // Edges into a "locked-by-choice" branch fade further so the un-chosen
+        // fork reads as de-emphasised rather than a hard wall.
+        final dim = toStatus == ZoneNodeStatus.locked &&
+            fromStatus == ZoneNodeStatus.active;
         final paint = Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = firstLocked ? 3 : 2.5
+          ..strokeWidth = 3
           ..strokeCap = StrokeCap.butt
-          ..color = AppColors.border
-              .withOpacity(firstLocked ? 0.75 : 0.5);
-        final dash = firstLocked ? 8.0 : 5.0;
-        const gap = 6.0;
-        _drawDashed(canvas, path, paint, dash, gap);
-        lockedStepsSoFar++;
+          ..color = AppColors.border.withOpacity(dim ? 0.4 : 0.7);
+        _drawDashed(canvas, path, paint, 7, 6);
       }
     }
   }
 
-  ZoneNodeStatus _statusAt(int i) => layouts[i].status;
-
   static bool _isUnlocked(ZoneNodeStatus s) =>
-      s == ZoneNodeStatus.completed || s == ZoneNodeStatus.active;
+      s == ZoneNodeStatus.completed ||
+      s == ZoneNodeStatus.active ||
+      s == ZoneNodeStatus.next;
 
   List<Color> _solidGradient(
       ZoneNodeStatus from, ZoneNodeStatus to, bool traveling) {
@@ -336,10 +393,18 @@ class _TrailPainter extends CustomPainter {
   bool shouldRepaint(covariant _TrailPainter old) {
     if (old.traveling != traveling) return true;
     if (old.layouts.length != layouts.length) return true;
+    if (old.edges.length != edges.length) return true;
     for (int i = 0; i < layouts.length; i++) {
       if (old.layouts[i].slot != layouts[i].slot ||
           old.layouts[i].yCenter != layouts[i].yCenter ||
-          old.layouts[i].status != layouts[i].status) {
+          old.layouts[i].status != layouts[i].status ||
+          old.layouts[i].zoneId != layouts[i].zoneId) {
+        return true;
+      }
+    }
+    for (int i = 0; i < edges.length; i++) {
+      if (old.edges[i].fromId != edges[i].fromId ||
+          old.edges[i].toId != edges[i].toId) {
         return true;
       }
     }

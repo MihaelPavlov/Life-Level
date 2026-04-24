@@ -612,14 +612,19 @@ class _MainShellState extends ConsumerState<MainShell>
                   keysByTabId: {'world': _mapNavKey},
                   onTap: (i) {
                     _closeRadial();
-                    // 'world' in the nav bar opens the shell overlay instead
-                    // of switching to a full tab, so every world-map entry
-                    // point renders the same way.
+                    // 'world' opens the shell overlay AND advances the tab
+                    // index so the bottom nav highlights it. The IndexedStack
+                    // slot for 'world' renders SizedBox.shrink() beneath the
+                    // overlay, so the tab-index switch is purely cosmetic.
                     if (_navIds[i] == 'world') {
                       WorldZoneRefreshNotifier.notify();
+                      MapTabNotifier.notify();
                       setState(() {
                         _pendingOnZoneSelected = null;
+                        _tabIndex = i;
                         _worldOpen = true;
+                        _titlesOpen = false;
+                        _bossOpen = false;
                       });
                       return;
                     }
@@ -627,9 +632,6 @@ class _MainShellState extends ConsumerState<MainShell>
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
                       invalidateUserScopedProviders(ref);
-                    }
-                    if (_navIds[i] == 'world') {
-                      MapTabNotifier.notify();
                     }
                   },
                 ),

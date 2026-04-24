@@ -289,6 +289,8 @@ String _subLabel(ZoneNode n, ActiveJourney? journey, String? nextRegionName) {
   }
   if (n.isCrossroads) return 'Crossroads';
 
+  final isBranch = n.branchOf != null;
+
   switch (n.status) {
     case ZoneNodeStatus.completed:
       return n.xpReward > 0 ? '+${n.xpReward} XP' : 'Completed';
@@ -309,9 +311,11 @@ String _subLabel(ZoneNode n, ActiveJourney? journey, String? nextRegionName) {
       return 'Next · ${n.distanceKm.toStringAsFixed(1)} km';
 
     case ZoneNodeStatus.available:
+      if (isBranch) return 'Branch · ${n.distanceKm.toStringAsFixed(1)} km';
       return 'Available · ${n.distanceKm.toStringAsFixed(1)} km';
 
     case ZoneNodeStatus.locked:
+      if (isBranch) return 'Other path chosen';
       return 'Lv ${n.levelRequirement} · Locked';
   }
 }

@@ -52,8 +52,18 @@ public class MapReadService(
             .Include(p => p.DestinationZone).ThenInclude(z => z!.Region)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id, ct);
 
-        var unlocked = progress?.UnlockedZones.Select(u => u.WorldZoneId).ToHashSet() ?? [];
-        var currentRegionId = progress?.CurrentRegionId;
+        // First-time hub open: brand new users don't yet have a UserWorldProgress
+        // row, so every zone comes back locked and the region detail shows
+        // nothing tappable. Seed them at the first-region entry zone right here
+        // so the very first `/api/map/world` call returns a live state. Mirrors
+        // the pattern already used by WorldZoneService.GetFullWorldAsync.
+        if (progress == null)
+        {
+            progress = await EnsureUserWorldProgressAsync(userId, activeWorld.Id, zones, ct);
+        }
+
+        var unlocked = progress.UnlockedZones.Select(u => u.WorldZoneId).ToHashSet();
+        var currentRegionId = progress.CurrentRegionId;
 
         var summaries = regions
             .Select(r => BuildRegionSummary(r, zones, unlocked, currentRegionId, level))
@@ -62,6 +72,53 @@ public class MapReadService(
         ActiveJourneyDto? journey = BuildActiveJourney(progress);
 
         return new WorldMapDto(new WorldUserDto(level, name), journey, summaries);
+    }
+
+    /// Seeds a fresh UserWorldProgress at the lowest-tier entry zone of the
+    /// lowest-chapter region. Idempotent — the caller already checked that
+    /// no row exists, and we re-fetch afterwards with the same eager-load
+    /// shape so downstream code sees the populated navigation properties.
+    private async Task<UserWorldProgressEntity> EnsureUserWorldProgressAsync(
+        Guid userId,
+        Guid worldId,
+        IReadOnlyList<WorldZoneEntity> zones,
+        CancellationToken ct)
+    {
+        // Pick the starter zone: prefer IsStartZone, else the lowest-chapter
+        // Entry-typed zone.
+        var startZone = zones
+            .OrderBy(z => z.IsStartZone ? 0 : 1)
+            .ThenBy(z => z.Type == WorldZoneType.Entry ? 0 : 1)
+            .ThenBy(z => z.Tier)
+            .First();
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = worldId,
+            CurrentZoneId = startZone.Id,
+            CurrentRegionId = startZone.RegionId,
+            DistanceTraveledOnEdge = 0,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        db.Set<UserWorldProgressEntity>().Add(progress);
+        db.Set<UserZoneUnlock>().Add(new UserZoneUnlock
+        {
+            UserId = userId,
+            WorldZoneId = startZone.Id,
+            UserWorldProgressId = progress.Id,
+            UnlockedAt = DateTime.UtcNow,
+        });
+
+        await db.SaveChangesAsync(ct);
+
+        return (await db.Set<UserWorldProgressEntity>()
+            .Include(p => p.UnlockedZones)
+            .Include(p => p.CurrentEdge)
+            .Include(p => p.DestinationZone).ThenInclude(z => z!.Region)
+            .FirstAsync(p => p.Id == progress.Id, ct));
     }
 
     public async Task<RegionDetailDto?> GetRegionDetailAsync(Guid userId, Guid regionId, CancellationToken ct = default)
@@ -90,6 +147,25 @@ public class MapReadService(
 
         var unlocked = progress?.UnlockedZones.Select(u => u.WorldZoneId).ToHashSet() ?? [];
 
+        // Load this user's committed path choices for any crossroads in this
+        // region. Branches for a crossroads with a recorded choice show the
+        // chosen branch normally; the sibling force-locks.
+        var crossroadsIds = zones
+            .Where(z => z.Type == WorldZoneType.Crossroads)
+            .Select(z => z.Id)
+            .ToHashSet();
+        Dictionary<Guid, Guid> chosenByCrossroads;
+        if (crossroadsIds.Count == 0)
+        {
+            chosenByCrossroads = new();
+        }
+        else
+        {
+            chosenByCrossroads = await db.Set<UserPathChoice>()
+                .Where(c => c.UserId == userId && crossroadsIds.Contains(c.CrossroadsZoneId))
+                .ToDictionaryAsync(c => c.CrossroadsZoneId, c => c.ChosenBranchZoneId, ct);
+        }
+
         // "Available" = level met AND at least one edge connects from an unlocked
         // zone to this one. Treat edges as bidirectional when flagged.
         var adjacencyToUnlocked = new HashSet<Guid>();
@@ -100,10 +176,14 @@ public class MapReadService(
         }
 
         var nodes = zones
-            .Select(z => BuildZoneNode(z, progress, unlocked, adjacencyToUnlocked, level))
+            .Select(z => BuildZoneNode(z, progress, unlocked, adjacencyToUnlocked, level, chosenByCrossroads))
             .ToList();
 
         var edgeDtos = edges.Select(e => new ZoneEdgeDto(e.FromZoneId, e.ToZoneId)).ToList();
+
+        var pathChoiceDtos = chosenByCrossroads
+            .Select(kv => new PathChoiceDto(kv.Key, kv.Value))
+            .ToList();
 
         var summary = BuildRegionSummary(region, zones, unlocked, progress?.CurrentRegionId, level);
 
@@ -124,7 +204,8 @@ public class MapReadService(
             BossStatus: summary.BossStatus,
             Pins: summary.Pins,
             Nodes: nodes,
-            Edges: edgeDtos);
+            Edges: edgeDtos,
+            PathChoices: pathChoiceDtos);
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -200,19 +281,58 @@ public class MapReadService(
         UserWorldProgressEntity? progress,
         HashSet<Guid> unlocked,
         HashSet<Guid> adjacencyToUnlocked,
-        int userLevel)
+        int userLevel,
+        IReadOnlyDictionary<Guid, Guid> chosenByCrossroads)
     {
+        string ComputeDefaultStatus()
+        {
+            if (progress?.CurrentZoneId == z.Id) return "active";
+            if (progress?.DestinationZoneId == z.Id) return "next";
+            if (unlocked.Contains(z.Id)) return "completed";
+            if (userLevel >= z.LevelRequirement && adjacencyToUnlocked.Contains(z.Id)) return "available";
+            return "locked";
+        }
+
         string status;
-        if (progress?.CurrentZoneId == z.Id)
-            status = "active";
-        else if (progress?.DestinationZoneId == z.Id)
-            status = "next";
-        else if (unlocked.Contains(z.Id))
-            status = "completed";
-        else if (userLevel >= z.LevelRequirement && adjacencyToUnlocked.Contains(z.Id))
-            status = "available";
+        if (z.BranchOfId.HasValue)
+        {
+            // Branch zone. Status depends on whether the user has already
+            // committed to a path at the parent crossroads.
+            if (chosenByCrossroads.TryGetValue(z.BranchOfId.Value, out var chosenBranchId))
+            {
+                if (chosenBranchId == z.Id)
+                {
+                    // Chosen branch — normal lifecycle rules apply.
+                    status = ComputeDefaultStatus();
+                }
+                else
+                {
+                    // Sibling was picked — permanently locked for this user.
+                    status = "locked";
+                }
+            }
+            else
+            {
+                // No choice yet. Both branches are "available" as long as the
+                // crossroads itself is reachable and the user meets the level.
+                bool crossroadsUnlocked = unlocked.Contains(z.BranchOfId.Value);
+                bool crossroadsReachable = crossroadsUnlocked || adjacencyToUnlocked.Contains(z.BranchOfId.Value);
+                if (progress?.CurrentZoneId == z.Id)
+                    status = "active";
+                else if (progress?.DestinationZoneId == z.Id)
+                    status = "next";
+                else if (unlocked.Contains(z.Id))
+                    status = "completed";
+                else if (crossroadsReachable && userLevel >= z.LevelRequirement)
+                    status = "available";
+                else
+                    status = "locked";
+            }
+        }
         else
-            status = "locked";
+        {
+            status = ComputeDefaultStatus();
+        }
 
         bool isCrossroads = z.Type == WorldZoneType.Crossroads;
 
@@ -231,7 +351,8 @@ public class MapReadService(
             NodesCompleted: z.NodesCompleted,
             NodesTotal: z.NodesTotal,
             LoreCollected: z.LoreCollected,
-            LoreTotal: z.LoreTotal);
+            LoreTotal: z.LoreTotal,
+            BranchOf: z.BranchOfId);
     }
 
     private static ActiveJourneyDto? BuildActiveJourney(UserWorldProgressEntity? progress)

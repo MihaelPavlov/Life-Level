@@ -25,6 +25,11 @@ public class WorldZone
     public Guid RegionId { get; set; }
     public Region Region { get; set; } = null!;
 
+    // When non-null, this zone is a branch of a specific Crossroads zone.
+    // Two branches sharing the same BranchOfId form the fork pair for that crossroads.
+    // Plain Entry/Standard/Boss zones leave this null.
+    public Guid? BranchOfId { get; set; }
+
     public ICollection<WorldZoneEdge> EdgesFrom { get; set; } = [];
     public ICollection<WorldZoneEdge> EdgesTo { get; set; } = [];
     public ICollection<UserZoneUnlock> UnlockedByUsers { get; set; } = [];

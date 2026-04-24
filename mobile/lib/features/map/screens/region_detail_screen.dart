@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import '../../../core/widgets/api_error_state.dart';
 import '../../character/providers/character_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
+import '../widgets/crossroads_choice_sheet.dart';
 import '../widgets/world_map_theme.dart';
 import '../widgets/zone_detail_sheet.dart';
 import '../widgets/zone_trail.dart';
@@ -101,6 +103,18 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     return match?.id;
   }
 
+  String _humanizeSetDestinationError(DioException e, ZoneNode target) {
+    final data = e.response?.data;
+    if (data is Map && data['message'] is String) {
+      final raw = data['message'] as String;
+      if (raw.toLowerCase().contains('not adjacent')) {
+        return 'You need to reach the previous zone before setting ${target.name} as your destination.';
+      }
+      return raw;
+    }
+    return 'Failed to set destination: ${e.message ?? e}';
+  }
+
   String? _findNextRegionName(RegionDetail region, WorldMapData world) {
     final ordered = [...world.regions]
       ..sort((a, b) => a.chapterIndex.compareTo(b.chapterIndex));
@@ -112,6 +126,26 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   Future<void> _handleSetDestination(ZoneNode node) async {
     try {
       await _service.setDestination(node.id);
+    } on PathAlreadyChosenException catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop(); // close whichever sheet is open
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.red,
+        ),
+      );
+      return;
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final msg = _humanizeSetDestinationError(e, node);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: AppColors.red,
+        ),
+      );
+      return;
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,6 +171,19 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   void _showNodeSheet(ZoneNode node) {
+    assert(() {
+      debugPrint(
+          '[node-tap] ${node.name} id=${node.id} isCrossroads=${node.isCrossroads} status=${node.status} branchOf=${node.branchOf}');
+      return true;
+    }());
+    // Crossroads short-circuit directly to the two-branch choice sheet —
+    // no intermediate ZoneDetailSheet. The choice sheet itself handles the
+    // "branches missing" case with a snackbar + debug log.
+    if (node.isCrossroads) {
+      _openCrossroadsSheet(node);
+      return;
+    }
+
     final isDestination = _activeDestinationZoneId == node.id;
     final canSet = node.status == ZoneNodeStatus.next ||
         node.status == ZoneNodeStatus.available;
@@ -153,6 +200,45 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         isDestination: isDestination,
         onSetDestination:
             canSet ? () => _handleSetDestination(node) : null,
+      ),
+    );
+  }
+
+  void _openCrossroadsSheet(ZoneNode crossroads) {
+    final allNodes = _region?.nodes ?? const <ZoneNode>[];
+    final branches =
+        allNodes.where((z) => z.branchOf == crossroads.id).toList();
+
+    // Loud diagnostic every time a crossroads tap lands here. Stripped in
+    // release via the `assert(() { ...; return true; }())` idiom.
+    assert(() {
+      debugPrint(
+          '[crossroads] tap on ${crossroads.name} id=${crossroads.id} '
+          'branchesFound=${branches.length} '
+          'regionNodes=${allNodes.map((z) => "${z.name}(id=${z.id} branchOf=${z.branchOf})").join(" | ")}');
+      return true;
+    }());
+
+    if (branches.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'No branches found for ${crossroads.name}. (${branches.length} matched — check logs.)'),
+          backgroundColor: AppColors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CrossroadsChoiceSheet(
+        crossroads: crossroads,
+        branches: branches.take(2).toList(),
+        alreadyChosenBranchId: _region!.pathChoices[crossroads.id],
+        onChoose: _handleSetDestination,
       ),
     );
   }
@@ -210,6 +296,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         SliverToBoxAdapter(
           child: ZoneTrail(
             nodes: region.nodes,
+            edges: region.edges,
             journey: _activeJourney,
             nextRegionName: _nextRegionName,
             avatarEmoji: avatar,

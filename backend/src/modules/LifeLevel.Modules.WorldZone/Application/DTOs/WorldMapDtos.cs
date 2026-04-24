@@ -57,7 +57,8 @@ public record RegionDetailDto(
     string BossStatus,
     IReadOnlyList<RegionPinDto> Pins,
     IReadOnlyList<ZoneNodeDto> Nodes,
-    IReadOnlyList<ZoneEdgeDto> Edges);
+    IReadOnlyList<ZoneEdgeDto> Edges,
+    IReadOnlyList<PathChoiceDto> PathChoices);
 
 public record ZoneNodeDto(
     Guid Id,
@@ -74,6 +75,9 @@ public record ZoneNodeDto(
     int? NodesCompleted,
     int? NodesTotal,
     int? LoreCollected,
-    int? LoreTotal);
+    int? LoreTotal,
+    Guid? BranchOf);
 
 public record ZoneEdgeDto(Guid FromId, Guid ToId);
+
+public record PathChoiceDto(Guid CrossroadsZoneId, Guid ChosenZoneId);

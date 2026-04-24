@@ -463,6 +463,16 @@ public class MapService(
         if (worldZoneId.HasValue)
             startNode = await db.MapNodes.FirstOrDefaultAsync(n => n.IsStartNode && n.WorldZoneId == worldZoneId.Value);
 
+        // Fallback for callers that don't know which zone the user belongs in
+        // yet (home feed's map-journey provider hits /api/map/full with no
+        // filter on a fresh account). Pick any start node — the world-zone
+        // system is the canonical progression surface now; the local map is
+        // legacy and just needs a valid anchor to avoid throwing.
+        startNode ??= await db.MapNodes
+            .Where(n => n.IsStartNode)
+            .OrderBy(n => n.LevelRequirement)
+            .FirstOrDefaultAsync();
+
         if (startNode == null)
             throw new InvalidOperationException(
                 $"No start node found for zone {worldZoneId}. Ensure the zone has been seeded with map nodes.");

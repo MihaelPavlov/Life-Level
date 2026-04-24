@@ -62,6 +62,7 @@ public class WorldSeeder(AppDbContext db)
         await db.MapNodes.ExecuteDeleteAsync();
 
         // World-zone user state (before edges — CurrentEdgeId FK).
+        await db.UserPathChoices.ExecuteDeleteAsync();
         await db.UserZoneUnlocks.ExecuteDeleteAsync();
         await db.UserWorldProgresses.ExecuteDeleteAsync();
         await db.WorldZoneEdges.ExecuteDeleteAsync();
