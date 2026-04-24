@@ -49,6 +49,18 @@ class ZoneTrail extends StatelessWidget {
     final totalHeight = _rowHeight * rowCount + _tailSpace;
     final traveling = journey != null;
 
+    // 0..1 progress along the active edge, or null when not traveling. Drives
+    // the progressive-fill effect on the active→next path: the traveled prefix
+    // is painted in the "done" green, the remainder stays in the destination
+    // hue so the path visibly fills up as the user logs km.
+    final double? journeyProgress;
+    if (journey != null && journey!.distanceTotalKm > 0) {
+      journeyProgress =
+          (journey!.distanceTravelledKm / journey!.distanceTotalKm).clamp(0.0, 1.0);
+    } else {
+      journeyProgress = null;
+    }
+
     return LayoutBuilder(builder: (context, constraints) {
       final width = constraints.maxWidth;
       final walkerPos = (traveling && avatarEmoji != null)
@@ -67,6 +79,7 @@ class ZoneTrail extends StatelessWidget {
                   layouts: layouts,
                   edges: edges,
                   traveling: traveling,
+                  journeyProgress: journeyProgress,
                 ),
               ),
             ),
@@ -279,11 +292,15 @@ class _TrailPainter extends CustomPainter {
   final List<_Layout> layouts;
   final List<ZoneEdge> edges;
   final bool traveling;
+  // Fraction of the active edge already covered (0..1). Null when no active
+  // journey or the journey edge has no known total distance.
+  final double? journeyProgress;
 
   _TrailPainter({
     required this.layouts,
     required this.edges,
     required this.traveling,
+    required this.journeyProgress,
   });
 
   @override
@@ -317,16 +334,47 @@ class _TrailPainter extends CustomPainter {
       if (unlocked) {
         final isActiveToNext = fromStatus == ZoneNodeStatus.active &&
             toStatus == ZoneNodeStatus.next;
-        final paint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: _solidGradient(fromStatus, toStatus, traveling),
-          ).createShader(Rect.fromLTRB(0, y0, size.width, y1));
-        canvas.drawPath(path, paint);
+
+        if (isActiveToNext && journeyProgress != null) {
+          // Progressive fill: draw the remaining segment in the destination
+          // hue (dim), then overlay the already-traveled prefix in the
+          // "completed" green. Path.computeMetrics yields exactly one metric
+          // for a single cubicTo path.
+          final metric = path.computeMetrics().first;
+          final traveledLen = metric.length * journeyProgress!;
+
+          final remainingPaint = Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4
+            ..strokeCap = StrokeCap.round
+            ..color = AppColors.orange.withOpacity(0.35);
+          if (journeyProgress! < 1.0) {
+            canvas.drawPath(
+                metric.extractPath(traveledLen, metric.length), remainingPaint);
+          }
+
+          if (journeyProgress! > 0.0) {
+            const doneGreen = Color(0x993fb950); // green @ 0.6 alpha
+            final traveledPaint = Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 4
+              ..strokeCap = StrokeCap.round
+              ..color = doneGreen;
+            canvas.drawPath(
+                metric.extractPath(0, traveledLen), traveledPaint);
+          }
+        } else {
+          final paint = Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4
+            ..strokeCap = StrokeCap.round
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: _solidGradient(fromStatus, toStatus, traveling),
+            ).createShader(Rect.fromLTRB(0, y0, size.width, y1));
+          canvas.drawPath(path, paint);
+        }
 
         if (isActiveToNext) {
           final halo = Paint()
@@ -392,6 +440,7 @@ class _TrailPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _TrailPainter old) {
     if (old.traveling != traveling) return true;
+    if (old.journeyProgress != journeyProgress) return true;
     if (old.layouts.length != layouts.length) return true;
     if (old.edges.length != edges.length) return true;
     for (int i = 0; i < layouts.length; i++) {
