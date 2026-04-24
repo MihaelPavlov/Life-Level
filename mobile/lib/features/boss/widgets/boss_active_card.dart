@@ -14,7 +14,14 @@ class BossActiveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remaining = boss.timeRemaining;
-    final timerText = remaining != null ? _fmtDuration(remaining) : '${boss.timerDays}d';
+    // World-zone bosses suppress the legacy 7-day expiry — backend returns
+    // `timerExpiresAt: null` and `timerDays: 0`. Surface that as "no limit"
+    // instead of the misleading "0d remaining" the legacy formula prints.
+    final hasTimer = remaining != null || boss.timerDays > 0;
+    final timerText = remaining != null
+        ? _fmtDuration(remaining)
+        : (boss.timerDays > 0 ? '${boss.timerDays}d' : '∞');
+    final timerLabel = hasTimer ? 'remaining' : 'no limit';
 
     return GestureDetector(
       onTap: _canFight ? onEnterBattle : null,
@@ -115,9 +122,10 @@ class BossActiveCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
-                          'remaining',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 9),
+                        Text(
+                          timerLabel,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 9),
                         ),
                       ],
                     ),

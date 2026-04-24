@@ -24,8 +24,9 @@ public class ActivityService(
     IZoneUnlockReadPort zoneUnlockRead,
     ICharacterTutorialPort characterTutorial,
     ILogger<ActivityService> logger,
-    IWorldDungeonActivityPort? worldDungeonActivity = null)
-    : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort
+    IWorldDungeonActivityPort? worldDungeonActivity = null,
+    IActivityBossDamagePort? activityBossDamage = null)
+    : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort, IActivityHistoryReadPort
 {
     // LL-035: the "log your first activity" tutorial step gate. We advance the character
     // from step 4 → 5 only when the user actually logs a real activity (port-driven).
@@ -116,6 +117,27 @@ public class ActivityService(
             {
                 // Dungeon credit must never break activity logging.
                 logger.LogWarning(ex, "Dungeon activity credit failed for user {UserId}", userId);
+            }
+        }
+
+        // Boss auto-damage — every active boss the user has takes a hit
+        // proportional to the workout's shape. Wires the "damage is dealt
+        // automatically when you log workouts" promise that the BossBattleView
+        // has been making. Failures here never block the activity log.
+        if (activityBossDamage != null)
+        {
+            try
+            {
+                await activityBossDamage.ApplyAsync(
+                    userId,
+                    request.Type.ToString(),
+                    request.DurationMinutes,
+                    request.DistanceKm ?? 0,
+                    request.Calories ?? 0);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Boss activity damage failed for user {UserId}", userId);
             }
         }
 
@@ -280,6 +302,30 @@ public class ActivityService(
             .Where(a => a.CharacterId == characterId && a.ExternalId == externalId)
             .Select(a => (Guid?)a.Id)
             .FirstOrDefaultAsync(ct);
+    }
+
+    // IActivityHistoryReadPort
+    public async Task<IReadOnlyList<ActivityRecordDto>> ListForUserBetweenAsync(
+        Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null) return Array.Empty<ActivityRecordDto>();
+
+        var rows = await db.Set<ActivityEntity>()
+            .Where(a => a.CharacterId == characterId
+                        && a.LoggedAt >= fromUtc
+                        && a.LoggedAt <= toUtc)
+            .OrderByDescending(a => a.LoggedAt)
+            .Select(a => new ActivityRecordDto(
+                a.Id,
+                a.Type.ToString(),
+                a.DurationMinutes,
+                a.DistanceKm,
+                a.Calories,
+                a.LoggedAt))
+            .ToListAsync(ct);
+
+        return rows;
     }
 
     private static (int Xp, int Str, int End, int Agi, int Flx, int Sta) CalculateGains(LogActivityRequest req)

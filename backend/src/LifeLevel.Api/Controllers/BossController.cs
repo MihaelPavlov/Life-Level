@@ -1,5 +1,6 @@
 using LifeLevel.Api.Application;
 using LifeLevel.SharedKernel.Contracts;
+using LifeLevel.Modules.Adventure.Encounters.Application.DTOs;
 using LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -119,6 +120,27 @@ public class BossController(BossService bossService, IUserContext userContext) :
             timerExpiresAt = state.StartedAt?.AddDays(state.Boss.TimerDays),
             defeatedAt = state.DefeatedAt
         });
+    }
+
+    /// <summary>
+    /// Per-activity damage history for the authenticated user's fight against
+    /// this boss. Items are newest-first. Returns 404 when the user has not
+    /// engaged this boss yet.
+    /// </summary>
+    [HttpGet("{bossId:guid}/damage-history")]
+    public async Task<ActionResult<IReadOnlyList<BossDamageHistoryItemDto>>> GetDamageHistory(
+        Guid bossId, CancellationToken ct)
+    {
+        var userId = userContext.UserId;
+        try
+        {
+            var items = await bossService.GetDamageHistoryAsync(userId, bossId, ct);
+            return Ok(items);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 
     // ── Debug endpoints ────────────────────────────────────────────────────────

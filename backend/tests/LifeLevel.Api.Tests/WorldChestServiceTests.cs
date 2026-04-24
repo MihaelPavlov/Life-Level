@@ -45,6 +45,12 @@ file sealed class ChestStaticUsernameReadPort(string name) : IUserReadPort
         => Task.FromResult<string?>(name);
 }
 
+file sealed class ChestEmptyBossDefeatReadPort : IBossDefeatReadPort
+{
+    public Task<HashSet<Guid>> GetDefeatedWorldZoneIdsAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(new HashSet<Guid>());
+}
+
 public class WorldChestServiceTests
 {
     private static AppDbContext CreateDb(string dbName)
@@ -221,7 +227,7 @@ public class WorldChestServiceTests
         });
         await db.SaveChangesAsync();
 
-        var mapRead = new MapReadService(db, new ChestDbCharacterLevelReadPort(db), new ChestStaticUsernameReadPort("Tester"));
+        var mapRead = new MapReadService(db, new ChestDbCharacterLevelReadPort(db), new ChestStaticUsernameReadPort("Tester"), new ChestEmptyBossDefeatReadPort());
         var detail = await mapRead.GetRegionDetailAsync(setup.UserId, setup.Region.Id);
 
         Assert.NotNull(detail);

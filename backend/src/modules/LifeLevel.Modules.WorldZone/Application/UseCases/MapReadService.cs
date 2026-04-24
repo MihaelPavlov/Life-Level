@@ -22,7 +22,8 @@ namespace LifeLevel.Modules.WorldZone.Application.UseCases;
 public class MapReadService(
     DbContext db,
     ICharacterLevelReadPort characterLevel,
-    IUserReadPort userRead)
+    IUserReadPort userRead,
+    IBossDefeatReadPort bossDefeatRead)
 {
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
@@ -65,8 +66,14 @@ public class MapReadService(
         var unlocked = progress.UnlockedZones.Select(u => u.WorldZoneId).ToHashSet();
         var currentRegionId = progress.CurrentRegionId;
 
+        // Which of this user's world-zone bosses have an IsDefeated
+        // UserBossState. Drives the "completed" region status — arriving at a
+        // boss zone marks it unlocked, but only defeating the boss completes
+        // the region.
+        var defeatedBossZoneIds = await bossDefeatRead.GetDefeatedWorldZoneIdsAsync(userId, ct);
+
         var summaries = regions
-            .Select(r => BuildRegionSummary(r, zones, unlocked, currentRegionId, level))
+            .Select(r => BuildRegionSummary(r, zones, unlocked, defeatedBossZoneIds, currentRegionId, level))
             .ToList();
 
         ActiveJourneyDto? journey = BuildActiveJourney(progress);
@@ -248,7 +255,8 @@ public class MapReadService(
             .Select(kv => new PathChoiceDto(kv.Key, kv.Value))
             .ToList();
 
-        var summary = BuildRegionSummary(region, zones, unlocked, progress?.CurrentRegionId, level);
+        var defeatedBossZoneIds = await bossDefeatRead.GetDefeatedWorldZoneIdsAsync(userId, ct);
+        var summary = BuildRegionSummary(region, zones, unlocked, defeatedBossZoneIds, progress?.CurrentRegionId, level);
 
         return new RegionDetailDto(
             Id: summary.Id,
@@ -279,6 +287,7 @@ public class MapReadService(
         Region region,
         IReadOnlyList<WorldZoneEntity> allZones,
         HashSet<Guid> unlocked,
+        HashSet<Guid> defeatedBossZoneIds,
         Guid? currentRegionId,
         int userLevel)
     {
@@ -288,7 +297,9 @@ public class MapReadService(
         var xpEarned = completedZones.Sum(z => z.XpReward);
 
         var bossZone = regionZones.FirstOrDefault(z => z.IsBoss || z.Type == WorldZoneType.Boss);
-        var bossDefeated = bossZone != null && unlocked.Contains(bossZone.Id);
+        // "Defeated" requires a defeated UserBossState — unlocked alone only
+        // means the user arrived at the zone, not that they won the fight.
+        var bossDefeated = bossZone != null && defeatedBossZoneIds.Contains(bossZone.Id);
 
         // Zones until boss: tier delta from highest-unlocked non-boss zone to boss.
         // Null when no boss, already defeated, or user hasn't started the region.
@@ -306,7 +317,11 @@ public class MapReadService(
         string status;
         if (userLevel < region.LevelRequirement)
             status = "locked";
-        else if (bossDefeated && completedZones.Count == total)
+        else if (bossDefeated)
+            // Beating the region's boss completes the region regardless of
+            // how many branch zones the user left unvisited. Branches are
+            // mutually exclusive so `completedZones.Count == total` would
+            // never fire for regions with a crossroads.
             status = "completed";
         else if (currentRegionId == region.Id)
             status = "active";

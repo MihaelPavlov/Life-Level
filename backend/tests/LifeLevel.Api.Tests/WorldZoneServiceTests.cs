@@ -659,7 +659,7 @@ public class WorldZoneServiceTests
     }
 
     private static MapReadService CreateMapReadService(AppDbContext db)
-        => new MapReadService(db, new DbCharacterLevelReadPort(db), new StaticUsernameReadPort("Tester"));
+        => new MapReadService(db, new DbCharacterLevelReadPort(db), new StaticUsernameReadPort("Tester"), new EmptyBossDefeatReadPort());
 
     // ──────────────────────────────────────────────────────────────────────────
     // Test 12: SetDestination on a branch with no prior choice records a
@@ -763,4 +763,12 @@ file sealed class StaticUsernameReadPort(string name) : IUserReadPort
 {
     public Task<string?> GetUsernameAsync(Guid userId, CancellationToken ct = default)
         => Task.FromResult<string?>(name);
+}
+
+// Supporting stub: MapReadService now needs boss-defeat state. Tests in this
+// file don't exercise boss completion — empty set is fine.
+file sealed class EmptyBossDefeatReadPort : IBossDefeatReadPort
+{
+    public Task<HashSet<Guid>> GetDefeatedWorldZoneIdsAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(new HashSet<Guid>());
 }

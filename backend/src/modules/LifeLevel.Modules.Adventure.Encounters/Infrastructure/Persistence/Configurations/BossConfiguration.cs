@@ -10,5 +10,11 @@ public class BossConfiguration : IEntityTypeConfiguration<Boss>
     {
         builder.HasKey(b => b.Id);
         // NodeId → MapNode is cross-module — configured in AppDbContext
+
+        // World-zone bridge: nullable column + index, no FK (cross-module soft link).
+        builder.Property(b => b.WorldZoneId);
+        builder.HasIndex(b => b.WorldZoneId);
+
+        builder.Property(b => b.SuppressExpiry).IsRequired();
     }
 }

@@ -75,4 +75,14 @@ public class CompleteZoneResult
     public string ZoneEmoji { get; set; } = string.Empty;
     public int XpAwarded { get; set; }
     public bool AlreadyCompleted { get; set; }
+
+    // Auto-advance after a Boss zone completion. When the completed zone is a
+    // region-boss (Type == Boss || IsBoss), WorldZoneService follows the
+    // `boss → next-region.entry` edge (if any) and teleports the user into the
+    // next region's entry zone. These fields surface the advance so the caller
+    // / mobile client can show a "region X is now open" affordance.
+    public Guid? NextRegionId { get; set; }
+    public string? NextRegionName { get; set; }
+    public string? NextRegionEmoji { get; set; }
+    public string? NextEntryZoneName { get; set; }
 }

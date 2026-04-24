@@ -41,3 +41,19 @@ public class CollectChestResult
     public string Rarity { get; set; } = string.Empty;
     public DateTime CollectedAt { get; set; }
 }
+
+/// <summary>
+/// One row in a boss's per-activity damage history for a given user.
+/// Computed on read from the Activities table inside the fight window
+/// (UserBossState.StartedAt → DefeatedAt ?? now). No backing table.
+/// </summary>
+public class BossDamageHistoryItemDto
+{
+    public Guid ActivityId { get; set; }
+    public string ActivityType { get; set; } = "";
+    public int DurationMinutes { get; set; }
+    public double DistanceKm { get; set; }
+    public int Calories { get; set; }
+    public int Damage { get; set; }
+    public DateTime LoggedAt { get; set; }
+}

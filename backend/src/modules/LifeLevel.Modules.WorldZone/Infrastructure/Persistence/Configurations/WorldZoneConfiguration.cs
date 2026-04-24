@@ -38,5 +38,11 @@ public class WorldZoneConfiguration : IEntityTypeConfiguration<WorldZoneEntity>
 
         // Dungeon bonus XP: populated only for Dungeon-type zones.
         builder.Property(z => z.DungeonBonusXp);
+
+        // Boss timer fields: populated only for Boss-type zones. Both nullable
+        // so non-boss rows stay null; bridge service falls back to the legacy
+        // "no timeout" behavior when they're null.
+        builder.Property(z => z.BossTimerDays);
+        builder.Property(z => z.BossSuppressExpiry);
     }
 }

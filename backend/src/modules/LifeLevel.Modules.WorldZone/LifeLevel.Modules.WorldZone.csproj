@@ -6,6 +6,12 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LifeLevel.SharedKernel\LifeLevel.SharedKernel.csproj" />
+    <!--
+      WorldBossBridgeService spawns legacy Boss rows for world-zone bosses.
+      Direct project reference is the simplest bridge; the reverse (Encounters
+      → WorldZone) would create a cycle (Encounters already references Map).
+    -->
+    <ProjectReference Include="..\LifeLevel.Modules.Adventure.Encounters\LifeLevel.Modules.Adventure.Encounters.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />

@@ -11,7 +11,10 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/world")]
 [Authorize]
-public class WorldZoneController(WorldZoneService worldZoneService, IUserContext userContext) : ControllerBase
+public class WorldZoneController(
+    WorldZoneService worldZoneService,
+    WorldBossBridgeService worldBossBridge,
+    IUserContext userContext) : ControllerBase
 {
     [HttpGet("full")]
     public async Task<ActionResult<WorldFullResponse>> GetFullWorld()
@@ -77,6 +80,26 @@ public class WorldZoneController(WorldZoneService worldZoneService, IUserContext
         {
             var result = await worldZoneService.CompleteZoneAsync(userId, zoneId);
             return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Spawn (or ensure spawned) the legacy Boss row bridged to a world-zone
+    /// Boss zone. Idempotent — returns the same <c>bossId</c> on every call
+    /// for the same zone. Safety-net before mobile flips to the boss overlay.
+    /// </summary>
+    [HttpPost("zone/{zoneId:guid}/boss/spawn")]
+    public async Task<IActionResult> SpawnWorldBoss(Guid zoneId, CancellationToken ct = default)
+    {
+        var userId = userContext.UserId;
+        try
+        {
+            var bossId = await worldBossBridge.EnsureSpawnedAsync(userId, zoneId, ct);
+            return Ok(new { bossId });
         }
         catch (InvalidOperationException ex)
         {

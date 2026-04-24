@@ -189,6 +189,17 @@ class WorldZoneService {
     return response.data as Map<String, dynamic>;
   }
 
+  /// Lazy-spawn the legacy Boss row bridged to a world-zone Boss so the
+  /// existing BossScreen / BossBattleView can render an HP fight. Idempotent
+  /// on the server — returns the same `bossId` for the same zone + user.
+  Future<String?> spawnWorldBoss(String zoneId) async {
+    final response =
+        await ApiClient.instance.post('/world/zone/$zoneId/boss/spawn');
+    final data = response.data;
+    if (data is Map<String, dynamic>) return data['bossId'] as String?;
+    return null;
+  }
+
   Future<void> debugAddDistance(double km) async {
     await ApiClient.instance.post('/world/debug/add-distance', data: {'km': km});
   }

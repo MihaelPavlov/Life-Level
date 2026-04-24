@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/boss_list_item.dart';
+import '../providers/boss_provider.dart';
+import '../widgets/boss_damage_hit_row.dart';
 import '../widgets/boss_hp_bar.dart';
 import '../widgets/boss_damage_hint.dart';
 
 /// Inline battle view displayed within BossScreen (keeps bottom nav visible).
-class BossBattleView extends StatelessWidget {
+class BossBattleView extends ConsumerWidget {
   final BossListItem boss;
   final VoidCallback onBack;
 
   const BossBattleView({super.key, required this.boss, required this.onBack});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final remaining = boss.timeRemaining;
-    final timerText =
-        remaining != null ? _fmtDuration(remaining) : '${boss.timerDays}d';
+    // World-zone bosses suppress the legacy 7-day expiry — backend returns
+    // `timerExpiresAt: null` and `timerDays: 0`. Render ∞ / "no limit"
+    // instead of the misleading "0d left" that the legacy formula prints.
+    final timerText = remaining != null
+        ? '${_fmtDuration(remaining)} left'
+        : (boss.timerDays > 0 ? '${boss.timerDays}d left' : '∞ no limit');
 
     return Material(
       color: const Color(0xFF060b10),
@@ -70,7 +77,7 @@ class BossBattleView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          '\u23F1 $timerText left',
+                          '⏱ $timerText',
                           style: const TextStyle(
                             color: AppColors.red,
                             fontSize: 13,
@@ -95,7 +102,7 @@ class BossBattleView extends StatelessWidget {
                       const SizedBox(height: 12),
                       _buildMyDamage(),
                       const SizedBox(height: 16),
-                      _buildRecentHits(),
+                      _buildRecentHits(ref),
                       const SizedBox(height: 16),
                       _buildCtas(),
                     ],
@@ -269,7 +276,8 @@ class BossBattleView extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentHits() {
+  Widget _buildRecentHits(WidgetRef ref) {
+    final historyAsync = ref.watch(bossDamageHistoryProvider(boss.id));
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
@@ -278,28 +286,85 @@ class BossBattleView extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Text(
+          const Text(
             'RECENT HITS',
             style: TextStyle(
               color: AppColors.textSecondary, fontSize: 10,
               fontWeight: FontWeight.w600, letterSpacing: 0.7,
             ),
           ),
-          SizedBox(height: 12),
-          Text(
-            'Damage is dealt automatically when you log workouts or sync activities from Strava.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.5),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Log a workout to deal damage!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600,
+          const SizedBox(height: 12),
+          historyAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.red),
+                ),
+              ),
             ),
+            error: (err, _) => Column(
+              children: [
+                const Text(
+                  'Couldn\'t load damage history.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () =>
+                      ref.invalidate(bossDamageHistoryProvider(boss.id)),
+                  child: const Text(
+                    'Retry',
+                    style: TextStyle(
+                      color: AppColors.red,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            data: (hits) {
+              if (hits.isEmpty) {
+                return const Column(
+                  children: [
+                    Text(
+                      'Damage is dealt automatically when you log workouts or sync activities from Strava.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Log a workout to deal damage!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  for (final hit in hits) BossDamageHitRow(hit: hit),
+                ],
+              );
+            },
           ),
         ],
       ),

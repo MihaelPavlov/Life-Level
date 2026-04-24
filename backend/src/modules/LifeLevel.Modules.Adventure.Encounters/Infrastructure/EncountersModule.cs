@@ -11,6 +11,9 @@ public static class EncountersModule
         services.AddScoped<BossService>();
         services.AddScoped<ChestService>();
         services.AddScoped<IBossDefeatedCountReadPort, BossDefeatedCountAdapter>();
+        services.AddScoped<IBossDefeatReadPort, BossDefeatAdapter>();
+        services.AddScoped<IBossSpawnPort, BossSpawnAdapter>();
+        services.AddScoped<IActivityBossDamagePort, ActivityBossDamageAdapter>();
         return services;
     }
 }

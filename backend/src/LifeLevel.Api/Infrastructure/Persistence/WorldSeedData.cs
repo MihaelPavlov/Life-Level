@@ -57,13 +57,19 @@ public static class WorldSeedData
     // same region whose Name matches. Resolved at zone-creation time.
     // ChestRewardXp / ChestRewardDescription: populated only for Chest-type zones.
     // DungeonBonusXp / DungeonFloors: populated only for Dungeon-type zones.
+    // BossTimerDays / BossSuppressExpiry: populated only for Boss-type zones.
+    // Leave null to use the world-zone default ("no timeout" — SuppressExpiry
+    // treated as true). Set BossSuppressExpiry=false with BossTimerDays>0 to
+    // enforce the legacy N-day expiry on a specific boss.
     private sealed record ZoneSpec(
         string Name, string Emoji, WorldZoneType Type, double DistanceKm, int XpReward, string Description,
         string? BranchOfName = null,
         int? ChestRewardXp = null,
         string? ChestRewardDescription = null,
         int? DungeonBonusXp = null,
-        IReadOnlyList<DungeonFloorSpec>? DungeonFloors = null);
+        IReadOnlyList<DungeonFloorSpec>? DungeonFloors = null,
+        int? BossTimerDays = null,
+        bool? BossSuppressExpiry = null);
 
     /// <summary>
     /// Floor definition for a Dungeon zone. One row per ordinal; at runtime the
@@ -102,7 +108,8 @@ public static class WorldSeedData
             new("Valley Road",       "🌾", WorldZoneType.Standard,   8.0, 450,  "Easy route — scenic + longer.",  BranchOfName: "Twin Roads Fork"),
             new("Ruined Pass",       "🏚️", WorldZoneType.Standard,   5.0, 700,  "Shortcut — punishing but rich.", BranchOfName: "Twin Roads Fork"),
             new("Hollow Thicket",    "🍂", WorldZoneType.Standard,   4.5, 520,  "A shadowed thicket where wild things roam."),
-            new("Forest Warden",     "🐺", WorldZoneType.Boss,       6.0, 1200, "The Warden stands between you and the Mountains."),
+            new("Forest Warden",     "🐺", WorldZoneType.Boss,       6.0, 1200, "The Warden stands between you and the Mountains.",
+                BossTimerDays: 2, BossSuppressExpiry: false),
         ],
         [new RegionPin("+10% END", "region bonus"), new RegionPin("Starter", "")]);
 
@@ -360,6 +367,8 @@ public static class WorldSeedData
                     ChestRewardXp          = z.Type == WorldZoneType.Chest ? z.ChestRewardXp : null,
                     ChestRewardDescription = z.Type == WorldZoneType.Chest ? z.ChestRewardDescription : null,
                     DungeonBonusXp         = z.Type == WorldZoneType.Dungeon ? z.DungeonBonusXp : null,
+                    BossTimerDays          = z.Type == WorldZoneType.Boss ? z.BossTimerDays : null,
+                    BossSuppressExpiry     = z.Type == WorldZoneType.Boss ? z.BossSuppressExpiry : null,
                 });
             }
         }

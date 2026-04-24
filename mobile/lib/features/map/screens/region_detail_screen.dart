@@ -8,6 +8,7 @@ import '../../../core/widgets/api_error_state.dart';
 import '../../character/providers/character_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
+import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/widgets/chest_opened_overlay.dart';
 import '../widgets/crossroads_choice_sheet.dart';
 import '../widgets/dungeon_floors_sheet.dart';
@@ -387,6 +388,27 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     }
   }
 
+  Future<void> _handleFightBoss(ZoneNode node) async {
+    // Spawn the legacy Boss row bridged to this zone (idempotent), then
+    // flip the shell's Boss overlay. User lands on BossScreen with Forest
+    // Warden as Active and an HP bar; logging workouts damages it.
+    try {
+      await _service.spawnWorldBoss(node.id);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to summon boss: $e'),
+          backgroundColor: AppColors.red,
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(); // close zone sheet
+    BossOverlayNotifier.notify();
+  }
+
   Future<void> _handleEnterDungeon(ZoneNode node) async {
     // Ensure there's a run to return to. Safe to call even if already in
     // progress — backend is idempotent.
@@ -471,6 +493,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                     node.dungeonStatus != DungeonRunStatus.abandoned)
             ? () => _handleEnterDungeon(node)
             : null,
+        onFightBoss: node.isBoss && atZone
+            ? () => _handleFightBoss(node)
+            : null,
+        nextRegionName: node.isBoss ? _nextRegionName : null,
         parentCrossroadsName: parentCrossroads?.name,
         userAtParentCrossroads: userAtParentCrossroads,
       ),

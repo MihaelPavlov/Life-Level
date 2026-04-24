@@ -23,6 +23,7 @@ public class WorldZoneService(
     IMapNodeCountPort mapNodeCount,
     IMapNodeCompletedCountPort mapNodeCompletedCount,
     WorldDungeonService? dungeonService = null,
+    WorldBossBridgeService? bossBridge = null,
     ILogger<WorldZoneService>? logger = null)
     : IWorldZoneDistancePort
 {
@@ -394,6 +395,7 @@ public class WorldZoneService(
             if (arrivedRegionId != null) progress.CurrentRegionId = arrivedRegionId;
 
             var alreadyUnlocked = progress.UnlockedZones.Any(u => u.WorldZoneId == arrivedZoneId);
+            WorldZoneEntity? arrivedZoneEntity = null;
             if (!alreadyUnlocked)
             {
                 var unlock = new UserZoneUnlockEntity
@@ -406,8 +408,31 @@ public class WorldZoneService(
                 db.Set<UserZoneUnlockEntity>().Add(unlock);
                 progress.UnlockedZones.Add(unlock);
 
-                var zoneEntity = await db.Set<WorldZoneEntity>().FindAsync([arrivedZoneId], ct);
-                if (zoneEntity != null) discoveredZones.Add(zoneEntity);
+                arrivedZoneEntity = await db.Set<WorldZoneEntity>().FindAsync([arrivedZoneId], ct);
+                if (arrivedZoneEntity != null) discoveredZones.Add(arrivedZoneEntity);
+            }
+
+            // Boss-zone arrival hook: lazy-spawn a legacy Boss row so the
+            // existing BossScreen / damage pipeline can render the fight.
+            // Safe on every hop — the bridge is idempotent. Wrapped in try/catch
+            // so a bridge failure never breaks normal travel.
+            if (bossBridge != null)
+            {
+                arrivedZoneEntity ??= await db.Set<WorldZoneEntity>().FindAsync([arrivedZoneId], ct);
+                if (arrivedZoneEntity != null &&
+                    (arrivedZoneEntity.Type == WorldZoneType.Boss || arrivedZoneEntity.IsBoss))
+                {
+                    try
+                    {
+                        await bossBridge.EnsureSpawnedAsync(userId, arrivedZoneId, ct);
+                    }
+                    catch (Exception bossEx)
+                    {
+                        log.LogWarning(bossEx,
+                            "WorldZone.AddDistance boss-bridge FAILED user={UserId} zoneId={ZoneId}",
+                            userId, arrivedZoneId);
+                    }
+                }
             }
 
             if (arrivedZoneId == progress.DestinationZoneId)
@@ -456,6 +481,7 @@ public class WorldZoneService(
 
     public async Task<CompleteZoneResult> CompleteZoneAsync(Guid userId, Guid zoneId)
     {
+        var log = logger ?? NullLogger<WorldZoneService>.Instance;
         var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive)
             ?? throw new InvalidOperationException("No active world found.");
 
@@ -497,6 +523,69 @@ public class WorldZoneService(
             }
         }
 
+        // Boss safety-net spawn. Ensures the legacy Boss row exists even if the
+        // user somehow reached this zone without going through AddDistanceAsync
+        // (teleport, admin tool, etc.). Idempotent.
+        var isBossZone = zone.Type == WorldZoneType.Boss || zone.IsBoss;
+        if (isBossZone && bossBridge != null)
+        {
+            try
+            {
+                await bossBridge.EnsureSpawnedAsync(userId, zoneId);
+            }
+            catch (Exception bossEx)
+            {
+                log.LogWarning(bossEx,
+                    "WorldZone.CompleteZone boss-bridge FAILED user={UserId} zoneId={ZoneId}",
+                    userId, zoneId);
+            }
+        }
+
+        // Auto-advance after a region-boss completion: follow an edge from this
+        // zone into a different region's entry zone. The mobile client then
+        // picks up the advance on its next /api/map/world fetch.
+        Guid? nextRegionId = null;
+        string? nextRegionName = null;
+        string? nextRegionEmoji = null;
+        string? nextEntryZoneName = null;
+
+        if (isBossZone)
+        {
+            var crossRegionEdge = await db.Set<WorldZoneEdgeEntity>()
+                .Where(e => e.FromZoneId == zoneId)
+                .Join(db.Set<WorldZoneEntity>().Include(z => z.Region),
+                      edge => edge.ToZoneId,
+                      toZone => toZone.Id,
+                      (edge, toZone) => new { edge, toZone })
+                .Where(x => x.toZone.RegionId != zone.RegionId
+                            && x.toZone.Type == WorldZoneType.Entry)
+                .Select(x => x.toZone)
+                .FirstOrDefaultAsync();
+
+            if (crossRegionEdge != null)
+            {
+                progress.CurrentZoneId = crossRegionEdge.Id;
+                progress.CurrentRegionId = crossRegionEdge.RegionId;
+
+                var entryUnlocked = progress.UnlockedZones.Any(u => u.WorldZoneId == crossRegionEdge.Id);
+                if (!entryUnlocked)
+                {
+                    db.Set<UserZoneUnlockEntity>().Add(new UserZoneUnlockEntity
+                    {
+                        UserId = userId,
+                        WorldZoneId = crossRegionEdge.Id,
+                        UserWorldProgressId = progress.Id,
+                        UnlockedAt = DateTime.UtcNow,
+                    });
+                }
+
+                nextRegionId = crossRegionEdge.RegionId;
+                nextRegionName = crossRegionEdge.Region?.Name;
+                nextRegionEmoji = crossRegionEdge.Region?.Emoji;
+                nextEntryZoneName = crossRegionEdge.Name;
+            }
+        }
+
         await db.SaveChangesAsync();
 
         return new CompleteZoneResult
@@ -504,7 +593,11 @@ public class WorldZoneService(
             ZoneName = zone.Name,
             ZoneEmoji = zone.Emoji,
             XpAwarded = xpAwarded,
-            AlreadyCompleted = alreadyUnlocked
+            AlreadyCompleted = alreadyUnlocked,
+            NextRegionId = nextRegionId,
+            NextRegionName = nextRegionName,
+            NextRegionEmoji = nextRegionEmoji,
+            NextEntryZoneName = nextEntryZoneName,
         };
     }
 

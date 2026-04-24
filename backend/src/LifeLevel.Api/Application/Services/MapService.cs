@@ -38,8 +38,11 @@ public class MapService(
 
         var nodeIds = nodes.Select(n => n.Id).ToHashSet();
 
-        // Load adventure sub-entities separately (MapNode no longer has nav props to these)
-        var bosses = await db.Bosses.Where(b => nodeIds.Contains(b.NodeId)).ToListAsync();
+        // Load adventure sub-entities separately (MapNode no longer has nav props to these).
+        // Boss.NodeId is nullable (world-zone bosses leave it null) — skip those here.
+        var bosses = await db.Bosses
+            .Where(b => b.NodeId.HasValue && nodeIds.Contains(b.NodeId.Value))
+            .ToListAsync();
         var chests = await db.Chests.Where(c => nodeIds.Contains(c.NodeId)).ToListAsync();
         var dungeons = await db.DungeonPortals
             .Include(d => d.Floors)
@@ -132,8 +135,9 @@ public class MapService(
 
         var unlockedIds = progress.UnlockedNodes.Select(u => u.MapNodeId).ToHashSet();
 
-        // Build lookup dictionaries by NodeId
-        var bossByNodeId = bosses.ToDictionary(b => b.NodeId);
+        // Build lookup dictionaries by NodeId. Boss.NodeId is nullable but the
+        // query above filters for b.NodeId.HasValue, so the ! is safe here.
+        var bossByNodeId = bosses.ToDictionary(b => b.NodeId!.Value);
         var chestByNodeId = chests.ToDictionary(c => c.NodeId);
         var dungeonByNodeId = dungeons.ToDictionary(d => d.NodeId);
         var crossroadsByNodeId = crossroadsList.ToDictionary(c => c.NodeId);
@@ -341,7 +345,9 @@ public class MapService(
             .ToListAsync();
 
         var nodeIds = nodes.Select(n => n.Id).ToHashSet();
-        var bosses = await db.Bosses.Where(b => nodeIds.Contains(b.NodeId)).ToListAsync();
+        var bosses = await db.Bosses
+            .Where(b => b.NodeId.HasValue && nodeIds.Contains(b.NodeId.Value))
+            .ToListAsync();
         var chests = await db.Chests.Where(c => nodeIds.Contains(c.NodeId)).ToListAsync();
         var dungeons = await db.DungeonPortals.Where(d => nodeIds.Contains(d.NodeId)).ToListAsync();
         var crossroadsList = await db.Crossroads.Where(c => nodeIds.Contains(c.NodeId)).ToListAsync();

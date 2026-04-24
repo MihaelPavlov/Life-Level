@@ -3,6 +3,7 @@ using System;
 using LifeLevel.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LifeLevel.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424144459_BridgeWorldZoneBoss")]
+    partial class BridgeWorldZoneBoss
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1923,12 +1926,6 @@ namespace LifeLevel.Api.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<bool?>("BossSuppressExpiry")
-                        .HasColumnType("boolean");
-
-                    b.Property<int?>("BossTimerDays")
-                        .HasColumnType("integer");
 
                     b.Property<Guid?>("BranchOfId")
                         .HasColumnType("uuid");

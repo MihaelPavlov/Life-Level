@@ -203,10 +203,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(u => u.UserId);
 
         // Adventure.Encounters cross-module: Boss/Chest → MapNode; UserBossState/UserChestState → User/UserMapProgress
+        // Boss.NodeId is nullable — world-zone bosses are bridged via Boss.WorldZoneId
+        // and carry no local-map node. Legacy local-map bosses still populate NodeId.
         modelBuilder.Entity<Boss>()
             .HasOne<MapNode>()
             .WithOne()
-            .HasForeignKey<Boss>(b => b.NodeId);
+            .HasForeignKey<Boss>(b => b.NodeId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Chest>()
             .HasOne<MapNode>()
@@ -221,7 +225,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<UserBossState>()
             .HasOne<UserMapProgress>()
             .WithMany()
-            .HasForeignKey(s => s.UserMapProgressId);
+            .HasForeignKey(s => s.UserMapProgressId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<UserChestState>()
             .HasOne<User>()

@@ -781,7 +781,10 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             .ToListAsync();
 
         var nodeIds = nodes.Select(n => n.Id).ToHashSet();
-        var bossNodeIds = await db.Bosses.Where(b => nodeIds.Contains(b.NodeId)).Select(b => b.NodeId).ToHashSetAsync();
+        var bossNodeIds = await db.Bosses
+            .Where(b => b.NodeId.HasValue && nodeIds.Contains(b.NodeId.Value))
+            .Select(b => b.NodeId!.Value)
+            .ToHashSetAsync();
         var chestNodeIds = await db.Chests.Where(c => nodeIds.Contains(c.NodeId)).Select(c => c.NodeId).ToHashSetAsync();
         var dungeonNodeIds = await db.DungeonPortals.Where(d => nodeIds.Contains(d.NodeId)).Select(d => new { d.NodeId, FloorCount = d.Floors.Count }).ToListAsync();
         var crossroadsNodeIds = await db.Crossroads.Where(c => nodeIds.Contains(c.NodeId)).Select(c => new { c.NodeId, PathCount = c.Paths.Count }).ToListAsync();
@@ -1089,11 +1092,12 @@ public class AdminMapController(AppDbContext db) : ControllerBase
                 .Where(n => n.WorldZoneId == zoneId.Value)
                 .Select(n => n.Id)
                 .ToListAsync();
-            query = query.Where(b => zoneNodeIds.Contains(b.NodeId));
+            // Boss.NodeId is nullable — world-zone bosses leave it null.
+            query = query.Where(b => b.NodeId.HasValue && zoneNodeIds.Contains(b.NodeId.Value));
         }
 
         var bosses = await query.ToListAsync();
-        var nodeIds = bosses.Select(b => b.NodeId).ToHashSet();
+        var nodeIds = bosses.Where(b => b.NodeId.HasValue).Select(b => b.NodeId!.Value).ToHashSet();
         var nodeNames = await db.MapNodes
             .Where(n => nodeIds.Contains(n.Id))
             .Select(n => new { n.Id, n.Name })
@@ -1104,7 +1108,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         {
             b.Id,
             b.NodeId,
-            NodeName = nodeNameMap.GetValueOrDefault(b.NodeId, ""),
+            NodeName = b.NodeId.HasValue ? nodeNameMap.GetValueOrDefault(b.NodeId.Value, "") : "",
             b.Name,
             b.Icon,
             b.MaxHp,

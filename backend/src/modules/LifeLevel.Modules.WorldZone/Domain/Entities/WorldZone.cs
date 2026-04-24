@@ -31,6 +31,15 @@ public class WorldZone
     // for all other zones.
     public int? DungeonBonusXp { get; set; }
 
+    // Boss zones (Type == Boss): timer applied to the spawned legacy Boss row.
+    // BossTimerDays == 0 with BossSuppressExpiry == true means "no timeout"
+    // (the default; matches the original world-zone boss behavior). Setting
+    // BossSuppressExpiry = false with BossTimerDays > 0 enables the existing
+    // Encounters expiry pipeline (Fight timer has expired…). Null for all
+    // non-boss zones.
+    public int? BossTimerDays { get; set; }
+    public bool? BossSuppressExpiry { get; set; }
+
     public Guid RegionId { get; set; }
     public Region Region { get; set; } = null!;
 

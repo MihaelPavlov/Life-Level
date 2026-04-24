@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../session/invalidate_user_providers.dart';
+import '../services/boss_overlay_notifier.dart';
 import '../services/deep_link_notifier.dart';
 import '../services/dungeon_floor_cleared_notifier.dart';
 import '../services/level_up_notifier.dart';
@@ -33,6 +34,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/titles/titles_ranks_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
 import '../../features/activity/models/activity_models.dart';
+import '../../features/boss/providers/boss_provider.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/providers/items_provider.dart';
 import 'shell_constants.dart';
@@ -103,6 +105,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
+  late final StreamSubscription<void> _bossOverlaySub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
 
   final _fabKey = GlobalKey();
@@ -235,6 +238,19 @@ class _MainShellState extends ConsumerState<MainShell>
       if (!mounted) return;
       showDungeonFloorClearedOverlay(context, event);
     });
+    _bossOverlaySub = BossOverlayNotifier.stream.listen((_) {
+      if (!mounted) return;
+      // Fresh-fetch the boss list so the just-spawned world-zone boss
+      // appears, then flip the existing shell overlay — same surface the
+      // ring-menu boss item opens.
+      ref.invalidate(bossListProvider);
+      setState(() {
+        _radialOpen = false;
+        _worldOpen = false;
+        _titlesOpen = false;
+        _bossOpen = true;
+      });
+    });
     _ringIds = List.from(widget.initialRingIds ?? kDefaultRingIds);
     _navIds  = List.from(widget.initialNavIds  ?? kDefaultNavIds);
 
@@ -346,6 +362,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _levelUpSub.cancel();
     _itemObtainedSub.cancel();
     _dungeonFloorSub.cancel();
+    _bossOverlaySub.cancel();
     _navTabSub.cancel();
     _worldMapSub.cancel();
     _inventoryFullSub.cancel();

@@ -4,15 +4,32 @@ using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 
-public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
+// IActivityHistoryReadPort is resolved lazily via IServiceProvider rather than
+// injected directly. Direct injection would form a scoped cycle:
+//   BossService ← IActivityHistoryReadPort (ActivityService)
+//               ← IActivityBossDamagePort (ActivityBossDamageAdapter → BossService).
+// The cycle deadlocks the DI container the first time any endpoint that
+// transitively needs ActivityService tries to resolve (e.g. /api/character/me,
+// /api/boss). Resolving the port at method-call time breaks it.
+public class BossService(
+    DbContext db,
+    ICharacterXpPort characterXp,
+    IEventPublisher events,
+    IServiceProvider services,
+    IWorldZoneCompletionPort? worldZoneCompletion = null)
 {
     public async Task<List<BossListItemDto>> GetAllBossesForUserAsync(Guid userId)
     {
         var bosses = await db.Set<Boss>().ToListAsync();
-        var bossNodeIds = bosses.Select(b => b.NodeId).ToList();
+        // Legacy local-map bosses have NodeId set. World-zone bosses leave it null.
+        var bossNodeIds = bosses
+            .Where(b => b.NodeId.HasValue)
+            .Select(b => b.NodeId!.Value)
+            .ToList();
         var nodes = await db.Set<MapNode>()
             .Where(n => bossNodeIds.Contains(n.Id))
             .ToDictionaryAsync(n => n.Id);
@@ -26,10 +43,16 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
 
         return bosses.Select(boss =>
         {
-            nodes.TryGetValue(boss.NodeId, out var node);
+            MapNode? node = null;
+            if (boss.NodeId.HasValue) nodes.TryGetValue(boss.NodeId.Value, out node);
             userStates.TryGetValue(boss.Id, out var state);
 
-            var canFight = boss.IsMini || currentNodeId == boss.NodeId;
+            // World-zone bosses: canFight is governed by WorldZone state, which
+            // the bridge already enforces by only spawning the Boss row on
+            // arrival. Once spawned, the user is always eligible to fight.
+            var canFight = boss.WorldZoneId.HasValue
+                || boss.IsMini
+                || (boss.NodeId.HasValue && currentNodeId == boss.NodeId.Value);
 
             return new BossListItemDto
             {
@@ -49,7 +72,9 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
                 IsDefeated = state?.IsDefeated ?? false,
                 IsExpired = state?.IsExpired ?? false,
                 StartedAt = state?.StartedAt,
-                TimerExpiresAt = state?.StartedAt?.AddDays(boss.TimerDays),
+                TimerExpiresAt = boss.SuppressExpiry
+                    ? null
+                    : state?.StartedAt?.AddDays(boss.TimerDays),
                 DefeatedAt = state?.DefeatedAt
             };
         })
@@ -64,12 +89,20 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
         var boss = await db.Set<Boss>().FindAsync(bossId)
             ?? throw new InvalidOperationException("Boss not found.");
 
-        var progress = await db.Set<UserMapProgress>()
-            .FirstOrDefaultAsync(p => p.UserId == userId)
-            ?? throw new InvalidOperationException("Map progress not found.");
+        // World-zone bosses don't require local-map progress — the world-zone
+        // bridge is the gate. Skip the node-position check entirely.
+        Guid? userMapProgressId = null;
+        if (!boss.WorldZoneId.HasValue)
+        {
+            var progress = await db.Set<UserMapProgress>()
+                .FirstOrDefaultAsync(p => p.UserId == userId)
+                ?? throw new InvalidOperationException("Map progress not found.");
 
-        if (!boss.IsMini && progress.CurrentNodeId != boss.NodeId)
-            throw new InvalidOperationException("You must be at the boss node to activate the fight.");
+            if (!boss.IsMini && boss.NodeId.HasValue && progress.CurrentNodeId != boss.NodeId.Value)
+                throw new InvalidOperationException("You must be at the boss node to activate the fight.");
+
+            userMapProgressId = progress.Id;
+        }
 
         var existing = await db.Set<UserBossState>()
             .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId);
@@ -88,7 +121,7 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
             Id = Guid.NewGuid(),
             UserId = userId,
             BossId = bossId,
-            UserMapProgressId = progress.Id,
+            UserMapProgressId = userMapProgressId,
             HpDealt = 0,
             IsDefeated = false,
             IsExpired = false,
@@ -105,12 +138,16 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
         var boss = await db.Set<Boss>().FindAsync(bossId)
             ?? throw new InvalidOperationException("Boss not found.");
 
-        var progress = await db.Set<UserMapProgress>()
-            .FirstOrDefaultAsync(p => p.UserId == userId)
-            ?? throw new InvalidOperationException("Map progress not found.");
+        // World-zone bosses: skip the local-map position check.
+        if (!boss.WorldZoneId.HasValue)
+        {
+            var progress = await db.Set<UserMapProgress>()
+                .FirstOrDefaultAsync(p => p.UserId == userId)
+                ?? throw new InvalidOperationException("Map progress not found.");
 
-        if (!boss.IsMini && progress.CurrentNodeId != boss.NodeId)
-            throw new InvalidOperationException("You must be at the boss node to deal damage.");
+            if (!boss.IsMini && boss.NodeId.HasValue && progress.CurrentNodeId != boss.NodeId.Value)
+                throw new InvalidOperationException("You must be at the boss node to deal damage.");
+        }
 
         var state = await db.Set<UserBossState>()
             .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId)
@@ -122,7 +159,11 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
         if (state.IsExpired)
             throw new InvalidOperationException("Fight has expired. Use debug reset to try again.");
 
-        if (state.StartedAt.HasValue && DateTime.UtcNow > state.StartedAt.Value.AddDays(boss.TimerDays))
+        // World-zone bosses never expire (SuppressExpiry = true). Skip the
+        // 7-day timer check for them.
+        if (!boss.SuppressExpiry
+            && state.StartedAt.HasValue
+            && DateTime.UtcNow > state.StartedAt.Value.AddDays(boss.TimerDays))
         {
             state.IsExpired = true;
             await db.SaveChangesAsync();
@@ -147,6 +188,14 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
             var source = boss.IsMini ? "MiniBossDefeated" : "BossDefeated";
             await characterXp.AwardXpAsync(userId, source, emoji, $"{boss.Name} defeated", boss.RewardXp);
             await events.PublishAsync(new BossDefeatedEvent(userId, bossId));
+
+            // World-zone bridge: complete the linked world-zone and advance to
+            // the next region's entry. Port is optional so legacy tests that
+            // don't wire WorldZone stay green.
+            if (boss.WorldZoneId.HasValue && worldZoneCompletion != null)
+            {
+                await worldZoneCompletion.CompleteBossZoneAsync(userId, boss.WorldZoneId.Value);
+            }
         }
 
         return new BossDamageResult
@@ -184,6 +233,51 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
             .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId);
     }
 
+    /// <summary>
+    /// Returns the per-activity damage log for the authenticated user's current
+    /// fight against <paramref name="bossId"/>. Computed on read by replaying
+    /// the damage formula against every Activity logged inside the fight window
+    /// (<c>UserBossState.StartedAt</c> through <c>DefeatedAt ?? now</c>). Newest
+    /// first. Throws <see cref="InvalidOperationException"/> if the user has
+    /// never engaged this boss.
+    /// </summary>
+    public async Task<IReadOnlyList<BossDamageHistoryItemDto>> GetDamageHistoryAsync(
+        Guid userId, Guid bossId, CancellationToken ct = default)
+    {
+        var state = await db.Set<UserBossState>()
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId, ct)
+            ?? throw new InvalidOperationException("You haven't engaged this boss.");
+
+        // Missing StartedAt is a legacy/corrupt case — treat as "from epoch" so
+        // we still return something rather than blowing up on nullable access.
+        var from = state.StartedAt ?? DateTime.MinValue;
+        var to = state.DefeatedAt ?? DateTime.UtcNow;
+
+        var activityHistoryRead = services.GetService<IActivityHistoryReadPort>();
+        var activities = activityHistoryRead != null
+            ? await activityHistoryRead.ListForUserBetweenAsync(userId, from, to, ct)
+            : (IReadOnlyList<ActivityRecordDto>)Array.Empty<ActivityRecordDto>();
+
+        var items = new List<BossDamageHistoryItemDto>(activities.Count);
+        foreach (var a in activities)
+        {
+            var dmg = CalculateDamageFromActivity(
+                a.Type, a.DurationMinutes, a.DistanceKm, a.Calories);
+            if (dmg <= 0) continue;
+            items.Add(new BossDamageHistoryItemDto
+            {
+                ActivityId = a.Id,
+                ActivityType = a.Type,
+                DurationMinutes = a.DurationMinutes,
+                DistanceKm = a.DistanceKm,
+                Calories = a.Calories,
+                Damage = dmg,
+                LoggedAt = a.LoggedAt,
+            });
+        }
+        return items;
+    }
+
     public async Task DebugSetHpAsync(Guid userId, Guid bossId, int hp)
     {
         var boss = await db.Set<Boss>().FindAsync(bossId)
@@ -208,6 +302,11 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
             var source = boss.IsMini ? "MiniBossDefeated" : "BossDefeated";
             await characterXp.AwardXpAsync(userId, source, emoji, $"{boss.Name} defeated", boss.RewardXp);
             await events.PublishAsync(new BossDefeatedEvent(userId, bossId));
+
+            if (boss.WorldZoneId.HasValue && worldZoneCompletion != null)
+            {
+                await worldZoneCompletion.CompleteBossZoneAsync(userId, boss.WorldZoneId.Value);
+            }
         }
     }
 
@@ -232,6 +331,11 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
             var source = boss.IsMini ? "MiniBossDefeated" : "BossDefeated";
             await characterXp.AwardXpAsync(userId, source, emoji, $"{boss.Name} defeated", boss.RewardXp);
             await events.PublishAsync(new BossDefeatedEvent(userId, bossId));
+
+            if (boss.WorldZoneId.HasValue && worldZoneCompletion != null)
+            {
+                await worldZoneCompletion.CompleteBossZoneAsync(userId, boss.WorldZoneId.Value);
+            }
         }
     }
 
@@ -262,16 +366,26 @@ public class BossService(DbContext db, ICharacterXpPort characterXp, IEventPubli
 
         if (existing != null) return existing;
 
-        var progress = await db.Set<UserMapProgress>()
-            .FirstOrDefaultAsync(p => p.UserId == userId)
-            ?? throw new InvalidOperationException("Map progress not found.");
+        var boss = await db.Set<Boss>().FindAsync(bossId)
+            ?? throw new InvalidOperationException("Boss not found.");
+
+        // World-zone bosses don't need a local-map progress row. Legacy
+        // bosses still do (their list-view logic uses it).
+        Guid? userMapProgressId = null;
+        if (!boss.WorldZoneId.HasValue)
+        {
+            var progress = await db.Set<UserMapProgress>()
+                .FirstOrDefaultAsync(p => p.UserId == userId)
+                ?? throw new InvalidOperationException("Map progress not found.");
+            userMapProgressId = progress.Id;
+        }
 
         var state = new UserBossState
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             BossId = bossId,
-            UserMapProgressId = progress.Id,
+            UserMapProgressId = userMapProgressId,
             HpDealt = 0,
             StartedAt = DateTime.UtcNow,
             IsDefeated = false,

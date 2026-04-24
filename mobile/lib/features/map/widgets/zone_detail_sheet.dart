@@ -29,6 +29,17 @@ class ZoneDetailSheet extends StatelessWidget {
   /// Callback for the dungeon `⚔️ Enter dungeon` / `Return — Floor X/Y` CTA.
   final VoidCallback? onEnterDungeon;
 
+  /// Callback for the boss `⚔️ Fight {name}` CTA. Fires only when the user
+  /// is AT the boss zone (`status == active`). On tap the backend lazy-spawns
+  /// a legacy Boss row bridged to this zone, then the shell's Boss overlay
+  /// opens so the user can log workouts to damage the boss.
+  final VoidCallback? onFightBoss;
+
+  /// Name of the next region (Ocean of Balance, …) — used in the
+  /// "Victory unlocks" reward card and the disabled `✓ Defeated · Unlocks X`
+  /// label for already-cleared bosses.
+  final String? nextRegionName;
+
   /// Populated when `node` is a branch (`node.branchOf != null`) — the name
   /// of the parent crossroads. Used in the gated "Reach X first" CTA label.
   final String? parentCrossroadsName;
@@ -49,6 +60,8 @@ class ZoneDetailSheet extends StatelessWidget {
     this.onChooseCrossroadsPath,
     this.onOpenChest,
     this.onEnterDungeon,
+    this.onFightBoss,
+    this.nextRegionName,
     this.parentCrossroadsName,
     this.userAtParentCrossroads = false,
   });
@@ -121,6 +134,8 @@ class ZoneDetailSheet extends StatelessWidget {
                 onChooseCrossroadsPath: onChooseCrossroadsPath,
                 onOpenChest: onOpenChest,
                 onEnterDungeon: onEnterDungeon,
+                onFightBoss: onFightBoss,
+                nextRegionName: nextRegionName,
                 parentCrossroadsName: parentCrossroadsName,
                 userAtParentCrossroads: userAtParentCrossroads,
               ),
@@ -461,6 +476,8 @@ class _Cta extends StatelessWidget {
   final VoidCallback? onChooseCrossroadsPath;
   final VoidCallback? onOpenChest;
   final VoidCallback? onEnterDungeon;
+  final VoidCallback? onFightBoss;
+  final String? nextRegionName;
   final String? parentCrossroadsName;
   final bool userAtParentCrossroads;
   const _Cta({
@@ -471,6 +488,8 @@ class _Cta extends StatelessWidget {
     required this.onChooseCrossroadsPath,
     required this.onOpenChest,
     required this.onEnterDungeon,
+    required this.onFightBoss,
+    required this.nextRegionName,
     required this.parentCrossroadsName,
     required this.userAtParentCrossroads,
   });
@@ -564,6 +583,30 @@ class _Cta extends StatelessWidget {
         );
       }
       // Still en route — fall through to set-as-destination.
+    }
+
+    // Boss-specific CTAs — fight on arrival, "defeated" after victory.
+    if (node.isBoss) {
+      if (node.status == ZoneNodeStatus.completed) {
+        final lbl = nextRegionName != null
+            ? '✓ Defeated · Unlocks $nextRegionName'
+            : '✓ Defeated';
+        return _CtaButton(
+          label: lbl,
+          color: AppColors.green,
+          onTap: null,
+          disabled: true,
+        );
+      }
+      if (node.status == ZoneNodeStatus.active) {
+        return _CtaButton(
+          label: '⚔️ Fight ${node.name}',
+          color: AppColors.red,
+          onTap: onFightBoss,
+          disabled: onFightBoss == null,
+        );
+      }
+      // Fall through for available/next/locked — inherits Standard CTAs.
     }
 
     if (node.status == ZoneNodeStatus.active) {
