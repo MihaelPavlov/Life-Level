@@ -147,6 +147,67 @@ public class MapReadService(
 
         var unlocked = progress?.UnlockedZones.Select(u => u.WorldZoneId).ToHashSet() ?? [];
 
+        // Pre-load chest open state for this region's chest zones so each
+        // ZoneNodeDto can carry the ChestIsOpened flag without N+1 queries.
+        var chestZoneIds = zones
+            .Where(z => z.Type == WorldZoneType.Chest)
+            .Select(z => z.Id)
+            .ToHashSet();
+        HashSet<Guid> openedChestZoneIds;
+        if (chestZoneIds.Count == 0)
+        {
+            openedChestZoneIds = new();
+        }
+        else
+        {
+            openedChestZoneIds = (await db.Set<UserWorldChestState>()
+                .Where(s => s.UserId == userId && chestZoneIds.Contains(s.WorldZoneId))
+                .Select(s => s.WorldZoneId)
+                .ToListAsync(ct))
+                .ToHashSet();
+        }
+
+        // Pre-load dungeon state + floor counts for this region's dungeon zones.
+        var dungeonZoneIds = zones
+            .Where(z => z.Type == WorldZoneType.Dungeon)
+            .Select(z => z.Id)
+            .ToHashSet();
+        Dictionary<Guid, UserWorldDungeonState> dungeonRunByZone;
+        Dictionary<Guid, (int total, int completed, int forfeited)> dungeonFloorCountsByZone;
+        if (dungeonZoneIds.Count == 0)
+        {
+            dungeonRunByZone = new();
+            dungeonFloorCountsByZone = new();
+        }
+        else
+        {
+            dungeonRunByZone = await db.Set<UserWorldDungeonState>()
+                .Where(s => s.UserId == userId && dungeonZoneIds.Contains(s.WorldZoneId))
+                .ToDictionaryAsync(s => s.WorldZoneId, ct);
+
+            var allFloors = await db.Set<WorldZoneDungeonFloor>()
+                .Where(f => dungeonZoneIds.Contains(f.WorldZoneId))
+                .ToListAsync(ct);
+            var floorIds = allFloors.Select(f => f.Id).ToList();
+            var floorStates = await db.Set<UserWorldDungeonFloorState>()
+                .Where(s => s.UserId == userId && floorIds.Contains(s.FloorId))
+                .ToDictionaryAsync(s => s.FloorId, ct);
+
+            dungeonFloorCountsByZone = allFloors
+                .GroupBy(f => f.WorldZoneId)
+                .ToDictionary(g => g.Key, g =>
+                {
+                    int total = g.Count();
+                    int completed = g.Count(f =>
+                        floorStates.TryGetValue(f.Id, out var st) &&
+                        st.Status == DungeonFloorStatus.Completed);
+                    int forfeited = g.Count(f =>
+                        floorStates.TryGetValue(f.Id, out var st) &&
+                        st.Status == DungeonFloorStatus.Forfeited);
+                    return (total, completed, forfeited);
+                });
+        }
+
         // Load this user's committed path choices for any crossroads in this
         // region. Branches for a crossroads with a recorded choice show the
         // chosen branch normally; the sibling force-locks.
@@ -176,7 +237,9 @@ public class MapReadService(
         }
 
         var nodes = zones
-            .Select(z => BuildZoneNode(z, progress, unlocked, adjacencyToUnlocked, level, chosenByCrossroads))
+            .Select(z => BuildZoneNode(
+                z, progress, unlocked, adjacencyToUnlocked, level, chosenByCrossroads,
+                openedChestZoneIds, dungeonRunByZone, dungeonFloorCountsByZone))
             .ToList();
 
         var edgeDtos = edges.Select(e => new ZoneEdgeDto(e.FromZoneId, e.ToZoneId)).ToList();
@@ -282,7 +345,10 @@ public class MapReadService(
         HashSet<Guid> unlocked,
         HashSet<Guid> adjacencyToUnlocked,
         int userLevel,
-        IReadOnlyDictionary<Guid, Guid> chosenByCrossroads)
+        IReadOnlyDictionary<Guid, Guid> chosenByCrossroads,
+        HashSet<Guid> openedChestZoneIds,
+        IReadOnlyDictionary<Guid, UserWorldDungeonState> dungeonRunByZone,
+        IReadOnlyDictionary<Guid, (int total, int completed, int forfeited)> dungeonFloorCountsByZone)
     {
         string ComputeDefaultStatus()
         {
@@ -335,6 +401,44 @@ public class MapReadService(
         }
 
         bool isCrossroads = z.Type == WorldZoneType.Crossroads;
+        bool isChest = z.Type == WorldZoneType.Chest;
+        bool isDungeon = z.Type == WorldZoneType.Dungeon;
+
+        // Chest fields — only populate for chest-typed zones.
+        int? chestRewardXp = isChest ? z.ChestRewardXp : null;
+        bool? chestIsOpened = isChest ? openedChestZoneIds.Contains(z.Id) : null;
+
+        // Dungeon fields — only populate for dungeon-typed zones.
+        int? dungeonFloorsTotal = null;
+        int? dungeonFloorsCompleted = null;
+        int? dungeonFloorsForfeited = null;
+        string? dungeonStatus = null;
+        if (isDungeon)
+        {
+            if (dungeonFloorCountsByZone.TryGetValue(z.Id, out var counts))
+            {
+                dungeonFloorsTotal = counts.total;
+                dungeonFloorsCompleted = counts.completed;
+                dungeonFloorsForfeited = counts.forfeited;
+            }
+            else
+            {
+                dungeonFloorsTotal = 0;
+                dungeonFloorsCompleted = 0;
+                dungeonFloorsForfeited = 0;
+            }
+
+            dungeonStatus = dungeonRunByZone.TryGetValue(z.Id, out var runState)
+                ? runState.Status switch
+                {
+                    DungeonRunStatus.NotEntered => "notEntered",
+                    DungeonRunStatus.InProgress => "inProgress",
+                    DungeonRunStatus.Completed => "completed",
+                    DungeonRunStatus.Abandoned => "abandoned",
+                    _ => "notEntered",
+                }
+                : "notEntered";
+        }
 
         return new ZoneNodeDto(
             Id: z.Id,
@@ -352,7 +456,15 @@ public class MapReadService(
             NodesTotal: z.NodesTotal,
             LoreCollected: z.LoreCollected,
             LoreTotal: z.LoreTotal,
-            BranchOf: z.BranchOfId);
+            BranchOf: z.BranchOfId,
+            IsChest: isChest,
+            ChestRewardXp: chestRewardXp,
+            ChestIsOpened: chestIsOpened,
+            IsDungeon: isDungeon,
+            DungeonFloorsTotal: dungeonFloorsTotal,
+            DungeonFloorsCompleted: dungeonFloorsCompleted,
+            DungeonFloorsForfeited: dungeonFloorsForfeited,
+            DungeonStatus: dungeonStatus);
     }
 
     private static ActiveJourneyDto? BuildActiveJourney(UserWorldProgressEntity? progress)

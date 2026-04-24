@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Zone Sheet · Per-type × per-state design matrix</title>
+<style>
+:root {
+  --bg-deep:    #040810;
+  --bg-base:    #080e14;
+  --surface-1:  #161b22;
+  --surface-2:  #1e2632;
+  --border:     #30363d;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #4d5b6b;
+  --blue:   #4f9eff;
+  --purple: #a371f7;
+  --orange: #f5a623;
+  --red:    #f85149;
+  --green:  #3fb950;
+  --teal:   #38d9c8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 48px 32px;
+  color: var(--text-primary);
+}
+
+.doc-head { max-width: 900px; margin: 0 auto 36px; text-align: center; }
+.doc-head h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.04em; margin-bottom: 8px; }
+.doc-head p  { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 32px;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.panel__label {
+  padding: 10px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.25);
+}
+.panel__label-left {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.panel__label-right {
+  font-size: 10px; color: var(--text-muted); font-weight: 600;
+}
+.panel__badge {
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.08em; margin-right: 6px;
+}
+
+/* Type-colored badges for panel labels */
+.b-entry     { background: rgba(56,217,200,0.14); color: var(--teal);   border: 1px solid rgba(56,217,200,0.4); }
+.b-standard  { background: rgba(63,185,80,0.14);  color: var(--green);  border: 1px solid rgba(63,185,80,0.4); }
+.b-branch    { background: rgba(245,166,35,0.14); color: var(--orange); border: 1px solid rgba(245,166,35,0.4); }
+.b-crossroads{ background: rgba(163,113,247,0.14);color: var(--purple); border: 1px solid rgba(163,113,247,0.4); }
+.b-boss      { background: rgba(248,81,73,0.14);  color: var(--red);    border: 1px solid rgba(248,81,73,0.4); }
+
+.sheet {
+  padding: 14px 20px 20px;
+  background: var(--surface-1);
+  min-height: 360px;
+  display: flex; flex-direction: column;
+}
+.grabber {
+  width: 42px; height: 4px; background: var(--border); border-radius: 2px;
+  margin: 4px auto 14px;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+.head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; position: relative; }
+.head__emoji {
+  width: 60px; height: 60px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  position: relative;
+}
+.head__emoji--entry     { background: linear-gradient(145deg, rgba(56,217,200,0.18), rgba(79,158,255,0.12)); border: 1px solid rgba(56,217,200,0.35); }
+.head__emoji--standard  { background: linear-gradient(145deg, rgba(63,185,80,0.16), rgba(79,158,255,0.10)); border: 1px solid rgba(63,185,80,0.3); }
+.head__emoji--branch    { background: linear-gradient(145deg, rgba(245,166,35,0.16), rgba(63,185,80,0.10)); border: 1px solid rgba(245,166,35,0.35); }
+.head__emoji--crossroads{ background: linear-gradient(145deg, rgba(163,113,247,0.2), rgba(163,113,247,0.08)); border: 2px solid var(--purple); transform: rotate(45deg); border-radius: 12px; }
+.head__emoji--crossroads > span { transform: rotate(-45deg); display: inline-block; }
+.head__emoji--boss      { background: linear-gradient(145deg, rgba(248,81,73,0.22), rgba(248,81,73,0.06)); border: 1px solid rgba(248,81,73,0.4); }
+.head__emoji--boss-active {
+  background: linear-gradient(145deg, rgba(248,81,73,0.28), rgba(248,81,73,0.08)); border: 2px solid var(--red);
+  animation: pulse-r 2.2s ease-in-out infinite;
+}
+@keyframes pulse-r {
+  0%, 100% { box-shadow: 0 0 22px rgba(248,81,73,0.35); }
+  50%      { box-shadow: 0 0 38px rgba(248,81,73,0.7); }
+}
+.head__you-are-here {
+  position: absolute; left: 18px; top: -8px;
+  background: var(--blue); color: #fff;
+  font-size: 7.5px; font-weight: 800; letter-spacing: 0.12em;
+  padding: 2px 6px; border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(79,158,255,0.5);
+}
+.head__body { flex: 1; min-width: 0; }
+.head__name { font-size: 17px; font-weight: 800; line-height: 1.1; }
+.head__region { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.pill {
+  display: inline-block; padding: 3px 10px; border-radius: 8px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em; margin-top: 6px;
+}
+.pill--avail    { background: rgba(245,166,35,0.14); color: var(--orange); border: 1px solid rgba(245,166,35,0.45); }
+.pill--next     { background: rgba(245,166,35,0.14); color: var(--orange); border: 1px solid rgba(245,166,35,0.45); }
+.pill--active   { background: rgba(79,158,255,0.14); color: var(--blue);   border: 1px solid rgba(79,158,255,0.45); }
+.pill--travel   { background: rgba(245,166,35,0.14); color: var(--orange); border: 1px solid rgba(245,166,35,0.45); }
+.pill--done     { background: rgba(63,185,80,0.14);  color: var(--green);  border: 1px solid rgba(63,185,80,0.45); }
+.pill--locked   { background: rgba(48,54,61,0.6);    color: var(--text-muted); border: 1px solid var(--border); }
+.pill--cross    { background: rgba(163,113,247,0.14);color: var(--purple); border: 1px solid rgba(163,113,247,0.45); }
+.pill--boss     { background: rgba(248,81,73,0.14);  color: var(--red);    border: 1px solid rgba(248,81,73,0.45); }
+.pill--branch   { background: rgba(245,166,35,0.1);  color: var(--orange); border: 1px solid rgba(245,166,35,0.3); font-size: 8.5px; padding: 2px 7px; margin-left: 4px; }
+
+/* ─── Chips row ──────────────────────────────────────────────────────────── */
+.chips {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  margin-bottom: 14px;
+}
+.chip {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.chip__label {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.chip__val { font-size: 12px; font-weight: 800; color: var(--text-primary); }
+.chip__val--ok   { color: var(--green); }
+.chip__val--warn { color: var(--orange); }
+.chip__val--bad  { color: var(--red); }
+
+/* ─── Body text / notes ──────────────────────────────────────────────────── */
+.body {
+  flex: 1;
+  font-size: 11.5px; color: var(--text-secondary); line-height: 1.55;
+  margin-bottom: 14px;
+}
+.note {
+  border: 1px dashed rgba(163,113,247,0.5); border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11px; color: var(--purple); line-height: 1.5;
+  background: rgba(163,113,247,0.06);
+  margin-bottom: 14px;
+}
+.journey {
+  background: linear-gradient(135deg, rgba(79,158,255,0.15), rgba(163,113,247,0.1));
+  border: 1px solid rgba(79,158,255,0.4); border-radius: 12px;
+  padding: 10px 12px; margin-bottom: 14px;
+}
+.journey__row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; }
+.journey__lbl { color: var(--blue); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; }
+.journey__val { color: var(--text-primary); font-weight: 700; }
+.journey__bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.journey__fill { height: 100%; background: linear-gradient(to right, var(--blue), var(--orange)); }
+.reward {
+  border: 1px solid rgba(63,185,80,0.35); background: rgba(63,185,80,0.08);
+  border-radius: 10px; padding: 8px 12px;
+  font-size: 11px; color: var(--green); font-weight: 700;
+  margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.reward__label { color: var(--text-muted); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+
+/* ─── CTA ────────────────────────────────────────────────────────────────── */
+.cta {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px; border-radius: 12px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.04em;
+}
+.cta--orange   { background: var(--orange); color: #0c0a08; }
+.cta--red      { background: var(--red);    color: #fff; box-shadow: 0 6px 24px rgba(248,81,73,0.4); }
+.cta--purple   { background: var(--purple); color: #fff; }
+.cta--disabled { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+.cta--blue     { background: rgba(79,158,255,0.12); color: var(--blue); border: 1px solid rgba(79,158,255,0.35); }
+.cta--green    { background: rgba(63,185,80,0.12);  color: var(--green); border: 1px solid rgba(63,185,80,0.4); }
+
+/* Caption under a disabled CTA */
+.caption {
+  text-align: center; font-size: 10.5px; color: var(--text-muted);
+  margin-top: 8px; line-height: 1.45;
+}
+
+/* ─── Key note at end of doc ─────────────────────────────────────────────── */
+.key {
+  max-width: 1000px; margin: 48px auto 0;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 24px;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.7;
+}
+.key h2 { font-size: 13px; color: var(--text-primary); margin-bottom: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.key li { margin-left: 18px; margin-bottom: 4px; }
+.key code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-size: 11px; color: var(--orange); }
+
+/* ─── Chest + Dungeon styles (Phase 0 extension) ────────────────────────── */
+.b-chest     { background: rgba(245,166,35,0.14); color: var(--orange); border: 1px solid rgba(245,166,35,0.4); }
+.b-dungeon   { background: rgba(163,113,247,0.14);color: var(--purple); border: 1px solid rgba(163,113,247,0.4); }
+
+.head__emoji--chest {
+  background: linear-gradient(145deg, rgba(245,166,35,0.22), rgba(245,166,35,0.06));
+  border: 1px solid rgba(245,166,35,0.5);
+}
+.head__emoji--chest-opened {
+  background: linear-gradient(145deg, rgba(63,185,80,0.2), rgba(245,166,35,0.08));
+  border: 1px solid rgba(63,185,80,0.45);
+}
+.head__emoji--dungeon {
+  background: linear-gradient(145deg, rgba(163,113,247,0.2), rgba(79,158,255,0.1));
+  border: 1px solid rgba(163,113,247,0.5);
+}
+.head__emoji--dungeon-active {
+  background: linear-gradient(145deg, rgba(163,113,247,0.28), rgba(79,158,255,0.12));
+  border: 2px solid var(--purple);
+  animation: pulse-p 2.4s ease-in-out infinite;
+}
+@keyframes pulse-p {
+  0%, 100% { box-shadow: 0 0 20px rgba(163,113,247,0.35); }
+  50%      { box-shadow: 0 0 34px rgba(163,113,247,0.7); }
+}
+
+.floors { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.floor {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.floor__icon { font-size: 18px; flex-shrink: 0; }
+.floor__body { flex: 1; min-width: 0; }
+.floor__title { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+.floor__sub { font-size: 9.5px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px; }
+.floor__pill {
+  flex-shrink: 0; font-size: 8.5px; font-weight: 800; letter-spacing: 0.08em;
+  padding: 3px 7px; border-radius: 6px;
+}
+.floor__pill--done    { background: rgba(63,185,80,0.16); color: var(--green); border: 1px solid rgba(63,185,80,0.4); }
+.floor__pill--active  { background: rgba(245,166,35,0.16); color: var(--orange); border: 1px solid rgba(245,166,35,0.4); }
+.floor__pill--locked  { background: rgba(48,54,61,0.6); color: var(--text-muted); border: 1px solid var(--border); }
+.floor__pill--lost    { background: rgba(248,81,73,0.14); color: var(--red); border: 1px solid rgba(248,81,73,0.4); }
+.floor--done .floor__icon { filter: saturate(1.2); }
+.floor--locked { opacity: 0.55; }
+.floor--lost .floor__title { text-decoration: line-through; color: var(--text-muted); }
+.floor--lost .floor__icon { filter: grayscale(1); opacity: 0.5; }
+.floor__bar {
+  height: 4px; background: var(--bg-deep); border-radius: 2px;
+  margin-top: 5px; overflow: hidden;
+}
+.floor__fill {
+  height: 100%; background: var(--orange); border-radius: 2px;
+}
+.floor__fill--done { background: var(--green); }
+
+.warn {
+  text-align: center; font-size: 10.5px;
+  color: var(--red); font-weight: 700; letter-spacing: 0.04em;
+  background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.35);
+  padding: 8px 10px; border-radius: 8px;
+  margin-top: 10px;
+}
+
+/* ─── Dungeon overlay mockup (full-screen) ───────────────────────────────── */
+.overlay-section { max-width: 1480px; margin: 48px auto 0; }
+.overlay-section h2 {
+  font-size: 14px; font-weight: 800; color: var(--text-primary);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.overlay-section p { font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
+.overlay-row { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+}
+.phone__hero {
+  padding: 54px 18px 18px;
+  background: linear-gradient(180deg, rgba(163,113,247,0.28), rgba(79,158,255,0.12) 60%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+}
+.phone__back {
+  width: 36px; height: 36px;
+  background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 14px;
+}
+.phone__title {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+}
+.phone__emoji { font-size: 48px; }
+.phone__name { font-size: 22px; font-weight: 800; }
+.phone__floor-count { font-size: 11px; color: var(--purple); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+.phone__content { padding: 16px 16px 120px; }
+.phone__section { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.phone__floor-card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 10px;
+}
+.phone__floor-card--active { border-color: rgba(245,166,35,0.5); background: linear-gradient(180deg, rgba(245,166,35,0.06), var(--surface-1)); }
+.phone__floor-card--done   { border-color: rgba(63,185,80,0.45); }
+.phone__floor-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.phone__floor-head .floor__icon { font-size: 22px; }
+.phone__floor-body { flex: 1; }
+.phone__floor-body .floor__title { font-size: 13px; }
+.phone__floor-body .floor__sub { font-size: 10px; }
+.phone__bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--surface-1); border-top: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+.phone__cta { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; }
+.phone__cta--primary { background: var(--orange); color: #0c0a08; }
+.phone__cta--ghost   { background: transparent; color: var(--text-muted); border: 1px solid var(--border); flex: 0 0 auto; padding: 12px 16px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <h1>ZONE SHEET · PER-TYPE × PER-STATE DESIGN MATRIX</h1>
+  <p>Every zone on the region trail opens a bottom sheet. This doc maps all 17 type × state combinations so the Flutter widget has a single visual contract. Reference for <code>mobile/lib/features/map/widgets/zone_detail_sheet.dart</code> + <code>crossroads_choice_sheet.dart</code>.</p>
+</div>
+
+<div class="grid">
+
+<!-- ═════════════ 01 · Entry · Available ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-entry">ENTRY</span>Available</div>
+    <div class="panel__label-right">01 · Whispering Grove</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--entry">🌿</div>
+      <div class="head__body">
+        <div class="head__name">Whispering Grove</div>
+        <div class="head__region">Forest of Endurance · Tier 1</div>
+        <div class="pill pill--avail">Available · 0.0 km</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">0.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+0</div></div>
+    </div>
+    <div class="body">Where every journey begins. The grove welcomes new adventurers with a soft breeze and a hint of pine.</div>
+    <div class="cta cta--orange">→ Set as destination</div>
+  </div>
+</div>
+
+<!-- ═════════════ 02 · Entry · Active (user here) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-entry">ENTRY</span>Active · here</div>
+    <div class="panel__label-right">02 · Whispering Grove</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--entry">🌿</div>
+      <div class="head__body">
+        <div class="head__name">Whispering Grove</div>
+        <div class="head__region">Forest of Endurance · Tier 1</div>
+        <div class="pill pill--active">You are here</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">0.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+0</div></div>
+    </div>
+    <div class="body">You just started here. Pick your next zone on the trail to set a destination.</div>
+    <div class="cta cta--blue cta--disabled">You are here</div>
+  </div>
+</div>
+
+<!-- ═════════════ 03 · Standard · Available ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-standard">STANDARD</span>Available</div>
+    <div class="panel__label-right">03 · Dawn Camp</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--standard">⛺</div>
+      <div class="head__body">
+        <div class="head__name">Dawn Camp</div>
+        <div class="head__region">Forest of Endurance · Tier 2</div>
+        <div class="pill pill--avail">Available · 3.0 km</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">3.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+320</div></div>
+    </div>
+    <div class="body">A warm camp at first light. Rest before the long run ahead.</div>
+    <div class="cta cta--orange">→ Set as destination</div>
+  </div>
+</div>
+
+<!-- ═════════════ 04 · Standard · Next (idle) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-standard">STANDARD</span>Next (idle)</div>
+    <div class="panel__label-right">04 · Ember Forge</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--standard">🏰</div>
+      <div class="head__body">
+        <div class="head__name">Ember Forge</div>
+        <div class="head__region">Forest of Endurance · Tier 4</div>
+        <div class="pill pill--next">Next · 5.0 km</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">5.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+600</div></div>
+    </div>
+    <div class="body">An ancient forge hidden deep in the forest. Its fires still burn.</div>
+    <div class="cta cta--orange">→ Set as destination</div>
+  </div>
+</div>
+
+<!-- ═════════════ 05 · Standard · Next (traveling) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-standard">STANDARD</span>Next · Traveling</div>
+    <div class="panel__label-right">05 · Ember Forge</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--standard">🏰</div>
+      <div class="head__body">
+        <div class="head__name">Ember Forge</div>
+        <div class="head__region">Forest of Endurance · Tier 4</div>
+        <div class="pill pill--travel">Traveling · 2.3 km to go</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">5.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+600</div></div>
+    </div>
+    <div class="journey">
+      <div class="journey__row"><div class="journey__lbl">Traveling</div><div class="journey__val">2.7 / 5.0 km</div></div>
+      <div class="journey__bar"><div class="journey__fill" style="width:54%"></div></div>
+    </div>
+    <div class="cta cta--orange">✓ Heading here</div>
+    <div class="caption">Tap to re-affirm · no-op when already set</div>
+  </div>
+</div>
+
+<!-- ═════════════ 06 · Standard · Active (arrived) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-standard">STANDARD</span>Active · here</div>
+    <div class="panel__label-right">06 · Misty Pine</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--standard">🌲</div>
+      <div class="head__body">
+        <div class="head__name">Misty Pine</div>
+        <div class="head__region">Forest of Endurance · Tier 3</div>
+        <div class="pill pill--active">You are here</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">4.2 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+420</div></div>
+    </div>
+    <div class="body">Towering pines wrapped in mist. Pick the next zone to keep moving.</div>
+    <div class="cta cta--blue cta--disabled">You are here</div>
+  </div>
+</div>
+
+<!-- ═════════════ 07 · Standard · Completed ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-standard">STANDARD</span>Completed</div>
+    <div class="panel__label-right">07 · Dawn Camp</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--standard" style="background: linear-gradient(145deg, rgba(63,185,80,0.24), rgba(63,185,80,0.08)); border-color: rgba(63,185,80,0.5);">✓</div>
+      <div class="head__body">
+        <div class="head__name">Dawn Camp</div>
+        <div class="head__region">Forest of Endurance · Tier 2</div>
+        <div class="pill pill--done">Completed ✓</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">3.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP earned</div><div class="chip__val chip__val--ok">+320</div></div>
+    </div>
+    <div class="body">You passed through here on your way to Ember Forge. Revisit mechanic TBD.</div>
+    <div class="cta cta--green cta--disabled">✓ Completed</div>
+  </div>
+</div>
+
+<!-- ═════════════ 08 · Standard · Locked (level) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-standard">STANDARD</span>Locked · Lv gate</div>
+    <div class="panel__label-right">08 · Tidepool Landing</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--standard" style="opacity:0.55">🐚</div>
+      <div class="head__body">
+        <div class="head__name">Tidepool Landing</div>
+        <div class="head__region">Ocean of Balance · Tier 1</div>
+        <div class="pill pill--locked">🔒 Locked · Lv 8</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--bad">Lv 8 ✕</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">0.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+0</div></div>
+    </div>
+    <div class="body">A shore where the first tides welcome you. Level up to reach Ocean of Balance.</div>
+    <div class="cta cta--disabled">🔒 Locked · Lv 8</div>
+  </div>
+</div>
+
+<!-- ═════════════ 09 · Branch · Available ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-branch">BRANCH</span>Available</div>
+    <div class="panel__label-right">09 · Valley Road</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--branch">🌾</div>
+      <div class="head__body">
+        <div class="head__name">Valley Road <span class="pill pill--branch">BRANCH</span></div>
+        <div class="head__region">Forest of Endurance · from Twin Roads Fork</div>
+        <div class="pill pill--avail">Available · 8.0 km</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">8.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+450</div></div>
+    </div>
+    <div class="body">Easy route — scenic + longer. Rejoins the main trail at Hollow Thicket.</div>
+    <div class="cta cta--orange">→ Set as destination</div>
+  </div>
+</div>
+
+<!-- ═════════════ 10 · Branch · Locked by sibling choice ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-branch">BRANCH</span>Other path chosen</div>
+    <div class="panel__label-right">10 · Ruined Pass</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--branch" style="opacity:0.55">🏚️</div>
+      <div class="head__body">
+        <div class="head__name">Ruined Pass <span class="pill pill--branch">BRANCH</span></div>
+        <div class="head__region">Forest of Endurance · from Twin Roads Fork</div>
+        <div class="pill pill--locked">🔒 Other path chosen</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">5.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+700</div></div>
+    </div>
+    <div class="body">You picked Valley Road at Twin Roads Fork. This path is locked for this run.</div>
+    <div class="cta cta--disabled">🔒 Other path chosen</div>
+  </div>
+</div>
+
+<!-- ═════════════ 11 · Crossroads · Available ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-crossroads">CROSSROADS</span>Available</div>
+    <div class="panel__label-right">11 · Twin Roads Fork</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--crossroads"><span>✦</span></div>
+      <div class="head__body">
+        <div class="head__name">Twin Roads Fork</div>
+        <div class="head__region">Forest of Endurance · Tier 5</div>
+        <div class="pill pill--cross">Crossroads</div>
+      </div>
+    </div>
+    <div class="note">
+      ✦ Branching point · two paths diverge from here. Cross to pick Valley Road (easy/long) or Ruined Pass (hard/short). Your pick is permanent.
+    </div>
+    <div class="body" style="flex:0 0 auto; margin-top:4px;">Two paths diverge. Choose wisely.</div>
+    <div style="flex:1"></div>
+    <div class="cta cta--purple">⚖ Choose a path</div>
+    <div class="caption">Opens <code style="color:var(--purple)">CrossroadsChoiceSheet</code> with both branches.</div>
+  </div>
+</div>
+
+<!-- ═════════════ 12 · Crossroads · Active (at fork) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-crossroads">CROSSROADS</span>Active · at the fork</div>
+    <div class="panel__label-right">12 · Twin Roads Fork</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__you-are-here">YOU ARE HERE</div>
+      <div class="head__emoji head__emoji--crossroads"><span>✦</span></div>
+      <div class="head__body">
+        <div class="head__name">Twin Roads Fork</div>
+        <div class="head__region">Forest of Endurance · Tier 5</div>
+        <div class="pill pill--cross">Crossroads · now</div>
+      </div>
+    </div>
+    <div class="note">
+      You arrived at the fork. Pick a path to continue — the sibling locks permanently once you set a branch as destination.
+    </div>
+    <div style="flex:1"></div>
+    <div class="cta cta--purple">⚖ Choose a path</div>
+  </div>
+</div>
+
+<!-- ═════════════ 13 · Crossroads · Completed ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-crossroads">CROSSROADS</span>Completed</div>
+    <div class="panel__label-right">13 · Twin Roads Fork</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--crossroads" style="border-color: rgba(63,185,80,0.5); background: linear-gradient(145deg, rgba(63,185,80,0.16), rgba(163,113,247,0.08));"><span>✦</span></div>
+      <div class="head__body">
+        <div class="head__name">Twin Roads Fork</div>
+        <div class="head__region">Forest of Endurance · Tier 5</div>
+        <div class="pill pill--done">Completed ✓</div>
+      </div>
+    </div>
+    <div class="body">You chose <b style="color:var(--green)">Valley Road</b> · Ruined Pass is permanently locked for this run.</div>
+    <div style="flex:1"></div>
+    <div class="cta cta--green cta--disabled">✓ Crossed · Valley Road taken</div>
+  </div>
+</div>
+
+<!-- ═════════════ 14 · Boss · Available ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-boss">BOSS</span>Available · far</div>
+    <div class="panel__label-right">14 · Forest Warden</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--boss">🐺</div>
+      <div class="head__body">
+        <div class="head__name">Forest Warden</div>
+        <div class="head__region">Forest of Endurance · Tier 8 · Boss</div>
+        <div class="pill pill--boss">Boss · 6.0 km</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">6.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+1200</div></div>
+    </div>
+    <div class="body">The Warden stands between you and Ocean of Balance. Mark it as destination — you'll auto-route through the intermediate zones.</div>
+    <div class="cta cta--orange">→ Set as destination</div>
+  </div>
+</div>
+
+<!-- ═════════════ 15 · Boss · Active (ready to fight) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-boss">BOSS</span>Active · Ready to fight</div>
+    <div class="panel__label-right">15 · Forest Warden</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__you-are-here" style="background: var(--red); box-shadow: 0 2px 6px rgba(248,81,73,0.5);">YOU ARRIVED</div>
+      <div class="head__emoji head__emoji--boss head__emoji--boss-active">🐺</div>
+      <div class="head__body">
+        <div class="head__name">Forest Warden</div>
+        <div class="head__region">Forest of Endurance · Tier 8 · Boss</div>
+        <div class="pill pill--boss">Boss · Ready to fight</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">6.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+1200</div></div>
+    </div>
+    <div class="body">The Warden's eyes burn like coals. Defeat it to open Ocean of Balance.</div>
+    <div class="reward">
+      <div class="reward__label">Victory unlocks</div>
+      <div>🌊 Ocean of Balance</div>
+    </div>
+    <div class="cta cta--red">⚔️ Fight Forest Warden</div>
+  </div>
+</div>
+
+<!-- ═════════════ 16 · Boss · Completed (defeated) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-boss">BOSS</span>Defeated</div>
+    <div class="panel__label-right">16 · Forest Warden</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--boss" style="opacity:0.7; border-color: rgba(63,185,80,0.5); background: linear-gradient(145deg, rgba(63,185,80,0.18), rgba(248,81,73,0.06));">🐺</div>
+      <div class="head__body">
+        <div class="head__name">Forest Warden</div>
+        <div class="head__region">Forest of Endurance · Tier 8 · Boss</div>
+        <div class="pill pill--done">Defeated ✓</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">6.0 km</div></div>
+      <div class="chip"><div class="chip__label">XP earned</div><div class="chip__val chip__val--ok">+1200</div></div>
+    </div>
+    <div class="body">The Warden fell. The path north is open.</div>
+    <div class="cta cta--green cta--disabled">✓ Defeated · Unlocks Ocean of Balance</div>
+    <div class="caption">Next region is now Active in the world hub.</div>
+  </div>
+</div>
+
+<!-- ═════════════ 18 · Chest · Locked ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-chest">CHEST</span>Locked</div>
+    <div class="panel__label-right">18 · Hidden Cairn</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--chest" style="opacity:0.55">🗝️</div>
+      <div class="head__body">
+        <div class="head__name">Hidden Cairn</div>
+        <div class="head__region">Mountains of Strength · Tier 3</div>
+        <div class="pill pill--locked">🔒 Locked · Lv 15</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--bad">Lv 15 ✕</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">2.5 km</div></div>
+      <div class="chip"><div class="chip__label">Reward</div><div class="chip__val chip__val--warn">+320 XP</div></div>
+    </div>
+    <div class="body">A stone cairn balanced on a windswept ridge. Level up to reach it.</div>
+    <div class="cta cta--disabled">🔒 Locked · Lv 15</div>
+  </div>
+</div>
+
+<!-- ═════════════ 19 · Chest · Available (at zone, not opened) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-chest">CHEST</span>Ready to open</div>
+    <div class="panel__label-right">19 · Whispering Shrine</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__you-are-here">YOU ARE HERE</div>
+      <div class="head__emoji head__emoji--chest">🗝️</div>
+      <div class="head__body">
+        <div class="head__name">Whispering Shrine</div>
+        <div class="head__region">Forest of Endurance · Tier 3</div>
+        <div class="pill pill--avail">Ready to open</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">3.5 km</div></div>
+      <div class="chip"><div class="chip__label">Reward</div><div class="chip__val chip__val--warn">+250 XP</div></div>
+    </div>
+    <div class="body">A mossy shrine tucked among the pines. Legend says offerings bring the forest's favor.</div>
+    <div class="cta cta--orange">🎁 Open chest · +250 XP</div>
+    <div class="caption">One-time reward · claim once and it's done.</div>
+  </div>
+</div>
+
+<!-- ═════════════ 20 · Chest · Opened ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-chest">CHEST</span>Opened</div>
+    <div class="panel__label-right">20 · Whispering Shrine</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--chest-opened">🗝️</div>
+      <div class="head__body">
+        <div class="head__name">Whispering Shrine</div>
+        <div class="head__region">Forest of Endurance · Tier 3</div>
+        <div class="pill pill--done">Opened ✓</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">3.5 km</div></div>
+      <div class="chip"><div class="chip__label">Earned</div><div class="chip__val chip__val--ok">+250 XP</div></div>
+    </div>
+    <div class="body">The shrine's offering bowl is empty now. The forest remembers your visit.</div>
+    <div class="cta cta--green cta--disabled">✓ Opened · +250 XP</div>
+    <div class="caption">One-time reward claimed.</div>
+  </div>
+</div>
+
+<!-- ═════════════ 21 · Dungeon · Locked ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-dungeon">DUNGEON</span>Locked</div>
+    <div class="panel__label-right">21 · Drowned Depths</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--dungeon" style="opacity:0.55">🌀</div>
+      <div class="head__body">
+        <div class="head__name">Drowned Depths</div>
+        <div class="head__region">Ocean of Balance · Tier 4 · Dungeon</div>
+        <div class="pill pill--locked">🔒 Locked · Lv 8</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--bad">Lv 8 ✕</div></div>
+      <div class="chip"><div class="chip__label">Floors</div><div class="chip__val">3</div></div>
+      <div class="chip"><div class="chip__label">Bonus XP</div><div class="chip__val chip__val--warn">+600</div></div>
+    </div>
+    <div class="body">A shrine of currents pulling you down. Three trials wait — all of them demand different disciplines.</div>
+    <div class="cta cta--disabled">🔒 Locked · Lv 8</div>
+  </div>
+</div>
+
+<!-- ═════════════ 22 · Dungeon · Available (arrived, not entered) ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-dungeon">DUNGEON</span>Arrived · Not entered</div>
+    <div class="panel__label-right">22 · Sunken Ruins</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__you-are-here">YOU ARE HERE</div>
+      <div class="head__emoji head__emoji--dungeon">🏚️</div>
+      <div class="head__body">
+        <div class="head__name">Sunken Ruins</div>
+        <div class="head__region">Forest of Endurance · Tier 5 · Dungeon</div>
+        <div class="pill pill--cross">Dungeon · 3 floors</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--ok">Lv 1 ✓</div></div>
+      <div class="chip"><div class="chip__label">Floors</div><div class="chip__val">3</div></div>
+      <div class="chip"><div class="chip__label">Bonus XP</div><div class="chip__val chip__val--warn">+510</div></div>
+    </div>
+    <div class="floors">
+      <div class="floor">
+        <div class="floor__icon">🏃</div>
+        <div class="floor__body"><div class="floor__title">Floor 1 · Running</div><div class="floor__sub">3.0 km</div></div>
+      </div>
+      <div class="floor">
+        <div class="floor__icon">🏋️</div>
+        <div class="floor__body"><div class="floor__title">Floor 2 · Gym</div><div class="floor__sub">30 minutes</div></div>
+      </div>
+      <div class="floor">
+        <div class="floor__icon">🧘</div>
+        <div class="floor__body"><div class="floor__title">Floor 3 · Yoga</div><div class="floor__sub">15 minutes</div></div>
+      </div>
+    </div>
+    <div class="cta cta--red">⚔️ Enter dungeon</div>
+  </div>
+</div>
+
+<!-- ═════════════ 23 · Dungeon · In progress ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-dungeon">DUNGEON</span>In progress · Floor 2/3</div>
+    <div class="panel__label-right">23 · Sunken Ruins</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--dungeon-active">🏚️</div>
+      <div class="head__body">
+        <div class="head__name">Sunken Ruins</div>
+        <div class="head__region">Forest of Endurance · Tier 5 · Dungeon</div>
+        <div class="pill pill--cross">Floor 2 of 3 · Active</div>
+      </div>
+    </div>
+    <div class="floors">
+      <div class="floor floor--done">
+        <div class="floor__icon">🏃</div>
+        <div class="floor__body"><div class="floor__title">Floor 1 · Running</div><div class="floor__sub">3.0 / 3.0 km</div></div>
+        <div class="floor__pill floor__pill--done">✓ DONE</div>
+      </div>
+      <div class="floor">
+        <div class="floor__icon">🏋️</div>
+        <div class="floor__body">
+          <div class="floor__title">Floor 2 · Gym</div>
+          <div class="floor__sub">12 / 30 minutes</div>
+          <div class="floor__bar"><div class="floor__fill" style="width:40%"></div></div>
+        </div>
+        <div class="floor__pill floor__pill--active">⚡ ACTIVE</div>
+      </div>
+      <div class="floor floor--locked">
+        <div class="floor__icon">🧘</div>
+        <div class="floor__body"><div class="floor__title">Floor 3 · Yoga</div><div class="floor__sub">15 minutes</div></div>
+        <div class="floor__pill floor__pill--locked">🔒 LOCKED</div>
+      </div>
+    </div>
+    <div class="cta cta--red">Continue — log a gym workout</div>
+    <div class="warn">Leaving now will forfeit 2 remaining floors · permanent</div>
+  </div>
+</div>
+
+<!-- ═════════════ 24 · Dungeon · Completed ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-dungeon">DUNGEON</span>Cleared</div>
+    <div class="panel__label-right">24 · Sunken Ruins</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--dungeon" style="border-color: rgba(63,185,80,0.5); background: linear-gradient(145deg, rgba(63,185,80,0.18), rgba(163,113,247,0.1));">🏚️</div>
+      <div class="head__body">
+        <div class="head__name">Sunken Ruins</div>
+        <div class="head__region">Forest of Endurance · Tier 5 · Dungeon</div>
+        <div class="pill pill--done">Cleared ✓</div>
+      </div>
+    </div>
+    <div class="floors">
+      <div class="floor floor--done"><div class="floor__icon">🏃</div><div class="floor__body"><div class="floor__title">Floor 1 · Running</div><div class="floor__sub">3.0 / 3.0 km</div></div><div class="floor__pill floor__pill--done">✓ DONE</div></div>
+      <div class="floor floor--done"><div class="floor__icon">🏋️</div><div class="floor__body"><div class="floor__title">Floor 2 · Gym</div><div class="floor__sub">30 / 30 minutes</div></div><div class="floor__pill floor__pill--done">✓ DONE</div></div>
+      <div class="floor floor--done"><div class="floor__icon">🧘</div><div class="floor__body"><div class="floor__title">Floor 3 · Yoga</div><div class="floor__sub">15 / 15 minutes</div></div><div class="floor__pill floor__pill--done">✓ DONE</div></div>
+    </div>
+    <div class="cta cta--green cta--disabled">✓ Dungeon cleared · +510 bonus XP</div>
+  </div>
+</div>
+
+<!-- ═════════════ 25 · Dungeon · Abandoned ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-dungeon">DUNGEON</span>Abandoned · floors lost</div>
+    <div class="panel__label-right">25 · Sunken Ruins</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--dungeon" style="opacity:0.55; border-color: rgba(248,81,73,0.4); background: linear-gradient(145deg, rgba(48,54,61,0.4), rgba(248,81,73,0.08));">🏚️</div>
+      <div class="head__body">
+        <div class="head__name">Sunken Ruins</div>
+        <div class="head__region">Forest of Endurance · Tier 5 · Dungeon</div>
+        <div class="pill pill--locked" style="color: var(--red); border-color: rgba(248,81,73,0.4); background: rgba(248,81,73,0.08);">Abandoned · 2/3 lost</div>
+      </div>
+    </div>
+    <div class="floors">
+      <div class="floor floor--done"><div class="floor__icon">🏃</div><div class="floor__body"><div class="floor__title">Floor 1 · Running</div><div class="floor__sub">3.0 / 3.0 km</div></div><div class="floor__pill floor__pill--done">✓ DONE</div></div>
+      <div class="floor floor--lost"><div class="floor__icon">🏋️</div><div class="floor__body"><div class="floor__title">Floor 2 · Gym</div><div class="floor__sub">Forfeited</div></div><div class="floor__pill floor__pill--lost">✕ LOST</div></div>
+      <div class="floor floor--lost"><div class="floor__icon">🧘</div><div class="floor__body"><div class="floor__title">Floor 3 · Yoga</div><div class="floor__sub">Forfeited</div></div><div class="floor__pill floor__pill--lost">✕ LOST</div></div>
+    </div>
+    <div class="cta cta--disabled">✕ Abandoned · 2 floors lost</div>
+    <div class="caption" style="color: var(--red);">These floors can't be recovered.</div>
+  </div>
+</div>
+
+<!-- ═════════════ 17 · Boss · Locked ═════════════ -->
+<div class="panel">
+  <div class="panel__label">
+    <div class="panel__label-left"><span class="panel__badge b-boss">BOSS</span>Locked · level gate</div>
+    <div class="panel__label-right">17 · Tide Sovereign</div>
+  </div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="head">
+      <div class="head__emoji head__emoji--boss" style="opacity:0.55">🐙</div>
+      <div class="head__body">
+        <div class="head__name">Tide Sovereign</div>
+        <div class="head__region">Ocean of Balance · Tier 6 · Boss</div>
+        <div class="pill pill--locked">🔒 Locked · Lv 8</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip"><div class="chip__label">Level req</div><div class="chip__val chip__val--bad">Lv 8 ✕</div></div>
+      <div class="chip"><div class="chip__label">Distance</div><div class="chip__val">6.5 km</div></div>
+      <div class="chip"><div class="chip__label">XP reward</div><div class="chip__val chip__val--warn">+1400</div></div>
+    </div>
+    <div class="body">The crown of the deep waits in the storm's eye — and it's out of your league for now.</div>
+    <div class="cta cta--disabled">🔒 Locked · Lv 8</div>
+  </div>
+</div>
+
+</div>
+
+<!-- ═════════════ Full-screen dungeon overlay ═════════════ -->
+<div class="overlay-section">
+  <h2>Dungeon overlay · In progress (Floor 2 of 3)</h2>
+  <p>Full-screen overlay opened from the dungeon sheet's "Enter dungeon" / "Return" CTA. Shows floor list with per-floor activity targets + live progress, a primary "Log workout" action, and a ghost "Leave dungeon" button that triggers the forfeit confirmation dialog.</p>
+
+  <div class="overlay-row">
+    <div class="phone">
+      <div class="phone__hero">
+        <div class="phone__back">‹</div>
+        <div class="phone__title">
+          <div class="phone__emoji">🏚️</div>
+          <div>
+            <div class="phone__name">Sunken Ruins</div>
+            <div class="phone__floor-count">Floor 2 of 3</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone__content">
+        <div class="phone__section">Trial progress</div>
+
+        <div class="phone__floor-card phone__floor-card--done">
+          <div class="phone__floor-head">
+            <div class="floor__icon">🏃</div>
+            <div class="phone__floor-body">
+              <div class="floor__title">Floor 1 · Running</div>
+              <div class="floor__sub">3.0 / 3.0 km</div>
+            </div>
+            <div class="floor__pill floor__pill--done">✓ DONE</div>
+          </div>
+          <div class="floor__bar"><div class="floor__fill floor__fill--done" style="width:100%"></div></div>
+        </div>
+
+        <div class="phone__floor-card phone__floor-card--active">
+          <div class="phone__floor-head">
+            <div class="floor__icon">🏋️</div>
+            <div class="phone__floor-body">
+              <div class="floor__title">Floor 2 · Gym</div>
+              <div class="floor__sub">12 / 30 minutes</div>
+            </div>
+            <div class="floor__pill floor__pill--active">⚡ ACTIVE</div>
+          </div>
+          <div class="floor__bar"><div class="floor__fill" style="width:40%"></div></div>
+        </div>
+
+        <div class="phone__floor-card" style="opacity:0.55">
+          <div class="phone__floor-head">
+            <div class="floor__icon">🧘</div>
+            <div class="phone__floor-body">
+              <div class="floor__title">Floor 3 · Yoga</div>
+              <div class="floor__sub">15 minutes · locked</div>
+            </div>
+            <div class="floor__pill floor__pill--locked">🔒 LOCKED</div>
+          </div>
+        </div>
+
+        <div class="warn" style="margin-top: 20px;">Leaving the dungeon now will forfeit 2 remaining floors · permanent</div>
+      </div>
+      <div class="phone__bottom">
+        <div class="phone__cta phone__cta--primary">Log workout</div>
+        <div class="phone__cta phone__cta--ghost">Leave</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════ Shared key ═════════════ -->
+<div class="key">
+  <h2>Implementation contract</h2>
+  <ul>
+    <li><b>Header emoji tint</b> is type-driven: teal=entry, green=standard/branch, purple=crossroads (rotated 45°), red=boss. Status overrides the border colour (green when <code>completed</code>, red glow when boss + <code>active</code>).</li>
+    <li><b>Status pill</b> is state-driven; always present below the region line.</li>
+    <li><b>Chips row</b> is three columns (Level req · Distance · XP) for every type except Crossroads — which swaps chips for the dashed purple note.</li>
+    <li><b>CTA</b> colour by action: orange=set/re-affirm, red=fight boss, purple=open choice sheet, green=disabled-done, blue=disabled-here, grey=locked.</li>
+    <li><b>Boss · Active</b> is the only CTA that performs a destructive call (<code>completeZone</code>) directly from the sheet; all other actions either set destination (idempotent) or open another sheet.</li>
+    <li><b>Crossroads</b> and <b>Branch</b> states rely on <code>branchOf</code> + <code>pathChoices</code> already carried by <code>RegionDetailDto</code>. No new backend fields needed.</li>
+    <li><b>Chest</b> is a one-shot zone — tap <code>🎁 Open chest</code> when arrived, grants XP, flips to the green opened state permanently. No cooldown.</li>
+    <li><b>Dungeon</b> is a multi-floor cross-training gate. Three floors, each with a distinct <code>ActivityType</code> + target. Floors unlock sequentially. Setting a destination outside the dungeon with incomplete floors forfeits them permanently (<code>Abandoned</code> state). Activity logging auto-credits toward the active floor when the logged <code>ActivityType</code> matches.</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -262,6 +262,8 @@ class _YouAreHereBadge extends StatelessWidget {
 Color _bubbleAccent(ZoneNode n) {
   if (n.isBoss) return AppColors.red;
   if (n.isCrossroads) return AppColors.purple;
+  if (n.isDungeon) return AppColors.purple;
+  if (n.isChest) return AppColors.orange;
   return ZoneNodeColors.of(n.status).accent;
 }
 
@@ -288,6 +290,28 @@ String _subLabel(ZoneNode n, ActiveJourney? journey, String? nextRegionName) {
     return 'Boss · Unlocks $target';
   }
   if (n.isCrossroads) return 'Crossroads';
+  if (n.isChest) {
+    if (n.chestIsOpened == true) {
+      return 'Chest · +${n.chestRewardXp ?? 0} XP · Opened';
+    }
+    if (n.status == ZoneNodeStatus.active) return 'Chest · tap to open';
+    return 'Chest · +${n.chestRewardXp ?? 0} XP';
+  }
+  if (n.isDungeon) {
+    final total = n.dungeonFloorsTotal ?? 0;
+    final done = n.dungeonFloorsCompleted ?? 0;
+    final lost = n.dungeonFloorsForfeited ?? 0;
+    switch (n.dungeonStatus) {
+      case DungeonRunStatus.completed:
+        return 'Dungeon · Cleared ✓';
+      case DungeonRunStatus.abandoned:
+        return 'Dungeon · $lost/$total lost';
+      case DungeonRunStatus.inProgress:
+        return 'Floor ${done + 1 <= total ? done + 1 : total} / $total';
+      default:
+        return 'Dungeon · $total floors';
+    }
+  }
 
   final isBranch = n.branchOf != null;
 

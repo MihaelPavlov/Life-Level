@@ -22,6 +22,7 @@ public class WorldZoneService(
     ICharacterLevelReadPort characterLevel,
     IMapNodeCountPort mapNodeCount,
     IMapNodeCompletedCountPort mapNodeCompletedCount,
+    WorldDungeonService? dungeonService = null,
     ILogger<WorldZoneService>? logger = null)
     : IWorldZoneDistancePort
 {
@@ -125,7 +126,7 @@ public class WorldZoneService(
         };
     }
 
-    public async Task SetDestinationAsync(Guid userId, Guid destinationZoneId)
+    public async Task<Application.DTOs.SetWorldDestinationResult> SetDestinationAsync(Guid userId, Guid destinationZoneId)
     {
         var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive)
             ?? throw new InvalidOperationException("No active world found.");
@@ -138,11 +139,25 @@ public class WorldZoneService(
         var destinationZone = await db.Set<WorldZoneEntity>().FindAsync(destinationZoneId)
             ?? throw new InvalidOperationException("Zone not found.");
 
-        // Safety: clients should never set destination directly to a crossroads —
-        // they must open the fork sheet and pick a branch. Keep the gate here so
-        // API misuse doesn't put the user into an ambiguous state.
-        if (destinationZone.Type == WorldZoneType.Crossroads)
-            throw new InvalidOperationException("Pick a branch from the crossroads sheet.");
+        // Crossroads IS a legal destination now — the mobile client shows
+        // the branch-choice sheet only once the user arrives there, so picking
+        // a crossroads here means "travel to the fork, then I'll choose".
+
+        // Enforce arrival-at-crossroads before picking a branch. Multi-hop
+        // routing is allowed for every other zone type, but branches have to
+        // be chosen FROM the parent crossroads so the user sees the
+        // "remaining distance" story cleanly.
+        if (destinationZone.BranchOfId.HasValue &&
+            progress.CurrentZoneId != destinationZone.BranchOfId.Value)
+        {
+            var crossroadsName = await db.Set<WorldZoneEntity>()
+                .Where(z => z.Id == destinationZone.BranchOfId.Value)
+                .Select(z => z.Name)
+                .FirstOrDefaultAsync() ?? "the crossroads";
+            throw new BranchRequiresCrossroadsArrivalException(
+                crossroadsName: crossroadsName,
+                crossroadsZoneId: destinationZone.BranchOfId.Value);
+        }
 
         // Enforce permanent path choice at crossroads. If this zone is a branch,
         // record the choice (first visit) or reject if the user already picked
@@ -192,7 +207,25 @@ public class WorldZoneService(
         if (!keepEdgeProgress) progress.DistanceTraveledOnEdge = 0;
         progress.UpdatedAt = DateTime.UtcNow;
 
+        // Dungeon forfeit: if the user is currently standing on a dungeon
+        // zone with an active (or un-entered) run and is moving AWAY from
+        // it, the run transitions to Abandoned and every non-Completed
+        // floor becomes Forfeited. The count is surfaced in the response
+        // so the client can show a "N floors forfeited" snackbar.
+        int forfeitedFloors = 0;
+        var currentZoneForForfeit = progress.CurrentZoneId;
+        if (dungeonService != null && currentZoneForForfeit != destinationZoneId)
+        {
+            var currentZone = await db.Set<WorldZoneEntity>().FindAsync(currentZoneForForfeit);
+            if (currentZone != null && currentZone.Type == WorldZoneType.Dungeon)
+            {
+                forfeitedFloors = await dungeonService.AbandonAsync(userId, currentZoneForForfeit);
+            }
+        }
+
         await db.SaveChangesAsync();
+
+        return new Application.DTOs.SetWorldDestinationResult(forfeitedFloors);
     }
 
     /// BFS from `fromZoneId` to `toZoneId` on the full edge graph, honouring
@@ -337,6 +370,19 @@ public class WorldZoneService(
             var arrivedZoneId = edge.FromZoneId == progress.CurrentZoneId
                 ? edge.ToZoneId
                 : edge.FromZoneId;
+
+            // Dungeon forfeit on auto-advance: if we're LEAVING a dungeon
+            // zone (sourceZone was a dungeon and it's not the destination),
+            // abandon any active run there.
+            var leavingZoneId = progress.CurrentZoneId;
+            if (dungeonService != null && leavingZoneId != arrivedZoneId)
+            {
+                var leavingZone = await db.Set<WorldZoneEntity>().FindAsync([leavingZoneId], ct);
+                if (leavingZone != null && leavingZone.Type == WorldZoneType.Dungeon)
+                {
+                    await dungeonService.AbandonAsync(userId, leavingZoneId, ct);
+                }
+            }
 
             progress.CurrentZoneId = arrivedZoneId;
             progress.DistanceTraveledOnEdge = 0;

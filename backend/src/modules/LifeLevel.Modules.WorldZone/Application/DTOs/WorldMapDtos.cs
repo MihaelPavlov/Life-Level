@@ -76,8 +76,45 @@ public record ZoneNodeDto(
     int? NodesTotal,
     int? LoreCollected,
     int? LoreTotal,
-    Guid? BranchOf);
+    Guid? BranchOf,
+    // Chest fields (populated only when the zone is a Chest)
+    bool IsChest,
+    int? ChestRewardXp,
+    bool? ChestIsOpened,
+    // Dungeon fields (populated only when the zone is a Dungeon)
+    bool IsDungeon,
+    int? DungeonFloorsTotal,
+    int? DungeonFloorsCompleted,
+    int? DungeonFloorsForfeited,
+    string? DungeonStatus);
 
 public record ZoneEdgeDto(Guid FromId, Guid ToId);
 
 public record PathChoiceDto(Guid CrossroadsZoneId, Guid ChosenZoneId);
+
+// Chest opening response.
+public record OpenChestResult(Guid ZoneId, string ZoneName, int Xp);
+
+// Dungeon state returned by GET /api/world/dungeon/{zoneId}/state.
+public record DungeonStateDto(
+    Guid ZoneId,
+    string ZoneName,
+    string Status,
+    int CurrentFloorOrdinal,
+    int BonusXp,
+    IReadOnlyList<DungeonFloorDto> Floors);
+
+public record DungeonFloorDto(
+    Guid Id,
+    int Ordinal,
+    string Name,
+    string Emoji,
+    string ActivityType,
+    string TargetKind,
+    double TargetValue,
+    double ProgressValue,
+    string Status);
+
+// SetDestination response — includes forfeit count so the client can surface
+// a snackbar when leaving mid-dungeon abandons the run.
+public record SetWorldDestinationResult(int ForfeitedFloors);

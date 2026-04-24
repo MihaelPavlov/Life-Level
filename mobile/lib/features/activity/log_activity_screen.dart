@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
@@ -177,6 +178,18 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       // Fire inventory-full warning for each item that was blocked
       for (final blocked in result.blockedItems) {
         InventoryFullNotifier.notify(blocked);
+      }
+
+      // Dungeon floor credit → global toast + overlay refresh.
+      if (result.floorCreditResult != null) {
+        final credit = result.floorCreditResult!;
+        DungeonFloorClearedNotifier.notify(DungeonFloorClearedEvent(
+          dungeonName: credit.dungeonName,
+          clearedFloorOrdinal: credit.clearedFloorOrdinal,
+          totalFloors: credit.totalFloors,
+          runCompleted: credit.runCompleted,
+          bonusXpAwarded: credit.bonusXpAwarded,
+        ));
       }
 
       if (mounted) {

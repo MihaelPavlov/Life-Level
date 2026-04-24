@@ -69,6 +69,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserZoneUnlock> UserZoneUnlocks => Set<UserZoneUnlock>();
     public DbSet<UserPathChoice> UserPathChoices => Set<UserPathChoice>();
 
+    // WorldZone — Chest + Dungeon (v3 inline on WorldZone)
+    public DbSet<UserWorldChestState> UserWorldChestStates => Set<UserWorldChestState>();
+    public DbSet<WorldZoneDungeonFloor> WorldZoneDungeonFloors => Set<WorldZoneDungeonFloor>();
+    public DbSet<UserWorldDungeonState> UserWorldDungeonStates => Set<UserWorldDungeonState>();
+    public DbSet<UserWorldDungeonFloorState> UserWorldDungeonFloorStates => Set<UserWorldDungeonFloorState>();
+
     // Map
     public DbSet<MapNode> MapNodes => Set<MapNode>();
     public DbSet<MapEdge> MapEdges => Set<MapEdge>();

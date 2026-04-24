@@ -34,6 +34,13 @@ public class LogActivityResult
     public int XpBonusApplied { get; init; } = 0;
     public IReadOnlyList<BlockedItemInfo> BlockedItems { get; init; } = [];
     public LevelUpUnlocksDto? LevelUpUnlocks { get; init; }
+
+    /// <summary>
+    /// Populated when this activity cleared a floor of the user's active
+    /// dungeon run. Null in the common case (no active run, wrong activity
+    /// type, or progress accumulated without clearing).
+    /// </summary>
+    public FloorCreditResult? FloorCreditResult { get; init; }
 }
 
 public class ActivityHistoryDto

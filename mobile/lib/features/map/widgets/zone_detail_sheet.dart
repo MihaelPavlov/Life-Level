@@ -22,6 +22,22 @@ class ZoneDetailSheet extends StatelessWidget {
   /// taps without seeded branches (CTA falls back to disabled).
   final VoidCallback? onChooseCrossroadsPath;
 
+  /// Callback for the chest `🎁 Open chest` CTA (fires only when `isChest &&
+  /// status == active && !chestIsOpened`).
+  final VoidCallback? onOpenChest;
+
+  /// Callback for the dungeon `⚔️ Enter dungeon` / `Return — Floor X/Y` CTA.
+  final VoidCallback? onEnterDungeon;
+
+  /// Populated when `node` is a branch (`node.branchOf != null`) — the name
+  /// of the parent crossroads. Used in the gated "Reach X first" CTA label.
+  final String? parentCrossroadsName;
+
+  /// True when the user is currently standing at the parent crossroads so
+  /// branch CTAs can fire `setDestination`. When false, the branch CTA is
+  /// disabled with a "Reach {parent} first" label.
+  final bool userAtParentCrossroads;
+
   const ZoneDetailSheet({
     super.key,
     required this.node,
@@ -31,6 +47,10 @@ class ZoneDetailSheet extends StatelessWidget {
     required this.isDestination,
     required this.onSetDestination,
     this.onChooseCrossroadsPath,
+    this.onOpenChest,
+    this.onEnterDungeon,
+    this.parentCrossroadsName,
+    this.userAtParentCrossroads = false,
   });
 
   bool get _hasActiveJourney =>
@@ -99,6 +119,10 @@ class ZoneDetailSheet extends StatelessWidget {
                 showTravelingView: _showTravelingView,
                 onSetDestination: onSetDestination,
                 onChooseCrossroadsPath: onChooseCrossroadsPath,
+                onOpenChest: onOpenChest,
+                onEnterDungeon: onEnterDungeon,
+                parentCrossroadsName: parentCrossroadsName,
+                userAtParentCrossroads: userAtParentCrossroads,
               ),
             ],
           ),
@@ -435,24 +459,113 @@ class _Cta extends StatelessWidget {
   final bool showTravelingView;
   final VoidCallback? onSetDestination;
   final VoidCallback? onChooseCrossroadsPath;
+  final VoidCallback? onOpenChest;
+  final VoidCallback? onEnterDungeon;
+  final String? parentCrossroadsName;
+  final bool userAtParentCrossroads;
   const _Cta({
     required this.node,
     required this.levelMet,
     required this.showTravelingView,
     required this.onSetDestination,
     required this.onChooseCrossroadsPath,
+    required this.onOpenChest,
+    required this.onEnterDungeon,
+    required this.parentCrossroadsName,
+    required this.userAtParentCrossroads,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (node.isCrossroads) {
+    // "Choose a path" only makes sense when the user is AT the crossroads
+    // (and the parent wired a callback). Otherwise fall through so the
+    // crossroads can be set as a regular destination — user will travel
+    // to the fork and pick a branch on arrival.
+    if (node.isCrossroads && onChooseCrossroadsPath != null) {
       return _CtaButton(
         label: '⚖ Choose a path',
         color: AppColors.purple,
         onTap: onChooseCrossroadsPath,
-        disabled: onChooseCrossroadsPath == null,
+        disabled: false,
       );
     }
+
+    // Chest-specific CTA wins over the generic paths when we're at the chest.
+    if (node.isChest) {
+      final reward = node.chestRewardXp ?? 0;
+      if (node.chestIsOpened == true ||
+          node.status == ZoneNodeStatus.completed) {
+        return _CtaButton(
+          label: '✓ Opened · +$reward XP',
+          color: AppColors.green,
+          onTap: null,
+          disabled: true,
+        );
+      }
+      if (node.status == ZoneNodeStatus.active) {
+        return _CtaButton(
+          label: '🎁 Open chest · +$reward XP',
+          color: AppColors.orange,
+          onTap: onOpenChest,
+          disabled: onOpenChest == null,
+        );
+      }
+      // Still en route — fall through to standard set-as-destination below.
+    }
+
+    // Dungeon-specific CTA paths.
+    if (node.isDungeon) {
+      final dStatus = node.dungeonStatus ?? DungeonRunStatus.notEntered;
+      final total = node.dungeonFloorsTotal ?? 0;
+      final done = node.dungeonFloorsCompleted ?? 0;
+      final forfeited = node.dungeonFloorsForfeited ?? 0;
+
+      if (dStatus == DungeonRunStatus.completed ||
+          node.status == ZoneNodeStatus.completed) {
+        return const _CtaButton(
+          label: '✓ Dungeon cleared',
+          color: AppColors.green,
+          onTap: null,
+          disabled: true,
+        );
+      }
+      if (dStatus == DungeonRunStatus.abandoned) {
+        return _CtaButton(
+          label: '✕ Abandoned · $forfeited/$total lost',
+          color: AppColors.textMuted,
+          onTap: null,
+          disabled: true,
+        );
+      }
+      if (node.status == ZoneNodeStatus.locked || !levelMet) {
+        return _CtaButton(
+          label: '🔒 Locked · Lv ${node.levelRequirement}',
+          color: AppColors.textMuted,
+          onTap: null,
+          disabled: true,
+        );
+      }
+      if (node.status == ZoneNodeStatus.active) {
+        if (dStatus == DungeonRunStatus.inProgress) {
+          // Resume — show active floor position.
+          final current = done + 1 <= total ? done + 1 : total;
+          return _CtaButton(
+            label: 'Return — Floor $current / $total',
+            color: AppColors.orange,
+            onTap: onEnterDungeon,
+            disabled: onEnterDungeon == null,
+          );
+        }
+        return _CtaButton(
+          label: '⚔️ Enter dungeon',
+          color: AppColors.red,
+          onTap: onEnterDungeon,
+          disabled: onEnterDungeon == null,
+        );
+      }
+      // Still en route — fall through to set-as-destination.
+    }
+
     if (node.status == ZoneNodeStatus.active) {
       return const _CtaButton(
         label: 'You are here',
@@ -472,6 +585,18 @@ class _Cta extends StatelessWidget {
     if (node.status == ZoneNodeStatus.locked || !levelMet) {
       return _CtaButton(
         label: '🔒 Locked · Lv ${node.levelRequirement}',
+        color: AppColors.textMuted,
+        onTap: null,
+        disabled: true,
+      );
+    }
+    // Branch gate — branches can only be set as destination from the
+    // parent crossroads. If the user isn't there yet, disable the CTA
+    // with a readable label instead of firing a backend call that fails.
+    if (node.branchOf != null && !userAtParentCrossroads) {
+      final name = parentCrossroadsName ?? 'the crossroads';
+      return _CtaButton(
+        label: '🔒 Reach $name first',
         color: AppColors.textMuted,
         onTap: null,
         disabled: true,

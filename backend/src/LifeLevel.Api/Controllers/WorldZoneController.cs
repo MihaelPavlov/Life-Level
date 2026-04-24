@@ -27,8 +27,8 @@ public class WorldZoneController(WorldZoneService worldZoneService, IUserContext
         var userId = userContext.UserId;
         try
         {
-            await worldZoneService.SetDestinationAsync(userId, request.DestinationZoneId);
-            return NoContent();
+            var result = await worldZoneService.SetDestinationAsync(userId, request.DestinationZoneId);
+            return Ok(result);
         }
         catch (PathAlreadyChosenException ex)
         {
@@ -36,6 +36,16 @@ public class WorldZoneController(WorldZoneService worldZoneService, IUserContext
             {
                 error = "PATH_ALREADY_CHOSEN",
                 message = ex.Message
+            });
+        }
+        catch (BranchRequiresCrossroadsArrivalException ex)
+        {
+            return Conflict(new
+            {
+                error = "BRANCH_REQUIRES_CROSSROADS_ARRIVAL",
+                message = ex.Message,
+                crossroadsName = ex.CrossroadsName,
+                crossroadsZoneId = ex.CrossroadsZoneId,
             });
         }
         catch (InvalidOperationException ex)

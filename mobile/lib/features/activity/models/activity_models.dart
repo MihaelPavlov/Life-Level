@@ -155,6 +155,32 @@ class LevelUpUnlocks {
       );
 }
 
+class DungeonFloorCreditInfo {
+  final String dungeonName;
+  final int clearedFloorOrdinal;
+  final int totalFloors;
+  final bool runCompleted;
+  final int bonusXpAwarded;
+
+  const DungeonFloorCreditInfo({
+    required this.dungeonName,
+    required this.clearedFloorOrdinal,
+    required this.totalFloors,
+    required this.runCompleted,
+    required this.bonusXpAwarded,
+  });
+
+  factory DungeonFloorCreditInfo.fromJson(Map<String, dynamic> json) =>
+      DungeonFloorCreditInfo(
+        dungeonName: json['dungeonName'] as String? ?? '',
+        clearedFloorOrdinal:
+            (json['clearedFloorOrdinal'] as num?)?.toInt() ?? 0,
+        totalFloors: (json['totalFloors'] as num?)?.toInt() ?? 0,
+        runCompleted: json['runCompleted'] as bool? ?? false,
+        bonusXpAwarded: (json['bonusXpAwarded'] as num?)?.toInt() ?? 0,
+      );
+}
+
 class LogActivityResult {
   final String activityId;
   final int xpGained;
@@ -174,6 +200,11 @@ class LogActivityResult {
   final List<BlockedItemInfo> blockedItems;
   final LevelUpUnlocks? levelUpUnlocks;
 
+  /// Non-null when the backend's dungeon-activity port credited a floor (or
+  /// finished the whole run). Drives the floor-cleared toast + dungeon
+  /// overlay refresh.
+  final DungeonFloorCreditInfo? floorCreditResult;
+
   const LogActivityResult({
     required this.activityId,
     required this.xpGained,
@@ -192,6 +223,7 @@ class LogActivityResult {
     this.xpBonusApplied = 0,
     this.blockedItems = const [],
     this.levelUpUnlocks,
+    this.floorCreditResult,
   });
 
   factory LogActivityResult.fromJson(Map<String, dynamic> json) =>
@@ -223,6 +255,10 @@ class LogActivityResult {
             ? null
             : LevelUpUnlocks.fromJson(
                 json['levelUpUnlocks'] as Map<String, dynamic>),
+        floorCreditResult: json['floorCreditResult'] == null
+            ? null
+            : DungeonFloorCreditInfo.fromJson(
+                json['floorCreditResult'] as Map<String, dynamic>),
       );
 }
 

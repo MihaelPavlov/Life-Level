@@ -11,8 +11,11 @@ public static class WorldZoneModule
     {
         services.AddScoped<WorldZoneService>();
         services.AddScoped<MapReadService>();
+        services.AddScoped<WorldChestService>();
+        services.AddScoped<WorldDungeonService>();
         services.AddScoped<IZoneUnlockReadPort, ZoneUnlockReadPortAdapter>();
         services.AddScoped<IWorldZoneDistancePort>(sp => sp.GetRequiredService<WorldZoneService>());
+        services.AddScoped<IWorldDungeonActivityPort>(sp => sp.GetRequiredService<WorldDungeonService>());
         return services;
     }
 }

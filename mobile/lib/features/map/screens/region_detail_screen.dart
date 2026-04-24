@@ -8,7 +8,9 @@ import '../../../core/widgets/api_error_state.dart';
 import '../../character/providers/character_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
+import '../../../core/widgets/chest_opened_overlay.dart';
 import '../widgets/crossroads_choice_sheet.dart';
+import '../widgets/dungeon_floors_sheet.dart';
 import '../widgets/world_map_theme.dart';
 import '../widgets/zone_detail_sheet.dart';
 import '../widgets/zone_trail.dart';
@@ -124,8 +126,23 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   Future<void> _handleSetDestination(ZoneNode node) async {
+    // Pre-flight: if the user is currently inside an in-progress dungeon and
+    // the target isn't that dungeon, warn them before forfeiting floors.
+    final dungeonInProgress = _currentInProgressDungeon();
+    if (dungeonInProgress != null && dungeonInProgress.id != node.id) {
+      final remaining = (dungeonInProgress.dungeonFloorsTotal ?? 0) -
+          (dungeonInProgress.dungeonFloorsCompleted ?? 0);
+      final confirmed = await _confirmSkipDungeonFloors(
+        dungeonName: dungeonInProgress.name,
+        remaining: remaining,
+      );
+      if (!mounted) return;
+      if (confirmed != true) return; // user cancelled; no destination change
+    }
+
+    SetDestinationResult result;
     try {
-      await _service.setDestination(node.id);
+      result = await _service.setDestination(node.id);
     } on PathAlreadyChosenException catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop(); // close whichever sheet is open
@@ -133,6 +150,17 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         SnackBar(
           content: Text(e.message),
           backgroundColor: AppColors.red,
+        ),
+      );
+      return;
+    } on BranchRequiresCrossroadsArrivalException catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Reach ${e.crossroadsName} first, then pick a path.'),
+          backgroundColor: AppColors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
       return;
@@ -161,13 +189,232 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     await _load();
     WorldZoneRefreshNotifier.notify();
     if (!mounted) return;
+    final forfeitMsg = result.forfeitedFloors > 0
+        ? ' · ${result.forfeitedFloors} floor${result.forfeitedFloors == 1 ? "" : "s"} forfeited'
+        : '';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Destination set · ${node.name}'),
+        content: Text('Destination set · ${node.name}$forfeitMsg'),
         backgroundColor: AppColors.surfaceElevated,
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  /// Shows a friendlier, stakes-clear confirmation dialog before abandoning
+  /// an in-progress dungeon. Returns `true` only when the user taps the
+  /// confirm button — any other dismissal (tap outside, back, Cancel) is a
+  /// "stay in the dungeon" signal.
+  Future<bool?> _confirmSkipDungeonFloors({
+    required String dungeonName,
+    required int remaining,
+  }) {
+    final floorWord = remaining == 1 ? 'floor' : 'floors';
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: AppColors.red.withValues(alpha: 0.35)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.red.withValues(alpha: 0.14),
+                      border: Border.all(
+                          color: AppColors.red.withValues(alpha: 0.45)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('⚠️', style: TextStyle(fontSize: 22)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Skip $remaining $floorWord?',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'If you move on now, you\'ll lose these growth opportunities '
+                'at $dungeonName. Each unfinished floor is a workout type you '
+                'won\'t train — and they can\'t be recovered.',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.5,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.red.withValues(alpha: 0.08),
+                  border:
+                      Border.all(color: AppColors.red.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Text('🔒', style: TextStyle(fontSize: 15)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Permanent — you won\'t be able to come back for them.',
+                        style: TextStyle(
+                          color: AppColors.red,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(color: AppColors.border),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Stay and train',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.red,
+                        foregroundColor: Colors.white,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Skip anyway',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Returns the zone node representing the user's currently in-progress
+  /// dungeon in the open region (if any). Used to trigger the forfeit
+  /// confirmation before switching destination.
+  ZoneNode? _currentInProgressDungeon() {
+    final region = _region;
+    if (region == null) return null;
+    for (final z in region.nodes) {
+      if (z.isDungeon && z.dungeonStatus == DungeonRunStatus.inProgress) {
+        return z;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _handleOpenChest(ZoneNode node) async {
+    try {
+      final result = await _service.openChest(node.id);
+      if (!mounted) return;
+      Navigator.of(context).pop(); // close the zone sheet
+      await _load();
+      WorldZoneRefreshNotifier.notify();
+      if (!mounted) return;
+      // Celebration modal — mirrors the level-up / item-obtained overlays.
+      showChestOpenedOverlay(
+        context,
+        zoneName: result.zoneName,
+        xp: result.xp,
+        emoji: node.emoji.isEmpty ? '🎁' : node.emoji,
+      );
+    } on ChestAlreadyOpenedException catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to open chest: $e'),
+          backgroundColor: AppColors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleEnterDungeon(ZoneNode node) async {
+    // Ensure there's a run to return to. Safe to call even if already in
+    // progress — backend is idempotent.
+    try {
+      await _service.enterDungeon(node.id);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to enter dungeon: $e'),
+          backgroundColor: AppColors.red,
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(); // close the zone sheet first
+    // Open the floors as a bottom sheet stacked over the region screen —
+    // stays on the same page, no navigation push.
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DungeonFloorsSheet(zoneId: node.id),
+    );
+    if (!mounted) return;
+    await _load();
+    WorldZoneRefreshNotifier.notify();
   }
 
   void _showNodeSheet(ZoneNode node) {
@@ -176,10 +423,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
           '[node-tap] ${node.name} id=${node.id} isCrossroads=${node.isCrossroads} status=${node.status} branchOf=${node.branchOf}');
       return true;
     }());
-    // Crossroads short-circuit directly to the two-branch choice sheet —
-    // no intermediate ZoneDetailSheet. The choice sheet itself handles the
-    // "branches missing" case with a snackbar + debug log.
-    if (node.isCrossroads) {
+    // Crossroads short-circuit: only open the two-branch choice sheet when
+    // the user is actually AT the crossroads. Otherwise let the tap fall
+    // through to the standard ZoneDetailSheet so they can set the
+    // crossroads itself as destination (BFS auto-routes there).
+    if (node.isCrossroads && node.status == ZoneNodeStatus.active) {
       _openCrossroadsSheet(node);
       return;
     }
@@ -188,6 +436,21 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     final canSet = node.status == ZoneNodeStatus.next ||
         node.status == ZoneNodeStatus.available;
 
+    final atZone = node.status == ZoneNodeStatus.active;
+
+    // Branches need parent-crossroads arrival before they're settable. Look
+    // up the parent from the region's node list and check if it's active.
+    ZoneNode? parentCrossroads;
+    if (node.branchOf != null && _region != null) {
+      for (final z in _region!.nodes) {
+        if (z.id == node.branchOf) {
+          parentCrossroads = z;
+          break;
+        }
+      }
+    }
+    final userAtParentCrossroads =
+        parentCrossroads?.status == ZoneNodeStatus.active;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -200,6 +463,16 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         isDestination: isDestination,
         onSetDestination:
             canSet ? () => _handleSetDestination(node) : null,
+        onOpenChest: node.isChest && atZone && node.chestIsOpened != true
+            ? () => _handleOpenChest(node)
+            : null,
+        onEnterDungeon: node.isDungeon && atZone &&
+                (node.dungeonStatus != DungeonRunStatus.completed &&
+                    node.dungeonStatus != DungeonRunStatus.abandoned)
+            ? () => _handleEnterDungeon(node)
+            : null,
+        parentCrossroadsName: parentCrossroads?.name,
+        userAtParentCrossroads: userAtParentCrossroads,
       ),
     );
   }

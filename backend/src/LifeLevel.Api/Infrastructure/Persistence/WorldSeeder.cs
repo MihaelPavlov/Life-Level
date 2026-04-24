@@ -23,6 +23,9 @@ public class WorldSeeder(AppDbContext db)
 
             db.WorldZoneEdges.AddRange(WorldSeedData.CreateEdges());
             await db.SaveChangesAsync();
+
+            db.WorldZoneDungeonFloors.AddRange(WorldSeedData.CreateDungeonFloors());
+            await db.SaveChangesAsync();
         }
 
         // Minimal local-map seed: one start node per WorldZone so activity
@@ -62,6 +65,12 @@ public class WorldSeeder(AppDbContext db)
         await db.MapNodes.ExecuteDeleteAsync();
 
         // World-zone user state (before edges — CurrentEdgeId FK).
+        // Chest + dungeon user state first (refers to WorldZoneDungeonFloor).
+        await db.UserWorldDungeonFloorStates.ExecuteDeleteAsync();
+        await db.UserWorldDungeonStates.ExecuteDeleteAsync();
+        await db.UserWorldChestStates.ExecuteDeleteAsync();
+        await db.WorldZoneDungeonFloors.ExecuteDeleteAsync();
+
         await db.UserPathChoices.ExecuteDeleteAsync();
         await db.UserZoneUnlocks.ExecuteDeleteAsync();
         await db.UserWorldProgresses.ExecuteDeleteAsync();
@@ -82,6 +91,9 @@ public class WorldSeeder(AppDbContext db)
         await db.SaveChangesAsync();
 
         db.WorldZoneEdges.AddRange(WorldSeedData.CreateEdges());
+        await db.SaveChangesAsync();
+
+        db.WorldZoneDungeonFloors.AddRange(WorldSeedData.CreateDungeonFloors());
         await db.SaveChangesAsync();
 
         db.MapNodes.AddRange(WorldSeedData.CreateMapStartNodes());

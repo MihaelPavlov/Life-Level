@@ -31,5 +31,12 @@ public class WorldZoneConfiguration : IEntityTypeConfiguration<WorldZoneEntity>
         // keeps seed + DTOs simple). Indexed for branch-lookup queries.
         builder.Property(z => z.BranchOfId);
         builder.HasIndex(z => z.BranchOfId);
+
+        // Chest reward fields: populated only for Chest-type zones.
+        builder.Property(z => z.ChestRewardXp);
+        builder.Property(z => z.ChestRewardDescription).HasMaxLength(256);
+
+        // Dungeon bonus XP: populated only for Dungeon-type zones.
+        builder.Property(z => z.DungeonBonusXp);
     }
 }

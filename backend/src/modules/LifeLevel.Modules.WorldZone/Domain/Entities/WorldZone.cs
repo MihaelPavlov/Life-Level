@@ -22,6 +22,15 @@ public class WorldZone
     public int? NodesTotal { get; set; }
     public int? NodesCompleted { get; set; }
 
+    // Chest zones (Type == Chest): inline reward metadata. Null for all other zones.
+    public int? ChestRewardXp { get; set; }
+    public string? ChestRewardDescription { get; set; }
+
+    // Dungeon zones (Type == Dungeon): inline bonus XP granted on run completion.
+    // Floor definitions live in WorldZoneDungeonFloor keyed by WorldZoneId. Null
+    // for all other zones.
+    public int? DungeonBonusXp { get; set; }
+
     public Guid RegionId { get; set; }
     public Region Region { get; set; } = null!;
 

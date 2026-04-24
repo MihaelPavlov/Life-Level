@@ -23,7 +23,8 @@ public class ActivityService(
     ILevelUpItemGrantPort levelUpItemGrant,
     IZoneUnlockReadPort zoneUnlockRead,
     ICharacterTutorialPort characterTutorial,
-    ILogger<ActivityService> logger)
+    ILogger<ActivityService> logger,
+    IWorldDungeonActivityPort? worldDungeonActivity = null)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort
 {
     // LL-035: the "log your first activity" tutorial step gate. We advance the character
@@ -100,6 +101,24 @@ public class ActivityService(
             await mapDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
         }
 
+        // Credit the activity against the user's active dungeon floor (if any).
+        // Returns non-null only when a floor was actually cleared, so the
+        // client animates and optionally shows a bonus-XP celebration.
+        FloorCreditResult? floorCreditResult = null;
+        if (worldDungeonActivity != null)
+        {
+            try
+            {
+                floorCreditResult = await worldDungeonActivity.CreditActivityAsync(
+                    userId, request.Type, request.DistanceKm ?? 0, request.DurationMinutes);
+            }
+            catch (Exception ex)
+            {
+                // Dungeon credit must never break activity logging.
+                logger.LogWarning(ex, "Dungeon activity credit failed for user {UserId}", userId);
+            }
+        }
+
         // Update quest progress and capture which quests were just completed
         var questResult = await questProgress.UpdateProgressFromActivityAsync(
             userId, request.Type, request.DurationMinutes,
@@ -139,6 +158,7 @@ public class ActivityService(
             BonusXpAwarded = questResult.BonusXp,
             XpBonusApplied = xpBonusApplied,
             LevelUpUnlocks = levelUpUnlocks,
+            FloorCreditResult = floorCreditResult,
         };
     }
 

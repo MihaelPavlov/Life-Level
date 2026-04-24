@@ -249,6 +249,18 @@ class RegionDetail extends RegionCard {
 
 // ── Zone node (single point on the region trail) ─────────────────────────────
 
+enum DungeonRunStatus { notEntered, inProgress, completed, abandoned }
+
+DungeonRunStatus? dungeonRunStatusFromString(String? s) {
+  switch ((s ?? '').toLowerCase()) {
+    case 'notentered':  return DungeonRunStatus.notEntered;
+    case 'inprogress':  return DungeonRunStatus.inProgress;
+    case 'completed':   return DungeonRunStatus.completed;
+    case 'abandoned':   return DungeonRunStatus.abandoned;
+    default:            return null;
+  }
+}
+
 class ZoneNode {
   final String id;
   final String name;
@@ -261,10 +273,22 @@ class ZoneNode {
   final ZoneNodeStatus status;
   final bool isCrossroads;
   final bool isBoss;
+  final bool isChest;
+  final bool isDungeon;
 
   /// When non-null, this zone is one branch of a crossroads. All siblings
   /// share the same `branchOf` value — the id of the parent crossroads zone.
   final String? branchOf;
+
+  /// Chest fields (populated only when `isChest == true`).
+  final int? chestRewardXp;
+  final bool? chestIsOpened;
+
+  /// Dungeon fields (populated only when `isDungeon == true`).
+  final int? dungeonFloorsTotal;
+  final int? dungeonFloorsCompleted;
+  final int? dungeonFloorsForfeited;
+  final DungeonRunStatus? dungeonStatus;
 
   final int? nodesCompleted;
   final int? nodesTotal;
@@ -283,7 +307,15 @@ class ZoneNode {
     required this.status,
     required this.isCrossroads,
     required this.isBoss,
+    required this.isChest,
+    required this.isDungeon,
     this.branchOf,
+    this.chestRewardXp,
+    this.chestIsOpened,
+    this.dungeonFloorsTotal,
+    this.dungeonFloorsCompleted,
+    this.dungeonFloorsForfeited,
+    this.dungeonStatus,
     this.nodesCompleted,
     this.nodesTotal,
     this.loreCollected,
@@ -302,11 +334,120 @@ class ZoneNode {
         status: zoneNodeStatusFromString(json['status'] as String?),
         isCrossroads: json['isCrossroads'] as bool? ?? false,
         isBoss: json['isBoss'] as bool? ?? false,
+        isChest: json['isChest'] as bool? ?? false,
+        isDungeon: json['isDungeon'] as bool? ?? false,
         branchOf: json['branchOf'] as String?,
+        chestRewardXp: (json['chestRewardXp'] as num?)?.toInt(),
+        chestIsOpened: json['chestIsOpened'] as bool?,
+        dungeonFloorsTotal: (json['dungeonFloorsTotal'] as num?)?.toInt(),
+        dungeonFloorsCompleted: (json['dungeonFloorsCompleted'] as num?)?.toInt(),
+        dungeonFloorsForfeited: (json['dungeonFloorsForfeited'] as num?)?.toInt(),
+        dungeonStatus: dungeonRunStatusFromString(json['dungeonStatus'] as String?),
         nodesCompleted: (json['nodesCompleted'] as num?)?.toInt(),
         nodesTotal: (json['nodesTotal'] as num?)?.toInt(),
         loreCollected: (json['loreCollected'] as num?)?.toInt(),
         loreTotal: (json['loreTotal'] as num?)?.toInt(),
+      );
+}
+
+// ── Dungeon state (fetched via /api/world/dungeon/{zoneId}/state) ────────────
+
+enum DungeonFloorStatus { locked, active, completed, forfeited }
+enum DungeonFloorTargetKind { distanceKm, durationMinutes }
+
+DungeonFloorStatus dungeonFloorStatusFromString(String? s) {
+  switch ((s ?? '').toLowerCase()) {
+    case 'active':     return DungeonFloorStatus.active;
+    case 'completed':  return DungeonFloorStatus.completed;
+    case 'forfeited':  return DungeonFloorStatus.forfeited;
+    default:           return DungeonFloorStatus.locked;
+  }
+}
+
+DungeonFloorTargetKind dungeonFloorTargetKindFromString(String? s) {
+  switch ((s ?? '').toLowerCase()) {
+    case 'durationminutes': return DungeonFloorTargetKind.durationMinutes;
+    default:                return DungeonFloorTargetKind.distanceKm;
+  }
+}
+
+class DungeonFloor {
+  final String id;
+  final int ordinal;
+  final String name;
+  final String emoji;
+  final String activityType;
+  final DungeonFloorTargetKind targetKind;
+  final double targetValue;
+  final double progressValue;
+  final DungeonFloorStatus status;
+
+  const DungeonFloor({
+    required this.id,
+    required this.ordinal,
+    required this.name,
+    required this.emoji,
+    required this.activityType,
+    required this.targetKind,
+    required this.targetValue,
+    required this.progressValue,
+    required this.status,
+  });
+
+  double get progressFraction =>
+      targetValue <= 0 ? 0.0 : (progressValue / targetValue).clamp(0.0, 1.0);
+
+  String get targetLabel => targetKind == DungeonFloorTargetKind.distanceKm
+      ? '${targetValue.toStringAsFixed(targetValue.truncateToDouble() == targetValue ? 0 : 1)} km'
+      : '${targetValue.toInt()} minutes';
+
+  factory DungeonFloor.fromJson(Map<String, dynamic> json) => DungeonFloor(
+        id: json['id'] as String,
+        ordinal: (json['ordinal'] as num?)?.toInt() ?? 1,
+        name: json['name'] as String? ?? '',
+        emoji: json['emoji'] as String? ?? '',
+        activityType: json['activityType'] as String? ?? '',
+        targetKind:
+            dungeonFloorTargetKindFromString(json['targetKind'] as String?),
+        targetValue: (json['targetValue'] as num?)?.toDouble() ?? 0.0,
+        progressValue: (json['progressValue'] as num?)?.toDouble() ?? 0.0,
+        status: dungeonFloorStatusFromString(json['status'] as String?),
+      );
+}
+
+class DungeonState {
+  final String zoneId;
+  final String zoneName;
+  final DungeonRunStatus status;
+  final int currentFloorOrdinal;
+  final int bonusXp;
+  final List<DungeonFloor> floors;
+
+  const DungeonState({
+    required this.zoneId,
+    required this.zoneName,
+    required this.status,
+    required this.currentFloorOrdinal,
+    required this.bonusXp,
+    required this.floors,
+  });
+
+  int get totalFloors => floors.length;
+  int get completedFloors =>
+      floors.where((f) => f.status == DungeonFloorStatus.completed).length;
+
+  factory DungeonState.fromJson(Map<String, dynamic> json) => DungeonState(
+        zoneId: json['zoneId'] as String,
+        zoneName: json['zoneName'] as String? ?? '',
+        status: dungeonRunStatusFromString(json['status'] as String?) ??
+            DungeonRunStatus.notEntered,
+        currentFloorOrdinal:
+            (json['currentFloorOrdinal'] as num?)?.toInt() ?? 0,
+        bonusXp: (json['bonusXp'] as num?)?.toInt() ?? 0,
+        floors: (json['floors'] as List?)
+                ?.map((e) => DungeonFloor.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            const [],
       );
 }
 

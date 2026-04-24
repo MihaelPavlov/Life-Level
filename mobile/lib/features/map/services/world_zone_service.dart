@@ -46,6 +46,56 @@ class PathAlreadyChosenException implements Exception {
   String toString() => 'PathAlreadyChosenException($message)';
 }
 
+/// Thrown by [WorldZoneService.openChest] when the user already opened the
+/// chest at this zone (backend 409 `CHEST_ALREADY_OPENED`).
+class ChestAlreadyOpenedException implements Exception {
+  final String message;
+  const ChestAlreadyOpenedException(this.message);
+  @override
+  String toString() => 'ChestAlreadyOpenedException($message)';
+}
+
+/// Thrown by [WorldZoneService.setDestination] when the target zone is a
+/// crossroads branch but the user is not currently at the parent crossroads
+/// (backend 409 `BRANCH_REQUIRES_CROSSROADS_ARRIVAL`). The mobile should
+/// gate the CTA upfront so this typically only fires on API misuse.
+class BranchRequiresCrossroadsArrivalException implements Exception {
+  final String message;
+  final String crossroadsName;
+  final String crossroadsZoneId;
+  const BranchRequiresCrossroadsArrivalException({
+    required this.message,
+    required this.crossroadsName,
+    required this.crossroadsZoneId,
+  });
+  @override
+  String toString() =>
+      'BranchRequiresCrossroadsArrivalException($message)';
+}
+
+class OpenChestResult {
+  final String zoneName;
+  final int xp;
+  const OpenChestResult({required this.zoneName, required this.xp});
+  factory OpenChestResult.fromJson(Map<String, dynamic> json) => OpenChestResult(
+        zoneName: json['zoneName'] as String? ?? '',
+        xp: (json['xp'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// Destination-set response. Returns the number of dungeon floors the user
+/// just forfeited by moving away from an in-progress dungeon — mobile uses
+/// this to surface a snackbar when the abandon was triggered server-side
+/// (e.g. auto-advance during AddDistance).
+class SetDestinationResult {
+  final int forfeitedFloors;
+  const SetDestinationResult({required this.forfeitedFloors});
+  factory SetDestinationResult.fromJson(Map<String, dynamic> json) =>
+      SetDestinationResult(
+        forfeitedFloors: (json['forfeitedFloors'] as num?)?.toInt() ?? 0,
+      );
+}
+
 class WorldZoneService {
   /// World hub data — list of regions + user + optional active journey.
   /// Backed by the rebuilt `GET /api/map/world` endpoint.
@@ -69,11 +119,17 @@ class WorldZoneService {
     return WorldFullData.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<void> setDestination(String destinationZoneId) async {
+  Future<SetDestinationResult> setDestination(String destinationZoneId) async {
     try {
-      await ApiClient.instance.put('/world/destination', data: {
-        'destinationZoneId': destinationZoneId,
-      });
+      final response = await ApiClient.instance.put(
+        '/world/destination',
+        data: {'destinationZoneId': destinationZoneId},
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return SetDestinationResult.fromJson(data);
+      }
+      return const SetDestinationResult(forfeitedFloors: 0);
     } on DioException catch (e) {
       if (e.response?.statusCode == 409) {
         final data = e.response?.data;
@@ -83,9 +139,49 @@ class WorldZoneService {
             map['message'] as String? ?? 'You already chose a different path.',
           );
         }
+        if (map['error'] == 'BRANCH_REQUIRES_CROSSROADS_ARRIVAL') {
+          throw BranchRequiresCrossroadsArrivalException(
+            message: map['message'] as String? ??
+                'Reach the crossroads before picking a branch.',
+            crossroadsName: map['crossroadsName'] as String? ?? 'the crossroads',
+            crossroadsZoneId: map['crossroadsZoneId'] as String? ?? '',
+          );
+        }
       }
       rethrow;
     }
+  }
+
+  /// Open a chest zone the user is currently standing on. One-shot per user.
+  Future<OpenChestResult> openChest(String zoneId) async {
+    try {
+      final response =
+          await ApiClient.instance.post('/world/chest/$zoneId/open');
+      return OpenChestResult.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        final data = e.response?.data;
+        final map = data is Map ? data : const {};
+        if (map['error'] == 'CHEST_ALREADY_OPENED') {
+          throw ChestAlreadyOpenedException(
+            map['message'] as String? ?? 'You already opened this chest.',
+          );
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Enter a dungeon the user is standing on. Idempotent — re-entering an
+  /// in-progress run is a no-op on the server side.
+  Future<void> enterDungeon(String zoneId) async {
+    await ApiClient.instance.post('/world/dungeon/$zoneId/enter');
+  }
+
+  /// Fetch per-floor state for the dungeon overlay.
+  Future<DungeonState> getDungeonState(String zoneId) async {
+    final response = await ApiClient.instance.get('/world/dungeon/$zoneId/state');
+    return DungeonState.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<Map<String, dynamic>> completeZone(String zoneId) async {

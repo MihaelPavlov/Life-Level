@@ -9,9 +9,11 @@ import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../session/invalidate_user_providers.dart';
 import '../services/deep_link_notifier.dart';
+import '../services/dungeon_floor_cleared_notifier.dart';
 import '../services/level_up_notifier.dart';
 import '../services/item_obtained_notifier.dart';
 import '../services/inventory_full_notifier.dart';
+import '../widgets/dungeon_floor_cleared_overlay.dart';
 import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
@@ -100,6 +102,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<String> _navTabSub;
   late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
+  late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
 
   final _fabKey = GlobalKey();
@@ -228,6 +231,10 @@ class _MainShellState extends ConsumerState<MainShell>
         showInventoryFullOverlay(context, item, level);
       }
     });
+    _dungeonFloorSub = DungeonFloorClearedNotifier.stream.listen((event) {
+      if (!mounted) return;
+      showDungeonFloorClearedOverlay(context, event);
+    });
     _ringIds = List.from(widget.initialRingIds ?? kDefaultRingIds);
     _navIds  = List.from(widget.initialNavIds  ?? kDefaultNavIds);
 
@@ -338,6 +345,7 @@ class _MainShellState extends ConsumerState<MainShell>
     WidgetsBinding.instance.removeObserver(this);
     _levelUpSub.cancel();
     _itemObtainedSub.cancel();
+    _dungeonFloorSub.cancel();
     _navTabSub.cancel();
     _worldMapSub.cancel();
     _inventoryFullSub.cancel();
