@@ -6,1896 +6,620 @@
 <title>LifeLevel Admin — Map</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
   :root {
-    --bg: #040810; --bg2: #080e14; --surface: #161b22; --surface2: #1e2632;
-    --border: #30363d; --text: #e6edf3; --text2: #8b949e;
-    --blue: #4f9eff; --purple: #a371f7; --orange: #f5a623;
-    --red: #f85149; --green: #3fb950; --radius: 8px;
+    --bg:        #040810;
+    --bg2:       #080e14;
+    --surface:   #161b22;
+    --surface2:  #1e2632;
+    --border:    #30363d;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --blue:      #4f9eff;
+    --purple:    #a371f7;
+    --orange:    #f5a623;
+    --red:       #f85149;
+    --green:     #3fb950;
+    --radius:    8px;
   }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; font-size: 14px; min-height: 100vh; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
   header h1 { font-size: 20px; font-weight: 700; color: var(--blue); }
-  .nav-links { display: flex; gap: 10px; }
-  .nav-links a { color: var(--text2); font-size: 13px; text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius); transition: color .15s, border-color .15s; }
-  .nav-links a:hover, .nav-links a.active { color: var(--blue); border-color: var(--blue); }
-  .token-row { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+  header a { color: var(--text2); text-decoration: none; font-size: 13px; }
+  header a:hover { color: var(--text); }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
   .token-row label { color: var(--text2); font-size: 12px; }
-  input[type="text"], input[type="number"], select, textarea {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    border-radius: var(--radius); padding: 8px 12px; font-size: 13px; outline: none; transition: border-color .15s;
+
+  input[type="text"], input[type="number"], input[type="url"],
+  select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
   }
   input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+
   #tokenInput { width: 420px; }
-  button { background: var(--blue); color: #fff; border: none; border-radius: var(--radius); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+
+  button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
   button:hover { opacity: .85; }
   button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   button.danger { background: var(--red); }
+  button.success { background: var(--green); }
   button.sm { padding: 4px 10px; font-size: 12px; }
-  button.warning { background: var(--orange); color: #000; }
-  nav.tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; flex-wrap: wrap; }
-  nav.tabs button { background: none; border: none; border-bottom: 3px solid transparent; color: var(--text2); padding: 14px 20px; font-size: 14px; font-weight: 600; border-radius: 0; cursor: pointer; transition: color .15s, border-color .15s; }
-  nav.tabs button:hover { color: var(--text); }
-  nav.tabs button.active { color: var(--blue); border-bottom-color: var(--blue); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
   main { padding: 24px; max-width: 1400px; }
-  .tab-panel { display: none; } .tab-panel.active { display: block; }
-  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: var(--radius); font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 1000; max-width: 340px; }
-  #toast.show { opacity: 1; } #toast.ok { border-left: 4px solid var(--green); } #toast.err { border-left: 4px solid var(--red); }
-  .table-wrap { overflow-x: auto; margin-top: 16px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { background: var(--surface2); color: var(--text2); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  tr:hover td { background: var(--surface2); }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
-  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-  .section-header h2 { font-size: 16px; font-weight: 700; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
-  .form-group { display: flex; flex-direction: column; gap: 4px; }
-  .form-group label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
-  .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
-  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; justify-content: center; align-items: center; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .panel-header h2 { font-size: 16px; font-weight: 700; }
+  .panel-header .spacer { flex: 1; }
+  .panel-sub { color: var(--text2); font-size: 12px; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: var(--radius);
+    font-size: 13px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 1000; max-width: 340px;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok { border-left: 4px solid var(--green); }
+  #toast.err { border-left: 4px solid var(--red); }
+
+  /* World / Region chip cards */
+  .card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+    min-width: 180px;
+  }
+  .card:hover { border-color: var(--blue); }
+  .card.selected { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue) inset; }
+  .card .title { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .card .sub { font-size: 11px; color: var(--text2); margin-top: 4px; letter-spacing: .04em; text-transform: uppercase; }
+  .card .actions { margin-top: 10px; display: flex; gap: 6px; }
+  .card.is-active { border-color: var(--green); }
+  .card .active-tag { background: var(--green); color: #000; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+
+  /* Zone table */
+  .zone-list { margin-top: 12px; }
+  .zone-row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+  }
+  .zone-row .tier { color: var(--text2); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .zone-row .main  { display: flex; align-items: center; gap: 10px; }
+  .zone-row .main .emoji { font-size: 20px; }
+  .zone-row .main .name  { font-weight: 700; }
+  .zone-row .main .meta  { color: var(--text2); font-size: 11px; }
+  .zone-row .actions { display: flex; gap: 6px; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .badge-Entry      { background: #1a2233; color: #7ec8ff; }
+  .badge-Standard   { background: #1e2d1e; color: #7ee87e; }
+  .badge-Crossroads { background: #2a2250; color: var(--purple); }
+  .badge-Boss       { background: #3d0c0c; color: var(--red); }
+  .badge-Chest      { background: #3d2a00; color: var(--orange); }
+  .badge-Dungeon    { background: #2d1a33; color: #d07ef7; }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(4,8,16,.78);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
   .modal-backdrop.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; min-width: 380px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
-  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); }
-  .filter-bar { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; flex-wrap: wrap; }
-  .filter-bar label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
-  .filter-bar select { min-width: 220px; }
-  .zone-info { font-size: 12px; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; }
-  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text2); margin-right: 4px; }
-  .pill.tier1 { border-color: var(--green); color: var(--green); }
-  .pill.tier2 { border-color: var(--blue); color: var(--blue); }
-  .pill.tier3 { border-color: var(--purple); color: var(--purple); }
-  .pill.tier4 { border-color: var(--orange); color: var(--orange); }
-  .pill.tier5 { border-color: var(--red); color: var(--red); }
-  .type-entry      { border-color: var(--blue); color: var(--blue); }
-  .type-boss       { border-color: var(--red); color: var(--red); }
-  .type-dungeon    { border-color: var(--purple); color: var(--purple); }
-  .type-chest      { border-color: var(--orange); color: var(--orange); }
-  .type-crossroads { border-color: var(--green); color: var(--green); }
-  .rarity-common    { color: #8b949e; }
-  .rarity-uncommon  { color: var(--green); }
-  .rarity-rare      { color: var(--blue); }
-  .rarity-epic      { color: var(--purple); }
-  .rarity-legendary { color: var(--orange); }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 640px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .modal h3 { font-size: 18px; margin-bottom: 16px; }
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 11px; color: var(--text2); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  .form-check { display: flex; align-items: center; gap: 8px; }
+  .form-check input { width: auto; }
+
+  .type-panel { display: none; border: 1px dashed var(--border); border-radius: var(--radius); padding: 14px; margin-top: 12px; background: rgba(79,158,255,0.04); }
+  .type-panel.active { display: block; }
+  .type-panel h4 { font-size: 12px; color: var(--blue); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+  .type-hint { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 10px; }
+  .type-hint b { color: var(--text); font-weight: 600; }
+
+  /* Floors table (inside zone modal) */
+  .floors-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .floors-table th {
+    text-align: left;
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .floors-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .floors-table tr:last-child td { border-bottom: none; }
+  .floors-empty { color: var(--text2); font-size: 12px; padding: 10px; text-align: center; }
+  .floors-warn { color: var(--orange); font-size: 12px; margin-top: 6px; }
+
+  /* Edges drawer */
+  .edges-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .edges-table th {
+    text-align: left;
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .edges-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
+
+  .empty-state { color: var(--text2); font-size: 13px; padding: 16px; text-align: center; }
+
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🗺️ Map Admin</h1>
-  <div class="nav-links">
-    <a href="index.html" id="linkItems">⚙️ Items</a>
-    <a href="map.html" class="active">🗺️ Map</a>
-  </div>
+  <h1>LifeLevel Admin — Map</h1>
+  <a href="index.html">Items</a>
   <div class="token-row">
-    <label for="tokenInput">JWT Token</label>
-    <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
-    <button onclick="saveToken()">Save</button>
+    <label for="tokenInput">Bearer token</label>
+    <input type="text" id="tokenInput" placeholder="paste JWT">
+    <button id="tokenSaveBtn" class="sm secondary">Save</button>
   </div>
 </header>
 
-<nav class="tabs">
-  <button class="active" onclick="switchTab('worlds',this)">🌐 Worlds</button>
-  <button onclick="switchTab('regions',this)">🗺️ Regions</button>
-  <button onclick="switchTab('nodes',this)">Nodes</button>
-  <button onclick="switchTab('edges',this)">Edges</button>
-  <button onclick="switchTab('bosses',this)">Bosses</button>
-  <button onclick="switchTab('zones',this)">🌍 World Zones</button>
-  <button onclick="switchTab('dungeons',this)">🏰 Dungeons</button>
-  <button onclick="switchTab('crossroads',this)">🔀 Crossroads</button>
-  <button onclick="switchTab('chests',this)">🗝️ Chests</button>
-</nav>
-
 <main>
 
-<!-- WORLDS TAB -->
-<div id="tab-worlds" class="tab-panel active">
-  <div class="section-header">
-    <h2>Worlds</h2>
-    <button onclick="openWorldModal()">+ Add World</button>
-    <button class="secondary" onclick="loadWorlds()">↺ Refresh</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Top-level game worlds. Only one world can be active at a time.</p>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Name</th><th>Active</th><th>Regions</th><th>Zones</th><th>Created</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="worldsTable"><tr><td colspan="6" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-</div>
+  <!-- Worlds panel -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Worlds</h2>
+      <span class="panel-sub" id="worldsStatus"></span>
+      <div class="spacer"></div>
+      <button id="newWorldBtn" class="sm">+ New world</button>
+    </div>
+    <div id="worldsGrid" class="card-grid"></div>
+  </section>
 
-<!-- REGIONS TAB -->
-<div id="tab-regions" class="tab-panel">
-  <div class="section-header">
-    <h2>Regions</h2>
-    <button onclick="openRegionModal()">+ Add Region</button>
-    <button class="secondary" onclick="loadRegions()">↺ Refresh</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Sub-areas within a world. Each region groups 5 typed zones.</p>
+  <!-- Regions panel -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2 id="regionsTitle">Regions</h2>
+      <span class="panel-sub" id="regionsStatus"></span>
+      <div class="spacer"></div>
+      <button id="newRegionBtn" class="sm" disabled>+ New region</button>
+    </div>
+    <div id="regionsGrid" class="card-grid"></div>
+    <div id="regionsEmpty" class="empty-state hidden">Select a world above to view regions.</div>
+  </section>
 
-  <div class="filter-bar">
-    <label>Filter by World</label>
-    <select id="regionWorldFilter" onchange="onRegionWorldFilterChange()">
-      <option value="">— Select a World —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Chapter</th><th>Emoji</th><th>Name</th><th>Theme</th>
-        <th>Lvl Req</th><th>Zones</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="regionsTable"><tr><td colspan="7" style="color:var(--text2);text-align:center;padding:24px">Pick a world above.</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- NODES TAB -->
-<div id="tab-nodes" class="tab-panel">
-  <div class="section-header">
-    <h2>Map Nodes</h2>
-    <button onclick="openNodeModal()">+ Add Node</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Zones and waypoints on the adventure map.</p>
-
-  <div class="filter-bar">
-    <label>Filter by World Zone</label>
-    <select id="nodeZoneFilter" onchange="onNodeZoneFilterChange()">
-      <option value="">— All Zones —</option>
-    </select>
-    <span id="nodeZoneInfo" class="zone-info" style="display:none"></span>
-  </div>
-
-  <div id="nodeTableView">
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Icon</th><th>Name</th><th>Type</th><th>Region</th>
-          <th>Lvl Req</th><th>Reward XP</th><th>Start</th><th>Hidden</th><th>Actions</th>
-        </tr></thead>
-        <tbody id="nodesTable"><tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
+  <!-- Zones panel -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2 id="zonesTitle">Zones</h2>
+      <span class="panel-sub" id="zonesStatus"></span>
+      <div class="spacer"></div>
+      <button id="newZoneBtn" class="sm" disabled>+ New zone</button>
+      <button id="toggleEdgesBtn" class="sm secondary" disabled>Edges ▾</button>
+    </div>
+    <div id="zonesList" class="zone-list"></div>
+    <div id="zonesEmpty" class="empty-state hidden">Select a region above to view zones.</div>
+    <div id="edgesSection" class="hidden" style="margin-top:16px; border-top: 1px solid var(--border); padding-top: 16px;">
+      <div class="panel-header">
+        <h2>Edges</h2>
+        <div class="spacer"></div>
+        <button id="newEdgeBtn" class="sm">+ Add edge</button>
+      </div>
+      <table class="edges-table">
+        <thead>
+          <tr><th>From</th><th>→ To</th><th>Distance (km)</th><th>Bidirectional</th><th></th></tr>
+        </thead>
+        <tbody id="edgesTbody"></tbody>
       </table>
     </div>
-  </div>
-</div>
-
-<!-- EDGES TAB -->
-<div id="tab-edges" class="tab-panel">
-  <div class="section-header">
-    <h2>Map Edges</h2>
-    <button onclick="openEdgeModal()">+ Add Edge</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Connections between nodes with travel distance.</p>
-
-  <div class="filter-bar">
-    <label>Filter by Zone</label>
-    <select id="edgeZoneFilter" onchange="onEdgeZoneFilterChange()">
-      <option value="">— All Zones —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>From Node</th><th>To Node</th><th>Distance (km)</th><th>Bidirectional</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="edgesTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- BOSSES TAB -->
-<div id="tab-bosses" class="tab-panel">
-  <div class="section-header">
-    <h2>Bosses</h2>
-    <button onclick="openBossModal()">+ Add Boss</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Zone bosses with HP pools and rewards.</p>
-
-  <div class="filter-bar">
-    <label>Filter by Zone</label>
-    <select id="bossZoneFilter" onchange="onBossZoneFilterChange()">
-      <option value="">— All Zones —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Icon</th><th>Name</th><th>Node</th><th>Max HP</th>
-        <th>Reward XP</th><th>Timer (days)</th><th>Mini</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="bossesTable"><tr><td colspan="8" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- WORLD ZONES TAB -->
-<div id="tab-zones" class="tab-panel">
-  <div class="section-header">
-    <h2>World Zones</h2>
-    <button onclick="openZoneModal()">+ New Zone</button>
-    <button class="secondary" onclick="loadZones()">↺ Refresh</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Typed zones within a region (Entry / Boss / Dungeon / Chest / Crossroads).</p>
-
-  <div class="filter-bar">
-    <label>World</label>
-    <select id="zoneWorldFilter" onchange="onZoneWorldFilterChange()">
-      <option value="">— All Worlds —</option>
-    </select>
-    <label>Region</label>
-    <select id="zoneRegionFilter" onchange="onZoneRegionFilterChange()">
-      <option value="">— All Regions —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Icon</th><th>Name</th><th>Region</th><th>Type</th><th>Tier</th>
-        <th>Lvl Req</th><th>Total XP</th><th>Distance (km)</th>
-        <th>Flags</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="zonesTable"><tr><td colspan="10" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- DUNGEONS TAB -->
-<div id="tab-dungeons" class="tab-panel">
-  <div class="section-header">
-    <h2>Dungeons</h2>
-    <button onclick="openDungeonModal()">+ Add Dungeon</button>
-    <button class="secondary" onclick="loadDungeons()">↺ Refresh</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Each dungeon is attached to a map node and has floors with activity requirements.</p>
-
-  <div class="filter-bar">
-    <label>Filter by Zone</label>
-    <select id="dungeonZoneFilter" onchange="onDungeonZoneFilterChange()">
-      <option value="">— All Zones —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Name</th><th>Node</th><th>Total Floors</th><th>Configured</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="dungeonsTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-  <div id="floorEditor" style="display:none;margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <h3 id="floorEditorTitle" style="font-size:15px;font-weight:700"></h3>
-      <button class="sm" onclick="openFloorModal()">+ Add Floor</button>
-      <button class="sm secondary" style="margin-left:auto" onclick="closeFloorEditor()">✕ Close</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Floor #</th><th>Activity</th><th>Required Minutes</th><th>Reward XP</th><th>Actions</th>
-        </tr></thead>
-        <tbody id="floorsTable"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No floors yet.</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- CROSSROADS TAB -->
-<div id="tab-crossroads" class="tab-panel">
-  <div class="section-header">
-    <h2>Crossroads</h2>
-    <button onclick="openCrossroadsModal()">+ Add Crossroads</button>
-    <button class="secondary" onclick="loadCrossroads()">↺ Refresh</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Branching decision points. Each crossroads is attached to a map node and has multiple paths.</p>
-
-  <div class="filter-bar">
-    <label>Filter by Zone</label>
-    <select id="crossroadsZoneFilter" onchange="onCrossroadsZoneFilterChange()">
-      <option value="">— All Zones —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Node</th><th>Paths</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="crossroadsTable"><tr><td colspan="3" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-  <div id="pathEditor" style="display:none;margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <h3 id="pathEditorTitle" style="font-size:15px;font-weight:700"></h3>
-      <button class="sm" onclick="openPathModal()">+ Add Path</button>
-      <button class="sm secondary" style="margin-left:auto" onclick="closePathEditor()">✕ Close</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Name</th><th>Difficulty</th><th>Distance (km)</th><th>Est. Days</th><th>Reward XP</th><th>Leads To</th><th>Actions</th>
-        </tr></thead>
-        <tbody id="pathsTable"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- CHESTS TAB -->
-<div id="tab-chests" class="tab-panel">
-  <div class="section-header">
-    <h2>Chests</h2>
-    <button onclick="openChestModal()">+ Add Chest</button>
-    <button class="secondary" onclick="loadChests()">↺ Refresh</button>
-  </div>
-  <p style="color:var(--text2);font-size:13px">Treasure chests attached to map nodes. Rarity determines visual + loot tier.</p>
-
-  <div class="filter-bar">
-    <label>Filter by Zone</label>
-    <select id="chestZoneFilter" onchange="onChestZoneFilterChange()">
-      <option value="">— All Zones —</option>
-    </select>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Icon</th><th>Node</th><th>Zone</th><th>Rarity</th><th>Reward XP</th><th>Actions</th>
-      </tr></thead>
-      <tbody id="chestsTable"><tr><td colspan="6" style="color:var(--text2);text-align:center;padding:24px">Loading…</td></tr></tbody>
-    </table>
-  </div>
-</div>
+  </section>
 
 </main>
 
-<!-- WORLD MODAL -->
-<div id="worldModal" class="modal-backdrop">
+<!-- World modal -->
+<div class="modal-backdrop" id="worldModal">
   <div class="modal">
-    <h3 id="worldModalTitle">Add World</h3>
-    <input type="hidden" id="worldId">
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:1/-1"><label>Name</label><input type="text" id="worldName" placeholder="e.g. Aetheria"></div>
-      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
-        <label>Active</label><input type="checkbox" id="worldIsActive">
-      </div>
+    <h3 id="worldModalTitle">New world</h3>
+    <div class="form-row">
+      <label>Name</label>
+      <input type="text" id="worldNameInput">
     </div>
-    <p style="color:var(--text2);font-size:12px;margin-top:10px">Only one world can be active at a time — enabling this will deactivate others.</p>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('worldModal')">Cancel</button>
-      <button onclick="saveWorld()">Save World</button>
+    <div class="form-row form-check">
+      <input type="checkbox" id="worldActiveInput">
+      <label for="worldActiveInput" style="margin:0; text-transform: none;">Set as active world</label>
+    </div>
+    <div class="form-actions">
+      <button class="secondary" data-close-modal="worldModal">Cancel</button>
+      <button id="worldSaveBtn" class="success">Save</button>
     </div>
   </div>
 </div>
 
-<!-- REGION MODAL -->
-<div id="regionModal" class="modal-backdrop">
+<!-- Region modal -->
+<div class="modal-backdrop" id="regionModal">
   <div class="modal">
-    <h3 id="regionModalTitle">Add Region</h3>
-    <input type="hidden" id="regionId">
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:1/-1"><label>World</label>
-        <select id="regionWorldSelect" style="width:100%"></select>
+    <h3 id="regionModalTitle">New region</h3>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="regionNameInput">
       </div>
-      <div class="form-group"><label>Emoji</label><input type="text" id="regionEmoji" placeholder="🌲"></div>
-      <div class="form-group"><label>Name</label><input type="text" id="regionName" placeholder="e.g. Verdant Reach"></div>
-      <div class="form-group"><label>Theme</label>
-        <select id="regionTheme">
-          <option>Forest</option><option>Mountain</option><option>Ocean</option>
-          <option>Frost</option><option>Volcano</option><option>Desert</option>
-        </select>
+      <div class="form-row">
+        <label>Emoji</label>
+        <input type="text" id="regionEmojiInput" maxlength="8">
       </div>
-      <div class="form-group"><label>Chapter Index</label><input type="number" id="regionChapterIdx" value="1" min="1"></div>
-      <div class="form-group"><label>Level Requirement</label><input type="number" id="regionLvlReq" value="1" min="1"></div>
     </div>
-    <div class="form-group" style="margin-top:12px"><label>Lore</label>
-      <textarea id="regionLore" rows="3" style="width:100%;resize:vertical" placeholder="Short description of the region…"></textarea>
+    <div class="form-grid-3">
+      <div class="form-row">
+        <label>Theme</label>
+        <select id="regionThemeInput"></select>
+      </div>
+      <div class="form-row">
+        <label>Chapter #</label>
+        <input type="number" id="regionChapterInput" value="1" min="1">
+      </div>
+      <div class="form-row">
+        <label>Level req</label>
+        <input type="number" id="regionLevelInput" value="1" min="1">
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('regionModal')">Cancel</button>
-      <button onclick="saveRegion()">Save Region</button>
+    <div class="form-row">
+      <label>Lore</label>
+      <textarea id="regionLoreInput" rows="3"></textarea>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-row">
+        <label>Boss name</label>
+        <input type="text" id="regionBossNameInput">
+      </div>
+      <div class="form-row">
+        <label>Boss status</label>
+        <select id="regionBossStatusInput"></select>
+      </div>
+      <div class="form-row">
+        <label>Default status</label>
+        <select id="regionDefaultStatusInput"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Pins (JSON array of {label,value})</label>
+      <textarea id="regionPinsInput" rows="2" placeholder='[{"label":"Reward","value":"+300 XP"}]'></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="secondary" data-close-modal="regionModal">Cancel</button>
+      <button id="regionSaveBtn" class="success">Save</button>
     </div>
   </div>
 </div>
 
-<!-- DUNGEON MODAL -->
-<div id="dungeonModal" class="modal-backdrop">
+<!-- Zone modal -->
+<div class="modal-backdrop" id="zoneModal">
   <div class="modal">
-    <h3 id="dungeonModalTitle">Add Dungeon</h3>
-    <input type="hidden" id="dungeonId">
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:1/-1"><label>Node</label><select id="dungeonNode" style="width:100%"></select></div>
-      <div class="form-group"><label>Dungeon Name</label><input type="text" id="dungeonName" placeholder="e.g. Crystal Caverns"></div>
-      <div class="form-group"><label>Total Floors</label><input type="number" id="dungeonTotalFloors" value="5" min="1"></div>
+    <h3 id="zoneModalTitle">New zone</h3>
+
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="zoneNameInput">
+      </div>
+      <div class="form-row">
+        <label>Emoji</label>
+        <input type="text" id="zoneEmojiInput" maxlength="8">
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('dungeonModal')">Cancel</button>
-      <button onclick="saveDungeon()">Save Dungeon</button>
+    <div class="form-row">
+      <label>Description</label>
+      <textarea id="zoneDescInput" rows="2"></textarea>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-row">
+        <label>Type</label>
+        <select id="zoneTypeInput"></select>
+      </div>
+      <div class="form-row">
+        <label>Tier</label>
+        <input type="number" id="zoneTierInput" value="1" min="1">
+      </div>
+      <div class="form-row">
+        <label>Level req</label>
+        <input type="number" id="zoneLevelInput" value="1" min="1">
+      </div>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-row">
+        <label>XP reward</label>
+        <input type="number" id="zoneXpInput" value="0" min="0">
+      </div>
+      <div class="form-row">
+        <label>Distance (km)</label>
+        <input type="number" id="zoneDistanceInput" value="0" min="0" step="0.1">
+      </div>
+      <div class="form-row form-check" style="align-items:flex-end;">
+        <input type="checkbox" id="zoneStartInput">
+        <label for="zoneStartInput" style="margin:0; text-transform:none;">Start zone</label>
+      </div>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-row">
+        <label>Branch of (Crossroads)</label>
+        <select id="zoneBranchInput"><option value="">— none —</option></select>
+      </div>
+      <div class="form-row">
+        <label>Lore total</label>
+        <input type="number" id="zoneLoreTotalInput" min="0">
+      </div>
+      <div class="form-row">
+        <label>Nodes total</label>
+        <input type="number" id="zoneNodesTotalInput" min="0">
+      </div>
+    </div>
+
+    <!-- Entry type hint -->
+    <div class="type-panel" id="typeEntryPanel">
+      <h4>Entry zone</h4>
+      <p class="type-hint">The region's starting zone. Tick <b>Start zone</b> above — only one Entry zone per region. No type-specific config.</p>
+    </div>
+
+    <!-- Standard type hint -->
+    <div class="type-panel" id="typeStandardPanel">
+      <h4>Standard zone</h4>
+      <p class="type-hint">A named story zone on the critical path. Players traverse edges to reach it. XP reward above = zone-completion XP.</p>
+    </div>
+
+    <!-- Chest type panel -->
+    <div class="type-panel" id="typeChestPanel">
+      <h4>Chest zone</h4>
+      <p class="type-hint">Side reward. <b>Name + Emoji</b> above = chest display. <b>XP reward</b> above = zone XP on arrival; <b>Chest reward XP</b> below = bounty on open.</p>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label>Chest reward XP</label>
+          <input type="number" id="zoneChestXpInput" min="0">
+        </div>
+        <div class="form-row">
+          <label>Chest description</label>
+          <input type="text" id="zoneChestDescInput" placeholder="A weathered chest …">
+        </div>
+      </div>
+    </div>
+
+    <!-- Dungeon type panel -->
+    <div class="type-panel" id="typeDungeonPanel">
+      <h4>Dungeon zone</h4>
+      <p class="type-hint">Multi-floor run. Each floor requires a specific activity (e.g. Running 2 km) to clear. <b>Bonus XP</b> awarded on full clear, in addition to per-floor rewards.</p>
+      <div class="form-row">
+        <label>Dungeon bonus XP (full clear)</label>
+        <input type="number" id="zoneDungeonBonusInput" min="0">
+      </div>
+      <div id="floorsContainer">
+        <div class="panel-header" style="margin-top:8px; margin-bottom:0;">
+          <strong style="font-size:12px; color: var(--text2); letter-spacing: .08em; text-transform: uppercase;">Floors</strong>
+          <div class="spacer"></div>
+          <button type="button" id="addFloorBtn" class="sm secondary">+ Add floor</button>
+        </div>
+        <div id="floorsList"></div>
+        <div class="floors-warn hidden" id="floorsUnsavedWarn">Save the zone first — then floors can be added.</div>
+      </div>
+    </div>
+
+    <!-- Boss type panel -->
+    <div class="type-panel" id="typeBossPanel">
+      <h4>Boss zone</h4>
+      <p class="type-hint"><b>Name + Emoji</b> above = boss display. <b>XP reward</b> above = victory bounty. HP is auto-computed from region chapter + zone tier.</p>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label>Timer days (0 = none)</label>
+          <input type="number" id="zoneBossTimerInput" min="0" value="0">
+        </div>
+        <div class="form-row form-check" style="align-items:flex-end;">
+          <input type="checkbox" id="zoneBossSuppressInput">
+          <label for="zoneBossSuppressInput" style="margin:0; text-transform:none;">Suppress expiry (no timeout)</label>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:4px;">
+        <label>Computed preview</label>
+        <div id="bossPreview" class="type-hint" style="color: var(--text);"></div>
+      </div>
+    </div>
+
+    <!-- Crossroads note -->
+    <div class="type-panel" id="typeCrossroadsPanel">
+      <h4>Crossroads zone</h4>
+      <p class="type-hint">Branching point. Create two downstream zones and set their <b>Branch of</b> field to this Crossroads. Players will pick one branch.</p>
+    </div>
+
+    <div class="form-actions">
+      <button class="secondary" data-close-modal="zoneModal">Cancel</button>
+      <button id="zoneSaveBtn" class="success">Save</button>
     </div>
   </div>
 </div>
 
-<!-- FLOOR MODAL -->
-<div id="floorModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 id="floorModalTitle">Add Floor</h3>
-    <input type="hidden" id="floorDungeonId">
-    <input type="hidden" id="floorNumber">
-    <div class="form-grid">
-      <div class="form-group"><label>Floor Number</label><input type="number" id="floorNum" value="1" min="1"></div>
-      <div class="form-group"><label>Required Activity</label>
-        <select id="floorActivity">
-          <option>Running</option><option>Gym</option><option>Cycling</option>
-          <option>Yoga</option><option>Swimming</option><option>Climbing</option><option>Hiking</option>
-        </select>
+<!-- Floor modal (nested) -->
+<div class="modal-backdrop" id="floorModal">
+  <div class="modal" style="width: 480px;">
+    <h3 id="floorModalTitle">Add floor</h3>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>Ordinal</label>
+        <input type="number" id="floorOrdinalInput" min="1" value="1">
       </div>
-      <div class="form-group"><label>Required Minutes</label><input type="number" id="floorMinutes" value="30" min="1"></div>
-      <div class="form-group"><label>Reward XP</label><input type="number" id="floorXp" value="200" min="0"></div>
+      <div class="form-row">
+        <label>Emoji</label>
+        <input type="text" id="floorEmojiInput" maxlength="8">
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('floorModal')">Cancel</button>
-      <button onclick="saveFloor()">Save Floor</button>
+    <div class="form-row">
+      <label>Name</label>
+      <input type="text" id="floorNameInput">
+    </div>
+    <div class="form-grid-3">
+      <div class="form-row">
+        <label>Activity</label>
+        <select id="floorActivityInput"></select>
+      </div>
+      <div class="form-row">
+        <label>Target kind</label>
+        <select id="floorTargetKindInput"></select>
+      </div>
+      <div class="form-row">
+        <label>Target value</label>
+        <input type="number" id="floorTargetValueInput" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="secondary" data-close-modal="floorModal">Cancel</button>
+      <button id="floorSaveBtn" class="success">Save</button>
     </div>
   </div>
 </div>
 
-<!-- CROSSROADS MODAL -->
-<div id="crossroadsModal" class="modal-backdrop">
-  <div class="modal">
-    <h3>Add Crossroads</h3>
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:1/-1"><label>Node</label><select id="crossroadsNode" style="width:100%"></select></div>
+<!-- Edge modal -->
+<div class="modal-backdrop" id="edgeModal">
+  <div class="modal" style="width: 520px;">
+    <h3 id="edgeModalTitle">Add edge</h3>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>From zone</label>
+        <select id="edgeFromInput"></select>
+      </div>
+      <div class="form-row">
+        <label>To zone</label>
+        <select id="edgeToInput"></select>
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('crossroadsModal')">Cancel</button>
-      <button onclick="saveCrossroads()">Save Crossroads</button>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>Distance (km)</label>
+        <input type="number" id="edgeDistanceInput" min="0" step="0.1" value="1.0">
+      </div>
+      <div class="form-row form-check" style="align-items:flex-end;">
+        <input type="checkbox" id="edgeBidirectionalInput" checked>
+        <label for="edgeBidirectionalInput" style="margin:0; text-transform:none;">Bidirectional</label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="secondary" data-close-modal="edgeModal">Cancel</button>
+      <button id="edgeSaveBtn" class="success">Save</button>
     </div>
   </div>
 </div>
 
-<!-- PATH MODAL -->
-<div id="pathModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 id="pathModalTitle">Add Path</h3>
-    <input type="hidden" id="pathCrossroadsId">
-    <input type="hidden" id="pathId">
-    <div class="form-grid">
-      <div class="form-group"><label>Path Name</label><input type="text" id="pathName" placeholder="e.g. The Shadow Road"></div>
-      <div class="form-group"><label>Difficulty</label>
-        <select id="pathDifficulty"><option>Easy</option><option>Moderate</option><option>Hard</option></select>
-      </div>
-      <div class="form-group"><label>Distance (km)</label><input type="number" id="pathDist" value="5" step="0.5" min="0.5"></div>
-      <div class="form-group"><label>Estimated Days</label><input type="number" id="pathDays" value="2" min="1"></div>
-      <div class="form-group"><label>Reward XP</label><input type="number" id="pathXp" value="300" min="0"></div>
-      <div class="form-group"><label>Leads To Node (optional)</label><select id="pathLeadsTo" style="width:100%"></select></div>
-    </div>
-    <div class="form-group" style="margin-top:12px"><label>Additional Requirement (optional)</label>
-      <textarea id="pathReq" rows="2" style="width:100%;resize:vertical" placeholder="e.g. Reach level 10 first"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('pathModal')">Cancel</button>
-      <button onclick="savePath()">Save Path</button>
-    </div>
-  </div>
-</div>
-
-<!-- NODE MODAL -->
-<div id="nodeModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 id="nodeModalTitle">Add Node</h3>
-    <input type="hidden" id="nodeId">
-    <div class="form-grid">
-      <div class="form-group"><label>Name</label><input type="text" id="nodeName"></div>
-      <div class="form-group"><label>Icon (emoji)</label><input type="text" id="nodeIcon"></div>
-      <div class="form-group"><label>Type</label>
-        <select id="nodeType">
-          <option>Zone</option><option>Crossroads</option><option>Boss</option>
-          <option>Dungeon</option><option>Chest</option><option>Start</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Region</label><input type="text" id="nodeRegion"></div>
-      <div class="form-group"><label>Position X</label><input type="number" id="nodePosX" value="0" step="0.1"></div>
-      <div class="form-group"><label>Position Y</label><input type="number" id="nodePosY" value="0" step="0.1"></div>
-      <div class="form-group"><label>Level Req</label><input type="number" id="nodeLevelReq" value="1" min="1"></div>
-      <div class="form-group"><label>Reward XP</label><input type="number" id="nodeRewardXp" value="100"></div>
-      <div class="form-group"><label>World Zone</label>
-        <select id="nodeWorldZone">
-          <option value="">— None —</option>
-        </select>
-      </div>
-      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
-        <label>Start Node</label><input type="checkbox" id="nodeIsStart">
-      </div>
-      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
-        <label>Hidden</label><input type="checkbox" id="nodeIsHidden">
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:12px"><label>Description</label><textarea id="nodeDescription" rows="2" style="width:100%;resize:vertical"></textarea></div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('nodeModal')">Cancel</button>
-      <button onclick="saveNode()">Save Node</button>
-    </div>
-  </div>
-</div>
-
-<!-- EDGE MODAL -->
-<div id="edgeModal" class="modal-backdrop">
-  <div class="modal">
-    <h3>Add Edge</h3>
-    <div class="form-grid">
-      <div class="form-group"><label>From Node</label><select id="edgeFrom" style="width:100%"></select></div>
-      <div class="form-group"><label>To Node</label><select id="edgeTo" style="width:100%"></select></div>
-      <div class="form-group"><label>Distance (km)</label><input type="number" id="edgeDistance" value="1" step="0.1" min="0.1"></div>
-      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
-        <label>Bidirectional</label><input type="checkbox" id="edgeBidir" checked>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('edgeModal')">Cancel</button>
-      <button onclick="saveEdge()">Save Edge</button>
-    </div>
-  </div>
-</div>
-
-<!-- BOSS MODAL -->
-<div id="bossModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 id="bossModalTitle">Add Boss</h3>
-    <input type="hidden" id="bossId">
-    <div class="form-grid">
-      <div class="form-group"><label>Node</label><select id="bossNode" style="width:100%"></select></div>
-      <div class="form-group"><label>Name</label><input type="text" id="bossName"></div>
-      <div class="form-group"><label>Icon (emoji)</label><input type="text" id="bossIcon"></div>
-      <div class="form-group"><label>Max HP</label><input type="number" id="bossMaxHp" value="1000"></div>
-      <div class="form-group"><label>Reward XP</label><input type="number" id="bossRewardXp" value="500"></div>
-      <div class="form-group"><label>Timer (days)</label><input type="number" id="bossTimerDays" value="7" min="1"></div>
-      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
-        <label>Mini Boss</label><input type="checkbox" id="bossIsMini">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('bossModal')">Cancel</button>
-      <button onclick="saveBoss()">Save Boss</button>
-    </div>
-  </div>
-</div>
-
-<!-- WORLD ZONE MODAL -->
-<div id="zoneModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 id="zoneModalTitle">Add World Zone</h3>
-    <input type="hidden" id="zoneId">
-    <input type="hidden" id="zoneWorldId">
-    <div class="form-grid">
-      <div class="form-group"><label>Name</label><input type="text" id="zoneName" placeholder="e.g. Forest of Endurance"></div>
-      <div class="form-group"><label>Icon (emoji)</label><input type="text" id="zoneIcon" placeholder="🌲"></div>
-      <div class="form-group"><label>Region</label><select id="zoneRegionSelect" style="width:100%"></select></div>
-      <div class="form-group"><label>Type</label>
-        <select id="zoneType">
-          <option>Entry</option><option>Boss</option><option>Dungeon</option>
-          <option>Chest</option><option>Crossroads</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Tier (1–5)</label><input type="number" id="zoneTier" value="1" min="1" max="5"></div>
-      <div class="form-group"><label>Level Req</label><input type="number" id="zoneLevelReq" value="1" min="1"></div>
-      <div class="form-group"><label>Total XP</label><input type="number" id="zoneTotalXp" value="5000"></div>
-      <div class="form-group"><label>Total Distance (km)</label><input type="number" id="zoneTotalDist" value="50" step="0.5"></div>
-      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
-        <label>Is Boss</label><input type="checkbox" id="zoneIsBoss">
-      </div>
-      <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:8px">
-        <label>Start Zone</label><input type="checkbox" id="zoneIsStart">
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:12px"><label>Description</label><textarea id="zoneDescription" rows="2" style="width:100%;resize:vertical" placeholder="Optional lore or notes…"></textarea></div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('zoneModal')">Cancel</button>
-      <button onclick="saveZone()">Save Zone</button>
-    </div>
-  </div>
-</div>
-
-<!-- CHEST MODAL -->
-<div id="chestModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 id="chestModalTitle">Add Chest</h3>
-    <input type="hidden" id="chestId">
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:1/-1"><label>Node</label><select id="chestNode" style="width:100%"></select></div>
-      <div class="form-group"><label>Rarity</label>
-        <select id="chestRarity">
-          <option>Common</option><option>Uncommon</option><option>Rare</option>
-          <option>Epic</option><option>Legendary</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Reward XP</label><input type="number" id="chestRewardXp" value="200" min="0"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal('chestModal')">Cancel</button>
-      <button onclick="saveChest()">Save Chest</button>
+<!-- Confirm dialog -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal" style="width: 440px;">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmMessage" style="font-size:13px; color: var(--text); line-height: 1.5;"></p>
+    <div class="form-actions">
+      <button class="secondary" data-close-modal="confirmModal">Cancel</button>
+      <button id="confirmOkBtn" class="danger">Delete</button>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
 
-<script>
-const API = '';
-let allNodes = [];
-let allZones = [];
-let allWorlds = [];
-let allRegions = [];
-
-function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
-function saveToken() {
-  const t = document.getElementById('tokenInput').value.trim();
-  localStorage.setItem('ll_admin_token', t);
-  toast('Token saved', 'ok');
-  loadAll();
-}
-function headers() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
-
-async function apiFetch(path, opts = {}) {
-  const res = await fetch(API + path, { ...opts, headers: { ...headers(), ...(opts.headers || {}) } });
-  if (!res.ok) { const txt = await res.text().catch(() => res.statusText); throw new Error(txt || res.statusText); }
-  try { return await res.json(); } catch { return null; }
-}
-
-let toastTimer;
-function toast(msg, type = 'ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.className = 'show ' + type;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.className = '', 3000);
-}
-
-function switchTab(id, btn) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  btn.classList.add('active');
-  if (id === 'worlds') loadWorlds();
-  if (id === 'regions') loadRegions();
-  if (id === 'nodes') loadNodes();
-  if (id === 'edges') loadEdges();
-  if (id === 'bosses') loadBosses();
-  if (id === 'zones') loadZones();
-  if (id === 'dungeons') loadDungeons();
-  if (id === 'crossroads') loadCrossroads();
-  if (id === 'chests') loadChests();
-}
-
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-backdrop').forEach(b => b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); }));
-
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── Worlds ─────────────────────────────────────────────────────────────────
-async function loadWorlds() {
-  try {
-    allWorlds = await apiFetch('/api/admin/map/worlds');
-    const tb = document.getElementById('worldsTable');
-    if (!allWorlds.length) {
-      tb.innerHTML = '<tr><td colspan="6" style="color:var(--text2);text-align:center;padding:24px">No worlds found. Create one above.</td></tr>';
-      return;
-    }
-    tb.innerHTML = allWorlds.map(w => `
-      <tr>
-        <td><strong>${esc(w.name)}</strong></td>
-        <td>${w.isActive ? '<span class="badge" style="background:rgba(63,185,80,.18);color:var(--green)">✓ ACTIVE</span>' : '<span style="color:var(--text2)">—</span>'}</td>
-        <td style="text-align:center">${w.regionCount ?? 0}</td>
-        <td style="text-align:center">${w.zoneCount ?? 0}</td>
-        <td style="color:var(--text2);font-size:12px">${w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}</td>
-        <td>
-          <button class="sm secondary" onclick='editWorld(${JSON.stringify(w)})'>Edit</button>
-          <button class="sm danger" style="margin-left:6px" onclick="deleteWorld('${w.id}','${esc(w.name)}')">Delete</button>
-        </td>
-      </tr>`).join('');
-    // Populate region filter dropdown too
-    populateRegionWorldFilter();
-    populateZoneWorldFilter();
-  } catch(e) { toast('Failed to load worlds: ' + e.message, 'err'); }
-}
-
-function openWorldModal() {
-  document.getElementById('worldModalTitle').textContent = 'Add World';
-  document.getElementById('worldId').value = '';
-  document.getElementById('worldName').value = '';
-  document.getElementById('worldIsActive').checked = false;
-  document.getElementById('worldModal').classList.add('open');
-}
-
-function editWorld(w) {
-  document.getElementById('worldModalTitle').textContent = 'Edit World';
-  document.getElementById('worldId').value = w.id;
-  document.getElementById('worldName').value = w.name || '';
-  document.getElementById('worldIsActive').checked = !!w.isActive;
-  document.getElementById('worldModal').classList.add('open');
-}
-
-async function saveWorld() {
-  const id = document.getElementById('worldId').value;
-  const body = {
-    name: document.getElementById('worldName').value.trim(),
-    isActive: document.getElementById('worldIsActive').checked,
-  };
-  try {
-    if (id) {
-      await apiFetch('/api/admin/map/worlds/' + id, { method: 'PUT', body: JSON.stringify(body) });
-      toast('World updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/worlds', { method: 'POST', body: JSON.stringify(body) });
-      toast('World created', 'ok');
-    }
-    closeModal('worldModal');
-    loadWorlds();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteWorld(id, name) {
-  if (!confirm(`Delete world "${name}"?\n\nFails if any regions, zones, or user progress exist.`)) return;
-  try {
-    await apiFetch('/api/admin/map/worlds/' + id, { method: 'DELETE' });
-    toast('World deleted', 'ok');
-    loadWorlds();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Regions ────────────────────────────────────────────────────────────────
-function populateRegionWorldFilter() {
-  const sel = document.getElementById('regionWorldFilter');
-  const current = localStorage.getItem('ll_admin_region_world') || sel.value;
-  sel.innerHTML = '<option value="">— Select a World —</option>' +
-    allWorlds.map(w => `<option value="${w.id}">${esc(w.name)}${w.isActive ? ' ★' : ''}</option>`).join('');
-  if (current && allWorlds.some(w => w.id === current)) {
-    sel.value = current;
-  } else {
-    const active = allWorlds.find(w => w.isActive);
-    if (active) { sel.value = active.id; localStorage.setItem('ll_admin_region_world', active.id); }
-  }
-}
-
-function onRegionWorldFilterChange() {
-  const id = document.getElementById('regionWorldFilter').value;
-  localStorage.setItem('ll_admin_region_world', id);
-  loadRegions();
-}
-
-async function loadRegions() {
-  if (!allWorlds.length) await loadWorlds();
-  populateRegionWorldFilter();
-  const worldId = document.getElementById('regionWorldFilter').value;
-  const tb = document.getElementById('regionsTable');
-  if (!worldId) {
-    tb.innerHTML = '<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:24px">Pick a world above.</td></tr>';
-    allRegions = [];
-    return;
-  }
-  try {
-    allRegions = await apiFetch('/api/admin/map/worlds/' + worldId + '/regions');
-    if (!allRegions.length) {
-      tb.innerHTML = '<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:24px">No regions in this world.</td></tr>';
-      return;
-    }
-    tb.innerHTML = allRegions.map(r => `
-      <tr>
-        <td style="text-align:center"><span class="badge" style="background:var(--surface2);color:var(--text2)">CH ${r.chapterIndex}</span></td>
-        <td style="font-size:20px">${r.emoji || ''}</td>
-        <td><strong>${esc(r.name)}</strong>${r.lore ? `<br><span style="color:var(--text2);font-size:11px">${esc((r.lore||'').substring(0,80))}${(r.lore||'').length>80?'…':''}</span>` : ''}</td>
-        <td><span class="pill">${esc(r.theme || '')}</span></td>
-        <td style="text-align:center">${r.levelRequirement ?? 1}</td>
-        <td style="text-align:center">${r.zoneCount ?? 0}</td>
-        <td>
-          <button class="sm secondary" onclick='editRegion(${JSON.stringify(r)})'>Edit</button>
-          <button class="sm danger" style="margin-left:6px" onclick="deleteRegion('${r.id}','${esc(r.name)}')">Delete</button>
-        </td>
-      </tr>`).join('');
-  } catch(e) { toast('Failed to load regions: ' + e.message, 'err'); }
-}
-
-function openRegionModal() {
-  const worldId = document.getElementById('regionWorldFilter').value;
-  if (!worldId) { toast('Pick a world first', 'err'); return; }
-  document.getElementById('regionModalTitle').textContent = 'Add Region';
-  document.getElementById('regionId').value = '';
-  ['regionName','regionEmoji','regionLore'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('regionTheme').value = 'Forest';
-  document.getElementById('regionChapterIdx').value = (allRegions.length + 1) || 1;
-  document.getElementById('regionLvlReq').value = 1;
-  // Populate world select
-  const wSel = document.getElementById('regionWorldSelect');
-  wSel.innerHTML = allWorlds.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('');
-  wSel.value = worldId;
-  wSel.disabled = false;
-  document.getElementById('regionModal').classList.add('open');
-}
-
-function editRegion(r) {
-  document.getElementById('regionModalTitle').textContent = 'Edit Region';
-  document.getElementById('regionId').value = r.id;
-  document.getElementById('regionName').value = r.name || '';
-  document.getElementById('regionEmoji').value = r.emoji || '';
-  // Theme stored lowercase — normalize to match the dropdown option casing
-  const themeOpt = (r.theme || 'forest').charAt(0).toUpperCase() + (r.theme || 'forest').slice(1).toLowerCase();
-  document.getElementById('regionTheme').value = themeOpt;
-  document.getElementById('regionChapterIdx').value = r.chapterIndex ?? 1;
-  document.getElementById('regionLvlReq').value = r.levelRequirement ?? 1;
-  document.getElementById('regionLore').value = r.lore || '';
-  const wSel = document.getElementById('regionWorldSelect');
-  wSel.innerHTML = allWorlds.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('');
-  wSel.value = r.worldId;
-  wSel.disabled = true; // Can't switch worlds on edit
-  document.getElementById('regionModal').classList.add('open');
-}
-
-async function saveRegion() {
-  const id = document.getElementById('regionId').value;
-  const body = {
-    worldId: document.getElementById('regionWorldSelect').value,
-    name: document.getElementById('regionName').value.trim(),
-    emoji: document.getElementById('regionEmoji').value.trim(),
-    theme: document.getElementById('regionTheme').value,
-    chapterIndex: parseInt(document.getElementById('regionChapterIdx').value),
-    levelRequirement: parseInt(document.getElementById('regionLvlReq').value),
-    lore: document.getElementById('regionLore').value.trim(),
-  };
-  try {
-    if (id) {
-      const { worldId, ...upd } = body;
-      await apiFetch('/api/admin/map/regions/' + id, { method: 'PUT', body: JSON.stringify(upd) });
-      toast('Region updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/regions', { method: 'POST', body: JSON.stringify(body) });
-      toast('Region created', 'ok');
-    }
-    closeModal('regionModal');
-    loadRegions();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteRegion(id, name) {
-  if (!confirm(`Delete region "${name}"?\n\nFails if any zones belong to it.`)) return;
-  try {
-    await apiFetch('/api/admin/map/regions/' + id, { method: 'DELETE' });
-    toast('Region deleted', 'ok');
-    loadRegions();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Nodes ──────────────────────────────────────────────────────────────────
-async function loadNodes(zoneId) {
-  const filterZoneId = zoneId !== undefined ? zoneId : document.getElementById('nodeZoneFilter').value;
-  const url = filterZoneId ? `/api/admin/map/nodes?zoneId=${filterZoneId}` : '/api/admin/map/nodes';
-  try {
-    allNodes = await apiFetch(url);
-    const tb = document.getElementById('nodesTable');
-    if (!allNodes.length) { tb.innerHTML = '<tr><td colspan="9" style="color:var(--text2);text-align:center;padding:24px">No nodes found.</td></tr>'; return; }
-    tb.innerHTML = allNodes.map(n => `
-      <tr>
-        <td>${n.icon || ''}</td>
-        <td><strong>${esc(n.name)}</strong></td>
-        <td><span class="badge" style="background:var(--surface2);color:var(--text2)">${esc(n.type || '')}</span></td>
-        <td>${esc(n.region || '')}</td>
-        <td>${n.levelRequirement ?? ''}</td>
-        <td>${n.rewardXp ?? ''}</td>
-        <td>${n.isStartNode ? '✅' : ''}</td>
-        <td>${n.isHidden ? '🙈' : ''}</td>
-        <td>
-          <button class="sm secondary" onclick='editNode(${JSON.stringify(n)})'>Edit</button>
-          <button class="sm danger" style="margin-left:6px" onclick="deleteNode('${n.id}')">Delete</button>
-        </td>
-      </tr>`).join('');
-    populateNodeSelects();
-  } catch(e) { toast('Failed to load nodes: ' + e.message, 'err'); }
-}
-
-function onNodeZoneFilterChange() {
-  const zoneId = document.getElementById('nodeZoneFilter').value;
-  const infoEl = document.getElementById('nodeZoneInfo');
-  if (zoneId) {
-    const zone = allZones.find(z => z.id === zoneId);
-    if (zone) {
-      infoEl.textContent = `${zone.icon || ''} ${zone.name} — Tier ${zone.tier} · Lvl ${zone.levelReq}+`;
-      infoEl.style.display = '';
-    }
-  } else {
-    infoEl.style.display = 'none';
-  }
-  loadNodes(zoneId);
-}
-
-function populateNodeZoneFilter() {
-  const sel = document.getElementById('nodeZoneFilter');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">— All Zones —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (current) sel.value = current;
-}
-
-function openNodeModal() {
-  document.getElementById('nodeModalTitle').textContent = 'Add Node';
-  document.getElementById('nodeId').value = '';
-  ['nodeName','nodeIcon','nodeRegion','nodeDescription'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('nodeType').value = 'Zone';
-  document.getElementById('nodePosX').value = 0;
-  document.getElementById('nodePosY').value = 0;
-  document.getElementById('nodeLevelReq').value = 1;
-  document.getElementById('nodeRewardXp').value = 100;
-  document.getElementById('nodeIsStart').checked = false;
-  document.getElementById('nodeIsHidden').checked = false;
-  populateNodeWorldZoneSelect();
-  const filterZone = document.getElementById('nodeZoneFilter').value;
-  if (filterZone) document.getElementById('nodeWorldZone').value = filterZone;
-  document.getElementById('nodeModal').classList.add('open');
-}
-
-function editNode(n) {
-  document.getElementById('nodeModalTitle').textContent = 'Edit Node';
-  document.getElementById('nodeId').value = n.id;
-  document.getElementById('nodeName').value = n.name || '';
-  document.getElementById('nodeIcon').value = n.icon || '';
-  document.getElementById('nodeType').value = n.type || 'Zone';
-  document.getElementById('nodeRegion').value = n.region || '';
-  document.getElementById('nodePosX').value = n.positionX ?? 0;
-  document.getElementById('nodePosY').value = n.positionY ?? 0;
-  document.getElementById('nodeLevelReq').value = n.levelRequirement ?? 1;
-  document.getElementById('nodeRewardXp').value = n.rewardXp ?? 100;
-  document.getElementById('nodeIsStart').checked = !!n.isStartNode;
-  document.getElementById('nodeIsHidden').checked = !!n.isHidden;
-  document.getElementById('nodeDescription').value = n.description || '';
-  populateNodeWorldZoneSelect(n.worldZoneId);
-  document.getElementById('nodeModal').classList.add('open');
-}
-
-function populateNodeWorldZoneSelect(selectedId) {
-  const sel = document.getElementById('nodeWorldZone');
-  sel.innerHTML = '<option value="">— None —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (selectedId) sel.value = selectedId;
-}
-
-async function saveNode() {
-  const id = document.getElementById('nodeId').value;
-  const worldZoneId = document.getElementById('nodeWorldZone').value || null;
-  const body = {
-    name: document.getElementById('nodeName').value.trim(),
-    description: document.getElementById('nodeDescription').value.trim() || null,
-    icon: document.getElementById('nodeIcon').value.trim(),
-    type: document.getElementById('nodeType').value,
-    region: document.getElementById('nodeRegion').value.trim(),
-    positionX: parseFloat(document.getElementById('nodePosX').value),
-    positionY: parseFloat(document.getElementById('nodePosY').value),
-    levelRequirement: parseInt(document.getElementById('nodeLevelReq').value),
-    rewardXp: parseInt(document.getElementById('nodeRewardXp').value),
-    isStartNode: document.getElementById('nodeIsStart').checked,
-    isHidden: document.getElementById('nodeIsHidden').checked,
-    worldZoneId,
-  };
-  try {
-    if (id) {
-      await apiFetch('/api/admin/map/nodes/' + id, { method: 'PUT', body: JSON.stringify(body) });
-      toast('Node updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/nodes', { method: 'POST', body: JSON.stringify(body) });
-      toast('Node created', 'ok');
-    }
-    closeModal('nodeModal');
-    loadNodes();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteNode(id) {
-  if (!confirm('Delete this node? This may affect edges and player progress.')) return;
-  try { await apiFetch('/api/admin/map/nodes/' + id, { method: 'DELETE' }); toast('Node deleted', 'ok'); loadNodes(); }
-  catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Edges ──────────────────────────────────────────────────────────────────
-function populateEdgeZoneFilter() {
-  const sel = document.getElementById('edgeZoneFilter');
-  const current = localStorage.getItem('ll_admin_edges_zone') || sel.value;
-  sel.innerHTML = '<option value="">— All Zones —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (current && allZones.some(z => z.id === current)) sel.value = current;
-}
-
-function onEdgeZoneFilterChange() {
-  localStorage.setItem('ll_admin_edges_zone', document.getElementById('edgeZoneFilter').value);
-  loadEdges();
-}
-
-async function loadEdges() {
-  try {
-    populateEdgeZoneFilter();
-    const zoneId = document.getElementById('edgeZoneFilter').value;
-    const url = zoneId ? `/api/admin/map/edges?zoneId=${zoneId}` : '/api/admin/map/edges';
-    const edges = await apiFetch(url);
-    const tb = document.getElementById('edgesTable');
-    if (!edges.length) { tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No edges found.</td></tr>'; return; }
-    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
-    tb.innerHTML = edges.map(e => {
-      const from = nodeMap[e.fromNodeId] || { name: e.fromNodeName || e.fromNodeId, icon: '' };
-      const to   = nodeMap[e.toNodeId]   || { name: e.toNodeName   || e.toNodeId,   icon: '' };
-      return `<tr>
-        <td>${from.icon || ''} ${esc(from.name)}</td>
-        <td>${to.icon || ''} ${esc(to.name)}</td>
-        <td>${e.distanceKm} km</td>
-        <td>${e.isBidirectional ? '↔️' : '→'}</td>
-        <td><button class="sm danger" onclick="deleteEdge('${e.id}')">Delete</button></td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Failed to load edges: ' + e.message, 'err'); }
-}
-
-function openEdgeModal() {
-  populateNodeSelects();
-  document.getElementById('edgeDistance').value = 1;
-  document.getElementById('edgeBidir').checked = true;
-  document.getElementById('edgeModal').classList.add('open');
-}
-
-async function saveEdge() {
-  const body = {
-    fromNodeId: document.getElementById('edgeFrom').value,
-    toNodeId: document.getElementById('edgeTo').value,
-    distanceKm: parseFloat(document.getElementById('edgeDistance').value),
-    isBidirectional: document.getElementById('edgeBidir').checked,
-  };
-  try {
-    await apiFetch('/api/admin/map/edges', { method: 'POST', body: JSON.stringify(body) });
-    toast('Edge created', 'ok');
-    closeModal('edgeModal');
-    loadEdges();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteEdge(id) {
-  if (!confirm('Delete this edge?')) return;
-  try { await apiFetch('/api/admin/map/edges/' + id, { method: 'DELETE' }); toast('Edge deleted', 'ok'); loadEdges(); }
-  catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Bosses ─────────────────────────────────────────────────────────────────
-function populateBossZoneFilter() {
-  const sel = document.getElementById('bossZoneFilter');
-  const current = localStorage.getItem('ll_admin_bosses_zone') || sel.value;
-  sel.innerHTML = '<option value="">— All Zones —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (current && allZones.some(z => z.id === current)) sel.value = current;
-}
-
-function onBossZoneFilterChange() {
-  localStorage.setItem('ll_admin_bosses_zone', document.getElementById('bossZoneFilter').value);
-  loadBosses();
-}
-
-async function loadBosses() {
-  try {
-    populateBossZoneFilter();
-    const zoneId = document.getElementById('bossZoneFilter').value;
-    const url = zoneId ? `/api/admin/map/bosses?zoneId=${zoneId}` : '/api/admin/map/bosses';
-    const bosses = await apiFetch(url);
-    const tb = document.getElementById('bossesTable');
-    if (!bosses.length) { tb.innerHTML = '<tr><td colspan="8" style="color:var(--text2);text-align:center;padding:24px">No bosses found.</td></tr>'; return; }
-    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
-    tb.innerHTML = bosses.map(b => {
-      const node = nodeMap[b.nodeId] || { name: b.nodeName || b.nodeId, icon: '' };
-      return `<tr>
-        <td>${b.icon || ''}</td>
-        <td><strong>${esc(b.name)}</strong></td>
-        <td>${node.icon || ''} ${esc(node.name)}</td>
-        <td>${b.maxHp}</td>
-        <td>${b.rewardXp}</td>
-        <td>${b.timerDays}d</td>
-        <td>${b.isMini ? '⚡ Mini' : '💀 Full'}</td>
-        <td>
-          <button class="sm secondary" onclick='editBoss(${JSON.stringify(b)})'>Edit</button>
-          <button class="sm danger" style="margin-left:6px" onclick="deleteBoss('${b.id}')">Delete</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Failed to load bosses: ' + e.message, 'err'); }
-}
-
-function openBossModal() {
-  document.getElementById('bossModalTitle').textContent = 'Add Boss';
-  document.getElementById('bossId').value = '';
-  ['bossName','bossIcon'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('bossMaxHp').value = 1000;
-  document.getElementById('bossRewardXp').value = 500;
-  document.getElementById('bossTimerDays').value = 7;
-  document.getElementById('bossIsMini').checked = false;
-  populateNodeSelects();
-  document.getElementById('bossModal').classList.add('open');
-}
-
-function editBoss(b) {
-  document.getElementById('bossModalTitle').textContent = 'Edit Boss';
-  document.getElementById('bossId').value = b.id;
-  document.getElementById('bossName').value = b.name || '';
-  document.getElementById('bossIcon').value = b.icon || '';
-  document.getElementById('bossMaxHp').value = b.maxHp;
-  document.getElementById('bossRewardXp').value = b.rewardXp;
-  document.getElementById('bossTimerDays').value = b.timerDays;
-  document.getElementById('bossIsMini').checked = !!b.isMini;
-  populateNodeSelects();
-  document.getElementById('bossNode').value = b.nodeId;
-  document.getElementById('bossModal').classList.add('open');
-}
-
-async function saveBoss() {
-  const id = document.getElementById('bossId').value;
-  const body = {
-    nodeId: document.getElementById('bossNode').value,
-    name: document.getElementById('bossName').value.trim(),
-    icon: document.getElementById('bossIcon').value.trim(),
-    maxHp: parseInt(document.getElementById('bossMaxHp').value),
-    rewardXp: parseInt(document.getElementById('bossRewardXp').value),
-    timerDays: parseInt(document.getElementById('bossTimerDays').value),
-    isMini: document.getElementById('bossIsMini').checked,
-  };
-  try {
-    if (id) {
-      const { nodeId, ...upd } = body;
-      await apiFetch('/api/admin/map/bosses/' + id, { method: 'PUT', body: JSON.stringify(upd) });
-      toast('Boss updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/bosses', { method: 'POST', body: JSON.stringify(body) });
-      toast('Boss created', 'ok');
-    }
-    closeModal('bossModal');
-    loadBosses();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteBoss(id) {
-  if (!confirm('Delete this boss?')) return;
-  try { await apiFetch('/api/admin/map/bosses/' + id, { method: 'DELETE' }); toast('Boss deleted', 'ok'); loadBosses(); }
-  catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── World Zones ────────────────────────────────────────────────────────────
-function populateZoneWorldFilter() {
-  const sel = document.getElementById('zoneWorldFilter');
-  const current = localStorage.getItem('ll_admin_zones_world') || sel.value;
-  sel.innerHTML = '<option value="">— All Worlds —</option>' +
-    allWorlds.map(w => `<option value="${w.id}">${esc(w.name)}${w.isActive ? ' ★' : ''}</option>`).join('');
-  if (current && allWorlds.some(w => w.id === current)) sel.value = current;
-}
-
-async function populateZoneRegionFilter() {
-  const sel = document.getElementById('zoneRegionFilter');
-  const worldId = document.getElementById('zoneWorldFilter').value;
-  const current = localStorage.getItem('ll_admin_zones_region') || sel.value;
-  if (!worldId) {
-    sel.innerHTML = '<option value="">— All Regions —</option>';
-    return;
-  }
-  try {
-    const regions = await apiFetch('/api/admin/map/worlds/' + worldId + '/regions');
-    sel.innerHTML = '<option value="">— All Regions —</option>' +
-      regions.map(r => `<option value="${r.id}">${r.emoji || ''} ${esc(r.name)}</option>`).join('');
-    if (current && regions.some(r => r.id === current)) sel.value = current;
-  } catch { sel.innerHTML = '<option value="">— All Regions —</option>'; }
-}
-
-async function onZoneWorldFilterChange() {
-  const id = document.getElementById('zoneWorldFilter').value;
-  localStorage.setItem('ll_admin_zones_world', id);
-  localStorage.removeItem('ll_admin_zones_region');
-  document.getElementById('zoneRegionFilter').value = '';
-  await populateZoneRegionFilter();
-  loadZones();
-}
-
-function onZoneRegionFilterChange() {
-  localStorage.setItem('ll_admin_zones_region', document.getElementById('zoneRegionFilter').value);
-  loadZones();
-}
-
-async function loadZones() {
-  try {
-    if (!allWorlds.length) allWorlds = await apiFetch('/api/admin/map/worlds');
-    populateZoneWorldFilter();
-    await populateZoneRegionFilter();
-    const worldId = document.getElementById('zoneWorldFilter').value;
-    const regionId = document.getElementById('zoneRegionFilter').value;
-    const qs = [];
-    if (worldId) qs.push(`worldId=${worldId}`);
-    if (regionId) qs.push(`regionId=${regionId}`);
-    const url = '/api/admin/map/world-zones' + (qs.length ? '?' + qs.join('&') : '');
-    allZones = await apiFetch(url);
-    renderZonesTable();
-    populateNodeZoneFilter();
-    populateNodeWorldZoneSelect();
-    // Also populate dependent zone filter dropdowns
-    populateEdgeZoneFilter();
-    populateBossZoneFilter();
-    populateDungeonZoneFilter();
-    populateCrossroadsZoneFilter();
-    populateChestZoneFilter();
-  } catch(e) { toast('Failed to load world zones: ' + e.message, 'err'); }
-}
-
-function tierClass(tier) {
-  const map = { 1:'tier1', 2:'tier2', 3:'tier3', 4:'tier4', 5:'tier5' };
-  return map[tier] || '';
-}
-
-function typeClass(type) {
-  return 'type-' + String(type || '').toLowerCase();
-}
-
-function renderZonesTable() {
-  const tb = document.getElementById('zonesTable');
-  if (!allZones.length) {
-    tb.innerHTML = '<tr><td colspan="10" style="color:var(--text2);text-align:center;padding:24px">No world zones found.</td></tr>';
-    return;
-  }
-  tb.innerHTML = allZones.map(z => {
-    const flags = [
-      z.isBoss       ? '<span class="pill" style="border-color:var(--red);color:var(--red)">💀 Boss</span>' : '',
-      z.isStart      ? '<span class="pill" style="border-color:var(--blue);color:var(--blue)">▶ Start</span>' : '',
-    ].filter(Boolean).join('');
-    return `<tr>
-      <td style="font-size:20px">${z.icon || ''}</td>
-      <td><strong>${esc(z.name)}</strong>${z.description ? `<br><span style="color:var(--text2);font-size:11px">${esc(z.description.substring(0,60))}${z.description.length>60?'…':''}</span>` : ''}</td>
-      <td>${esc(z.region || '')}</td>
-      <td><span class="pill ${typeClass(z.type)}">${esc(z.type || '')}</span></td>
-      <td><span class="pill ${tierClass(z.tier)}">T${z.tier}</span></td>
-      <td>${z.levelReq ?? z.levelRequirement ?? ''}</td>
-      <td>${(z.totalXp ?? 0).toLocaleString()}</td>
-      <td>${z.totalDistanceKm ?? 0} km</td>
-      <td>${flags || '<span style="color:var(--text2)">—</span>'}</td>
-      <td>
-        <button class="sm secondary" onclick='editZone(${JSON.stringify(z)})'>Edit</button>
-        <button class="sm danger" style="margin-left:6px" onclick="deleteZone('${z.id}','${esc(z.name)}')">Delete</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-async function populateZoneModalRegions(worldId, selectedRegionId) {
-  const sel = document.getElementById('zoneRegionSelect');
-  if (!worldId) {
-    sel.innerHTML = '<option value="">— No world —</option>';
-    return;
-  }
-  try {
-    const regions = await apiFetch('/api/admin/map/worlds/' + worldId + '/regions');
-    sel.innerHTML = regions.map(r => `<option value="${r.id}">${r.emoji || ''} ${esc(r.name)}</option>`).join('');
-    if (selectedRegionId) sel.value = selectedRegionId;
-  } catch { sel.innerHTML = '<option value="">— Failed to load —</option>'; }
-}
-
-async function openZoneModal() {
-  document.getElementById('zoneModalTitle').textContent = 'Add World Zone';
-  document.getElementById('zoneId').value = '';
-  ['zoneName','zoneIcon','zoneDescription'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('zoneType').value = 'Entry';
-  document.getElementById('zoneTier').value = 1;
-  document.getElementById('zoneLevelReq').value = 1;
-  document.getElementById('zoneTotalXp').value = 5000;
-  document.getElementById('zoneTotalDist').value = 50;
-  document.getElementById('zoneIsBoss').checked = false;
-  document.getElementById('zoneIsStart').checked = false;
-
-  // World: prefer the Zone tab filter → active world
-  let worldId = document.getElementById('zoneWorldFilter').value;
-  if (!worldId) worldId = (allWorlds.find(w => w.isActive) || allWorlds[0])?.id || '';
-  document.getElementById('zoneWorldId').value = worldId;
-  await populateZoneModalRegions(worldId, document.getElementById('zoneRegionFilter').value);
-  document.getElementById('zoneModal').classList.add('open');
-}
-
-async function editZone(z) {
-  document.getElementById('zoneModalTitle').textContent = 'Edit World Zone';
-  document.getElementById('zoneId').value = z.id;
-  document.getElementById('zoneWorldId').value = z.worldId || '';
-  document.getElementById('zoneName').value = z.name || '';
-  document.getElementById('zoneIcon').value = z.icon || '';
-  document.getElementById('zoneDescription').value = z.description || '';
-  // Type (lowercased from API) → Title-case for dropdown
-  const type = z.type ? (z.type.charAt(0).toUpperCase() + z.type.slice(1).toLowerCase()) : 'Entry';
-  document.getElementById('zoneType').value = type;
-  document.getElementById('zoneTier').value = z.tier ?? 1;
-  document.getElementById('zoneLevelReq').value = z.levelReq ?? z.levelRequirement ?? 1;
-  document.getElementById('zoneTotalXp').value = z.totalXp ?? 5000;
-  document.getElementById('zoneTotalDist').value = z.totalDistanceKm ?? 50;
-  document.getElementById('zoneIsBoss').checked = !!z.isBoss;
-  document.getElementById('zoneIsStart').checked = !!z.isStart;
-  await populateZoneModalRegions(z.worldId, z.regionId);
-  document.getElementById('zoneModal').classList.add('open');
-}
-
-async function saveZone() {
-  const id = document.getElementById('zoneId').value;
-  const worldId = document.getElementById('zoneWorldId').value || null;
-  const body = {
-    name: document.getElementById('zoneName').value.trim(),
-    description: document.getElementById('zoneDescription').value.trim() || null,
-    icon: document.getElementById('zoneIcon').value.trim(),
-    regionId: document.getElementById('zoneRegionSelect').value || null,
-    type: document.getElementById('zoneType').value,
-    tier: parseInt(document.getElementById('zoneTier').value),
-    levelReq: parseInt(document.getElementById('zoneLevelReq').value),
-    totalXp: parseInt(document.getElementById('zoneTotalXp').value),
-    totalDistanceKm: parseFloat(document.getElementById('zoneTotalDist').value),
-    isBoss: document.getElementById('zoneIsBoss').checked,
-    isStart: document.getElementById('zoneIsStart').checked,
-    worldId,
-  };
-  try {
-    if (id) {
-      const { worldId: _wid, ...upd } = body;
-      await apiFetch('/api/admin/map/world-zones/' + id, { method: 'PUT', body: JSON.stringify(upd) });
-      toast('World zone updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/world-zones', { method: 'POST', body: JSON.stringify(body) });
-      toast('World zone created', 'ok');
-    }
-    closeModal('zoneModal');
-    loadZones();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteZone(id, name) {
-  if (!confirm(`Delete world zone "${name}"?\n\nThis will fail if any map nodes are still assigned to this zone.`)) return;
-  try {
-    await apiFetch('/api/admin/map/world-zones/' + id, { method: 'DELETE' });
-    toast('World zone deleted', 'ok');
-    loadZones();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Dungeons ────────────────────────────────────────────────────────────────
-let allDungeons = [];
-let selectedDungeonId = null;
-
-function populateDungeonZoneFilter() {
-  const sel = document.getElementById('dungeonZoneFilter');
-  const current = localStorage.getItem('ll_admin_dungeons_zone') || sel.value;
-  sel.innerHTML = '<option value="">— All Zones —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (current && allZones.some(z => z.id === current)) sel.value = current;
-}
-
-function onDungeonZoneFilterChange() {
-  localStorage.setItem('ll_admin_dungeons_zone', document.getElementById('dungeonZoneFilter').value);
-  loadDungeons();
-}
-
-async function loadDungeons() {
-  try {
-    populateDungeonZoneFilter();
-    const zoneId = document.getElementById('dungeonZoneFilter').value;
-    const url = zoneId ? `/api/admin/map/dungeons?zoneId=${zoneId}` : '/api/admin/map/dungeons';
-    allDungeons = await apiFetch(url);
-    const tb = document.getElementById('dungeonsTable');
-    if (!allDungeons.length) {
-      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No dungeons found.</td></tr>';
-      return;
-    }
-    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
-    tb.innerHTML = allDungeons.map(d => {
-      const node = nodeMap[d.nodeId] || { name: d.nodeName || d.nodeId, icon: '' };
-      const isSelected = d.id === selectedDungeonId;
-      return `<tr style="${isSelected ? 'background:var(--surface2)' : ''}">
-        <td><strong>${esc(d.name)}</strong></td>
-        <td>${node.icon || ''} ${esc(node.name)}</td>
-        <td style="text-align:center">${d.totalFloors}</td>
-        <td style="text-align:center">
-          <span class="badge" style="background:${d.floorCount >= d.totalFloors ? 'rgba(63,185,80,.15)' : 'rgba(245,166,35,.15)'};color:${d.floorCount >= d.totalFloors ? 'var(--green)' : 'var(--orange)'}">
-            ${d.floorCount} / ${d.totalFloors}
-          </span>
-        </td>
-        <td>
-          <button class="sm" onclick="selectDungeon('${d.id}','${esc(d.name)}')">🏗 Floors</button>
-          <button class="sm secondary" style="margin-left:4px" onclick='editDungeon(${JSON.stringify(d)})'>Edit</button>
-          <button class="sm danger" style="margin-left:4px" onclick="deleteDungeon('${d.id}','${esc(d.name)}')">Delete</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Failed to load dungeons: ' + e.message, 'err'); }
-}
-
-async function selectDungeon(id, name) {
-  selectedDungeonId = id;
-  document.getElementById('floorEditorTitle').textContent = `Floors — ${name}`;
-  document.getElementById('floorEditor').style.display = '';
-  document.getElementById('floorDungeonId').value = id;
-  await loadFloors(id);
-  loadDungeons();
-  document.getElementById('floorEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function closeFloorEditor() {
-  selectedDungeonId = null;
-  document.getElementById('floorEditor').style.display = 'none';
-  loadDungeons();
-}
-
-async function loadFloors(dungeonId) {
-  try {
-    const dungeon = await apiFetch('/api/admin/map/dungeons/' + dungeonId);
-    const floors = dungeon.floors || dungeon.dungeon?.floors || [];
-    const tb = document.getElementById('floorsTable');
-    if (!floors.length) {
-      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:24px">No floors yet. Add the first one above.</td></tr>';
-      return;
-    }
-    const sorted = [...floors].sort((a, b) => a.floorNumber - b.floorNumber);
-    const activityEmoji = { Running:'🏃', Gym:'🏋️', Cycling:'🚴', Yoga:'🧘', Swimming:'🏊', Climbing:'🧗', Hiking:'🥾' };
-    tb.innerHTML = sorted.map(f => `
-      <tr>
-        <td style="text-align:center"><strong>F${f.floorNumber}</strong></td>
-        <td>${activityEmoji[f.requiredActivity] || ''} ${esc(f.requiredActivity)}</td>
-        <td style="text-align:center">${f.requiredMinutes} min</td>
-        <td style="text-align:center">${f.rewardXp} XP</td>
-        <td>
-          <button class="sm secondary" onclick='editFloor(${JSON.stringify(f)})'>Edit</button>
-          <button class="sm danger" style="margin-left:4px" onclick="deleteFloor('${dungeonId}',${f.floorNumber})">Delete</button>
-        </td>
-      </tr>`).join('');
-  } catch(e) { toast('Failed to load floors: ' + e.message, 'err'); }
-}
-
-function openDungeonModal() {
-  document.getElementById('dungeonModalTitle').textContent = 'Add Dungeon';
-  document.getElementById('dungeonId').value = '';
-  document.getElementById('dungeonName').value = '';
-  document.getElementById('dungeonTotalFloors').value = 5;
-  populateDungeonNodeSelect();
-  document.getElementById('dungeonModal').classList.add('open');
-}
-
-function editDungeon(d) {
-  document.getElementById('dungeonModalTitle').textContent = 'Edit Dungeon';
-  document.getElementById('dungeonId').value = d.id;
-  document.getElementById('dungeonName').value = d.name;
-  document.getElementById('dungeonTotalFloors').value = d.totalFloors;
-  populateDungeonNodeSelect(d.nodeId);
-  document.getElementById('dungeonModal').classList.add('open');
-}
-
-function populateDungeonNodeSelect(selectedId) {
-  const sel = document.getElementById('dungeonNode');
-  sel.innerHTML = allNodes.map(n => `<option value="${n.id}">${n.icon||''} ${esc(n.name)}</option>`).join('');
-  if (selectedId) sel.value = selectedId;
-}
-
-async function saveDungeon() {
-  const id = document.getElementById('dungeonId').value;
-  try {
-    if (id) {
-      await apiFetch('/api/admin/map/dungeons/' + id, { method: 'PUT', body: JSON.stringify({
-        name: document.getElementById('dungeonName').value.trim(),
-        totalFloors: parseInt(document.getElementById('dungeonTotalFloors').value),
-      })});
-      toast('Dungeon updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/dungeons', { method: 'POST', body: JSON.stringify({
-        nodeId: document.getElementById('dungeonNode').value,
-        name: document.getElementById('dungeonName').value.trim(),
-        totalFloors: parseInt(document.getElementById('dungeonTotalFloors').value),
-      })});
-      toast('Dungeon created', 'ok');
-    }
-    closeModal('dungeonModal');
-    loadDungeons();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteDungeon(id, name) {
-  if (!confirm(`Delete dungeon "${name}" and all its floors?`)) return;
-  try {
-    await apiFetch('/api/admin/map/dungeons/' + id, { method: 'DELETE' });
-    toast('Dungeon deleted', 'ok');
-    if (selectedDungeonId === id) closeFloorEditor();
-    else loadDungeons();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-function openFloorModal() {
-  document.getElementById('floorModalTitle').textContent = 'Add Floor';
-  document.getElementById('floorNumber').value = '';
-  document.getElementById('floorNum').value = nextFloorNumber();
-  document.getElementById('floorActivity').value = 'Running';
-  document.getElementById('floorMinutes').value = 30;
-  document.getElementById('floorXp').value = 200;
-  document.getElementById('floorModal').classList.add('open');
-}
-
-function nextFloorNumber() {
-  const rows = document.querySelectorAll('#floorsTable tr td:first-child strong');
-  const nums = [...rows].map(el => parseInt(el.textContent.replace('F','')));
-  return nums.length ? Math.max(...nums) + 1 : 1;
-}
-
-function editFloor(f) {
-  document.getElementById('floorModalTitle').textContent = 'Edit Floor';
-  document.getElementById('floorNumber').value = f.floorNumber;
-  document.getElementById('floorNum').value = f.floorNumber;
-  document.getElementById('floorNum').disabled = true;
-  document.getElementById('floorActivity').value = f.requiredActivity;
-  document.getElementById('floorMinutes').value = f.requiredMinutes;
-  document.getElementById('floorXp').value = f.rewardXp;
-  document.getElementById('floorModal').classList.add('open');
-}
-
-async function saveFloor() {
-  const dungeonId = document.getElementById('floorDungeonId').value;
-  const editingFloorNum = document.getElementById('floorNumber').value;
-  const floorNum = parseInt(document.getElementById('floorNum').value);
-  const body = {
-    requiredActivity: document.getElementById('floorActivity').value,
-    requiredMinutes: parseInt(document.getElementById('floorMinutes').value),
-    rewardXp: parseInt(document.getElementById('floorXp').value),
-  };
-  try {
-    if (editingFloorNum) {
-      await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors/${editingFloorNum}`, { method: 'PUT', body: JSON.stringify(body) });
-      toast('Floor updated', 'ok');
-    } else {
-      await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors`, { method: 'POST', body: JSON.stringify({ floorNumber: floorNum, ...body }) });
-      toast('Floor added', 'ok');
-    }
-    document.getElementById('floorNum').disabled = false;
-    closeModal('floorModal');
-    loadFloors(dungeonId);
-    loadDungeons();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteFloor(dungeonId, floorNum) {
-  if (!confirm(`Delete Floor ${floorNum}?`)) return;
-  try {
-    await apiFetch(`/api/admin/map/dungeons/${dungeonId}/floors/${floorNum}`, { method: 'DELETE' });
-    toast('Floor deleted', 'ok');
-    loadFloors(dungeonId);
-    loadDungeons();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Crossroads ───────────────────────────────────────────────────────────────
-let allCrossroads = [];
-let selectedCrossroadsId = null;
-
-function populateCrossroadsZoneFilter() {
-  const sel = document.getElementById('crossroadsZoneFilter');
-  const current = localStorage.getItem('ll_admin_crossroads_zone') || sel.value;
-  sel.innerHTML = '<option value="">— All Zones —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (current && allZones.some(z => z.id === current)) sel.value = current;
-}
-
-function onCrossroadsZoneFilterChange() {
-  localStorage.setItem('ll_admin_crossroads_zone', document.getElementById('crossroadsZoneFilter').value);
-  loadCrossroads();
-}
-
-async function loadCrossroads() {
-  try {
-    populateCrossroadsZoneFilter();
-    const zoneId = document.getElementById('crossroadsZoneFilter').value;
-    const url = zoneId ? `/api/admin/map/crossroads?zoneId=${zoneId}` : '/api/admin/map/crossroads';
-    allCrossroads = await apiFetch(url);
-    const tb = document.getElementById('crossroadsTable');
-    if (!allCrossroads.length) {
-      tb.innerHTML = '<tr><td colspan="3" style="color:var(--text2);text-align:center;padding:24px">No crossroads found.</td></tr>';
-      return;
-    }
-    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
-    tb.innerHTML = allCrossroads.map(c => {
-      const node = nodeMap[c.nodeId] || { name: c.nodeName || c.nodeId, icon: '' };
-      return `<tr>
-        <td>${node.icon || ''} <strong>${esc(node.name)}</strong></td>
-        <td><span class="badge" style="background:var(--surface2);color:var(--text2)">${c.pathCount} path${c.pathCount !== 1 ? 's' : ''}</span></td>
-        <td>
-          <button class="sm" onclick="selectCrossroads('${c.id}','${esc(node.name)}')">🛤 Paths</button>
-          <button class="sm danger" style="margin-left:4px" onclick="deleteCrossroads('${c.id}','${esc(node.name)}')">Delete</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Failed to load crossroads: ' + e.message, 'err'); }
-}
-
-async function selectCrossroads(id, nodeName) {
-  selectedCrossroadsId = id;
-  document.getElementById('pathEditorTitle').textContent = `Paths — ${nodeName}`;
-  document.getElementById('pathEditor').style.display = '';
-  document.getElementById('pathCrossroadsId').value = id;
-  await loadPaths(id);
-  document.getElementById('pathEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function closePathEditor() {
-  selectedCrossroadsId = null;
-  document.getElementById('pathEditor').style.display = 'none';
-}
-
-async function loadPaths(crossroadsId) {
-  try {
-    const cr = await apiFetch('/api/admin/map/crossroads/' + crossroadsId);
-    const paths = cr.paths || cr.crossroads?.paths || [];
-    const tb = document.getElementById('pathsTable');
-    if (!paths.length) {
-      tb.innerHTML = '<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:24px">No paths yet.</td></tr>';
-      return;
-    }
-    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
-    const diffColor = { Easy:'var(--green)', Moderate:'var(--orange)', Hard:'var(--red)' };
-    tb.innerHTML = paths.map(p => {
-      const dest = p.leadsToNodeId ? (nodeMap[p.leadsToNodeId] || { name: p.leadsToNodeId, icon: '' }) : null;
-      return `<tr>
-        <td><strong>${esc(p.name)}</strong>${p.additionalRequirement ? `<br><span style="color:var(--text2);font-size:11px">⚠ ${esc(p.additionalRequirement)}</span>` : ''}</td>
-        <td><span style="color:${diffColor[p.difficulty]||'var(--text2)'}">${esc(p.difficulty)}</span></td>
-        <td style="text-align:center">${p.distanceKm} km</td>
-        <td style="text-align:center">${p.estimatedDays}d</td>
-        <td style="text-align:center">${p.rewardXp} XP</td>
-        <td>${dest ? `${dest.icon||''} ${esc(dest.name)}` : '<span style="color:var(--text2)">—</span>'}</td>
-        <td>
-          <button class="sm secondary" onclick='editPath(${JSON.stringify(p)})'>Edit</button>
-          <button class="sm danger" style="margin-left:4px" onclick="deletePath('${crossroadsId}','${p.id}')">Delete</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Failed to load paths: ' + e.message, 'err'); }
-}
-
-function openCrossroadsModal() {
-  document.getElementById('crossroadsNode').innerHTML =
-    allNodes.map(n => `<option value="${n.id}">${n.icon||''} ${esc(n.name)}</option>`).join('');
-  document.getElementById('crossroadsModal').classList.add('open');
-}
-
-async function saveCrossroads() {
-  try {
-    await apiFetch('/api/admin/map/crossroads', { method: 'POST', body: JSON.stringify({ nodeId: document.getElementById('crossroadsNode').value }) });
-    toast('Crossroads created', 'ok');
-    closeModal('crossroadsModal');
-    loadCrossroads();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteCrossroads(id, nodeName) {
-  if (!confirm(`Delete crossroads on "${nodeName}" and all its paths?`)) return;
-  try {
-    await apiFetch('/api/admin/map/crossroads/' + id, { method: 'DELETE' });
-    toast('Crossroads deleted', 'ok');
-    if (selectedCrossroadsId === id) closePathEditor();
-    else loadCrossroads();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-function openPathModal() {
-  document.getElementById('pathModalTitle').textContent = 'Add Path';
-  document.getElementById('pathId').value = '';
-  ['pathName','pathReq'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('pathDifficulty').value = 'Moderate';
-  document.getElementById('pathDist').value = 5;
-  document.getElementById('pathDays').value = 2;
-  document.getElementById('pathXp').value = 300;
-  populatePathLeadsTo();
-  document.getElementById('pathModal').classList.add('open');
-}
-
-function editPath(p) {
-  document.getElementById('pathModalTitle').textContent = 'Edit Path';
-  document.getElementById('pathId').value = p.id;
-  document.getElementById('pathName').value = p.name || '';
-  document.getElementById('pathDifficulty').value = p.difficulty || 'Moderate';
-  document.getElementById('pathDist').value = p.distanceKm;
-  document.getElementById('pathDays').value = p.estimatedDays;
-  document.getElementById('pathXp').value = p.rewardXp;
-  document.getElementById('pathReq').value = p.additionalRequirement || '';
-  populatePathLeadsTo(p.leadsToNodeId);
-  document.getElementById('pathModal').classList.add('open');
-}
-
-function populatePathLeadsTo(selectedId) {
-  const sel = document.getElementById('pathLeadsTo');
-  sel.innerHTML = '<option value="">— None —</option>' +
-    allNodes.map(n => `<option value="${n.id}">${n.icon||''} ${esc(n.name)}</option>`).join('');
-  if (selectedId) sel.value = selectedId;
-}
-
-async function savePath() {
-  const crossroadsId = document.getElementById('pathCrossroadsId').value;
-  const pathId = document.getElementById('pathId').value;
-  const body = {
-    name: document.getElementById('pathName').value.trim(),
-    difficulty: document.getElementById('pathDifficulty').value,
-    distanceKm: parseFloat(document.getElementById('pathDist').value),
-    estimatedDays: parseInt(document.getElementById('pathDays').value),
-    rewardXp: parseInt(document.getElementById('pathXp').value),
-    additionalRequirement: document.getElementById('pathReq').value.trim() || null,
-    leadsToNodeId: document.getElementById('pathLeadsTo').value || null,
-  };
-  try {
-    if (pathId) {
-      await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths/${pathId}`, { method: 'PUT', body: JSON.stringify(body) });
-      toast('Path updated', 'ok');
-    } else {
-      await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths`, { method: 'POST', body: JSON.stringify(body) });
-      toast('Path added', 'ok');
-    }
-    closeModal('pathModal');
-    loadPaths(crossroadsId);
-    loadCrossroads();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deletePath(crossroadsId, pathId) {
-  if (!confirm('Delete this path?')) return;
-  try {
-    await apiFetch(`/api/admin/map/crossroads/${crossroadsId}/paths/${pathId}`, { method: 'DELETE' });
-    toast('Path deleted', 'ok');
-    loadPaths(crossroadsId);
-    loadCrossroads();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Chests ────────────────────────────────────────────────────────────────
-let allChests = [];
-
-function populateChestZoneFilter() {
-  const sel = document.getElementById('chestZoneFilter');
-  const current = localStorage.getItem('ll_admin_chests_zone') || sel.value;
-  sel.innerHTML = '<option value="">— All Zones —</option>' +
-    allZones.map(z => `<option value="${z.id}">${z.icon || ''} ${esc(z.name)}</option>`).join('');
-  if (current && allZones.some(z => z.id === current)) sel.value = current;
-}
-
-function onChestZoneFilterChange() {
-  localStorage.setItem('ll_admin_chests_zone', document.getElementById('chestZoneFilter').value);
-  loadChests();
-}
-
-async function loadChests() {
-  try {
-    populateChestZoneFilter();
-    const zoneId = document.getElementById('chestZoneFilter').value;
-    const url = zoneId ? `/api/admin/map/chests?zoneId=${zoneId}` : '/api/admin/map/chests';
-    allChests = await apiFetch(url);
-    const tb = document.getElementById('chestsTable');
-    if (!allChests.length) {
-      tb.innerHTML = '<tr><td colspan="6" style="color:var(--text2);text-align:center;padding:24px">No chests found.</td></tr>';
-      return;
-    }
-    const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]));
-    const zoneMap = Object.fromEntries(allZones.map(z => [z.id, z]));
-    const rarityIcon = { Common:'📦', Uncommon:'🟢', Rare:'🔷', Epic:'💜', Legendary:'🌟' };
-    tb.innerHTML = allChests.map(c => {
-      const node = nodeMap[c.nodeId] || { name: c.nodeName || c.nodeId, icon: '' };
-      const zone = node && node.worldZoneId ? zoneMap[node.worldZoneId] : null;
-      const rarity = typeof c.rarity === 'string' ? c.rarity : 'Common';
-      return `<tr>
-        <td style="font-size:18px">${rarityIcon[rarity] || '📦'}</td>
-        <td>${node.icon || ''} <strong>${esc(node.name)}</strong></td>
-        <td>${zone ? `${zone.icon || ''} ${esc(zone.name)}` : '<span style="color:var(--text2)">—</span>'}</td>
-        <td><span class="rarity-${rarity.toLowerCase()}">${esc(rarity)}</span></td>
-        <td>${c.rewardXp} XP</td>
-        <td>
-          <button class="sm secondary" onclick='editChest(${JSON.stringify(c)})'>Edit</button>
-          <button class="sm danger" style="margin-left:4px" onclick="deleteChest('${c.id}')">Delete</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Failed to load chests: ' + e.message, 'err'); }
-}
-
-function openChestModal() {
-  document.getElementById('chestModalTitle').textContent = 'Add Chest';
-  document.getElementById('chestId').value = '';
-  document.getElementById('chestRarity').value = 'Common';
-  document.getElementById('chestRewardXp').value = 200;
-  const zoneFilter = document.getElementById('chestZoneFilter').value;
-  let nodes = allNodes;
-  if (zoneFilter) nodes = allNodes.filter(n => n.worldZoneId === zoneFilter);
-  const sel = document.getElementById('chestNode');
-  sel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.icon || ''} ${esc(n.name)}</option>`).join('');
-  document.getElementById('chestModal').classList.add('open');
-}
-
-function editChest(c) {
-  document.getElementById('chestModalTitle').textContent = 'Edit Chest';
-  document.getElementById('chestId').value = c.id;
-  const rarity = typeof c.rarity === 'string' ? c.rarity : 'Common';
-  document.getElementById('chestRarity').value = rarity;
-  document.getElementById('chestRewardXp').value = c.rewardXp ?? 200;
-  const sel = document.getElementById('chestNode');
-  sel.innerHTML = allNodes.map(n => `<option value="${n.id}">${n.icon || ''} ${esc(n.name)}</option>`).join('');
-  if (c.nodeId) sel.value = c.nodeId;
-  document.getElementById('chestModal').classList.add('open');
-}
-
-async function saveChest() {
-  const id = document.getElementById('chestId').value;
-  const body = {
-    nodeId: document.getElementById('chestNode').value,
-    rarity: document.getElementById('chestRarity').value,
-    rewardXp: parseInt(document.getElementById('chestRewardXp').value),
-  };
-  try {
-    if (id) {
-      const { nodeId, ...upd } = body;
-      await apiFetch('/api/admin/map/chests/' + id, { method: 'PUT', body: JSON.stringify(upd) });
-      toast('Chest updated', 'ok');
-    } else {
-      await apiFetch('/api/admin/map/chests', { method: 'POST', body: JSON.stringify(body) });
-      toast('Chest created', 'ok');
-    }
-    closeModal('chestModal');
-    loadChests();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-async function deleteChest(id) {
-  if (!confirm('Delete this chest?')) return;
-  try {
-    await apiFetch('/api/admin/map/chests/' + id, { method: 'DELETE' });
-    toast('Chest deleted', 'ok');
-    loadChests();
-  } catch(e) { toast('Error: ' + e.message, 'err'); }
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-function populateNodeSelects() {
-  const opts = allNodes.map(n => `<option value="${n.id}">${n.icon || ''} ${esc(n.name)}</option>`).join('');
-  ['edgeFrom','edgeTo','bossNode','chestNode'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts || '<option>No nodes loaded</option>'; });
-}
-
-async function loadAll() {
-  try {
-    await loadWorlds();
-    await loadZones();
-    await loadNodes();
-  } catch {}
-}
-
-// ── Cross-page nav with token ──────────────────────────────────────────────
-document.getElementById('linkItems').addEventListener('click', e => {
-  const t = getToken();
-  if (t) { e.preventDefault(); window.location.href = 'index.html?token=' + encodeURIComponent(t); }
-});
-
-// ── Init ───────────────────────────────────────────────────────────────────
-const qToken = new URLSearchParams(window.location.search).get('token');
-if (qToken) {
-  localStorage.setItem('ll_admin_token', qToken);
-  document.getElementById('tokenInput').value = qToken;
-} else {
-  const savedToken = getToken();
-  if (savedToken) document.getElementById('tokenInput').value = savedToken;
-}
-loadAll();
-</script>
+<script src="js/map/api.js"></script>
+<script src="js/map/worlds.js"></script>
+<script src="js/map/regions.js"></script>
+<script src="js/map/zones.js"></script>
+<script src="js/map/floors.js"></script>
+<script src="js/map/edges.js"></script>
+<script src="js/map/app.js"></script>
 </body>
 </html>

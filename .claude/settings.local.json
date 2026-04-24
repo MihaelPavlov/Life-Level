@@ -331,7 +331,11 @@
       "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" -s euguw86hxst4qsqw install -r \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\mobile\\\\build\\\\app\\\\outputs\\\\flutter-apk\\\\app-debug.apk\")",
       "PowerShell(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback|vEthernet|WSL' -and $_.IPAddress -notmatch '^169\\\\.254' } | Select-Object IPAddress, InterfaceAlias)",
       "PowerShell(Stop-Process *)",
-      "Bash(grep -E \"202604.*\\\\.cs$\")"
+      "Bash(grep -E \"202604.*\\\\.cs$\")",
+      "Bash(find C:\\\\\\\\Users\\\\\\\\MihaelPavlov\\\\\\\\repos\\\\\\\\Home\\\\\\\\Life-Level\\\\\\\\backend\\\\\\\\src\\\\\\\\modules\\\\\\\\LifeLevel.Modules.WorldZone\\\\\\\\Domain\\\\\\\\Entities -type f -name \"*.cs\")",
+      "Bash(find C:\\\\\\\\Users\\\\\\\\MihaelPavlov\\\\\\\\repos\\\\\\\\Home\\\\\\\\Life-Level\\\\\\\\backend\\\\\\\\src\\\\\\\\modules\\\\\\\\LifeLevel.Modules.WorldZone\\\\\\\\Domain\\\\\\\\Enums -type f -name \"*.cs\")",
+      "Bash(find C:\\\\\\\\Users\\\\\\\\MihaelPavlov\\\\\\\\repos\\\\\\\\Home\\\\\\\\Life-Level\\\\\\\\backend\\\\\\\\src\\\\\\\\modules\\\\\\\\LifeLevel.Modules.Adventure.Encounters\\\\\\\\Domain\\\\\\\\Entities -type f -name \"*.cs\")",
+      "Bash(grep -i \".cs$\")"
     ]
   }
 }
