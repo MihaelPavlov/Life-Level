@@ -28,12 +28,18 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
   int? _calories;
   bool _submitting = false;
 
-  bool get _showDistance => [
-        ActivityType.running,
-        ActivityType.cycling,
-        ActivityType.hiking,
-        ActivityType.walking,
-      ].contains(_selectedType);
+  // Activity types whose distance contributes to map movement / dungeon
+  // floor targets. Swimming is included — backend already accepts
+  // `distanceKm` for any type and feeds it into `AddDistanceAsync`.
+  static const _distanceTypes = {
+    ActivityType.running,
+    ActivityType.cycling,
+    ActivityType.hiking,
+    ActivityType.walking,
+    ActivityType.swimming,
+  };
+
+  bool get _showDistance => _distanceTypes.contains(_selectedType);
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +73,8 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
               selected: _selectedType,
               onSelect: (t) => setState(() {
                 _selectedType = t;
-                // Reset distance when switching to non-distance type
-                if (![ActivityType.running, ActivityType.cycling, ActivityType.hiking, ActivityType.walking]
-                    .contains(t)) {
+                // Reset distance when switching to a type that doesn't show the field.
+                if (!_distanceTypes.contains(t)) {
                   _distanceKm = null;
                 }
               }),
