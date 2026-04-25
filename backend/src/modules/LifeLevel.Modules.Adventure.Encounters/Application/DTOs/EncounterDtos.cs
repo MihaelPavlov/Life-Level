@@ -21,6 +21,7 @@ public class BossListItemDto
     public string Region { get; set; } = string.Empty;
     public string NodeName { get; set; } = string.Empty;
     public int LevelRequirement { get; set; }
+    public Guid? WorldZoneId { get; set; }
 
     // Gameplay
     public bool CanFight { get; set; }

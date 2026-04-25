@@ -62,6 +62,10 @@ class _MainShellState extends ConsumerState<MainShell>
   ValueChanged<ZonePick>? _pendingOnZoneSelected;
   bool _titlesOpen = false;
   bool _bossOpen = false;
+  /// Carried alongside `_bossOpen` to deep-link the boss overlay straight
+  /// into a specific boss's battle view (set when the home portal "Fight →"
+  /// CTA fires, cleared when the overlay closes).
+  String? _pendingBossId;
   bool _loginRewardShown = false;
 
   late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
@@ -103,7 +107,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
-  late final StreamSubscription<void> _bossOverlaySub;
+  late final StreamSubscription<BossOpenIntent> _bossOverlaySub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
 
   final _fabKey = GlobalKey();
@@ -253,17 +257,19 @@ class _MainShellState extends ConsumerState<MainShell>
       if (!mounted) return;
       showDungeonFloorClearedOverlay(context, event);
     });
-    _bossOverlaySub = BossOverlayNotifier.stream.listen((_) {
+    _bossOverlaySub = BossOverlayNotifier.stream.listen((intent) {
       if (!mounted) return;
       // Fresh-fetch the boss list so the just-spawned world-zone boss
       // appears, then flip the existing shell overlay — same surface the
-      // ring-menu boss item opens.
+      // ring-menu boss item opens. `intent.bossId` (when present) tells
+      // BossScreen to auto-open the battle view for that boss.
       ref.invalidate(bossListProvider);
       setState(() {
         _radialOpen = false;
         _worldOpen = false;
         _titlesOpen = false;
         _bossOpen = true;
+        _pendingBossId = intent.bossId;
       });
     });
     _ringIds = List.from(widget.initialRingIds ?? kDefaultRingIds);
@@ -603,7 +609,11 @@ class _MainShellState extends ConsumerState<MainShell>
                 Positioned.fill(
                   bottom: kNavBarH,
                   child: BossScreen(
-                    onClose: () => setState(() => _bossOpen = false),
+                    initialBossId: _pendingBossId,
+                    onClose: () => setState(() {
+                      _bossOpen = false;
+                      _pendingBossId = null;
+                    }),
                   ),
                 ),
 

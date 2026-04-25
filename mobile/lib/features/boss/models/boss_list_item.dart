@@ -9,6 +9,9 @@ class BossListItem {
   final String region;
   final String nodeName;
   final int levelRequirement;
+  /// World-zone Guid this boss is bound to (null for legacy local-map bosses).
+  /// Used by the home portal to map the current boss zone → its boss row.
+  final String? worldZoneId;
 
   // Gameplay
   final bool canFight;
@@ -33,6 +36,7 @@ class BossListItem {
     required this.region,
     required this.nodeName,
     required this.levelRequirement,
+    this.worldZoneId,
     required this.canFight,
     required this.activated,
     required this.hpDealt,
@@ -74,6 +78,7 @@ class BossListItem {
         region: json['region'] ?? '',
         nodeName: json['nodeName'] ?? '',
         levelRequirement: json['levelRequirement'] ?? 0,
+        worldZoneId: json['worldZoneId'] as String?,
         canFight: json['canFight'] ?? false,
         activated: json['activated'] ?? false,
         hpDealt: json['hpDealt'] ?? 0,

@@ -66,6 +66,7 @@ public class BossService(
                 Region = node?.Region.ToString() ?? string.Empty,
                 NodeName = node?.Name ?? string.Empty,
                 LevelRequirement = node?.LevelRequirement ?? 0,
+                WorldZoneId = boss.WorldZoneId,
                 CanFight = canFight,
                 Activated = state != null,
                 HpDealt = state?.HpDealt ?? 0,

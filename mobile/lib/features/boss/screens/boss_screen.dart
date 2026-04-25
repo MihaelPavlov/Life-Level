@@ -11,7 +11,11 @@ import 'boss_battle_screen.dart';
 
 class BossScreen extends ConsumerStatefulWidget {
   final VoidCallback? onClose;
-  const BossScreen({super.key, this.onClose});
+  /// When provided, auto-open the battle view for this boss as soon as the
+  /// list resolves. Set by the home portal "Fight →" CTAs via
+  /// `BossOverlayNotifier.notifyForBoss`.
+  final String? initialBossId;
+  const BossScreen({super.key, this.onClose, this.initialBossId});
 
   @override
   ConsumerState<BossScreen> createState() => BossScreenState();
@@ -19,6 +23,7 @@ class BossScreen extends ConsumerStatefulWidget {
 
 class BossScreenState extends ConsumerState<BossScreen> {
   BossListItem? _selectedBoss;
+  bool _autoOpenAttempted = false;
 
   void refresh() => ref.read(bossListProvider.notifier).refresh();
 
@@ -26,6 +31,21 @@ class BossScreenState extends ConsumerState<BossScreen> {
   void _closeBattle() {
     setState(() => _selectedBoss = null);
     refresh();
+  }
+
+  void _maybeAutoOpen(List<BossListItem> bosses) {
+    if (_autoOpenAttempted) return;
+    final id = widget.initialBossId;
+    if (id == null) return;
+    _autoOpenAttempted = true;
+    final boss = bosses
+        .cast<BossListItem?>()
+        .firstWhere((b) => b!.id == id, orElse: () => null);
+    if (boss == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openBattle(boss);
+    });
   }
 
   @override
@@ -38,6 +58,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
     }
 
     final bossAsync = ref.watch(bossListProvider);
+    bossAsync.whenData(_maybeAutoOpen);
 
     return Material(
       color: AppColors.backgroundAlt,

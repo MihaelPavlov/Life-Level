@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:life_level/core/services/boss_overlay_notifier.dart';
 import 'package:life_level/features/boss/models/boss_list_item.dart';
 import 'package:life_level/features/boss/providers/boss_provider.dart';
 import 'package:life_level/features/home/cards/home_portal_card.dart';
@@ -431,6 +434,51 @@ void main() {
     expect(find.textContaining('3.5 km'), findsOneWidget);
     // Misleading "0 / 1 nodes" bar must be gone for this case too.
     expect(find.textContaining('nodes'), findsNothing);
+  });
+
+  testWidgets(
+      'boss-zone Fight tap fires BossOverlayNotifier.notifyForBoss(boss.id)',
+      (tester) async {
+    final bossZone =
+        _zone(id: 'boss-zone', type: 'boss', name: 'Warden Hollow');
+    final boss = BossListItem(
+      id: 'boss-1',
+      name: 'Forest Warden',
+      icon: '👹',
+      maxHp: 1000,
+      rewardXp: 500,
+      timerDays: 7,
+      isMini: false,
+      region: 'ForestOfEndurance',
+      nodeName: '',
+      levelRequirement: 5,
+      worldZoneId: 'boss-zone',
+      canFight: true,
+      // Not active — otherwise the priority _BossRaidPortal would render
+      // instead of the boss-zone variant we're testing.
+      activated: false,
+      hpDealt: 0,
+      isDefeated: false,
+      isExpired: false,
+    );
+
+    final intents = <BossOpenIntent>[];
+    final sub = BossOverlayNotifier.stream.listen(intents.add);
+    addTearDown(sub.cancel);
+
+    await tester.pumpWidget(_harness(
+      world: _world(zones: [bossZone], currentZoneId: 'boss-zone'),
+      bosses: [boss],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fight →'), findsOneWidget);
+    await tester.tap(find.text('Fight →'));
+    // Stream events deliver on the next microtask.
+    await tester.pump();
+
+    expect(intents, hasLength(1));
+    expect(intents.single.bossId, 'boss-1');
   });
 
   testWidgets(

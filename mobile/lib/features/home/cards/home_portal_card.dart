@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
@@ -402,7 +403,7 @@ class _BossRaidPortal extends StatelessWidget {
       barColors: const [AppColors.red, AppColors.redDark],
       primaryLabel: 'Fight →',
       primaryStyle: HomeHeroButtonStyle.solidRed,
-      onPrimary: () => NavTabNotifier.switchTo('boss'),
+      onPrimary: () => BossOverlayNotifier.notifyForBoss(boss.id),
       onSync: onSync,
     );
   }
@@ -499,7 +500,7 @@ class _StandardPortal extends StatelessWidget {
   }
 }
 
-class _BossZonePortal extends StatelessWidget {
+class _BossZonePortal extends ConsumerWidget {
   final WorldZoneModel zone;
   final String? regionChip;
   final String? regionId;
@@ -512,7 +513,15 @@ class _BossZonePortal extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Map this boss zone → its boss row. Backend exposes `worldZoneId` on
+    // BossListItemDto; if the row is missing the boss hasn't lazy-spawned
+    // yet (rare, since the bridge spawns on arrival).
+    final bosses = ref.watch(bossListProvider).valueOrNull;
+    final boss = bosses
+        ?.cast<BossListItem?>()
+        .firstWhere((b) => b!.worldZoneId == zone.id, orElse: () => null);
+
     return _HeroShell(
       accent: AppColors.red,
       label: '⚔️ BOSS ZONE · READY FOR THE RAID',
@@ -528,7 +537,20 @@ class _BossZonePortal extends StatelessWidget {
       barColors: const [AppColors.red, AppColors.redDark],
       primaryLabel: 'Fight →',
       primaryStyle: HomeHeroButtonStyle.solidRed,
-      onPrimary: () => _openWorldDestination(context, regionId),
+      onPrimary: () {
+        if (boss == null) {
+          // Lazy-spawn race or list still loading: fall back to the boss
+          // list (no preselect) and tell the user to retry.
+          BossOverlayNotifier.notify();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Boss is spawning — log a workout to engage.'),
+            ),
+          );
+          return;
+        }
+        BossOverlayNotifier.notifyForBoss(boss.id);
+      },
       onSync: onSync,
     );
   }
