@@ -7,8 +7,8 @@ import '../boss/providers/boss_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
 import '../tutorial/providers/tutorial_provider.dart';
-import 'cards/home_adventure_hero.dart';
 import 'cards/home_header.dart';
+import 'cards/home_portal_card.dart';
 import 'cards/home_log_workout_cta.dart';
 import 'cards/home_login_reward_chip.dart';
 import 'cards/home_seasonal_event_row.dart';
@@ -17,6 +17,7 @@ import 'cards/home_streak_strip.dart';
 import 'cards/home_todays_quests.dart';
 import 'cards/home_xp_storm_banner.dart';
 import 'providers/map_journey_provider.dart';
+import 'providers/world_progress_provider.dart';
 
 /// Home tab scaffold. Owns layout + the sync handler only; every card lives
 /// in its own file under `cards/`.
@@ -86,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Padding(
                   key: _xpCardKey,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: HomeAdventureHero(
+                  child: HomePortalCard(
                     onSync: () => _handleSync(context, ref),
                   ),
                 ),
@@ -144,6 +145,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (_) {/* swallow */}
 
     ref.invalidate(mapJourneyProvider);
+    ref.invalidate(worldProgressProvider);
+    ref.invalidate(currentRegionDetailProvider);
     ref.invalidate(characterProfileProvider);
     ref.invalidate(activityHistoryProvider);
     ref.invalidate(bossListProvider);

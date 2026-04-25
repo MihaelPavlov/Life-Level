@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import 'home_palette.dart';
 
-enum HomeHeroButtonStyle { ghost, solidBlue, solidGreen, solidRed }
+enum HomeHeroButtonStyle {
+  ghost,
+  solidBlue,
+  solidGreen,
+  solidRed,
+  solidOrange,
+  solidPurple,
+}
 
 /// Flat button used inside the Adventure Hero card.
 /// Matches `.home3-btn` variants in home-v3.html.
@@ -62,6 +69,28 @@ class HomeHeroButton extends StatelessWidget {
         shadows = [
           BoxShadow(
             color: AppColors.red.withValues(alpha: 0.3),
+            blurRadius: 16,
+          ),
+        ];
+      case HomeHeroButtonStyle.solidOrange:
+        bgStart = AppColors.orange;
+        bgEnd = const Color(0xFFe08e14);
+        borderColor = AppColors.orange.withValues(alpha: 0.55);
+        textColor = Colors.white;
+        shadows = [
+          BoxShadow(
+            color: AppColors.orange.withValues(alpha: 0.3),
+            blurRadius: 16,
+          ),
+        ];
+      case HomeHeroButtonStyle.solidPurple:
+        bgStart = AppColors.purple;
+        bgEnd = const Color(0xFF8756d6);
+        borderColor = AppColors.purple.withValues(alpha: 0.55);
+        textColor = Colors.white;
+        shadows = [
+          BoxShadow(
+            color: AppColors.purple.withValues(alpha: 0.3),
             blurRadius: 16,
           ),
         ];

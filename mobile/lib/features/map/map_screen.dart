@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/level_up_notifier.dart';
+import '../../core/services/map_focus_notifier.dart';
 import '../../core/services/map_tab_notifier.dart';
 import '../../core/services/world_map_notifier.dart';
 import '../../core/widgets/api_error_state.dart';
@@ -48,6 +49,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
   late final TransformationController _transformCtrl;
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<void> _mapTabSub;
+  late final StreamSubscription<String?> _mapFocusSub;
 
   bool _hasInitializedViewport = false;
 
@@ -75,6 +77,14 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
       _hasInitializedViewport = false;
       _loadMap();
     });
+    // Home portal / anywhere in the app can request the map to re-focus on a
+    // specific world zone. null → fall back to current/destination zone.
+    _mapFocusSub = MapFocusNotifier.stream.listen((zoneId) {
+      _worldZoneId = zoneId;
+      _zoneName = null;
+      _hasInitializedViewport = false;
+      _loadMap();
+    });
     _loadMap();
   }
 
@@ -82,6 +92,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
   void dispose() {
     _levelUpSub.cancel();
     _mapTabSub.cancel();
+    _mapFocusSub.cancel();
     _pulseCtrl.dispose();
     _destCtrl.dispose();
     _transformCtrl.dispose();
