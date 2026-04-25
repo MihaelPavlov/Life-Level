@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../activity/providers/activity_provider.dart';
-import '../providers/map_journey_provider.dart';
+import '../providers/world_progress_provider.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../widgets/home_stat_tile.dart';
 
@@ -17,12 +17,12 @@ class HomeStatStrip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mapAsync = ref.watch(mapJourneyProvider);
+    final worldAsync = ref.watch(worldProgressProvider);
     final historyAsync = ref.watch(activityHistoryProvider);
     final streakAsync = ref.watch(streakProvider);
 
     final pendingKm =
-        mapAsync.valueOrNull?.userProgress.pendingDistanceKm ?? 0.0;
+        worldAsync.valueOrNull?.userProgress.pendingDistanceKm ?? 0.0;
     final todaysXp = _todaysXp(historyAsync.valueOrNull);
     final shields = streakAsync.valueOrNull?.shieldsAvailable ?? 0;
 
@@ -42,7 +42,7 @@ class HomeStatStrip extends ConsumerWidget {
             valueColor: AppColors.blue,
             primary: !bankedDim,
             dim: bankedDim,
-            onTap: () => NavTabNotifier.switchTo('map'),
+            onTap: () => NavTabNotifier.switchTo('world'),
           ),
           const SizedBox(width: 8),
           HomeStatTile(

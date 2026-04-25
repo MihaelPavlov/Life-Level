@@ -26,7 +26,6 @@ const kAllRingItems = [
   RingItem('boss',        '🐉', 'Boss',        Color(0xFFf85149)),
   RingItem('profile',     '👤', 'Profile',     Color(0xFF9e9e9e)),
   RingItem('leaderboard', '🏆', 'Leaderboard', Color(0xFFf5a623)),
-  RingItem('map',         '🗺️', 'Map',         Color(0xFF52e0a0)),
   RingItem('quests',      '📜', 'Quests',      Color(0xFF8b949e)),
 ];
 
@@ -43,7 +42,6 @@ class NavTab {
 const kAllNavItems = [
   NavTab('home',        '🏠', 'Home'),
   NavTab('quests',      '📜', 'Quests'),
-  NavTab('map',         '🗺️', 'Map'),
   NavTab('profile',     '👤', 'Profile'),
   NavTab('stats',       '📊', 'Stats'),
   NavTab('boss',        '⚔️', 'Bosses'),

@@ -45,21 +45,29 @@ class WorldZoneModel {
   });
 
   factory WorldZoneModel.fromJson(Map<String, dynamic> json) => WorldZoneModel(
-        id: json['id'],
-        name: json['name'],
-        description: json['description'],
-        icon: json['icon'],
-        region: json['region'],
-        tier: json['tier'] as int,
-        positionX: (json['positionX'] as num).toDouble(),
-        positionY: (json['positionY'] as num).toDouble(),
-        levelRequirement: json['levelRequirement'] as int,
-        totalXp: json['totalXp'] as int,
-        totalDistanceKm: (json['totalDistanceKm'] as num).toDouble(),
-        isCrossroads: json['isCrossroads'] as bool,
-        isStartZone: json['isStartZone'] as bool,
-        nodeCount: json['nodeCount'] as int,
-        completedNodeCount: json['completedNodeCount'] as int?,
+        id: json['id'] as String,
+        name: (json['name'] as String?) ?? '',
+        description: json['description'] as String?,
+        // Backend serialises the emoji glyph as `emoji`; old mobile callers
+        // called it `icon`. Accept either so a future rename is safe.
+        icon: (json['icon'] as String?) ?? (json['emoji'] as String?) ?? '',
+        region: (json['region'] as String?) ?? '',
+        tier: (json['tier'] as num?)?.toInt() ?? 1,
+        positionX: (json['positionX'] as num?)?.toDouble() ?? 0,
+        positionY: (json['positionY'] as num?)?.toDouble() ?? 0,
+        levelRequirement: (json['levelRequirement'] as num?)?.toInt() ?? 1,
+        // Backend uses `xpReward`; legacy clients used `totalXp`.
+        totalXp: (json['totalXp'] as num?)?.toInt() ??
+            (json['xpReward'] as num?)?.toInt() ??
+            0,
+        totalDistanceKm: (json['totalDistanceKm'] as num?)?.toDouble() ??
+            (json['distanceKm'] as num?)?.toDouble() ??
+            0,
+        isCrossroads: (json['isCrossroads'] as bool?) ??
+            ((json['type'] as String?) == 'crossroads'),
+        isStartZone: (json['isStartZone'] as bool?) ?? false,
+        nodeCount: (json['nodeCount'] as num?)?.toInt() ?? 0,
+        completedNodeCount: (json['completedNodeCount'] as num?)?.toInt(),
         type: (json['type'] as String?) ?? 'zone',
         userState: json['userState'] != null
             ? ZoneUserState.fromJson(json['userState'])
@@ -117,6 +125,7 @@ class WorldUserProgress {
   final String currentZoneId;
   final String? currentEdgeId;
   final double distanceTraveledOnEdge;
+  final double pendingDistanceKm;
   final String? destinationZoneId;
   final List<String> unlockedZoneIds;
   // ID of the region the user's CurrentZone belongs to. Set by the backend
@@ -128,6 +137,7 @@ class WorldUserProgress {
     required this.currentZoneId,
     this.currentEdgeId,
     required this.distanceTraveledOnEdge,
+    this.pendingDistanceKm = 0,
     this.destinationZoneId,
     required this.unlockedZoneIds,
     this.currentRegionId,
@@ -135,14 +145,17 @@ class WorldUserProgress {
 
   factory WorldUserProgress.fromJson(Map<String, dynamic> json) =>
       WorldUserProgress(
-        currentZoneId: json['currentZoneId'],
-        currentEdgeId: json['currentEdgeId'],
+        currentZoneId: (json['currentZoneId'] as String?) ?? '',
+        currentEdgeId: json['currentEdgeId'] as String?,
         distanceTraveledOnEdge:
-            (json['distanceTraveledOnEdge'] as num).toDouble(),
-        destinationZoneId: json['destinationZoneId'],
-        unlockedZoneIds: (json['unlockedZoneIds'] as List)
-            .map((e) => e.toString())
-            .toList(),
+            (json['distanceTraveledOnEdge'] as num?)?.toDouble() ?? 0,
+        pendingDistanceKm:
+            (json['pendingDistanceKm'] as num?)?.toDouble() ?? 0,
+        destinationZoneId: json['destinationZoneId'] as String?,
+        unlockedZoneIds: (json['unlockedZoneIds'] as List?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
         currentRegionId: json['currentRegionId'] as String?,
       );
 }
@@ -169,9 +182,10 @@ class WorldFullData {
             .toList(),
         userProgress: json['userProgress'] != null
             ? WorldUserProgress.fromJson(json['userProgress'] as Map<String, dynamic>)
-            : WorldUserProgress(
+            : const WorldUserProgress(
                 currentZoneId: '',
                 distanceTraveledOnEdge: 0,
+                pendingDistanceKm: 0,
                 unlockedZoneIds: [],
               ),
         characterLevel: json['characterLevel'] as int,

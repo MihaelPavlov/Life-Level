@@ -7,14 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace LifeLevel.Api.Controllers;
 
 /// <summary>
-/// Read-side endpoints for the v3 World Map (spec §12 of
-/// <c>design-mockup/map/WORLD-MAP-FINAL-DESIGN.md</c>). Two-level navigation:
-/// the world screen fetches <c>GET /api/map/world</c>; tapping into a region
-/// fetches <c>GET /api/map/region/{id}</c>.
-///
-/// Kept separate from the existing <see cref="MapController"/> (which owns the
-/// dungeon/node layer at <c>/api/map/full</c>) so the two layers stay
-/// independently routable.
+/// Read-side endpoints for the world map. Two-level navigation: the world
+/// screen fetches <c>GET /api/map/world</c>; tapping into a region fetches
+/// <c>GET /api/map/region/{id}</c>.
 /// </summary>
 [ApiController]
 [Authorize]

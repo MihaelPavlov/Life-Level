@@ -755,6 +755,140 @@ public class WorldZoneServiceTests
         Assert.Equal(setup.Crossroads.Id, branchANode.BranchOf);
         Assert.Equal(setup.Crossroads.Id, branchBNode.BranchOf);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Banking-km drain tests (regression: SetDestination with pending km used
+    // to overflow the edge length without firing arrival; AddDistance used to
+    // drop excess on final arrival).
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /// Helper: seed a minimal A→B world with the given edge length and a user
+    /// already at A (no destination, no current edge) holding `pendingKm`
+    /// banked. Returns the A and B zone ids.
+    private async Task<(Guid A, Guid B, Guid EdgeId)> SeedSimpleAToBAsync(
+        AppDbContext db, string testName, double edgeKm, double pendingKm)
+    {
+        var (world, region) = SeedWorld(db);
+        var userId = TestUserId;
+
+        var user = new User { Id = userId, Username = testName, Email = $"{testName}@t.com", PasswordHash = "x" };
+        var character = new Character { Id = Guid.NewGuid(), UserId = userId, Level = 1 };
+        db.Users.Add(user);
+        db.Characters.Add(character);
+
+        var a = new WorldZoneEntity { Id = Guid.NewGuid(), RegionId = region.Id, Name = "A", IsStartZone = true };
+        var b = new WorldZoneEntity { Id = Guid.NewGuid(), RegionId = region.Id, Name = "B", XpReward = 0 };
+        db.WorldZones.AddRange(a, b);
+
+        var edge = new WorldZoneEdge
+        {
+            Id = Guid.NewGuid(),
+            FromZoneId = a.Id,
+            ToZoneId = b.Id,
+            DistanceKm = edgeKm,
+            IsBidirectional = true,
+        };
+        db.WorldZoneEdges.Add(edge);
+
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            WorldId = world.Id,
+            CurrentZoneId = a.Id,
+            DistanceTraveledOnEdge = 0,
+            PendingDistanceKm = pendingKm,
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId,
+            WorldZoneId = a.Id,
+            UserWorldProgressId = progress.Id,
+        });
+        await db.SaveChangesAsync();
+
+        return (a.Id, b.Id, edge.Id);
+    }
+
+    private static readonly Guid TestUserId = Guid.NewGuid();
+
+    [Fact]
+    public async Task SetDestination_WithPendingExceedingEdge_ArrivesAndBanksOverflow()
+    {
+        var db = CreateDb(nameof(SetDestination_WithPendingExceedingEdge_ArrivesAndBanksOverflow));
+        var (_, b, _) = await SeedSimpleAToBAsync(db, "bank_overflow", edgeKm: 4.2, pendingKm: 5.0);
+
+        var service = CreateService(db);
+        await service.SetDestinationAsync(TestUserId, b);
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == TestUserId);
+        Assert.Equal(b, updated.CurrentZoneId);
+        Assert.Null(updated.CurrentEdgeId);
+        Assert.Null(updated.DestinationZoneId);
+        Assert.Equal(0, updated.DistanceTraveledOnEdge);
+        Assert.Equal(0.8, updated.PendingDistanceKm, precision: 5);
+    }
+
+    [Fact]
+    public async Task SetDestination_WithPendingMatchingEdge_ArrivesWithZeroBank()
+    {
+        var db = CreateDb(nameof(SetDestination_WithPendingMatchingEdge_ArrivesWithZeroBank));
+        var (_, b, _) = await SeedSimpleAToBAsync(db, "bank_exact", edgeKm: 4.2, pendingKm: 4.2);
+
+        var service = CreateService(db);
+        await service.SetDestinationAsync(TestUserId, b);
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == TestUserId);
+        Assert.Equal(b, updated.CurrentZoneId);
+        Assert.Null(updated.CurrentEdgeId);
+        Assert.Null(updated.DestinationZoneId);
+        Assert.Equal(0, updated.PendingDistanceKm, precision: 5);
+        Assert.Equal(0, updated.DistanceTraveledOnEdge);
+    }
+
+    [Fact]
+    public async Task SetDestination_WithPendingShorterThanEdge_PartiallyTravels()
+    {
+        var db = CreateDb(nameof(SetDestination_WithPendingShorterThanEdge_PartiallyTravels));
+        var (a, b, edgeId) = await SeedSimpleAToBAsync(db, "bank_partial", edgeKm: 4.2, pendingKm: 2.5);
+
+        var service = CreateService(db);
+        await service.SetDestinationAsync(TestUserId, b);
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == TestUserId);
+        Assert.Equal(a, updated.CurrentZoneId);
+        Assert.Equal(b, updated.DestinationZoneId);
+        Assert.Equal(edgeId, updated.CurrentEdgeId);
+        Assert.Equal(2.5, updated.DistanceTraveledOnEdge, precision: 5);
+        Assert.Equal(0, updated.PendingDistanceKm, precision: 5);
+    }
+
+    [Fact]
+    public async Task AddDistance_WithExcessOnFinalDestination_BanksOverflow()
+    {
+        var db = CreateDb(nameof(AddDistance_WithExcessOnFinalDestination_BanksOverflow));
+        var (_, b, edgeId) = await SeedSimpleAToBAsync(db, "bank_excess_arrival", edgeKm: 4.2, pendingKm: 0);
+
+        // Start the user mid-edge with a destination set, so the next
+        // AddDistance call exercises the final-arrival branch.
+        var progress = await db.UserWorldProgresses.FirstAsync(p => p.UserId == TestUserId);
+        progress.CurrentEdgeId = edgeId;
+        progress.DestinationZoneId = b;
+        progress.DistanceTraveledOnEdge = 4.0;
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db);
+        // 4.0 already on edge + 1.0 added = 5.0 total; edge is 4.2 → 0.8
+        // overflow that should land back in PendingDistanceKm.
+        await service.AddDistanceAsync(TestUserId, 1.0);
+
+        var updated = await db.UserWorldProgresses.FirstAsync(p => p.UserId == TestUserId);
+        Assert.Equal(b, updated.CurrentZoneId);
+        Assert.Null(updated.CurrentEdgeId);
+        Assert.Null(updated.DestinationZoneId);
+        Assert.Equal(0.8, updated.PendingDistanceKm, precision: 5);
+    }
 }
 
 // Supporting stub: MapReadService needs a username read port. Tests don't care

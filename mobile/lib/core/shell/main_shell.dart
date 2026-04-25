@@ -22,9 +22,7 @@ import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/login_reward/login_reward_screen.dart';
 import '../../features/quests/quests_screen.dart';
-import '../../features/map/map_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
-import '../services/map_tab_notifier.dart';
 import '../services/nav_tab_notifier.dart';
 import '../services/world_map_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
@@ -217,8 +215,25 @@ class _MainShellState extends ConsumerState<MainShell>
       if (mounted) showItemObtainedOverlay(context, item);
     });
     _navTabSub = NavTabNotifier.stream.listen((tabId) {
+      if (!mounted) return;
       final navIndex = _navIds.indexOf(tabId);
-      if (navIndex != -1 && mounted) setState(() => _tabIndex = navIndex);
+      // 'world' is rendered as an overlay above the IndexedStack — switching
+      // to it without opening the overlay would leave the user staring at
+      // SizedBox.shrink(). Open the overlay alongside the tab switch so
+      // programmatic NavTabNotifier.switchTo('world') matches the behaviour
+      // of tapping the bottom-nav 'world' icon.
+      if (tabId == 'world') {
+        WorldZoneRefreshNotifier.notify();
+        setState(() {
+          if (navIndex != -1) _tabIndex = navIndex;
+          _pendingOnZoneSelected = null;
+          _worldOpen = true;
+          _titlesOpen = false;
+          _bossOpen = false;
+        });
+        return;
+      }
+      if (navIndex != -1) setState(() => _tabIndex = navIndex);
     });
     _worldMapSub = WorldMapNotifier.stream.listen((event) {
       if (!mounted) return;
@@ -497,7 +512,6 @@ class _MainShellState extends ConsumerState<MainShell>
     switch (id) {
       case 'home':    return const HomeScreen();
       case 'quests':  return const QuestsScreen();
-      case 'map':     return const MapScreen();
       // 'world' is never rendered inside the IndexedStack — tapping the nav
       // tab opens the shell overlay instead. This placeholder keeps index
       // alignment with _navIds.
@@ -643,7 +657,6 @@ class _MainShellState extends ConsumerState<MainShell>
                     // overlay, so the tab-index switch is purely cosmetic.
                     if (_navIds[i] == 'world') {
                       WorldZoneRefreshNotifier.notify();
-                      MapTabNotifier.notify();
                       setState(() {
                         _pendingOnZoneSelected = null;
                         _tabIndex = i;

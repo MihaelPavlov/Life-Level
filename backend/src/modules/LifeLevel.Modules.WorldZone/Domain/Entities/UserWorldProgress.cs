@@ -13,6 +13,12 @@ public class UserWorldProgress
     public WorldZoneEdge? CurrentEdge { get; set; }
     public double DistanceTraveledOnEdge { get; set; } = 0;
 
+    /// Distance the user has banked but not yet applied to an edge — i.e. they
+    /// logged a workout while standing still (no destination set, or stopped
+    /// at a crossroads). Drained into edge progress on the next SetDestination
+    /// or AddDistance call once an edge is active.
+    public double PendingDistanceKm { get; set; } = 0;
+
     public Guid? DestinationZoneId { get; set; }
     public WorldZone? DestinationZone { get; set; }
 

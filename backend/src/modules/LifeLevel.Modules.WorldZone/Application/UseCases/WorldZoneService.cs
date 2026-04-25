@@ -121,6 +121,7 @@ public class WorldZoneService(
                 CurrentZoneId = progress.CurrentZoneId,
                 CurrentEdgeId = progress.CurrentEdgeId,
                 DistanceTraveledOnEdge = progress.DistanceTraveledOnEdge,
+                PendingDistanceKm = progress.PendingDistanceKm,
                 DestinationZoneId = progress.DestinationZoneId,
                 UnlockedZoneIds = unlockedIds.ToList()
             }
@@ -206,6 +207,14 @@ public class WorldZoneService(
         progress.DestinationZoneId = destinationZoneId;
         progress.CurrentEdgeId = firstEdge.Id;
         if (!keepEdgeProgress) progress.DistanceTraveledOnEdge = 0;
+
+        // Capture banked km — we defer the actual drain to AddDistanceAsync
+        // below so the multi-hop arrival logic fires (zone unlocks, region
+        // updates, boss bridge spawning) and any leftover after the trip is
+        // re-banked instead of overshooting the edge length.
+        var pendingDrain = progress.PendingDistanceKm;
+        progress.PendingDistanceKm = 0;
+
         progress.UpdatedAt = DateTime.UtcNow;
 
         // Dungeon forfeit: if the user is currently standing on a dungeon
@@ -225,6 +234,14 @@ public class WorldZoneService(
         }
 
         await db.SaveChangesAsync();
+
+        // Apply the captured banked km through the same path a logged
+        // workout takes. This handles arrival, zone unlocks, boss bridge
+        // spawning, and re-banks any overshoot past the destination.
+        if (pendingDrain > 0)
+        {
+            await AddDistanceAsync(userId, pendingDrain);
+        }
 
         return new Application.DTOs.SetWorldDestinationResult(forfeitedFloors);
     }
@@ -334,8 +351,13 @@ public class WorldZoneService(
 
         if (progress.CurrentEdgeId == null || progress.DestinationZoneId == null)
         {
-            log.LogInformation("WorldZone.AddDistance SKIP user={UserId} incomingKm={Km} reason=no-destination currentEdgeId={EdgeId} destinationZoneId={DestId}",
-                userId, km, progress.CurrentEdgeId, progress.DestinationZoneId);
+            // No destination set — bank the distance so the user doesn't lose
+            // it. SetDestinationAsync will drain it onto the new edge.
+            progress.PendingDistanceKm += km;
+            progress.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            log.LogInformation("WorldZone.AddDistance BANK user={UserId} incomingKm={Km} pendingKm={PendingKm}",
+                userId, km, progress.PendingDistanceKm);
             return;
         }
 
@@ -437,7 +459,9 @@ public class WorldZoneService(
 
             if (arrivedZoneId == progress.DestinationZoneId)
             {
-                // End of planned journey — clear destination.
+                // End of planned journey — bank any leftover km the user
+                // logged past the destination so it isn't dropped on the floor.
+                if (excessKm > 0) progress.PendingDistanceKm += excessKm;
                 progress.CurrentEdgeId = null;
                 progress.DestinationZoneId = null;
                 remainingKm = 0;
@@ -450,8 +474,9 @@ public class WorldZoneService(
             if (nextEdge == null)
             {
                 // Path broken mid-journey (e.g. branch locked in the meantime).
-                // Park the user at the arrived zone and clear the goal; the
-                // excess km is dropped on the floor.
+                // Park the user at the arrived zone, bank any leftover km, and
+                // clear the goal so the user can re-plan.
+                if (excessKm > 0) progress.PendingDistanceKm += excessKm;
                 progress.CurrentEdgeId = null;
                 progress.DestinationZoneId = null;
                 remainingKm = 0;

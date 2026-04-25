@@ -12,7 +12,7 @@ import '../streak/providers/streak_provider.dart';
 import 'activity_result_sheet.dart';
 import 'models/activity_models.dart';
 import 'providers/activity_provider.dart';
-import '../home/providers/map_journey_provider.dart';
+import '../home/providers/world_progress_provider.dart';
 
 class LogActivityScreen extends ConsumerStatefulWidget {
   const LogActivityScreen({super.key});
@@ -165,7 +165,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       ref.invalidate(dailyQuestsProvider);
       ref.invalidate(weeklyQuestsProvider);
       ref.invalidate(streakProvider);
-      ref.invalidate(mapJourneyProvider);
+      ref.invalidate(worldProgressProvider);
       ref.invalidate(bossListProvider);
 
       WorldZoneRefreshNotifier.notify();

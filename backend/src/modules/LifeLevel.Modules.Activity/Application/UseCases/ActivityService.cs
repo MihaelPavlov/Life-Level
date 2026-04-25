@@ -17,7 +17,6 @@ public class ActivityService(
     IEventPublisher events,
     IStreakReadPort streakRead,
     IQuestProgressPort questProgress,
-    IMapDistancePort mapDistance,
     IWorldZoneDistancePort worldZoneDistance,
     IGearBonusReadPort gearBonus,
     ILevelUpItemGrantPort levelUpItemGrant,
@@ -97,9 +96,7 @@ public class ActivityService(
         {
             logger.LogInformation("ActivityService.LogActivity user={UserId} type={Type} incomingDistanceKm={Km}",
                 userId, request.Type, request.DistanceKm);
-            // MapService.DebugAddDistanceAsync now cascades the same km to the
-            // world-zone port, so a single call advances both systems.
-            await mapDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
+            await worldZoneDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
         }
 
         // Credit the activity against the user's active dungeon floor (if any).
@@ -236,8 +233,7 @@ public class ActivityService(
         {
             logger.LogInformation("ActivityService.LogExternalActivity user={UserId} type={Type} incomingDistanceKm={Km} externalId={ExternalId}",
                 userId, type, distanceKm, externalId);
-            // MapService cascades to world-zone; one call advances both.
-            await mapDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+            await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
         }
 
         await questProgress.UpdateProgressFromActivityAsync(

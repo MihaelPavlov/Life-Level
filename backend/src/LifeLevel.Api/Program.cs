@@ -117,9 +117,6 @@ builder.Services.Configure<GarminOptions>(builder.Configuration.GetSection(Garmi
 builder.Services.AddHttpClient<LifeLevel.Modules.Integrations.Application.UseCases.GarminOAuthService>();
 builder.Services.AddHttpClient<LifeLevel.Modules.Integrations.Application.UseCases.GarminWebhookService>();
 
-// App services (MapService stays in LifeLevel.Api)
-builder.Services.AddScoped<MapService>();
-builder.Services.AddScoped<IMapDistancePort>(sp => sp.GetRequiredService<MapService>());
 builder.Services.AddScoped<WorldSeeder>();
 builder.Services.AddScoped<ItemSeeder>();
 builder.Services.AddScoped<AchievementSeeder>();

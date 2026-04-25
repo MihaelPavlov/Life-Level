@@ -55,6 +55,7 @@ public class UserWorldProgressDto
     public Guid CurrentZoneId { get; set; }
     public Guid? CurrentEdgeId { get; set; }
     public double DistanceTraveledOnEdge { get; set; }
+    public double PendingDistanceKm { get; set; }
     public Guid? DestinationZoneId { get; set; }
     public List<Guid> UnlockedZoneIds { get; set; } = [];
 }

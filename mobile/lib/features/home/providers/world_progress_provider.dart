@@ -20,3 +20,14 @@ final currentRegionDetailProvider =
   if (regionId == null || regionId.isEmpty) return null;
   return WorldZoneService().getRegionDetail(regionId);
 });
+
+/// Per-floor state for a dungeon zone. Lets the home portal render the active
+/// or next floor's target activity inline on the dungeon variant. Family on
+/// zoneId so the cache is keyed per dungeon and naturally autoDisposed.
+final dungeonStateProvider =
+    FutureProvider.autoDispose.family<DungeonState?, String>(
+  (ref, zoneId) async {
+    if (zoneId.isEmpty) return null;
+    return WorldZoneService().getDungeonState(zoneId);
+  },
+);

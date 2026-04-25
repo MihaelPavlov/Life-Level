@@ -16,7 +16,6 @@ import 'cards/home_stat_strip.dart';
 import 'cards/home_streak_strip.dart';
 import 'cards/home_todays_quests.dart';
 import 'cards/home_xp_storm_banner.dart';
-import 'providers/map_journey_provider.dart';
 import 'providers/world_progress_provider.dart';
 
 /// Home tab scaffold. Owns layout + the sync handler only; every card lives
@@ -144,7 +143,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     } catch (_) {/* swallow */}
 
-    ref.invalidate(mapJourneyProvider);
     ref.invalidate(worldProgressProvider);
     ref.invalidate(currentRegionDetailProvider);
     ref.invalidate(characterProfileProvider);
