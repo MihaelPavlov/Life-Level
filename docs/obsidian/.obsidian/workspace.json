@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Product/Marketing and Positioning.md",
+                "file": "07 - Development/Internal Testing Findings.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Marketing and Positioning"
+              "title": "Internal Testing Findings"
             }
           }
         ]
@@ -185,15 +185,32 @@
   },
   "active": "2456a66808104aad",
   "lastOpenFiles": [
+    "07 - Development/Environment Setup.md",
+    "07 - Development/Debug Endpoints.md",
     "00 - Life-Level MOC.md",
-    "02 - Game Design/Achievements and Titles.md",
-    "01 - Product/Marketing and Positioning.md",
-    "07 - Development/iOS Pre-Testing Setup.md",
-    "02 - Game Design/XP and Leveling.md",
-    "03 - Backend/Modules/Character.md",
-    "01 - Product/Roadmap Status.md",
-    "01 - Product/Product Vision.md",
+    "01 - Product/The Forging - Unique Character Development.md",
+    "01 - Product/The Forging - The Discipline Tree Library.md",
+    "01 - Product/The Forging - Start Here (System Map).md",
+    "01 - Product/The Forging - Lineage Engineering Specs.md",
+    "01 - Product/The Forging - The Lineage Content Library.md",
+    "01 - Product/The Forging - The Conjunction Rune Library.md",
+    "01 - Product/Engagement and Uniqueness Ideas.md.tmp.54672.1777164918712",
+    "01 - Product/The Forging - Constellation Engineering Specs.md",
+    "01 - Product/Engagement Observability and Measurement.md",
+    "01 - Product/The Forging - The Class Name Library.md",
+    "01 - Product/Engagement Build Sequencing and Cost.md",
+    "01 - Product/The Forging - Constellation, Inscriptions, Resonance.md",
+    "01 - Product/Engagement Player Journey - Day-1 to Day-365.md",
+    "01 - Product/The Forging - The Awakening Bank.md",
+    "01 - Product/The Forging - Lineage and Long-Arc Mechanics.md",
+    "01 - Product/Engagement User Research Playbook.md",
+    "01 - Product/Engagement Design Principles.md",
+    "01 - Product/The Forging - Engineering Specs.md",
+    "01 - Product/Engagement Ship-Readiness Scorecard.md",
+    "01 - Product/Engagement Engineering Specs - Day-1, Autonomy, Competence.md",
+    "01 - Product/Engagement Deep Dives - Day-1, Autonomy, Competence.md",
+    "01 - Product/Engagement and Uniqueness Ideas.md",
     "01 - Product/Feature Catalog.md",
-    "03 - Backend/Modules/Achievements.md"
+    "01 - Product/Product Vision.md"
   ]
 }

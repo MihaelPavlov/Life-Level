@@ -2,7 +2,15 @@ using LifeLevel.SharedKernel.Enums;
 
 namespace LifeLevel.SharedKernel.Ports;
 
-public record CompletedQuestInfo(Guid QuestId, string Title, int RewardXp);
+public record CompletedQuestInfo(
+    Guid QuestId,
+    string Title,
+    int RewardXp,
+    string Description,
+    string Category,
+    double TargetValue,
+    string TargetUnit,
+    string QuestType);
 
 public record QuestActivityResult(
     IReadOnlyList<CompletedQuestInfo> CompletedQuests,

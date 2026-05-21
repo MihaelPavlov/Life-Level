@@ -41,6 +41,13 @@ public class LogActivityResult
     /// type, or progress accumulated without clearing).
     /// </summary>
     public FloorCreditResult? FloorCreditResult { get; init; }
+
+    /// <summary>
+    /// Bosses (if any) that this activity's auto-damage tick just killed.
+    /// Empty list in the common case. The mobile client uses this to surface
+    /// a "you defeated &lt;boss&gt;" celebratory popup right after logging.
+    /// </summary>
+    public IReadOnlyList<BossDefeatedInfo> BossDefeats { get; init; } = [];
 }
 
 public class ActivityHistoryDto

@@ -258,7 +258,15 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp)
         var r = await UpdateProgressFromActivityAsync(userId, activityType, durationMinutes, distanceKm, calories);
         return new QuestActivityResult(
             r.UpdatedQuests
-             .Select(q => new CompletedQuestInfo(q.QuestId, q.Title, (int)q.RewardXp))
+             .Select(q => new CompletedQuestInfo(
+                 q.QuestId,
+                 q.Title,
+                 (int)q.RewardXp,
+                 q.Description,
+                 q.Category,
+                 q.TargetValue,
+                 q.TargetUnit,
+                 q.Type))
              .ToList(),
             r.AllDailyCompleted,
             r.BonusXpAwarded);
@@ -349,6 +357,7 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp)
         QuestId = p.QuestId,
         Title = p.Quest.Title,
         Description = p.Quest.Description,
+        Type = p.Quest.Type.ToString(),
         Category = p.Quest.Category.ToString(),
         RequiredActivity = p.Quest.RequiredActivity?.ToString(),
         TargetValue = p.Quest.TargetValue ?? 0,

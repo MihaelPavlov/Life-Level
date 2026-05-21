@@ -53,24 +53,24 @@ class TutorialIntroScreen extends ConsumerWidget {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
+              padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
                   const _FirstQuestTag(),
                   const SizedBox(height: 16),
                   const _HeroCircle(
                     emoji: '\uD83D\uDDE1',
                     accent: AppColors.blue,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 18),
                   const Text(
                     'A new adventurer arrives',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textPrimary,
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -81,10 +81,10 @@ class TutorialIntroScreen extends ConsumerWidget {
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
-                      height: 1.55,
+                      height: 1.45,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 18),
                   const _PillarCard(
                     emoji: '\uD83D\uDCC8',
                     title: 'Train \u2192 Level up',
@@ -102,7 +102,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                     title: 'Defeat bosses',
                     desc: 'Daily raids reward gear & titles',
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 18),
                   const TutorialProgressDots(
                     total: 8,
                     activeIndex: 0,
@@ -112,8 +112,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   _BeginButton(
                     onPressed: () async {
-                      final controller =
-                          ref.read(tutorialControllerProvider);
+                      final controller = ref.read(tutorialControllerProvider);
                       controller.dismissIntroModal();
                       if (Navigator.of(context).canPop()) {
                         Navigator.of(context).pop();
@@ -123,16 +122,13 @@ class TutorialIntroScreen extends ConsumerWidget {
                       await controller.advance();
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _SkipLink(
                     onPressed: () async {
                       final confirmed = await showTutorialSkipSheet(context);
                       if (confirmed == true) {
-                        await ref
-                            .read(tutorialControllerProvider)
-                            .skip();
-                        if (context.mounted &&
-                            Navigator.of(context).canPop()) {
+                        await ref.read(tutorialControllerProvider).skip();
+                        if (context.mounted && Navigator.of(context).canPop()) {
                           Navigator.of(context).pop();
                         }
                       }
@@ -177,8 +173,8 @@ class _HeroCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 112,
-        height: 112,
+        width: 96,
+        height: 96,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
@@ -200,7 +196,7 @@ class _HeroCircle extends StatelessWidget {
           ],
         ),
         child: Center(
-          child: Text(emoji, style: const TextStyle(fontSize: 52)),
+          child: Text(emoji, style: const TextStyle(fontSize: 44)),
         ),
       ),
     );

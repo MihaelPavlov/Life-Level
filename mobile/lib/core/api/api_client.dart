@@ -6,8 +6,11 @@ import '../../main.dart' show navigatorKey;
 import '../../features/auth/login_screen.dart';
 
 class ApiClient {
-  static const _baseUrl = 'http://localhost:5128/api';
-  static final _storage = const FlutterSecureStorage(
+  static const _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:5128/api',
+  );
+  static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
@@ -31,7 +34,8 @@ class ApiClient {
         handler.next(options);
       },
       onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
+        final isAuthRequest = error.requestOptions.path.startsWith('/auth/');
+        if (error.response?.statusCode == 401 && !isAuthRequest) {
           await _storage.delete(key: 'jwt_token');
           navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -77,11 +81,15 @@ class ApiClient {
       final parts = token.split('.');
       if (parts.length != 3) return false;
       var payload = parts[1].replaceAll('-', '+').replaceAll('_', '/');
-      while (payload.length % 4 != 0) payload += '=';
-      final claims = jsonDecode(utf8.decode(base64Decode(payload))) as Map<String, dynamic>;
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
+      final claims = jsonDecode(utf8.decode(base64Decode(payload)))
+          as Map<String, dynamic>;
       // ASP.NET Core serialises ClaimTypes.Role as this URI key
-      final role = claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
-          ?? claims['role'];
+      final role = claims[
+              'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
+          claims['role'];
       return role == 'Admin';
     } catch (_) {
       return false;

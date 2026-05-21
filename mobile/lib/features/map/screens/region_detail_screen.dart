@@ -35,6 +35,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
 
+  // Attached to the active zone bubble inside ZoneTrail so we can call
+  // Scrollable.ensureVisible to auto-scroll the user there on entry.
+  final GlobalKey _activeNodeKey = GlobalKey();
+
   RegionDetail? _region;
   // Kept locally so the sheet can render "traveling" layouts without another
   // round-trip. Sourced from the world map endpoint because region-detail
@@ -85,6 +89,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         _userLevel = world.user.level;
         _loading = false;
       });
+      // Once the trail has laid out, snap the viewport to the active zone so
+      // the user always lands on their current position.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveZone();
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -92,6 +101,21 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         _loading = false;
       });
     }
+  }
+
+  void _scrollToActiveZone() {
+    if (!mounted) return;
+    final ctx = _activeNodeKey.currentContext;
+    if (ctx == null) return; // no active zone in this region
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      // Land the active bubble ~30% from the top of the viewport so the user
+      // sees a bit of trail above (where they came from) and below (where
+      // they're going) without having to scroll.
+      alignment: 0.3,
+    );
   }
 
   String? _findDestinationZoneId(RegionDetail region, WorldMapData world) {
@@ -600,6 +624,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
             nextRegionName: _nextRegionName,
             avatarEmoji: avatar,
             onTap: _showNodeSheet,
+            activeNodeKey: _activeNodeKey,
           ),
         ),
         if (_activeJourney != null)

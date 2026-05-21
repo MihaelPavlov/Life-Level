@@ -174,6 +174,12 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "ok",
+    service = "LifeLevel.Api",
+    timestamp = DateTimeOffset.UtcNow
+}));
 
 // Serve the HTML admin panel
 app.MapGet("/admin-map", (IWebHostEnvironment env) =>

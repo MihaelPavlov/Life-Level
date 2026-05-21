@@ -1,0 +1,2253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Economy + Random NPCs (LL-011 expanded)</title>
+<style>
+  :root {
+    --bg: #040810;
+    --bg-alt: #080e14;
+    --surface: #161b22;
+    --surface-2: #1e2632;
+    --surface-3: #232b38;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #6e7681;
+    --blue: #4f9eff;
+    --purple: #a371f7;
+    --orange: #f5a623;
+    --red: #f85149;
+    --green: #3fb950;
+    --gold: #f7c948;
+    --teal: #2bd4d9;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  html, body {
+    padding: 40px 24px 100px;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(245,166,35,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(163,113,247,0.05) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 400 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.02em;
+    text-align: center; margin: 0 0 8px;
+    background: linear-gradient(90deg, var(--gold), var(--orange));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .lead {
+    text-align: center; color: var(--text-dim); max-width: 780px;
+    margin: 0 auto 28px; font-size: 14px;
+  }
+  .topbar {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    max-width: 1100px; margin: 0 auto 36px;
+  }
+  .topbar a {
+    padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+    color: var(--text-dim); background: var(--surface); border: 1px solid var(--border);
+  }
+  .topbar a:hover { color: var(--text); border-color: var(--text-dim); }
+  .topbar a.gold { color: var(--gold); border-color: rgba(247,201,72,0.35); }
+  .topbar a.npc { color: var(--purple); border-color: rgba(163,113,247,0.35); }
+  .topbar a.spawn { color: var(--teal); border-color: rgba(43,212,217,0.35); }
+
+  .section-title {
+    text-align: center; font-size: 22px; font-weight: 700;
+    margin: 72px 0 4px; letter-spacing: -0.01em;
+  }
+  .section-title.gold { color: var(--gold); }
+  .section-title.npc { color: var(--purple); }
+  .section-title.spawn { color: var(--teal); }
+  .section-sub { text-align: center; color: var(--text-dim); margin-bottom: 32px; font-size: 13px; max-width: 760px; margin-left: auto; margin-right: auto; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, 390px);
+    gap: 40px 28px; justify-content: center;
+    max-width: 1400px; margin: 0 auto;
+  }
+
+  .step-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .step-label { text-align: center; max-width: 390px; }
+  .step-num {
+    display: inline-block; background: rgba(247,201,72,0.10); border: 1px solid rgba(247,201,72,0.4);
+    border-radius: 12px; padding: 3px 14px; font-size: 10px; color: var(--gold);
+    font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px;
+  }
+  .step-num.npc { background: rgba(163,113,247,0.10); border-color: rgba(163,113,247,0.4); color: var(--purple); }
+  .step-num.spawn { background: rgba(43,212,217,0.10); border-color: rgba(43,212,217,0.4); color: var(--teal); }
+  .step-num.shop { background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.4); color: var(--green); }
+  .step-title { font-size: 15px; color: var(--text); font-weight: 700; margin-bottom: 3px; }
+  .step-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+  .phone {
+    width: 390px; height: 844px; background: var(--bg-alt);
+    border-radius: 44px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+    flex-shrink: 0;
+  }
+  .status-bar { position: absolute; top: 0; left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 14px 22px 0; z-index: 100; }
+  .st { font-size: 13px; font-weight: 600; color: var(--text); }
+  .si { font-size: 11px; color: var(--text-dim); }
+  .nav { position: absolute; bottom: 0; left: 0; right: 0; height: 82px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 8px 12px; z-index: 100; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; }
+  .nav-icon { font-size: 20px; } .nav-label { font-size: 10px; }
+  .nav-item.active .nav-icon, .nav-item.active .nav-label { color: var(--blue); }
+  .nav-item:not(.active) .nav-icon, .nav-item:not(.active) .nav-label { color: var(--text-dim); }
+
+  /* Wallet pills */
+  .wallet { display: flex; gap: 6px; align-items: center; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(22,27,34,0.92); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 10px;
+    font-size: 11px; font-weight: 700; color: var(--text);
+  }
+  .pill.coin { border-color: rgba(247,201,72,0.4); color: var(--gold); }
+  .pill.gem { border-color: rgba(163,113,247,0.4); color: var(--purple); }
+  .pill.token { border-color: rgba(43,212,217,0.4); color: var(--teal); }
+
+  /* glow keyframes */
+  @keyframes pulse { 0%,100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+  @keyframes coinGlow { 0%,100% { box-shadow: 0 0 18px rgba(247,201,72,0.25); } 50% { box-shadow: 0 0 36px rgba(247,201,72,0.55), 0 0 60px rgba(247,201,72,0.18); } }
+  @keyframes npcGlow { 0%,100% { box-shadow: 0 0 16px rgba(163,113,247,0.25); } 50% { box-shadow: 0 0 32px rgba(163,113,247,0.55); } }
+  @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+
+  /* card primitives */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: var(--text-dim); }
+  .row { display: flex; align-items: center; justify-content: space-between; }
+  .gap8 { gap: 8px; } .gap10 { gap: 10px; } .gap12 { gap: 12px; }
+
+  .cta {
+    width: 100%; padding: 12px; border-radius: 12px;
+    font-size: 13px; font-weight: 700; color: #0d1117; border: none;
+    background: linear-gradient(90deg, var(--gold), var(--orange));
+    cursor: pointer; letter-spacing: 0.02em;
+  }
+  .cta.purple { background: linear-gradient(90deg, var(--purple), #7857c4); color: #fff; }
+  .cta.teal { background: linear-gradient(90deg, var(--teal), #1e9b9f); color: #06292a; }
+  .cta.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+
+  /* doc panels */
+  .doc {
+    max-width: 1100px; margin: 32px auto 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px 26px; color: var(--text);
+  }
+  .doc h3 { font-size: 16px; font-weight: 700; margin: 4px 0 12px; }
+  .doc h4 { font-size: 13px; font-weight: 700; color: var(--gold); margin: 14px 0 6px; letter-spacing: 0.04em; }
+  .doc p, .doc li { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .doc ul { padding-left: 20px; margin: 4px 0 8px; }
+  .doc code { font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 12px; color: var(--gold); background: rgba(247,201,72,0.08); padding: 1px 6px; border-radius: 5px; }
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .twocol { grid-template-columns: 1fr; } }
+
+  /* ═════════════════════════════════════════════════════════════
+     CURRENT MAP STYLES — copied verbatim from
+     design-mockup/map/WORLD-MAP-FINAL-MOCKUP.html so NPC overlays
+     sit on the same chrome the live mobile app uses.
+  ═════════════════════════════════════════════════════════════ */
+  .scroll { position: absolute; inset: 0; overflow-y: auto; padding: 54px 16px 110px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .scroll--region { padding: 0 0 110px; }
+  .progress-bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .pf-green { height: 100%; background: var(--green); }
+  .pf-orange { height: 100%; background: var(--orange); }
+
+  .wv3-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .wv3-header__chapter { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--blue); text-transform: uppercase; margin-bottom: 2px; }
+  .wv3-header__title { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+  .wv3-header__level { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.04em; padding: 5px 10px; border-radius: 10px; box-shadow: 0 0 12px rgba(79,158,255,0.3); flex-shrink: 0; }
+
+  .wv3-region {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; margin-bottom: 12px; overflow: hidden; position: relative;
+  }
+  .wv3-region--active { border-color: rgba(63,185,80,0.5); box-shadow: 0 0 28px rgba(63,185,80,0.14), inset 0 0 40px rgba(63,185,80,0.04); }
+  .wv3-region--locked { opacity: 0.55; }
+  .wv3-region__banner { height: 72px; position: relative; overflow: hidden; display: flex; align-items: center; padding: 0 16px; }
+  .wv3-region--forest .wv3-region__banner { background: linear-gradient(135deg, rgba(63,185,80,0.28), rgba(79,158,255,0.1)); }
+  .wv3-region--ocean .wv3-region__banner { background: linear-gradient(135deg, rgba(79,158,255,0.25), rgba(0,0,0,0.2)); }
+  .wv3-region--mountain .wv3-region__banner { background: linear-gradient(135deg, rgba(163,113,247,0.22), rgba(79,158,255,0.16)); }
+  .wv3-region--volcano .wv3-region__banner { background: linear-gradient(135deg, rgba(248,81,73,0.2), rgba(245,166,35,0.18)); }
+  .wv3-region__emoji { font-size: 44px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); position: relative; z-index: 1; }
+  .wv3-region__stat-badge { margin-left: auto; z-index: 1; position: relative; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; color: #fff; text-transform: uppercase; padding: 4px 10px; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.18); }
+  .wv3-region__stat-badge--active { background: rgba(63,185,80,0.5); border-color: rgba(63,185,80,0.6); }
+  .wv3-region__stat-badge--complete { background: rgba(63,185,80,0.3); border-color: rgba(63,185,80,0.5); }
+  .wv3-region__stat-badge--locked { background: rgba(139,148,158,0.3); color: var(--text-dim); }
+  .wv3-region__pins { position: absolute; bottom: 4px; left: 16px; right: 16px; display: flex; gap: 4px; z-index: 1; flex-wrap: wrap; }
+  .wv3-region__pin { font-size: 8px; font-weight: 700; letter-spacing: 0.04em; color: #fff; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.15); }
+  .wv3-region__pin--npc-trainer { background: rgba(63,185,80,0.55); border-color: rgba(63,185,80,0.7); animation: pulseSoft 2.2s ease-in-out infinite; }
+  .wv3-region__pin--npc-hunter { background: rgba(248,81,73,0.55); border-color: rgba(248,81,73,0.7); animation: pulseSoft 2.4s ease-in-out infinite; }
+  .wv3-region__pin--npc-sage { background: rgba(163,113,247,0.55); border-color: rgba(163,113,247,0.7); animation: pulseSoft 2.6s ease-in-out infinite; }
+  .wv3-region__pin--npc-merchant { background: rgba(247,201,72,0.55); border-color: rgba(247,201,72,0.7); animation: pulseSoft 2.0s ease-in-out infinite; }
+  @keyframes pulseSoft { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .wv3-region__body { padding: 12px 16px 14px; }
+  .wv3-region__name { font-size: 16px; font-weight: 800; color: var(--text); line-height: 1.1; margin-bottom: 2px; }
+  .wv3-region__lore { font-size: 11px; color: var(--text-dim); line-height: 1.45; margin-bottom: 10px; }
+  .wv3-region__bar-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 10px; }
+  .wv3-region__bar-label { color: var(--text-dim); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .wv3-region__bar-val { color: var(--text); font-weight: 800; }
+  .wv3-region__cta-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .wv3-region__meta { flex: 1; font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .wv3-region__btn { padding: 8px 14px; border-radius: 10px; border: 1px solid; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; flex-shrink: 0; }
+  .wv3-region__btn--enter { background: linear-gradient(135deg, var(--green), #2ea043); border-color: rgba(63,185,80,0.6); color: #fff; box-shadow: 0 0 14px rgba(63,185,80,0.3); }
+  .wv3-region__btn--ghost { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  .wv3-region__btn--locked { background: transparent; border-color: var(--border); color: var(--text-muted); }
+
+  /* NPC strip on the active region's body (callout) */
+  .wv3-npc-strip {
+    margin-top: 10px; padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(163,113,247,0.10), rgba(63,185,80,0.05));
+    border: 1px dashed rgba(163,113,247,0.4); border-radius: 12px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .wv3-npc-strip__avatars { display: flex; gap: -6px; }
+  .wv3-npc-strip__avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--surface-2); border: 2px solid var(--surface);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
+    margin-right: -6px;
+  }
+  .wv3-npc-strip__avatar--green { box-shadow: 0 0 0 2px rgba(63,185,80,0.55); }
+  .wv3-npc-strip__avatar--red { box-shadow: 0 0 0 2px rgba(248,81,73,0.55); }
+  .wv3-npc-strip__avatar--purple { box-shadow: 0 0 0 2px rgba(163,113,247,0.55); }
+  .wv3-npc-strip__avatar--gold { box-shadow: 0 0 0 2px rgba(247,201,72,0.55); }
+  .wv3-npc-strip__text { flex: 1; font-size: 10px; color: var(--text-dim); line-height: 1.4; padding-left: 10px; }
+  .wv3-npc-strip__text b { color: var(--text); }
+
+  /* ── Region-detail trail ── */
+  .rv3-banner {
+    position: relative; height: 180px;
+    background: linear-gradient(180deg, rgba(63,185,80,0.32), rgba(63,185,80,0.06) 70%, var(--bg-alt));
+    padding: 54px 16px 0; overflow: hidden;
+  }
+  .rv3-banner__back { width: 36px; height: 36px; border-radius: 10px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.12); color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .rv3-banner__row { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+  .rv3-banner__emoji { font-size: 48px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55)); }
+  .rv3-banner__chapter { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: var(--green); text-transform: uppercase; }
+  .rv3-banner__name { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; margin-top: 2px; }
+
+  .rv3-section { font-size: 10px; font-weight: 800; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin: 18px 16px 8px; }
+  .rv3-trail { position: relative; padding: 0 0 24px; }
+  .rv3-curve { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .rv3-node { position: relative; z-index: 2; display: flex; align-items: center; min-height: 86px; }
+  .rv3-node--left { justify-content: flex-start; padding-left: 52px; }
+  .rv3-node--right { justify-content: flex-end; padding-right: 52px; }
+  .rv3-node--center { justify-content: center; }
+  .rv3-bubble { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; position: relative; }
+  .rv3-bubble__circle { width: 60px; height: 60px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+  .rv3-bubble--completed .rv3-bubble__circle { background: rgba(63,185,80,0.15); border-color: var(--green); color: var(--green); width: 48px; height: 48px; font-size: 20px; }
+  .rv3-bubble--active .rv3-bubble__circle { width: 72px; height: 72px; font-size: 32px; background: linear-gradient(135deg, rgba(79,158,255,0.22), rgba(79,158,255,0.08)); border: 3px solid var(--blue); box-shadow: 0 0 28px rgba(79,158,255,0.5), 0 0 0 6px rgba(79,158,255,0.08); animation: pulseB 2.4s ease-in-out infinite; }
+  @keyframes pulseB { 0%,100% { box-shadow: 0 0 28px rgba(79,158,255,0.5), 0 0 0 6px rgba(79,158,255,0.08); } 50% { box-shadow: 0 0 38px rgba(79,158,255,0.75), 0 0 0 10px rgba(79,158,255,0.13); } }
+  .rv3-bubble--next .rv3-bubble__circle { border: 2px dashed var(--orange); color: var(--orange); background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(245,166,35,0.05)); box-shadow: 0 0 18px rgba(245,166,35,0.18); }
+  .rv3-bubble--crossroads .rv3-bubble__circle { transform: rotate(45deg); border-radius: 12px; border-color: var(--purple); color: var(--purple); background: linear-gradient(135deg, rgba(163,113,247,0.18), rgba(163,113,247,0.06)); }
+  .rv3-bubble--crossroads .rv3-bubble__circle > span { transform: rotate(-45deg); display: block; }
+  .rv3-bubble--boss .rv3-bubble__circle { border-color: var(--red); color: var(--red); background: linear-gradient(135deg, rgba(248,81,73,0.22), rgba(248,81,73,0.06)); width: 64px; height: 64px; font-size: 26px; }
+  .rv3-bubble__label { font-size: 11px; font-weight: 700; color: var(--text); max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rv3-bubble__sub { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-muted); text-transform: uppercase; }
+  .rv3-bubble--active .rv3-bubble__sub { color: var(--blue); }
+  .rv3-bubble--next .rv3-bubble__sub { color: var(--orange); }
+  .rv3-bubble--completed .rv3-bubble__sub { color: var(--green); }
+  .rv3-bubble--crossroads .rv3-bubble__sub { color: var(--purple); }
+  .rv3-bubble--boss .rv3-bubble__sub { color: var(--red); }
+
+  /* NPC strip — sits BELOW the region banner, ABOVE the trail.
+     Horizontal scroll, never overlapping zones. */
+  .npc-strip {
+    margin: 10px 0 4px; padding: 0 16px;
+    display: flex; gap: 8px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .npc-strip::-webkit-scrollbar { display: none; }
+  .npc-card {
+    flex: 0 0 130px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px; position: relative;
+    cursor: pointer;
+  }
+  .npc-card--trainer { border-color: rgba(63,185,80,0.45); box-shadow: 0 0 16px rgba(63,185,80,0.10); }
+  .npc-card--hunter { border-color: rgba(248,81,73,0.45); box-shadow: 0 0 16px rgba(248,81,73,0.10); }
+  .npc-card--sage { border-color: rgba(163,113,247,0.45); box-shadow: 0 0 16px rgba(163,113,247,0.10); }
+  .npc-card--merchant { border-color: rgba(247,201,72,0.45); box-shadow: 0 0 16px rgba(247,201,72,0.10); }
+  .npc-card__top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .npc-card__avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface-2); border: 2px solid;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    flex-shrink: 0;
+  }
+  .npc-card__avatar--trainer { border-color: var(--green); background: linear-gradient(135deg, rgba(63,185,80,0.3), rgba(63,185,80,0.06)); animation: pulseSoft 2.2s ease-in-out infinite; }
+  .npc-card__avatar--hunter { border-color: var(--red); background: linear-gradient(135deg, rgba(248,81,73,0.3), rgba(248,81,73,0.06)); animation: pulseSoft 2.4s ease-in-out infinite; }
+  .npc-card__avatar--sage { border-color: var(--purple); background: linear-gradient(135deg, rgba(163,113,247,0.3), rgba(163,113,247,0.06)); animation: pulseSoft 2.6s ease-in-out infinite; }
+  .npc-card__avatar--merchant { border-color: var(--gold); background: linear-gradient(135deg, rgba(247,201,72,0.3), rgba(247,201,72,0.06)); animation: pulseSoft 2.0s ease-in-out infinite; }
+  .npc-card__role { font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+  .npc-card__role--trainer { color: var(--green); }
+  .npc-card__role--hunter { color: var(--red); }
+  .npc-card__role--sage { color: var(--purple); }
+  .npc-card__role--merchant { color: var(--gold); }
+  .npc-card__name { font-size: 12px; font-weight: 800; color: var(--text); line-height: 1.1; }
+  .npc-card__zone {
+    font-size: 9px; color: var(--text-dim); margin-top: 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .npc-card__zone-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+  .npc-card__timer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);
+  }
+  .npc-card__timer { font-size: 10px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .npc-card__timer--soon { color: var(--orange); }
+  .npc-card__chev { font-size: 11px; color: var(--text-muted); }
+  .npc-card__footprint { opacity: 0.45; }
+
+  /* Lifecycle row */
+  .lifecycle {
+    display: flex; gap: 6px; padding: 0 16px; margin-top: 8px;
+  }
+  .lifecycle__cell {
+    flex: 1; padding: 8px 8px 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    text-align: center;
+  }
+  .lifecycle__dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .lifecycle__title { font-size: 10px; font-weight: 700; color: var(--text); margin-top: 4px; letter-spacing: 0.04em; }
+  .lifecycle__sub { font-size: 9px; color: var(--text-dim); margin-top: 2px; line-height: 1.3; }
+
+  /* Status bar */
+  .stat-bar { position: absolute; top: 0; left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 14px 22px 0; z-index: 100; }
+  .stat-bar__time { font-size: 13px; font-weight: 600; color: var(--text); }
+  .stat-bar__icons { font-size: 11px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<h1>Economy &amp; Wandering NPCs</h1>
+<p class="lead">
+  LL-011 expanded: a three-tier currency system (<b style="color:var(--gold)">Coins</b> ·
+  <b style="color:var(--purple)">Gems</b> · <b style="color:var(--teal)">Event Tokens</b>)
+  plus four random NPC archetypes that share the merchant spawn engine.
+  Every NPC is a Wandering Merchant variant — same timer, same rarity rules, different payload.
+</p>
+
+<div class="topbar">
+  <a class="gold" href="#economy">💰 Economy</a>
+  <a class="npc" href="#npcs">🧙 NPCs</a>
+  <a class="spawn" href="#spawn">🌀 Spawn rules</a>
+  <a class="npc" href="#sheets">💬 Interaction</a>
+  <a class="gold" href="#respect">⭐ Respect</a>
+  <a href="#data">🗂 Data model</a>
+  <a href="#open">❓ Open questions</a>
+</div>
+
+<!-- ========================================================= -->
+<!-- 1. CURRENCY (ECONOMY) -->
+<!-- ========================================================= -->
+<div class="section-title gold" id="economy">1 · Currency tiers</div>
+<div class="section-sub">
+  Three currencies, each with a distinct earn rate and sink. Coins are the daily pulse;
+  Gems are slow-earned aspirational; Tokens are seasonal and decay when the season ends.
+</div>
+
+<div class="grid">
+
+  <!-- Phone 1 — Wallet / Currency hub -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">WALLET</div>
+      <div class="step-title">Three-tier currency hub</div>
+      <div class="step-desc">Earn rates and pending rewards visible at a glance · accessible from profile dropdown</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- Header -->
+      <div style="position:absolute;top:44px;left:0;right:0;padding:14px 20px 6px;background:linear-gradient(to bottom,rgba(8,14,20,0.96) 70%,transparent);z-index:10">
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:30px;height:30px;border-radius:8px;background:rgba(247,201,72,0.15);display:flex;align-items:center;justify-content:center;font-size:14px">←</div>
+            <div style="font-size:18px;font-weight:700">Wallet</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-dim)">History</div>
+        </div>
+      </div>
+
+      <!-- Hero balances -->
+      <div style="position:absolute;top:96px;left:16px;right:16px">
+
+        <!-- Coins (primary) -->
+        <div style="background:linear-gradient(135deg,rgba(247,201,72,0.18),rgba(245,166,35,0.06));border:1px solid rgba(247,201,72,0.35);border-radius:18px;padding:16px;margin-bottom:10px;animation:coinGlow 3.4s ease-in-out infinite">
+          <div class="row">
+            <div>
+              <div class="label" style="color:var(--gold)">COINS</div>
+              <div style="font-size:30px;font-weight:800;color:var(--gold);letter-spacing:-0.02em;line-height:1.1;margin-top:2px">2,847</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px">+218 today · <span style="color:var(--green)">on pace</span></div>
+            </div>
+            <div style="font-size:42px">🪙</div>
+          </div>
+        </div>
+
+        <!-- Gems -->
+        <div style="background:linear-gradient(135deg,rgba(163,113,247,0.18),rgba(163,113,247,0.04));border:1px solid rgba(163,113,247,0.35);border-radius:18px;padding:14px;margin-bottom:10px">
+          <div class="row">
+            <div>
+              <div class="label" style="color:var(--purple)">GEMS</div>
+              <div style="font-size:24px;font-weight:800;color:var(--purple);line-height:1.1;margin-top:2px">42</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Earned only from milestones</div>
+            </div>
+            <div style="font-size:34px">💎</div>
+          </div>
+        </div>
+
+        <!-- Event tokens -->
+        <div style="background:linear-gradient(135deg,rgba(43,212,217,0.16),rgba(43,212,217,0.04));border:1px solid rgba(43,212,217,0.35);border-radius:18px;padding:14px;margin-bottom:14px">
+          <div class="row">
+            <div>
+              <div class="label" style="color:var(--teal)">EVENT TOKENS</div>
+              <div style="font-size:22px;font-weight:800;color:var(--teal);line-height:1.1;margin-top:2px">137</div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px">⏳ Spring Sprint · ends in 4d 11h</div>
+            </div>
+            <div style="font-size:30px">🎟️</div>
+          </div>
+        </div>
+
+        <!-- Quick spend -->
+        <div class="card" style="margin-bottom:8px">
+          <div class="label">QUICK SPEND</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <div style="background:var(--surface-2);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🛡️</div>
+              <div style="font-size:11px;font-weight:700;margin-top:2px">Streak Shield</div>
+              <div style="font-size:11px;color:var(--gold);margin-top:2px">300 🪙</div>
+            </div>
+            <div style="background:var(--surface-2);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🎯</div>
+              <div style="font-size:11px;font-weight:700;margin-top:2px">Reroll Quests</div>
+              <div style="font-size:11px;color:var(--gold);margin-top:2px">150 🪙</div>
+            </div>
+            <div style="background:var(--surface-2);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">⚡</div>
+              <div style="font-size:11px;font-weight:700;margin-top:2px">XP Boost 2h</div>
+              <div style="font-size:11px;color:var(--purple);margin-top:2px">3 💎</div>
+            </div>
+            <div style="background:var(--surface-2);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px">🔮</div>
+              <div style="font-size:11px;font-weight:700;margin-top:2px">Loot Reroll</div>
+              <div style="font-size:11px;color:var(--purple);margin-top:2px">5 💎</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone 2 — Home with currency strip -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">HOME HUD</div>
+      <div class="step-title">Currency strip in the header</div>
+      <div class="step-desc">Pills sit next to the avatar — tap any pill to jump to wallet · earn animations stack here</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- Top header -->
+      <div style="position:absolute;top:44px;left:0;right:0;padding:12px 18px 8px;z-index:10">
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#3578cc,#a371f7);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800">A</div>
+            <div>
+              <div style="font-size:15px;font-weight:700">admin103</div>
+              <div style="font-size:10px;color:var(--text-dim)">Lvl 24 · Veteran</div>
+            </div>
+          </div>
+          <div class="wallet">
+            <span class="pill coin">🪙 2,847</span>
+            <span class="pill gem">💎 42</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP card -->
+      <div style="position:absolute;top:108px;left:16px;right:16px">
+        <div class="card" style="margin-bottom:10px">
+          <div class="row"><div class="label">XP TO NEXT LEVEL</div><div style="font-size:11px;color:var(--gold);font-weight:700">3,420 / 5,000</div></div>
+          <div style="height:8px;background:var(--surface-2);border-radius:4px;margin-top:8px;overflow:hidden">
+            <div style="height:100%;width:68%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div>
+          </div>
+        </div>
+
+        <!-- Earn highlights -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(247,201,72,0.3)">
+          <div class="row">
+            <div class="label" style="color:var(--gold)">TODAY'S EARNINGS</div>
+            <div style="font-size:11px;color:var(--text-dim)">Tap to break down</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <div style="flex:1;background:var(--surface-2);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:11px;color:var(--text-dim)">Activity</div>
+              <div style="font-size:13px;font-weight:700;color:var(--gold)">+ 80 🪙</div>
+            </div>
+            <div style="flex:1;background:var(--surface-2);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:11px;color:var(--text-dim)">Daily quests</div>
+              <div style="font-size:13px;font-weight:700;color:var(--gold)">+ 100 🪙</div>
+            </div>
+            <div style="flex:1;background:var(--surface-2);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:11px;color:var(--text-dim)">Trainer</div>
+              <div style="font-size:13px;font-weight:700;color:var(--gold)">+ 38 🪙</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active boss -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(248,81,73,0.3)">
+          <div class="row"><div class="label" style="color:var(--red)">ACTIVE BOSS · GROVE STALKER</div><div style="font-size:10px;color:var(--text-dim)">5d left</div></div>
+          <div style="height:8px;background:var(--surface-2);border-radius:4px;margin-top:8px;overflow:hidden">
+            <div style="height:100%;width:34%;background:linear-gradient(90deg,#ff5247,#f5a623)"></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div style="font-size:11px;color:var(--text-dim)">Your damage</div>
+            <div style="font-size:11px;font-weight:700;color:var(--orange)">+ 80 🪙 on kill</div>
+          </div>
+        </div>
+
+        <!-- NPC nearby teaser -->
+        <div class="card" style="border:1px solid rgba(163,113,247,0.5);box-shadow:0 0 24px rgba(163,113,247,0.18);background:linear-gradient(135deg,rgba(163,113,247,0.10),rgba(22,27,34,0.95))">
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:34px;height:34px;border-radius:10px;background:rgba(163,113,247,0.2);display:flex;align-items:center;justify-content:center;font-size:16px">🧙</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--purple)">Sage Idris is nearby</div>
+                <div style="font-size:11px;color:var(--text-dim)">Forest of Endurance · 1.4 km</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--purple);font-weight:700">→</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone 3 — Earn breakdown -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num shop">EARN RATE</div>
+      <div class="step-title">How you get each currency</div>
+      <div class="step-desc">Activity · Quests · Bosses · NPCs · Achievements · Events. Caps + multipliers shown.</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+      <div style="position:absolute;top:44px;left:16px;right:16px">
+
+        <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:var(--gold)">🪙 Coin earn rate</div>
+
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Activity log</div><div style="font-size:11px;color:var(--gold);font-weight:700">5 🪙 / km</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Capped at 60 🪙/day · streak bonus +50%</div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Daily quest complete</div><div style="font-size:11px;color:var(--gold);font-weight:700">20 🪙 each</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">+50 🪙 bonus when all 5 done (×1.5 on streak day 7)</div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Boss damage</div><div style="font-size:11px;color:var(--gold);font-weight:700">prop. to dmg</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Top 3 in guild raid get bonus pool · regular boss 50–200 🪙</div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Hunter NPC bounty</div><div style="font-size:11px;color:var(--gold);font-weight:700">80–250 🪙</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Mini-boss kill on bounty contract · scales with rarity</div>
+        </div>
+
+        <div style="font-size:14px;font-weight:700;margin:14px 0 8px;color:var(--purple)">💎 Gem sources</div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Level-up reward</div><div style="font-size:11px;color:var(--purple);font-weight:700">+2 💎 every Lvl</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">+10 💎 at every 10th level (milestone)</div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Achievements</div><div style="font-size:11px;color:var(--purple);font-weight:700">3 / 8 / 20 💎</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Tier-based · Rare/Epic/Legendary</div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="row"><div style="font-size:13px;font-weight:600">Premium subscription</div><div style="font-size:11px;color:var(--purple);font-weight:700">200 💎 / month</div></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Plus 5% gem boost on all earn sources</div>
+        </div>
+
+        <div style="font-size:14px;font-weight:700;margin:14px 0 8px;color:var(--teal)">🎟️ Event tokens</div>
+        <div class="card">
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.5">Awarded only during seasonal events. Decay <b style="color:var(--text)">30 days after season ends</b> — push players toward seasonal sinks. Used for season-exclusive cosmetics and mounts.</div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 2. NPCs -->
+<!-- ========================================================= -->
+<div class="section-title npc" id="npcs">2 · Random NPC archetypes</div>
+<div class="section-sub">
+  Four NPCs share the merchant spawn engine. They appear randomly in unlocked zones, time out after 5–24h,
+  and reuse <code style="color:var(--purple);background:rgba(163,113,247,0.08);padding:1px 6px;border-radius:5px">RandomEvent</code>
+  scheduling — different payload, same spawner.
+</div>
+
+<div class="grid">
+
+  <!-- NPC 1 — Trainer -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">TRAINER · COMMON</div>
+      <div class="step-title">Coach Lyra · skill challenge</div>
+      <div class="step-desc">Bite-sized activity challenges with bonus XP + coins · ×3 daily cap</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- Backdrop -->
+      <div style="position:absolute;top:0;left:0;right:0;height:520px;background:radial-gradient(ellipse at 60% 40%,rgba(63,185,80,0.16),transparent 60%),#0a1c12"></div>
+
+      <!-- HUD -->
+      <div style="position:absolute;top:44px;left:0;right:0;padding:12px 18px;z-index:10">
+        <div class="row">
+          <div style="font-size:17px;font-weight:700">Forest of Endurance</div>
+          <div class="wallet"><span class="pill coin">🪙 2,847</span></div>
+        </div>
+      </div>
+
+      <!-- NPC card -->
+      <div style="position:absolute;top:120px;left:16px;right:16px">
+
+        <!-- Portrait + lore -->
+        <div style="background:rgba(22,27,34,0.97);border:2px solid rgba(63,185,80,0.5);border-radius:20px;padding:18px;box-shadow:0 0 30px rgba(63,185,80,0.18)">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,rgba(63,185,80,0.4),rgba(63,185,80,0.1));display:flex;align-items:center;justify-content:center;font-size:36px">🏃‍♀️</div>
+            <div>
+              <div style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:0.06em">TRAINER · COMMON</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">Coach Lyra</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:1px">"Show me you can sprint."</div>
+            </div>
+          </div>
+
+          <!-- Challenge card -->
+          <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:10px">
+            <div class="label" style="color:var(--green)">CHALLENGE</div>
+            <div style="font-size:14px;font-weight:700;margin-top:4px">Run 3 km in under 18:00</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Stamina + Agility focus · auto-detected from your run</div>
+          </div>
+
+          <!-- Reward strip -->
+          <div style="display:flex;gap:6px;margin-bottom:12px">
+            <div style="flex:1;background:rgba(79,158,255,0.1);border:1px solid rgba(79,158,255,0.3);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:var(--text-dim)">XP</div>
+              <div style="font-size:13px;font-weight:700;color:var(--blue)">+ 250</div>
+            </div>
+            <div style="flex:1;background:rgba(247,201,72,0.1);border:1px solid rgba(247,201,72,0.3);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:var(--text-dim)">Coins</div>
+              <div style="font-size:13px;font-weight:700;color:var(--gold)">+ 60</div>
+            </div>
+            <div style="flex:1;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:var(--text-dim)">END</div>
+              <div style="font-size:13px;font-weight:700;color:var(--green)">+ 1.2</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom:10px">
+            <div style="font-size:11px;color:var(--text-dim)">Lyra leaves in</div>
+            <div style="font-size:13px;font-weight:700;color:var(--orange)">7h 12m</div>
+          </div>
+
+          <button class="cta">Accept challenge</button>
+          <div style="text-align:center;margin-top:8px"><span style="font-size:11px;color:var(--text-dim)">2 / 3 trainer challenges today</span></div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NPC 2 — Hunter -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">HUNTER · UNCOMMON</div>
+      <div class="step-title">Vael Ironclaw · bounty contract</div>
+      <div class="step-desc">Hunts a mini-boss for big coin · timed contract, expires if you miss the window</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <div style="position:absolute;top:0;left:0;right:0;height:520px;background:radial-gradient(ellipse at 50% 35%,rgba(248,81,73,0.18),transparent 60%),#1c0a0e"></div>
+
+      <div style="position:absolute;top:44px;left:0;right:0;padding:12px 18px;z-index:10">
+        <div class="row">
+          <div style="font-size:17px;font-weight:700">Mountains of Strength</div>
+          <div class="wallet"><span class="pill coin">🪙 2,847</span></div>
+        </div>
+      </div>
+
+      <div style="position:absolute;top:120px;left:16px;right:16px">
+        <div style="background:rgba(22,27,34,0.97);border:2px solid rgba(248,81,73,0.5);border-radius:20px;padding:18px;box-shadow:0 0 30px rgba(248,81,73,0.18)">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,rgba(248,81,73,0.4),rgba(248,81,73,0.1));display:flex;align-items:center;justify-content:center;font-size:36px">🪓</div>
+            <div>
+              <div style="font-size:10px;color:var(--red);font-weight:700;letter-spacing:0.06em">HUNTER · UNCOMMON</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">Vael Ironclaw</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:1px">"There's a beast loose. Bring its head."</div>
+            </div>
+          </div>
+
+          <!-- Bounty -->
+          <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:10px">
+            <div class="row">
+              <div class="label" style="color:var(--red)">BOUNTY TARGET</div>
+              <div style="font-size:10px;color:var(--orange);font-weight:700">⏳ 2d 14h</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+              <div style="font-size:30px">🐺</div>
+              <div>
+                <div style="font-size:13px;font-weight:700">Stone-eater Wolf</div>
+                <div style="font-size:10px;color:var(--text-dim);margin-top:1px">Mini-boss · 1,400 HP · Strength zone</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reward strip -->
+          <div style="display:flex;gap:6px;margin-bottom:12px">
+            <div style="flex:1;background:rgba(247,201,72,0.1);border:1px solid rgba(247,201,72,0.3);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:var(--text-dim)">Coins</div>
+              <div style="font-size:13px;font-weight:700;color:var(--gold)">+ 220</div>
+            </div>
+            <div style="flex:1;background:rgba(163,113,247,0.1);border:1px solid rgba(163,113,247,0.3);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:var(--text-dim)">Gems</div>
+              <div style="font-size:13px;font-weight:700;color:var(--purple)">+ 1</div>
+            </div>
+            <div style="flex:1;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:10px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:var(--text-dim)">Drop</div>
+              <div style="font-size:13px;font-weight:700;color:var(--orange)">Rare</div>
+            </div>
+          </div>
+
+          <div style="background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.25);border-radius:10px;padding:10px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:0.04em;margin-bottom:4px">⚠️ FAILURE</div>
+            <div style="font-size:11px;color:var(--text-dim);line-height:1.45">If the bounty expires, Vael won't talk to you for 48h. Reputation matters.</div>
+          </div>
+
+          <button class="cta" style="background:linear-gradient(90deg,#f85149,#a83434);color:#fff">Accept bounty</button>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NPC 3 — Sage -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">SAGE · RARE</div>
+      <div class="step-title">Sage Idris · lore quest</div>
+      <div class="step-desc">Multi-step riddle quest · unlocks a hidden zone narrative + cosmetic</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <div style="position:absolute;top:0;left:0;right:0;height:520px;background:radial-gradient(ellipse at 55% 40%,rgba(163,113,247,0.18),transparent 60%),#0e0a1c"></div>
+
+      <div style="position:absolute;top:44px;left:0;right:0;padding:12px 18px;z-index:10">
+        <div class="row">
+          <div style="font-size:17px;font-weight:700">Whispering Glade</div>
+          <div class="wallet"><span class="pill coin">🪙 2,847</span></div>
+        </div>
+      </div>
+
+      <div style="position:absolute;top:120px;left:16px;right:16px">
+        <div style="background:rgba(22,27,34,0.97);border:2px solid rgba(163,113,247,0.5);border-radius:20px;padding:18px;animation:npcGlow 3s ease-in-out infinite">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,rgba(163,113,247,0.4),rgba(163,113,247,0.1));display:flex;align-items:center;justify-content:center;font-size:36px">🧙</div>
+            <div>
+              <div style="font-size:10px;color:var(--purple);font-weight:700;letter-spacing:0.06em">SAGE · RARE</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">Sage Idris</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:1px;font-style:italic">"The path remembers those who walk it three times…"</div>
+            </div>
+          </div>
+
+          <!-- Riddle -->
+          <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:10px">
+            <div class="label" style="color:var(--purple)">RIDDLE</div>
+            <div style="font-size:13px;color:var(--text);margin-top:6px;line-height:1.55">"Walk the same path three sunrises in a row, and the glade will speak its name to you."</div>
+            <div style="margin-top:10px;display:flex;gap:6px">
+              <div style="flex:1;height:6px;background:var(--purple);border-radius:3px"></div>
+              <div style="flex:1;height:6px;background:var(--purple);border-radius:3px;opacity:0.4"></div>
+              <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:6px">1 / 3 sunrises walked</div>
+          </div>
+
+          <!-- Reward -->
+          <div style="background:rgba(247,201,72,0.06);border:1px solid rgba(247,201,72,0.2);border-radius:10px;padding:10px;margin-bottom:12px">
+            <div class="label" style="color:var(--gold)">UPON COMPLETION</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.5">Unlock <b style="color:var(--text)">Whispering Path</b> hidden trail · 5 💎 · cosmetic title <i style="color:var(--gold)">"Glade-Walker"</i></div>
+          </div>
+
+          <button class="cta purple">Continue the riddle</button>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NPC 4 — Wandering Merchant (refresh) -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">MERCHANT · COMMON–EPIC</div>
+      <div class="step-title">Wandering Merchant · LL-011 core</div>
+      <div class="step-desc">Stock rolls per spawn · prices in coins, rare items in gems · 5–24h timer</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <div style="position:absolute;top:0;left:0;right:0;height:520px;background:radial-gradient(ellipse at 55% 40%,rgba(245,166,35,0.16),transparent 60%),#1c1408"></div>
+
+      <div style="position:absolute;top:44px;left:0;right:0;padding:12px 18px;z-index:10">
+        <div class="row">
+          <div style="font-size:17px;font-weight:700">Crossroads Camp</div>
+          <div class="wallet"><span class="pill coin">🪙 2,847</span><span class="pill gem">💎 42</span></div>
+        </div>
+      </div>
+
+      <div style="position:absolute;top:120px;left:16px;right:16px">
+        <div style="background:rgba(22,27,34,0.97);border:2px solid rgba(245,166,35,0.5);border-radius:20px;padding:18px">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,rgba(245,166,35,0.4),rgba(245,166,35,0.1));display:flex;align-items:center;justify-content:center;font-size:36px">🧔</div>
+            <div>
+              <div style="font-size:10px;color:var(--orange);font-weight:700;letter-spacing:0.06em">MERCHANT · TODAY'S WARES</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">Old Borin</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:1px">"Stock rotates at midnight, friend."</div>
+            </div>
+          </div>
+
+          <!-- Stock -->
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            <div class="card" style="padding:10px">
+              <div class="row">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="font-size:22px">🥾</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:700">Iron-soled Boots</div>
+                    <div style="font-size:10px;color:var(--blue)">Rare · +6% END</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="font-size:13px;font-weight:700;color:var(--gold)">450 🪙</div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="padding:10px">
+              <div class="row">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="font-size:22px">🛡️</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:700">Streak Shield ×3</div>
+                    <div style="font-size:10px;color:var(--text-dim)">Skip 3 days penalty-free</div>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--gold)">800 🪙</div>
+              </div>
+            </div>
+            <div class="card" style="padding:10px;border-color:rgba(163,113,247,0.4);background:linear-gradient(90deg,rgba(163,113,247,0.06),transparent)">
+              <div class="row">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="font-size:22px">🐎</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:700">Mystery Mount Token</div>
+                    <div style="font-size:10px;color:var(--purple)">Epic · random mount roll</div>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--purple)">12 💎</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom:8px">
+            <div style="font-size:11px;color:var(--text-dim)">Borin moves on in</div>
+            <div style="font-size:13px;font-weight:700;color:var(--orange)">14h 02m</div>
+          </div>
+
+          <button class="cta">Browse all wares</button>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 3. SPAWN RULES -->
+<!-- ========================================================= -->
+<div class="section-title spawn" id="spawn">3 · How NPCs spawn on the map</div>
+<div class="section-sub">
+  Reuses LL-011's <code style="background:rgba(43,212,217,0.08);color:var(--teal);padding:1px 6px;border-radius:5px">RandomEventSpawner</code> hosted service.
+  Each NPC is a row in the same table with a <code style="background:rgba(43,212,217,0.08);color:var(--teal);padding:1px 6px;border-radius:5px">type</code> discriminator.
+</div>
+
+<div class="grid">
+
+  <!-- Phone A — World map (region cards) with NPC pin badges -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num spawn">WORLD MAP · LEVEL 1</div>
+      <div class="step-title">NPC pins on region cards</div>
+      <div class="step-desc">Same hero-card layout as today · NPCs surface as extra coloured pin badges + a callout strip on the active region</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div class="scroll">
+        <div class="wv3-header">
+          <div style="flex:1;min-width:0">
+            <div class="wv3-header__chapter">Explorer Kai</div>
+            <div class="wv3-header__title">World Map</div>
+          </div>
+          <div class="wallet" style="margin-right:8px"><span class="pill coin">🪙 2,847</span></div>
+          <div class="wv3-header__level">Lv 12</div>
+        </div>
+
+        <div class="section-title-row" style="font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:0.08em;margin-bottom:10px">REGIONS · 2 UNLOCKED · <span style="color:var(--purple)">3 NPCs ACTIVE</span></div>
+
+        <!-- ACTIVE region with NPC pins -->
+        <div class="wv3-region wv3-region--active wv3-region--forest">
+          <div class="wv3-region__banner">
+            <div class="wv3-region__emoji">🌲</div>
+            <div class="wv3-region__stat-badge wv3-region__stat-badge--active">Active</div>
+            <div class="wv3-region__pins">
+              <div class="wv3-region__pin">🗝 7 zones</div>
+              <div class="wv3-region__pin wv3-region__pin--npc-trainer">🏃‍♀️ Trainer · 7h</div>
+              <div class="wv3-region__pin wv3-region__pin--npc-merchant">🧔 Merchant · 14h</div>
+              <div class="wv3-region__pin wv3-region__pin--npc-sage">🧙 Sage · 6d</div>
+            </div>
+          </div>
+          <div class="wv3-region__body">
+            <div class="wv3-region__name">Forest of Endurance</div>
+            <div class="wv3-region__lore">Endless woodlands that reward every km logged. Run and cycle to carve your path.</div>
+            <div class="wv3-region__bar-row">
+              <span class="wv3-region__bar-label">Progress</span>
+              <span class="wv3-region__bar-val">4 / 7 zones</span>
+            </div>
+            <div class="progress-bar"><div class="pf-green" style="width:57%"></div></div>
+
+            <!-- NPC callout strip — only shown when ≥1 NPC alive in the region -->
+            <div class="wv3-npc-strip">
+              <div class="wv3-npc-strip__avatars">
+                <div class="wv3-npc-strip__avatar wv3-npc-strip__avatar--green">🏃‍♀️</div>
+                <div class="wv3-npc-strip__avatar wv3-npc-strip__avatar--gold">🧔</div>
+                <div class="wv3-npc-strip__avatar wv3-npc-strip__avatar--purple">🧙</div>
+              </div>
+              <div class="wv3-npc-strip__text">
+                <b>3 NPCs</b> waiting · Lyra @ Misty Pine · Borin @ Crossroads · Idris @ Glade
+              </div>
+            </div>
+
+            <div class="wv3-region__cta-row">
+              <div class="wv3-region__meta">+2,840 XP · 2 zones to boss</div>
+              <button class="wv3-region__btn wv3-region__btn--enter">Enter →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPLETED region with one Hunter -->
+        <div class="wv3-region wv3-region--ocean">
+          <div class="wv3-region__banner">
+            <div class="wv3-region__emoji">🌊</div>
+            <div class="wv3-region__stat-badge wv3-region__stat-badge--complete">Completed ✓</div>
+            <div class="wv3-region__pins">
+              <div class="wv3-region__pin">🏆 5 / 5</div>
+              <div class="wv3-region__pin wv3-region__pin--npc-hunter">🪓 Hunter · 2d</div>
+            </div>
+          </div>
+          <div class="wv3-region__body">
+            <div class="wv3-region__name">Ocean of Balance</div>
+            <div class="wv3-region__lore">Tidal islands linked by swims and yoga flows. Bounty hunter passing through.</div>
+            <div class="wv3-region__bar-row">
+              <span class="wv3-region__bar-label">Progress</span>
+              <span class="wv3-region__bar-val">5 / 5 · ✓</span>
+            </div>
+            <div class="progress-bar"><div class="pf-green" style="width:100%"></div></div>
+            <div class="wv3-region__cta-row">
+              <div class="wv3-region__meta">Hunter Vael has a bounty for you</div>
+              <button class="wv3-region__btn wv3-region__btn--ghost">Revisit →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOCKED region — no NPC spawns by design -->
+        <div class="wv3-region wv3-region--locked wv3-region--mountain">
+          <div class="wv3-region__banner">
+            <div class="wv3-region__emoji">⛰️</div>
+            <div class="wv3-region__stat-badge wv3-region__stat-badge--locked">🔒 Lv 15</div>
+            <div class="wv3-region__pins">
+              <div class="wv3-region__pin">🔒 Unlock at Lv 15</div>
+              <div class="wv3-region__pin" style="opacity:0.5">🚫 No NPCs</div>
+            </div>
+          </div>
+          <div class="wv3-region__body">
+            <div class="wv3-region__name">Mountains of Strength</div>
+            <div class="wv3-region__lore">NPCs don't spawn in locked regions. Unlock the zone to see them.</div>
+            <div class="wv3-region__bar-row">
+              <span class="wv3-region__bar-label">Unlock progress</span>
+              <span class="wv3-region__bar-val">Lv 12 / 15</span>
+            </div>
+            <div class="progress-bar"><div class="pf-orange" style="width:80%"></div></div>
+            <div class="wv3-region__cta-row">
+              <div class="wv3-region__meta">3 levels to go</div>
+              <button class="wv3-region__btn wv3-region__btn--locked">🔒 Locked</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone B — Region detail (zone trail) with NPCs attached to zones -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num spawn">REGION DETAIL · LEVEL 2</div>
+      <div class="step-title">NPCs attached to zone bubbles</div>
+      <div class="step-desc">Same Duolingo trail · NPC tokens float beside the zone they spawned in · timer pill warns when expiring soon</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div class="scroll scroll--region">
+        <div class="rv3-banner">
+          <div class="rv3-banner__back">‹</div>
+          <div class="rv3-banner__row">
+            <div class="rv3-banner__emoji">🌲</div>
+            <div style="flex:1;min-width:0">
+              <div class="rv3-banner__chapter">Chapter 2 · Active · 3 NPCs</div>
+              <div class="rv3-banner__name">Forest of Endurance</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NPC STRIP — separate panel between banner and trail.
+             Tokens never overlap zone bubbles. Tap a card to open the NPC sheet. -->
+        <div style="font-size:10px;font-weight:800;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin:14px 16px 6px;display:flex;justify-content:space-between">
+          <span>Travelers in this region · 3</span>
+          <span style="color:var(--purple)">→ See all</span>
+        </div>
+        <div class="npc-strip">
+          <div class="npc-card npc-card--trainer">
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--trainer">🏃‍♀️</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--trainer">Trainer</div>
+                <div class="npc-card__name">Coach Lyra</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--green)"></span>Dawn Camp</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer npc-card__timer--soon">2h 12m</span>
+              <span class="npc-card__chev">›</span>
+            </div>
+          </div>
+
+          <div class="npc-card npc-card--merchant">
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--merchant">🧔</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--merchant">Merchant</div>
+                <div class="npc-card__name">Old Borin</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--gold)"></span>Whispering Grove</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer">14h 02m</span>
+              <span class="npc-card__chev">›</span>
+            </div>
+          </div>
+
+          <div class="npc-card npc-card--sage">
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--sage">🧙</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--sage">Sage</div>
+                <div class="npc-card__name">Sage Idris</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--purple)"></span>Misty Pine</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer">6d 14h</span>
+              <span class="npc-card__chev">›</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rv3-section">Your path through the forest</div>
+
+        <div class="rv3-trail" style="height:680px">
+          <svg class="rv3-curve" viewBox="0 0 390 680" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3fb950" stop-opacity="0.6"/>
+                <stop offset="1" stop-color="#3fb950" stop-opacity="0.3"/>
+              </linearGradient>
+              <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3fb950" stop-opacity="0.4"/>
+                <stop offset="1" stop-color="#4f9eff" stop-opacity="0.6"/>
+              </linearGradient>
+            </defs>
+            <path d="M 110 50 C 110 100, 280 100, 280 150" stroke="url(#g1)" stroke-width="4" fill="none"/>
+            <path d="M 280 150 C 280 210, 110 210, 110 270" stroke="url(#g1)" stroke-width="4" fill="none"/>
+            <path d="M 110 270 C 110 330, 280 330, 280 390" stroke="url(#g2)" stroke-width="4" fill="none"/>
+            <path d="M 280 390 C 280 450, 195 450, 195 510" stroke="#30363d" stroke-width="3" fill="none" stroke-dasharray="8 6" opacity="0.7"/>
+            <path d="M 195 510 C 195 570, 195 590, 195 610" stroke="#30363d" stroke-width="2.5" fill="none" stroke-dasharray="5 6" opacity="0.5"/>
+          </svg>
+
+          <div class="rv3-node rv3-node--left">
+            <div class="rv3-bubble rv3-bubble--completed">
+              <div class="rv3-bubble__circle">✓</div>
+              <div class="rv3-bubble__label">Whispering Grove</div>
+              <div class="rv3-bubble__sub">+420 XP</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--right">
+            <div class="rv3-bubble rv3-bubble--completed">
+              <div class="rv3-bubble__circle">✓</div>
+              <div class="rv3-bubble__label">Dawn Camp</div>
+              <div class="rv3-bubble__sub">+320 XP</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--left" style="padding-top:6px">
+            <div class="rv3-bubble rv3-bubble--active">
+              <div style="position:absolute;left:50%;transform:translateX(-50%);top:-2px;font-size:8px;font-weight:800;letter-spacing:0.1em;color:#fff;background:var(--blue);padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(79,158,255,0.5)">YOU ARE HERE</div>
+              <div class="rv3-bubble__circle">🌿</div>
+              <div class="rv3-bubble__label">Misty Pine</div>
+              <div class="rv3-bubble__sub">Tier 3 · Current</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--right">
+            <div class="rv3-bubble rv3-bubble--next">
+              <div class="rv3-bubble__circle">🏰</div>
+              <div class="rv3-bubble__label">Ember Forge</div>
+              <div class="rv3-bubble__sub">Next · 5.0 km</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--center">
+            <div class="rv3-bubble rv3-bubble--crossroads">
+              <div class="rv3-bubble__circle"><span>✦</span></div>
+              <div class="rv3-bubble__label">Twin Roads Fork</div>
+              <div class="rv3-bubble__sub">Crossroads</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--center">
+            <div class="rv3-bubble rv3-bubble--boss">
+              <div class="rv3-bubble__circle">👹</div>
+              <div class="rv3-bubble__label">Forest Warden</div>
+              <div class="rv3-bubble__sub">Boss · Unlocks Mountains</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone C — Spawn lifecycle on the trail (just-spawned · expiring soon · expired) -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num spawn">LIFECYCLE</div>
+      <div class="step-title">Spawn → active → expiring → gone</div>
+      <div class="step-desc">Same trail, three time-skipped states · expired NPCs leave behind a faded "left at sundown" footprint for a few hours</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div class="scroll scroll--region">
+        <div class="rv3-banner" style="height:130px">
+          <div class="rv3-banner__back">‹</div>
+          <div class="rv3-banner__row" style="margin-top:6px">
+            <div class="rv3-banner__emoji" style="font-size:36px">🌲</div>
+            <div style="flex:1;min-width:0">
+              <div class="rv3-banner__chapter">Lifecycle · Forest of Endurance</div>
+              <div class="rv3-banner__name" style="font-size:18px">Spawn timeline</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lifecycle">
+          <div class="lifecycle__cell" style="border-color:rgba(63,185,80,0.5)">
+            <span class="lifecycle__dot" style="background:var(--green)"></span>
+            <div class="lifecycle__title" style="color:var(--green)">SPAWN</div>
+            <div class="lifecycle__sub">Pulse + push notification</div>
+          </div>
+          <div class="lifecycle__cell" style="border-color:rgba(79,158,255,0.5)">
+            <span class="lifecycle__dot" style="background:var(--blue)"></span>
+            <div class="lifecycle__title" style="color:var(--blue)">ACTIVE</div>
+            <div class="lifecycle__sub">Tap to interact</div>
+          </div>
+          <div class="lifecycle__cell" style="border-color:rgba(245,166,35,0.5)">
+            <span class="lifecycle__dot" style="background:var(--orange)"></span>
+            <div class="lifecycle__title" style="color:var(--orange)">EXPIRING</div>
+            <div class="lifecycle__sub">&lt; 2h timer turns amber</div>
+          </div>
+          <div class="lifecycle__cell" style="border-color:rgba(110,118,129,0.5)">
+            <span class="lifecycle__dot" style="background:var(--text-muted)"></span>
+            <div class="lifecycle__title" style="color:var(--text-muted)">GONE</div>
+            <div class="lifecycle__sub">Footprint for 4h</div>
+          </div>
+        </div>
+
+        <div style="font-size:10px;font-weight:800;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin:14px 16px 6px">Strip showing all states</div>
+
+        <!-- NPC strip — same separated panel, but each card carries a state badge.
+             The trail underneath is unchanged; nothing overlaps zone bubbles. -->
+        <div class="npc-strip">
+          <!-- Just spawned -->
+          <div class="npc-card npc-card--trainer" style="position:relative">
+            <div style="position:absolute;top:-6px;right:-6px;background:var(--green);color:#0a2410;font-size:8px;font-weight:800;letter-spacing:0.06em;padding:2px 6px;border-radius:6px">NEW</div>
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--trainer">🏃‍♀️</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--trainer">Trainer</div>
+                <div class="npc-card__name">Coach Lyra</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--green)"></span>just spawned</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer" style="color:var(--green)">8h 00m</span>
+              <span class="npc-card__chev">›</span>
+            </div>
+          </div>
+
+          <!-- Active mid-life -->
+          <div class="npc-card npc-card--merchant">
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--merchant">🧔</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--merchant">Merchant</div>
+                <div class="npc-card__name">Old Borin</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--blue)"></span>active · 4h in</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer">10h 12m</span>
+              <span class="npc-card__chev">›</span>
+            </div>
+          </div>
+
+          <!-- Expiring soon -->
+          <div class="npc-card npc-card--sage" style="position:relative">
+            <div style="position:absolute;top:-6px;right:-6px;background:var(--orange);color:#241808;font-size:8px;font-weight:800;letter-spacing:0.06em;padding:2px 6px;border-radius:6px">EXPIRING</div>
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--sage" style="opacity:0.7">🧙</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--sage">Sage</div>
+                <div class="npc-card__name">Sage Idris</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--orange)"></span>leaving soon</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer npc-card__timer--soon">1h 12m</span>
+              <span class="npc-card__chev">›</span>
+            </div>
+          </div>
+
+          <!-- Footprint (gone) -->
+          <div class="npc-card npc-card--hunter npc-card__footprint">
+            <div class="npc-card__top">
+              <div class="npc-card__avatar npc-card__avatar--hunter" style="filter:grayscale(0.6)">👣</div>
+              <div style="min-width:0">
+                <div class="npc-card__role npc-card__role--hunter">Hunter</div>
+                <div class="npc-card__name">Vael Ironclaw</div>
+              </div>
+            </div>
+            <div class="npc-card__zone"><span class="npc-card__zone-dot" style="background:var(--text-muted)"></span>left 2h ago</div>
+            <div class="npc-card__timer-row">
+              <span class="npc-card__timer" style="color:var(--text-muted)">— gone —</span>
+              <span class="npc-card__chev">·</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rv3-section">Trail (untouched · NPCs live above)</div>
+
+        <div class="rv3-trail" style="height:300px">
+          <svg class="rv3-curve" viewBox="0 0 390 300" preserveAspectRatio="none">
+            <path d="M 110 50 C 110 100, 280 100, 280 150" stroke="url(#g1)" stroke-width="4" fill="none"/>
+            <path d="M 280 150 C 280 210, 110 210, 110 270" stroke="url(#g2)" stroke-width="4" fill="none"/>
+          </svg>
+
+          <div class="rv3-node rv3-node--left">
+            <div class="rv3-bubble rv3-bubble--completed">
+              <div class="rv3-bubble__circle">✓</div>
+              <div class="rv3-bubble__label">Whispering Grove</div>
+              <div class="rv3-bubble__sub">+420 XP</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--right">
+            <div class="rv3-bubble rv3-bubble--completed">
+              <div class="rv3-bubble__circle">✓</div>
+              <div class="rv3-bubble__label">Dawn Camp</div>
+              <div class="rv3-bubble__sub">+320 XP</div>
+            </div>
+          </div>
+
+          <div class="rv3-node rv3-node--left">
+            <div class="rv3-bubble rv3-bubble--completed">
+              <div class="rv3-bubble__circle">✓</div>
+              <div class="rv3-bubble__label">Misty Pine</div>
+              <div class="rv3-bubble__sub">Current</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone — Spawn dial / dev visualisation -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num spawn">SCHEDULER</div>
+      <div class="step-title">Spawn dial · per-zone</div>
+      <div class="step-desc">Each zone has a 5–24h cooldown · NPC type rolled by rarity weights · cap 4 per user globally</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <div style="position:absolute;top:44px;left:16px;right:16px">
+
+        <div style="font-size:18px;font-weight:700;margin-bottom:14px">Spawn pipeline</div>
+
+        <!-- Step 1 -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(43,212,217,0.3)">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(43,212,217,0.15);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">1</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">Hosted service tick (every 15 min)</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px;line-height:1.5">For each user, scan unlocked zones. Pick zones whose <code style="background:rgba(43,212,217,0.08);color:var(--teal);padding:1px 5px;border-radius:4px">last_spawn_at + cooldown &lt; now</code>.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(43,212,217,0.3)">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(43,212,217,0.15);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">2</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">Roll archetype · weighted</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px;line-height:1.5">Trainer 50% · Merchant 30% · Hunter 15% · Sage 5%. Boosted by player level (Sage gates after Lvl 15).</div>
+              <div style="display:flex;gap:4px;margin-top:8px">
+                <div style="flex:50;height:8px;background:var(--green);border-radius:3px"></div>
+                <div style="flex:30;height:8px;background:var(--orange);border-radius:3px"></div>
+                <div style="flex:15;height:8px;background:var(--red);border-radius:3px"></div>
+                <div style="flex:5;height:8px;background:var(--purple);border-radius:3px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(43,212,217,0.3)">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(43,212,217,0.15);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">3</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">Cap check · max 4 active per user</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px;line-height:1.5">Prevents NPC spam. If at cap, oldest (lowest priority) NPC is replaced — Sage is sticky, others get evicted first.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(43,212,217,0.3)">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(43,212,217,0.15);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">4</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">Persist + push notify</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px;line-height:1.5">Insert <code style="background:rgba(43,212,217,0.08);color:var(--teal);padding:1px 5px;border-radius:4px">RandomNpc</code> row, fire <code style="background:rgba(43,212,217,0.08);color:var(--teal);padding:1px 5px;border-radius:4px">NpcSpawnedEvent</code>. FCM push uses LL-013 cadence policy (no spam in 4h window).</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background:linear-gradient(135deg,rgba(43,212,217,0.08),transparent);border-color:rgba(43,212,217,0.4)">
+          <div class="label" style="color:var(--teal)">EXPIRY</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.55">Each NPC has its own <code style="background:rgba(43,212,217,0.08);color:var(--teal);padding:1px 5px;border-radius:4px">expires_at</code>. A janitor pass on every tick despawns expired ones. Trainer/Merchant: 5–12h. Hunter: 24–72h (bounty length). Sage: 7d.</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 4 · INTERACTION SHEETS -->
+<!-- ========================================================= -->
+<style>
+  /* Bottom-sheet primitives — modeled on the .zsv3-* pattern from
+     WORLD-MAP-FINAL-MOCKUP so interaction sheets feel native. */
+  .sheet-backdrop { position: absolute; inset: 0; z-index: 10; background: rgba(4,8,16,0.68); backdrop-filter: blur(2px); }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 82px; z-index: 15;
+    background: var(--surface); border-top: 1px solid var(--border);
+    border-radius: 22px 22px 0 0;
+    padding: 12px 18px 22px;
+    box-shadow: 0 -18px 40px rgba(0,0,0,0.55); max-height: 78%;
+    overflow-y: auto; scrollbar-width: none;
+  }
+  .sheet::-webkit-scrollbar { display: none; }
+  .sheet__grabber { width: 42px; height: 4px; background: var(--border); border-radius: 2px; margin: 4px auto 14px; }
+  .sheet__close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .sheet__head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .sheet__avatar { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; border: 1px solid; }
+  .sheet__avatar--trainer { background: linear-gradient(145deg, rgba(63,185,80,0.25), rgba(63,185,80,0.06)); border-color: rgba(63,185,80,0.5); }
+  .sheet__avatar--hunter { background: linear-gradient(145deg, rgba(248,81,73,0.25), rgba(248,81,73,0.06)); border-color: rgba(248,81,73,0.5); }
+  .sheet__avatar--sage { background: linear-gradient(145deg, rgba(163,113,247,0.25), rgba(163,113,247,0.06)); border-color: rgba(163,113,247,0.5); transform: rotate(45deg); border-radius: 12px; }
+  .sheet__avatar--sage > span { transform: rotate(-45deg); display: block; }
+  .sheet__avatar--merchant { background: linear-gradient(145deg, rgba(247,201,72,0.25), rgba(247,201,72,0.06)); border-color: rgba(247,201,72,0.5); }
+  .sheet__role { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .sheet__role--trainer { color: var(--green); }
+  .sheet__role--hunter { color: var(--red); }
+  .sheet__role--sage { color: var(--purple); }
+  .sheet__role--merchant { color: var(--gold); }
+  .sheet__name { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.1; margin-top: 2px; }
+  .sheet__quote { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+  .sheet__rep { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 10px; color: var(--text-muted); }
+  .sheet__rep b { color: var(--text); font-weight: 700; }
+
+  .sheet__challenge {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  }
+  .sheet__challenge-label { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .sheet__challenge-title { font-size: 14px; font-weight: 800; color: var(--text); margin-top: 4px; }
+  .sheet__challenge-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; line-height: 1.5; }
+
+  .reward-strip { display: flex; gap: 6px; margin-bottom: 12px; }
+  .reward {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px; text-align: center;
+  }
+  .reward--xp { border-color: rgba(79,158,255,0.3); background: rgba(79,158,255,0.06); }
+  .reward--coin { border-color: rgba(247,201,72,0.3); background: rgba(247,201,72,0.06); }
+  .reward--gem { border-color: rgba(163,113,247,0.3); background: rgba(163,113,247,0.06); }
+  .reward--stat { border-color: rgba(63,185,80,0.3); background: rgba(63,185,80,0.06); }
+  .reward--drop { border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.06); }
+  .reward__label { font-size: 9px; color: var(--text-dim); }
+  .reward__val { font-size: 12px; font-weight: 800; margin-top: 2px; }
+  .reward--xp .reward__val { color: var(--blue); }
+  .reward--coin .reward__val { color: var(--gold); }
+  .reward--gem .reward__val { color: var(--purple); }
+  .reward--stat .reward__val { color: var(--green); }
+  .reward--drop .reward__val { color: var(--orange); }
+
+  .difficulty {
+    display: flex; gap: 6px; margin-bottom: 12px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 4px;
+  }
+  .difficulty__opt {
+    flex: 1; padding: 8px 6px; border-radius: 7px; text-align: center;
+    font-size: 11px; font-weight: 700; color: var(--text-dim); cursor: pointer;
+  }
+  .difficulty__opt--active { background: linear-gradient(135deg, var(--green), #2ea043); color: #fff; }
+
+  .stock-row {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 10px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .stock-row__icon { font-size: 22px; flex-shrink: 0; }
+  .stock-row__body { flex: 1; min-width: 0; }
+  .stock-row__name { font-size: 12px; font-weight: 800; color: var(--text); }
+  .stock-row__rarity { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; margin-top: 2px; }
+  .stock-row__rarity--rare { color: var(--blue); }
+  .stock-row__rarity--epic { color: var(--purple); }
+  .stock-row__rarity--legendary { color: var(--orange); }
+  .stock-row__price { font-size: 12px; font-weight: 800; flex-shrink: 0; }
+  .stock-row__price--coin { color: var(--gold); }
+  .stock-row__price--gem { color: var(--purple); }
+  .stock-row__locked { opacity: 0.5; }
+
+  .progress-dots { display: flex; gap: 6px; margin: 8px 0 4px; }
+  .progress-dot { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-3); }
+  .progress-dot--done { background: var(--purple); }
+  .progress-dot--active { background: var(--purple); opacity: 0.6; }
+</style>
+
+<div class="section-title npc" id="sheets">4 · Interaction sheets</div>
+<div class="section-sub">
+  Tap any NPC card → bottom sheet slides up. Same chrome as the existing zone-sheet, archetype-coloured.
+  Each sheet is what you actually <em>do</em> with the NPC.
+</div>
+
+<div class="grid">
+
+  <!-- Sheet 1 — Trainer -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">SHEET · TRAINER</div>
+      <div class="step-title">Coach Lyra · accept challenge</div>
+      <div class="step-desc">Difficulty toggle scales reward · 3 / day cap shown · respect-tier modifier baked in</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <!-- Backdrop = banner + strip + faint trail -->
+      <div class="rv3-banner" style="height:140px">
+        <div class="rv3-banner__back">‹</div>
+        <div class="rv3-banner__row" style="margin-top:8px">
+          <div class="rv3-banner__emoji" style="font-size:36px">🌲</div>
+          <div style="flex:1;min-width:0">
+            <div class="rv3-banner__chapter">Forest of Endurance</div>
+            <div class="rv3-banner__name" style="font-size:18px">Region detail</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop"></div>
+
+      <div class="sheet">
+        <div class="sheet__grabber"></div>
+        <div class="sheet__close">✕</div>
+
+        <div class="sheet__head">
+          <div class="sheet__avatar sheet__avatar--trainer">🏃‍♀️</div>
+          <div style="min-width:0;flex:1">
+            <div class="sheet__role sheet__role--trainer">Trainer · Common</div>
+            <div class="sheet__name">Coach Lyra</div>
+            <div class="sheet__quote">"Show me you can sprint."</div>
+            <div class="sheet__rep">Respect: <b style="color:var(--green)">Trusted</b> · 240 / 500 to Mentor</div>
+          </div>
+        </div>
+
+        <div class="sheet__challenge">
+          <div class="sheet__challenge-label" style="color:var(--green)">CHALLENGE</div>
+          <div class="sheet__challenge-title">Run 3 km in under 18:00</div>
+          <div class="sheet__challenge-sub">Stamina + Agility focus · auto-detected from your run · expires in 7h 12m</div>
+        </div>
+
+        <div class="difficulty">
+          <div class="difficulty__opt">Easy · 18:00</div>
+          <div class="difficulty__opt difficulty__opt--active">Hard · 14:30 · ×2</div>
+        </div>
+
+        <div class="reward-strip">
+          <div class="reward reward--xp"><div class="reward__label">XP</div><div class="reward__val">+ 500</div></div>
+          <div class="reward reward--coin"><div class="reward__label">Coins</div><div class="reward__val">+ 120</div></div>
+          <div class="reward reward--stat"><div class="reward__label">END</div><div class="reward__val">+ 2.4</div></div>
+        </div>
+
+        <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:10px">
+          2 of 3 challenges accepted today
+        </div>
+
+        <button class="cta">Accept Hard challenge</button>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet 2 — Hunter -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">SHEET · HUNTER</div>
+      <div class="step-title">Vael Ironclaw · bounty board</div>
+      <div class="step-desc">Multiple bounty contracts · pick one, the rest stay open · failure cooldown shown up front</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div class="rv3-banner" style="height:140px;background:linear-gradient(180deg,rgba(248,81,73,0.32),rgba(248,81,73,0.06) 70%,var(--bg-alt))">
+        <div class="rv3-banner__back">‹</div>
+        <div class="rv3-banner__row" style="margin-top:8px">
+          <div class="rv3-banner__emoji" style="font-size:36px">⛰️</div>
+          <div style="flex:1;min-width:0">
+            <div class="rv3-banner__chapter" style="color:var(--red)">Ocean of Balance</div>
+            <div class="rv3-banner__name" style="font-size:18px">Bounty board</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop"></div>
+
+      <div class="sheet">
+        <div class="sheet__grabber"></div>
+        <div class="sheet__close">✕</div>
+
+        <div class="sheet__head">
+          <div class="sheet__avatar sheet__avatar--hunter">🪓</div>
+          <div style="min-width:0;flex:1">
+            <div class="sheet__role sheet__role--hunter">Hunter · Uncommon</div>
+            <div class="sheet__name">Vael Ironclaw</div>
+            <div class="sheet__quote">"Three contracts on the board. Pick one."</div>
+            <div class="sheet__rep">Respect: <b style="color:var(--red)">Wary</b> · 1 successful kill</div>
+          </div>
+        </div>
+
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.08em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Open contracts</div>
+
+        <div class="stock-row">
+          <div class="stock-row__icon">🐺</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Stone-eater Wolf</div>
+            <div class="stock-row__rarity stock-row__rarity--rare">Mini-boss · Rare drop</div>
+          </div>
+          <div style="text-align:right">
+            <div class="stock-row__price stock-row__price--coin">220 🪙</div>
+            <div style="font-size:9px;color:var(--text-dim);margin-top:2px">+1 💎</div>
+          </div>
+        </div>
+
+        <div class="stock-row" style="border-color:rgba(163,113,247,0.4)">
+          <div class="stock-row__icon">🐗</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Tusked Marauder</div>
+            <div class="stock-row__rarity stock-row__rarity--epic">Mini-boss · Epic drop</div>
+          </div>
+          <div style="text-align:right">
+            <div class="stock-row__price stock-row__price--coin">350 🪙</div>
+            <div style="font-size:9px;color:var(--text-dim);margin-top:2px">+2 💎</div>
+          </div>
+        </div>
+
+        <div class="stock-row stock-row__locked">
+          <div class="stock-row__icon">🐉</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Ash-fang the Younger</div>
+            <div class="stock-row__rarity stock-row__rarity--legendary">🔒 Need Trusted respect</div>
+          </div>
+          <div style="text-align:right">
+            <div class="stock-row__price stock-row__price--coin">700 🪙</div>
+            <div style="font-size:9px;color:var(--text-dim);margin-top:2px">+5 💎</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.25);border-radius:10px;padding:10px;margin:10px 0">
+          <div style="font-size:10px;color:var(--red);font-weight:800;letter-spacing:0.04em;margin-bottom:3px">⚠️ FAIL = 48h COOLDOWN</div>
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.45">If you accept and don't kill in time, Vael won't post bounties for you for 2 days.</div>
+        </div>
+
+        <button class="cta" style="background:linear-gradient(90deg,#f85149,#a83434);color:#fff">Accept Stone-eater Wolf</button>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet 3 — Sage -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">SHEET · SAGE</div>
+      <div class="step-title">Sage Idris · multi-day riddle</div>
+      <div class="step-desc">Step-gated · passively progresses as you walk · dialogue branches based on rep</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div class="rv3-banner" style="height:140px;background:linear-gradient(180deg,rgba(163,113,247,0.32),rgba(163,113,247,0.06) 70%,var(--bg-alt))">
+        <div class="rv3-banner__back">‹</div>
+        <div class="rv3-banner__row" style="margin-top:8px">
+          <div class="rv3-banner__emoji" style="font-size:36px">🌲</div>
+          <div style="flex:1;min-width:0">
+            <div class="rv3-banner__chapter" style="color:var(--purple)">Forest of Endurance</div>
+            <div class="rv3-banner__name" style="font-size:18px">Whispering Glade</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop"></div>
+
+      <div class="sheet">
+        <div class="sheet__grabber"></div>
+        <div class="sheet__close">✕</div>
+
+        <div class="sheet__head">
+          <div class="sheet__avatar sheet__avatar--sage"><span>🧙</span></div>
+          <div style="min-width:0;flex:1">
+            <div class="sheet__role sheet__role--sage">Sage · Rare</div>
+            <div class="sheet__name">Sage Idris</div>
+            <div class="sheet__quote">"The path remembers those who walk it three times…"</div>
+            <div class="sheet__rep">Respect: <b style="color:var(--purple)">Stranger</b> · first riddle</div>
+          </div>
+        </div>
+
+        <div class="sheet__challenge" style="border-color:rgba(163,113,247,0.3);background:linear-gradient(135deg,rgba(163,113,247,0.05),var(--surface-2))">
+          <div class="sheet__challenge-label" style="color:var(--purple)">RIDDLE · STEP 1 / 3</div>
+          <div class="sheet__challenge-title">"Walk the same path three sunrises in a row, and the glade will speak its name to you."</div>
+          <div class="sheet__challenge-sub">Step counts only between 06:00 and 09:00 local time. The glade is watching.</div>
+          <div class="progress-dots">
+            <div class="progress-dot progress-dot--done"></div>
+            <div class="progress-dot progress-dot--active"></div>
+            <div class="progress-dot"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:4px">1 sunrise walked · 2 to go</div>
+        </div>
+
+        <div style="background:rgba(247,201,72,0.05);border:1px dashed rgba(247,201,72,0.3);border-radius:10px;padding:10px;margin-bottom:12px">
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.08em;color:var(--gold);text-transform:uppercase;margin-bottom:4px">UPON COMPLETION</div>
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.5">
+            Unlock <b style="color:var(--text)">Whispering Path</b> hidden trail · <b style="color:var(--purple)">5 💎</b> ·
+            cosmetic title <b style="color:var(--gold)"><i>"Glade-Walker"</i></b>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="cta ghost" style="flex:1">Ponder later</button>
+          <button class="cta purple" style="flex:1.4">Begin sunrise walk →</button>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet 4 — Merchant -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num npc">SHEET · MERCHANT</div>
+      <div class="step-title">Old Borin · stock + reroll</div>
+      <div class="step-desc">3-item stock per spawn · 1 💎 to reroll · rep gates legendary slot</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div class="rv3-banner" style="height:140px;background:linear-gradient(180deg,rgba(247,201,72,0.32),rgba(247,201,72,0.06) 70%,var(--bg-alt))">
+        <div class="rv3-banner__back">‹</div>
+        <div class="rv3-banner__row" style="margin-top:8px">
+          <div class="rv3-banner__emoji" style="font-size:36px">🌲</div>
+          <div style="flex:1;min-width:0">
+            <div class="rv3-banner__chapter" style="color:var(--gold)">Forest of Endurance</div>
+            <div class="rv3-banner__name" style="font-size:18px">Whispering Grove</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop"></div>
+
+      <div class="sheet">
+        <div class="sheet__grabber"></div>
+        <div class="sheet__close">✕</div>
+
+        <div class="sheet__head">
+          <div class="sheet__avatar sheet__avatar--merchant">🧔</div>
+          <div style="min-width:0;flex:1">
+            <div class="sheet__role sheet__role--merchant">Merchant · Common</div>
+            <div class="sheet__name">Old Borin</div>
+            <div class="sheet__quote">"Stock rotates at midnight, friend."</div>
+            <div class="sheet__rep">Respect: <b style="color:var(--gold)">Regular</b> · −10% prices applied</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.08em;color:var(--text-dim);text-transform:uppercase">Today's wares</div>
+          <div style="font-size:10px;color:var(--purple);font-weight:700">Reroll · 1 💎</div>
+        </div>
+
+        <div class="stock-row">
+          <div class="stock-row__icon">🥾</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Iron-soled Boots</div>
+            <div class="stock-row__rarity stock-row__rarity--rare">Rare · +6% END</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--text-muted);text-decoration:line-through">500 🪙</div>
+            <div class="stock-row__price stock-row__price--coin">450 🪙</div>
+          </div>
+        </div>
+
+        <div class="stock-row">
+          <div class="stock-row__icon">🛡️</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Streak Shield ×3</div>
+            <div class="stock-row__rarity" style="color:var(--text-dim)">Skip 3 days penalty-free</div>
+          </div>
+          <div class="stock-row__price stock-row__price--coin">800 🪙</div>
+        </div>
+
+        <div class="stock-row" style="border-color:rgba(163,113,247,0.4)">
+          <div class="stock-row__icon">🐎</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Mystery Mount Token</div>
+            <div class="stock-row__rarity stock-row__rarity--epic">Epic · random mount roll</div>
+          </div>
+          <div class="stock-row__price stock-row__price--gem">12 💎</div>
+        </div>
+
+        <div class="stock-row stock-row__locked">
+          <div class="stock-row__icon">🗡️</div>
+          <div class="stock-row__body">
+            <div class="stock-row__name">Sun-forged Blade</div>
+            <div class="stock-row__rarity stock-row__rarity--legendary">🔒 Trusted respect required</div>
+          </div>
+          <div class="stock-row__price stock-row__price--gem">28 💎</div>
+        </div>
+
+        <button class="cta" style="margin-top:10px">Buy selected · 450 🪙</button>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 5 · REPUTATION -->
+<!-- ========================================================= -->
+<div class="section-title npc" id="respect" style="color:var(--gold)">5 · Respect ladder</div>
+<div class="section-sub">
+  Each archetype has its own respect track. Higher rep = better stock, harder bounties, deeper riddles, lower prices.
+  Solves the "why grind the same NPC?" question.
+</div>
+
+<div class="grid">
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">RESPECT TRACKS</div>
+      <div class="step-title">Per-archetype progression</div>
+      <div class="step-desc">5-tier ladder · earned by completing the NPC's content · purges nothing on expiry, only resets the active timer</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div style="position:absolute;top:44px;left:16px;right:16px">
+        <div style="font-size:18px;font-weight:700;margin-bottom:14px">NPC respect</div>
+
+        <!-- Trainer -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(63,185,80,0.35)">
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:30px;height:30px;border-radius:50%;background:rgba(63,185,80,0.18);display:flex;align-items:center;justify-content:center;font-size:14px">🏃‍♀️</div>
+              <div>
+                <div style="font-size:12px;font-weight:800;color:var(--green);letter-spacing:0.04em">TRAINERS</div>
+                <div style="font-size:11px;color:var(--text-dim)">Trusted · 240 / 500 to Mentor</div>
+              </div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--green)">III</div>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:8px">
+            <div style="flex:1;height:6px;background:var(--green);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--green);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--green);border-radius:3px;opacity:0.5"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:8px">Next tier unlocks: <b style="color:var(--text)">×2 reward Hard mode</b></div>
+        </div>
+
+        <!-- Hunter -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(248,81,73,0.35)">
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:30px;height:30px;border-radius:50%;background:rgba(248,81,73,0.18);display:flex;align-items:center;justify-content:center;font-size:14px">🪓</div>
+              <div>
+                <div style="font-size:12px;font-weight:800;color:var(--red);letter-spacing:0.04em">HUNTERS</div>
+                <div style="font-size:11px;color:var(--text-dim)">Wary · 80 / 250 to Allied</div>
+              </div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--red)">II</div>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:8px">
+            <div style="flex:1;height:6px;background:var(--red);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--red);border-radius:3px;opacity:0.5"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:8px">Next tier unlocks: <b style="color:var(--text)">Legendary mini-boss bounties</b></div>
+        </div>
+
+        <!-- Sage -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(163,113,247,0.35)">
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:30px;height:30px;border-radius:50%;background:rgba(163,113,247,0.18);display:flex;align-items:center;justify-content:center;font-size:14px">🧙</div>
+              <div>
+                <div style="font-size:12px;font-weight:800;color:var(--purple);letter-spacing:0.04em">SAGES</div>
+                <div style="font-size:11px;color:var(--text-dim)">Stranger · 0 / 100 to Acquainted</div>
+              </div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--purple)">I</div>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:8px">
+            <div style="flex:1;height:6px;background:var(--purple);border-radius:3px;opacity:0.5"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:8px">Next tier unlocks: <b style="color:var(--text)">2-step riddles</b></div>
+        </div>
+
+        <!-- Merchant -->
+        <div class="card" style="margin-bottom:10px;border-color:rgba(247,201,72,0.35)">
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:30px;height:30px;border-radius:50%;background:rgba(247,201,72,0.18);display:flex;align-items:center;justify-content:center;font-size:14px">🧔</div>
+              <div>
+                <div style="font-size:12px;font-weight:800;color:var(--gold);letter-spacing:0.04em">MERCHANTS</div>
+                <div style="font-size:11px;color:var(--text-dim)">Regular · 1,420 / 2,500 to Trusted</div>
+              </div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--gold)">III</div>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:8px">
+            <div style="flex:1;height:6px;background:var(--gold);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--gold);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--gold);border-radius:3px;opacity:0.5"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+            <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:8px">Active perk: <b style="color:var(--gold)">−10% prices</b> · Next: legendary slot unlocks</div>
+        </div>
+
+        <div class="card" style="background:linear-gradient(135deg,rgba(43,212,217,0.06),transparent);border-color:rgba(43,212,217,0.3)">
+          <div class="label" style="color:var(--teal)">RESPECT VS LEVEL</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.5">Player level gates which archetypes can spawn (Sage at Lv 15+). Respect, separately, gates which content within an archetype is on offer. Two axes, no overlap.</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tier ladder doc -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">TIER LADDER</div>
+      <div class="step-title">5 tiers · same shape per archetype</div>
+      <div class="step-desc">Cumulative thresholds · per-archetype unlock theme · permanent (rep doesn't decay between spawns)</div>
+    </div>
+    <div class="phone">
+      <div class="stat-bar"><span class="stat-bar__time">9:41</span><span class="stat-bar__icons">●●● 🔋</span></div>
+
+      <div style="position:absolute;top:44px;left:16px;right:16px">
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px">Trainer ladder</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:14px">Earn rep by completing Lyra's challenges. Hard challenges grant 2× rep.</div>
+
+        <!-- Tier rows -->
+        <div class="card" style="margin-bottom:8px;border-color:rgba(63,185,80,0.6);background:linear-gradient(90deg,rgba(63,185,80,0.08),transparent)">
+          <div class="row">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:var(--green)">V · LEGEND</div>
+              <div style="font-size:13px;font-weight:700;margin-top:2px">Iron-Sworn</div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Daily ×3 challenge cap → ×5 · exclusive title</div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums">5,000</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:8px;border-color:rgba(63,185,80,0.45)">
+          <div class="row">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:var(--green)">IV · MASTER</div>
+              <div style="font-size:13px;font-weight:700;margin-top:2px">Forge-Trained</div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px">+50% coin rewards · choose your own challenge type</div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums">2,000</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:8px;border-color:rgba(63,185,80,0.45)">
+          <div class="row">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:var(--green)">III · MENTOR</div>
+              <div style="font-size:13px;font-weight:700;margin-top:2px">Pace-Setter</div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Hard mode unlocks · ×2 reward multiplier</div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums">500</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:8px;border-color:rgba(63,185,80,0.6);background:linear-gradient(90deg,rgba(63,185,80,0.18),transparent);box-shadow:0 0 16px rgba(63,185,80,0.18)">
+          <div class="row">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:var(--green)">II · TRUSTED <span style="background:var(--green);color:#0a2410;padding:1px 5px;border-radius:4px;margin-left:4px;font-size:8px">YOU</span></div>
+              <div style="font-size:13px;font-weight:700;margin-top:2px">Recognized</div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Time-of-day flex · daily cap raised to 4</div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums">100 ✓</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:8px;border-color:rgba(63,185,80,0.45);opacity:0.7">
+          <div class="row">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:var(--green)">I · STRANGER</div>
+              <div style="font-size:13px;font-weight:700;margin-top:2px">Untested</div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Default · Easy challenges only</div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums">0 ✓</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px;background:linear-gradient(135deg,rgba(247,201,72,0.06),transparent);border-color:rgba(247,201,72,0.3)">
+          <div class="label" style="color:var(--gold)">REP NEVER DECAYS</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.5">Lyra leaving doesn't reset your standing — when the next Trainer NPC spawns, your respect is already there. Encourages long-term commitment over grinding one spawn.</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Stats</div></div>
+        <div class="nav-item active"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- PLACEMENT RULES -->
+<!-- ========================================================= -->
+<div class="doc" style="border-color:rgba(43,212,217,0.4)">
+  <h3 style="color:var(--teal)">📍 How NPCs choose <em>where</em> they appear</h3>
+  <div class="twocol">
+    <div>
+      <h4 style="color:var(--teal)">On the <b>World Map</b> (region cards)</h4>
+      <ul>
+        <li>Each region card shows up to <b>3 NPC pin badges</b> in its banner pin row, ranked by rarity (Sage &gt; Hunter &gt; Merchant &gt; Trainer).</li>
+        <li>If &gt;3 NPCs alive, the card gets a <code>+N more</code> pin and the rest are visible only inside the region.</li>
+        <li>The <b>active region</b> also gets the dashed callout strip listing the 3 most relevant NPCs by name + zone.</li>
+        <li><b>Locked regions get nothing.</b> The spawner skips zones the user can't enter — keeps the worldmap honest.</li>
+      </ul>
+      <h4 style="color:var(--teal)">On the <b>Region Detail</b> (zone trail)</h4>
+      <ul>
+        <li>NPCs <b>never overlap zone bubbles</b>. They live in a horizontal scrolling strip placed above the trail (between banner and "Your path" section title).</li>
+        <li>Each card carries: archetype-coloured avatar, role label, NPC name, anchor-zone tag (where they're standing), and a timer with chevron.</li>
+        <li>Tap the card → opens the NPC sheet. The trail stays clean and readable; NPCs are always one glance away but never compete with the path visuals.</li>
+        <li><b>Bosses and Crossroads never get NPCs</b> — they have their own narrative weight, NPC clutter would compete.</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color:var(--teal)">Anchor zone selection (per spawn)</h4>
+      <p>When the spawner rolls a new NPC for a region, it picks the anchor zone like this:</p>
+      <ol style="font-size:13px;color:var(--text-dim);padding-left:20px;line-height:1.6">
+        <li><b>Filter:</b> only zones that are <code>Completed</code> or <code>Active</code> for that user — no spawning on zones they haven't reached.</li>
+        <li><b>Exclude:</b> Boss zones, Crossroads zones, the destination of the user's active journey (don't blocking-clutter their next bubble).</li>
+        <li><b>Weight by recency:</b> zones the user has visited in the last 7 days get 3× weight — keeps NPCs near where they're actively playing.</li>
+        <li><b>Diversity tax:</b> if the same zone already hosts an NPC, halve its weight (avoid all four NPCs on one bubble).</li>
+        <li><b>Pick:</b> weighted random.</li>
+      </ol>
+
+      <h4>Visual states on the trail</h4>
+      <ul>
+        <li><b>Spawn (just appeared):</b> outer ring pulse for ~6 seconds, plus the <code>SPAWN · just now</code> sub-label on the parent zone for a few minutes.</li>
+        <li><b>Active:</b> normal pulse, full opacity.</li>
+        <li><b>Expiring (&lt;2h):</b> timer pill turns amber; token slightly desaturated.</li>
+        <li><b>Gone:</b> token removed; replaced by a faint <code>👣</code> footprint card under the trail listing the last 5 expired NPCs (helps users learn the rhythm).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- DATA MODEL DOC -->
+<!-- ========================================================= -->
+<div class="doc" id="data">
+  <h3 style="color:var(--gold)">🗂 Data model sketch</h3>
+  <div class="twocol">
+    <div>
+      <h4>Currency</h4>
+      <p>Add to <code>UserCharacter</code> aggregate (Identity module):</p>
+<pre style="background:var(--surface-2);border-radius:8px;padding:12px;font-size:12px;color:var(--text);overflow:auto;line-height:1.55"><code>public class UserWallet {
+  public Guid UserId { get; set; }
+  public long Coins { get; set; }
+  public int Gems { get; set; }
+  public Dictionary&lt;Guid, int&gt; EventTokens { get; set; }
+  public DateTime UpdatedAt { get; set; }
+}</code></pre>
+      <p style="margin-top:8px">Why a single wallet aggregate: a transaction can debit/credit multiple currencies atomically. Tokens are a dict because seasons come and go.</p>
+
+      <h4 style="color:var(--purple)">NPC entity</h4>
+      <p>Lives in a new <code>LifeLevel.Modules.RandomEvents</code> module (or extend the existing one):</p>
+<pre style="background:var(--surface-2);border-radius:8px;padding:12px;font-size:12px;color:var(--text);overflow:auto;line-height:1.55"><code>public class RandomNpc {
+  public Guid Id { get; set; }
+  public Guid UserId { get; set; }
+  public Guid ZoneId { get; set; }
+  public NpcArchetype Archetype { get; set; }
+    // Trainer | Hunter | Sage | Merchant
+  public NpcRarity Rarity { get; set; }
+  public DateTime SpawnedAt { get; set; }
+  public DateTime ExpiresAt { get; set; }
+  public string PayloadJson { get; set; }
+    // typed deserialise based on Archetype
+  public NpcStatus Status { get; set; }
+    // Active | Accepted | Completed | Expired | Failed
+}</code></pre>
+    </div>
+    <div>
+      <h4 style="color:var(--teal)">Ledger</h4>
+      <p>One immutable row per currency change — debug, fraud detection, fair-play audits:</p>
+<pre style="background:var(--surface-2);border-radius:8px;padding:12px;font-size:12px;color:var(--text);overflow:auto;line-height:1.55"><code>public class WalletLedgerEntry {
+  public Guid Id { get; set; }
+  public Guid UserId { get; set; }
+  public CurrencyKind Currency { get; set; }
+  public long Delta { get; set; }     // signed
+  public long Balance { get; set; }   // post-tx
+  public string Source { get; set; }
+    // "activity" | "quest" | "boss"
+    // | "merchant.purchase" | "trainer.complete"
+    // | "bounty.complete" | "achievement"
+  public Guid? RefId { get; set; }
+  public DateTime At { get; set; }
+}</code></pre>
+
+      <h4 style="color:var(--gold)">Endpoints</h4>
+      <ul>
+        <li><code>GET /api/wallet</code> — current balances + last 20 ledger entries</li>
+        <li><code>GET /api/npcs/active</code> — active NPCs for the user</li>
+        <li><code>POST /api/npcs/{id}/accept</code> — accept Trainer challenge / Hunter bounty / Sage step</li>
+        <li><code>POST /api/npcs/{id}/complete</code> — server validates + grants payload</li>
+        <li><code>POST /api/wallet/spend</code> — atomic spend with idempotency key (replaces direct purchase endpoints)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- OPEN QUESTIONS -->
+<!-- ========================================================= -->
+<div class="doc" id="open">
+  <h3 style="color:var(--orange)">❓ Open questions for next iteration</h3>
+  <div class="twocol">
+    <div>
+      <h4>Economy</h4>
+      <ul>
+        <li>Is there a daily coin <b>cap</b> to prevent farming, or do we lean on the per-source caps only?</li>
+        <li>Does buying gems with real money exist on day 1, or are gems milestone-only first?</li>
+        <li>Trade between players? (Out of scope for v1, but the wallet ledger model supports it.)</li>
+        <li>Refund / regret window for accidental purchases?</li>
+      </ul>
+      <h4 style="color:var(--purple)">NPCs</h4>
+      <ul>
+        <li>Should NPCs have <b>reputation</b> per archetype that unlocks better stock / harder bounties?</li>
+        <li>Multiplayer: can a Hunter bounty be co-op? (Could turn into a guild raid hook.)</li>
+        <li>Sage riddles: hand-curated content vs. templated? Templated scales but feels generic.</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color:var(--teal)">Spawn / fairness</h4>
+      <ul>
+        <li>Should NPC spawns be <b>shared</b> within a guild (so members meet at the same NPC) or per-user?</li>
+        <li>Pity timer if a user goes 24h without any NPC at all?</li>
+        <li>What happens when a user has zero unlocked zones (Lvl 1 onboarding)? Probably guarantee a Trainer at the starter zone.</li>
+      </ul>
+      <h4>Tickets to spin off</h4>
+      <ul>
+        <li><b>LL-011a</b> — Wallet aggregate + ledger + spend endpoint</li>
+        <li><b>LL-011b</b> — Currency display in HUD + wallet screen</li>
+        <li><b>LL-011c</b> — Trainer NPC (smallest archetype, pilot)</li>
+        <li><b>LL-011d</b> — Hunter NPC + bounty integration with mini-boss system</li>
+        <li><b>LL-011e</b> — Sage NPC + lore quest content pipeline</li>
+        <li><b>LL-011f</b> — Wandering Merchant (the original ticket, but now using shared spawn engine)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

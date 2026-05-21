@@ -24,7 +24,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final result = await _authService.register(
@@ -38,13 +41,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-              builder: (_) =>
-                  WelcomeSetupScreen(ringItems: result.ringItems)),
+              builder: (_) => WelcomeSetupScreen(ringItems: result.ringItems)),
           (_) => false,
         );
       }
-    } catch (e) {
-      setState(() => _error = 'Registration failed. Email or username may already be taken.');
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Registration failed. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -58,7 +62,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textSecondary),
+          icon:
+              const Icon(Icons.arrow_back_ios, color: AppColors.textSecondary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -85,7 +90,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Text(
                     'Begin your journey',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style:
+                        TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 40),
 
@@ -101,8 +107,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emailCtrl,
                     label: 'Email',
                     keyboardType: TextInputType.emailAddress,
-                    validator: (v) =>
-                        v != null && v.contains('@') ? null : 'Enter a valid email',
+                    validator: (v) => v != null && v.contains('@')
+                        ? null
+                        : 'Enter a valid email',
                   ),
                   const SizedBox(height: 16),
 
@@ -117,7 +124,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   // DEV ONLY — remove before production
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
@@ -128,7 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         const Text(
                           '[DEV] Admin account',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          style: TextStyle(
+                              color: AppColors.textSecondary, fontSize: 13),
                         ),
                         Switch(
                           value: _isAdmin,
@@ -142,7 +151,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (_error != null)
                     Text(
                       _error!,
-                      style: const TextStyle(color: AppColors.red, fontSize: 13),
+                      style:
+                          const TextStyle(color: AppColors.red, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
                   const SizedBox(height: 24),
@@ -164,7 +174,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           )
                         : const Text('START ADVENTURE',
                             style: TextStyle(
-                                fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.5)),
                   ),
                   const SizedBox(height: 40),
                 ],

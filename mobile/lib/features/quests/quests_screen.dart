@@ -85,6 +85,7 @@ class QuestsScreenState extends ConsumerState<QuestsScreen>
               ),
               child: TabBar(
                 controller: _tabController,
+                dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
                   color: AppColors.blue,
                   borderRadius: BorderRadius.circular(10),

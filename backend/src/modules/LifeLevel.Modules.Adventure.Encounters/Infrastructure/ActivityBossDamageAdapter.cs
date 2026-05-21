@@ -19,7 +19,7 @@ public class ActivityBossDamageAdapter(
     BossService bossService,
     ILogger<ActivityBossDamageAdapter>? logger = null) : IActivityBossDamagePort
 {
-    public async Task ApplyAsync(
+    public async Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
         Guid userId,
         string activityType,
         int durationMinutes,
@@ -34,27 +34,47 @@ public class ActivityBossDamageAdapter(
             .Select(s => s.BossId)
             .ToListAsync(ct);
 
-        if (activeBossIds.Count == 0) return;
+        if (activeBossIds.Count == 0) return Array.Empty<BossDefeatedInfo>();
 
         var damage = BossService.CalculateDamageFromActivity(
             activityType, durationMinutes, distanceKm, calories);
-        if (damage <= 0) return;
+        if (damage <= 0) return Array.Empty<BossDefeatedInfo>();
+
+        // Single bulk lookup keyed by id — avoids N+1 when multiple bosses
+        // are defeated in the same tick.
+        var bossesById = await db.Set<Boss>()
+            .Where(b => activeBossIds.Contains(b.Id))
+            .ToDictionaryAsync(b => b.Id, ct);
+
+        var defeated = new List<BossDefeatedInfo>();
 
         foreach (var bossId in activeBossIds)
         {
             try
             {
-                await bossService.DealDamageAsync(userId, bossId, damage);
+                var result = await bossService.DealDamageAsync(userId, bossId, damage);
+                if (result.JustDefeated && bossesById.TryGetValue(bossId, out var boss))
+                {
+                    defeated.Add(new BossDefeatedInfo(
+                        BossId: boss.Id,
+                        Name: boss.Name,
+                        Icon: boss.Icon,
+                        RewardXp: result.RewardXpAwarded > 0 ? result.RewardXpAwarded : boss.RewardXp,
+                        IsMini: boss.IsMini));
+                }
             }
             catch (Exception ex)
             {
                 // Swallow — a stale legacy boss state shouldn't break the
                 // activity-log flow for the user. Log and continue so other
-                // active bosses still get the damage.
+                // active bosses still get the damage. Do NOT add to the
+                // defeated list since we don't know whether it died.
                 log.LogWarning(ex,
                     "ActivityBossDamage SKIP user={UserId} boss={BossId} damage={Damage}",
                     userId, bossId, damage);
             }
         }
+
+        return defeated;
     }
 }

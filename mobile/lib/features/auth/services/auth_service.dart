@@ -10,13 +10,21 @@ class AuthService {
     required String password,
     bool isAdmin = false,
   }) async {
-    final res = await _dio.post('/auth/register', data: {
-      'username': username,
-      'email': email,
-      'password': password,
-      'role': isAdmin ? 2 : 0, // 2 = Admin, 0 = Player
-    });
-    return AuthResult.fromJson(res.data);
+    try {
+      final res = await _dio.post('/auth/register', data: {
+        'username': username,
+        'email': email,
+        'password': password,
+        'role': isAdmin ? 2 : 0, // 2 = Admin, 0 = Player
+      });
+      return AuthResult.fromJson(_asMap(res.data));
+    } on DioException catch (e) {
+      throw AuthException(_serverMessage(
+        e,
+        fallback:
+            'Registration failed. Email or username may already be taken.',
+      ));
+    }
   }
 
   Future<void> saveRingConfig(List<String> itemIds) async {
@@ -31,18 +39,51 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final res = await _dio.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
-    return AuthResult.fromJson(res.data);
+    try {
+      final res = await _dio.post('/auth/login', data: {
+        'email': email,
+        'password': password,
+      });
+      return AuthResult.fromJson(_asMap(res.data));
+    } on DioException catch (e) {
+      throw AuthException(_serverMessage(
+        e,
+        fallback: 'Invalid email or password.',
+      ));
+    }
   }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw const FormatException('Unexpected auth response from server.');
+  }
+
+  String _serverMessage(DioException e, {required String fallback}) {
+    final data = e.response?.data;
+    if (data is Map && data['error'] is String) {
+      return data['error'] as String;
+    }
+    if (data is String && data.trim().isNotEmpty) {
+      return data;
+    }
+    return fallback;
+  }
+}
+
+class AuthException implements Exception {
+  final String message;
+
+  const AuthException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class AuthResult {
   final String token;
   final String username;
-  final String characterId;
+  final String? characterId;
   final List<String> ringItems;
   final bool isSetupComplete;
 
@@ -55,12 +96,12 @@ class AuthResult {
   });
 
   factory AuthResult.fromJson(Map<String, dynamic> json) => AuthResult(
-        token: json['token'],
-        username: json['username'],
-        characterId: json['characterId'],
-        ringItems: (json['ringItems'] as List<dynamic>)
+        token: json['token'] as String,
+        username: json['username'] as String,
+        characterId: json['characterId']?.toString(),
+        ringItems: ((json['ringItems'] as List<dynamic>?) ?? const [])
             .map((e) => (e as String).toLowerCase())
             .toList(),
-        isSetupComplete: json['isSetupComplete'] as bool,
+        isSetupComplete: json['isSetupComplete'] as bool? ?? false,
       );
 }

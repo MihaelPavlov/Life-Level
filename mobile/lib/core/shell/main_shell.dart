@@ -8,12 +8,14 @@ import '../../core/constants/app_colors.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../session/invalidate_user_providers.dart';
+import '../services/boss_defeated_notifier.dart';
 import '../services/boss_overlay_notifier.dart';
 import '../services/deep_link_notifier.dart';
 import '../services/dungeon_floor_cleared_notifier.dart';
 import '../services/level_up_notifier.dart';
 import '../services/item_obtained_notifier.dart';
 import '../services/inventory_full_notifier.dart';
+import '../widgets/boss_defeated_overlay.dart';
 import '../widgets/dungeon_floor_cleared_overlay.dart';
 import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
@@ -108,6 +110,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
   late final StreamSubscription<BossOpenIntent> _bossOverlaySub;
+  late final StreamSubscription<BossDefeatedInfo> _bossDefeatedSub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
 
   final _fabKey = GlobalKey();
@@ -257,6 +260,10 @@ class _MainShellState extends ConsumerState<MainShell>
       if (!mounted) return;
       showDungeonFloorClearedOverlay(context, event);
     });
+    _bossDefeatedSub = BossDefeatedNotifier.stream.listen((info) {
+      if (!mounted) return;
+      showBossDefeatedOverlay(context, info);
+    });
     _bossOverlaySub = BossOverlayNotifier.stream.listen((intent) {
       if (!mounted) return;
       // Fresh-fetch the boss list so the just-spawned world-zone boss
@@ -384,6 +391,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _itemObtainedSub.cancel();
     _dungeonFloorSub.cancel();
     _bossOverlaySub.cancel();
+    _bossDefeatedSub.cancel();
     _navTabSub.cancel();
     _worldMapSub.cancel();
     _inventoryFullSub.cancel();

@@ -336,7 +336,15 @@
       "Bash(find C:\\\\\\\\Users\\\\\\\\MihaelPavlov\\\\\\\\repos\\\\\\\\Home\\\\\\\\Life-Level\\\\\\\\backend\\\\\\\\src\\\\\\\\modules\\\\\\\\LifeLevel.Modules.WorldZone\\\\\\\\Domain\\\\\\\\Enums -type f -name \"*.cs\")",
       "Bash(find C:\\\\\\\\Users\\\\\\\\MihaelPavlov\\\\\\\\repos\\\\\\\\Home\\\\\\\\Life-Level\\\\\\\\backend\\\\\\\\src\\\\\\\\modules\\\\\\\\LifeLevel.Modules.Adventure.Encounters\\\\\\\\Domain\\\\\\\\Entities -type f -name \"*.cs\")",
       "Bash(grep -i \".cs$\")",
-      "Bash(grep -E \"\\\\.\\(cs|csproj\\)$\")"
+      "Bash(grep -E \"\\\\.\\(cs|csproj\\)$\")",
+      "PowerShell(try { $r = Invoke-WebRequest http://127.0.0.1:8765/docs/board.md -UseBasicParsing -TimeoutSec 2; $r.StatusCode } catch { \"DOWN\" })",
+      "PowerShell(Start-Process \"http://127.0.0.1:8765/design-mockup/project-board.html\")",
+      "PowerShell(Start-Process \"http://127.0.0.1:8765/design-mockup/economy-and-npcs.html\")",
+      "PowerShell(Start-Process \"http://127.0.0.1:8765/design-mockup/economy-and-npcs.html#spawn\")",
+      "PowerShell(Start-Process \"http://127.0.0.1:8765/design-mockup/economy-and-npcs.html#sheets\")",
+      "PowerShell(npm root *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(npm i *)"
     ]
   }
 }

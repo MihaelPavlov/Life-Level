@@ -8,6 +8,7 @@ public class UserQuestProgressDto
     public Guid QuestId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public string? RequiredActivity { get; set; }
     public double TargetValue { get; set; }

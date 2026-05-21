@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Engagement Deep Dives — Day-1, Autonomy, Competence (Mockups)</title>
+<style>
+  :root {
+    --bg: #040810;
+    --bg-alt: #080e14;
+    --surface: #161b22;
+    --surface-2: #1e2632;
+    --surface-3: #232b38;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #6e7681;
+    --blue: #4f9eff;
+    --blue-deep: #3578cc;
+    --purple: #a371f7;
+    --orange: #f5a623;
+    --red: #f85149;
+    --green: #3fb950;
+    --gold: #f7c948;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 40px 24px 100px;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(79,158,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(163,113,247,0.05) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 400 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.02em;
+    text-align: center; margin: 0 0 8px;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .lead {
+    text-align: center; color: var(--text-dim); max-width: 780px;
+    margin: 0 auto 28px; font-size: 14px;
+  }
+  .topbar {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    max-width: 960px; margin: 0 auto 36px;
+  }
+  .topbar a {
+    padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+    color: var(--text-dim); background: var(--surface); border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .topbar a:hover { color: var(--text); border-color: var(--text-dim); }
+  .topbar a.day1 { color: var(--blue); border-color: rgba(79,158,255,0.35); }
+  .topbar a.auto { color: var(--green); border-color: rgba(63,185,80,0.35); }
+  .topbar a.comp { color: var(--orange); border-color: rgba(245,166,35,0.35); }
+
+  .section-title {
+    text-align: center; font-size: 22px; font-weight: 700;
+    margin: 80px 0 4px; letter-spacing: -0.01em;
+  }
+  .section-title.day1 { color: var(--blue); }
+  .section-title.auto { color: var(--green); }
+  .section-title.comp { color: var(--orange); }
+  .section-sub { text-align: center; color: var(--text-dim); margin-bottom: 32px; font-size: 13px; max-width: 720px; margin-left: auto; margin-right: auto; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, 390px);
+    gap: 36px 28px; justify-content: center;
+    max-width: 1400px; margin: 0 auto;
+  }
+
+  /* For the Initiation Rite, we want a horizontally scrollable strip so all 7 screens read as a sequence */
+  .strip {
+    display: flex; gap: 24px; padding: 8px 24px 32px;
+    overflow-x: auto; max-width: 100%; margin: 0 auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-color: var(--border) transparent;
+  }
+  .strip .frame-wrap { scroll-snap-align: start; flex-shrink: 0; }
+
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 12px; text-align: center; max-width: 390px;
+  }
+  .frame-label .step {
+    color: var(--blue); margin-right: 8px;
+    padding: 3px 8px; border-radius: 6px;
+    background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3);
+  }
+  .frame-label .step.green { color: var(--green); background: rgba(63,185,80,0.12); border-color: rgba(63,185,80,0.3); }
+  .frame-label .step.orange { color: var(--orange); background: rgba(245,166,35,0.12); border-color: rgba(245,166,35,0.3); }
+  .frame-label .step.purple { color: var(--purple); background: rgba(163,113,247,0.12); border-color: rgba(163,113,247,0.3); }
+  .frame-label .step.red { color: var(--red); background: rgba(248,81,73,0.12); border-color: rgba(248,81,73,0.3); }
+  .frame-label .step.gold { color: var(--gold); background: rgba(247,201,72,0.12); border-color: rgba(247,201,72,0.3); }
+  .frame-label .note { display: block; font-size: 10px; color: var(--text-dim); opacity: 0.75; margin-top: 4px; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.4; }
+
+  .phone {
+    width: 390px; height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 1px solid #1c2230;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #0a0d14;
+    overflow: hidden; position: relative;
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 30px;
+    background: #000; border-radius: 0 0 18px 18px; z-index: 100;
+  }
+  .status-bar {
+    position: absolute; top: 12px; left: 24px; right: 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 600; color: var(--text); z-index: 50;
+  }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+
+  /* ============================================================
+     Section 1 — The First Three Minutes
+     ============================================================ */
+
+  /* Screen 1 — Title card */
+  .scr-title {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 600px 400px at 50% 35%, rgba(79,158,255,0.18), transparent 60%),
+      radial-gradient(ellipse 500px 300px at 50% 80%, rgba(163,113,247,0.12), transparent 60%),
+      var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 60px 36px;
+  }
+  .scr-title h1 {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
+    color: var(--text); -webkit-text-fill-color: var(--text); background: none; margin: 0 0 16px;
+  }
+  .scr-title h1 em { font-style: normal; color: var(--blue); }
+  .scr-title .press {
+    margin-top: 80px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-dim); animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+  .scr-title .glyph {
+    width: 120px; height: 120px; border-radius: 50%;
+    border: 2px solid rgba(79,158,255,0.4);
+    background: radial-gradient(circle at 50% 50%, rgba(79,158,255,0.15), transparent 70%);
+    display: grid; place-items: center; font-size: 56px;
+    box-shadow: 0 0 60px rgba(79,158,255,0.25);
+    margin-bottom: 32px;
+  }
+
+  /* Screen 2 — Reason picker */
+  .scr-reason { position: absolute; inset: 0; padding: 80px 28px 40px; background: var(--bg-alt); }
+  .scr-reason .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--blue); text-align: center; margin-bottom: 12px; }
+  .scr-reason h2 { font-size: 26px; font-weight: 800; text-align: center; margin: 0 0 6px; line-height: 1.2; }
+  .scr-reason .small { text-align: center; font-size: 13px; color: var(--text-dim); font-style: italic; margin-bottom: 36px; }
+  .reason-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .reason-card {
+    padding: 18px 14px; border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .reason-card.selected { background: rgba(79,158,255,0.08); border-color: rgba(79,158,255,0.5); }
+  .reason-card .emoji { font-size: 32px; margin-bottom: 6px; line-height: 1; }
+  .reason-card .label { font-size: 12px; font-weight: 700; color: var(--text); }
+  .reason-card .sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .reason-card.full { grid-column: span 2; padding: 12px; }
+
+  /* Screen 3 — Patron */
+  .scr-patron { position: absolute; inset: 0; padding: 70px 28px 30px;
+    background:
+      radial-gradient(ellipse 400px 300px at 50% 30%, rgba(163,113,247,0.10), transparent 70%),
+      var(--bg-alt);
+  }
+  .scr-patron .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--purple); text-align: center; margin-bottom: 12px; }
+  .scr-patron h2 { font-size: 26px; font-weight: 800; text-align: center; margin: 0 0 6px; }
+  .scr-patron .small { text-align: center; font-size: 13px; color: var(--text-dim); font-style: italic; margin-bottom: 32px; }
+  .patron-list { display: flex; flex-direction: column; gap: 10px; }
+  .patron-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .patron-row.selected { background: rgba(163,113,247,0.10); border-color: rgba(163,113,247,0.5); box-shadow: 0 0 24px rgba(163,113,247,0.15); }
+  .patron-row .glyph { font-size: 32px; width: 50px; text-align: center; }
+  .patron-row .copy .name { font-weight: 800; font-size: 14px; }
+  .patron-row .copy .desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Screen 4 — Oath */
+  .scr-oath { position: absolute; inset: 0; padding: 90px 28px 40px;
+    background:
+      radial-gradient(ellipse 500px 400px at 50% 60%, rgba(247,201,72,0.06), transparent 70%),
+      var(--bg-alt);
+  }
+  .scr-oath .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 12px; }
+  .scr-oath h2 { font-size: 28px; font-weight: 800; text-align: center; margin: 0 0 6px; }
+  .scr-oath .small { text-align: center; font-size: 13px; color: var(--text-dim); font-style: italic; margin-bottom: 40px; }
+  .oath-input {
+    background: var(--surface); border: 2px solid rgba(247,201,72,0.4);
+    border-radius: 14px; padding: 24px 20px;
+    font-size: 15px; color: var(--text); min-height: 96px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3), 0 0 30px rgba(247,201,72,0.06);
+    line-height: 1.5;
+  }
+  .oath-input .typed { color: var(--text); font-weight: 600; }
+  .oath-input .cursor { display: inline-block; width: 2px; height: 18px; background: var(--gold); vertical-align: -3px; margin-left: 1px; animation: blink 0.8s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .oath-counter { text-align: right; font-size: 10px; color: var(--text-dim); margin-top: 6px; letter-spacing: 0.06em; }
+  .oath-suggest { margin-top: 20px; font-size: 11px; color: var(--text-muted); text-align: center; padding: 0 12px; }
+
+  /* Screen 5 — Prophecy Scroll */
+  .scr-scroll { position: absolute; inset: 0; padding: 60px 24px 40px;
+    background:
+      radial-gradient(ellipse 600px 800px at 50% 50%, rgba(247,201,72,0.10), transparent 70%),
+      var(--bg);
+  }
+  .scroll-art {
+    background:
+      linear-gradient(180deg, #2b2417 0%, #1f1a10 100%);
+    border: 1px solid rgba(247,201,72,0.4);
+    border-radius: 8px;
+    padding: 32px 24px 28px;
+    box-shadow:
+      0 0 0 1px rgba(247,201,72,0.12),
+      inset 0 0 32px rgba(247,201,72,0.08),
+      0 16px 60px rgba(247,201,72,0.18);
+    position: relative;
+    margin-top: 40px;
+  }
+  .scroll-art::before, .scroll-art::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 14px;
+    background: linear-gradient(90deg, transparent, rgba(247,201,72,0.35), transparent);
+  }
+  .scroll-art::before { top: -7px; }
+  .scroll-art::after { bottom: -7px; }
+  .scroll-art .eyebrow { color: var(--gold); font-size: 10px; font-weight: 800; letter-spacing: 0.25em; text-transform: uppercase; text-align: center; margin-bottom: 14px; }
+  .scroll-art h3 { font-size: 22px; font-weight: 800; text-align: center; margin: 0 0 18px; color: #f4e4b8; line-height: 1.25; }
+  .scroll-art .row { font-size: 12px; line-height: 1.7; color: #d8c79c; margin: 8px 0; }
+  .scroll-art .row .key { color: var(--gold); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 10px; }
+  .scroll-art .oath-line { font-style: italic; font-size: 13px; line-height: 1.5; color: #f4e4b8; padding: 14px 0; border-top: 1px solid rgba(247,201,72,0.25); border-bottom: 1px solid rgba(247,201,72,0.25); margin: 18px 0; text-align: center; }
+  .scroll-art .welcome { font-size: 12px; color: var(--gold); text-align: center; margin-top: 16px; line-height: 1.5; }
+  .scr-scroll .footer-hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 28px; letter-spacing: 0.04em; }
+
+  /* Screen 6 — First quest */
+  .scr-quest { position: absolute; inset: 0; padding: 100px 28px 30px; background: var(--bg-alt); }
+  .quest-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 22px 20px;
+    box-shadow: 0 0 32px rgba(63,185,80,0.10);
+  }
+  .quest-card .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+  .quest-card h3 { font-size: 22px; font-weight: 800; margin: 0 0 4px; line-height: 1.25; }
+  .quest-card .target { font-size: 14px; color: var(--green); font-weight: 700; margin-bottom: 14px; }
+  .quest-card .copy { font-size: 13px; color: var(--text-dim); line-height: 1.5; font-style: italic; }
+  .quest-cta { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+  .btn-primary {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: var(--blue); color: #000; font-weight: 800; font-size: 14px; letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .btn-secondary {
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); font-weight: 700; font-size: 13px; text-align: center;
+  }
+
+  /* Screen 7 — First-workout cinematic */
+  .scr-cinematic { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 800px 600px at 50% 40%, rgba(247,201,72,0.18), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 50% 65%, rgba(79,158,255,0.10), transparent 70%),
+      var(--bg);
+  }
+  .cine-map {
+    position: absolute; top: 60px; left: 30px; right: 30px; bottom: 220px;
+    background:
+      radial-gradient(ellipse 300px 200px at 50% 70%, rgba(63,185,80,0.10), transparent 70%);
+    display: grid; place-items: center;
+  }
+  .cine-trail {
+    position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 180px;
+    background: linear-gradient(180deg, transparent, rgba(247,201,72,0.6) 30%, var(--gold));
+    border-radius: 2px;
+    box-shadow: 0 0 16px rgba(247,201,72,0.6);
+  }
+  .cine-trail::after, .cine-trail::before {
+    content: '·'; position: absolute; left: 50%; transform: translateX(-50%);
+    color: var(--gold); font-size: 32px; line-height: 0; text-shadow: 0 0 12px var(--gold);
+  }
+  .cine-trail::before { top: 60px; }
+  .cine-trail::after { bottom: 30px; }
+  .cine-avatar {
+    position: absolute; top: 38%; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: grid; place-items: center; font-size: 28px;
+    box-shadow: 0 0 32px rgba(79,158,255,0.5), 0 0 64px rgba(163,113,247,0.3);
+  }
+  .cine-zone-name {
+    position: absolute; top: 18%; left: 0; right: 0;
+    text-align: center; font-size: 24px; font-weight: 800; line-height: 1.3;
+    color: var(--gold); letter-spacing: -0.01em;
+    text-shadow: 0 0 24px rgba(247,201,72,0.4);
+  }
+  .cine-zone-name .small { display: block; font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.18em; margin-top: 6px; text-transform: uppercase; text-shadow: none; }
+  .cine-rank-flare {
+    position: absolute; bottom: 110px; left: 0; right: 0; text-align: center;
+  }
+  .cine-rank-flare .rank-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .cine-rank-flare .rank-name {
+    display: inline-block; padding: 10px 28px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(247,201,72,0.18), rgba(245,166,35,0.18));
+    border: 1px solid rgba(247,201,72,0.6);
+    font-size: 22px; font-weight: 800; color: var(--gold);
+    box-shadow: 0 0 30px rgba(247,201,72,0.3);
+  }
+  .cine-line {
+    position: absolute; bottom: 50px; left: 0; right: 0; text-align: center;
+    font-size: 14px; font-style: italic; color: var(--text-dim); letter-spacing: 0.02em;
+  }
+
+  /* ============================================================
+     Section 2 — Autonomy
+     ============================================================ */
+
+  /* Player-authored quests */
+  .scr-pa-quest { position: absolute; inset: 0; padding: 60px 22px 30px; background: var(--bg-alt); }
+  .scr-pa-quest .topnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .scr-pa-quest .topnav .back { width: 32px; height: 32px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; color: var(--text-dim); }
+  .scr-pa-quest .topnav .title { font-size: 14px; font-weight: 700; }
+  .scr-pa-quest .topnav .save { font-size: 12px; color: var(--blue); font-weight: 700; }
+  .form-row { margin-bottom: 18px; }
+  .form-label { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .form-input {
+    width: 100%; padding: 14px 16px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; font-weight: 600;
+  }
+  .form-input.large { padding: 18px 16px; font-size: 16px; }
+  .form-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+  }
+  .chip.active { background: rgba(63,185,80,0.12); border-color: rgba(63,185,80,0.45); color: var(--green); }
+  .reward-box {
+    margin-top: 8px; padding: 14px 16px;
+    background: rgba(63,185,80,0.06); border: 1px solid rgba(63,185,80,0.3);
+    border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .reward-box .left { font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; }
+  .reward-box .xp { font-size: 22px; font-weight: 800; color: var(--green); }
+  .reward-box .stretch { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Implementation intentions */
+  .scr-ifthen { position: absolute; inset: 0; padding: 60px 22px 30px; background: var(--bg-alt); }
+  .scr-ifthen .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; text-align: center; padding-top: 30px; }
+  .scr-ifthen h2 { font-size: 24px; font-weight: 800; text-align: center; margin: 0 0 4px; }
+  .scr-ifthen .small { font-size: 12px; color: var(--text-dim); text-align: center; font-style: italic; margin-bottom: 28px; }
+  .ifthen-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 18px; margin-bottom: 12px;
+  }
+  .ifthen-card .clause-label { font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
+  .ifthen-card .clause-pick {
+    background: rgba(63,185,80,0.06); border: 1px solid rgba(63,185,80,0.35);
+    border-radius: 10px; padding: 14px;
+    font-size: 14px; font-weight: 700; color: var(--text);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ifthen-card .clause-pick .caret { color: var(--green); }
+  .ifthen-preview {
+    margin-top: 18px; padding: 16px;
+    background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.4);
+    border-radius: 12px; text-align: center;
+    font-size: 14px; color: var(--text); line-height: 1.5;
+  }
+  .ifthen-preview strong { color: var(--green); }
+
+  /* Goal Tree */
+  .scr-tree { position: absolute; inset: 0; padding: 60px 22px 30px; background: var(--bg-alt); overflow-y: auto; }
+  .scr-tree .h-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; padding-top: 28px; }
+  .scr-tree h2 { font-size: 22px; font-weight: 800; margin: 0 0 4px; line-height: 1.25; }
+  .scr-tree .theme-name { font-size: 13px; color: var(--green); font-weight: 700; margin-bottom: 4px; }
+  .tree-week { display: flex; gap: 12px; align-items: flex-start; margin-top: 22px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+  .tree-week .num { font-size: 18px; font-weight: 800; color: var(--green); min-width: 38px; }
+  .tree-week .body .title { font-weight: 700; font-size: 13px; }
+  .tree-week .body .targets { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .tree-week .body .targets .qb { font-size: 10px; padding: 3px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim); font-weight: 600; }
+  .tree-week .body .targets .qb.green { background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); color: var(--green); }
+
+  /* Class paths */
+  .scr-class { position: absolute; inset: 0; padding: 80px 18px 30px;
+    background:
+      radial-gradient(ellipse 600px 400px at 50% 30%, rgba(163,113,247,0.10), transparent 70%),
+      var(--bg-alt);
+  }
+  .scr-class .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--purple); text-align: center; margin-bottom: 6px; }
+  .scr-class h2 { font-size: 22px; font-weight: 800; text-align: center; margin: 0 0 4px; }
+  .scr-class .small { text-align: center; font-size: 12px; color: var(--text-dim); font-style: italic; margin-bottom: 24px; }
+  .class-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; margin-bottom: 10px; display: flex; gap: 14px; align-items: center;
+  }
+  .class-row.selected { border-color: rgba(163,113,247,0.6); background: rgba(163,113,247,0.06); box-shadow: 0 0 24px rgba(163,113,247,0.12); }
+  .class-row .icon { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; font-size: 26px; background: linear-gradient(135deg, rgba(163,113,247,0.2), rgba(79,158,255,0.2)); border: 1px solid rgba(163,113,247,0.3); }
+  .class-row .body { flex: 1; }
+  .class-row .body .name { font-weight: 800; font-size: 16px; }
+  .class-row .body .stats { font-size: 11px; color: var(--purple); font-weight: 700; letter-spacing: 0.04em; margin-top: 2px; }
+  .class-row .body .quote { font-size: 12px; color: var(--text-dim); font-style: italic; margin-top: 4px; }
+  .class-row .body .perk { font-size: 11px; color: var(--text); margin-top: 6px; line-height: 1.4; }
+  .class-foot { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 18px; padding: 0 8px; }
+
+  /* Lifestyle perks */
+  .scr-perks { position: absolute; inset: 0; padding: 70px 22px 30px;
+    background:
+      radial-gradient(ellipse 500px 400px at 50% 25%, rgba(247,201,72,0.08), transparent 70%),
+      var(--bg-alt);
+  }
+  .scr-perks .rank-up { font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 4px; }
+  .scr-perks h2 { font-size: 24px; font-weight: 800; text-align: center; margin: 0 0 4px; }
+  .scr-perks .small { font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 24px; }
+  .perk-pair { display: flex; gap: 10px; margin-bottom: 12px; }
+  .perk-card {
+    flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 14px;
+  }
+  .perk-card.selected { border-color: rgba(63,185,80,0.6); background: rgba(63,185,80,0.06); }
+  .perk-card .ico { font-size: 24px; margin-bottom: 8px; }
+  .perk-card .name { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+  .perk-card .desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+  .perk-card .vs { font-size: 9px; font-weight: 800; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+
+  /* Branching epilogues */
+  .scr-epilogue { position: absolute; inset: 0; padding: 60px 22px 30px;
+    background:
+      radial-gradient(ellipse 700px 500px at 50% 30%, rgba(63,185,80,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 50% 75%, rgba(248,81,73,0.06), transparent 60%),
+      var(--bg);
+  }
+  .scr-epilogue .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 6px; padding-top: 24px; }
+  .scr-epilogue h2 { font-size: 22px; font-weight: 800; text-align: center; margin: 0 0 4px; line-height: 1.25; }
+  .scr-epilogue .lede { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; margin: 12px 16px 28px; font-style: italic; }
+  .epilogue-choice { display: flex; flex-direction: column; gap: 14px; }
+  .ep-card {
+    padding: 22px; border-radius: 14px;
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .ep-card.left { background: linear-gradient(180deg, rgba(63,185,80,0.06), transparent), var(--surface); border-color: rgba(63,185,80,0.4); }
+  .ep-card.right { background: linear-gradient(180deg, rgba(248,81,73,0.06), transparent), var(--surface); border-color: rgba(248,81,73,0.4); }
+  .ep-card .icon { font-size: 32px; margin-bottom: 8px; }
+  .ep-card .name { font-weight: 800; font-size: 18px; margin-bottom: 6px; }
+  .ep-card.left .name { color: var(--green); }
+  .ep-card.right .name { color: var(--red); }
+  .ep-card .desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .ep-card .reward { font-size: 11px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text); }
+  .ep-card .reward strong { color: var(--gold); }
+
+  /* ============================================================
+     Section 3 — Competence
+     ============================================================ */
+
+  /* Atomic Identity Counter */
+  .scr-aic { position: absolute; inset: 0; padding: 60px 18px 30px; background: var(--bg-alt); }
+  .profile-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-top: 16px; }
+  .profile-hdr .av { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--blue)); display: grid; place-items: center; font-size: 28px; box-shadow: 0 0 24px rgba(79,158,255,0.3); }
+  .profile-hdr .nm { flex: 1; }
+  .profile-hdr .nm .n { font-weight: 800; font-size: 17px; }
+  .profile-hdr .nm .lvl { font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em; }
+  .aic-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; }
+  .aic-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; margin-bottom: 10px;
+  }
+  .aic-card.primary { border-color: rgba(245,166,35,0.45); background: linear-gradient(180deg, rgba(245,166,35,0.08), transparent), var(--surface); }
+  .aic-card .label { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .aic-card .label .star { color: var(--gold); margin-right: 4px; }
+  .aic-stats { display: flex; align-items: baseline; gap: 14px; }
+  .aic-stats .big { font-size: 30px; font-weight: 800; color: var(--orange); letter-spacing: -0.02em; line-height: 1; }
+  .aic-stats .unit { font-size: 12px; color: var(--text-dim); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .aic-stats .extra { margin-left: auto; text-align: right; font-size: 11px; color: var(--text-dim); }
+  .aic-card .week-bar { display: flex; gap: 3px; margin-top: 12px; }
+  .aic-card .week-bar .day { flex: 1; height: 6px; border-radius: 2px; background: var(--surface-3); }
+  .aic-card .week-bar .day.on { background: var(--orange); box-shadow: 0 0 8px rgba(245,166,35,0.4); }
+
+  /* Becoming-bar */
+  .scr-bb { position: absolute; inset: 0; padding: 60px 18px 30px; background: var(--bg-alt); }
+  .bb-header { padding-top: 30px; margin-bottom: 22px; }
+  .bb-header .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--orange); margin-bottom: 6px; }
+  .bb-header h2 { font-size: 24px; font-weight: 800; margin: 0; }
+  .bb-tier-now {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px;
+    background: linear-gradient(135deg, rgba(245,166,35,0.14), rgba(247,201,72,0.06));
+    border: 1px solid rgba(245,166,35,0.45);
+    border-radius: 16px;
+    margin-bottom: 22px;
+  }
+  .bb-tier-now .glyph { font-size: 36px; }
+  .bb-tier-now .name { font-size: 16px; font-weight: 800; color: var(--gold); }
+  .bb-tier-now .copy { font-size: 12px; color: var(--text); margin-top: 2px; line-height: 1.4; font-style: italic; }
+  .bb-progress {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px;
+  }
+  .bb-progress .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; color: var(--text-dim); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .bb-progress .bar { height: 10px; border-radius: 5px; background: var(--surface-3); overflow: hidden; position: relative; }
+  .bb-progress .bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--orange), var(--gold)); width: 47%; }
+  .bb-tiers { margin-top: 14px; display: flex; justify-content: space-between; }
+  .bb-tier-pip { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bb-tier-pip .ico { font-size: 18px; opacity: 0.5; filter: grayscale(0.5); }
+  .bb-tier-pip.done .ico { opacity: 1; filter: none; }
+  .bb-tier-pip.now .ico { opacity: 1; filter: drop-shadow(0 0 8px rgba(247,201,72,0.6)); }
+  .bb-tier-pip .name { font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em; font-weight: 700; }
+  .bb-tier-pip.now .name { color: var(--gold); }
+
+  /* +1 vote affirmation */
+  .scr-vote { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 400px 300px at 50% 25%, rgba(63,185,80,0.10), transparent 70%),
+      var(--bg-alt);
+    padding: 100px 22px 30px;
+  }
+  .vote-hero {
+    background: linear-gradient(180deg, rgba(63,185,80,0.16), transparent 80%);
+    border: 1px solid rgba(63,185,80,0.35);
+    border-radius: 18px; padding: 28px 22px;
+    text-align: center; margin-bottom: 18px;
+  }
+  .vote-hero .ico {
+    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px;
+    background: rgba(63,185,80,0.16); border: 2px solid var(--green);
+    display: grid; place-items: center; font-size: 36px;
+    box-shadow: 0 0 32px rgba(63,185,80,0.3);
+  }
+  .vote-hero .label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+  .vote-hero .gain { font-size: 28px; font-weight: 800; color: var(--green); }
+  .vote-hero .id-chip {
+    display: inline-block; margin-top: 16px;
+    padding: 8px 16px; border-radius: 999px;
+    background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.4);
+    font-size: 13px; font-weight: 800; color: var(--green); letter-spacing: 0.02em;
+  }
+  .vote-meta { display: flex; gap: 8px; }
+  .vote-meta .tile {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; text-align: center;
+  }
+  .vote-meta .tile .k { font-size: 9px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; }
+  .vote-meta .tile .v { font-size: 16px; font-weight: 800; color: var(--text); }
+
+  /* Mastery moment */
+  .scr-mastery { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: grid; place-items: center; padding: 24px; backdrop-filter: blur(8px); }
+  .mastery-card {
+    width: 320px; padding: 28px 24px;
+    background: linear-gradient(180deg, rgba(245,166,35,0.18), transparent 60%), var(--surface);
+    border: 1px solid rgba(245,166,35,0.45);
+    border-radius: 22px;
+    text-align: center;
+    box-shadow: 0 16px 64px rgba(245,166,35,0.18), 0 0 0 1px rgba(0,0,0,0.4);
+  }
+  .mastery-card .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: var(--orange); margin-bottom: 18px; }
+  .mastery-card .ico {
+    width: 96px; height: 96px; border-radius: 50%; margin: 0 auto 18px;
+    background: rgba(245,166,35,0.12); border: 2px solid rgba(245,166,35,0.55);
+    display: grid; place-items: center; font-size: 44px;
+    box-shadow: 0 0 32px rgba(245,166,35,0.4);
+  }
+  .mastery-card h3 { font-size: 22px; font-weight: 800; margin: 0 0 6px; }
+  .mastery-card .copy { font-size: 13px; color: var(--text-dim); line-height: 1.5; font-style: italic; margin-bottom: 16px; }
+  .mastery-card .stat-row {
+    display: flex; justify-content: center; gap: 14px;
+    padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  .mastery-card .stat-row .stat .v { font-size: 20px; font-weight: 800; color: var(--gold); }
+  .mastery-card .stat-row .stat .k { font-size: 9px; color: var(--text-dim); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; }
+  .mastery-card .btn { padding: 12px; background: var(--orange); color: #000; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; width: 100%; }
+
+  /* Year-in-review */
+  .scr-yir { position: absolute; inset: 0;
+    background: linear-gradient(180deg, #2c1810, #050405);
+    padding: 0;
+  }
+  .yir-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 500px 300px at 50% 20%, rgba(247,201,72,0.20), transparent 60%),
+      radial-gradient(ellipse 400px 400px at 30% 80%, rgba(248,81,73,0.10), transparent 60%);
+  }
+  .yir-content { position: relative; z-index: 2; padding: 80px 24px 40px; height: 100%; display: flex; flex-direction: column; }
+  .yir-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.36em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+  .yir-content h2 { font-size: 36px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .yir-content .big-num {
+    font-size: 80px; font-weight: 900; color: var(--gold); letter-spacing: -0.03em; line-height: 1; margin-top: 24px;
+    text-shadow: 0 0 40px rgba(247,201,72,0.4);
+  }
+  .yir-content .unit { font-size: 16px; color: var(--gold); font-weight: 700; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .yir-content .frame-line { font-size: 16px; line-height: 1.5; color: var(--text); margin-top: 24px; font-style: italic; }
+  .yir-content .stat-row { margin-top: auto; display: flex; gap: 12px; }
+  .yir-content .stat-row .pill {
+    flex: 1; padding: 12px; border-radius: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    text-align: center;
+  }
+  .yir-content .stat-row .pill .v { font-size: 18px; font-weight: 800; color: var(--gold); }
+  .yir-content .stat-row .pill .k { font-size: 9px; color: var(--text-dim); letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+  .yir-card-num {
+    position: absolute; top: 36px; right: 24px;
+    font-size: 11px; color: var(--text-dim); letter-spacing: 0.16em; font-weight: 700;
+  }
+
+  /* Boss-as-mirror */
+  .scr-bossmirror { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 600px 500px at 50% 70%, rgba(248,81,73,0.18), transparent 60%),
+      var(--bg);
+  }
+  .bm-bg {
+    position: absolute; top: 60px; left: 0; right: 0; bottom: 280px;
+    display: grid; place-items: center;
+  }
+  .bm-art {
+    width: 220px; height: 220px; border-radius: 50%;
+    background:
+      radial-gradient(circle, rgba(248,81,73,0.36), rgba(248,81,73,0.08) 60%, transparent 80%);
+    display: grid; place-items: center;
+    animation: pulseSlow 3s ease-in-out infinite;
+  }
+  @keyframes pulseSlow { 50% { transform: scale(1.05); } }
+  .bm-art .face { font-size: 84px; filter: drop-shadow(0 0 24px rgba(248,81,73,0.6)); }
+  .bm-name {
+    position: absolute; top: 80px; left: 0; right: 0; text-align: center;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: var(--red);
+  }
+  .bm-name .title {
+    display: block; font-size: 26px; letter-spacing: -0.01em; text-transform: none; color: var(--text); margin-top: 4px; font-weight: 800;
+  }
+  .bm-quote-box {
+    position: absolute; bottom: 110px; left: 22px; right: 22px;
+    padding: 18px;
+    background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.4);
+    border-radius: 14px;
+  }
+  .bm-quote-box .said {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); margin-bottom: 8px;
+  }
+  .bm-quote-box .quote {
+    font-size: 13px; line-height: 1.5; font-style: italic; color: var(--text);
+  }
+  .bm-cta {
+    position: absolute; bottom: 30px; left: 22px; right: 22px;
+    display: flex; gap: 10px;
+  }
+  .bm-cta .btn-fight {
+    flex: 1; padding: 14px; background: var(--red); color: #fff; font-weight: 800; font-size: 14px; border-radius: 12px; text-align: center;
+  }
+  .bm-cta .btn-back {
+    padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); font-weight: 700; font-size: 13px; border-radius: 12px;
+  }
+
+  /* I'm becoming someone else pivot */
+  .scr-pivot { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 500px 400px at 50% 30%, rgba(163,113,247,0.10), transparent 70%),
+      var(--bg-alt);
+    padding: 70px 22px 30px;
+  }
+  .pivot-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--purple); text-align: center; margin-bottom: 8px; padding-top: 30px; }
+  .pivot-h2 { font-size: 22px; font-weight: 800; text-align: center; margin: 0 0 12px; line-height: 1.3; }
+  .pivot-current {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 18px;
+  }
+  .pivot-current .row { display: flex; justify-content: space-between; align-items: center; }
+  .pivot-current .row .l { font-size: 13px; color: var(--text); font-weight: 700; }
+  .pivot-current .row .l .id { color: var(--orange); }
+  .pivot-current .meta { font-size: 11px; color: var(--text-dim); margin-top: 6px; line-height: 1.5; }
+  .pivot-actions { display: flex; flex-direction: column; gap: 10px; }
+  .pivot-btn {
+    width: 100%; padding: 16px; border-radius: 12px; text-align: center;
+    font-size: 14px; font-weight: 800;
+  }
+  .pivot-btn.swap { background: var(--purple); color: #fff; }
+  .pivot-btn.keep { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .past-lives {
+    margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);
+  }
+  .past-lives .h { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+  .past-life {
+    background: rgba(163,113,247,0.05); border: 1px solid rgba(163,113,247,0.25);
+    border-radius: 10px; padding: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    opacity: 0.7;
+  }
+  .past-life .l { font-size: 12px; color: var(--text); font-weight: 700; }
+  .past-life .y { font-size: 11px; color: var(--purple); font-weight: 700; }
+
+  /* ============================================================
+     Misc (ephemeral footer)
+     ============================================================ */
+  .footer {
+    text-align: center; color: var(--text-muted); font-size: 11px;
+    margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--blue); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<h1>Engagement Deep Dives — Visual Mockups</h1>
+<p class="lead">Phone-frame proof-of-concept screens for every idea in <code>Engagement Deep Dives - Day-1, Autonomy, Competence.md</code>. Dark theme, 390×844px iPhone frames. Designed to be scanned visually rather than read in detail.</p>
+
+<div class="topbar">
+  <a href="#day1" class="day1">§1 · The First Three Minutes</a>
+  <a href="#autonomy" class="auto">§2 · Autonomy</a>
+  <a href="#competence" class="comp">§3 · Competence</a>
+</div>
+
+<!-- ============================================================
+     SECTION 1 — DAY-1
+     ============================================================ -->
+
+<h2 class="section-title day1" id="day1">§1 · The First Three Minutes</h2>
+<p class="section-sub">The 7-screen Initiation Rite (≤90 seconds), then the once-in-a-lifetime First-Workout Cinematic. Identity-led onboarding — pick who you want to <em>become</em>, not what you want to <em>do</em>.</p>
+
+<div class="strip">
+
+  <!-- ─────────── Screen 1 — Title card ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">SCREEN 1 / 7</span> Title card<span class="note">3-second auto-advance · sets the tone</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-title">
+        <div class="glyph">⚔️</div>
+        <h1>You did not stop gaming.<br><em>You picked a harder game.</em></h1>
+        <div class="press">Press to begin</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Screen 2 — Reason ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">SCREEN 2 / 7</span> The reason<span class="note">1 tap · stored as initialReason · re-surfaces in Year-in-Review</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-reason">
+        <div class="eyebrow">Initiation · Step 1 of 4</div>
+        <h2>Why are you here today?</h2>
+        <div class="small">Not yesterday's you. Today's you.</div>
+        <div class="reason-grid">
+          <div class="reason-card"><div class="emoji">😤</div><div class="label">To vent</div><div class="sub">work, life, the news</div></div>
+          <div class="reason-card"><div class="emoji">🧘</div><div class="label">To reset</div><div class="sub">clear the head</div></div>
+          <div class="reason-card selected"><div class="emoji">🎯</div><div class="label">To train</div><div class="sub">build a thing</div></div>
+          <div class="reason-card"><div class="emoji">🌅</div><div class="label">As ritual</div><div class="sub">because I do this now</div></div>
+          <div class="reason-card"><div class="emoji">💪</div><div class="label">To build</div><div class="sub">strength, capacity</div></div>
+          <div class="reason-card"><div class="emoji">…</div><div class="label">Other</div><div class="sub">tell us</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Screen 3 — Patron ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step purple">SCREEN 3 / 7</span> The patron<span class="note">1 tap · seeds class identity later</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-patron">
+        <div class="eyebrow">Initiation · Step 2 of 4</div>
+        <h2>Choose your patron.</h2>
+        <div class="small">They mark your line. You can outgrow them later.</div>
+        <div class="patron-list">
+          <div class="patron-row selected"><div class="glyph">🐺</div><div class="copy"><div class="name">The Pack</div><div class="desc">For those who run together — even alone.</div></div></div>
+          <div class="patron-row"><div class="glyph">🦅</div><div class="copy"><div class="name">The Wind</div><div class="desc">For those who chase distance.</div></div></div>
+          <div class="patron-row"><div class="glyph">🐻</div><div class="copy"><div class="name">The Mountain</div><div class="desc">For those who lift the weight.</div></div></div>
+          <div class="patron-row"><div class="glyph">🐍</div><div class="copy"><div class="name">The River</div><div class="desc">For those who bend, then return.</div></div></div>
+          <div class="patron-row"><div class="glyph">🦌</div><div class="copy"><div class="name">The Wood</div><div class="desc">For those who walk with intention.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Screen 4 — Oath ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">SCREEN 4 / 7</span> The oath<span class="note">free text 8-60 chars · re-surfaced at Champion rank</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-oath">
+        <div class="eyebrow">Initiation · Step 3 of 4</div>
+        <h2>Speak your oath.</h2>
+        <div class="small">One line. Future you will read this when it matters.</div>
+        <div class="oath-input">
+          <span class="typed">Stronger by my next birthday</span><span class="cursor"></span>
+        </div>
+        <div class="oath-counter">31 / 60</div>
+        <div class="oath-suggest">Or try: <em>"I'll show up even when I don't want to."</em></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Screen 5 — Prophecy Scroll ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">SCREEN 5 / 7</span> The Prophecy Scroll<span class="note">animated parchment reveal · permanent profile decoration</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-scroll">
+        <div class="scroll-art">
+          <div class="eyebrow">Prophecy · Sealed</div>
+          <h3>The Pack remembers your name.</h3>
+          <div class="row"><span class="key">Reason ·</span> To train</div>
+          <div class="row"><span class="key">Patron ·</span> 🐺 The Pack</div>
+          <div class="oath-line">"Stronger by my next birthday"</div>
+          <div class="welcome">Welcome, Initiate of the Pack.<br>The Forest of Endurance opens to you.</div>
+        </div>
+        <div class="footer-hint">Tap to fold the scroll →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Screen 6 — First quest preview ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">SCREEN 6 / 7</span> First quest<span class="note">no timer · max 1 reminder push if deferred</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-quest">
+        <div class="quest-card">
+          <div class="eyebrow">First Quest · Initiate</div>
+          <h3>Take your first step.</h3>
+          <div class="target">Complete one workout. Anything counts.</div>
+          <div class="copy">No timer. No pressure. Whenever you're ready.</div>
+        </div>
+        <div class="quest-cta">
+          <div class="btn-primary">Log it now →</div>
+          <div class="btn-secondary">I'll do it later — remind me</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Screen 7 — First-workout cinematic ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">SCREEN 7 / 7</span> First-workout cinematic<span class="note">8 seconds · once-in-a-lifetime · permanent footprint icon on profile</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-cinematic">
+        <div class="cine-zone-name">Forest of Endurance<span class="small">Your first sanctum</span></div>
+        <div class="cine-map">
+          <div class="cine-trail"></div>
+          <div class="cine-avatar">🐺</div>
+        </div>
+        <div class="cine-rank-flare">
+          <div class="rank-eyebrow">Rank Granted</div>
+          <div class="rank-name">⚔ Initiate</div>
+        </div>
+        <div class="cine-line">The path is yours now.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     SECTION 2 — AUTONOMY
+     ============================================================ -->
+
+<h2 class="section-title auto" id="autonomy">§2 · Autonomy</h2>
+<p class="section-sub">Self-chosen progression. Player-authored quests, if-then plans (Gollwitzer), goal trees, class paths, lifestyle perks, branching epilogues. The thinnest of the three SDT axes today.</p>
+
+<div class="grid">
+
+  <!-- ─────────── Player-authored quest ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">2.1</span> Player-authored quest<span class="note">deterministic XP sizing · 1.5× soft cap · narrow LLM only for title polish</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-pa-quest">
+        <div class="topnav">
+          <div class="back">←</div>
+          <div class="title">New Quest</div>
+          <div class="save">Save</div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Title</div>
+          <div class="form-input large">Saturday's Mark</div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Target</div>
+          <div class="form-pair">
+            <div class="form-input">5.0</div>
+            <div class="form-input">km</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Activity</div>
+          <div class="chip-row">
+            <div class="chip active">🏃 Running</div>
+            <div class="chip">🚴 Cycling</div>
+            <div class="chip">💪 Gym</div>
+            <div class="chip">🧘 Yoga</div>
+            <div class="chip">+ Any</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Deadline</div>
+          <div class="form-input">Saturday, 5 days</div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Reward (auto-sized)</div>
+          <div class="reward-box">
+            <div>
+              <div class="left">Locked at create</div>
+              <div class="stretch">Stretch: 1.3× your 14-day pace</div>
+            </div>
+            <div class="xp">+340 XP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Implementation intentions ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">2.2</span> Implementation intention<span class="note">if-then plan · Gollwitzer · d=.14-.31 effect on PA · push fires at cue time</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-ifthen">
+        <div class="eyebrow">Plan the line</div>
+        <h2>If ___ then I will ___</h2>
+        <div class="small">A plan beats motivation. Set it once.</div>
+
+        <div class="ifthen-card">
+          <div class="clause-label">When</div>
+          <div class="clause-pick"><span>Monday at 7 AM</span><span class="caret">▾</span></div>
+        </div>
+        <div class="ifthen-card">
+          <div class="clause-label">Then I will</div>
+          <div class="clause-pick"><span>run 3 km along the river</span><span class="caret">▾</span></div>
+        </div>
+
+        <div class="ifthen-preview">
+          <strong>Monday 7 AM —</strong><br>
+          your river run waits.
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:auto; padding-top: 16px;">
+          <div class="btn-secondary" style="flex:1;">Cancel</div>
+          <div class="btn-primary" style="flex:2;">Save my plan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Goal Tree ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">2.3</span> Goal Tree<span class="note">12-week theme → 4-6 weekly quests · player accepts/edits/rejects each</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-tree">
+        <div class="h-eyebrow">12-week theme</div>
+        <h2>Become a half-marathoner</h2>
+        <div class="theme-name">Spring Season · Week 1 of 12</div>
+
+        <div class="tree-week">
+          <div class="num">W1</div>
+          <div class="body">
+            <div class="title">Foundation week</div>
+            <div class="targets">
+              <div class="qb green">3× run, 30 min ea</div>
+              <div class="qb green">Sun yoga, 20 min</div>
+              <div class="qb">Strength, 1×</div>
+            </div>
+          </div>
+        </div>
+        <div class="tree-week">
+          <div class="num">W2</div>
+          <div class="body">
+            <div class="title">First long run</div>
+            <div class="targets">
+              <div class="qb">3× run</div>
+              <div class="qb">Long run: 6 km</div>
+              <div class="qb">Yoga, 20 min</div>
+            </div>
+          </div>
+        </div>
+        <div class="tree-week">
+          <div class="num">W3</div>
+          <div class="body">
+            <div class="title">Build the engine</div>
+            <div class="targets">
+              <div class="qb">3× run</div>
+              <div class="qb">Long: 8 km</div>
+              <div class="qb">Strength 1×</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Class paths ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step purple">2.4</span> Class paths<span class="note">level 10 · resettable seasonally · +20% XP for one stat cluster</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-class">
+        <div class="eyebrow">Level 10 · Choose your line</div>
+        <h2>Which line do you walk?</h2>
+        <div class="small">Resettable at season change.</div>
+
+        <div class="class-row">
+          <div class="icon">⚔️</div>
+          <div class="body">
+            <div class="name">Warrior</div>
+            <div class="stats">STR · STA</div>
+            <div class="quote">"The wall stands."</div>
+            <div class="perk">+20% XP from gym + climbing</div>
+          </div>
+        </div>
+        <div class="class-row selected">
+          <div class="icon">🏹</div>
+          <div class="body">
+            <div class="name">Ranger</div>
+            <div class="stats">END · AGI</div>
+            <div class="quote">"The wind passes."</div>
+            <div class="perk">+20% XP from running + cycling</div>
+          </div>
+        </div>
+        <div class="class-row">
+          <div class="icon">🧙</div>
+          <div class="body">
+            <div class="name">Sage</div>
+            <div class="stats">FLX · STA</div>
+            <div class="quote">"The river bends."</div>
+            <div class="perk">+20% XP from yoga + swimming</div>
+          </div>
+        </div>
+        <div class="class-foot">Choose now or later — your level-up screen will ask again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Lifestyle perks ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">2.5</span> Lifestyle perks<span class="note">3 rank thresholds · pick 1 of 2 each · stack to 3</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-perks">
+        <div class="rank-up">★ ★ ★  Rank Up · Warrior  ★ ★ ★</div>
+        <h2>Choose your perk.</h2>
+        <div class="small">You can change it next season.</div>
+
+        <div class="perk-pair">
+          <div class="perk-card selected">
+            <div class="vs">Option A</div>
+            <div class="ico">🌅</div>
+            <div class="name">Early Bird</div>
+            <div class="desc">+10% XP from workouts started before 9 AM.</div>
+          </div>
+          <div class="perk-card">
+            <div class="vs">Option B</div>
+            <div class="ico">🌙</div>
+            <div class="name">Night Owl</div>
+            <div class="desc">+10% XP from workouts started after 9 PM.</div>
+          </div>
+        </div>
+
+        <div style="font-size:10px; color: var(--text-muted); text-align:center; margin: 18px 0 12px; letter-spacing: 0.16em; text-transform: uppercase;">— Or —</div>
+
+        <div class="perk-pair">
+          <div class="perk-card">
+            <div class="vs">Option C</div>
+            <div class="ico">⏱</div>
+            <div class="name">Long Hauler</div>
+            <div class="desc">+15% XP for workouts ≥ 60 min.</div>
+          </div>
+          <div class="perk-card">
+            <div class="vs">Option D</div>
+            <div class="ico">⚡</div>
+            <div class="name">Sprinter</div>
+            <div class="desc">+15% XP for workouts ≤ 20 min.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Branching epilogues ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">2.6</span> Branching epilogue<span class="note">region finale · cosmetic only · permanent profile mark · no mechanical effect</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-epilogue">
+        <div class="eyebrow">Forest of Endurance · Finale</div>
+        <h2>The grove burns.<br>Will you stop it?</h2>
+        <p class="lede">You stand at the edge. The fire is yours to choose.<br>This decision is final. It marks your profile forever.</p>
+        <div class="epilogue-choice">
+          <div class="ep-card left">
+            <div class="icon">🌿</div>
+            <div class="name">Spare the grove</div>
+            <div class="desc">Quench the fire. The wood remembers your mercy. The next region opens with a green sigh.</div>
+            <div class="reward"><strong>Cosmetic ·</strong> Mossy laurel banner</div>
+          </div>
+          <div class="ep-card right">
+            <div class="icon">🔥</div>
+            <div class="name">Burn the grove</div>
+            <div class="desc">Let it consume the wraith. The ash becomes the threshold to the next zone.</div>
+            <div class="reward"><strong>Cosmetic ·</strong> Embered laurel banner</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     SECTION 3 — COMPETENCE
+     ============================================================ -->
+
+<h2 class="section-title comp" id="competence">§3 · Competence</h2>
+<p class="section-sub">Votes for who you're becoming. Atomic Identity Counter (Atoms-style), Becoming-bar with 6 tiers, +1 vote affirmation, mastery moments, year-in-review, boss-as-mirror, identity pivot. Visible mastery tied to the oath you took on Day 1.</p>
+
+<div class="grid">
+
+  <!-- ─────────── Atomic Identity Counter ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step orange">3.1</span> Atomic Identity Counter<span class="note">profile widget · multiple identities · monthly + lifetime tally</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-aic">
+        <div class="profile-hdr">
+          <div class="av">🐺</div>
+          <div class="nm">
+            <div class="n">Mihael · Ranger</div>
+            <div class="lvl">Level 24 · Veteran</div>
+          </div>
+        </div>
+        <div class="aic-eyebrow">★ Identities · Votes Cast</div>
+
+        <div class="aic-card primary">
+          <div class="label"><span class="star">★</span>I am a runner</div>
+          <div class="aic-stats">
+            <div class="big">142</div>
+            <div>
+              <div class="unit">Lifetime</div>
+              <div class="extra">+3 this week · 12 this month</div>
+            </div>
+          </div>
+          <div class="week-bar">
+            <div class="day on"></div>
+            <div class="day"></div>
+            <div class="day on"></div>
+            <div class="day"></div>
+            <div class="day on"></div>
+            <div class="day"></div>
+            <div class="day"></div>
+          </div>
+        </div>
+
+        <div class="aic-card">
+          <div class="label">I am someone who shows up</div>
+          <div class="aic-stats">
+            <div class="big">187</div>
+            <div>
+              <div class="unit">Lifetime</div>
+              <div class="extra">+5 this week · 14 this month</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="aic-card">
+          <div class="label">I rest with intention</div>
+          <div class="aic-stats">
+            <div class="big">23</div>
+            <div>
+              <div class="unit">Lifetime</div>
+              <div class="extra">+1 this week</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Becoming-bar ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step orange">3.2</span> Becoming-bar<span class="note">6 tiers · sigil per tier · per-identity · tier-up has its own celebration</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-bb">
+        <div class="bb-header">
+          <div class="eyebrow">Becoming · I am a runner</div>
+          <h2>You're a regular.</h2>
+        </div>
+        <div class="bb-tier-now">
+          <div class="glyph">🌾</div>
+          <div>
+            <div class="name">Tier 3 · Tiller</div>
+            <div class="copy">"You're a regular."</div>
+          </div>
+        </div>
+        <div class="bb-progress">
+          <div class="row"><span>47 votes · Tier 3</span><span style="color: var(--gold);">53 to Tier 4</span></div>
+          <div class="bar"><div class="bar-fill"></div></div>
+          <div class="bb-tiers">
+            <div class="bb-tier-pip done"><div class="ico">🌱</div><div class="name">Spark</div></div>
+            <div class="bb-tier-pip done"><div class="ico">🌿</div><div class="name">Sprout</div></div>
+            <div class="bb-tier-pip now"><div class="ico">🌾</div><div class="name">Tiller</div></div>
+            <div class="bb-tier-pip"><div class="ico">🌲</div><div class="name">Steady</div></div>
+            <div class="bb-tier-pip"><div class="ico">⛰</div><div class="name">Bedrock</div></div>
+            <div class="bb-tier-pip"><div class="ico">🌌</div><div class="name">Lineage</div></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;">
+          <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;">Next milestone</div>
+          <div style="font-size: 14px; font-weight: 700; line-height: 1.5;">
+            53 more workouts cast as <em style="color: var(--orange);">runner</em> → unlock <strong>🌲 Steady</strong>: <em>"You're someone who runs."</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── +1 vote affirmation ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step green">3.3</span> "+1 vote" affirmation<span class="note">post-workout · per matching identity · cheap, hits every workout</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-vote">
+        <div class="vote-hero">
+          <div class="ico">✓</div>
+          <div class="label">Workout logged</div>
+          <div class="gain">+340 XP</div>
+          <div class="id-chip">+1 vote · I am a runner</div>
+        </div>
+        <div class="vote-meta">
+          <div class="tile"><div class="k">Distance</div><div class="v">5.2 km</div></div>
+          <div class="tile"><div class="k">Duration</div><div class="v">28 min</div></div>
+          <div class="tile"><div class="k">Pace</div><div class="v">5:23</div></div>
+        </div>
+        <div style="margin-top: 14px; padding: 14px; background: rgba(63,185,80,0.06); border: 1px solid rgba(63,185,80,0.3); border-radius: 12px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); margin-bottom: 6px;">Stat gains</div>
+          <div style="font-size: 13px; color: var(--text); font-weight: 700;">+2 END · +1 AGI · +1 STA</div>
+        </div>
+        <div style="margin-top: 16px;" class="btn-primary">Continue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Mastery moments ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step orange">3.4</span> Mastery moments<span class="note">milestone overlay · per discipline · 1/5/25/100/500/2500 sessions or km · quiet ceremony</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div style="position:absolute; inset:0; background: radial-gradient(ellipse at top, rgba(79,158,255,0.06), var(--bg-alt));">
+        <!-- subtle backdrop suggesting workout result behind -->
+        <div style="position: absolute; inset: 0; opacity: 0.3;">
+          <div style="height: 60px;"></div>
+          <div style="padding: 0 22px;">
+            <div style="height: 80px; background: var(--surface); border-radius: 14px; margin-bottom: 12px;"></div>
+            <div style="height: 200px; background: var(--surface); border-radius: 14px;"></div>
+          </div>
+        </div>
+        <div class="scr-mastery">
+          <div class="mastery-card">
+            <div class="eyebrow">★ Mastery moment ★</div>
+            <div class="ico">🏆</div>
+            <h3>500 km on the road.</h3>
+            <p class="copy">Few will ever match it. The road remembers.</p>
+            <div class="stat-row">
+              <div class="stat"><div class="v">500</div><div class="k">Lifetime km</div></div>
+              <div class="stat"><div class="v">142</div><div class="k">Sessions</div></div>
+              <div class="stat"><div class="v">96 h</div><div class="k">Time on feet</div></div>
+            </div>
+            <div class="btn">Tap to keep going</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Year-in-review reckoning ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">3.5a</span> Year-in-review<span class="note">card 2 of 10 · headline number with frame-line</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span style="color: #fff;">9:41</span><span class="icons" style="color: #fff;">●●●  ●●  100%</span></div>
+      <div class="scr-yir">
+        <div class="yir-bg"></div>
+        <div class="yir-card-num">02 / 10</div>
+        <div class="yir-content">
+          <div class="yir-eyebrow">Your year · 2026</div>
+          <h2>You moved.</h2>
+          <div class="big-num">634</div>
+          <div class="unit">Kilometres</div>
+          <div class="frame-line">"That's the width of Ireland.<br>You crossed a country with your feet."</div>
+          <div class="stat-row">
+            <div class="pill"><div class="v">156</div><div class="k">Sessions</div></div>
+            <div class="pill"><div class="v">112 h</div><div class="k">On the move</div></div>
+            <div class="pill"><div class="v">47</div><div class="k">Vent runs</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Year-in-review final card ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step gold">3.5b</span> Year-in-review · final card<span class="note">10 of 10 · the oath surfaced verbatim · the load-bearing emotional moment</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span style="color: #fff;">9:41</span><span class="icons" style="color: #fff;">●●●  ●●  100%</span></div>
+      <div class="scr-yir" style="background: linear-gradient(180deg, #1a0f2a, #050405);">
+        <div style="position: absolute; inset: 0; background: radial-gradient(ellipse 600px 400px at 50% 50%, rgba(247,201,72,0.14), transparent 70%);"></div>
+        <div class="yir-card-num">10 / 10</div>
+        <div class="yir-content" style="justify-content: center;">
+          <div class="yir-eyebrow" style="text-align: center;">A year ago you said:</div>
+          <div style="text-align: center; padding: 36px 8px; border: 1px solid rgba(247,201,72,0.4); border-radius: 16px; background: rgba(247,201,72,0.04); margin: 24px 0;">
+            <div style="font-size: 22px; font-weight: 800; line-height: 1.4; color: #f4e4b8; font-style: italic;">
+              "Stronger by my next birthday."
+            </div>
+          </div>
+          <div style="text-align: center; font-size: 16px; color: var(--gold); font-weight: 700; line-height: 1.6;">Was it true?</div>
+          <div style="margin-top: 24px; padding: 16px; background: rgba(255,255,255,0.04); border-radius: 12px;">
+            <div style="font-size: 11px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 800; margin-bottom: 6px;">A year of being a runner</div>
+            <div style="font-size: 14px; line-height: 1.5; color: var(--text);">142 votes cast. Tier 3 → Tier 4. You ran <strong style="color: var(--gold);">five times further</strong> than you did last year.</div>
+          </div>
+          <div style="margin-top: 22px;" class="btn-primary">Share my year →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── Boss-as-mirror ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step red">3.6</span> Boss-as-mirror<span class="note">boss intro flavor references YOUR neglected disciplines · SDT competence specificity</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-bossmirror">
+        <div class="bm-name">⚔ Boss Encounter ⚔<span class="title">The Witness of the Pines</span></div>
+        <div class="bm-bg">
+          <div class="bm-art"><div class="face">🦌</div></div>
+        </div>
+        <div class="bm-quote-box">
+          <div class="said">It speaks</div>
+          <div class="quote">"You came to me in running shoes again. The wood saw you skip yoga six weeks running. It remembers."</div>
+        </div>
+        <div class="bm-cta">
+          <div class="btn-back">Retreat</div>
+          <div class="btn-fight">Fight →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── I'm becoming someone else ─────────── -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step purple">3.7</span> "I'm becoming someone else"<span class="note">after 3 months on a primary identity · soft prompt · archived as past life</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">●●●  ●●  100%</span></div>
+      <div class="scr-pivot">
+        <div class="pivot-eyebrow">★ Reflection ★</div>
+        <h2 class="pivot-h2">Has this still got you?</h2>
+
+        <div class="pivot-current">
+          <div class="row">
+            <div class="l">Primary · <span class="id">I am a runner</span></div>
+            <div style="font-size: 11px; color: var(--gold); font-weight: 700;">★ 142 votes</div>
+          </div>
+          <div class="meta">3 months · still casting votes · Tier 3 (Tiller). You can keep going, or take this season as the time to become something else.</div>
+        </div>
+
+        <div class="pivot-actions">
+          <div class="pivot-btn keep">Keep being a runner</div>
+          <div class="pivot-btn swap">Swap to a new identity →</div>
+        </div>
+
+        <div class="past-lives">
+          <div class="h">Past lives · 2025</div>
+          <div class="past-life">
+            <div class="l">I am someone who shows up</div>
+            <div class="y">Q2 2025</div>
+          </div>
+          <div class="past-life" style="margin-top:8px;">
+            <div class="l">I am building a base</div>
+            <div class="y">Q1 2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>Mockups for <code>Engagement Deep Dives - Day-1, Autonomy, Competence.md</code><br>
+  Master ideation: <code>Engagement and Uniqueness Ideas.md</code> · Vault: <code>docs/obsidian/01 - Product/</code></p>
+</div>
+
+</body>
+</html>

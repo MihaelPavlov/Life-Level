@@ -24,7 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final result = await _authService.login(
@@ -37,8 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (_) =>
-                    MainShell(initialRingIds: result.ringItems)),
+                builder: (_) => MainShell(initialRingIds: result.ringItems)),
           );
         } else {
           Navigator.pushReplacement(
@@ -49,8 +51,10 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       }
-    } catch (e) {
-      setState(() => _error = 'Invalid email or password.');
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Login failed. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -85,7 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text(
                     'Train in the real world.\nProgress in a game world.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style:
+                        TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 48),
 
@@ -94,8 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailCtrl,
                     label: 'Email',
                     keyboardType: TextInputType.emailAddress,
-                    validator: (v) =>
-                        v != null && v.contains('@') ? null : 'Enter a valid email',
+                    validator: (v) => v != null && v.contains('@')
+                        ? null
+                        : 'Enter a valid email',
                   ),
                   const SizedBox(height: 16),
 
@@ -112,7 +118,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (_error != null)
                     Text(
                       _error!,
-                      style: const TextStyle(color: AppColors.red, fontSize: 13),
+                      style:
+                          const TextStyle(color: AppColors.red, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
                   const SizedBox(height: 24),
@@ -135,7 +142,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text('LOGIN',
                             style: TextStyle(
-                                fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.5)),
                   ),
                   const SizedBox(height: 24),
 
@@ -146,7 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("Don't have an account? ",
                           style: TextStyle(color: AppColors.textSecondary)),
                       GestureDetector(
-                        onTap: () => Navigator.push(context,
+                        onTap: () => Navigator.push(
+                            context,
                             MaterialPageRoute(
                                 builder: (_) => const RegisterScreen())),
                         child: const Text('Sign up',

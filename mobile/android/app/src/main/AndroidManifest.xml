@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Health Connect permissions — WORKOUT internally reads Exercise + Distance + Calories + Steps -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE_SESSION" />
@@ -9,7 +10,7 @@
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <application
-        android:label="life_level"
+        android:label="Life-Level"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

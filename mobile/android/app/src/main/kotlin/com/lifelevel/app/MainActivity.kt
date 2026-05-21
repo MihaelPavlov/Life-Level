@@ -1,4 +1,4 @@
-package com.example.life_level
+package com.lifelevel.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

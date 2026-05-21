@@ -121,11 +121,12 @@ public class ActivityService(
         // proportional to the workout's shape. Wires the "damage is dealt
         // automatically when you log workouts" promise that the BossBattleView
         // has been making. Failures here never block the activity log.
+        IReadOnlyList<BossDefeatedInfo> bossDefeats = Array.Empty<BossDefeatedInfo>();
         if (activityBossDamage != null)
         {
             try
             {
-                await activityBossDamage.ApplyAsync(
+                bossDefeats = await activityBossDamage.ApplyAsync(
                     userId,
                     request.Type.ToString(),
                     request.DurationMinutes,
@@ -135,6 +136,7 @@ public class ActivityService(
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Boss activity damage failed for user {UserId}", userId);
+                bossDefeats = Array.Empty<BossDefeatedInfo>();
             }
         }
 
@@ -178,6 +180,7 @@ public class ActivityService(
             XpBonusApplied = xpBonusApplied,
             LevelUpUnlocks = levelUpUnlocks,
             FloorCreditResult = floorCreditResult,
+            BossDefeats = bossDefeats,
         };
     }
 

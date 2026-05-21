@@ -20,6 +20,11 @@ class ZoneTrail extends StatelessWidget {
 
   final void Function(ZoneNode) onTap;
 
+  /// When provided, attached to the bubble of the node currently in
+  /// [ZoneNodeStatus.active]. Lets the parent screen call
+  /// `Scrollable.ensureVisible` to auto-scroll to the active zone.
+  final Key? activeNodeKey;
+
   const ZoneTrail({
     super.key,
     required this.nodes,
@@ -28,6 +33,7 @@ class ZoneTrail extends StatelessWidget {
     required this.nextRegionName,
     required this.avatarEmoji,
     required this.onTap,
+    this.activeNodeKey,
   });
 
   static const double _rowHeight = 110;
@@ -92,6 +98,9 @@ class ZoneTrail extends StatelessWidget {
                 child: _SlotAlign(
                   slot: layouts[i].slot,
                   child: ZoneNodeBubble(
+                    key: nodes[i].status == ZoneNodeStatus.active
+                        ? activeNodeKey
+                        : null,
                     node: nodes[i],
                     journey: journey,
                     nextRegionName: nodes[i].isBoss ? nextRegionName : null,

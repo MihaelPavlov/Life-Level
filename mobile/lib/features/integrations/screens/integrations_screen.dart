@@ -15,19 +15,28 @@ class IntegrationsScreen extends ConsumerStatefulWidget {
   ConsumerState<IntegrationsScreen> createState() => _IntegrationsScreenState();
 }
 
-class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
+class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
+    with WidgetsBindingObserver {
   SyncResult? _bannerResult;
-  String? _pendingGarminVerifier;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Deep link handling is owned by MainShell — do not add a second listener here.
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(integrationSyncProvider.notifier).refresh();
+    }
   }
 
   Future<void> _connectStrava(BuildContext context) async {
@@ -52,7 +61,6 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
     try {
       final verifier = GarminService.generateCodeVerifier();
       final challenge = GarminService.generateCodeChallenge(verifier);
-      _pendingGarminVerifier = verifier;
       await launchUrl(
         Uri.parse(GarminService().authorizationUrl(challenge)),
         mode: LaunchMode.externalApplication,
@@ -103,9 +111,11 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
             ),
             const SizedBox(height: 12),
             _helpStep('1', 'Install Health Sync from the Play Store'),
-            _helpStep('2', 'Open Health Sync and select your device app as source (e.g. Zepp Life or HUAWEI Health)'),
+            _helpStep('2',
+                'Open Health Sync and select your device app as source (e.g. Zepp Life or HUAWEI Health)'),
             _helpStep('3', 'Set Health Connect as the destination'),
-            _helpStep('4', 'Run a sync — your workouts will appear here automatically'),
+            _helpStep('4',
+                'Run a sync — your workouts will appear here automatically'),
           ],
         ),
       ),
@@ -122,7 +132,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
             width: 22,
             height: 22,
             decoration: BoxDecoration(
-              color: const Color(0xFF4f9eff).withOpacity(0.15),
+              color: const Color(0xFF4f9eff).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(11),
             ),
             child: Center(
@@ -174,9 +184,9 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
               padding: const EdgeInsets.only(top: 8, bottom: 32),
               children: [
                 if (_bannerResult != null)
-                  SyncStatusBanner(result: _bannerResult!, onDismiss: _dismissBanner),
-
-                _SectionLabel('DEVICE HEALTH'),
+                  SyncStatusBanner(
+                      result: _bannerResult!, onDismiss: _dismissBanner),
+                const _SectionLabel('DEVICE HEALTH'),
                 IntegrationTile(
                   emoji: '❤️',
                   title: 'Health Connect / Apple Health',
@@ -184,32 +194,33 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
                   isConnected: state.isHealthConnected,
                   isSyncing: state.isSyncing,
                   lastSyncAt: state.lastSyncAt,
-                  onConnect: () =>
-                      ref.read(integrationSyncProvider.notifier).requestPermissions(),
+                  onConnect: () => ref
+                      .read(integrationSyncProvider.notifier)
+                      .requestPermissions(),
                   onSyncNow: () =>
                       ref.read(integrationSyncProvider.notifier).syncNow(),
                 ),
-
                 const SizedBox(height: 12),
-                _SectionLabel('CONNECTED APPS'),
+                const _SectionLabel('CONNECTED APPS'),
                 _StravaIntegrationTile(
                   isConnected: state.isStravaConnected,
                   athleteName: state.stravaAthleteName,
                   onConnect: () => _connectStrava(context),
-                  onDisconnect: () =>
-                      ref.read(integrationSyncProvider.notifier).disconnectStrava(),
+                  onDisconnect: () => ref
+                      .read(integrationSyncProvider.notifier)
+                      .disconnectStrava(),
                 ),
                 _GarminIntegrationTile(
                   isConnected: state.isGarminConnected,
                   displayName: state.garminDisplayName,
                   onConnect: () => _connectGarmin(context),
-                  onDisconnect: () =>
-                      ref.read(integrationSyncProvider.notifier).disconnectGarmin(),
+                  onDisconnect: () => ref
+                      .read(integrationSyncProvider.notifier)
+                      .disconnectGarmin(),
                 ),
-
                 const SizedBox(height: 12),
-                _SectionLabel('COMPATIBLE DEVICES'),
-                _InfoTile(
+                const _SectionLabel('COMPATIBLE DEVICES'),
+                const _InfoTile(
                   emoji: '✅',
                   title: 'Samsung, Amazfit & OPPO',
                   subtitle:
@@ -320,7 +331,8 @@ class _StravaIntegrationTile extends StatelessWidget {
         color: const Color(0xFF161b22),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isConnected ? const Color(0xFFFC4C02) : const Color(0xFF30363d),
+          color:
+              isConnected ? const Color(0xFFFC4C02) : const Color(0xFF30363d),
         ),
       ),
       child: Row(
@@ -329,10 +341,14 @@ class _StravaIntegrationTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: isConnected ? const Color(0xFF2d1a12) : const Color(0xFF1e2632),
+              color: isConnected
+                  ? const Color(0xFF2d1a12)
+                  : const Color(0xFF1e2632),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isConnected ? const Color(0xFFFC4C02) : const Color(0xFF30363d),
+                color: isConnected
+                    ? const Color(0xFFFC4C02)
+                    : const Color(0xFF30363d),
               ),
             ),
             child: const Center(
@@ -361,7 +377,8 @@ class _StravaIntegrationTile extends StatelessWidget {
                           ? 'Connected as $athleteName'
                           : 'Connected')
                       : 'Auto-import runs, rides & more via OAuth',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF8b949e)),
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF8b949e)),
                 ),
               ],
             ),
@@ -433,13 +450,16 @@ class _GarminIntegrationTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: isConnected ? const Color(0xFF0a1e2d) : const Color(0xFF1e2632),
+              color: isConnected
+                  ? const Color(0xFF0a1e2d)
+                  : const Color(0xFF1e2632),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isConnected ? brandColor : const Color(0xFF30363d),
               ),
             ),
-            child: const Center(child: Text('🏃', style: TextStyle(fontSize: 20))),
+            child:
+                const Center(child: Text('🏃', style: TextStyle(fontSize: 20))),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -457,9 +477,12 @@ class _GarminIntegrationTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   isConnected
-                      ? (displayName != null ? 'Connected as $displayName' : 'Connected')
+                      ? (displayName != null
+                          ? 'Connected as $displayName'
+                          : 'Connected')
                       : 'Coming soon — integration scaffolded',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF8b949e)),
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF8b949e)),
                 ),
               ],
             ),
@@ -532,7 +555,8 @@ class _InfoTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF8b949e)),
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF8b949e)),
                 ),
                 if (actionLabel != null && onAction != null) ...[
                   const SizedBox(height: 6),

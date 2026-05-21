@@ -65,6 +65,7 @@ External activity dedup relies on `ExternalId = "provider:nativeId"`. If two con
 `go_router` is in `pubspec.yaml` but not used anywhere — the shell handles all navigation. Safe to remove on next cleanup pass.
 
 ## Related
+- [[Internal Testing Findings]]
 - [[Environment Setup]]
 - [[Every-Session Startup]]
 - [[Strava Webhook Registration]]

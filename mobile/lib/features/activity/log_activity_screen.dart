@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/boss_defeated_notifier.dart';
 import '../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
@@ -183,6 +184,12 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       // Fire inventory-full warning for each item that was blocked
       for (final blocked in result.blockedItems) {
         InventoryFullNotifier.notify(blocked);
+      }
+
+      // Each boss the activity finished off → celebration overlay (one per
+      // boss, in the order the backend killed them).
+      for (final boss in result.bossDefeats) {
+        BossDefeatedNotifier.notify(boss);
       }
 
       // Dungeon floor credit → global toast + overlay refresh.

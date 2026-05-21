@@ -155,6 +155,31 @@ class LevelUpUnlocks {
       );
 }
 
+class BossDefeatedInfo {
+  final String bossId;
+  final String name;
+  final String icon;
+  final int rewardXp;
+  final bool isMini;
+
+  const BossDefeatedInfo({
+    required this.bossId,
+    required this.name,
+    required this.icon,
+    required this.rewardXp,
+    required this.isMini,
+  });
+
+  factory BossDefeatedInfo.fromJson(Map<String, dynamic> json) =>
+      BossDefeatedInfo(
+        bossId: json['bossId'] as String,
+        name: json['name'] as String? ?? '',
+        icon: json['icon'] as String? ?? '👹',
+        rewardXp: (json['rewardXp'] as num?)?.toInt() ?? 0,
+        isMini: json['isMini'] as bool? ?? false,
+      );
+}
+
 class DungeonFloorCreditInfo {
   final String dungeonName;
   final int clearedFloorOrdinal;
@@ -205,6 +230,10 @@ class LogActivityResult {
   /// overlay refresh.
   final DungeonFloorCreditInfo? floorCreditResult;
 
+  /// Bosses whose HP hit 0 from this single activity. Drives the boss-slain
+  /// celebration overlay. Empty in the common case.
+  final List<BossDefeatedInfo> bossDefeats;
+
   const LogActivityResult({
     required this.activityId,
     required this.xpGained,
@@ -224,6 +253,7 @@ class LogActivityResult {
     this.blockedItems = const [],
     this.levelUpUnlocks,
     this.floorCreditResult,
+    this.bossDefeats = const [],
   });
 
   factory LogActivityResult.fromJson(Map<String, dynamic> json) =>
@@ -259,6 +289,9 @@ class LogActivityResult {
             ? null
             : DungeonFloorCreditInfo.fromJson(
                 json['floorCreditResult'] as Map<String, dynamic>),
+        bossDefeats: (json['bossDefeats'] as List<dynamic>? ?? [])
+            .map((e) => BossDefeatedInfo.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 }
 

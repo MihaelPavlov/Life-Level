@@ -21,12 +21,32 @@ class HealthSyncService {
   Future<bool> isPermissionGranted() async {
     if (kIsWeb) return false;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_permissionKey) ?? false;
+    try {
+      await _health.configure();
+      final available = await _health.isHealthConnectAvailable();
+      if (!available) {
+        await prefs.setBool(_permissionKey, false);
+        return false;
+      }
+
+      final granted = await _health.hasPermissions(
+            _readTypes,
+            permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
+          ) ??
+          false;
+      await prefs.setBool(_permissionKey, granted);
+      return granted;
+    } catch (e) {
+      debugPrint('Health Connect permission check error: $e');
+      return prefs.getBool(_permissionKey) ?? false;
+    }
   }
 
   Future<bool> requestPermissions() async {
     if (kIsWeb) return false;
     try {
+      if (await isPermissionGranted()) return true;
+
       await _health.configure();
       final available = await _health.isHealthConnectAvailable();
       debugPrint('Health Connect available: $available');
@@ -46,15 +66,9 @@ class HealthSyncService {
           Uri.parse('android-app://com.google.android.apps.healthdata'),
           mode: LaunchMode.externalApplication,
         );
-        // Re-check after user returns from Health Connect
-        final recheckGranted = await _health.hasPermissions(
-          _readTypes,
-          permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
-        ) ?? false;
-        debugPrint('Recheck permissions granted: $recheckGranted');
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool(_permissionKey, recheckGranted);
-        return recheckGranted;
+        await prefs.setBool(_permissionKey, false);
+        return false;
       }
 
       final prefs = await SharedPreferences.getInstance();
@@ -91,19 +105,25 @@ class HealthSyncService {
       final available = await _health.isHealthConnectAvailable();
       debugPrint('[HealthSync] Health Connect available: $available');
       if (!available) {
-        return const SyncResult(imported: 0, skipped: 0, errors: ['Health Connect is not available on this device.']);
+        return const SyncResult(
+            imported: 0,
+            skipped: 0,
+            errors: ['Health Connect is not available on this device.']);
       }
 
       final hasPerms = await _health.hasPermissions(
-        _readTypes,
-        permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
-      ) ?? false;
+            _readTypes,
+            permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
+          ) ??
+          false;
       debugPrint('[HealthSync] permissions check: $hasPerms');
       if (!hasPerms) {
         // Clear cached flag so UI shows "Connect" again
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(_permissionKey, false);
-        return const SyncResult(imported: 0, skipped: 0, errors: ['Health Connect permissions were revoked. Please reconnect.']);
+        return const SyncResult(imported: 0, skipped: 0, errors: [
+          'Health Connect permissions were revoked. Please reconnect.'
+        ]);
       }
     } catch (e) {
       debugPrint('[HealthSync] permission check error: $e');
@@ -126,12 +146,16 @@ class HealthSyncService {
       );
     } catch (e) {
       debugPrint('[HealthSync] ERROR reading health data: $e');
-      return SyncResult(imported: 0, skipped: 0, errors: ['Failed to read Health Connect data: $e']);
+      return SyncResult(
+          imported: 0,
+          skipped: 0,
+          errors: ['Failed to read Health Connect data: $e']);
     }
 
     debugPrint('[HealthSync] raw data points: ${dataPoints.length}');
     for (final p in dataPoints) {
-      debugPrint('[HealthSync]   point: type=${p.typeString} from=${p.dateFrom} to=${p.dateTo} '
+      debugPrint(
+          '[HealthSync]   point: type=${p.typeString} from=${p.dateFrom} to=${p.dateTo} '
           'value=${p.value.runtimeType} source=${p.sourceName}');
     }
 
@@ -147,7 +171,9 @@ class HealthSyncService {
       return const SyncResult.empty();
     }
 
-    final provider = Platform.isIOS ? IntegrationProviders.healthKit : IntegrationProviders.healthConnect;
+    final provider = Platform.isIOS
+        ? IntegrationProviders.healthKit
+        : IntegrationProviders.healthConnect;
     final prefix = Platform.isIOS ? 'healthkit' : 'healthconnect';
 
     final activities = <ExternalActivityDto>[];
@@ -162,7 +188,8 @@ class HealthSyncService {
         continue;
       }
 
-      final activityType = ActivityTypeMapper.fromHealthConnect(workout.workoutActivityType);
+      final activityType =
+          ActivityTypeMapper.fromHealthConnect(workout.workoutActivityType);
       final distanceKm = workout.totalDistance != null
           ? workout.totalDistance! / 1000.0
           : null;
@@ -190,18 +217,21 @@ class HealthSyncService {
   }
 
   Future<SyncResult> _postBatch(SyncBatchRequest request) async {
-    debugPrint('[HealthSync] posting ${request.activities.length} activities to backend');
+    debugPrint(
+        '[HealthSync] posting ${request.activities.length} activities to backend');
     try {
       final response = await ApiClient.instance.post(
         '/integrations/health/sync',
         data: request.toJson(),
       );
       final result = SyncResult.fromJson(response.data as Map<String, dynamic>);
-      debugPrint('[HealthSync] backend response: imported=${result.imported} skipped=${result.skipped} errors=${result.errors}');
+      debugPrint(
+          '[HealthSync] backend response: imported=${result.imported} skipped=${result.skipped} errors=${result.errors}');
       return result;
     } catch (e) {
       debugPrint('[HealthSync] ERROR posting to backend: $e');
-      return SyncResult(imported: 0, skipped: 0, errors: ['Backend sync failed: $e']);
+      return SyncResult(
+          imported: 0, skipped: 0, errors: ['Backend sync failed: $e']);
     }
   }
 }

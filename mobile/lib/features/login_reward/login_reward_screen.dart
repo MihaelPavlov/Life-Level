@@ -5,6 +5,7 @@ import '../../core/services/level_up_notifier.dart';
 import '../character/providers/character_provider.dart';
 import 'models/login_reward_models.dart';
 import 'providers/login_reward_provider.dart';
+import 'services/login_reward_service.dart';
 
 class LoginRewardScreen extends ConsumerStatefulWidget {
   final VoidCallback onDismiss;
@@ -38,7 +39,7 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
       return const SizedBox.shrink();
     }
 
-    final currentDay = _claimed?.dayInCycle ?? status.dayInCycle;
+    final currentDay = _claimed?.dayInCycle ?? _displayDay(status);
 
     return Material(
       color: Colors.transparent,
@@ -117,9 +118,9 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
                     ),
                     if (status.nextRewardIncludesShield) ...[
                       const SizedBox(height: 8),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text('🛡️', style: TextStyle(fontSize: 18)),
                           SizedBox(width: 6),
                           Text(
@@ -135,9 +136,9 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
                     ],
                     if (status.nextRewardIsXpStorm) ...[
                       const SizedBox(height: 8),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text('⚡', style: TextStyle(fontSize: 18)),
                           SizedBox(width: 6),
                           Text(
@@ -169,9 +170,9 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
                     ),
                     if (_claimed!.includesShield) ...[
                       const SizedBox(height: 8),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text('🛡️', style: TextStyle(fontSize: 18)),
                           SizedBox(width: 6),
                           Text(
@@ -187,9 +188,9 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
                     ],
                     if (_claimed!.isXpStorm) ...[
                       const SizedBox(height: 8),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text('⚡', style: TextStyle(fontSize: 18)),
                           SizedBox(width: 6),
                           Text(
@@ -215,9 +216,8 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
                           ? null
                           : (_claimed != null ? widget.onDismiss : _claim),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _claimed != null
-                            ? AppColors.green
-                            : AppColors.blue,
+                        backgroundColor:
+                            _claimed != null ? AppColors.green : AppColors.blue,
                         disabledBackgroundColor:
                             AppColors.blue.withValues(alpha: 0.5),
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -255,19 +255,37 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
   }
 
   Future<void> _claim() async {
+    if (_claiming || _claimed != null) return;
     setState(() => _claiming = true);
     try {
-      final result =
-          await ref.read(loginRewardServiceProvider).claimReward();
+      final result = await ref.read(loginRewardServiceProvider).claimReward();
       setState(() {
         _claimed = result;
         _claiming = false;
       });
       // Refresh character profile so XP/level updates everywhere.
       ref.invalidate(characterProfileProvider);
+      ref.invalidate(loginRewardStatusProvider);
       // Fire level-up overlay if applicable.
       if (result.leveledUp && result.newLevel != null) {
         LevelUpNotifier.notify(result.newLevel!);
+      }
+    } on LoginRewardAlreadyClaimedException catch (e) {
+      ref.invalidate(characterProfileProvider);
+      ref.invalidate(loginRewardStatusProvider);
+      setState(() => _claiming = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.red),
+        );
+        widget.onDismiss();
+      }
+    } on LoginRewardException catch (e) {
+      setState(() => _claiming = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.red),
+        );
       }
     } catch (e) {
       setState(() => _claiming = false);
@@ -280,6 +298,12 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
         );
       }
     }
+  }
+
+  int _displayDay(LoginRewardStatus status) {
+    final day =
+        status.claimedToday ? status.dayInCycle : (status.dayInCycle % 7) + 1;
+    return day.clamp(1, 7);
   }
 }
 
@@ -313,9 +337,7 @@ class _SevenDayCycle extends StatelessWidget {
                         ? AppColors.blue
                         : AppColors.surfaceElevated,
                 border: Border.all(
-                  color: isToday
-                      ? AppColors.blue
-                      : Colors.transparent,
+                  color: isToday ? AppColors.blue : Colors.transparent,
                   width: 2,
                 ),
                 boxShadow: isToday
