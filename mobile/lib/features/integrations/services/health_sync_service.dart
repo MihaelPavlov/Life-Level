@@ -10,9 +10,13 @@ import '../mappers/activity_type_mapper.dart';
 class HealthSyncService {
   static const _lastSyncKey = 'health_last_sync_ms';
   static const _permissionKey = 'health_permission_granted';
+  static const _stepsPerKm = 1250.0;
+  static const _estimatedStepsPerMinute = 100;
+  static const _minDailyStepsToImport = 100;
 
-  // WORKOUT internally requests READ_EXERCISE_SESSION + READ_DISTANCE + READ_TOTAL_CALORIES_BURNED
-  static const _readTypes = [HealthDataType.WORKOUT];
+  // WORKOUT internally requests READ_EXERCISE_SESSION + READ_DISTANCE + READ_TOTAL_CALORIES_BURNED.
+  // STEPS imports daily movement as Walking activities for internal testing.
+  static const _readTypes = [HealthDataType.WORKOUT, HealthDataType.STEPS];
 
   final _health = Health();
 
@@ -166,11 +170,6 @@ class HealthSyncService {
 
     debugPrint('[HealthSync] filtered workouts: ${workouts.length}');
 
-    if (workouts.isEmpty) {
-      await _saveLastSyncTime(now);
-      return const SyncResult.empty();
-    }
-
     final provider = Platform.isIOS
         ? IntegrationProviders.healthKit
         : IntegrationProviders.healthConnect;
@@ -206,6 +205,11 @@ class HealthSyncService {
       ));
     }
 
+    activities.addAll(await _buildDailyStepActivities(
+      provider: provider,
+      prefix: prefix,
+    ));
+
     if (activities.isEmpty) {
       await _saveLastSyncTime(now);
       return const SyncResult.empty();
@@ -214,6 +218,71 @@ class HealthSyncService {
     final result = await _postBatch(SyncBatchRequest(activities: activities));
     await _saveLastSyncTime(now);
     return result;
+  }
+
+  Future<List<ExternalActivityDto>> _buildDailyStepActivities({
+    required String provider,
+    required String prefix,
+  }) async {
+    final activities = <ExternalActivityDto>[];
+    final localNow = DateTime.now();
+    final firstDay = DateTime(
+      localNow.year,
+      localNow.month,
+      localNow.day,
+    ).subtract(const Duration(days: 6));
+
+    for (var day = firstDay;
+        !day.isAfter(localNow);
+        day = day.add(const Duration(days: 1))) {
+      final start = DateTime(day.year, day.month, day.day);
+      final nextDay = start.add(const Duration(days: 1));
+      final end = nextDay.isAfter(localNow) ? localNow : nextDay;
+      if (!end.isAfter(start)) continue;
+
+      int? steps;
+      try {
+        steps = await _health.getTotalStepsInInterval(
+          start,
+          end,
+          includeManualEntry: false,
+        );
+      } catch (e) {
+        debugPrint('[HealthSync] ERROR reading steps for $start: $e');
+        continue;
+      }
+
+      final totalSteps = steps ?? 0;
+      if (totalSteps < _minDailyStepsToImport) {
+        debugPrint('[HealthSync] skipping daily steps $start: $totalSteps');
+        continue;
+      }
+
+      final dateKey = _dateKey(start);
+      final distanceKm = totalSteps / _stepsPerKm;
+      final durationMinutes =
+          (totalSteps / _estimatedStepsPerMinute).round().clamp(10, 240);
+
+      debugPrint('[HealthSync] daily steps $dateKey: steps=$totalSteps '
+          'distanceKm=$distanceKm duration=$durationMinutes');
+
+      activities.add(ExternalActivityDto(
+        provider: provider,
+        externalId: '$prefix:steps:$dateKey',
+        activityType: 'Walking',
+        durationMinutes: durationMinutes,
+        distanceKm: distanceKm,
+        performedAt: start.toUtc(),
+      ));
+    }
+
+    return activities;
+  }
+
+  String _dateKey(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
   }
 
   Future<SyncResult> _postBatch(SyncBatchRequest request) async {

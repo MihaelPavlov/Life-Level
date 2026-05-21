@@ -109,6 +109,8 @@ Priority guide:
 
 ## Retest Queue
 
+- [ ] 1.0.0+5 - Connect Health Connect with Steps permission and confirm daily steps import as Walking activity.
+- [ ] 1.0.0+5 - Confirm repeated Health Connect sync skips already-imported step days.
 - [ ] 1.0.0+4 - Confirm First Quest / tutorial intro fits on the test phone.
 - [ ] 1.0.0+4 - Claim Day 1 login reward after registration.
 - [ ] 1.0.0+4 - Open Health Connect, grant permissions, return to app, confirm it shows connected.

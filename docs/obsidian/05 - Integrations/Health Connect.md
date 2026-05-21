@@ -54,6 +54,8 @@ In `android/app/src/main/AndroidManifest.xml`:
 
 ## Sync flow
 
+Current implementation also imports daily steps for internal Android testing. It reads the last 7 local days from Health Connect, converts days with at least 1,000 steps into `Walking` activities, and deduplicates them with IDs like `healthconnect:steps:YYYY-MM-DD`.
+
 `HealthSyncService.syncRecentWorkouts()`:
 
 1. Read `lastSyncTime` from `SharedPreferences` key `health_last_sync_ms`.

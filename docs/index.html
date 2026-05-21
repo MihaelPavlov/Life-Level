@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Life-Level - Real Activity. Game Progress.</title>
+  <meta name="description" content="Life-Level turns real-world activity into character progress, quests, streaks, map travel, bosses, and rewards. Train in the real world. Progress in a game world.">
+  <meta property="og:title" content="Life-Level">
+  <meta property="og:description" content="Train in the real world. Progress in a game world.">
+  <meta property="og:image" content="assets/feature-graphic-1024x500.png">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/logo.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #040810;
+      --bg-alt: #080e14;
+      --surface: #161b22;
+      --surface-2: #1e2632;
+      --text: #e6edf3;
+      --muted: #9aa8bd;
+      --soft: #6f7f95;
+      --line: #30363d;
+      --blue: #4f9eff;
+      --purple: #a371f7;
+      --orange: #f5a623;
+      --red: #f85149;
+      --green: #3fb950;
+      --max: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(4, 8, 16, 0.78);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 68px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #06111f;
+      font-size: 12px;
+      font-weight: 900;
+      background:
+        radial-gradient(circle at 50% 36%, #fff4a8 0 9%, transparent 10%),
+        linear-gradient(135deg, #5ee6a8 0%, #4f9eff 46%, #f5a623 100%);
+      box-shadow: 0 0 18px rgba(79, 158, 255, 0.36);
+      flex: 0 0 auto;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-cta {
+      padding: 10px 14px;
+      border: 1px solid rgba(79, 158, 255, 0.55);
+      border-radius: 8px;
+      color: var(--text);
+      background: rgba(79, 158, 255, 0.14);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: grid;
+      align-items: end;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 72% 28%, rgba(79, 158, 255, 0.18), transparent 34rem),
+        radial-gradient(circle at 18% 68%, rgba(63, 185, 80, 0.09), transparent 28rem),
+        #050914;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(90deg, transparent, black 18%, black 82%, transparent);
+      opacity: 0.28;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 34%;
+      z-index: -1;
+      background: linear-gradient(0deg, var(--bg) 0%, rgba(4, 8, 16, 0) 100%);
+    }
+
+    .hero-inner {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 132px 0 82px;
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.98fr);
+      gap: clamp(36px, 6vw, 78px);
+      align-items: center;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: clamp(360px, 44vw, 560px);
+      margin: 0;
+      overflow: hidden;
+      align-self: stretch;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(79, 158, 255, 0.24), transparent 32%),
+        radial-gradient(circle at 50% 76%, rgba(63, 185, 80, 0.18), transparent 38%),
+        rgba(3, 6, 13, 0.78);
+      box-shadow: -32px 36px 90px rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      place-items: center;
+    }
+
+    .hero-visual::before {
+      content: "";
+      position: absolute;
+      width: 72%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(79, 158, 255, 0.28);
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(circle, black 54%, transparent 72%);
+      opacity: 0.9;
+    }
+
+    .hero-visual::after {
+      content: "";
+      position: absolute;
+      width: 64%;
+      height: 16%;
+      bottom: 16%;
+      border-radius: 999px;
+      background: rgba(79, 158, 255, 0.11);
+      filter: blur(18px);
+    }
+
+    .progress-emblem {
+      position: relative;
+      z-index: 2;
+      width: min(330px, 70%);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .progress-emblem .ring {
+      position: absolute;
+      inset: 6%;
+      border-radius: 999px;
+      border: 2px solid rgba(79, 158, 255, 0.42);
+      box-shadow:
+        inset 0 0 34px rgba(79, 158, 255, 0.12),
+        0 0 42px rgba(79, 158, 255, 0.15);
+    }
+
+    .progress-emblem .ring.two {
+      inset: 20%;
+      border-color: rgba(63, 185, 80, 0.34);
+      transform: rotate(18deg);
+    }
+
+    .progress-emblem .path {
+      position: absolute;
+      width: 26%;
+      height: 70%;
+      bottom: 11%;
+      clip-path: polygon(50% 0, 83% 100%, 50% 86%, 17% 100%);
+      background: linear-gradient(180deg, #fff4a8 0%, #f5a623 36%, #4f9eff 100%);
+      box-shadow: 0 0 34px rgba(245, 166, 35, 0.36);
+    }
+
+    .progress-emblem .crystal {
+      position: absolute;
+      top: 16%;
+      width: 31%;
+      aspect-ratio: 0.78;
+      clip-path: polygon(50% 0, 92% 28%, 73% 100%, 27% 100%, 8% 28%);
+      background: linear-gradient(135deg, #7fd4ff 0%, #4f9eff 36%, #a371f7 100%);
+      box-shadow: 0 0 40px rgba(79, 158, 255, 0.58);
+    }
+
+    .progress-emblem .node {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #dff3ff;
+      font-size: 20px;
+      font-weight: 900;
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+    }
+
+    .progress-emblem .node:nth-child(5) {
+      left: 2%;
+      bottom: 23%;
+      color: var(--green);
+    }
+
+    .progress-emblem .node:nth-child(6) {
+      right: 2%;
+      bottom: 23%;
+      color: var(--orange);
+    }
+
+    .progress-emblem .node:nth-child(7) {
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      color: var(--blue);
+    }
+
+    .hero-visual-caption {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 24px;
+      pointer-events: none;
+      z-index: 3;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 18px;
+      color: #9dccff;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-kicker::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 20px rgba(63, 185, 80, 0.85);
+    }
+
+    h1 {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(52px, 10vw, 116px);
+      line-height: 0.9;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 620px;
+      margin: 26px 0 0;
+      color: #d9e7f7;
+      font-size: clamp(19px, 2.4vw, 28px);
+      line-height: 1.25;
+      font-weight: 650;
+    }
+
+    .hero-subcopy {
+      max-width: 590px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-weight: 800;
+    }
+
+    .button-primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #04111f;
+    }
+
+    .button-secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .section {
+      padding: 84px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .section.alt {
+      background:
+        linear-gradient(180deg, rgba(79, 158, 255, 0.05), transparent 42%),
+        var(--bg-alt);
+    }
+
+    .wrap {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .section-heading {
+      max-width: 760px;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 690px;
+    }
+
+    .loop {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      counter-reset: step;
+    }
+
+    .step,
+    .feature,
+    .trust-item {
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      background: rgba(22, 27, 34, 0.82);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .step {
+      min-height: 210px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: "0" counter(step);
+      display: block;
+      color: rgba(79, 158, 255, 0.72);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 38px;
+    }
+
+    .step h3,
+    .feature h3,
+    .trust-item h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .step p,
+    .feature p,
+    .trust-item p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .identity-band {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .identity-copy {
+      max-width: 520px;
+    }
+
+    .identity-copy p {
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .stat-wall {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .stat {
+      min-height: 156px;
+      padding: 18px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(30, 38, 50, 0.76);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stat strong {
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .stat span {
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stat:nth-child(1) strong { color: var(--red); }
+    .stat:nth-child(2) strong { color: var(--blue); }
+    .stat:nth-child(3) strong { color: var(--green); }
+    .stat:nth-child(4) strong { color: var(--purple); }
+    .stat:nth-child(5) strong { color: var(--orange); }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .feature {
+      min-height: 190px;
+      padding: 22px;
+    }
+
+    .feature-mark {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 22px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(79, 158, 255, 0.95), rgba(163, 113, 247, 0.9));
+    }
+
+    .feature:nth-child(2) .feature-mark { background: linear-gradient(135deg, var(--green), var(--blue)); }
+    .feature:nth-child(3) .feature-mark { background: linear-gradient(135deg, var(--orange), var(--red)); }
+    .feature:nth-child(4) .feature-mark { background: linear-gradient(135deg, var(--purple), var(--orange)); }
+    .feature:nth-child(5) .feature-mark { background: linear-gradient(135deg, var(--red), var(--purple)); }
+    .feature:nth-child(6) .feature-mark { background: linear-gradient(135deg, var(--green), var(--orange)); }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .trust-item {
+      padding: 22px;
+      min-height: 164px;
+    }
+
+    .cta-band {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+      padding: 34px;
+      border: 1px solid rgba(79, 158, 255, 0.22);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(79, 158, 255, 0.14), rgba(245, 166, 35, 0.08)),
+        rgba(22, 27, 34, 0.82);
+    }
+
+    .cta-band h2 {
+      font-size: clamp(28px, 4vw, 42px);
+    }
+
+    .cta-band p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 650px;
+    }
+
+    .footer {
+      padding: 34px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: #03060d;
+      color: var(--soft);
+      font-size: 14px;
+    }
+
+    .footer-inner {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer a {
+      color: var(--muted);
+    }
+
+    .footer a:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 860px) {
+      .nav {
+        min-height: 62px;
+      }
+
+      .nav-links a:not(.nav-cta) {
+        display: none;
+      }
+
+      .hero {
+        min-height: auto;
+      }
+
+      .hero-inner {
+        padding: 98px 0 58px;
+        grid-template-columns: 1fr;
+      }
+
+      .hero-visual {
+        order: -1;
+        min-height: clamp(260px, 64vw, 430px);
+        border-radius: 18px;
+      }
+
+      .progress-emblem .node {
+        width: 44px;
+        height: 44px;
+        font-size: 17px;
+      }
+
+      .loop,
+      .feature-grid,
+      .trust-grid,
+      .identity-band,
+      .cta-band {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-wall {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stat:last-child {
+        grid-column: 1 / -1;
+      }
+
+      .section {
+        padding: 64px 0;
+      }
+
+      .cta-band {
+        padding: 24px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .brand span {
+        font-size: 16px;
+      }
+
+      .nav-cta {
+        padding: 9px 11px;
+      }
+
+      .hero-inner {
+        padding-top: 84px;
+      }
+
+      .actions,
+      .button {
+        width: 100%;
+      }
+
+      .stat-wall {
+        grid-template-columns: 1fr;
+      }
+
+      .stat:last-child {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="Life-Level home">
+        <span class="brand-mark" aria-hidden="true">LL</span>
+        <span>Life-Level</span>
+      </a>
+      <div class="nav-links">
+        <a href="#loop">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#data">Data</a>
+        <a class="nav-cta" href="mailto:m.pavlov1405@gmail.com?subject=Life-Level%20Android%20test%20access">Test access</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <p class="hero-kicker">Real activity. Game progress.</p>
+          <h1 id="hero-title">Life-Level</h1>
+          <p class="hero-copy">Train in the real world. Progress in a game world.</p>
+          <p class="hero-subcopy">
+            Every run, ride, lift, walk, swim, hike, climb, or yoga session can become XP,
+            stat growth, quests, map travel, boss damage, and rewards.
+          </p>
+          <div class="actions" aria-label="Primary actions">
+            <a class="button button-primary" href="mailto:m.pavlov1405@gmail.com?subject=Life-Level%20Android%20test%20access">Request Android test access</a>
+            <a class="button button-secondary" href="https://mpavlov9905.github.io/life-level/privacy/">Read privacy policy</a>
+          </div>
+        </div>
+        <figure class="hero-visual" aria-label="Life-Level progression artwork">
+          <div class="progress-emblem" aria-hidden="true">
+            <span class="ring"></span>
+            <span class="ring two"></span>
+            <span class="path"></span>
+            <span class="crystal"></span>
+            <span class="node">XP</span>
+            <span class="node">LV</span>
+            <span class="node">Q</span>
+          </div>
+          <figcaption class="hero-visual-caption">Activity becomes XP, quests, map travel, and rewards.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="loop">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">The loop</p>
+          <h2>Your workout becomes a character people can see.</h2>
+          <p class="lead">
+            Life-Level rewards effort you already put in. The progress is not just a graph.
+            It becomes a profile, a rank, a world, and a record of what you earned.
+          </p>
+        </div>
+        <div class="loop">
+          <article class="step">
+            <h3>Log or sync activity</h3>
+            <p>Use manual logging or supported integrations to bring real activity into the app.</p>
+          </article>
+          <article class="step">
+            <h3>Gain XP and stats</h3>
+            <p>Activities strengthen your character across STR, END, AGI, FLX, and STA.</p>
+          </article>
+          <article class="step">
+            <h3>Clear quests</h3>
+            <p>Daily, weekly, and special goals turn consistency into visible progress.</p>
+          </article>
+          <article class="step">
+            <h3>Move through the world</h3>
+            <p>Distance carries your character across zones, encounters, bosses, and rewards.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="wrap identity-band">
+        <div class="identity-copy">
+          <p class="eyebrow">The difference</p>
+          <h2>Not another dashboard for numbers.</h2>
+          <p>
+            Life-Level is built around identity. Your activity does not disappear into charts.
+            It becomes levels, titles, equipment, achievements, map progress, and the story
+            of a character that gets stronger because you did.
+          </p>
+        </div>
+        <div class="stat-wall" aria-label="Life-Level character stats">
+          <div class="stat"><strong>STR</strong><span>Gym, climbing, power</span></div>
+          <div class="stat"><strong>END</strong><span>Runs, rides, long effort</span></div>
+          <div class="stat"><strong>AGI</strong><span>Movement, pace, variety</span></div>
+          <div class="stat"><strong>FLX</strong><span>Yoga, mobility, balance</span></div>
+          <div class="stat"><strong>STA</strong><span>Consistency and stamina</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">Features</p>
+          <h2>Progression deep enough to keep mattering.</h2>
+          <p class="lead">
+            The core game is solo-friendly now, with social systems planned as the world grows.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature">
+            <div class="feature-mark" aria-hidden="true"></div>
+            <h3>Character progression</h3>
+            <p>Level up, earn ranks, grow stats, equip titles, and make progress feel owned.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-mark" aria-hidden="true"></div>
+            <h3>Quests and streaks</h3>
+            <p>Daily, weekly, and special objectives give each session a reason to exist.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-mark" aria-hidden="true"></div>
+            <h3>Adventure map</h3>
+            <p>Real distance moves you through zones, paths, encounters, and discoveries.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-mark" aria-hidden="true"></div>
+            <h3>Bosses and rewards</h3>
+            <p>Activities deal damage, wins drop items, and achievements become identity.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-mark" aria-hidden="true"></div>
+            <h3>Multiple activity types</h3>
+            <p>Running, cycling, gym, yoga, swimming, hiking, walking, and climbing all count.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-mark" aria-hidden="true"></div>
+            <h3>Fair progression</h3>
+            <p>No pay-to-win direction. Premium plans stay cosmetic or convenience-focused.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="data">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">Data and trust</p>
+          <h2>Your activity data should have a clear purpose.</h2>
+          <p class="lead">
+            Life-Level uses activity data only to power in-app progress, rewards, and gameplay.
+            You choose which supported services to connect.
+          </p>
+        </div>
+        <div class="trust-grid">
+          <article class="trust-item">
+            <h3>Health Connect</h3>
+            <p>Android users can authorize supported activity data such as steps and workouts.</p>
+          </article>
+          <article class="trust-item">
+            <h3>Fitness services</h3>
+            <p>Strava support is built for activity sync, with Garmin support in progress.</p>
+          </article>
+          <article class="trust-item">
+            <h3>Not medical software</h3>
+            <p>Life-Level is not a medical device and does not diagnose, treat, cure, or prevent any medical condition.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <p class="eyebrow">Android internal testing</p>
+            <h2>Start with one real session.</h2>
+            <p>
+              Life-Level is being tested on Android first. Ask for access, install the test build,
+              and let the next walk or workout move your character forward.
+            </p>
+          </div>
+          <a class="button button-primary" href="mailto:m.pavlov1405@gmail.com?subject=Life-Level%20Android%20test%20access">Request access</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>Copyright 2026 Life-Level. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="https://mpavlov9905.github.io/life-level/privacy/">Privacy Policy</a>
+        <a href="mailto:m.pavlov1405@gmail.com">Support</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
