@@ -23,6 +23,27 @@ class HomeStreakStrip extends ConsumerWidget {
 
     final today = DateTime.now();
     final dayIndex = today.weekday - 1; // 0 = Mon, 6 = Sun
+    final todayDate = DateUtils.dateOnly(today);
+    final startOfWeek = today.subtract(Duration(days: dayIndex));
+
+    // Use lastActivityDate + currentStreak to determine which calendar days
+    // were active — avoids broken week-position math.
+    final lastActivity = streak?.lastActivityDate?.toLocal();
+    final lastActivityDate =
+        lastActivity != null ? DateUtils.dateOnly(lastActivity) : null;
+
+    bool isActiveDay(DateTime dayDate) {
+      if (lastActivityDate == null || currentStreak == 0) return false;
+      final first =
+          lastActivityDate.subtract(Duration(days: currentStreak - 1));
+      return !dayDate.isBefore(first) && !dayDate.isAfter(lastActivityDate);
+    }
+
+    // Days from the active streak window that fall before this week's Monday.
+    final visibleActiveDays =
+        currentStreak > 0 ? (dayIndex + 1).clamp(0, currentStreak) : 0;
+    final hiddenDays =
+        (currentStreak - visibleActiveDays).clamp(0, currentStreak);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -41,25 +62,30 @@ class HomeStreakStrip extends ConsumerWidget {
             const SizedBox(width: 10),
             Container(width: 1, height: 22, color: kHBorderSoft),
             const SizedBox(width: 10),
+            if (hiddenDays > 0) ...[
+              _OverflowBadge(count: hiddenDays),
+              const SizedBox(width: 6),
+            ],
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(7, (i) {
-                  final daysAgo = dayIndex - i;
-                  final isToday = i == dayIndex;
-                  final isFuture = i > dayIndex;
+                  final dayDate = DateUtils.dateOnly(
+                      startOfWeek.add(Duration(days: i)));
+                  final isToday = dayDate == todayDate;
+                  final isFuture = dayDate.isAfter(todayDate);
+                  final active = isActiveDay(dayDate);
                   final isShieldedToday = isToday && shieldUsedToday;
 
                   HomeStreakDotState state;
                   if (isShieldedToday) {
                     state = HomeStreakDotState.shield;
-                  } else if (isToday && currentStreak > 0) {
-                    state = HomeStreakDotState.today;
-                  } else if (!isFuture && daysAgo <= currentStreak - 1 && !isToday) {
+                  } else if (isToday && active) {
                     state = HomeStreakDotState.done;
                   } else if (isToday) {
-                    // Today with no streak activity yet — show as future/pending
-                    state = HomeStreakDotState.future;
+                    state = HomeStreakDotState.today;
+                  } else if (!isFuture && active) {
+                    state = HomeStreakDotState.done;
                   } else {
                     state = HomeStreakDotState.future;
                   }
@@ -87,11 +113,9 @@ class _Flame extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('\uD83D\uDD25', style: TextStyle(fontSize: 14)),
+        const Text('🔥', style: TextStyle(fontSize: 14)),
         const SizedBox(width: 4),
         Text(
-          // Friendly zero-state: "Start today" instead of a bare "0" that
-          // looks broken when the user hasn't logged an activity yet.
           current == 0 ? 'Start today' : '$current',
           style: const TextStyle(
             fontSize: 11,
@@ -100,6 +124,28 @@ class _Flame extends StatelessWidget {
             color: AppColors.orange,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _OverflowBadge extends StatelessWidget {
+  final int count;
+  const _OverflowBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(
+      fontSize: 7,
+      fontWeight: FontWeight.w800,
+      color: AppColors.orange,
+      height: 1.2,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('···', style: style),
+        Text('+$count', style: style),
       ],
     );
   }

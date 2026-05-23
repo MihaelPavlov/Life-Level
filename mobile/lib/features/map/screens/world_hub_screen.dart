@@ -187,27 +187,6 @@ class _HubHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (onClose != null) ...[
-          GestureDetector(
-            onTap: onClose,
-            child: Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Text('‹',
-                  style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600)),
-            ),
-          ),
-          const SizedBox(width: 10),
-        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

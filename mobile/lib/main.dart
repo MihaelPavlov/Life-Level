@@ -14,12 +14,11 @@ final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Firebase web config isn't wired; skip Firebase init in Chrome so the app
-  // still boots for admin/preview work. Push notifications only run on mobile.
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // Background message handler runs in a separate isolate — web doesn't support it.
   if (!kIsWeb) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
   runApp(const ProviderScope(child: LifeLevelApp()));

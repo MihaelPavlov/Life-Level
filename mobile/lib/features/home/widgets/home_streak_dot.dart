@@ -27,13 +27,13 @@ class HomeStreakDot extends StatelessWidget {
         bg = AppColors.green;
         border = AppColors.green;
         textColor = const Color(0xFF0b1a12);
-        glyph = '\u2713'; // ✓
+        glyph = '✓'; // ✓
         labelColor = kHTextMuted;
       case HomeStreakDotState.today:
         bg = AppColors.orange.withValues(alpha: 0.15);
         border = AppColors.orange;
         textColor = AppColors.orange;
-        glyph = '\u25CF'; // ●
+        glyph = '●'; // ●
         labelColor = AppColors.orange;
       case HomeStreakDotState.future:
         bg = Colors.transparent;
@@ -45,7 +45,7 @@ class HomeStreakDot extends StatelessWidget {
         bg = AppColors.purple.withValues(alpha: 0.12);
         border = AppColors.purple;
         textColor = AppColors.purple;
-        glyph = '\uD83D\uDEE1'; // 🛡
+        glyph = '🛡'; // 🛡
         labelColor = kHTextMuted;
     }
 

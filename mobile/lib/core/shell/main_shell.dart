@@ -15,6 +15,7 @@ import '../services/dungeon_floor_cleared_notifier.dart';
 import '../services/level_up_notifier.dart';
 import '../services/item_obtained_notifier.dart';
 import '../services/inventory_full_notifier.dart';
+import '../services/notification_banner_notifier.dart';
 import '../widgets/boss_defeated_overlay.dart';
 import '../widgets/dungeon_floor_cleared_overlay.dart';
 import '../widgets/level_up_overlay.dart';
@@ -46,6 +47,7 @@ import '../../features/tutorial/providers/tutorial_provider.dart';
 import '../../features/tutorial/widgets/tutorial_overlay.dart';
 import '../../features/tutorial/screens/tutorial_intro_screen.dart';
 import '../../features/tutorial/screens/tutorial_outro_screen.dart';
+
 
 // ── shell ─────────────────────────────────────────────────────────────────────
 class MainShell extends ConsumerStatefulWidget {
@@ -112,6 +114,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<BossOpenIntent> _bossOverlaySub;
   late final StreamSubscription<BossDefeatedInfo> _bossDefeatedSub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
+  late final StreamSubscription<NotificationBannerPayload> _notificationBannerSub;
 
   final _fabKey = GlobalKey();
   final _mapNavKey = GlobalKey();
@@ -294,6 +297,41 @@ class _MainShellState extends ConsumerState<MainShell>
     // stays in one place (see DeepLinkNotifier + NotificationsService).
     _deepLinkNotifierSub = DeepLinkNotifier.stream.listen(_handleDeepLink);
 
+    // Foreground push notification banners — shown as a floating SnackBar
+    // while the user is already inside the app.
+    _notificationBannerSub =
+        NotificationBannerNotifier.stream.listen((payload) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                payload.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              if (payload.body.isNotEmpty)
+                Text(
+                  payload.body,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1e2632),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    });
+
     // LL-035: attach once to the tutorial controller so intro/outro modals
     // are pushed as routes whenever the controller state requests them.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -353,13 +391,75 @@ class _MainShellState extends ConsumerState<MainShell>
   }
 
   void _handleDeepLink(Uri uri) {
-    if (uri.scheme != 'lifelevel' || uri.host != 'oauth') return;
-    final code = uri.queryParameters['code'];
-    if (code == null || !mounted) return;
-    if (uri.pathSegments.contains('strava')) {
-      if (_oauthCallbackHandled) return;
-      _oauthCallbackHandled = true;
-      _handleStravaCallback(code);
+    if (uri.scheme != 'lifelevel') return;
+    if (!mounted) return;
+
+    // ── OAuth callback (Strava) — keep existing behaviour intact ──────────
+    if (uri.host == 'oauth') {
+      final code = uri.queryParameters['code'];
+      if (code == null) return;
+      if (uri.pathSegments.contains('strava')) {
+        if (_oauthCallbackHandled) return;
+        _oauthCallbackHandled = true;
+        _handleStravaCallback(code);
+      }
+      return;
+    }
+
+    // ── Notification deep links ────────────────────────────────────────────
+    switch (uri.host) {
+      case 'home':
+        final navIndex = _navIds.indexOf('home');
+        if (navIndex != -1) {
+          setState(() {
+            _tabIndex = navIndex;
+            _worldOpen = false;
+            _titlesOpen = false;
+            _bossOpen = false;
+          });
+        }
+
+      case 'quests':
+        final navIndex = _navIds.indexOf('quests');
+        if (navIndex != -1) {
+          setState(() {
+            _tabIndex = navIndex;
+            _worldOpen = false;
+            _titlesOpen = false;
+            _bossOpen = false;
+          });
+        }
+
+      case 'boss':
+        setState(() {
+          _radialOpen = false;
+          _worldOpen = false;
+          _titlesOpen = false;
+          _bossOpen = true;
+        });
+
+      case 'map':
+      case 'world':
+        WorldZoneRefreshNotifier.notify();
+        final navIndex = _navIds.indexOf('world');
+        setState(() {
+          if (navIndex != -1) _tabIndex = navIndex;
+          _pendingOnZoneSelected = null;
+          _worldOpen = true;
+          _titlesOpen = false;
+          _bossOpen = false;
+        });
+
+      case 'profile':
+        final navIndex = _navIds.indexOf('profile');
+        if (navIndex != -1) {
+          setState(() {
+            _tabIndex = navIndex;
+            _worldOpen = false;
+            _titlesOpen = false;
+            _bossOpen = false;
+          });
+        }
     }
   }
 
@@ -398,6 +498,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _connectivitySub.cancel();
     _deepLinkSub?.cancel();
     _deepLinkNotifierSub.cancel();
+    _notificationBannerSub.cancel();
     _hintTimer?.cancel();
     _openCtrl.dispose();
     _snapCtrl.dispose();
@@ -722,10 +823,15 @@ class _MainShellState extends ConsumerState<MainShell>
   void _onRingItemTap(String id) {
     _closeRadial();
     if (id == 'world') {
-      setState(() {
-        _pendingOnZoneSelected = null;
-        _worldOpen = true;
-      });
+      final navIndex = _navIds.indexOf('world');
+      if (navIndex != -1) {
+        setState(() => _tabIndex = navIndex);
+      } else {
+        setState(() {
+          _pendingOnZoneSelected = null;
+          _worldOpen = true;
+        });
+      }
       return;
     }
     if (id == 'titles') {

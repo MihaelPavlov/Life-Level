@@ -172,6 +172,81 @@ class BossScreenState extends ConsumerState<BossScreen> {
   }
 
   Widget _buildList(List<BossListItem> bosses) {
+    if (bosses.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => ref.read(bossListProvider.notifier).refresh(),
+        color: AppColors.red,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: 520,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 36),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🗺️', style: TextStyle(fontSize: 64)),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'No boss encounters yet',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Your next boss isn\'t far. Explore the world map to unlock zone bosses and start your first encounter.',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            colors: [AppColors.blue, Color(0xFF3578cc)],
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: _goToMap,
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              child: Text(
+                                '🗺️  Open World Map',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final active = bosses.where((b) => b.isActive).toList();
     final defeated = bosses.where((b) => b.isDefeated).toList();
     final expired = bosses.where((b) => b.isExpired && !b.isDefeated).toList();

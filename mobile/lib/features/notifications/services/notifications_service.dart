@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/services/deep_link_notifier.dart';
+import '../../../core/services/notification_banner_notifier.dart';
 import '../models/notification_models.dart';
 
 /// Top-level background message handler.
@@ -45,12 +46,16 @@ class NotificationsService {
   /// platform does not support FCM).
   String? get cachedToken => _cachedToken;
 
+  // VAPID key for web push (Firebase Console → Cloud Messaging → Web Push certificates).
+  static const _webVapidKey = 'BB1aBzIAaah-JVNe9NXjCBub-lq4fZhjZ_tJYx27xWizE0xJ5fTKBd4HIZeEMh4IUhSro5HUiMdGUuVoum8kHcA';
+
   /// Fetches the current FCM token, caching it after the first call.
   Future<String?> getToken() async {
     if (_cachedToken != null) return _cachedToken;
-    if (kIsWeb) return null;
     try {
-      _cachedToken = await FirebaseMessaging.instance.getToken();
+      _cachedToken = await FirebaseMessaging.instance.getToken(
+        vapidKey: kIsWeb ? _webVapidKey : null,
+      );
       return _cachedToken;
     } catch (e) {
       debugPrint('[NotificationsService] getToken failed: $e');
@@ -68,10 +73,6 @@ class NotificationsService {
   Future<bool> initialize(WidgetRef? ref) async {
     if (_initialized) return true;
     _initialized = true;
-
-    // No FCM on web (Firebase not wired). Silent no-op so the rest of the
-    // app boots normally in Chrome for admin/preview work.
-    if (kIsWeb) return false;
 
     try {
       final messaging = FirebaseMessaging.instance;
@@ -95,6 +96,15 @@ class NotificationsService {
         // the status can be reported as `notDetermined` in some rare cases.
       }
 
+      // iOS only — web/Android handle foreground presentation differently.
+      if (!kIsWeb && Platform.isIOS) {
+        await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+
       final token = await getToken();
       if (token != null) {
         await _registerTokenWithBackend(token);
@@ -108,11 +118,15 @@ class NotificationsService {
       });
 
       _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
-        // v1: just log. In-app banner is a separate ticket.
         debugPrint(
           '[NotificationsService] foreground message: '
           'id=${message.messageId} data=${message.data}',
         );
+        final title = message.notification?.title ?? message.data['title'];
+        final body  = message.notification?.body  ?? message.data['body'];
+        if (title != null) {
+          NotificationBannerNotifier.notify(title, body ?? '');
+        }
       });
 
       _openedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {

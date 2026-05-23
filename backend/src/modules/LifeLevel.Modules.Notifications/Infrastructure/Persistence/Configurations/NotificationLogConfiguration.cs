@@ -14,6 +14,8 @@ public class NotificationLogConfiguration : IEntityTypeConfiguration<Notificatio
         entity.Property(l => l.Body).IsRequired().HasMaxLength(1024);
         entity.Property(l => l.Outcome).HasConversion<string>().HasMaxLength(32);
         entity.Property(l => l.ErrorMessage).HasMaxLength(1024);
+        entity.Property(l => l.IsRead).IsRequired();
+        entity.Property(l => l.ReadAt).IsRequired(false);
         // Composite index for the daily-cap count query: (UserId, SentAt).
         entity.HasIndex(l => new { l.UserId, l.SentAt });
         // Cross-module FK (NotificationLog.UserId → User) configured in AppDbContext.

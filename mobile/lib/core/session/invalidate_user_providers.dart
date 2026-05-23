@@ -7,6 +7,7 @@ import '../../features/boss/providers/boss_provider.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/items/providers/items_provider.dart';
+import '../../features/notifications/services/notifications_service.dart';
 import '../../features/quests/providers/quest_provider.dart';
 import '../../features/streak/providers/streak_provider.dart';
 
@@ -48,6 +49,10 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
 Future<void> performLogout(BuildContext context) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final navigator = Navigator.of(context, rootNavigator: true);
+  final fcmToken = NotificationsService.instance.cachedToken;
+  if (fcmToken != null) {
+    await NotificationsService.instance.unregister(fcmToken);
+  }
   await ApiClient.clearToken();
   navigator.pushAndRemoveUntil(
     MaterialPageRoute(builder: (_) => const LoginScreen()),

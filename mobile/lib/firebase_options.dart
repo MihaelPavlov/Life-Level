@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -49,6 +46,16 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyC6CEa41xuKE9Cc7RT9vFoIS3F3xJbZZpc',
+    appId: '1:734427785844:web:8a18ad08a59a403fd0ff21',
+    messagingSenderId: '734427785844',
+    projectId: 'life-level-ae77f',
+    storageBucket: 'life-level-ae77f.firebasestorage.app',
+    authDomain: 'life-level-ae77f.firebaseapp.com',
+    measurementId: 'G-D4X5H6Q331',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA60sMTUhoOpqQ-jsZfCXa2QE3SbL4e2Q0',
     appId: '1:734427785844:android:395822710ee235c6d0ff21',
@@ -63,6 +70,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '734427785844',
     projectId: 'life-level-ae77f',
     storageBucket: 'life-level-ae77f.firebasestorage.app',
-    iosBundleId: 'com.example.lifeLevel',
+    iosBundleId: 'com.lifelevel.app',
   );
 }

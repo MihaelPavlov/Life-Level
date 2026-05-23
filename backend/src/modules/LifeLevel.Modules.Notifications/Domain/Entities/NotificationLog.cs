@@ -18,4 +18,12 @@ public class NotificationLog
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
     public NotificationOutcome Outcome { get; set; }
     public string? ErrorMessage { get; set; }
+    public bool IsRead { get; private set; } = false;
+    public DateTime? ReadAt { get; private set; }
+
+    public void MarkRead()
+    {
+        IsRead = true;
+        ReadAt = DateTime.UtcNow;
+    }
 }

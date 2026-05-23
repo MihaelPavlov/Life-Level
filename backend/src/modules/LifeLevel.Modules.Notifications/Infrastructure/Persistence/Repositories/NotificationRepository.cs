@@ -45,6 +45,25 @@ public class NotificationRepository(DbContext db) : INotificationRepository
         await db.Set<NotificationLog>().AddAsync(log, ct);
     }
 
+    public Task<List<NotificationLog>> GetForUserAsync(Guid userId, int limit, CancellationToken ct = default) =>
+        db.Set<NotificationLog>()
+            .Where(l => l.UserId == userId && l.Outcome == NotificationOutcome.Sent)
+            .OrderByDescending(l => l.SentAt)
+            .Take(limit)
+            .ToListAsync(ct);
+
+    public async Task MarkAllReadAsync(Guid userId, CancellationToken ct = default)
+    {
+        var unread = await db.Set<NotificationLog>()
+            .Where(l => l.UserId == userId && !l.IsRead)
+            .ToListAsync(ct);
+
+        foreach (var log in unread)
+            log.MarkRead();
+
+        await db.SaveChangesAsync(ct);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);
 }

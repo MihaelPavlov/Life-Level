@@ -8,7 +8,7 @@ import '../../features/auth/login_screen.dart';
 class ApiClient {
   static const _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:5128/api',
+    defaultValue: 'http://10.0.2.2:5128/api',
   );
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),

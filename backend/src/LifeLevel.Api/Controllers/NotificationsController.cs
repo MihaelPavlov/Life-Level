@@ -36,4 +36,27 @@ public class NotificationsController(
         await notifications.UnregisterTokenAsync(req.Token, ct);
         return NoContent();
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetNotifications(CancellationToken ct)
+    {
+        var logs = await notifications.GetNotificationsAsync(userContext.UserId, ct);
+        var dtos = logs.Select(l => new NotificationItemDto(
+            l.Id,
+            l.Title,
+            l.Body,
+            l.Category,
+            null,
+            l.SentAt,
+            l.IsRead
+        )).ToList();
+        return Ok(dtos);
+    }
+
+    [HttpPost("mark-all-read")]
+    public async Task<IActionResult> MarkAllRead(CancellationToken ct)
+    {
+        await notifications.MarkAllReadAsync(userContext.UserId, ct);
+        return NoContent();
+    }
 }

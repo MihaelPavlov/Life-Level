@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LifeLevel.SharedKernel\LifeLevel.SharedKernel.csproj" />
     <ProjectReference Include="..\LifeLevel.Modules.Streak\LifeLevel.Modules.Streak.csproj" />
+    <ProjectReference Include="..\LifeLevel.Modules.Quest\LifeLevel.Modules.Quest.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />

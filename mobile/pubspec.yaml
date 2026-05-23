@@ -1,7 +1,7 @@
 name: life_level
 description: Gamified fitness tracker — train in the real world, progress in a game world.
 publish_to: 'none'
-version: 1.0.0+6
+version: 1.0.0+10
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

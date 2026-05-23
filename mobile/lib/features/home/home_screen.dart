@@ -11,6 +11,7 @@ import 'cards/home_header.dart';
 import 'cards/home_portal_card.dart';
 import 'cards/home_log_workout_cta.dart';
 import 'cards/home_login_reward_chip.dart';
+import 'cards/home_recent_activities_card.dart';
 import 'cards/home_seasonal_event_row.dart';
 import 'cards/home_stat_strip.dart';
 import 'cards/home_streak_strip.dart';
@@ -100,6 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   key: _questsCardKey,
                   child: const HomeTodaysQuestsCard(),
                 ),
+                const HomeRecentActivitiesCard(),
                 const SizedBox(height: 16),
               ],
             ),

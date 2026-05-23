@@ -1,6 +1,8 @@
 using LifeLevel.Modules.Quest.Application.DTOs;
 using LifeLevel.Modules.Quest.Domain.Enums;
+using LifeLevel.Modules.Quest.Domain.Events;
 using LifeLevel.SharedKernel.Enums;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 using QuestEntity = LifeLevel.Modules.Quest.Domain.Entities.Quest;
@@ -8,7 +10,7 @@ using UserQuestProgressEntity = LifeLevel.Modules.Quest.Domain.Entities.UserQues
 
 namespace LifeLevel.Modules.Quest.Application.UseCases;
 
-public class QuestService(DbContext db, ICharacterXpPort characterXp)
+public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
     : IDailyQuestReadPort, IQuestProgressPort
 {
     // Far-future expiry used for special quests
@@ -171,6 +173,7 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp)
 
                 await db.SaveChangesAsync();
                 await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {quest.Title}", quest.RewardXp);
+                await events.PublishAsync(new QuestCompletedEvent(userId, quest.Id, quest.Title, quest.RewardXp), CancellationToken.None);
 
                 updatedProgresses.Add(progress);
             }

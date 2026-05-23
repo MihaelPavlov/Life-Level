@@ -153,6 +153,12 @@ public class NotificationService(
         await repo.SaveChangesAsync(ct);
     }
 
+    public Task<List<NotificationLog>> GetNotificationsAsync(Guid userId, CancellationToken ct = default) =>
+        repo.GetForUserAsync(userId, 50, ct);
+
+    public Task MarkAllReadAsync(Guid userId, CancellationToken ct = default) =>
+        repo.MarkAllReadAsync(userId, ct);
+
     private async Task LogOutcomeAsync(
         Guid userId,
         string category,

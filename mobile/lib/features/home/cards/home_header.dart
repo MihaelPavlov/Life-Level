@@ -9,7 +9,7 @@ import '../widgets/home_avatar_ring.dart';
 import '../widgets/home_bell_button.dart';
 import '../widgets/home_streak_chip.dart';
 
-/// Compact home header: avatar ring + greeting + streak chip + bell.
+/// Compact home header: avatar ring + greeting + streak chip + notification bell.
 /// Matches `.home3-header` in home-v3.html (screens 1–4).
 class HomeHeader extends ConsumerWidget {
   final CharacterProfile? profile;
@@ -21,13 +21,14 @@ class HomeHeader extends ConsumerWidget {
     final p = profile;
     final unread = ref.watch(notificationUnreadCountProvider);
 
+    final topPad = MediaQuery.of(context).padding.top + 12;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 54, 16, 18),
+      padding: EdgeInsets.fromLTRB(16, topPad, 16, 18),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           HomeAvatarRing(
-            emoji: p?.avatarEmoji ?? '\uD83E\uDDD9', // 🧙
+            emoji: p?.avatarEmoji ?? '🧙',
             level: p?.level ?? 1,
             xpProgress: p?.xpProgress ?? 0.0,
           ),
@@ -75,9 +76,9 @@ class HomeHeader extends ConsumerWidget {
   }
 
   String _greetingFor(int hour) {
-    if (hour < 5) return 'Good night \uD83C\uDF19';
-    if (hour < 12) return 'Good morning \uD83D\uDC4B';
-    if (hour < 18) return 'Good afternoon \uD83D\uDC4B';
-    return 'Good evening \uD83D\uDC4B';
+    if (hour < 5) return 'Good night 🌙';
+    if (hour < 12) return 'Good morning 👋';
+    if (hour < 18) return 'Good afternoon 👋';
+    return 'Good evening 👋';
   }
 }
