@@ -262,6 +262,7 @@
     <a href="index.html">⚙️ Items</a>
     <a href="map.html">🗺️ Map</a>
     <a href="level-unlocks.html" class="active">🏆 Levels</a>
+    <a href="rank-thresholds.html">⚔️ Ranks</a>
   </div>
   <div class="token-row">
     <label for="baseUrlInput">API base URL</label>
@@ -367,15 +368,15 @@ async function boot() {
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
-let state = { levels: {}, allItems: [], allZones: [], selectedLevel: null };
+let state = { levels: {}, allItems: [], allTitles: [], selectedLevel: null };
 
 // ── Load data ────────────────────────────────────────────────────────────────
 async function loadData() {
   try {
     const data = await apiFetch('/api/admin/level-unlocks');
-    state.levels   = data.levels;
-    state.allItems = data.allItems;
-    state.allZones = data.allZones;
+    state.levels    = data.levels;
+    state.allItems  = data.allItems;
+    state.allTitles = data.allTitles;
     renderSidebar();
     if (state.selectedLevel) selectLevel(state.selectedLevel);
   } catch (e) {
@@ -389,8 +390,8 @@ function renderSidebar() {
   list.innerHTML = '';
   const maxLevel = 50;
   for (let l = 1; l <= maxLevel; l++) {
-    const lvData = state.levels[l] || { zones: [], items: [] };
-    const count = (lvData.zones?.length || 0) + (lvData.items?.length || 0);
+    const lvData = state.levels[l] || { zones: [], items: [], titles: [], statBonus: 0 };
+    const count = (lvData.zones?.length || 0) + (lvData.items?.length || 0) + (lvData.titles?.length || 0) + (lvData.statBonus > 0 ? 1 : 0);
     const btn = document.createElement('button');
     btn.className = 'level-btn' + (count > 0 ? ' has-content' : '') + (state.selectedLevel === l ? ' active' : '');
     btn.onclick = () => selectLevel(l);
@@ -420,9 +421,11 @@ function xpForLevel(l) {
 function renderDetail(level) {
   const panel = document.getElementById('levelDetail');
   panel.style.display = 'block';
-  const lvData = state.levels[level] || { zones: [], items: [] };
-  const zones = lvData.zones || [];
-  const items = lvData.items || [];
+  const lvData = state.levels[level] || { zones: [], items: [], titles: [], statBonus: 0 };
+  const zones     = lvData.zones     || [];
+  const items     = lvData.items     || [];
+  const titles    = lvData.titles    || [];
+  const statBonus = lvData.statBonus || 0;
 
   const totalXp = xpForLevel(level);
   const xpLabel = totalXp > 0 ? `Total XP to reach: ${totalXp.toLocaleString()}` : 'Starting level';
@@ -479,10 +482,91 @@ function renderDetail(level) {
         <button class="success sm" onclick="addItemReward(${level})">+ Add</button>
       </div>
     </div>
+
+    <!-- Title Grants Section -->
+    <div class="section">
+      <h3>👑 Title Grants <span style="color:var(--text);font-style:normal;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400">(unlocked automatically on reaching this level)</span></h3>
+      <div id="titlesList">
+        ${titles.length === 0
+          ? '<div class="empty-state">No titles granted at this level.</div>'
+          : titles.map(t => `
+            <div class="unlock-row">
+              <span class="icon">${escHtml(t.titleEmoji)}</span>
+              <div class="name">${escHtml(t.titleName)}</div>
+              <button class="sm danger" onclick="removeTitleGrant('${t.id}')">Remove</button>
+            </div>
+          `).join('')
+        }
+      </div>
+      <div class="add-form">
+        <label>Add title:</label>
+        <select id="addTitleSelect">
+          <option value="">— pick title —</option>
+          ${state.allTitles
+            .filter(t => !titles.some(g => g.titleId === t.id))
+            .map(t => `<option value="${t.id}">${escHtml(t.emoji)} ${escHtml(t.name)}</option>`)
+            .join('')}
+        </select>
+        <button class="success sm" onclick="addTitleGrant(${level})">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Stat Bonus Section -->
+    <div class="section">
+      <h3>⚡ Bonus Stat Points <span style="color:var(--text);font-style:normal;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400">(added on top of the standard +1 per level)</span></h3>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+        <span style="color:var(--text2);font-size:13px">Standard: <strong style="color:var(--text)">+1</strong></span>
+        <span style="color:var(--text2);font-size:13px">Bonus:</span>
+        <input type="number" id="statBonusInput" min="0" max="99" value="${statBonus}"
+               style="width:70px;padding:4px 8px;font-size:13px">
+        <button class="sm success" onclick="saveStatBonus(${level})">Save</button>
+        ${statBonus > 0 ? `<span style="color:var(--green);font-size:12px">+${statBonus} bonus → <strong>+${1 + statBonus} total</strong> on level-up</span>` : '<span style="color:var(--text2);font-size:12px">No bonus configured</span>'}
+      </div>
+    </div>
   `;
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
+async function addTitleGrant(level) {
+  const sel = document.getElementById('addTitleSelect');
+  const titleId = sel.value;
+  if (!titleId) { toast('Pick a title first.', 'err'); return; }
+  try {
+    await apiFetch('/api/admin/level-unlocks/title-grants', {
+      method: 'POST',
+      body: JSON.stringify({ titleId, level }),
+    });
+    toast(`Title grant added for level ${level}.`, 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function removeTitleGrant(id) {
+  try {
+    await apiFetch(`/api/admin/level-unlocks/title-grants/${id}`, { method: 'DELETE' });
+    toast('Title grant removed.', 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function saveStatBonus(level) {
+  const val = parseInt(document.getElementById('statBonusInput').value) || 0;
+  try {
+    await apiFetch(`/api/admin/level-unlocks/stat-bonuses/${level}`, {
+      method: 'PUT',
+      body: JSON.stringify({ bonusPoints: val }),
+    });
+    toast(val > 0 ? `Stat bonus set to +${val} for level ${level}.` : `Stat bonus removed for level ${level}.`, 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
 async function addItemReward(level) {
   const sel = document.getElementById('addItemSelect');
   const itemId = sel.value;

@@ -16,15 +16,6 @@ public class TitleService(
     IDailyQuestReadPort questPort,
     IEventPublisher events)
 {
-    // Boss-defeat thresholds for each rank
-    private static readonly (CharacterRank Rank, int BossesRequired)[] RankThresholds =
-    [
-        (CharacterRank.Novice,   0),
-        (CharacterRank.Warrior,  1),
-        (CharacterRank.Veteran,  3),
-        (CharacterRank.Champion, 8),
-        (CharacterRank.Legend,   18),
-    ];
 
     public async Task<TitlesAndRanksResponse> GetTitlesAndRanksAsync(Guid userId, CancellationToken ct = default)
     {
@@ -61,8 +52,8 @@ public class TitleService(
                 lockedTitles.Add(dto);
         }
 
-        var currentRank = ComputeRank(bossCount);
-        var nextRankThreshold = GetNextRankThreshold(currentRank);
+        var currentRank = await ComputeRankAsync(bossCount, ct);
+        var nextRankThreshold = await GetNextRankThresholdAsync(currentRank, ct);
 
         var rankProgression = new RankProgressionDto(
             CurrentRank: currentRank.ToString(),
@@ -146,7 +137,7 @@ public class TitleService(
         }
 
         // Update rank based on boss defeats
-        var computedRank = ComputeRank(bossCount);
+        var computedRank = await ComputeRankAsync(bossCount, ct);
         bool rankChanged = character.Rank != computedRank;
         if (rankChanged)
         {
@@ -184,22 +175,23 @@ public class TitleService(
         return false;
     }
 
-    private static CharacterRank ComputeRank(int bossCount)
+    private async Task<CharacterRank> ComputeRankAsync(int bossCount, CancellationToken ct)
     {
-        CharacterRank current = CharacterRank.Novice;
-        foreach (var (rank, required) in RankThresholds)
-        {
-            if (bossCount >= required)
-                current = rank;
-        }
-        return current;
+        var thresholds = await db.Set<RankThreshold>()
+            .OrderByDescending(r => r.BossesRequired)
+            .ToListAsync(ct);
+        var match = thresholds.FirstOrDefault(t => bossCount >= t.BossesRequired);
+        return match != null ? Enum.Parse<CharacterRank>(match.Rank) : CharacterRank.Novice;
     }
 
-    private static (CharacterRank Rank, int BossesRequired)? GetNextRankThreshold(CharacterRank current)
+    private async Task<(CharacterRank Rank, int BossesRequired)?> GetNextRankThresholdAsync(CharacterRank current, CancellationToken ct)
     {
-        int currentIndex = Array.FindIndex(RankThresholds, t => t.Rank == current);
-        if (currentIndex < 0 || currentIndex >= RankThresholds.Length - 1)
-            return null;
-        return RankThresholds[currentIndex + 1];
+        var thresholds = await db.Set<RankThreshold>()
+            .OrderBy(r => r.BossesRequired)
+            .ToListAsync(ct);
+        var idx = thresholds.FindIndex(t => Enum.Parse<CharacterRank>(t.Rank) == current);
+        if (idx < 0 || idx >= thresholds.Count - 1) return null;
+        var next = thresholds[idx + 1];
+        return (Enum.Parse<CharacterRank>(next.Rank), next.BossesRequired);
     }
 }

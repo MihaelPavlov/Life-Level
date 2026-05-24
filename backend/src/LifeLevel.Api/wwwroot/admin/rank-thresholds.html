@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLevel Admin — Rank Thresholds</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #040810;
+    --bg2:       #080e14;
+    --surface:   #161b22;
+    --surface2:  #1e2632;
+    --border:    #30363d;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --blue:      #4f9eff;
+    --purple:    #a371f7;
+    --orange:    #f5a623;
+    --red:       #f85149;
+    --green:     #3fb950;
+    --radius:    8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--red); }
+
+  .nav-links { display: flex; gap: 8px; }
+  .nav-links a {
+    color: var(--text2);
+    font-size: 13px;
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: color .15s, border-color .15s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.active { color: var(--red); border-color: var(--red); }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .token-row label { color: var(--text2); font-size: 12px; }
+
+  input[type="text"], input[type="number"], select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus { border-color: var(--blue); }
+  #tokenInput { width: 360px; }
+
+  button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  button.sm { padding: 4px 12px; font-size: 12px; }
+  button.success { background: var(--green); }
+
+  main { padding: 32px 24px; max-width: 680px; }
+
+  .page-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 24px;
+  }
+
+  .rank-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .rank-icon { font-size: 28px; line-height: 1; }
+  .rank-info { flex: 1; }
+  .rank-info .rank-name { font-size: 15px; font-weight: 700; }
+  .rank-info .rank-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .rank-edit { display: flex; align-items: center; gap: 8px; }
+  .rank-edit label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .rank-edit input { width: 70px; padding: 5px 8px; font-size: 13px; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: var(--radius);
+    font-size: 13px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 1000; max-width: 340px;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok  { border-left: 4px solid var(--green); }
+  #toast.err { border-left: 4px solid var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚔️ Rank Thresholds</h1>
+  <div class="nav-links">
+    <a href="index.html">⚙️ Items</a>
+    <a href="map.html">🗺️ Map</a>
+    <a href="level-unlocks.html">🏆 Levels</a>
+    <a href="rank-thresholds.html" class="active">⚔️ Ranks</a>
+  </div>
+  <div class="token-row">
+    <label for="baseUrlInput">API base URL</label>
+    <select id="baseUrlInput" style="width:220px">
+      <option value="">localhost (local)</option>
+      <option value="https://life-level-api-latest-1779363121.onrender.com">Production (Render)</option>
+    </select>
+    <button onclick="saveBaseUrl()">Switch</button>
+    <label for="tokenInput" style="margin-left:12px">JWT Token</label>
+    <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
+    <button onclick="saveToken()">Save</button>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">Rank Progression Thresholds</div>
+  <div class="page-sub">
+    Ranks are earned by defeating bosses. Set how many boss defeats are required for each rank.
+    Novice is always 0 (starting rank) and cannot be changed meaningfully.
+  </div>
+  <div id="rankList">Loading…</div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const RANK_META = {
+  Novice:   { emoji: '🌱', color: '#8b949e', desc: 'Starting rank — all new players begin here' },
+  Warrior:  { emoji: '⚔️', color: '#3fb950', desc: 'First milestone — proves commitment to the game' },
+  Veteran:  { emoji: '🛡️', color: '#4f9eff', desc: 'Mid-tier rank — seasoned adventurer' },
+  Champion: { emoji: '👑', color: '#a371f7', desc: 'High rank — only dedicated players reach this' },
+  Legend:   { emoji: '🌟', color: '#f5a623', desc: 'Ultimate rank — the top of the ladder' },
+};
+
+// ── Auth / base URL helpers ──────────────────────────────────────────────────
+function getBaseUrl() {
+  return (localStorage.getItem('ll_admin_baseUrl') || '').replace(/\/$/, '');
+}
+function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
+
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t) { toast('Paste a token first.', 'err'); return; }
+  localStorage.setItem('ll_admin_token', t);
+  toast('Token saved.', 'ok');
+  boot();
+}
+
+function saveBaseUrl() {
+  const url = document.getElementById('baseUrlInput').value.trim().replace(/\/$/, '');
+  localStorage.setItem('ll_admin_baseUrl', url);
+  localStorage.removeItem('ll_admin_token');
+  window.location.reload();
+}
+
+async function apiFetch(path, opts = {}) {
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(getBaseUrl() + path, { ...opts, headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`${res.status} ${text}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+
+// ── Auto-login ───────────────────────────────────────────────────────────────
+async function fetchAdminConfig() {
+  try {
+    const res = await fetch(getBaseUrl() + '/api/admin/config');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function autoLogin() {
+  const cfg = await fetchAdminConfig();
+  if (!cfg) return false;
+  try {
+    const res = await fetch(getBaseUrl() + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: cfg.email, password: cfg.password }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const token = data?.token;
+    if (!token) return false;
+    localStorage.setItem('ll_admin_token', token);
+    document.getElementById('tokenInput').value = token;
+    return true;
+  } catch { return false; }
+}
+
+async function boot() {
+  if (!getToken()) {
+    const ok = await autoLogin();
+    if (!ok) { toast('Auto-login failed — paste an Admin JWT and click Save.', 'err'); return; }
+  }
+  await loadRanks();
+}
+
+// ── Load & render ────────────────────────────────────────────────────────────
+async function loadRanks() {
+  try {
+    const data = await apiFetch('/api/admin/rank-thresholds');
+    renderRanks(data);
+  } catch (e) {
+    toast('Failed to load: ' + e.message, 'err');
+  }
+}
+
+function renderRanks(thresholds) {
+  const container = document.getElementById('rankList');
+  container.innerHTML = thresholds.map(t => {
+    const meta = RANK_META[t.rank] || { emoji: '❓', color: '#fff', desc: '' };
+    return `
+      <div class="rank-card">
+        <span class="rank-icon">${meta.emoji}</span>
+        <div class="rank-info">
+          <div class="rank-name" style="color:${meta.color}">${t.rank}</div>
+          <div class="rank-desc">${meta.desc}</div>
+        </div>
+        <div class="rank-edit">
+          <label>Bosses required:</label>
+          <input type="number" id="boss-${t.rank}" value="${t.bossesRequired}" min="0" max="9999"
+                 ${t.rank === 'Novice' ? 'disabled title="Novice is always 0"' : ''}>
+          <button class="sm success" onclick="saveRank('${t.rank}')"
+                  ${t.rank === 'Novice' ? 'disabled' : ''}>Save</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function saveRank(rank) {
+  const val = parseInt(document.getElementById(`boss-${rank}`).value) || 0;
+  try {
+    await apiFetch(`/api/admin/rank-thresholds/${rank}`, {
+      method: 'PUT',
+      body: JSON.stringify({ bossesRequired: val }),
+    });
+    toast(`${rank} updated — requires ${val} boss${val !== 1 ? 'es' : ''}.`, 'ok');
+    await loadRanks();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(function init() {
+  const saved = localStorage.getItem('ll_admin_baseUrl') || '';
+  const sel = document.getElementById('baseUrlInput');
+  for (const opt of sel.options) {
+    if (opt.value === saved) { opt.selected = true; break; }
+  }
+  const token = localStorage.getItem('ll_admin_token') || '';
+  if (token) document.getElementById('tokenInput').value = token;
+  boot();
+})();
+</script>
+</body>
+</html>

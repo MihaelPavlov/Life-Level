@@ -1,6 +1,7 @@
 using LifeLevel.Modules.Character.Application.DTOs;
 using LifeLevel.Modules.Character.Domain;
 using LifeLevel.Modules.Character.Domain.Data;
+using LifeLevel.Modules.Character.Domain.Entities;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
@@ -173,6 +174,30 @@ public class CharacterService(
             };
             character.UpdatedAt = DateTime.UtcNow;
             leveled = true;
+
+            // Bonus stat points configured per level
+            var statBonus = await db.Set<LevelStatBonus>()
+                .FirstOrDefaultAsync(b => b.Level == character.Level, ct);
+            if (statBonus != null)
+                character.AvailableStatPoints += statBonus.BonusPoints;
+
+            // Title grants configured per level
+            var titleGrants = await db.Set<LevelTitleGrant>()
+                .Where(g => g.Level == character.Level)
+                .ToListAsync(ct);
+            foreach (var grant in titleGrants)
+            {
+                bool alreadyHas = await db.Set<CharacterTitle>()
+                    .AnyAsync(ct2 => ct2.CharacterId == character.Id && ct2.TitleId == grant.TitleId, ct);
+                if (!alreadyHas)
+                    db.Set<CharacterTitle>().Add(new CharacterTitle
+                    {
+                        Id = Guid.NewGuid(),
+                        CharacterId = character.Id,
+                        TitleId = grant.TitleId,
+                        EarnedAt = DateTime.UtcNow,
+                    });
+            }
         }
 
         if (leveled)

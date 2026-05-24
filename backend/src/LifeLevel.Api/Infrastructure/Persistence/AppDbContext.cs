@@ -46,6 +46,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<XpHistoryEntry> XpHistoryEntries => Set<XpHistoryEntry>();
     public DbSet<Title> Titles => Set<Title>();
     public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
+    public DbSet<LevelTitleGrant> LevelTitleGrants => Set<LevelTitleGrant>();
+    public DbSet<LevelStatBonus> LevelStatBonuses => Set<LevelStatBonus>();
+    public DbSet<RankThreshold> RankThresholds => Set<RankThreshold>();
 
     // Activity
     public DbSet<Activity> Activities => Set<Activity>();
@@ -331,5 +334,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Level unlock rewards — cross-module: LevelTitleGrant → Title
+        modelBuilder.Entity<LevelTitleGrant>()
+            .HasOne(l => l.Title)
+            .WithMany()
+            .HasForeignKey(l => l.TitleId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<LevelTitleGrant>()
+            .HasIndex(l => new { l.Level, l.TitleId })
+            .IsUnique();
+
+        modelBuilder.Entity<LevelStatBonus>()
+            .HasIndex(b => b.Level)
+            .IsUnique();
+
+        modelBuilder.Entity<RankThreshold>()
+            .HasIndex(r => r.Rank)
+            .IsUnique();
     }
 }
