@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level — Architecture &amp; Flows</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0c0f17;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── HEADER ── */
+#hdr{padding:13px 20px 11px;border-bottom:1px solid #1a2030;flex-shrink:0}
+#hdr h1{font-size:15px;font-weight:700;letter-spacing:-.2px;margin-bottom:3px}
+#hdr h1 b{color:#f5c014}
+#hdr p{font-size:11.5px;color:#4a5568;line-height:1.55;max-width:680px;margin-bottom:9px}
+.legend{display:flex;gap:14px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#5a6a7e}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── BODY ── */
+#body{display:flex;flex:1;overflow:hidden}
+
+/* ── CANVAS WRAP ── */
+#cw{flex:1;position:relative;overflow:hidden;cursor:grab}
+#cw:active{cursor:grabbing}
+#canvas{position:absolute;top:0;left:0;transform-origin:0 0}
+
+/* ── COLUMN HEADERS ── */
+.ch{position:absolute;top:14px;font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#2d3a4a;white-space:nowrap;pointer-events:none}
+
+/* ── NODES ── */
+.node{position:absolute;width:152px;background:#111722;border:1px solid #1e2840;border-left-width:3px;border-radius:5px;padding:9px 10px 8px;user-select:none;transition:border-color .18s,opacity .18s,box-shadow .18s}
+.nn{font-size:11.5px;font-weight:600;color:#b8c4d4;line-height:1.25;margin-bottom:2px}
+.ns{font-size:9.5px;color:#2d3a4a;line-height:1.35}
+
+/* Layer border colors */
+.node[data-l="user"]      {border-left-color:#e879a0}
+.node[data-l="flutter"]   {border-left-color:#4f9eff}
+.node[data-l="ctrl"]      {border-left-color:#a371f7}
+.node[data-l="module"]    {border-left-color:#f5a623}
+.node[data-l="shared"]    {border-left-color:#f5a623}
+.node[data-l="db"]        {border-left-color:#3fb950}
+.node[data-l="ext"]       {border-left-color:#39d0d8}
+
+/* States */
+.node.dim{opacity:.09}
+.node.inflow{border-color:#f5c014!important;border-left-color:#f5c014!important;box-shadow:0 0 0 1px rgba(245,192,20,.18);opacity:1}
+.node.inflow .nn{color:#f5c014}
+.node.hotnode{border-color:#f5c014!important;border-left-color:#f5c014!important;box-shadow:0 0 14px rgba(245,192,20,.35)!important;z-index:20;opacity:1}
+.node.hotnode .nn{color:#f5c014}
+
+/* ── SVG OVERLAY ── */
+#svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+
+/* ── SIDEBAR ── */
+#sb{width:288px;flex-shrink:0;background:#0d1117;border-left:1px solid #1a2030;display:flex;flex-direction:column;overflow:hidden}
+#sb-scroll{flex:1;overflow-y:auto}
+#sb-scroll::-webkit-scrollbar{width:3px}
+#sb-scroll::-webkit-scrollbar-track{background:transparent}
+#sb-scroll::-webkit-scrollbar-thumb{background:#1e2840;border-radius:2px}
+
+.slabel{font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:#2d3a4a;padding:14px 18px 7px}
+
+/* Flow items */
+.fi{padding:9px 18px;cursor:pointer;border-bottom:1px solid #0f1520}
+.fi:hover{background:#141921}
+.fi.active{background:#161400}
+.fi-title{font-size:12.5px;font-weight:600;color:#5a6a7e;line-height:1.3;transition:color .12s}
+.fi.active .fi-title{color:#f5c014}
+.fi-desc{font-size:11px;color:#3a4a5e;margin-top:3px;line-height:1.45;display:none}
+.fi.active .fi-desc{display:block;color:#4a5a70}
+.clear-sel{padding:9px 18px 12px;font-size:11px;color:#2d3a4a;cursor:pointer;display:inline-block}
+.clear-sel:hover{color:#5a6a7e}
+
+.sb-div{height:1px;background:#1a2030;margin:2px 0}
+
+/* Steps */
+#steps-wrap{padding:0 18px 24px}
+.step-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #0f1520;cursor:pointer}
+.step-item:last-child{border-bottom:none}
+.step-item:hover .sc{box-shadow:0 0 8px rgba(245,192,20,.4)}
+.step-item.hot .sc{box-shadow:0 0 12px rgba(245,192,20,.55)}
+.sc{width:21px;height:21px;border-radius:50%;background:#f5c014;color:#0c0f17;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sb{flex:1;min-width:0}
+.sr{font-size:11.5px;font-weight:700;color:#c0cad8;line-height:1.3;margin-bottom:2px}
+.sm{font-size:10.5px;color:#f5c014;font-family:'SFMono-Regular',Consolas,monospace;margin-bottom:3px;word-break:break-all}
+.sd{font-size:10.5px;color:#3a4a5e;line-height:1.5}
+.sp{background:#0a0d12;border:1px solid #1a2030;border-radius:3px;padding:4px 7px;margin-top:4px;font-family:'SFMono-Regular',Consolas,monospace;font-size:9.5px;color:#f5a623;line-height:1.5}
+
+.empty-msg{padding:18px 18px;font-size:11.5px;color:#2d3a4a;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <h1>Life-Level — <b>Architecture &amp; Flows</b></h1>
+  <p>Every module and external service that powers <b style="color:#e2e8f0">Life-Level</b>. Pick a flow on the right to highlight the path through the system and see what gets passed at each step.</p>
+  <div class="legend">
+    <div class="li"><div class="ld" style="background:#e879a0"></div>Flutter UI</div>
+    <div class="li"><div class="ld" style="background:#a371f7"></div>Controller</div>
+    <div class="li"><div class="ld" style="background:#f5a623"></div>Module</div>
+    <div class="li"><div class="ld" style="background:#f5a623;opacity:.5"></div>SharedKernel</div>
+    <div class="li"><div class="ld" style="background:#3fb950"></div>Data store</div>
+    <div class="li"><div class="ld" style="background:#39d0d8"></div>External service</div>
+  </div>
+</div>
+
+<div id="body">
+  <div id="cw">
+    <div id="canvas"></div>
+    <svg id="svg"></svg>
+  </div>
+  <div id="sb">
+    <div id="sb-scroll">
+      <div class="slabel">Flows</div>
+      <div id="flows-list"></div>
+      <div class="clear-sel" id="clear-btn" onclick="clearFlow()" style="display:none">Clear selection</div>
+      <div class="sb-div"></div>
+      <div class="slabel">Steps</div>
+      <div id="steps-wrap"><div class="empty-msg">Select a flow above to see the step‑by‑step path with data annotations.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// LAYOUT CONSTANTS
+// ═══════════════════════════════════════════
+const NW = 152, NH = 50;
+
+// Column x positions
+const COL = { user:22, flutter:200, ctrl:388, module:576, shared:764, db:942, ext:1112 };
+
+// Column header labels & x offsets
+const COL_HEADERS = [
+  { label:'ACTORS',          x: COL.user },
+  { label:'FLUTTER APP',     x: COL.flutter },
+  { label:'REST API',        x: COL.ctrl },
+  { label:'MODULES',         x: COL.module },
+  { label:'SHARED KERNEL',   x: COL.shared },
+  { label:'DATA STORES',     x: COL.db },
+  { label:'EXTERNAL',        x: COL.ext },
+];
+
+// ═══════════════════════════════════════════
+// NODE DEFINITIONS
+// ═══════════════════════════════════════════
+const NODES = [
+  // ACTORS
+  { id:'user',            l:'user',    x:COL.user,    y:210, name:'End User',             sub:'mobile app' },
+
+  // FLUTTER APP
+  { id:'fl-shell',        l:'flutter', x:COL.flutter, y:60,  name:'MainShell',            sub:'core/shell' },
+  { id:'fl-home',         l:'flutter', x:COL.flutter, y:126, name:'HomeScreen',           sub:'features/home' },
+  { id:'fl-activity',     l:'flutter', x:COL.flutter, y:192, name:'ActivityScreen',       sub:'features/activity' },
+  { id:'fl-character',    l:'flutter', x:COL.flutter, y:258, name:'CharacterSetup',       sub:'features/character' },
+  { id:'fl-tutorial',     l:'flutter', x:COL.flutter, y:324, name:'TutorialOverlay',      sub:'features/tutorial' },
+  { id:'fl-profile',      l:'flutter', x:COL.flutter, y:390, name:'ProfileScreen',        sub:'features/profile' },
+  { id:'fl-boss',         l:'flutter', x:COL.flutter, y:456, name:'BossWidget',           sub:'features/boss' },
+  { id:'fl-world',        l:'flutter', x:COL.flutter, y:522, name:'WorldMapScreen',       sub:'features/world_zone' },
+  { id:'fl-integrations', l:'flutter', x:COL.flutter, y:588, name:'IntegrationsScreen',   sub:'features/integrations' },
+
+  // CONTROLLERS
+  { id:'ctrl-auth',       l:'ctrl',    x:COL.ctrl,    y:80,  name:'AuthController',       sub:'/auth/register  /auth/login' },
+  { id:'ctrl-char',       l:'ctrl',    x:COL.ctrl,    y:170, name:'CharacterController',  sub:'/character/me  /character/setup' },
+  { id:'ctrl-activity',   l:'ctrl',    x:COL.ctrl,    y:258, name:'ActivityController',   sub:'/activity/log' },
+  { id:'ctrl-boss',       l:'ctrl',    x:COL.ctrl,    y:348, name:'BossController',       sub:'/boss/{id}/fight  /boss/{id}/damage' },
+  { id:'ctrl-world',      l:'ctrl',    x:COL.ctrl,    y:438, name:'WorldZoneController',  sub:'/world-map  /world-zones' },
+  { id:'ctrl-login',      l:'ctrl',    x:COL.ctrl,    y:528, name:'LoginRewardController',sub:'/login-reward/claim' },
+  { id:'ctrl-integrations',l:'ctrl',   x:COL.ctrl,    y:618, name:'IntegrationsController',sub:'/strava/webhook  /garmin/webhook' },
+
+  // MODULES
+  { id:'mod-identity',    l:'module',  x:COL.module,  y:60,  name:'Identity',             sub:'AuthService · JwtService' },
+  { id:'mod-character',   l:'module',  x:COL.module,  y:148, name:'Character',            sub:'CharacterService · XP engine' },
+  { id:'mod-activity',    l:'module',  x:COL.module,  y:248, name:'Activity',             sub:'ActivityService · CalculateGains()' },
+  { id:'mod-quest',       l:'module',  x:COL.module,  y:336, name:'Quest',                sub:'QuestService · 5 daily quests' },
+  { id:'mod-streak',      l:'module',  x:COL.module,  y:424, name:'Streak',               sub:'StreakService · shield logic' },
+  { id:'mod-loginreward', l:'module',  x:COL.module,  y:512, name:'LoginReward',          sub:'7-day cycle · IsXpStorm flag' },
+  { id:'mod-boss',        l:'module',  x:COL.module,  y:600, name:'Adv.Encounters',       sub:'BossService · CalculateDamage()' },
+  { id:'mod-worldzone',   l:'module',  x:COL.module,  y:688, name:'WorldZone',            sub:'WorldZoneService · travel' },
+  { id:'mod-integrations',l:'module',  x:COL.module,  y:776, name:'Integrations',         sub:'StravaWebhookService' },
+  { id:'mod-notifications',l:'module', x:COL.module,  y:858, name:'Notifications',        sub:'INotificationPort · FCM' },
+
+  // SHARED KERNEL
+  { id:'sharedkernel',    l:'shared',  x:COL.shared,  y:440, name:'SharedKernel',         sub:'31 ports · domain events' },
+
+  // DATA
+  { id:'db-postgres',     l:'db',      x:COL.db,      y:310, name:'PostgreSQL',           sub:'Supabase · EF Core · 41 DbSets' },
+  { id:'db-redis',        l:'db',      x:COL.db,      y:420, name:'Redis',                sub:'leaderboards · XP storm' },
+
+  // EXTERNAL
+  { id:'ext-firebase',    l:'ext',     x:COL.ext,     y:210, name:'Firebase FCM',         sub:'push notifications' },
+  { id:'ext-strava',      l:'ext',     x:COL.ext,     y:328, name:'Strava API',           sub:'OAuth · webhooks' },
+  { id:'ext-garmin',      l:'ext',     x:COL.ext,     y:446, name:'Garmin API',           sub:'OAuth · webhooks' },
+];
+
+// ═══════════════════════════════════════════
+// FLOW DEFINITIONS
+// ═══════════════════════════════════════════
+const FLOWS = {
+  'register': {
+    name: 'New user registration + setup',
+    desc: 'User registers, receives JWT, Character is auto-created, tutorial begins.',
+    steps: [
+      { from:'user',          to:'fl-shell',       title:'Opens app',                    method:'main.dart bootstrap',                    desc:'User launches Life-Level for the first time. Firebase initialises, MainShell mounts.',                                  payload:'Firebase.initializeApp()' },
+      { from:'fl-shell',      to:'ctrl-auth',       title:'MainShell → AuthController',   method:'POST /api/auth/register',                 desc:'Registration form submits credentials.',                                                                               payload:'{ username, password }' },
+      { from:'ctrl-auth',     to:'mod-identity',    title:'AuthController → Identity',    method:'AuthService.RegisterAsync()',             desc:'Password hashed. User entity created. JWT (HS256, 24h) issued.',                                                       payload:'User saved → UserRegisteredEvent' },
+      { from:'mod-identity',  to:'mod-character',   title:'Identity → Character',         method:'UserRegisteredEvent → CharacterCreatedHandler', desc:'Domain event fires after SaveChanges. Handler creates Character at Level 1, 0 XP, all stats 0, TutorialStep 0.', payload:'Character { Level:1, Xp:0, all stats:0 }' },
+      { from:'mod-identity',  to:'db-postgres',     title:'Identity → PostgreSQL',        method:'AppDbContext.SaveChangesAsync()',          desc:'User + Character rows written to Supabase PostgreSQL via EF Core.',                                                    payload:'INSERT Users, Characters' },
+      { from:'ctrl-auth',     to:'fl-shell',        title:'AuthController → MainShell',   method:'AuthResponse returned',                  desc:'JWT token + userId returned. Flutter stores token in secure storage.',                                                  payload:'{ token: "eyJ...", userId }' },
+      { from:'fl-shell',      to:'fl-character',    title:'MainShell → CharacterSetup',   method:'Navigator.push(CharacterSetupScreen)',    desc:'IsSetupComplete == false → Flutter routes to class + avatar selection.',                                                payload:'CharacterSetupScreen()' },
+      { from:'fl-character',  to:'ctrl-char',       title:'CharacterSetup → CharacterController', method:'POST /api/character/setup',       desc:'User picks CharacterClass and emoji avatar.',                                                                          payload:'{ classId: 2, avatarEmoji: "🧙" }' },
+      { from:'ctrl-char',     to:'mod-character',   title:'CharacterController → Character', method:'CharacterService.CompleteSetupAsync()', desc:'IsSetupComplete = true. ClassId + avatar stored. Class stat multipliers applied to future gains.',                   payload:'Character.IsSetupComplete = true' },
+      { from:'fl-shell',      to:'fl-tutorial',     title:'MainShell → TutorialOverlay',  method:'TutorialController.start(step: 0)',       desc:'TutorialStep == 0 → overlay activates. Step-0 bubble highlights XP bar via GlobalKey.',                               payload:'step: 0 → bubble on xpCard' },
+    ]
+  },
+  'log-activity': {
+    name: 'Log activity (workout)',
+    desc: 'User logs a run — triggers XP, stats, streak, quests, zone distance, tutorial gate.',
+    steps: [
+      { from:'fl-activity',    to:'ctrl-activity',  title:'ActivityScreen → ActivityController', method:'POST /api/activity/log',          desc:'User submits workout.',                                                                                                 payload:'{ type:"Run", durationMinutes:45, distanceKm:8.2, calories:520 }' },
+      { from:'ctrl-activity',  to:'mod-activity',   title:'ActivityController → Activity',  method:'ActivityService.LogActivityAsync()',   desc:'Full calculation pipeline starts.',                                                                                    payload:'CalculateGains() called' },
+      { from:'mod-activity',   to:'sharedkernel',   title:'Activity → SharedKernel',        method:'IGearBonusReadPort.GetEquippedBonusesAsync()', desc:'Gear XP bonus fetched from Items module via port. Same DB transaction.', payload:'→ XpBonusPct: 15' },
+      { from:'sharedkernel',   to:'mod-activity',   title:'SharedKernel → Activity',        method:'XP formula applied',                  desc:'baseXp = 45×10 = 450 · typeModifier(Run)=1.0 · gear×1.15 → finalXp=517. Stat gains: END+3, AGI+2, STA+1.',            payload:'xp:517  end:3  agi:2  sta:1' },
+      { from:'mod-activity',   to:'sharedkernel',   title:'Activity → SharedKernel (XP)',   method:'ICharacterXpPort.AwardXpAsync()',      desc:'XP awarded to Character. Level-up check runs inside CharacterService.',                                                 payload:'AwardXpAsync(userId, 517)' },
+      { from:'mod-activity',   to:'sharedkernel',   title:'Activity → SharedKernel (stats)', method:'ICharacterStatPort.ApplyStatGainsAsync()', desc:'Stat delta committed to Character entity in same transaction.',                                                  payload:'end+3, agi+2, sta+1' },
+      { from:'mod-activity',   to:'sharedkernel',   title:'Activity → SharedKernel (zone)', method:'IWorldZoneDistancePort.AddDistanceAsync()', desc:'Activity km credited toward current zone travel destination.',                                                    payload:'AddDistanceAsync(8.2 km)' },
+      { from:'mod-activity',   to:'db-postgres',    title:'Activity → PostgreSQL',          method:'AppDbContext.SaveChangesAsync()',       desc:'Activity row persisted. Domain events fire after this.',                                                               payload:'INSERT Activities (...)' },
+      { from:'mod-activity',   to:'mod-streak',     title:'Activity → Streak',              method:'ActivityLoggedEvent → StreakActivityHandler', desc:'Streak.Current incremented. Break condition cleared.',                                                          payload:'streak.Current: 6 → 7' },
+      { from:'mod-activity',   to:'mod-quest',      title:'Activity → Quest',               method:'ActivityLoggedEvent → QuestActivityHandler', desc:'Quest progress updated for matching daily quests via IQuestProgressPort.',                                       payload:'RecordActivityProgressAsync("Run", 8.2)' },
+      { from:'ctrl-activity',  to:'fl-activity',    title:'ActivityController → ActivityScreen', method:'LogActivityResult returned',       desc:'Full gain breakdown returned to Flutter.',                                                                             payload:'{ xpGained:517, endGained:3, agiGained:2, staGained:1, leveledUp:false }' },
+    ]
+  },
+  'level-up': {
+    name: 'Level-up cascade',
+    desc: 'XP threshold hit — items, zones, titles unlocked, mobile overlay triggered.',
+    steps: [
+      { from:'mod-activity',   to:'sharedkernel',   title:'Activity → SharedKernel',       method:'ICharacterXpPort.AwardXpAsync()',      desc:'Called from Activity (or Boss defeat). XP added to Character.Xp.',                                                      payload:'AwardXpAsync(userId, xpAmount)' },
+      { from:'sharedkernel',   to:'mod-character',  title:'SharedKernel → Character',      method:'CharacterService — threshold check',   desc:'threshold(N) = N×1000. Xp ≥ Level×1000 → Level++ and AvailableStatPoints++. XpHistoryEntry created.',                 payload:'Level 4 → 5\nAvailableStatPoints++' },
+      { from:'mod-character',  to:'mod-character',  title:'Character → Character (event)', method:'CharacterLeveledUpEvent fired',        desc:'Domain event fires after SaveChanges. LevelUpUnlockHandler runs.',                                                      payload:'CharacterLeveledUpEvent { userId, newLevel:5 }' },
+      { from:'mod-character',  to:'sharedkernel',   title:'Character → SharedKernel (items)', method:'ILevelUpItemGrantPort.GrantItemsAsync()', desc:'Items with UnlockLevel == newLevel are granted to character inventory.',                                          payload:'GrantItemsAsync(userId, level:5)' },
+      { from:'mod-character',  to:'sharedkernel',   title:'Character → SharedKernel (zones)', method:'IZoneUnlockReadPort check',         desc:'Any WorldZone with UnlockLevel == newLevel is now accessible.',                                                         payload:'Zone "Mountains of Strength" unlocked' },
+      { from:'mod-character',  to:'sharedkernel',   title:'Character → SharedKernel (title)', method:'ITitleUnlockPort.UnlockTitleAsync()', desc:'Title with UnlockLevel == newLevel awarded.',                                                                         payload:'ITitleUnlockPort.UnlockTitleAsync("Climber")' },
+      { from:'mod-character',  to:'db-postgres',    title:'Character → PostgreSQL',         method:'AppDbContext.SaveChangesAsync()',      desc:'Updated Character, CharacterItem, UserZoneUnlock, CharacterTitle all committed.',                                       payload:'UPDATE Characters\nINSERT CharacterItems, UserZoneUnlocks' },
+      { from:'ctrl-activity',  to:'fl-activity',    title:'ActivityController → ActivityScreen', method:'LogActivityResult { leveledUp:true }', desc:'Response includes leveledUp:true and newLevel.',                                                                  payload:'{ leveledUp:true, newLevel:5, unlockedItems:[...] }' },
+      { from:'fl-activity',    to:'fl-shell',       title:'ActivityScreen → MainShell',     method:'LevelUpNotifier.emit()',              desc:'Static broadcast stream — MainShell always listens. Level-up overlay triggered anywhere in app.',                        payload:'LevelUpNotifier.emit(LevelUpResult)' },
+    ]
+  },
+  'boss-fight': {
+    name: 'Boss fight + defeat',
+    desc: 'User activates a boss, deals damage via workouts, boss is defeated, XP awarded.',
+    steps: [
+      { from:'fl-boss',        to:'ctrl-boss',      title:'BossWidget → BossController',   method:'POST /api/boss/{id}/fight',            desc:'User taps Fight. Creates UserBossState record.',                                                                        payload:'{ bossId: "forest-guardian" }' },
+      { from:'ctrl-boss',      to:'mod-boss',       title:'BossController → Adv.Encounters', method:'BossService.ActivateFightAsync()',  desc:'UserBossState created: HpDealt=0, IsDefeated=false, TimerDays=7.',                                                       payload:'UserBossState { MaxHp:350, TimerDays:7 }' },
+      { from:'fl-boss',        to:'ctrl-boss',      title:'BossWidget → BossController',   method:'POST /api/boss/{id}/damage',           desc:'After each workout Flutter sends accumulated damage.',                                                                  payload:'{ damage: 24 }' },
+      { from:'ctrl-boss',      to:'mod-boss',       title:'BossController → Adv.Encounters', method:'BossService.DealDamageAsync()',     desc:'Validates timer not expired. Adds to UserBossState.HpDealt.',                                                            payload:'HpDealt: 0+24 → 24 / 350 HP' },
+      { from:'mod-activity',   to:'mod-boss',       title:'Activity → Adv.Encounters',     method:'Damage calc from activity',           desc:'baseDamage = (minutes/30)+(km/2) × typeMultiplier. Run 45min 8km → 5×1.0 = 5 dmg.',                                     payload:'Run: base=(1+4)×1.0 = 5\nStrength: base=2×2.0 = 4' },
+      { from:'mod-boss',       to:'db-postgres',    title:'Adv.Encounters → PostgreSQL',   method:'UserBossState updated',               desc:'HpDealt accumulates per activity. Checked against MaxHp each time.',                                                     payload:'UPDATE UserBossStates SET HpDealt=350' },
+      { from:'mod-boss',       to:'sharedkernel',   title:'Adv.Encounters → SharedKernel', method:'ICharacterXpPort.AwardXpAsync()',     desc:'HpDealt ≥ MaxHp: IsDefeated=true. RewardXp awarded.',                                                                  payload:'AwardXpAsync(userId, Boss.RewardXp:1500)' },
+      { from:'mod-boss',       to:'mod-notifications', title:'Adv.Encounters → Notifications', method:'INotificationPort.SendToUserAsync()', desc:'Victory push notification via FCM.',                                                                                payload:'"Boss Defeated! 1500 XP earned."' },
+      { from:'mod-notifications', to:'ext-firebase',title:'Notifications → Firebase FCM',  method:'IFcmSender.SendAsync()',              desc:'Firebase Admin SDK delivers push to registered device token.',                                                           payload:'FCM → { title:"Boss Defeated!" }' },
+      { from:'ctrl-boss',      to:'fl-boss',        title:'BossController → BossWidget',   method:'BossDamageResult { isDefeated:true }',desc:'Response triggers BossDefeatedCard. If XP caused level-up, LevelUpNotifier fires.',                                     payload:'{ isDefeated:true, xpAwarded:1500 }' },
+    ]
+  },
+  'strava-sync': {
+    name: 'Strava webhook sync',
+    desc: 'Strava delivers a webhook when user logs a workout — ingested as a real activity.',
+    steps: [
+      { from:'ext-strava',     to:'ctrl-integrations', title:'Strava API → IntegrationsController', method:'POST /api/integrations/strava/webhook', desc:'Strava sends event when user logs activity in their Strava app.',                                            payload:'{ object_type:"activity", aspect_type:"create", object_id:12345678 }' },
+      { from:'ctrl-integrations', to:'mod-integrations', title:'IntegrationsController → Integrations', method:'StravaWebhookService.ProcessEventAsync()', desc:'Validates webhook token. Fetches full activity from Strava API using stored access token.',         payload:'GET strava.com/api/v3/activities/12345678' },
+      { from:'mod-integrations', to:'sharedkernel',  title:'Integrations → SharedKernel (dedup)', method:'IActivityExternalIdReadPort check',    desc:'Checks if externalId already ingested. Prevents duplicate activities.',                                        payload:'GetExternalActivityIdAsync("12345678", "Strava") → null (new)' },
+      { from:'mod-integrations', to:'sharedkernel',  title:'Integrations → SharedKernel (log)',  method:'IActivityLogPort.LogActivityAsync()',    desc:'Same pipeline as a manual log. ActivityType mapped from Strava\'s sport_type.',                              payload:'{ type:"Run", durationMinutes:52, distanceKm:9.4, calories:610 }' },
+      { from:'sharedkernel',   to:'mod-activity',    title:'SharedKernel → Activity',        method:'ActivityService.LogActivityAsync()',       desc:'Full XP + stat + zone distance + domain events pipeline runs.',                                                  payload:'xp:556, end:4, agi:2 → Streak++, Quests updated' },
+      { from:'mod-integrations', to:'db-postgres',   title:'Integrations → PostgreSQL',      method:'ExternalActivityRecord persisted',         desc:'Dedup record saved so same Strava activity is never ingested twice.',                                            payload:'INSERT ExternalActivityRecords (externalId:"12345678", Source:"Strava")' },
+      { from:'mod-notifications', to:'ext-firebase', title:'Notifications → Firebase FCM',   method:'IFcmSender.SendAsync()',                   desc:'Activity synced notification delivered to user device.',                                                         payload:'"Activity synced from Strava! 556 XP earned."' },
+    ]
+  },
+  'daily-login': {
+    name: 'Daily login reward claim',
+    desc: 'User claims daily reward — XP, streak shield, and XP Storm flag on Day 7.',
+    steps: [
+      { from:'fl-home',        to:'ctrl-login',     title:'HomeScreen → LoginRewardController', method:'GET /api/login-reward',              desc:'HomeScreen fetches login reward state on mount. Shows chip with today\'s reward.',                                    payload:'→ { day:6, claimedToday:false, pendingReward:{ xp:400 } }' },
+      { from:'fl-home',        to:'ctrl-login',     title:'HomeScreen → LoginRewardController', method:'POST /api/login-reward/claim',       desc:'User taps the daily reward chip.',                                                                                  payload:'(no body)' },
+      { from:'ctrl-login',     to:'mod-loginreward',title:'LoginRewardController → LoginReward', method:'LoginRewardService.ClaimAsync()',   desc:'Validates one-claim-per-UTC-day. Advances CurrentDay (1→2 … 7→1).',                                                 payload:'day: 6 → 7\nClaimedToday = true' },
+      { from:'mod-loginreward', to:'sharedkernel',  title:'LoginReward → SharedKernel (XP)',  method:'ICharacterXpPort.AwardXpAsync()',      desc:'Daily XP reward: Day1=100, Day2=150, Day3=200, Day4=250, Day5=300, Day6=400, Day7=500.',                            payload:'AwardXpAsync(userId, 500)' },
+      { from:'mod-loginreward', to:'sharedkernel',  title:'LoginReward → SharedKernel (shield)', method:'IStreakShieldPort.AddShieldAsync()', desc:'Day 7 also grants a streak shield. Max 3 shields.',                                                                 payload:'AddShieldAsync(userId) → Shields: 1→2' },
+      { from:'mod-loginreward', to:'db-postgres',   title:'LoginReward → PostgreSQL',         method:'IsXpStorm = true on Day 7',           desc:'Day 7 sets IsXpStorm flag. ActivityService reads this on next workout to apply ×2 XP multiplier. (LL-001: not yet wired.)', payload:'UPDATE LoginRewards SET IsXpStorm=true, CurrentDay=7' },
+      { from:'ctrl-login',     to:'fl-home',        title:'LoginRewardController → HomeScreen', method:'LoginRewardDto returned',            desc:'Updated state returned. XP storm banner shown on Day 7.',                                                            payload:'{ day:7, claimedToday:true, xpStormActive:true, shieldGranted:true }' },
+      { from:'fl-home',        to:'fl-shell',       title:'HomeScreen → MainShell',           method:'LevelUpNotifier.emit() if leveled',   desc:'If Day 7 XP caused level-up, LevelUpNotifier fires overlay. RewardRevealModal animates the claim.',                  payload:'showRewardRevealModal(xp:500, shield:true, xpStorm:true)' },
+    ]
+  },
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let activeFlow = null, activeStep = null;
+let nodeEls = {}, scale = 1, panX = 0, panY = 0;
+let canvasW = 0, canvasH = 0;
+
+// ═══════════════════════════════════════════
+// BUILD
+// ═══════════════════════════════════════════
+function build() {
+  const canvas = document.getElementById('canvas');
+
+  // Column headers
+  COL_HEADERS.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'ch';
+    d.style.left = c.x + 'px';
+    d.textContent = c.label;
+    canvas.appendChild(d);
+  });
+
+  // Nodes
+  NODES.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'node';
+    el.dataset.l = n.l;
+    el.dataset.id = n.id;
+    el.style.left = n.x + 'px';
+    el.style.top  = n.y + 'px';
+    el.innerHTML  = `<div class="nn">${n.name}</div><div class="ns">${n.sub}</div>`;
+    canvas.appendChild(el);
+    nodeEls[n.id] = el;
+  });
+
+  // Canvas size
+  canvasW = Math.max(...NODES.map(n => n.x + NW)) + 30;
+  canvasH = Math.max(...NODES.map(n => n.y + NH)) + 40;
+  canvas.style.width  = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+
+  const svg = document.getElementById('svg');
+  svg.setAttribute('width',  canvasW);
+  svg.setAttribute('height', canvasH);
+
+  // Flows sidebar
+  const fl = document.getElementById('flows-list');
+  Object.entries(FLOWS).forEach(([id, f]) => {
+    const d = document.createElement('div');
+    d.className = 'fi';
+    d.dataset.fid = id;
+    d.innerHTML = `<div class="fi-title">${f.name}</div><div class="fi-desc">${f.desc}</div>`;
+    d.addEventListener('click', () => activateFlow(id));
+    fl.appendChild(d);
+  });
+
+  setTimeout(fitView, 60);
+}
+
+// ═══════════════════════════════════════════
+// BEZIER HELPERS
+// ═══════════════════════════════════════════
+function nRight(id) {
+  const n = NODES.find(n => n.id === id);
+  return { x: n.x + NW, y: n.y + NH / 2 };
+}
+function nLeft(id) {
+  const n = NODES.find(n => n.id === id);
+  return { x: n.x, y: n.y + NH / 2 };
+}
+function nTop(id) {
+  const n = NODES.find(n => n.id === id);
+  return { x: n.x + NW / 2, y: n.y };
+}
+function nBot(id) {
+  const n = NODES.find(n => n.id === id);
+  return { x: n.x + NW / 2, y: n.y + NH };
+}
+
+function bezierMid(p0, cp1, cp2, p1) {
+  return {
+    x: .125*p0.x + .375*cp1.x + .375*cp2.x + .125*p1.x,
+    y: .125*p0.y + .375*cp1.y + .375*cp2.y + .125*p1.y,
+  };
+}
+
+function edgePath(fromId, toId) {
+  const fn = NODES.find(n => n.id === fromId);
+  const tn = NODES.find(n => n.id === toId);
+  if (!fn || !tn) return null;
+
+  if (fromId === toId) {
+    // self-loop: arch above the node
+    const p = nTop(fromId);
+    const lp = { x: p.x - 30, y: p.y };
+    const rp = { x: p.x + 30, y: p.y };
+    const cp1 = { x: p.x - 50, y: p.y - 55 };
+    const cp2 = { x: p.x + 50, y: p.y - 55 };
+    const mid = bezierMid(lp, cp1, cp2, rp);
+    return { d: `M ${lp.x} ${lp.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${rp.x} ${rp.y}`, mid };
+  }
+
+  const goRight = tn.x >= fn.x + NW - 10;
+  const goLeft  = tn.x + NW <= fn.x + 10;
+
+  if (goRight) {
+    const p0  = nRight(fromId);
+    const p1  = nLeft(toId);
+    const dx  = p1.x - p0.x;
+    const cp1 = { x: p0.x + dx * .45, y: p0.y };
+    const cp2 = { x: p1.x - dx * .45, y: p1.y };
+    const mid = bezierMid(p0, cp1, cp2, p1);
+    return { d: `M ${p0.x} ${p0.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${p1.x} ${p1.y}`, mid };
+  }
+
+  if (goLeft) {
+    // route upward to avoid overlap
+    const p0  = nLeft(fromId);
+    const p1  = nRight(toId);
+    const lift = Math.min(fn.y, tn.y) - 60;
+    const cp1 = { x: p0.x - 60, y: lift };
+    const cp2 = { x: p1.x + 60, y: lift };
+    const mid = bezierMid(p0, cp1, cp2, p1);
+    return { d: `M ${p0.x} ${p0.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${p1.x} ${p1.y}`, mid };
+  }
+
+  // same column or minor offset: use top/bottom routing
+  const p0  = nBot(fromId);
+  const p1  = nTop(toId);
+  const dy  = p1.y - p0.y;
+  const cp1 = { x: p0.x, y: p0.y + dy * .4 };
+  const cp2 = { x: p1.x, y: p1.y - dy * .4 };
+  const mid = bezierMid(p0, cp1, cp2, p1);
+  return { d: `M ${p0.x} ${p0.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${p1.x} ${p1.y}`, mid };
+}
+
+// ═══════════════════════════════════════════
+// DRAW EDGES
+// ═══════════════════════════════════════════
+function drawEdges(flowId, hotStep) {
+  const svg = document.getElementById('svg');
+  svg.innerHTML = '';
+  if (!flowId) return;
+  const flow = FLOWS[flowId];
+
+  // defs for arrowheads
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML = `
+    <marker id="arr-hot" markerWidth="7" markerHeight="6" refX="5" refY="3" orient="auto">
+      <polygon points="0 0 7 3 0 6" fill="#f5c014"/>
+    </marker>
+    <marker id="arr-dim" markerWidth="7" markerHeight="6" refX="5" refY="3" orient="auto">
+      <polygon points="0 0 7 3 0 6" fill="#f5c014" opacity=".3"/>
+    </marker>`;
+  svg.appendChild(defs);
+
+  flow.steps.forEach((step, i) => {
+    const isHot = hotStep === null || i === hotStep;
+    const opacity = hotStep !== null && i !== hotStep ? 0.2 : 1;
+    const ep = edgePath(step.from, step.to);
+    if (!ep) return;
+
+    // path
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', ep.d);
+    path.setAttribute('stroke', '#f5c014');
+    path.setAttribute('stroke-width', isHot ? '2' : '1.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', opacity);
+    path.setAttribute('marker-end', isHot ? 'url(#arr-hot)' : 'url(#arr-dim)');
+    svg.appendChild(path);
+
+    // step number circle on edge
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('opacity', opacity);
+    const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circ.setAttribute('cx', ep.mid.x);
+    circ.setAttribute('cy', ep.mid.y);
+    circ.setAttribute('r',  '10');
+    circ.setAttribute('fill', '#f5c014');
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x', ep.mid.x);
+    txt.setAttribute('y', ep.mid.y + 4);
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('font-size', '9.5');
+    txt.setAttribute('font-weight', '800');
+    txt.setAttribute('font-family', '-apple-system,sans-serif');
+    txt.setAttribute('fill', '#0c0f17');
+    txt.textContent = i + 1;
+    g.appendChild(circ);
+    g.appendChild(txt);
+    svg.appendChild(g);
+  });
+}
+
+// ═══════════════════════════════════════════
+// HIGHLIGHT NODES
+// ═══════════════════════════════════════════
+function highlightNodes(flowId, hotStep) {
+  Object.values(nodeEls).forEach(el => {
+    el.classList.remove('dim','inflow','hotnode');
+  });
+  if (!flowId) return;
+
+  const flow = FLOWS[flowId];
+  const flowIds = new Set(flow.steps.flatMap(s => [s.from, s.to]));
+
+  Object.keys(nodeEls).forEach(id => {
+    if (!flowIds.has(id)) {
+      nodeEls[id].classList.add('dim');
+    } else {
+      nodeEls[id].classList.add('inflow');
+    }
+  });
+
+  if (hotStep !== null) {
+    const step = flow.steps[hotStep];
+    // dim everything not in this specific step
+    flowIds.forEach(id => {
+      if (id !== step.from && id !== step.to) {
+        nodeEls[id]?.classList.remove('inflow');
+        nodeEls[id]?.classList.add('dim');
+      }
+    });
+    nodeEls[step.from]?.classList.add('hotnode');
+    nodeEls[step.to]?.classList.add('hotnode');
+  }
+}
+
+// ═══════════════════════════════════════════
+// RENDER STEPS PANEL
+// ═══════════════════════════════════════════
+function renderSteps(flowId, hotStep) {
+  const wrap = document.getElementById('steps-wrap');
+  if (!flowId) {
+    wrap.innerHTML = '<div class="empty-msg">Select a flow above to see the step‑by‑step path with data annotations.</div>';
+    return;
+  }
+  const flow = FLOWS[flowId];
+  wrap.innerHTML = '';
+  flow.steps.forEach((step, i) => {
+    const fromN = NODES.find(n => n.id === step.from);
+    const toN   = NODES.find(n => n.id === step.to);
+    const div = document.createElement('div');
+    div.className = 'step-item' + (i === hotStep ? ' hot' : '');
+    div.innerHTML = `
+      <div class="sc">${i+1}</div>
+      <div class="sb">
+        <div class="sr">${fromN?.name ?? step.from} → ${toN?.name ?? step.to}</div>
+        <div class="sm">${step.method}</div>
+        <div class="sd">${step.desc}</div>
+        ${step.payload ? `<div class="sp">${esc(step.payload)}</div>` : ''}
+      </div>`;
+    div.addEventListener('click', () => {
+      activeStep = (activeStep === i) ? null : i;
+      renderSteps(flowId, activeStep);
+      drawEdges(flowId, activeStep);
+      highlightNodes(flowId, activeStep);
+    });
+    wrap.appendChild(div);
+  });
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+// ═══════════════════════════════════════════
+// ACTIVATE / CLEAR FLOW
+// ═══════════════════════════════════════════
+function activateFlow(id) {
+  activeFlow = id;
+  activeStep = null;
+  document.querySelectorAll('.fi').forEach(el => el.classList.toggle('active', el.dataset.fid === id));
+  document.getElementById('clear-btn').style.display = '';
+  renderSteps(id, null);
+  drawEdges(id, null);
+  highlightNodes(id, null);
+}
+
+function clearFlow() {
+  activeFlow = null; activeStep = null;
+  document.querySelectorAll('.fi').forEach(el => el.classList.remove('active'));
+  document.getElementById('clear-btn').style.display = 'none';
+  renderSteps(null, null);
+  drawEdges(null, null);
+  highlightNodes(null, null);
+}
+
+// ═══════════════════════════════════════════
+// PAN / ZOOM
+// ═══════════════════════════════════════════
+function fitView() {
+  const cw = document.getElementById('cw');
+  const ww = cw.clientWidth, wh = cw.clientHeight;
+  scale = Math.min(ww / canvasW, wh / canvasH) * 0.88;
+  panX  = (ww - canvasW * scale) / 2;
+  panY  = (wh - canvasH * scale) / 2;
+  applyT();
+}
+
+function applyT() {
+  const t = `translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('canvas').style.transform = t;
+  document.getElementById('canvas').style.transformOrigin = '0 0';
+  document.getElementById('svg').style.transform = t;
+  document.getElementById('svg').style.transformOrigin = '0 0';
+}
+
+let drag = false, lx, ly;
+const cw = document.getElementById('cw');
+cw.addEventListener('mousedown', e => { drag=true; lx=e.clientX; ly=e.clientY; });
+document.addEventListener('mousemove', e => {
+  if (!drag) return;
+  panX += e.clientX-lx; panY += e.clientY-ly; lx=e.clientX; ly=e.clientY; applyT();
+});
+document.addEventListener('mouseup', () => drag=false);
+cw.addEventListener('wheel', e => {
+  e.preventDefault();
+  scale = Math.max(.15, Math.min(3, scale * (e.deltaY > 0 ? .9 : 1.11)));
+  applyT();
+}, { passive:false });
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (!activeFlow) return;
+  const len = FLOWS[activeFlow].steps.length;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeStep = activeStep === null ? 0 : Math.min(activeStep+1, len-1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeStep = activeStep === null ? len-1 : Math.max(activeStep-1, 0);
+  } else if (e.key === 'Escape') { clearFlow(); return; }
+  else return;
+  renderSteps(activeFlow, activeStep);
+  drawEdges(activeFlow, activeStep);
+  highlightNodes(activeFlow, activeStep);
+  // scroll step into view
+  const items = document.querySelectorAll('.step-item');
+  items[activeStep]?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+});
+
+window.addEventListener('load', build);
+window.addEventListener('resize', fitView);
+</script>
+</body>
+</html>

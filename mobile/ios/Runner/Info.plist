@@ -45,12 +45,16 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 
 	<!-- HealthKit usage descriptions (required for health package) -->
 	<key>NSHealthShareUsageDescription</key>
-	<string>Life Level reads your workouts to award XP and track your fitness progress in the game.</string>
+	<string>Life-Level reads your workouts and activity data to award XP, stats, quests, and in-game progress.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Life Level may write workout summaries to Apple Health.</string>
+	<string>Life-Level may write workout summaries to Apple Health when you choose to sync activity data.</string>
 
 	<!-- Strava OAuth deep-link callback scheme -->
 	<key>CFBundleURLTypes</key>

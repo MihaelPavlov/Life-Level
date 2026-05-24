@@ -54,12 +54,10 @@ In `android/app/src/main/AndroidManifest.xml`:
 
 ## Sync flow
 
-Current implementation also imports daily steps for internal Android testing. It reads the last 7 local days from Health Connect, converts days with at least 1,000 steps into `Walking` activities, and deduplicates them with IDs like `healthconnect:steps:YYYY-MM-DD`.
-
 `HealthSyncService.syncRecentWorkouts()`:
 
 1. Read `lastSyncTime` from `SharedPreferences` key `health_last_sync_ms`.
-2. Query `Health()` plugin for workouts in `[lastSyncTime, now]`.
+2. Query `Health()` plugin for workouts in `[now − 30 days, now]`.
 3. For each workout:
    - Map Health Connect `HealthDataType` → our `ActivityType` (see [[Activity Type Mapping]]).
    - Build `ExternalActivityDto(provider="HealthConnect", externalId, activityType, duration, distance, calories, heartRateAvg, performedAt)`.
@@ -67,6 +65,15 @@ Current implementation also imports daily steps for internal Android testing. It
 5. Backend dedups + logs each via `IActivityLogPort`.
 6. Return `SyncResult(imported, skipped, errors[])`.
 7. Update `lastSyncTime` to now.
+
+## Sync windows
+
+| Data type | Window | Notes |
+|---|---|---|
+| Workouts | **Last 30 days** | Rolling window, not tied to registration date |
+| Daily steps | **Last 7 days** | Days with < 100 steps are skipped; converted to `Walking` activities |
+
+Both are deduplicated by `externalId` (`healthconnect:{uuid}` for workouts, `healthconnect:steps:YYYY-MM-DD` for steps) so re-syncing never creates duplicates.
 
 ## Sync triggers
 

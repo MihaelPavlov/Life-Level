@@ -43,10 +43,26 @@ public class FcmNotificationAdapter : IFcmSender
                     return true;
                 }
 
+                // Prefer inline JSON (cloud/container deployments: set Firebase__CredentialsJson env var on Render).
+                var credentialsJson = config["Firebase:CredentialsJson"];
+                if (!string.IsNullOrWhiteSpace(credentialsJson))
+                {
+                    var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(credentialsJson));
+                    FirebaseApp.Create(new AppOptions
+                    {
+                        Credential = GoogleCredential.FromStream(stream)
+                    });
+                    _initialized = true;
+                    logger.LogInformation("FirebaseApp initialized from inline credentials JSON.");
+                    return true;
+                }
+
+                // Fall back to file path (local development: set Firebase:CredentialsPath in appsettings).
                 var credentialsPath = config["Firebase:CredentialsPath"];
                 if (string.IsNullOrWhiteSpace(credentialsPath))
                 {
-                    logger.LogWarning("Firebase:CredentialsPath not configured — FCM disabled.");
+                    logger.LogWarning(
+                        "Neither Firebase:CredentialsJson nor Firebase:CredentialsPath configured — FCM disabled.");
                     _initialized = true;
                     return false;
                 }

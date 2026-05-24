@@ -54,6 +54,15 @@ curl -X POST https://www.strava.com/api/v3/push_subscriptions \
    - Call `IActivityLogPort.LogExternalActivityAsync` with `externalId = "strava:{id}"`.
    - Dedup via `IActivityExternalIdReadPort.FindActivityIdByExternalIdAsync` — skip if already logged.
 
+## Manual sync window
+
+`StravaWebhookService.SyncRecentAsync` (triggered by `POST /api/integrations/strava/sync` or the home screen Sync button):
+
+- Fetches up to **50 activities from the last 30 days** (`after = now − 30d`).
+- Not tied to account registration date — always a rolling 30-day window.
+- Dedup is handled by `externalId = "strava:{id}"` so re-syncing never creates duplicates.
+- Activities older than 30 days are not imported by manual sync — they are only captured going forward via the real-time webhook.
+
 ## Token refresh
 
 `StravaTokenRefresher` (IHostedService) scans `StravaConnection` rows and refreshes tokens nearing expiry (< 1 hour) via `POST /oauth/token` with `refresh_token`.

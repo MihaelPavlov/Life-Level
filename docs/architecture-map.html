@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level — Architecture & Business Map</title>
+<style>
+:root {
+  --bg: #040810; --bg2: #080e14; --surface: #161b22; --surface2: #1e2632;
+  --border: #30363d; --text: #e6edf3; --text2: #8b949e;
+  --blue: #4f9eff; --purple: #a371f7; --orange: #f5a623;
+  --red: #f85149; --green: #3fb950; --yellow: #d29922; --teal: #39d0d8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6}
+a{color:var(--blue);text-decoration:none}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+header h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+header h1 span{color:var(--blue)}
+.badge{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:12px;color:var(--text2);white-space:nowrap}
+.badge.blue{border-color:var(--blue);color:var(--blue)}
+.badge.purple{border-color:var(--purple);color:var(--purple)}
+.badge.green{border-color:var(--green);color:var(--green)}
+.badge.orange{border-color:var(--orange);color:var(--orange)}
+
+/* ── STATS BAR ── */
+.stats-bar{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto}
+.stat-item{padding:14px 28px;text-align:center;border-right:1px solid var(--border);flex-shrink:0}
+.stat-item .num{font-size:26px;font-weight:700;color:var(--blue)}
+.stat-item .lbl{font-size:11px;color:var(--text2);letter-spacing:.5px;text-transform:uppercase}
+
+/* ── TAB NAV ── */
+.tab-nav{display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto}
+.tab-nav button{background:none;border:none;color:var(--text2);padding:12px 24px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
+.tab-nav button:hover{color:var(--text)}
+.tab-nav button.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* ── TAB PANES ── */
+.tab-pane{display:none;padding:28px 32px;max-width:1400px;margin:0 auto}
+.tab-pane.active{display:block}
+
+/* ── SECTION TITLES ── */
+.section-title{font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';display:inline-block;width:3px;height:18px;background:var(--blue);border-radius:2px}
+.section-sub{color:var(--text2);font-size:13px;margin-bottom:20px;margin-top:-10px}
+
+/* ── LAYER DIAGRAM ── */
+.layer-diagram{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:32px}
+.layer{padding:18px 24px;border-bottom:1px solid var(--border);position:relative}
+.layer:last-child{border-bottom:none}
+.layer-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:10px}
+.layer-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.layer-desc{font-size:12px;color:var(--text2)}
+.layer.flutter{background:linear-gradient(135deg,#0d1117 0%,#1a2332 100%);border-left:3px solid var(--blue)}
+.layer.api{background:linear-gradient(135deg,#0d1117 0%,#1e1632 100%);border-left:3px solid var(--purple)}
+.layer.data{background:linear-gradient(135deg,#0d1117 0%,#1a2a1a 100%);border-left:3px solid var(--green)}
+.layer.external{background:linear-gradient(135deg,#0d1117 0%,#2a1a0d 100%);border-left:3px solid var(--orange)}
+.layer-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--text2)}
+.arrow-connector{text-align:center;padding:6px;color:var(--text2);font-size:18px;background:var(--bg)}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color .15s}
+.card:hover{border-color:var(--text2)}
+.card-title{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.card-desc{font-size:12px;color:var(--text2);margin-bottom:10px}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{background:var(--surface2);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2)}
+.tag.blue{background:#0d2040;color:var(--blue);border:1px solid #1a3860}
+.tag.purple{background:#1a0d35;color:var(--purple);border:1px solid #3a1a6a}
+.tag.green{background:#0d2a15;color:var(--green);border:1px solid #1a4a25}
+.tag.orange{background:#2a1a0d;color:var(--orange);border:1px solid #4a2a0d}
+.tag.red{background:#2a0d0d;color:var(--red);border:1px solid #4a1515}
+.tag.teal{background:#0d2a2a;color:var(--teal);border:1px solid #1a4a4a}
+
+/* ── MODULE CARDS ── */
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;border-top-width:3px}
+.module-card .mod-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.module-card .mod-desc{font-size:12px;color:var(--text2);margin-bottom:10px}
+.module-card .mod-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-top:10px;margin-bottom:4px}
+.module-card ul{list-style:none;padding:0}
+.module-card ul li{font-size:11px;color:var(--text2);padding:1px 0;padding-left:12px;position:relative}
+.module-card ul li::before{content:'·';position:absolute;left:2px;color:var(--border)}
+
+/* ── API TABLE ── */
+.api-search{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-size:14px;margin-bottom:16px;outline:none}
+.api-search:focus{border-color:var(--blue)}
+.api-table{width:100%;border-collapse:collapse;font-size:13px}
+.api-table th{background:var(--surface2);text-align:left;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);position:sticky;top:0}
+.api-table td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+.api-table tr:hover td{background:var(--surface2)}
+.method{display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px}
+.method.GET{background:#0d2a15;color:var(--green)}
+.method.POST{background:#0d2040;color:var(--blue)}
+.method.DELETE{background:#2a0d0d;color:var(--red)}
+.method.PATCH{background:#1a0d35;color:var(--purple)}
+.path{font-family:monospace;color:var(--text);font-size:12px}
+.path span{color:var(--orange)}
+.mod-badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;background:var(--surface2);color:var(--text2)}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:4px 12px;font-size:12px;color:var(--text2);cursor:pointer}
+.filter-btn:hover,.filter-btn.active{background:var(--surface2);color:var(--text);border-color:var(--text2)}
+
+/* ── FORMULA BOXES ── */
+.formula-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.formula-box .f-title{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--blue)}
+.formula-code{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-family:monospace;font-size:13px;color:var(--text);line-height:1.8;margin-bottom:10px;overflow-x:auto}
+.formula-code .kw{color:var(--purple)}
+.formula-code .num{color:var(--orange)}
+.formula-code .cmt{color:var(--text2)}
+.formula-code .fn{color:var(--blue)}
+.formula-vars{font-size:12px;color:var(--text2)}
+.formula-vars dt{color:var(--text);font-weight:600;display:inline}
+.formula-vars dd{display:inline;margin:0}
+
+/* ── STAT TABLE ── */
+.stat-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px}
+.stat-table th{background:var(--surface2);text-align:left;padding:8px 12px;color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.stat-table td{padding:7px 12px;border-bottom:1px solid var(--border)}
+.stat-table td:first-child{font-weight:600}
+.dot-filled{color:var(--blue)}
+.dot-empty{color:var(--border)}
+
+/* ── TICKETS ── */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.kanban{grid-template-columns:1fr}}
+.kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.kanban-col-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ticket{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+.ticket-id{font-size:11px;font-family:monospace;color:var(--text2);margin-bottom:4px}
+.ticket-title{font-size:13px;font-weight:600;margin-bottom:6px}
+.ticket-meta{display:flex;flex-wrap:wrap;gap:4px}
+.priority-high{color:var(--red)}
+.priority-medium{color:var(--orange)}
+.priority-low{color:var(--text2)}
+
+/* ── FLOW DIAGRAM ── */
+.flow{display:flex;flex-direction:column;gap:0;margin-bottom:24px}
+.flow-step{display:flex;align-items:flex-start;gap:12px;padding:12px 0}
+.flow-step-num{width:24px;height:24px;border-radius:50%;background:var(--blue);color:var(--bg);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.flow-step-body{flex:1}
+.flow-step-title{font-size:13px;font-weight:600;margin-bottom:2px}
+.flow-step-desc{font-size:12px;color:var(--text2)}
+.flow-connector{margin-left:12px;border-left:1px dashed var(--border);height:12px}
+
+/* ── PORTS TABLE ── */
+.ports-table{width:100%;border-collapse:collapse;font-size:12px}
+.ports-table th{background:var(--surface2);text-align:left;padding:8px 12px;color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.ports-table td{padding:7px 12px;border-bottom:1px solid var(--border);font-family:monospace;font-size:12px}
+.ports-table td:last-child{font-family:-apple-system,sans-serif;font-size:11px;color:var(--text2)}
+
+/* ── MISC ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}}
+.info-row{display:flex;gap:8px;margin-bottom:8px;font-size:13px}
+.info-row .k{color:var(--text2);min-width:140px}
+.info-row .v{color:var(--text)}
+code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px;font-family:monospace}
+.hidden{display:none!important}
+.events-list{font-size:13px}
+.events-list li{padding:6px 0;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:8px}
+.events-list li:last-child{border-bottom:none}
+.event-name{font-family:monospace;color:var(--purple)}
+.event-arrow{color:var(--text2)}
+.event-handler{font-family:monospace;color:var(--blue)}
+.event-effect{color:var(--text2);font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>Life</span>Level — Architecture &amp; Business Map</h1>
+  <span class="badge blue">ASP.NET Core 8</span>
+  <span class="badge purple">Flutter</span>
+  <span class="badge green">PostgreSQL</span>
+  <span class="badge">Redis · FCM · Strava · Garmin</span>
+  <span class="badge orange">2026-05-22</span>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="num">11</div><div class="lbl">Backend Modules</div></div>
+  <div class="stat-item"><div class="num">41</div><div class="lbl">DB Entities</div></div>
+  <div class="stat-item"><div class="num">24</div><div class="lbl">Controllers</div></div>
+  <div class="stat-item"><div class="num">31</div><div class="lbl">Shared Ports</div></div>
+  <div class="stat-item"><div class="num">40+</div><div class="lbl">API Endpoints</div></div>
+  <div class="stat-item"><div class="num">20+</div><div class="lbl">Flutter Features</div></div>
+  <div class="stat-item"><div class="num">58</div><div class="lbl">Design Mockups</div></div>
+  <div class="stat-item"><div class="num">30+</div><div class="lbl">Tickets</div></div>
+</div>
+
+<div class="tab-nav">
+  <button class="active" onclick="showTab('overview',this)">🗺 Overview</button>
+  <button onclick="showTab('modules',this)">📦 Backend Modules</button>
+  <button onclick="showTab('api',this)">🔌 API Reference</button>
+  <button onclick="showTab('engine',this)">⚙️ Game Engine</button>
+  <button onclick="showTab('mobile',this)">📱 Mobile App</button>
+  <button onclick="showTab('flows',this)">🔄 Data Flows</button>
+  <button onclick="showTab('tickets',this)">🎫 Tickets</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ OVERVIEW -->
+<div id="tab-overview" class="tab-pane active">
+
+  <div class="section-title">System Architecture</div>
+  <p class="section-sub">Modular monolith with ports-and-adapters. All game logic, auth, and business rules live in ASP.NET Core. Supabase is infrastructure only.</p>
+
+  <div class="layer-diagram">
+    <div class="layer flutter">
+      <div class="layer-label">Client</div>
+      <div class="layer-title">📱 Flutter Mobile App</div>
+      <div class="layer-desc">Single codebase (iOS + Android) · Riverpod state management · Dart 3</div>
+      <div class="layer-chips">
+        <span class="chip">Home</span><span class="chip">Map</span><span class="chip">Boss</span>
+        <span class="chip">Quests</span><span class="chip">Profile</span><span class="chip">Activity</span>
+        <span class="chip">Tutorial</span><span class="chip">Titles</span><span class="chip">Items</span>
+        <span class="chip">Streak</span><span class="chip">Achievements</span><span class="chip">Integrations</span>
+        <span class="chip">Notifications</span><span class="chip">World Zones</span>
+      </div>
+    </div>
+    <div class="arrow-connector">↕ HTTPS REST (JWT Bearer) &nbsp;·&nbsp; ↓ FCM Push</div>
+    <div class="layer api">
+      <div class="layer-label">API / Business Logic</div>
+      <div class="layer-title">🏗 ASP.NET Core 8 — Modular Monolith</div>
+      <div class="layer-desc">Composition root: LifeLevel.Api · 24 controllers · Single AppDbContext (41 DbSets) · Module boundaries enforced via SharedKernel ports</div>
+      <div class="layer-chips">
+        <span class="chip">Identity</span><span class="chip">Character</span><span class="chip">Activity</span>
+        <span class="chip">Quest</span><span class="chip">Streak</span><span class="chip">LoginReward</span>
+        <span class="chip">Map</span><span class="chip">WorldZone</span>
+        <span class="chip">Adventure.Encounters</span><span class="chip">Adventure.Dungeons</span>
+        <span class="chip">Items</span><span class="chip">Achievements</span>
+        <span class="chip">Notifications</span><span class="chip">Integrations</span>
+        <span class="chip">SharedKernel (21 ports + events)</span>
+      </div>
+    </div>
+    <div class="arrow-connector">↕ EF Core + Npgsql</div>
+    <div class="layer data">
+      <div class="layer-label">Data</div>
+      <div class="layer-title">🗄 Supabase PostgreSQL + Redis</div>
+      <div class="layer-desc">Managed Postgres connected via EF Core · Redis for leaderboards + XP storm state · JWT HS256 auth (24h expiry) · Migrations in LifeLevel.Api only</div>
+    </div>
+    <div class="arrow-connector">↔ OAuth/Webhooks &nbsp;·&nbsp; FCM SDK</div>
+    <div class="layer external">
+      <div class="layer-label">External Services</div>
+      <div class="layer-title">🌐 Integrations</div>
+      <div class="layer-chips">
+        <span class="chip">🔥 Firebase FCM — push notifications</span>
+        <span class="chip">🚴 Strava OAuth + webhooks</span>
+        <span class="chip">⌚ Garmin OAuth + webhooks</span>
+        <span class="chip">💪 Google Health Connect (Android)</span>
+        <span class="chip">🍎 HealthKit (iOS)</span>
+        <span class="chip">🔌 SignalR — real-time raids (planned LL-016)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Cross-Module Communication</div>
+  <div class="two-col" style="margin-bottom:28px">
+    <div class="card">
+      <div class="card-title">⚡ Tier 1 — Synchronous Port Calls</div>
+      <div class="card-desc">Same transaction, direct interface injection. Used for data that must be consistent.</div>
+      <ul class="events-list">
+        <li><span class="event-name">Activity</span><span class="event-arrow">→</span><span class="event-handler">ICharacterXpPort.AwardXpAsync()</span></li>
+        <li><span class="event-name">Activity</span><span class="event-arrow">→</span><span class="event-handler">ICharacterStatPort.ApplyStatGainsAsync()</span></li>
+        <li><span class="event-name">Activity</span><span class="event-arrow">→</span><span class="event-handler">IWorldZoneDistancePort.AddDistanceAsync()</span></li>
+        <li><span class="event-name">Character.GetProfile</span><span class="event-arrow">→</span><span class="event-handler">IStreakReadPort, ILoginRewardReadPort, IDailyQuestReadPort</span></li>
+        <li><span class="event-name">LoginReward</span><span class="event-arrow">→</span><span class="event-handler">IStreakShieldPort.AddShieldAsync()</span></li>
+        <li><span class="event-name">Boss</span><span class="event-arrow">→</span><span class="event-handler">ICharacterXpPort.AwardXpAsync()</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">📡 Tier 2 — Domain Events (fire-and-await)</div>
+      <div class="card-desc">After SaveChanges. Used for side-effects that don't need to be in the same transaction.</div>
+      <ul class="events-list">
+        <li><span class="event-name">ActivityLoggedEvent</span><span class="event-arrow">→</span><span class="event-handler">StreakActivityHandler</span></li>
+        <li><span class="event-name">ActivityLoggedEvent</span><span class="event-arrow">→</span><span class="event-handler">QuestActivityHandler</span></li>
+        <li><span class="event-name">UserRegisteredEvent</span><span class="event-arrow">→</span><span class="event-handler">CharacterCreatedHandler</span></li>
+        <li><span class="event-name">StreakBrokenEvent</span><span class="event-arrow">→</span><span class="event-handler">StreakBrokenNotificationHandler → FCM push</span></li>
+        <li><span class="event-name">CharacterLeveledUpEvent</span><span class="event-arrow">→</span><span class="event-handler">LevelUpUnlockHandler (items/zones/titles)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Module Dependency DAG</div>
+  <p class="section-sub">No cycles allowed. Every module depends only on SharedKernel (or modules listed below it in the DAG).</p>
+  <div class="grid-3" style="margin-bottom:28px">
+    <div class="card">
+      <div class="card-title">🔒 Leaf Modules (→ SharedKernel only)</div>
+      <div class="card-tags">
+        <span class="tag blue">Identity</span><span class="tag purple">Character</span>
+        <span class="tag orange">Activity</span><span class="tag green">Quest</span>
+        <span class="tag">Streak</span><span class="tag">LoginReward</span>
+        <span class="tag">WorldZone</span><span class="tag">Notifications</span>
+        <span class="tag">Integrations</span><span class="tag">Items</span><span class="tag">Achievements</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗺 Map → SharedKernel + core</div>
+      <div class="card-tags"><span class="tag teal">Map</span></div>
+      <div class="card-desc" style="margin-top:8px;font-size:12px">MapService lives in LifeLevel.Api (composition root) to avoid cycles when loading cross-module entities from Adventure modules.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚔️ Adventure → SharedKernel + Map</div>
+      <div class="card-tags">
+        <span class="tag red">Adventure.Encounters</span>
+        <span class="tag red">Adventure.Dungeons</span>
+      </div>
+      <div class="card-desc" style="margin-top:8px;font-size:12px">Only modules that depend on Map layer. Dungeons and Encounters read map state via port or direct Map entity reference.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Key Architectural Constraints</div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">✅ AppDbContext Rule</div><div class="card-desc">Single AppDbContext in LifeLevel.Api (41 DbSets). Each module provides IEntityTypeConfiguration&lt;T&gt; classes. ApplyConfigurationsFromAssembly() called per module in OnModelCreating. Migrations live in LifeLevel.Api only.</div></div>
+    <div class="card"><div class="card-title">✅ Port Rule</div><div class="card-desc">Modules never reference each other's concrete classes. All cross-module calls go through port interfaces defined in SharedKernel. Concrete implementations live in the implementing module and are registered in LifeLevel.Api DI container.</div></div>
+    <div class="card"><div class="card-title">✅ Seeder Rule</div><div class="card-desc">WorldSeeder lives in LifeLevel.Api (touches World/Zone/Node entities from multiple modules). Composition root is the right place for cross-module seeders.</div></div>
+    <div class="card"><div class="card-title">✅ Auth Rule</div><div class="card-desc">Supabase Auth is NOT used. JWT HS256 issued by ASP.NET Core Identity module. Tokens expire in 24h. All auth logic stays in the backend — never delegated to Supabase.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULES -->
+<div id="tab-modules" class="tab-pane">
+
+  <div class="section-title">11 Backend Module Class Libraries</div>
+  <p class="section-sub">Each module is a separate C# project with its own entities, services, and port implementations. Composed in LifeLevel.Api.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:32px">
+
+    <div class="module-card" style="border-top-color:#4f9eff">
+      <div class="mod-name">🔑 Identity</div>
+      <div class="mod-desc">Auth, JWT, user registration</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>User (Id, Username, Email, PasswordHash)</li><li>UserRingItem (equipment state)</li></ul>
+      <div class="mod-section">Key Services</div>
+      <ul><li>AuthService — register + JWT</li><li>JwtService — token generation/validation</li></ul>
+      <div class="mod-section">Events Raised</div>
+      <ul><li>UserRegisteredEvent → CharacterCreatedHandler</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#a371f7">
+      <div class="mod-name">👤 Character</div>
+      <div class="mod-desc">XP/stat engine, level progression, titles, tutorial tracking</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Character (Level, Xp, Rank, 5 stats, AvailableStatPoints, TutorialStep)</li><li>CharacterClass (multipliers per stat)</li><li>XpHistoryEntry</li><li>Title (48 titles)</li><li>CharacterTitle</li></ul>
+      <div class="mod-section">Key Services</div>
+      <ul><li>CharacterService — level calc, stat spend, profile</li><li>TitleService — equip, rank ladder</li><li>TutorialService — 7-step onboarding</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort</li><li>ICharacterTutorialPort, ITitleUnlockPort, ICharacterInfoPort</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#f5a623">
+      <div class="mod-name">🏃 Activity</div>
+      <div class="mod-desc">Log workouts, calculate XP/stat gains, trigger cross-module effects</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Activity (Type, DurationMinutes, DistanceKm, Calories, HeartRateAvg, XpGained, 5 stat gains)</li></ul>
+      <div class="mod-section">Activity Types</div>
+      <ul><li>Run, Cycle, Swim, Walk, Sport, Strength, Yoga, Custom</li></ul>
+      <div class="mod-section">Key Services</div>
+      <ul><li>ActivityService — CalculateGains(), port dispatch</li></ul>
+      <div class="mod-section">Events Raised</div>
+      <ul><li>ActivityLoggedEvent → StreakActivityHandler, QuestActivityHandler</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#3fb950">
+      <div class="mod-name">📋 Quest</div>
+      <div class="mod-desc">Daily/weekly/special quests, generation, progress tracking</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Quest (Name, Type, TargetValue, RewardXp)</li><li>UserQuestProgress (CurrentValue, IsCompleted, ExpiresAt)</li></ul>
+      <div class="mod-section">Rules</div>
+      <ul><li>5 daily quests generated per user per day</li><li>Expire at next midnight UTC</li><li>3 weekly quests</li><li>Bonus +50 XP for all-5-daily completion</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>IDailyQuestReadPort, IQuestProgressPort</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#d29922">
+      <div class="mod-name">🔥 Streak</div>
+      <div class="mod-desc">Daily activity streaks, shields, milestones, break logic</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Streak (Current, Longest, Shields, ShieldUsedToday, LastActivityDate, LastStreakBrokenAt)</li></ul>
+      <div class="mod-section">Rules</div>
+      <ul><li>Shield accrual: every 7 active days</li><li>Max 3 shields</li><li>Break: no activity + no shield for 24h</li><li>Day 7 sets XpStorm flag (Day 7 login cycle)</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>IStreakReadPort, IStreakShieldPort, IStreakDailyReset</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#f5a623">
+      <div class="mod-name">🎁 LoginReward</div>
+      <div class="mod-desc">7-day login cycle, daily claims, XP Storm flag</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>LoginReward (CurrentDay 1–7, ClaimedToday, LastClaimDate, IsXpStorm)</li></ul>
+      <div class="mod-section">Rules</div>
+      <ul><li>Day 7 sets XpStorm flag + grants shield via IStreakShieldPort</li><li>One claim per calendar day (UTC)</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>ILoginRewardReadPort, ILoginRewardDailyReset</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#39d0d8">
+      <div class="mod-name">🗺 Map</div>
+      <div class="mod-desc">Local dungeon layer — node/edge graph, encounters, distance movement</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>MapNode (Region, Icon, NodeType, EncounterId)</li><li>MapEdge (SourceNodeId, TargetNodeId, DistanceKm)</li><li>UserMapProgress (CurrentNodeId)</li><li>UserNodeUnlock</li></ul>
+      <div class="mod-section">Note</div>
+      <ul><li>MapService lives in LifeLevel.Api to avoid cycles</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#39d0d8">
+      <div class="mod-name">🌍 WorldZone</div>
+      <div class="mod-desc">Overworld layer — zone/edge graph, zone-scoped dungeons, distance travel</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>World → Region → WorldZone hierarchy</li><li>WorldZoneEdge (DistanceKm)</li><li>UserWorldProgress (DestinationZoneId, DistanceTraveledOnEdge)</li><li>UserZoneUnlock, UserPathChoice</li><li>WorldZoneDungeonFloor, UserWorldDungeonState</li></ul>
+      <div class="mod-section">Rules</div>
+      <ul><li>Activity km → AddDistanceAsync() → progress on edge</li><li>Arrival when accumulated ≥ edge.DistanceKm</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>IWorldZoneDistancePort, IWorldZoneCompletionPort, IWorldDungeonActivityPort, IZoneUnlockReadPort</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#f85149">
+      <div class="mod-name">⚔️ Adventure.Encounters</div>
+      <div class="mod-desc">Boss/mini-boss mechanics, chest encounters, damage formula</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Boss (MaxHp, RewardXp, TimerDays, IsMini, NodeId?, WorldZoneId?)</li><li>Chest (EncounterId, LootTableId)</li><li>UserBossState (HpDealt, IsDefeated, IsExpired, StartedAt)</li><li>UserChestState</li></ul>
+      <div class="mod-section">Rules</div>
+      <ul><li>Boss damage: (minutes/30) + (km/2) × type multiplier</li><li>Timer: 7 days (regular), shorter for mini</li><li>Defeat: HpDealt ≥ MaxHp → RewardXp via ICharacterXpPort</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#f85149">
+      <div class="mod-name">🏰 Adventure.Dungeons</div>
+      <div class="mod-desc">Dungeon floor progression, crossroads branching, path choice tracking</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>DungeonFloor (FloorNumber, Difficulty)</li><li>DungeonPortal (NodeId, LeadsToZoneId)</li><li>Crossroads, CrossroadsPath</li><li>UserDungeonState (CurrentFloorId)</li><li>UserCrossroadsState (ChosenPathId?)</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#3fb950">
+      <div class="mod-name">🎒 Items</div>
+      <div class="mod-desc">21-item catalog, 5 equip slots, gear stat bonuses</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Item (Rarity: Common→Legendary, Slot, stat bonuses, UnlockLevel)</li><li>CharacterItem, EquipmentSlot, ItemDropRule</li></ul>
+      <div class="mod-section">Equip Slots</div>
+      <ul><li>weapon, armor, helm, gloves, trinket</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>IGearBonusReadPort (XpBonusPct), ILevelUpItemGrantPort, IInventorySlotReadPort</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#3fb950">
+      <div class="mod-name">🏆 Achievements</div>
+      <div class="mod-desc">48-badge catalog, unlock checks on activity log</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>Achievement (Name, Icon, BadgeUrl, UnlockCriteria)</li><li>UserAchievement (Progress, UnlockedAt)</li></ul>
+      <div class="mod-section">Tiers</div>
+      <ul><li>Common / Uncommon / Rare / Epic / Legendary</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#f85149">
+      <div class="mod-name">🔔 Notifications</div>
+      <div class="mod-desc">FCM push delivery, in-app feed, cadence policy</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>DeviceToken (Token, IsActive)</li><li>NotificationLog (Category, Title, Body, DeepLinkPath, IsRead)</li></ul>
+      <div class="mod-section">Ports Implemented</div>
+      <ul><li>INotificationPort.SendToUserAsync()</li></ul>
+    </div>
+
+    <div class="module-card" style="border-top-color:#4f9eff">
+      <div class="mod-name">🔗 Integrations</div>
+      <div class="mod-desc">Strava/Garmin OAuth + webhooks, Health Connect sync</div>
+      <div class="mod-section">Entities</div>
+      <ul><li>StravaConnection, GarminConnection (tokens, expiry, IsConnected)</li><li>ExternalActivityRecord (dedup by externalId)</li></ul>
+      <div class="mod-section">Key Services</div>
+      <ul><li>StravaWebhookService, GarminWebhookService, HealthSyncService</li></ul>
+    </div>
+
+  </div>
+
+  <div class="section-title">SharedKernel — All 31 Port Interfaces</div>
+  <div style="overflow-x:auto">
+  <table class="ports-table">
+    <thead><tr><th>Port Interface</th><th>Key Method</th><th>Caller → Implementor</th></tr></thead>
+    <tbody>
+      <tr><td>ICharacterXpPort</td><td>AwardXpAsync() → XpAwardResult</td><td>Activity/Boss → Character</td></tr>
+      <tr><td>ICharacterStatPort</td><td>ApplyStatGainsAsync(str,end,agi,flx,sta)</td><td>Activity → Character</td></tr>
+      <tr><td>ICharacterLevelReadPort</td><td>GetLevelAsync(userId)</td><td>WorldZone/Quest → Character</td></tr>
+      <tr><td>ICharacterIdReadPort</td><td>GetCharacterIdAsync(userId)</td><td>multiple → Character</td></tr>
+      <tr><td>ICharacterInfoPort</td><td>GetInfoAsync(userId)</td><td>multiple → Character</td></tr>
+      <tr><td>ICharacterTutorialPort</td><td>AdvanceIfOnStepAsync(charId, expectedStep)</td><td>Activity → Character</td></tr>
+      <tr><td>ITitleUnlockPort</td><td>UnlockTitleAsync(userId, titleKey)</td><td>LevelUpHandler → Character</td></tr>
+      <tr><td>IStreakReadPort</td><td>GetCurrentStreakAsync(userId)</td><td>Character.GetProfile → Streak</td></tr>
+      <tr><td>IStreakShieldPort</td><td>AddShieldAsync(userId)</td><td>LoginReward → Streak</td></tr>
+      <tr><td>IStreakDailyReset</td><td>CheckAndBreakExpiredStreaksAsync()</td><td>Cron → Streak</td></tr>
+      <tr><td>ILoginRewardReadPort</td><td>HasClaimedTodayAsync(userId)</td><td>Character.GetProfile → LoginReward</td></tr>
+      <tr><td>ILoginRewardDailyReset</td><td>ProcessDailyResetAsync()</td><td>Cron → LoginReward</td></tr>
+      <tr><td>IDailyQuestReadPort</td><td>CountCompletedDailyQuestsAsync(userId)</td><td>Character.GetProfile → Quest</td></tr>
+      <tr><td>IActivityLogPort</td><td>LogActivityAsync(userId, req) → ActivityLogPortResult</td><td>Integrations → Activity</td></tr>
+      <tr><td>IActivityStatsReadPort</td><td>GetHistoryAsync(userId)</td><td>multiple → Activity</td></tr>
+      <tr><td>IActivityExternalIdReadPort</td><td>GetExternalActivityIdAsync(externalId, source)</td><td>Integrations → Activity (dedup)</td></tr>
+      <tr><td>IActivityHistoryReadPort</td><td>GetActivitiesAsync(userId) + stats</td><td>Character profile → Activity</td></tr>
+      <tr><td>IActivityBossDamagePort</td><td>GetBossDamageHistoryAsync(userId, bossId)</td><td>Boss → Activity</td></tr>
+      <tr><td>IMapProgressReadPort</td><td>GetCurrentNodeIdAsync(userId)</td><td>multiple → Map</td></tr>
+      <tr><td>IMapNodeCountPort</td><td>count query</td><td>Achievement → Map</td></tr>
+      <tr><td>IMapNodeCompletedCountPort</td><td>count query</td><td>Achievement → Map</td></tr>
+      <tr><td>IWorldZoneDistancePort</td><td>AddDistanceAsync(userId, km)</td><td>Activity → WorldZone</td></tr>
+      <tr><td>IWorldZoneCompletionPort</td><td>CompleteZoneAsync(userId, zoneId)</td><td>WorldZone internal</td></tr>
+      <tr><td>IWorldDungeonActivityPort</td><td>CreditActivityAsync(userId, activityXp)</td><td>Activity → WorldZone</td></tr>
+      <tr><td>IBossSpawnPort</td><td>SpawnBossAsync(userId, zoneId, bossId)</td><td>WorldZone → Encounters</td></tr>
+      <tr><td>IBossDefeatedCountReadPort</td><td>GetDefeatedBossCountAsync(userId)</td><td>Achievement → Encounters</td></tr>
+      <tr><td>IBossDefeatReadPort</td><td>GetLastDefeatAsync(userId, bossId)</td><td>multiple → Encounters</td></tr>
+      <tr><td>IGearBonusReadPort</td><td>GetEquippedBonusesAsync(userId) → XpBonusPct</td><td>Activity → Items</td></tr>
+      <tr><td>ILevelUpItemGrantPort</td><td>GrantItemsAsync(userId, level)</td><td>LevelUpHandler → Items</td></tr>
+      <tr><td>IZoneUnlockReadPort</td><td>GetUnlockedZonesAsync(userId)</td><td>multiple → WorldZone</td></tr>
+      <tr><td>IInventorySlotReadPort</td><td>GetSlotCountAsync(userId)</td><td>Items (internal)</td></tr>
+      <tr><td>INotificationPort</td><td>SendToUserAsync(userId, category, title, body, data)</td><td>multiple → Notifications</td></tr>
+      <tr><td>IQuestProgressPort</td><td>RecordActivityProgressAsync(userId, type, progress)</td><td>QuestActivityHandler → Quest</td></tr>
+      <tr><td>IUserReadPort</td><td>GetUserByIdAsync(userId)</td><td>multiple → Identity</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ API -->
+<div id="tab-api" class="tab-pane">
+  <div class="section-title">API Reference — All Endpoints</div>
+  <p class="section-sub">Base URL: <code>/api</code> · Auth: <code>Authorization: Bearer &lt;jwt&gt;</code> · All requests/responses are JSON.</p>
+
+  <input class="api-search" id="apiSearch" placeholder="Search endpoints... (e.g. activity, boss, quest)" oninput="filterApi(this.value)">
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterByModule('all',this)">All</button>
+    <button class="filter-btn" onclick="filterByModule('activity',this)">Activity</button>
+    <button class="filter-btn" onclick="filterByModule('character',this)">Character</button>
+    <button class="filter-btn" onclick="filterByModule('quest',this)">Quest</button>
+    <button class="filter-btn" onclick="filterByModule('boss',this)">Boss</button>
+    <button class="filter-btn" onclick="filterByModule('streak',this)">Streak</button>
+    <button class="filter-btn" onclick="filterByModule('map',this)">Map</button>
+    <button class="filter-btn" onclick="filterByModule('world',this)">World</button>
+    <button class="filter-btn" onclick="filterByModule('auth',this)">Auth</button>
+    <button class="filter-btn" onclick="filterByModule('other',this)">Other</button>
+  </div>
+
+  <div style="overflow-x:auto">
+  <table class="api-table" id="apiTable">
+    <thead><tr><th>Method</th><th>Path</th><th>Request Body / Params</th><th>Response</th><th>Module</th></tr></thead>
+    <tbody>
+      <!-- Activity -->
+      <tr data-module="activity"><td><span class="method POST">POST</span></td><td class="path">/api/activity/log</td><td><code>{type, durationMinutes, distanceKm?, calories?, heartRate?}</code></td><td><code>{xpGained, strGained, endGained, agiGained, flxGained, staGained, leveledUp, newLevel, xpStorm}</code></td><td><span class="mod-badge">Activity</span></td></tr>
+      <tr data-module="activity"><td><span class="method GET">GET</span></td><td class="path">/api/activity/history</td><td>—</td><td><code>List&lt;ActivityResponse&gt;</code> newest-first with stats + XP</td><td><span class="mod-badge">Activity</span></td></tr>
+      <!-- Character -->
+      <tr data-module="character"><td><span class="method GET">GET</span></td><td class="path">/api/character/me</td><td>—</td><td><code>{level, xp, stats, equippedTitle, rank, longestStreak, loginReward, …}</code></td><td><span class="mod-badge">Character</span></td></tr>
+      <tr data-module="character"><td><span class="method POST">POST</span></td><td class="path">/api/character/setup</td><td><code>{classId, avatarEmoji}</code></td><td>CharacterSetupResponse</td><td><span class="mod-badge">Character</span></td></tr>
+      <tr data-module="character"><td><span class="method GET">GET</span></td><td class="path">/api/classes</td><td>—</td><td><code>List&lt;CharacterClassResponse&gt;</code></td><td><span class="mod-badge">Character</span></td></tr>
+      <tr data-module="character"><td><span class="method POST">POST</span></td><td class="path">/api/character/spend-stat</td><td><code>{pointsToSpend, statType}</code></td><td>Updated stats</td><td><span class="mod-badge">Character</span></td></tr>
+      <tr data-module="character"><td><span class="method GET">GET</span></td><td class="path">/api/character/inventory</td><td>—</td><td><code>List&lt;CharacterItemResponse&gt;</code></td><td><span class="mod-badge">Items</span></td></tr>
+      <tr data-module="character"><td><span class="method POST">POST</span></td><td class="path">/api/character/equip</td><td><code>{slotId, itemId}</code></td><td>EquipmentDto (new loadout)</td><td><span class="mod-badge">Items</span></td></tr>
+      <tr data-module="character"><td><span class="method POST">POST</span></td><td class="path">/api/character/unequip</td><td><code>{slotId}</code></td><td>EquipmentDto</td><td><span class="mod-badge">Items</span></td></tr>
+      <!-- Quest -->
+      <tr data-module="quest"><td><span class="method GET">GET</span></td><td class="path">/api/quests/daily</td><td>—</td><td><code>List&lt;UserQuestProgressDto&gt;</code> (5 quests, expires midnight UTC)</td><td><span class="mod-badge">Quest</span></td></tr>
+      <tr data-module="quest"><td><span class="method GET">GET</span></td><td class="path">/api/quests/weekly</td><td>—</td><td><code>List&lt;UserQuestProgressDto&gt;</code></td><td><span class="mod-badge">Quest</span></td></tr>
+      <tr data-module="quest"><td><span class="method GET">GET</span></td><td class="path">/api/quests/special</td><td>—</td><td><code>List&lt;UserQuestProgressDto&gt;</code></td><td><span class="mod-badge">Quest</span></td></tr>
+      <tr data-module="quest"><td><span class="method POST">POST</span></td><td class="path">/api/quests/<span>{id}</span>/complete</td><td>—</td><td><code>{xpAwarded, bonus}</code></td><td><span class="mod-badge">Quest</span></td></tr>
+      <!-- Streak -->
+      <tr data-module="streak"><td><span class="method GET">GET</span></td><td class="path">/api/streak</td><td>—</td><td><code>{current, longest, shieldsAvailable, shieldUsedToday, lastActivityDate}</code></td><td><span class="mod-badge">Streak</span></td></tr>
+      <tr data-module="streak"><td><span class="method POST">POST</span></td><td class="path">/api/streak/shield-use</td><td>—</td><td>Updated StreakDto</td><td><span class="mod-badge">Streak</span></td></tr>
+      <!-- LoginReward -->
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/login-reward</td><td>—</td><td><code>{day, claimedToday, pendingReward?, xpStormActive}</code></td><td><span class="mod-badge">LoginReward</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/login-reward/claim</td><td>—</td><td>Updated LoginRewardDto (advances day)</td><td><span class="mod-badge">LoginReward</span></td></tr>
+      <!-- Boss -->
+      <tr data-module="boss"><td><span class="method GET">GET</span></td><td class="path">/api/boss</td><td>—</td><td><code>List&lt;BossListItemDto&gt;</code> (regular + mini + world-zone bosses with state)</td><td><span class="mod-badge">Boss</span></td></tr>
+      <tr data-module="boss"><td><span class="method POST">POST</span></td><td class="path">/api/boss/<span>{id}</span>/fight</td><td>—</td><td>UserBossState (activates fight)</td><td><span class="mod-badge">Boss</span></td></tr>
+      <tr data-module="boss"><td><span class="method POST">POST</span></td><td class="path">/api/boss/<span>{id}</span>/damage</td><td><code>{damage: int}</code></td><td><code>{newHp, isDefeated, xpAwarded?}</code></td><td><span class="mod-badge">Boss</span></td></tr>
+      <!-- Map -->
+      <tr data-module="map"><td><span class="method GET">GET</span></td><td class="path">/api/dungeon</td><td>—</td><td>MapDto (nodes, edges, current position)</td><td><span class="mod-badge">Map</span></td></tr>
+      <tr data-module="map"><td><span class="method GET">GET</span></td><td class="path">/api/dungeon/map</td><td><code>?nodeId&amp;edgeId</code></td><td>Full map structure</td><td><span class="mod-badge">Map</span></td></tr>
+      <tr data-module="map"><td><span class="method POST">POST</span></td><td class="path">/api/chest/<span>{id}</span>/open</td><td>—</td><td><code>{items[], xp}</code></td><td><span class="mod-badge">Map</span></td></tr>
+      <!-- World -->
+      <tr data-module="world"><td><span class="method GET">GET</span></td><td class="path">/api/world-zones</td><td>—</td><td><code>List&lt;WorldZoneDto&gt;</code> with unlock status, progress, destination state</td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <tr data-module="world"><td><span class="method GET">GET</span></td><td class="path">/api/world-map</td><td>—</td><td>WorldMapDto (zones, edges, character position, traveling state)</td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <tr data-module="world"><td><span class="method POST">POST</span></td><td class="path">/api/world-zones/<span>{id}</span>/set-destination</td><td><code>{zoneId}</code></td><td>Travel state updated</td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <tr data-module="world"><td><span class="method GET">GET</span></td><td class="path">/api/world-dungeon/<span>{zoneId}</span></td><td>—</td><td>Zone's internal dungeon structure</td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <tr data-module="world"><td><span class="method POST">POST</span></td><td class="path">/api/world-dungeon/floor-state</td><td><code>{floorId, activityXp}</code></td><td>Floor progression updated</td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <tr data-module="world"><td><span class="method POST">POST</span></td><td class="path">/api/world-chest/<span>{id}</span>/open</td><td>—</td><td><code>{items[], xp}</code></td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <tr data-module="world"><td><span class="method POST">POST</span></td><td class="path">/api/crossroads/<span>{id}</span>/choose-path</td><td><code>{pathId}</code></td><td>Updated crossroads state</td><td><span class="mod-badge">WorldZone</span></td></tr>
+      <!-- Auth -->
+      <tr data-module="auth"><td><span class="method POST">POST</span></td><td class="path">/api/auth/register</td><td><code>{username, password}</code></td><td><code>{token, user}</code></td><td><span class="mod-badge">Auth</span></td></tr>
+      <tr data-module="auth"><td><span class="method POST">POST</span></td><td class="path">/api/auth/login</td><td><code>{username, password}</code></td><td><code>{token, user}</code></td><td><span class="mod-badge">Auth</span></td></tr>
+      <tr data-module="auth"><td><span class="method POST">POST</span></td><td class="path">/api/user/logout</td><td>—</td><td>success</td><td><span class="mod-badge">Auth</span></td></tr>
+      <tr data-module="auth"><td><span class="method GET">GET</span></td><td class="path">/api/user/me</td><td>—</td><td>User info</td><td><span class="mod-badge">Auth</span></td></tr>
+      <!-- Other -->
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/items</td><td>—</td><td><code>List&lt;ItemResponse&gt;</code> (21 items, rarity, slot, stats)</td><td><span class="mod-badge">Items</span></td></tr>
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/achievements</td><td>—</td><td><code>List&lt;AchievementDto&gt;</code> (48 total with unlock status)</td><td><span class="mod-badge">Achievements</span></td></tr>
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/achievements/<span>{id}</span></td><td>—</td><td>AchievementDetailDto with progress + criteria</td><td><span class="mod-badge">Achievements</span></td></tr>
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/titles</td><td>—</td><td><code>List&lt;TitleDto&gt;</code> (48 titles, rarity, unlocked)</td><td><span class="mod-badge">Titles</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/titles/<span>{id}</span>/equip</td><td>—</td><td>Equipped TitleDto</td><td><span class="mod-badge">Titles</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/notifications/register-token</td><td><code>{fcmToken}</code></td><td>DeviceToken stored</td><td><span class="mod-badge">Notifications</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/notifications/unregister-token</td><td><code>{fcmToken}</code></td><td>DeviceToken deleted</td><td><span class="mod-badge">Notifications</span></td></tr>
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/notifications</td><td>—</td><td>List&lt;NotificationItem&gt; <em>(LL-032 pending)</em></td><td><span class="mod-badge">Notifications</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/tutorial/advance</td><td><code>{expectedStep}</code></td><td><code>{newStep, xpAwarded}</code></td><td><span class="mod-badge">Tutorial</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/tutorial/skip</td><td>—</td><td>tutorial skipped (no XP)</td><td><span class="mod-badge">Tutorial</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/tutorial/replay-topic</td><td><code>{topic}</code></td><td>topic bitmask updated</td><td><span class="mod-badge">Tutorial</span></td></tr>
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/integrations/strava/auth-url</td><td>—</td><td>Redirect URL</td><td><span class="mod-badge">Integrations</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/integrations/strava/callback</td><td><code>{code, state}</code></td><td>StravaConnection established</td><td><span class="mod-badge">Integrations</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/integrations/strava/webhook</td><td>Strava event payload</td><td>activity ingested</td><td><span class="mod-badge">Integrations</span></td></tr>
+      <tr data-module="other"><td><span class="method GET">GET</span></td><td class="path">/api/integrations/garmin/auth-url</td><td>—</td><td>Redirect URL</td><td><span class="mod-badge">Integrations</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/integrations/garmin/callback</td><td><code>{code, state}</code></td><td>GarminConnection established</td><td><span class="mod-badge">Integrations</span></td></tr>
+      <tr data-module="other"><td><span class="method POST">POST</span></td><td class="path">/api/integrations/health-connect</td><td><code>{activities[]}</code></td><td>bulk ingestion</td><td><span class="mod-badge">Integrations</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ GAME ENGINE -->
+<div id="tab-engine" class="tab-pane">
+  <div class="section-title">XP Formula</div>
+  <div class="formula-box">
+    <div class="f-title">ActivityService.CalculateGains()</div>
+    <div class="formula-code"><span class="kw">var</span> baseXp = durationMinutes × <span class="num">10</span>; <span class="cmt">// 10 XP per minute</span>
+<span class="kw">var</span> typeModifier = activityType <span class="kw">switch</span> {
+  Run, Cycle   → <span class="num">1.00</span>,
+  Swim         → <span class="num">1.20</span>,  <span class="cmt">// +20%</span>
+  Walk         → <span class="num">0.75</span>,  <span class="cmt">// -25%</span>
+  Sport        → <span class="num">1.10</span>,  <span class="cmt">// +10%</span>
+  Strength     → <span class="num">1.30</span>,  <span class="cmt">// +30%</span>
+  Yoga         → <span class="num">0.90</span>,  <span class="cmt">// -10%</span>
+  Custom       → <span class="num">1.00</span>,
+};
+<span class="kw">var</span> gearBonus = <span class="fn">IGearBonusReadPort</span>.GetEquippedBonusesAsync(userId).XpBonusPct;
+<span class="kw">var</span> finalXp = (int)(baseXp × typeModifier × (<span class="num">1</span> + gearBonus / <span class="num">100</span>));
+<span class="cmt">// XP Storm ×2 (LL-001): finalXp ×= 2 when LoginReward.IsXpStorm == true — NOT YET WIRED</span></div>
+    <p style="font-size:12px;color:var(--text2)">Note: Gear bonus (XpBonusPct) comes from equipped items via IGearBonusReadPort. XP Storm multiplier (Day 7 login reward) is tracked but not yet applied — see ticket LL-001.</p>
+  </div>
+
+  <div class="section-title">Stat Gains (per activity type)</div>
+  <table class="stat-table">
+    <thead><tr><th>Activity</th><th>STR</th><th>END</th><th>AGI</th><th>FLX</th><th>STA</th></tr></thead>
+    <tbody>
+      <tr><td>🏃 Run</td><td>·</td><td>●●●</td><td>●●</td><td>·</td><td>●</td></tr>
+      <tr><td>🚴 Cycle</td><td>·</td><td>●●●</td><td>●●</td><td>·</td><td>●</td></tr>
+      <tr><td>🏊 Swim</td><td>●</td><td>●●</td><td>·</td><td>●</td><td>●●</td></tr>
+      <tr><td>🚶 Walk</td><td>·</td><td>●</td><td>●</td><td>·</td><td>●</td></tr>
+      <tr><td>⚽ Sport</td><td>●</td><td>●</td><td>●●●</td><td>·</td><td>●</td></tr>
+      <tr><td>🏋️ Strength</td><td>●●●</td><td>·</td><td>·</td><td>·</td><td>●●</td></tr>
+      <tr><td>🧘 Yoga</td><td>·</td><td>·</td><td>·</td><td>●●●</td><td>●</td></tr>
+      <tr><td>❓ Custom</td><td>·</td><td>·</td><td>·</td><td>·</td><td>●</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:24px">● = gains scaled to duration. CharacterClass multipliers (from CharacterClass entity) further scale each stat.</p>
+
+  <div class="section-title">Level Progression</div>
+  <div class="formula-box">
+    <div class="f-title">CharacterService — Level Threshold Formula</div>
+    <div class="formula-code"><span class="cmt">// XP required to reach level N (cumulative):</span>
+threshold(N) = N × <span class="num">1000</span>
+
+Level  1 → <span class="num">1,000</span> XP   |   Level  6 → <span class="num">6,000</span> XP
+Level  2 → <span class="num">2,000</span> XP   |   Level  7 → <span class="num">7,000</span> XP
+Level  3 → <span class="num">3,000</span> XP   |   Level  8 → <span class="num">8,000</span> XP
+Level  4 → <span class="num">4,000</span> XP   |   Level  9 → <span class="num">9,000</span> XP
+Level  5 → <span class="num">5,000</span> XP   |   Level 10 → <span class="num">10,000</span> XP
+
+<span class="cmt">// On level-up: fires CharacterLeveledUpEvent →</span>
+<span class="cmt">//   LevelUpUnlockHandler: UnlockTitles, UnlockZones, GrantItems</span>
+<span class="cmt">//   Mobile: shows level-up overlay via LevelUpNotifier (static stream)</span></div>
+  </div>
+
+  <div class="section-title">Boss Damage Formula</div>
+  <div class="formula-box">
+    <div class="f-title">BossService.CalculateDamageFromActivity()</div>
+    <div class="formula-code">baseDamage = (durationMinutes / <span class="num">30</span>) + (int)(distanceKm / <span class="num">2.0</span>)
+
+typeMultiplier = activityType <span class="kw">switch</span> {
+  Walk     → <span class="num">0.5</span>,
+  Run      → <span class="num">1.0</span>,
+  Cycle    → <span class="num">1.0</span>,
+  Swim     → <span class="num">1.5</span>,
+  Strength → <span class="num">2.0</span>,
+  Sport    → <span class="num">1.5</span>,
+  Yoga     → <span class="num">0.5</span>,
+  Custom   → <span class="num">1.0</span>,
+};
+
+finalDamage = max(<span class="num">1</span>, (int)(baseDamage × typeMultiplier))
+
+<span class="cmt">// Boss HP ranges: 100–500+ (regular), smaller for mini</span>
+<span class="cmt">// Timer: 7 days (regular boss); IsExpired set after TimerDays</span>
+<span class="cmt">// Defeat: HpDealt ≥ MaxHp → IsDefeated = true → AwardXp</span></div>
+  </div>
+
+  <div class="section-title">Streak Rules</div>
+  <div class="two-col" style="margin-bottom:24px">
+    <div class="formula-box" style="margin-bottom:0">
+      <div class="f-title">Streak Lifecycle</div>
+      <div class="formula-code">Daily activity logged → streak.Current++
+No activity for 24h + no shield → <span class="kw">BREAK</span>
+  streak.Current = 0
+  streak.LastStreakBrokenAt = now
+  <span class="kw">fires</span> StreakBrokenEvent → FCM push
+
+Shield use (before break):
+  streak.Shields--
+  streak.ShieldUsedToday = true
+  streak.Current preserved
+
+Shield accrual: every 7 active days
+Max shields: 3 (configurable)
+Day 7 of login cycle → sets IsXpStorm flag on LoginReward</div>
+    </div>
+    <div class="formula-box" style="margin-bottom:0">
+      <div class="f-title">Streak Milestones</div>
+      <div class="formula-code">Milestone thresholds: [3, 7, 14, 30, 60, 100] days
+
+7-day login reward cycle:
+  Day 1: +100 XP
+  Day 2: +150 XP
+  Day 3: +200 XP
+  Day 4: +250 XP
+  Day 5: +300 XP
+  Day 6: +400 XP
+  Day 7: +500 XP + IsXpStorm flag + 1 Shield
+
+30-day milestone: legendary cosmetic (planned LL-038)
+At-risk notification at 20h idle (planned LL-036)</div>
+    </div>
+  </div>
+
+  <div class="section-title">Quest Generation</div>
+  <div class="formula-box">
+    <div class="f-title">QuestService.GenerateDailyQuestsAsync()</div>
+    <div class="formula-code"><span class="cmt">// 5 quests assigned per user per day, at UTC midnight reset</span>
+<span class="cmt">// Templates randomly selected from active Quest pool</span>
+<span class="cmt">// ExpiresAt = next midnight UTC</span>
+
+Progress via: QuestActivityHandler (ActivityLoggedEvent)
+  → IQuestProgressPort.RecordActivityProgressAsync(userId, type, value)
+
+Completion: CurrentValue ≥ Quest.TargetValue
+Reward: Quest.RewardXp (100–500 XP range)
+
+All-5-daily bonus: +<span class="num">50</span> XP when all 5 complete in same day
+Weekly quests: 3 quests (e.g. "3 workouts this week", "10 km running")</div>
+  </div>
+
+  <div class="section-title">Zone Travel Rules</div>
+  <div class="formula-box">
+    <div class="f-title">WorldZoneService.AddDistanceAsync() via IWorldZoneDistancePort</div>
+    <div class="formula-code">On activity log:
+  Activity.DistanceKm → IWorldZoneDistancePort.AddDistanceAsync(userId, km)
+  UserWorldProgress.DistanceTraveledOnEdge += km
+
+Visual position on edge:
+  progress% = DistanceTraveledOnEdge / WorldZoneEdge.DistanceKm
+
+Arrival condition:
+  DistanceTraveledOnEdge >= WorldZoneEdge.DistanceKm
+  → zone-arrival banner shown on mobile
+  → destination zone unlocked
+  → auto-spawns zone boss if applicable
+
+Zone unlock requirements: WorldZone.UnlockLevel &lt;= Character.Level
+Set destination: POST /api/world-zones/{id}/set-destination</div>
+  </div>
+
+  <div class="section-title">Tutorial System (LL-035 — Shipped)</div>
+  <div class="formula-box">
+    <div class="f-title">7-Step Onboarding Flow</div>
+    <div class="formula-code">Step 0: Intro (XP bar highlight)          → <span class="num">25</span> XP on advance
+Step 1: Stats row explanation             → <span class="num">25</span> XP on advance
+Step 2: Quests + streak introduction      → <span class="num">25</span> XP on advance
+Step 3: Activity log gate (must log one)  → <span class="num">50</span> XP — gated by ICharacterTutorialPort
+Step 4: World map walkthrough             → <span class="num">50</span> XP on advance
+Step 5: Boss system introduction          → <span class="num">50</span> XP on advance
+Step 6: Outro + "Novice Adventurer" title → <span class="num">250</span> XP total
+
+TutorialRewardsClaimed flag: prevents re-award on replay
+TutorialTopicsSeen bitmask: tracks 5 topics (xp-stats|quests-streaks|activity-logging|world-map|boss-system)</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MOBILE -->
+<div id="tab-mobile" class="tab-pane">
+  <div class="section-title">Flutter App Structure</div>
+  <p class="section-sub">Single codebase (iOS + Android). Feature-first folder layout under <code>mobile/lib/features/</code>. Riverpod for state. Firebase for notifications.</p>
+
+  <div class="section-title" style="margin-top:20px">Core Shell</div>
+  <div class="grid-3" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title">🏠 MainShell</div>
+      <div class="card-desc"><code>core/shell/main_shell.dart</code></div>
+      <ul style="font-size:12px;color:var(--text2);list-style:none;padding:0">
+        <li>· Root scaffold (ConsumerStatefulWidget)</li>
+        <li>· IndexedStack with 3 nav tabs</li>
+        <li>· FAB radial ring (10 items)</li>
+        <li>· Level-up overlay (LevelUpNotifier static stream)</li>
+        <li>· Login-reward modal on first daily open</li>
+        <li>· Tutorial overlay wiring</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">🧭 Navigation</div>
+      <div class="card-desc">Bottom tab bar (3 tabs) + FABs</div>
+      <ul style="font-size:12px;color:var(--text2);list-style:none;padding:0">
+        <li>· Tab 0: Home</li>
+        <li>· Tab 1: Map / World</li>
+        <li>· Tab 2: Profile</li>
+        <li>· FAB center: Log Activity</li>
+        <li>· FAB radial: Boss, Guild, Stats, Battle, Titles, World, Quests, Leaderboard, Profile, Map</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">🔔 Deep Links</div>
+      <div class="card-desc"><code>core/deep_link/</code></div>
+      <ul style="font-size:12px;color:var(--text2);list-style:none;padding:0">
+        <li>· DeepLinkNotifier — streams from notifications</li>
+        <li>· Handles: boss fight, streak, quest, zone</li>
+        <li>· FCM onMessage + onBackgroundMessage handlers</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Feature Modules</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+
+    <div class="card"><div class="card-title">🏠 home/</div><div class="card-desc">Home feed — orchestrates cards</div>
+      <div class="card-tags">
+        <span class="tag">HomeScreen</span><span class="tag">HomeHeader</span><span class="tag">HomeStreakStrip</span>
+        <span class="tag">HomeAdventureHero</span><span class="tag">HomeStatStrip</span>
+        <span class="tag">HomeTodaysQuestsCard</span><span class="tag">HomeLogWorkoutCta</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🏃 activity/</div><div class="card-desc">Log workouts, history, type selection</div>
+      <div class="card-tags">
+        <span class="tag">ActivityService (POST /log)</span><span class="tag">RecentActivitiesScreen</span>
+        <span class="tag">ActivityType enum</span><span class="tag">ActivityTypeMapper</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">👤 character/</div><div class="card-desc">Setup wizard, class selection, avatar</div>
+      <div class="card-tags">
+        <span class="tag">CharacterSetupScreen</span><span class="tag">ClassSelectionScreen</span>
+        <span class="tag">CharacterService</span><span class="tag">characterProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🗺 map/</div><div class="card-desc">Local dungeon node/edge canvas</div>
+      <div class="card-tags">
+        <span class="tag">MapScreen</span><span class="tag">NodeCanvas (CustomPainter)</span>
+        <span class="tag">MapHistorySheet</span><span class="tag">mapJourneyProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🌍 world_zone/</div><div class="card-desc">World map, zone picker, travel flow</div>
+      <div class="card-tags">
+        <span class="tag">WorldMapScreen</span><span class="tag">WorldMapDetailSheet</span>
+        <span class="tag">Zone grid</span><span class="tag">Distance progress bar</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">⚔️ boss/</div><div class="card-desc">Boss HP, damage ticks, fight flow</div>
+      <div class="card-tags">
+        <span class="tag">BossHpBar</span><span class="tag">BossDefeatedCard</span>
+        <span class="tag">BossLockedCard</span><span class="tag">BossExpiredCard</span>
+        <span class="tag">BossDamageHint</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">📋 quests/</div><div class="card-desc">Daily / weekly / special quest tabs</div>
+      <div class="card-tags">
+        <span class="tag">DailyQuestsTab</span><span class="tag">WeeklyQuestsTab</span>
+        <span class="tag">SpecialQuestsTab</span><span class="tag">QuestCard</span>
+        <span class="tag">questProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🔥 streak/</div><div class="card-desc">Streak detail, shields, milestones</div>
+      <div class="card-tags">
+        <span class="tag">StreakDetailSheet</span><span class="tag">Keep-alive card</span>
+        <span class="tag">Milestones [3,7,14,30,60,100]</span><span class="tag">streakProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🎁 login_reward/</div><div class="card-desc">7-day cycle chip, reward reveal modal</div>
+      <div class="card-tags">
+        <span class="tag">LoginRewardChip</span><span class="tag">RewardRevealModal</span>
+        <span class="tag">7-day grid</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">👤 profile/</div><div class="card-desc">4-tab profile screen</div>
+      <div class="card-tags">
+        <span class="tag">ProfileOverviewTab</span><span class="tag">EquipmentTab</span>
+        <span class="tag">InventoryTab</span><span class="tag">AchievementsTab</span>
+        <span class="tag">StatDetailSheet</span><span class="tag">XpHistorySheet</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🏆 achievements/</div><div class="card-desc">48-badge grid, progress, tiers</div>
+      <div class="card-tags">
+        <span class="tag">AchievementsGrid</span><span class="tag">BadgeCard</span>
+        <span class="tag">Tier filter</span><span class="tag">achievementsProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">👑 titles/</div><div class="card-desc">Title equip, rank ladder</div>
+      <div class="card-tags">
+        <span class="tag">TitlesScreen</span><span class="tag">TitleCard</span>
+        <span class="tag">RankLadder</span><span class="tag">titlesProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🎒 items/</div><div class="card-desc">Inventory, equip/unequip, gear bonuses</div>
+      <div class="card-tags">
+        <span class="tag">InventoryScreen</span><span class="tag">ItemDetailSheet</span>
+        <span class="tag">EquipmentPaperdoll</span><span class="tag">itemsProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🎓 tutorial/</div><div class="card-desc">7-step onboarding coachmarks</div>
+      <div class="card-tags">
+        <span class="tag">TutorialBubble</span><span class="tag">TutorialDimBackdrop</span>
+        <span class="tag">TutorialController</span><span class="tag">TutorialsHubScreen</span>
+        <span class="tag">6 GlobalKeys</span><span class="tag">5 topics (bitmask)</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🔔 notifications/</div><div class="card-desc">FCM token, notification feed, deep links</div>
+      <div class="card-tags">
+        <span class="tag">NotificationsSheet</span><span class="tag">FCM registration</span>
+        <span class="tag">Mark-all-read</span><span class="tag">notificationsProvider</span>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-title">🔗 integrations/</div><div class="card-desc">Strava/Garmin OAuth, Health Connect sync</div>
+      <div class="card-tags">
+        <span class="tag">StravaService</span><span class="tag">GarminService</span>
+        <span class="tag">HealthSyncService</span><span class="tag">SyncStatusBanner</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-title" style="margin-top:24px">Riverpod Providers</div>
+  <div class="grid-4">
+    <div class="card"><code>characterProvider</code><div class="card-desc">Hydrated, main profile state</div></div>
+    <div class="card"><code>activityHistoryProvider</code><div class="card-desc">Activity feed</div></div>
+    <div class="card"><code>questProvider</code><div class="card-desc">Daily/weekly/special quests</div></div>
+    <div class="card"><code>streakProvider</code><div class="card-desc">Current/longest streak + shields</div></div>
+    <div class="card"><code>itemsProvider</code><div class="card-desc">Inventory + equipped gear</div></div>
+    <div class="card"><code>achievementsProvider</code><div class="card-desc">48 achievements + progress</div></div>
+    <div class="card"><code>titlesProvider</code><div class="card-desc">Titles + equip state</div></div>
+    <div class="card"><code>integrationsProvider</code><div class="card-desc">Strava/Garmin connection status</div></div>
+    <div class="card"><code>notificationsProvider</code><div class="card-desc">In-app notification feed</div></div>
+    <div class="card"><code>tutorialProvider</code><div class="card-desc">Tutorial step + topics seen</div></div>
+    <div class="card"><code>mapJourneyProvider</code><div class="card-desc">Local dungeon node progress</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ FLOWS -->
+<div id="tab-flows" class="tab-pane">
+  <div class="section-title">Key Data Flows</div>
+
+  <div class="two-col">
+    <div>
+      <div class="section-title" style="font-size:14px">📱 → POST /api/activity/log</div>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><div class="flow-step-title">Mobile sends activity</div><div class="flow-step-desc">type, durationMinutes, distanceKm, calories, heartRate</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><div class="flow-step-title">ActivityService.CalculateGains()</div><div class="flow-step-desc">XP = minutes×10 × typeModifier × gearBonus. Stat gains by type.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><div class="flow-step-title">Sync port calls (same txn)</div><div class="flow-step-desc">ICharacterXpPort → level-up check. ICharacterStatPort → stat update. IWorldZoneDistancePort → edge progress.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><div class="flow-step-title">Activity entity saved</div><div class="flow-step-desc">Activity record persisted to DB.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-body"><div class="flow-step-title">Domain events fired (after SaveChanges)</div><div class="flow-step-desc">ActivityLoggedEvent → StreakActivityHandler (increment streak), QuestActivityHandler (update quest progress). Tutorial gate check.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">6</div><div class="flow-step-body"><div class="flow-step-title">Response returned</div><div class="flow-step-desc">{xpGained, statGains, leveledUp, newLevel, xpStorm}</div></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title" style="font-size:14px">⬆️ Level-Up Flow</div>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><div class="flow-step-title">ICharacterXpPort.AwardXpAsync()</div><div class="flow-step-desc">Called from Activity or Boss defeat. XP added to Character.Xp.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><div class="flow-step-title">Level check: Xp ≥ Level × 1000?</div><div class="flow-step-desc">If yes: Character.Level++, Character.AvailableStatPoints++</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><div class="flow-step-title">CharacterLeveledUpEvent fired</div><div class="flow-step-desc">LevelUpUnlockHandler runs: grants items via ILevelUpItemGrantPort, unlocks zones, unlocks titles (if UnlockLevel == newLevel).</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><div class="flow-step-title">Mobile overlay triggered</div><div class="flow-step-desc">ActivityService returns leveledUp:true → mobile fires LevelUpNotifier static stream → MainShell shows level-up overlay.</div></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title" style="font-size:14px">🔑 Registration Flow</div>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><div class="flow-step-title">POST /api/auth/register</div><div class="flow-step-desc">{username, password}</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><div class="flow-step-title">AuthService creates User</div><div class="flow-step-desc">Password hashed. JWT token generated (24h HS256).</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><div class="flow-step-title">UserRegisteredEvent fired</div><div class="flow-step-desc">CharacterCreatedHandler → creates Character entity (level 1, 0 XP, all stats 0). Tutorial at step 0.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><div class="flow-step-title">Character setup required</div><div class="flow-step-desc">Mobile routes to CharacterSetupScreen (class + avatar selection). POST /api/character/setup.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-body"><div class="flow-step-title">Tutorial begins</div><div class="flow-step-desc">TutorialController starts at step 0 — shows intro bubble over XP bar.</div></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title" style="font-size:14px">🌍 Zone Travel Flow</div>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><div class="flow-step-title">User sets destination</div><div class="flow-step-desc">POST /api/world-zones/{id}/set-destination → UserWorldProgress.DestinationZoneId set.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><div class="flow-step-title">Each activity adds distance</div><div class="flow-step-desc">Activity.DistanceKm → IWorldZoneDistancePort.AddDistanceAsync() → UserWorldProgress.DistanceTraveledOnEdge += km.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><div class="flow-step-title">Mobile shows progress</div><div class="flow-step-desc">GET /api/world-map → DistanceTraveledOnEdge / edge.DistanceKm = progress %. WorldMapDetailSheet shows bar.</div></div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><div class="flow-step-title">Arrival</div><div class="flow-step-desc">Progress ≥ 100% → zone unlocked → arrival banner → zone boss auto-spawned if configured.</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TICKETS -->
+<div id="tab-tickets" class="tab-pane">
+  <div class="section-title">Board — Current State</div>
+  <p class="section-sub">Source of truth: <code>docs/board.md</code>. Format: LL-NNN, layer (backend/mobile/game-engine), agent, priority, acceptance criteria.</p>
+
+  <div class="kanban">
+    <div class="kanban-col">
+      <div class="kanban-col-title">🟡 In Progress</div>
+
+      <div class="ticket">
+        <div class="ticket-id">LL-001</div>
+        <div class="ticket-title">Wire XP Storm ×2 multiplier</div>
+        <div class="ticket-meta">
+          <span class="tag blue">backend</span><span class="tag orange">game-engine</span>
+          <span class="priority-medium">medium</span>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:6px">ActivityService detects active XP Storm window (LoginReward.IsXpStorm flag). Multiplier applied after gear bonus. LogActivityResult exposes storm flag. Unit tests.</p>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-title">🔴 Bugs</div>
+
+      <div class="ticket">
+        <div class="ticket-id">LL-029</div>
+        <div class="ticket-title">World-map character position stuck at 0</div>
+        <div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-high">high</span></div>
+        <p style="font-size:11px;color:var(--text2);margin-top:6px">IWorldZoneDistancePort added + wired. Zone detail sheet fixed. Progress bar redesigned. Manual verification pending.</p>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-id">LL-021</div>
+        <div class="ticket-title">Zone-arrival banner blocks input</div>
+        <div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-high">high</span></div>
+        <p style="font-size:11px;color:var(--text2);margin-top:6px">showGeneralDialog replaced with in-Stack AnimatedSlide + IgnorePointer.</p>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-title">📋 Backlog (27 tickets)</div>
+
+      <div class="ticket"><div class="ticket-id">LL-010</div><div class="ticket-title">Garmin PKCE SHA-256 code challenge</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-medium">medium</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-011</div><div class="ticket-title">Random event spawner: Wandering Merchants</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P7</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-012</div><div class="ticket-title">Seasonal events — 5-stage reward ladder</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P7</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-014</div><div class="ticket-title">Friends system</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-015</div><div class="ticket-title">Leaderboards (Redis sorted sets)</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-016</div><div class="ticket-title">Guild system + shared-HP raid boss (SignalR)</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-017</div><div class="ticket-title">Encrypt Strava/Garmin tokens at rest</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="priority-high">high</span><span class="tag">pre-prod</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-018</div><div class="ticket-title">iOS HealthKit capability setup</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-medium">medium</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-019</div><div class="ticket-title">Remove unused go_router dependency</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">cleanup</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-020</div><div class="ticket-title">Transactional outbox for domain events</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="priority-low">low→escalates</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-028</div><div class="ticket-title">Level-gated feature unlocks</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="tag orange">game-engine</span><span class="priority-low">low</span><span class="tag">P6</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-030</div><div class="ticket-title">Refactor home screen to home-v3 mockup</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-medium">medium</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-031</div><div class="ticket-title">Local map history sheet</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P3</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-032</div><div class="ticket-title">Backend notifications feed endpoints</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="priority-medium">medium</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-033</div><div class="ticket-title">Re-home "Use Shield" action after home-v3</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-034</div><div class="ticket-title">Restore tap-to-open level-up recap on avatar</div><div class="ticket-meta"><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-036</div><div class="ticket-title">Streak at-risk push notification at 20h idle</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="priority-medium">medium</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-037</div><div class="ticket-title">StreakMilestone entity + backend-driven ladder</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-038</div><div class="ticket-title">Milestone-reached rewards</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="tag orange">game-engine</span><span class="priority-low">low</span><span class="tag">P7</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-039</div><div class="ticket-title">Streak history calendar heat-grid</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-040</div><div class="ticket-title">Shield-accrual countdown in streak sheet</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-low">low</span><span class="tag">P8</span></div></div>
+      <div class="ticket"><div class="ticket-id">LL-041</div><div class="ticket-title">Broken-streak recovery modal</div><div class="ticket-meta"><span class="tag blue">backend</span><span class="tag purple">mobile</span><span class="priority-medium">medium</span><span class="tag">P2 tail</span></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+let currentModule = 'all';
+function filterApi(q) {
+  const rows = document.querySelectorAll('#apiTable tbody tr');
+  const ql = q.toLowerCase();
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    const mod = r.dataset.module;
+    const matchesSearch = !ql || text.includes(ql);
+    const matchesModule = currentModule === 'all' || mod === currentModule;
+    r.classList.toggle('hidden', !(matchesSearch && matchesModule));
+  });
+}
+function filterByModule(mod, btn) {
+  currentModule = mod;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterApi(document.getElementById('apiSearch').value);
+}
+</script>
+</body>
+</html>

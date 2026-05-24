@@ -59,4 +59,18 @@ public class NotificationsController(
         await notifications.MarkAllReadAsync(userContext.UserId, ct);
         return NoContent();
     }
+
+    [HttpPost("send-test")]
+    public async Task<IActionResult> SendTest(CancellationToken ct)
+    {
+        var result = await notifications.SendToUserAsync(
+            userId: userContext.UserId,
+            category: "level-up",
+            title: "🔔 Test Notification",
+            body: "Push notifications are working!",
+            data: new Dictionary<string, string> { ["deeplink"] = "lifelevel://home" },
+            isCritical: true,
+            ct: ct);
+        return Ok(new { result.Sent, result.Reason });
+    }
 }

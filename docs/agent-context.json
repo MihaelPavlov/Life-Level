@@ -1,0 +1,559 @@
+{
+  "_meta": {
+    "generated": "2026-05-22",
+    "purpose": "Complete context for AI agents implementing new Life-Level features. Read this before writing any code.",
+    "version": "1.0.0",
+    "htmlMap": "docs/architecture-map.html",
+    "boardFile": "docs/board.md",
+    "architectureFile": "backend/ARCHITECTURE.txt"
+  },
+
+  "project": {
+    "name": "Life-Level",
+    "tagline": "Fitness RPG: train in real world → progress in game world",
+    "stack": {
+      "mobile": "Flutter (Dart 3) + Riverpod — single codebase iOS + Android",
+      "backend": "ASP.NET Core 8 (C#) — modular monolith, ports-and-adapters",
+      "database": "Supabase PostgreSQL connected via EF Core + Npgsql",
+      "auth": "JWT HS256, 24h expiry, issued by Identity module (NOT Supabase Auth)",
+      "cache": "Redis — sorted sets for leaderboards, XP storm state",
+      "notifications": "Firebase FCM (project: life-level-ae77f)",
+      "realtime": "SignalR — planned for guild raids (LL-016, not yet integrated)",
+      "integrations": ["Strava OAuth (ClientId 218444)", "Garmin OAuth (ClientId in config)", "Google Health Connect (Android)", "HealthKit (iOS)"]
+    },
+    "principle": "Supabase is infrastructure only (managed Postgres + storage). All auth, game logic, XP calculations, and business rules live exclusively in ASP.NET Core."
+  },
+
+  "architecture": {
+    "pattern": "modular-monolith with ports-and-adapters",
+    "compositionRoot": "LifeLevel.Api",
+    "compositionRootResponsibilities": [
+      "24 controllers (no business logic — thin HTTP adapters only)",
+      "Single AppDbContext (41 DbSets)",
+      "EF Core migrations",
+      "WorldSeeder (cross-module seeder, must stay in composition root)",
+      "MapService (cross-module entity loading, stays in composition root to avoid DAG cycles)",
+      "DI registration of all port implementations",
+      "AppDbContext.OnModelCreating calls ApplyConfigurationsFromAssembly() for each module"
+    ],
+    "moduleDAG": {
+      "leafModules": ["Identity", "Character", "Activity", "Quest", "Streak", "LoginReward", "WorldZone", "Notifications", "Integrations", "Items", "Achievements"],
+      "mapLayer": "Map (depends on SharedKernel only)",
+      "adventureLayer": ["Adventure.Encounters (depends on SharedKernel + Map)", "Adventure.Dungeons (depends on SharedKernel + Map)"],
+      "sharedKernel": "SharedKernel (no dependencies — port interfaces, contracts, domain events, shared enums)"
+    },
+    "crossModuleCommunicationRules": {
+      "rule1": "Modules NEVER reference each other's concrete classes or services.",
+      "rule2": "Cross-module calls use SharedKernel port interfaces only.",
+      "rule3": "Port implementations live in the implementing module, registered in LifeLevel.Api DI.",
+      "tier1SyncPorts": "Direct port calls within the same DB transaction (Activity → ICharacterXpPort, etc.)",
+      "tier2DomainEvents": "Domain events fired after SaveChanges (ActivityLoggedEvent, CharacterLeveledUpEvent, etc.)"
+    },
+    "tier1SyncPortCalls": [
+      {"caller": "Activity", "port": "ICharacterXpPort.AwardXpAsync()", "implementor": "Character"},
+      {"caller": "Activity", "port": "ICharacterStatPort.ApplyStatGainsAsync()", "implementor": "Character"},
+      {"caller": "Activity", "port": "IWorldZoneDistancePort.AddDistanceAsync()", "implementor": "WorldZone"},
+      {"caller": "Activity", "port": "IWorldDungeonActivityPort.CreditActivityAsync()", "implementor": "WorldZone"},
+      {"caller": "Activity", "port": "IGearBonusReadPort.GetEquippedBonusesAsync()", "implementor": "Items"},
+      {"caller": "Activity", "port": "ICharacterTutorialPort.AdvanceIfOnStepAsync()", "implementor": "Character"},
+      {"caller": "Character.GetProfile", "port": "IStreakReadPort.GetCurrentStreakAsync()", "implementor": "Streak"},
+      {"caller": "Character.GetProfile", "port": "ILoginRewardReadPort.HasClaimedTodayAsync()", "implementor": "LoginReward"},
+      {"caller": "Character.GetProfile", "port": "IDailyQuestReadPort.CountCompletedDailyQuestsAsync()", "implementor": "Quest"},
+      {"caller": "LoginReward", "port": "IStreakShieldPort.AddShieldAsync()", "implementor": "Streak"},
+      {"caller": "Boss defeat", "port": "ICharacterXpPort.AwardXpAsync()", "implementor": "Character"},
+      {"caller": "Integrations webhooks", "port": "IActivityLogPort.LogActivityAsync()", "implementor": "Activity"}
+    ],
+    "tier2DomainEvents": [
+      {"event": "ActivityLoggedEvent", "handlers": ["StreakActivityHandler (increment streak)", "QuestActivityHandler (update quest progress)"]},
+      {"event": "UserRegisteredEvent", "handlers": ["CharacterCreatedHandler (create Character entity at level 1)"]},
+      {"event": "StreakBrokenEvent", "handlers": ["StreakBrokenNotificationHandler (send FCM push via INotificationPort)"]},
+      {"event": "CharacterLeveledUpEvent", "handlers": ["LevelUpUnlockHandler (ILevelUpItemGrantPort, IZoneUnlockReadPort, ITitleUnlockPort)"]}
+    ]
+  },
+
+  "backend": {
+    "modules": [
+      {
+        "name": "SharedKernel",
+        "description": "Port interfaces, domain event framework, shared enums. No dependencies.",
+        "sharedEnums": ["ActivityType (Run, Cycle, Swim, Walk, Sport, Strength, Yoga, Custom)", "UserRole"],
+        "portCount": 31
+      },
+      {
+        "name": "Identity",
+        "description": "Auth, JWT, user registration",
+        "entities": ["User (Id, Username, Email, PasswordHash, CreatedAt)", "UserRingItem (equipment ring state)"],
+        "services": ["AuthService (register, login, JWT)", "JwtService (HS256 token gen/validate)"],
+        "eventsRaised": ["UserRegisteredEvent"],
+        "portsImplemented": ["IUserReadPort"]
+      },
+      {
+        "name": "Character",
+        "description": "XP/stat engine, level progression, titles, tutorial tracking",
+        "entities": [
+          "Character (Id, UserId, Level, Xp, Rank, Str, End, Agi, Flx, Sta, AvailableStatPoints, MaxInventorySlots, ClassId, AvatarEmoji, IsSetupComplete, EquippedTitleId, TutorialStep, TutorialCompletedAt, TutorialRewardsClaimed, TutorialTopicsSeen)",
+          "CharacterClass (Id, Name, Emoji, StrMultiplier, EndMultiplier, AgiMultiplier, FlxMultiplier, StaMultiplier, IsActive)",
+          "XpHistoryEntry (CharacterId, Source, XpAwarded, NewLevel, CreatedAt)",
+          "Title (Id, Name, Icon, Rarity, stat bonuses, UnlockLevel, IsBoss, IsActive)",
+          "CharacterTitle (CharacterId, TitleId, UnlockedAt, IsEquipped)"
+        ],
+        "services": ["CharacterService", "TitleService", "TutorialService"],
+        "portsImplemented": ["ICharacterXpPort", "ICharacterStatPort", "ICharacterLevelReadPort", "ICharacterIdReadPort", "ICharacterInfoPort", "ICharacterTutorialPort", "ITitleUnlockPort"]
+      },
+      {
+        "name": "Activity",
+        "description": "Log workouts, calculate XP/stat gains, trigger cross-module effects",
+        "entities": [
+          "Activity (Id, CharacterId, Type, DurationMinutes, DistanceKm, Calories, HeartRateAvg, XpGained, StrGained, EndGained, AgiGained, FlxGained, StaGained, Steps, LoggedAt)"
+        ],
+        "services": ["ActivityService (CalculateGains, port dispatch)"],
+        "eventsRaised": ["ActivityLoggedEvent"],
+        "portsImplemented": ["IActivityLogPort", "IActivityStatsReadPort", "IActivityExternalIdReadPort", "IActivityHistoryReadPort", "IActivityBossDamagePort"]
+      },
+      {
+        "name": "Quest",
+        "description": "Daily/weekly/special quests, generation cron, progress tracking",
+        "entities": [
+          "Quest (Id, Name, Description, Type, TargetValue, RewardXp, IsActive)",
+          "UserQuestProgress (UserId, QuestId, CurrentValue, IsCompleted, RewardClaimed, AssignedAt, ExpiresAt)"
+        ],
+        "services": ["QuestService (GenerateDailyQuestsAsync, progress update)"],
+        "portsImplemented": ["IDailyQuestReadPort", "IQuestProgressPort"]
+      },
+      {
+        "name": "Streak",
+        "description": "Daily streaks, shields, break logic, milestones",
+        "entities": [
+          "Streak (Id, UserId, Current, Longest, Shields, ShieldsUsed, ShieldUsedToday, TotalDaysActive, LastActivityDate, LastStreakBrokenAt, LastBrokenFromLength)"
+        ],
+        "services": ["StreakService", "StreakBrokenNotificationHandler"],
+        "eventsRaised": ["StreakBrokenEvent"],
+        "portsImplemented": ["IStreakReadPort", "IStreakShieldPort", "IStreakDailyReset"]
+      },
+      {
+        "name": "LoginReward",
+        "description": "7-day login cycle, XP Storm flag",
+        "entities": [
+          "LoginReward (Id, UserId, CurrentDay 1-7, ClaimedToday, LastClaimDate, IsXpStorm)"
+        ],
+        "services": ["LoginRewardService"],
+        "portsImplemented": ["ILoginRewardReadPort", "ILoginRewardDailyReset"]
+      },
+      {
+        "name": "Map",
+        "description": "Local dungeon layer — node/edge graph, encounters, distance movement",
+        "note": "MapService lives in LifeLevel.Api (composition root) to avoid DAG cycles",
+        "entities": [
+          "MapNode (Id, MapId, Name, Region, Icon, LevelRequirement, NodeType, EncounterId?)",
+          "MapEdge (Id, MapId, SourceNodeId, TargetNodeId, DistanceKm)",
+          "UserMapProgress (Id, UserId, CurrentNodeId)",
+          "UserNodeUnlock (UserId, NodeId, UnlockedAt)"
+        ],
+        "portsImplemented": ["IMapProgressReadPort", "IMapNodeCountPort", "IMapNodeCompletedCountPort"]
+      },
+      {
+        "name": "WorldZone",
+        "description": "Overworld layer — zone/edge graph, zone-scoped dungeons, distance-driven travel",
+        "entities": [
+          "World (Id, Name, Description)",
+          "Region (Id, WorldId, Name)",
+          "WorldZone (Id, RegionId, Name, Icon, Description, UnlockLevel, DistanceToNext)",
+          "WorldZoneEdge (Id, SourceZoneId, TargetZoneId, DistanceKm)",
+          "UserWorldProgress (Id, UserId, DestinationZoneId?, DistanceTraveledOnEdge)",
+          "UserZoneUnlock (UserId, ZoneId, UnlockedAt)",
+          "UserPathChoice (UserId, CrossroadsId, ChosenPathId)",
+          "UserWorldChestState (UserId, ChestId, IsOpened)",
+          "WorldZoneDungeonFloor (Id, ZoneId, FloorNumber)",
+          "UserWorldDungeonState (UserId, ZoneId, CurrentFloorIndex)",
+          "UserWorldDungeonFloorState (UserWorldDungeonStateId, FloorIndex, IsCompleted)"
+        ],
+        "services": ["WorldZoneService", "WorldChestService", "WorldDungeonService", "WorldBossBridgeService"],
+        "portsImplemented": ["IWorldZoneDistancePort", "IWorldZoneCompletionPort", "IWorldDungeonActivityPort", "IZoneUnlockReadPort", "IBossSpawnPort"]
+      },
+      {
+        "name": "Adventure.Encounters",
+        "description": "Boss/mini-boss mechanics, chest encounters, damage formula, XP rewards",
+        "entities": [
+          "Boss (Id, Name, Icon, MaxHp, RewardXp, TimerDays, IsMini, SuppressExpiry, NodeId?, WorldZoneId?)",
+          "Chest (Id, EncounterId, LootTableId, IsOpened)",
+          "UserBossState (Id, UserId, BossId, HpDealt, IsDefeated, IsExpired, StartedAt, DefeatedAt, UserMapProgressId?)",
+          "UserChestState (Id, UserId, ChestId, IsOpened, OpenedAt)"
+        ],
+        "services": ["BossService", "ChestService"],
+        "portsImplemented": ["IBossDefeatedCountReadPort", "IBossDefeatReadPort"]
+      },
+      {
+        "name": "Adventure.Dungeons",
+        "description": "Dungeon floor progression, crossroads branching, path choice tracking",
+        "entities": [
+          "DungeonFloor (Id, DungeonId, FloorNumber, Difficulty)",
+          "DungeonPortal (Id, NodeId, LeadsToZoneId, IsUsable)",
+          "Crossroads (Id, NodeId, Description)",
+          "CrossroadsPath (Id, CrossroadsId, PathName, LeadsToNodeId)",
+          "UserDungeonState (Id, UserId, CurrentFloorId)",
+          "UserCrossroadsState (Id, UserId, CrossroadsId, ChosenPathId?)"
+        ],
+        "services": ["DungeonService", "CrossroadsService"]
+      },
+      {
+        "name": "Items",
+        "description": "21-item catalog, 5 equip slots, gear stat bonuses",
+        "entities": [
+          "Item (Id, Name, Icon, Rarity, Slot, StrBonus, EndBonus, AgiBonus, FlxBonus, StaBonus, IsActive, UnlockLevel)",
+          "CharacterItem (CharacterId, ItemId, IsEquipped)",
+          "EquipmentSlot (Id, SlotName, MaxItems)",
+          "ItemDropRule (ItemId, TriggerType, Probability, UnlockLevel)"
+        ],
+        "slots": ["weapon", "armor", "helm", "gloves", "trinket"],
+        "rarities": ["Common (green)", "Rare (blue)", "Epic (purple)", "Legendary (orange)"],
+        "services": ["ItemService", "ItemGrantService"],
+        "portsImplemented": ["IGearBonusReadPort", "ILevelUpItemGrantPort", "IInventorySlotReadPort"]
+      },
+      {
+        "name": "Achievements",
+        "description": "48-badge catalog, unlock checks on activity log, tier system",
+        "entities": [
+          "Achievement (Id, Name, Icon, Description, BadgeUrl, UnlockCriteria, IsActive)",
+          "UserAchievement (UserId, AchievementId, UnlockedAt, Progress)"
+        ],
+        "tiers": ["Common", "Uncommon", "Rare", "Epic", "Legendary"],
+        "services": ["AchievementService"]
+      },
+      {
+        "name": "Notifications",
+        "description": "FCM push delivery, in-app notification feed, cadence policy",
+        "entities": [
+          "DeviceToken (UserId, Token, IsActive, RegisteredAt)",
+          "NotificationLog (UserId, Category, Title, Body, DeepLinkPath, IsRead, CreatedAt)"
+        ],
+        "services": ["NotificationService"],
+        "portsImplemented": ["INotificationPort"]
+      },
+      {
+        "name": "Integrations",
+        "description": "Strava/Garmin OAuth + webhooks, Health Connect sync, activity dedup",
+        "entities": [
+          "StravaConnection (UserId, StravaUserId, AccessToken, RefreshToken, ExpiresAt, IsConnected)",
+          "GarminConnection (UserId, GarminUserId, AccessToken, RefreshToken, ExpiresAt, IsConnected)",
+          "ExternalActivityRecord (UserId, Source, ExternalId, ActivityType, DurationMinutes, DistanceKm, Calories, SyncedAt)"
+        ],
+        "services": ["StravaOAuthService", "StravaWebhookService", "GarminOAuthService", "GarminWebhookService", "HealthSyncService"],
+        "note": "Garmin uses plain-text code challenge today — LL-010 upgrades to PKCE SHA-256. Tokens not encrypted at rest today — LL-017 adds encryption."
+      }
+    ],
+
+    "allEndpoints": [
+      {"method": "POST", "path": "/api/auth/register", "body": "{username, password}", "response": "{token, user}", "module": "Identity"},
+      {"method": "POST", "path": "/api/auth/login", "body": "{username, password}", "response": "{token, user}", "module": "Identity"},
+      {"method": "POST", "path": "/api/user/logout", "body": null, "response": "success", "module": "Identity"},
+      {"method": "GET", "path": "/api/user/me", "body": null, "response": "UserInfo", "module": "Identity"},
+      {"method": "GET", "path": "/api/character/me", "body": null, "response": "CharacterProfileResponse {level, xp, stats, equippedTitle, rank, longestStreak, loginReward, ...}", "module": "Character"},
+      {"method": "POST", "path": "/api/character/setup", "body": "{classId, avatarEmoji}", "response": "CharacterSetupResponse", "module": "Character"},
+      {"method": "GET", "path": "/api/classes", "body": null, "response": "List<CharacterClassResponse>", "module": "Character"},
+      {"method": "POST", "path": "/api/character/spend-stat", "body": "{pointsToSpend, statType}", "response": "Updated stats", "module": "Character"},
+      {"method": "POST", "path": "/api/activity/log", "body": "{type, durationMinutes, distanceKm?, calories?, heartRate?}", "response": "{xpGained, strGained, endGained, agiGained, flxGained, staGained, leveledUp, newLevel, xpStorm}", "module": "Activity"},
+      {"method": "GET", "path": "/api/activity/history", "body": null, "response": "List<ActivityResponse> newest-first", "module": "Activity"},
+      {"method": "GET", "path": "/api/quests/daily", "body": null, "response": "List<UserQuestProgressDto> (5 quests)", "module": "Quest"},
+      {"method": "GET", "path": "/api/quests/weekly", "body": null, "response": "List<UserQuestProgressDto>", "module": "Quest"},
+      {"method": "GET", "path": "/api/quests/special", "body": null, "response": "List<UserQuestProgressDto>", "module": "Quest"},
+      {"method": "POST", "path": "/api/quests/{id}/complete", "body": null, "response": "{xpAwarded, bonus}", "module": "Quest"},
+      {"method": "GET", "path": "/api/streak", "body": null, "response": "{current, longest, shieldsAvailable, shieldUsedToday, lastActivityDate, lastStreakBrokenAt?}", "module": "Streak"},
+      {"method": "POST", "path": "/api/streak/shield-use", "body": null, "response": "Updated StreakDto", "module": "Streak"},
+      {"method": "GET", "path": "/api/login-reward", "body": null, "response": "{day, claimedToday, pendingReward?, xpStormActive}", "module": "LoginReward"},
+      {"method": "POST", "path": "/api/login-reward/claim", "body": null, "response": "Updated LoginRewardDto (advances day)", "module": "LoginReward"},
+      {"method": "GET", "path": "/api/boss", "body": null, "response": "List<BossListItemDto> with state (regular + mini + world-zone bosses)", "module": "Adventure.Encounters"},
+      {"method": "POST", "path": "/api/boss/{id}/fight", "body": null, "response": "UserBossState (activates fight)", "module": "Adventure.Encounters"},
+      {"method": "POST", "path": "/api/boss/{id}/damage", "body": "{damage: int}", "response": "{newHp, isDefeated, xpAwarded?}", "module": "Adventure.Encounters"},
+      {"method": "GET", "path": "/api/dungeon", "body": null, "response": "MapDto (nodes, edges, current position)", "module": "Map"},
+      {"method": "GET", "path": "/api/dungeon/map", "body": null, "query": "nodeId, edgeId", "response": "Full map structure", "module": "Map"},
+      {"method": "POST", "path": "/api/chest/{id}/open", "body": null, "response": "{items[], xp}", "module": "Adventure.Encounters"},
+      {"method": "GET", "path": "/api/world-zones", "body": null, "response": "List<WorldZoneDto> with unlock status + progress", "module": "WorldZone"},
+      {"method": "GET", "path": "/api/world-map", "body": null, "response": "WorldMapDto (zones, edges, character position, traveling state)", "module": "WorldZone"},
+      {"method": "POST", "path": "/api/world-zones/{id}/set-destination", "body": "{zoneId}", "response": "Travel state updated", "module": "WorldZone"},
+      {"method": "GET", "path": "/api/world-dungeon/{zoneId}", "body": null, "response": "Zone dungeon structure", "module": "WorldZone"},
+      {"method": "POST", "path": "/api/world-dungeon/floor-state", "body": "{floorId, activityXp}", "response": "Floor progression updated", "module": "WorldZone"},
+      {"method": "POST", "path": "/api/world-chest/{id}/open", "body": null, "response": "{items[], xp}", "module": "WorldZone"},
+      {"method": "POST", "path": "/api/crossroads/{id}/choose-path", "body": "{pathId}", "response": "Crossroads state updated", "module": "Adventure.Dungeons"},
+      {"method": "GET", "path": "/api/items", "body": null, "response": "List<ItemResponse> (21 items)", "module": "Items"},
+      {"method": "GET", "path": "/api/character/inventory", "body": null, "response": "List<CharacterItemResponse>", "module": "Items"},
+      {"method": "POST", "path": "/api/character/equip", "body": "{slotId, itemId}", "response": "EquipmentDto (new loadout)", "module": "Items"},
+      {"method": "POST", "path": "/api/character/unequip", "body": "{slotId}", "response": "EquipmentDto", "module": "Items"},
+      {"method": "GET", "path": "/api/achievements", "body": null, "response": "List<AchievementDto> (48 with unlock status)", "module": "Achievements"},
+      {"method": "GET", "path": "/api/achievements/{id}", "body": null, "response": "AchievementDetailDto with progress + criteria", "module": "Achievements"},
+      {"method": "GET", "path": "/api/titles", "body": null, "response": "List<TitleDto> (48 titles, rarity, unlocked status)", "module": "Character"},
+      {"method": "POST", "path": "/api/titles/{id}/equip", "body": null, "response": "Equipped TitleDto", "module": "Character"},
+      {"method": "POST", "path": "/api/notifications/register-token", "body": "{fcmToken}", "response": "DeviceToken stored", "module": "Notifications"},
+      {"method": "POST", "path": "/api/notifications/unregister-token", "body": "{fcmToken}", "response": "DeviceToken deleted", "module": "Notifications"},
+      {"method": "GET", "path": "/api/notifications", "body": null, "response": "List<NotificationItem> — PENDING (LL-032)", "module": "Notifications"},
+      {"method": "POST", "path": "/api/tutorial/advance", "body": "{expectedStep}", "response": "{newStep, xpAwarded}", "module": "Character"},
+      {"method": "POST", "path": "/api/tutorial/skip", "body": null, "response": "Tutorial skipped (no XP)", "module": "Character"},
+      {"method": "POST", "path": "/api/tutorial/replay-all", "body": null, "response": "Reset to step 0 (no XP re-award)", "module": "Character"},
+      {"method": "POST", "path": "/api/tutorial/replay-topic", "body": "{topic: 'xp-stats'|'quests-streaks'|'activity-logging'|'world-map'|'boss-system'}", "response": "Topic bitmask updated", "module": "Character"},
+      {"method": "GET", "path": "/api/integrations/strava/auth-url", "body": null, "response": "OAuth redirect URL", "module": "Integrations"},
+      {"method": "POST", "path": "/api/integrations/strava/callback", "body": "{code, state}", "response": "StravaConnection established", "module": "Integrations"},
+      {"method": "POST", "path": "/api/integrations/strava/webhook", "body": "Strava event payload", "response": "Activity ingested", "module": "Integrations"},
+      {"method": "GET", "path": "/api/integrations/garmin/auth-url", "body": null, "response": "OAuth redirect URL", "module": "Integrations"},
+      {"method": "POST", "path": "/api/integrations/garmin/callback", "body": "{code, state}", "response": "GarminConnection established", "module": "Integrations"},
+      {"method": "POST", "path": "/api/integrations/garmin/webhook", "body": "Garmin event payload", "response": "Activity ingested", "module": "Integrations"},
+      {"method": "POST", "path": "/api/integrations/health-connect", "body": "{activities[]}", "response": "Bulk ingestion result", "module": "Integrations"}
+    ]
+  },
+
+  "gameEngine": {
+    "xpFormula": {
+      "description": "ActivityService.CalculateGains() — called on POST /api/activity/log",
+      "steps": [
+        "baseXp = durationMinutes × 10",
+        "typeModifier: Run/Cycle=1.0, Swim=1.2, Walk=0.75, Sport=1.1, Strength=1.3, Yoga=0.9, Custom=1.0",
+        "gearBonus = IGearBonusReadPort.GetEquippedBonusesAsync(userId).XpBonusPct (from equipped items)",
+        "finalXp = (int)(baseXp × typeModifier × (1 + gearBonus / 100))",
+        "XP Storm ×2: NOT YET WIRED (LL-001 in progress) — LoginReward.IsXpStorm flag exists but multiplier not applied"
+      ],
+      "output": "{xp, str, end, agi, flx, sta}"
+    },
+    "statGains": {
+      "description": "Scaled to durationMinutes. CharacterClass multipliers further scale each stat.",
+      "byActivity": {
+        "Run": {"END": "high", "AGI": "medium", "STA": "low"},
+        "Cycle": {"END": "high", "AGI": "medium", "STA": "low"},
+        "Swim": {"STR": "low", "END": "medium", "FLX": "low", "STA": "medium"},
+        "Walk": {"END": "low", "AGI": "low", "STA": "low"},
+        "Sport": {"STR": "low", "END": "low", "AGI": "high", "STA": "low"},
+        "Strength": {"STR": "high", "STA": "medium"},
+        "Yoga": {"FLX": "high", "STA": "low"},
+        "Custom": {"STA": "low"}
+      }
+    },
+    "levelProgression": {
+      "formula": "threshold(N) = N × 1000 XP (cumulative)",
+      "examples": {"1": 1000, "2": 2000, "5": 5000, "10": 10000},
+      "onLevelUp": [
+        "Character.Level++, Character.AvailableStatPoints++",
+        "CharacterLeveledUpEvent fired → LevelUpUnlockHandler",
+        "Items granted if Item.UnlockLevel == newLevel",
+        "Zones unlocked if WorldZone.UnlockLevel == newLevel",
+        "Title unlocked if Title.UnlockLevel == newLevel",
+        "Mobile: leveledUp:true in response → LevelUpNotifier.emit() → MainShell overlay"
+      ]
+    },
+    "bossDamageFormula": {
+      "description": "BossService.CalculateDamageFromActivity()",
+      "formula": "baseDamage = (durationMinutes / 30) + (int)(distanceKm / 2.0)",
+      "typeMultipliers": {"Walk": 0.5, "Run": 1.0, "Cycle": 1.0, "Swim": 1.5, "Strength": 2.0, "Sport": 1.5, "Yoga": 0.5, "Custom": 1.0},
+      "finalFormula": "finalDamage = max(1, (int)(baseDamage × typeMultiplier))",
+      "bossHpRanges": "100–500+ (regular), smaller for mini-bosses",
+      "timer": "7 days (regular boss); IsExpired set after TimerDays pass",
+      "defeat": "HpDealt >= MaxHp → IsDefeated = true → AwardXp via ICharacterXpPort"
+    },
+    "streakRules": {
+      "increment": "Activity logged → streak.Current++",
+      "break": "No activity for 24h AND no shield available → Current = 0, LastStreakBrokenAt = now, StreakBrokenEvent fired → FCM push",
+      "shieldUse": "streak.Shields--, ShieldUsedToday = true, Current preserved",
+      "shieldAccrual": "Every 7 active days gains 1 shield. Max 3 shields.",
+      "day7LoginReward": "Day 7 of login cycle → IsXpStorm = true on LoginReward entity + AddShieldAsync()",
+      "milestoneThresholds": [3, 7, 14, 30, 60, 100],
+      "atRiskNotification": "Planned at 20h idle (LL-036)"
+    },
+    "questGeneration": {
+      "dailyCount": 5,
+      "generationTrigger": "UTC midnight cron via ILoginRewardDailyReset",
+      "expiry": "Next midnight UTC",
+      "progressTrigger": "QuestActivityHandler (ActivityLoggedEvent) → IQuestProgressPort.RecordActivityProgressAsync()",
+      "completion": "CurrentValue >= Quest.TargetValue",
+      "rewardRange": "100–500 XP per quest",
+      "allDailyBonus": "+50 XP for completing all 5 daily quests in same day",
+      "weeklyCount": 3
+    },
+    "zoneTravelRules": {
+      "setDestination": "POST /api/world-zones/{id}/set-destination → UserWorldProgress.DestinationZoneId",
+      "distanceAccumulation": "Each activity → IWorldZoneDistancePort.AddDistanceAsync(km) → UserWorldProgress.DistanceTraveledOnEdge += km",
+      "progress": "DistanceTraveledOnEdge / WorldZoneEdge.DistanceKm = progress 0–100%",
+      "arrival": "progress >= 100% → zone unlocked → zone-arrival banner → boss auto-spawned if configured",
+      "unlockRequirement": "WorldZone.UnlockLevel <= Character.Level"
+    },
+    "tutorialSystem": {
+      "steps": 7,
+      "stepXpRewards": {"0": 25, "1": 25, "2": 25, "3": 50, "4": 50, "5": 50, "6": 250},
+      "step3Gate": "Must log activity to advance step 3 → ICharacterTutorialPort.AdvanceIfOnStepAsync(characterId, 4)",
+      "step6Reward": "250 XP + 'Novice Adventurer' title",
+      "replayProtection": "TutorialRewardsClaimed flag prevents XP re-award on replay",
+      "topics": ["xp-stats", "quests-streaks", "activity-logging", "world-map", "boss-system"],
+      "topicsTracking": "TutorialTopicsSeen bitmask (5 bits)"
+    }
+  },
+
+  "mobile": {
+    "rootFile": "mobile/lib/main.dart",
+    "shellFile": "mobile/lib/core/shell/main_shell.dart",
+    "stateManagement": "Riverpod (ConsumerWidget, ConsumerStatefulWidget)",
+    "navTabs": ["Home (index 0)", "Map/World (index 1)", "Profile (index 2)"],
+    "fabItems": ["LogActivity (center)", "Boss", "Guild", "Stats", "Battle", "Titles", "World", "Quests", "Leaderboard", "Profile", "Map"],
+    "globalEvents": {
+      "levelUp": "LevelUpNotifier — static broadcast stream. MainShell listens and shows overlay. Any screen can emit without context.",
+      "loginReward": "Login-reward modal shown on first daily open via MainShell",
+      "tutorial": "TutorialController controls overlay visibility; 6 GlobalKeys wired in HomeScreen"
+    },
+    "features": [
+      {"name": "home", "path": "features/home/", "screens": ["HomeScreen"], "key": "Orchestrates all home cards"},
+      {"name": "activity", "path": "features/activity/", "screens": ["RecentActivitiesScreen"], "services": ["ActivityService"]},
+      {"name": "character", "path": "features/character/", "screens": ["CharacterSetupScreen", "ClassSelectionScreen"]},
+      {"name": "map", "path": "features/map/", "screens": ["MapScreen"], "key": "Local dungeon NodeCanvas (CustomPainter)"},
+      {"name": "world_zone", "path": "features/world_zone/", "screens": ["WorldMapScreen"], "key": "Zone grid + distance travel"},
+      {"name": "boss", "path": "features/boss/", "widgets": ["BossHpBar", "BossDefeatedCard", "BossLockedCard", "BossExpiredCard"]},
+      {"name": "quests", "path": "features/quests/", "screens": ["DailyQuestsTab", "WeeklyQuestsTab", "SpecialQuestsTab"]},
+      {"name": "streak", "path": "features/streak/", "sheets": ["StreakDetailSheet"]},
+      {"name": "login_reward", "path": "features/login_reward/", "widgets": ["LoginRewardChip", "RewardRevealModal"]},
+      {"name": "profile", "path": "features/profile/", "screens": ["ProfileScreen"], "tabs": ["Overview", "Equipment", "Inventory", "Achievements"]},
+      {"name": "achievements", "path": "features/achievements/"},
+      {"name": "titles", "path": "features/titles/", "screens": ["TitlesScreen"]},
+      {"name": "items", "path": "features/items/", "screens": ["InventoryScreen"]},
+      {"name": "tutorial", "path": "features/tutorial/", "key": "7-step onboarding, TutorialBubble, TutorialDimBackdrop, TutorialsHubScreen"},
+      {"name": "notifications", "path": "features/notifications/", "sheets": ["NotificationsSheet"]},
+      {"name": "integrations", "path": "features/integrations/", "services": ["StravaService", "GarminService", "HealthSyncService"]}
+    ],
+    "providers": [
+      "characterProvider", "activityHistoryProvider", "questProvider", "streakProvider",
+      "itemsProvider", "achievementsProvider", "titlesProvider", "integrationsProvider",
+      "notificationsProvider", "tutorialProvider", "mapJourneyProvider"
+    ],
+    "fileStructureRules": {
+      "screenFiles": "Scaffold only — no business logic",
+      "tabs": "In tabs/ subfolder",
+      "widgets": "In widgets/ subfolder",
+      "services": "In services/ subfolder",
+      "models": "In models/ subfolder",
+      "providers": "In providers/ subfolder",
+      "neverDropServiceFilesLooseInFeatureRoot": true
+    }
+  },
+
+  "designSystem": {
+    "colors": {
+      "bg": "#040810",
+      "bg2": "#080e14",
+      "surface": "#161b22",
+      "surface2": "#1e2632",
+      "border": "#30363d",
+      "textPrimary": "#e6edf3",
+      "textSecondary": "#8b949e",
+      "blue": "#4f9eff",
+      "purple": "#a371f7",
+      "orange": "#f5a623",
+      "red": "#f85149",
+      "green": "#3fb950",
+      "yellow": "#d29922"
+    },
+    "semanticColors": {
+      "actions/active": "blue #4f9eff",
+      "magic/rare": "purple #a371f7",
+      "premium/rewards": "orange #f5a623",
+      "boss/danger": "red #f85149",
+      "success/completion": "green #3fb950"
+    },
+    "mockupDirectory": "design-mockup/",
+    "currentMockups": {
+      "home": "home-v3.html",
+      "worldMap": "WORLD-MAP-FINAL-MOCKUP-v2.html",
+      "zoneSheet": "zone-sheet-v3.html",
+      "tutorial": "tutorial-coachmarks.html",
+      "boss": "boss-fight-real-gear.html"
+    }
+  },
+
+  "tickets": {
+    "sourceFile": "docs/board.md",
+    "ticketFormat": "LL-NNN with layer (backend/mobile/game-engine), agent type, priority, acceptance criteria",
+    "inProgress": [
+      {
+        "id": "LL-001",
+        "title": "Wire XP Storm ×2 multiplier into activity XP formula",
+        "layer": "backend, game-engine",
+        "agent": "backend",
+        "priority": "medium",
+        "acceptance": [
+          "ActivityService detects active XP Storm window (LoginReward.IsXpStorm == true for user)",
+          "Multiplier applied after gear bonus (base × typeModifier × gearBonus × 2)",
+          "LogActivityResult.XpStorm field exposed",
+          "Unit tests"
+        ]
+      }
+    ],
+    "bugs": [
+      {
+        "id": "LL-029",
+        "title": "World-map character position stuck at 0",
+        "layer": "backend, mobile",
+        "priority": "high",
+        "status": "Implemented (3 passes) — manual verification pending",
+        "changes": ["IWorldZoneDistancePort added + wired", "Zone detail sheet fixed", "Progress bar redesigned"]
+      },
+      {
+        "id": "LL-021",
+        "title": "Zone-arrival banner blocks input",
+        "layer": "mobile",
+        "priority": "high",
+        "status": "Implemented",
+        "changes": ["showGeneralDialog replaced with in-Stack AnimatedSlide + IgnorePointer"]
+      }
+    ],
+    "backlog": [
+      {"id": "LL-010", "title": "Garmin PKCE SHA-256 code challenge", "layer": "mobile", "priority": "medium", "phase": "P8"},
+      {"id": "LL-011", "title": "Random event spawner: Wandering Merchants", "layer": "backend, mobile", "priority": "low", "phase": "P7"},
+      {"id": "LL-012", "title": "Seasonal events with 5-stage reward ladder", "layer": "backend, mobile", "priority": "low", "phase": "P7"},
+      {"id": "LL-014", "title": "Friends system", "layer": "backend, mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-015", "title": "Leaderboards (Redis sorted sets)", "layer": "backend, mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-016", "title": "Guild system + shared-HP raid boss (SignalR)", "layer": "backend, mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-017", "title": "Encrypt Strava/Garmin tokens at rest", "layer": "backend", "priority": "high", "phase": "pre-prod"},
+      {"id": "LL-018", "title": "iOS HealthKit capability setup", "layer": "mobile", "priority": "medium", "phase": "P8"},
+      {"id": "LL-019", "title": "Remove unused go_router dependency", "layer": "mobile", "priority": "low", "phase": "cleanup"},
+      {"id": "LL-020", "title": "Transactional outbox for domain events", "layer": "backend", "priority": "low-escalates", "phase": "P8"},
+      {"id": "LL-028", "title": "Level-gated feature unlocks", "layer": "backend, mobile, game-engine", "priority": "low", "phase": "P6"},
+      {"id": "LL-030", "title": "Refactor home screen to home-v3 mockup", "layer": "mobile", "priority": "medium", "phase": "P8", "note": "Unstaged changes exist"},
+      {"id": "LL-031", "title": "Local Map history sheet", "layer": "mobile", "priority": "low", "phase": "P3", "note": "Unstaged"},
+      {"id": "LL-032", "title": "Backend notifications feed endpoints", "layer": "backend", "priority": "medium", "phase": "P8", "endpoints": ["GET /api/notifications", "POST /api/notifications/mark-all-read", "POST /api/notifications/{id}/mark-read"]},
+      {"id": "LL-033", "title": "Re-home 'Use Shield' action after home-v3", "layer": "mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-034", "title": "Restore tap-to-open level-up recap on avatar", "layer": "mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-036", "title": "Streak at-risk push notification at 20h idle", "layer": "backend", "priority": "medium", "phase": "P8"},
+      {"id": "LL-037", "title": "StreakMilestone entity + backend-driven ladder", "layer": "backend, mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-038", "title": "Milestone-reached rewards", "layer": "backend, mobile, game-engine", "priority": "low", "phase": "P7"},
+      {"id": "LL-039", "title": "Streak history calendar heat-grid", "layer": "backend, mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-040", "title": "Shield-accrual countdown in streak sheet", "layer": "backend, mobile", "priority": "low", "phase": "P8"},
+      {"id": "LL-041", "title": "Broken-streak recovery modal", "layer": "backend, mobile", "priority": "medium", "phase": "P2 tail"}
+    ]
+  },
+
+  "agentInstructions": {
+    "beforeAnyBackendWork": "Read backend/ARCHITECTURE.txt first — it contains the authoritative module boundary rules, port patterns, and DAG constraints.",
+    "newModuleChecklist": [
+      "Create as a separate C# class library project",
+      "Add dependency on SharedKernel only (unless it's Adventure layer, which may reference Map)",
+      "Define port interfaces in SharedKernel if other modules need to call this module",
+      "Register port implementations in LifeLevel.Api DI",
+      "Add IEntityTypeConfiguration<T> for each entity",
+      "Add DbSet<T> to AppDbContext in LifeLevel.Api",
+      "Add migration via 'dotnet ef migrations add' in LifeLevel.Api"
+    ],
+    "newFlutterFeatureChecklist": [
+      "Create feature folder: mobile/lib/features/<name>/",
+      "Sub-folders: screens/, widgets/, services/, models/, providers/",
+      "Screen file = scaffold only, no business logic",
+      "Use Riverpod providers for state",
+      "Register service/provider in appropriate provider file",
+      "Add navigation route in main_shell.dart or appropriate nav handler"
+    ],
+    "newEndpointChecklist": [
+      "Add controller method in LifeLevel.Api/Controllers/",
+      "Controller is thin HTTP adapter — delegate to module service immediately",
+      "Service lives in the module project",
+      "Add request/response DTOs",
+      "Wire [Authorize] attribute for authenticated endpoints",
+      "Add integration test"
+    ],
+    "crossModuleCommunicationChecklist": [
+      "Define port interface in SharedKernel/Ports/",
+      "Implement in the target module",
+      "Register in LifeLevel.Api/Program.cs DI",
+      "Inject IPortInterface (not the concrete service) in the calling module"
+    ]
+  }
+}

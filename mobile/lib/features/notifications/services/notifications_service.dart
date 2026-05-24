@@ -36,6 +36,7 @@ class NotificationsService {
   static final NotificationsService instance = NotificationsService._();
 
   bool _initialized = false;
+  bool _tokenRegistered = false;
   String? _cachedToken;
 
   StreamSubscription<String>? _tokenRefreshSub;
@@ -71,7 +72,15 @@ class NotificationsService {
   /// that may want to invalidate providers on notification arrival; this v1
   /// implementation does not use it.
   Future<bool> initialize(WidgetRef? ref) async {
-    if (_initialized) return true;
+    // If listeners are already set up but token registration failed, retry registration
+    // without re-attaching listeners. This handles the Render cold-start race.
+    if (_initialized) {
+      if (!_tokenRegistered) {
+        final token = _cachedToken ?? await getToken();
+        if (token != null) await _registerTokenWithBackend(token);
+      }
+      return true;
+    }
     _initialized = true;
 
     try {
@@ -188,6 +197,7 @@ class NotificationsService {
         platform: platform,
       ).toJson();
       await ApiClient.instance.post('/notifications/register-token', data: body);
+      _tokenRegistered = true;
       debugPrint('[NotificationsService] token registered ($platform)');
     } catch (e) {
       debugPrint('[NotificationsService] register-token failed: $e');
