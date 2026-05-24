@@ -46,17 +46,25 @@
     boot();
   });
 
-  // Dev-only fallback credentials used when no usable Admin token is present.
-  // Fine for a local admin page on a dev box; never ship this to prod.
-  const DEV_EMAIL = 'admin103@abv.bg';
-  const DEV_PASSWORD = '1qaz!QAZ';
+  // Expose boot globally so the base-URL switcher can re-run it without a full reload.
+  window.MapAdminBoot = boot;
 
-  async function devLogin() {
+  async function fetchAdminConfig() {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(M.getBaseUrl() + '/api/admin/config');
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  async function devLogin(email, password) {
+    try {
+      const res = await fetch(M.getBaseUrl() + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: DEV_EMAIL, password: DEV_PASSWORD }),
+        body: JSON.stringify({ email, password }),
       });
       if (!res.ok) return false;
       const data = await res.json();
@@ -85,12 +93,15 @@
       await MapAdminWorlds.load();
       return;
     }
-    // 2) Stale or missing — auto-login as the dev admin and retry.
+    // 2) Stale or missing — fetch credentials from the target API and auto-login.
     M.setToken('');
-    const loggedIn = await devLogin();
-    if (loggedIn && await tryEnums()) {
-      await MapAdminWorlds.load();
-      return;
+    const cfg = await fetchAdminConfig();
+    if (cfg) {
+      const loggedIn = await devLogin(cfg.email, cfg.password);
+      if (loggedIn && await tryEnums()) {
+        await MapAdminWorlds.load();
+        return;
+      }
     }
     M.toast('Auto-login failed — paste an Admin JWT manually and click Save.', 'err');
   }

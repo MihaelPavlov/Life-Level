@@ -121,6 +121,7 @@ builder.Services.AddScoped<WorldSeeder>();
 builder.Services.AddScoped<ItemSeeder>();
 builder.Services.AddScoped<AchievementSeeder>();
 builder.Services.AddScoped<TitleSeeder>();
+builder.Services.AddScoped<AdminUserSeeder>();
 
 // User context
 builder.Services.AddHttpContextAccessor();
@@ -208,6 +209,9 @@ using (var scope = app.Services.CreateScope())
 
     var titleSeeder = scope.ServiceProvider.GetRequiredService<TitleSeeder>();
     await titleSeeder.SeedAsync();
+
+    var adminSeeder = scope.ServiceProvider.GetRequiredService<AdminUserSeeder>();
+    await adminSeeder.SeedAsync();
 }
 
 app.Run();

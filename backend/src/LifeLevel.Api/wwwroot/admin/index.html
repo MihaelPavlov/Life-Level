@@ -295,7 +295,13 @@
     <a href="map.html" id="linkMap" style="color:var(--text2);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:8px">🗺️ Map</a>
   </div>
   <div class="token-row">
-    <label for="tokenInput">JWT Token</label>
+    <label for="baseUrlInput">API base URL</label>
+    <select id="baseUrlInput" style="width:220px">
+      <option value="">localhost (local)</option>
+      <option value="https://life-level-api-latest-1779363121.onrender.com">Production (Render)</option>
+    </select>
+    <button onclick="saveBaseUrl()">Switch</button>
+    <label for="tokenInput" style="margin-left:12px">JWT Token</label>
     <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
     <button onclick="saveToken()">Save</button>
   </div>
@@ -648,7 +654,16 @@
 <div id="toast"></div>
 
 <script>
-const API = '';  // same origin
+const BASE_URL_KEY = 'll_admin_baseUrl';
+function getBaseUrl() { return localStorage.getItem(BASE_URL_KEY) || ''; }
+function saveBaseUrl() {
+  const url = (document.getElementById('baseUrlInput').value.trim()).replace(/\/$/, '');
+  localStorage.setItem(BASE_URL_KEY, url);
+  localStorage.removeItem('ll_admin_token');
+  document.getElementById('tokenInput').value = '';
+  toast('Switched to ' + (url || 'localhost') + ' — reload to re-login', 'ok');
+  window.location.reload();
+}
 
 function getToken() {
   return localStorage.getItem('ll_admin_token') || '';
@@ -666,7 +681,7 @@ function headers() {
 }
 
 async function apiFetch(path, opts = {}) {
-  const res = await fetch(API + path, { ...opts, headers: { ...headers(), ...(opts.headers || {}) } });
+  const res = await fetch(getBaseUrl() + path, { ...opts, headers: { ...headers(), ...(opts.headers || {}) } });
   if (!res.ok) {
     const txt = await res.text().catch(() => res.statusText);
     throw new Error(txt || res.statusText);
@@ -1969,6 +1984,8 @@ document.getElementById('linkMap').addEventListener('click', e => {
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
+document.getElementById('baseUrlInput').value = getBaseUrl();
+
 const qToken = new URLSearchParams(window.location.search).get('token');
 if (qToken) {
   localStorage.setItem('ll_admin_token', qToken);

@@ -3,6 +3,7 @@
 
 (function () {
   const TOKEN_KEY = 'll_admin_token';
+  const BASE_URL_KEY = 'll_admin_baseUrl';
   const BASE = '/api/admin/map';
 
   function getToken() {
@@ -12,11 +13,18 @@
     localStorage.setItem(TOKEN_KEY, t || '');
   }
 
+  function getBaseUrl() {
+    return localStorage.getItem(BASE_URL_KEY) || '';
+  }
+  function setBaseUrl(url) {
+    localStorage.setItem(BASE_URL_KEY, (url || '').replace(/\/$/, ''));
+  }
+
   async function request(method, path, body) {
     const headers = { 'Content-Type': 'application/json' };
     const tok = getToken();
     if (tok) headers['Authorization'] = 'Bearer ' + tok;
-    const res = await fetch(BASE + path, {
+    const res = await fetch(getBaseUrl() + BASE + path, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -84,6 +92,8 @@
     confirmDialog,
     getToken,
     setToken,
+    getBaseUrl,
+    setBaseUrl,
     state: {
       enums: null,       // { worldZoneTypes, regionThemes, ... }
       worlds: [],

@@ -253,7 +253,13 @@
   <h1>LifeLevel Admin — Map</h1>
   <a href="index.html">Items</a>
   <div class="token-row">
-    <label for="tokenInput">Bearer token</label>
+    <label for="baseUrlInput">API base URL</label>
+    <select id="baseUrlInput" style="width:220px">
+      <option value="">localhost (local)</option>
+      <option value="https://life-level-api-latest-1779363121.onrender.com">Production (Render)</option>
+    </select>
+    <button id="baseUrlSaveBtn" class="sm secondary">Switch</button>
+    <label for="tokenInput" style="margin-left:12px">Bearer token</label>
     <input type="text" id="tokenInput" placeholder="paste JWT">
     <button id="tokenSaveBtn" class="sm secondary">Save</button>
   </div>
@@ -621,5 +627,17 @@
 <script src="js/map/floors.js"></script>
 <script src="js/map/edges.js"></script>
 <script src="js/map/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const baseUrlInput = document.getElementById('baseUrlInput');
+    baseUrlInput.value = MapAdmin.getBaseUrl();
+    document.getElementById('baseUrlSaveBtn').addEventListener('click', () => {
+      const url = baseUrlInput.value.trim().replace(/\/$/, '');
+      localStorage.setItem('ll_admin_baseUrl', url);
+      localStorage.removeItem('ll_admin_token');
+      window.location.reload();
+    });
+  });
+</script>
 </body>
 </html>
