@@ -435,37 +435,20 @@ function renderDetail(level) {
 
     <!-- Zones Section -->
     <div class="section">
-      <h3>🗺️ Zone Unlocks <span style="color:var(--text);font-style:normal;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400">(zones requiring level ${level} to enter)</span></h3>
+      <h3>🗺️ Zone Unlocks <span style="color:var(--text2);font-style:normal;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400">— edit level requirement per zone in the <a href="map.html" style="color:var(--blue);text-decoration:none">Map editor</a></span></h3>
       <div id="zonesList">
         ${zones.length === 0
           ? '<div class="empty-state">No zones unlock at this level.</div>'
           : zones.map(z => `
-            <div class="unlock-row" id="zone-row-${z.id}">
+            <div class="unlock-row">
               <span class="icon">🗺️</span>
               <div class="name">
                 ${escHtml(z.name)}
                 <div class="sub">${escHtml(z.regionName)}</div>
               </div>
-              <select style="width:90px;padding:4px 8px;font-size:12px"
-                      onchange="changeZoneLevel('${z.id}', this.value)"
-                      title="Move zone to a different level">
-                ${levelOptions(level)}
-              </select>
-              <button class="sm danger" onclick="removeZoneFromLevel('${z.id}')">Remove</button>
             </div>
           `).join('')
         }
-      </div>
-      <div class="add-form">
-        <label>Add zone:</label>
-        <select id="addZoneSelect">
-          <option value="">— pick zone —</option>
-          ${state.allZones
-            .filter(z => z.levelRequirement !== level)
-            .map(z => `<option value="${z.id}">[Lv${z.levelRequirement}] ${escHtml(z.name)} (${escHtml(z.regionName)})</option>`)
-            .join('')}
-        </select>
-        <button class="success sm" onclick="addZoneToLevel(${level})">+ Add</button>
       </div>
     </div>
 
@@ -499,57 +482,7 @@ function renderDetail(level) {
   `;
 }
 
-function levelOptions(current) {
-  let html = '';
-  for (let l = 1; l <= 50; l++) {
-    html += `<option value="${l}" ${l === current ? 'selected' : ''}>Lv ${l}</option>`;
-  }
-  return html;
-}
-
 // ── Actions ──────────────────────────────────────────────────────────────────
-async function changeZoneLevel(zoneId, newLevel) {
-  try {
-    await apiFetch(`/api/admin/level-unlocks/zones/${zoneId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ levelRequirement: parseInt(newLevel) }),
-    });
-    toast(`Zone moved to level ${newLevel}.`, 'ok');
-    await loadData();
-  } catch (e) {
-    toast('Failed: ' + e.message, 'err');
-  }
-}
-
-async function removeZoneFromLevel(zoneId) {
-  try {
-    await apiFetch(`/api/admin/level-unlocks/zones/${zoneId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ levelRequirement: 1 }),
-    });
-    toast('Zone reset to level 1.', 'ok');
-    await loadData();
-  } catch (e) {
-    toast('Failed: ' + e.message, 'err');
-  }
-}
-
-async function addZoneToLevel(level) {
-  const sel = document.getElementById('addZoneSelect');
-  const zoneId = sel.value;
-  if (!zoneId) { toast('Pick a zone first.', 'err'); return; }
-  try {
-    await apiFetch(`/api/admin/level-unlocks/zones/${zoneId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ levelRequirement: level }),
-    });
-    toast(`Zone moved to level ${level}.`, 'ok');
-    await loadData();
-  } catch (e) {
-    toast('Failed: ' + e.message, 'err');
-  }
-}
-
 async function addItemReward(level) {
   const sel = document.getElementById('addItemSelect');
   const itemId = sel.value;

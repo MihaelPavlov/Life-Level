@@ -22,7 +22,6 @@ public class AdminLevelUnlocksController(AppDbContext db) : ControllerBase
         var zones = await db.WorldZones
             .Include(z => z.Region)
             .Select(z => new { z.Id, z.Name, z.LevelRequirement, RegionName = z.Region.Name })
-            .OrderBy(z => z.Name)
             .ToListAsync();
 
         var rules = await db.ItemDropRules
@@ -57,20 +56,7 @@ public class AdminLevelUnlocksController(AppDbContext db) : ControllerBase
                 items = parsedRules.Where(r => r.Level == l).Select(r => new { r.Id, r.ItemId, r.ItemName, r.ItemIcon, r.DropChancePct, r.IsEnabled }).ToList(),
             });
 
-        return Ok(new { maxLevel = MaxLevel, levels, allItems, allZones = zones });
-    }
-
-    // PATCH /api/admin/level-unlocks/zones/{zoneId}
-    [HttpPatch("zones/{zoneId:guid}")]
-    public async Task<IActionResult> SetZoneLevelRequirement(Guid zoneId, [FromBody] SetZoneLevelRequest req)
-    {
-        if (req.LevelRequirement < 1 || req.LevelRequirement > MaxLevel)
-            return BadRequest($"Level must be between 1 and {MaxLevel}.");
-        var zone = await db.WorldZones.FindAsync(zoneId);
-        if (zone == null) return NotFound();
-        zone.LevelRequirement = req.LevelRequirement;
-        await db.SaveChangesAsync();
-        return Ok();
+        return Ok(new { maxLevel = MaxLevel, levels, allItems });
     }
 
     // POST /api/admin/level-unlocks/item-rewards
@@ -109,5 +95,4 @@ public class AdminLevelUnlocksController(AppDbContext db) : ControllerBase
     }
 }
 
-public record SetZoneLevelRequest(int LevelRequirement);
 public record AddItemRewardRequest(Guid ItemId, int Level);
