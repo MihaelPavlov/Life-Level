@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLevel Admin — Level Unlocks</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #040810;
+    --bg2:       #080e14;
+    --surface:   #161b22;
+    --surface2:  #1e2632;
+    --border:    #30363d;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --blue:      #4f9eff;
+    --purple:    #a371f7;
+    --orange:    #f5a623;
+    --red:       #f85149;
+    --green:     #3fb950;
+    --radius:    8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  header h1 { font-size: 20px; font-weight: 700; color: var(--orange); }
+
+  .nav-links { display: flex; gap: 8px; }
+  .nav-links a {
+    color: var(--text2);
+    font-size: 13px;
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: color .15s, border-color .15s;
+  }
+  .nav-links a:hover { color: var(--text); border-color: var(--text2); }
+  .nav-links a.active { color: var(--orange); border-color: var(--orange); }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .token-row label { color: var(--text2); font-size: 12px; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+  #tokenInput { width: 360px; }
+
+  button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  button.danger    { background: var(--red); }
+  button.success   { background: var(--green); }
+  button.warning   { background: var(--orange); color: #000; }
+  button.sm        { padding: 4px 10px; font-size: 12px; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: var(--radius);
+    font-size: 13px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 1000; max-width: 340px;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok  { border-left: 4px solid var(--green); }
+  #toast.err { border-left: 4px solid var(--red); }
+
+  /* Body layout */
+  .body-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 57px);
+  }
+
+  /* Level sidebar */
+  #levelSidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 8px;
+  }
+
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 0 8px 10px;
+  }
+
+  .level-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    transition: background .1s, color .1s;
+    text-align: left;
+  }
+  .level-btn:hover { background: var(--surface); color: var(--text); opacity: 1; }
+  .level-btn.active { background: var(--surface2); color: var(--orange); }
+  .level-btn .badge-count {
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--surface2);
+    color: var(--blue);
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .level-btn.active .badge-count { background: var(--bg); }
+  .level-btn.has-content { color: var(--text); }
+
+  /* Detail panel */
+  #detailPanel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .detail-header h2 { font-size: 22px; font-weight: 700; color: var(--orange); }
+  .detail-header .xp-hint { font-size: 12px; color: var(--text2); }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .section h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .unlock-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .unlock-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .unlock-row .name { flex: 1; font-size: 13px; }
+  .unlock-row .sub  { font-size: 11px; color: var(--text2); }
+  .unlock-row .icon { font-size: 18px; line-height: 1; }
+
+  .empty-state {
+    color: var(--text2);
+    font-size: 13px;
+    padding: 8px 0;
+    font-style: italic;
+  }
+
+  .add-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .add-form select { flex: 1; min-width: 200px; }
+  .add-form label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+
+  .placeholder-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text2);
+    gap: 8px;
+  }
+  .placeholder-panel .big { font-size: 48px; }
+  .placeholder-panel p { font-size: 14px; }
+
+  .rarity-Common    { color: var(--green); }
+  .rarity-Uncommon  { color: var(--blue); }
+  .rarity-Rare      { color: var(--purple); }
+  .rarity-Epic      { color: var(--orange); }
+  .rarity-Legendary { color: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 Level Unlocks</h1>
+  <div class="nav-links">
+    <a href="index.html">⚙️ Items</a>
+    <a href="map.html">🗺️ Map</a>
+    <a href="level-unlocks.html" class="active">🏆 Levels</a>
+  </div>
+  <div class="token-row">
+    <label for="baseUrlInput">API base URL</label>
+    <select id="baseUrlInput" style="width:220px">
+      <option value="">localhost (local)</option>
+      <option value="https://life-level-api-latest-1779363121.onrender.com">Production (Render)</option>
+    </select>
+    <button onclick="saveBaseUrl()">Switch</button>
+    <label for="tokenInput" style="margin-left:12px">JWT Token</label>
+    <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
+    <button onclick="saveToken()">Save</button>
+  </div>
+</header>
+
+<div class="body-layout">
+  <div id="levelSidebar">
+    <div class="sidebar-title">Level</div>
+    <div id="levelList"></div>
+  </div>
+  <div id="detailPanel">
+    <div class="placeholder-panel" id="placeholderState">
+      <div class="big">🏆</div>
+      <p>Select a level to view and edit unlocks</p>
+    </div>
+    <div id="levelDetail" style="display:none"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Auth / base URL helpers ──────────────────────────────────────────────────
+function getBaseUrl() {
+  return (localStorage.getItem('ll_admin_baseUrl') || '').replace(/\/$/, '');
+}
+function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
+
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t) { toast('Paste a token first.', 'err'); return; }
+  localStorage.setItem('ll_admin_token', t);
+  toast('Token saved.', 'ok');
+  boot();
+}
+
+function saveBaseUrl() {
+  const url = document.getElementById('baseUrlInput').value.trim().replace(/\/$/, '');
+  localStorage.setItem('ll_admin_baseUrl', url);
+  localStorage.removeItem('ll_admin_token');
+  window.location.reload();
+}
+
+async function apiFetch(path, opts = {}) {
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(getBaseUrl() + path, { ...opts, headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`${res.status} ${text}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+
+// ── Auto-login ───────────────────────────────────────────────────────────────
+async function fetchAdminConfig() {
+  try {
+    const res = await fetch(getBaseUrl() + '/api/admin/config');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function autoLogin() {
+  const cfg = await fetchAdminConfig();
+  if (!cfg) return false;
+  try {
+    const res = await fetch(getBaseUrl() + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: cfg.email, password: cfg.password }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const token = data?.token;
+    if (!token) return false;
+    localStorage.setItem('ll_admin_token', token);
+    document.getElementById('tokenInput').value = token;
+    return true;
+  } catch { return false; }
+}
+
+async function boot() {
+  if (!getToken()) {
+    const ok = await autoLogin();
+    if (!ok) {
+      toast('Auto-login failed — paste an Admin JWT and click Save.', 'err');
+      return;
+    }
+  }
+  await loadData();
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+let state = { levels: {}, allItems: [], allZones: [], selectedLevel: null };
+
+// ── Load data ────────────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const data = await apiFetch('/api/admin/level-unlocks');
+    state.levels   = data.levels;
+    state.allItems = data.allItems;
+    state.allZones = data.allZones;
+    renderSidebar();
+    if (state.selectedLevel) selectLevel(state.selectedLevel);
+  } catch (e) {
+    toast('Failed to load: ' + e.message, 'err');
+  }
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('levelList');
+  list.innerHTML = '';
+  const maxLevel = 50;
+  for (let l = 1; l <= maxLevel; l++) {
+    const lvData = state.levels[l] || { zones: [], items: [] };
+    const count = (lvData.zones?.length || 0) + (lvData.items?.length || 0);
+    const btn = document.createElement('button');
+    btn.className = 'level-btn' + (count > 0 ? ' has-content' : '') + (state.selectedLevel === l ? ' active' : '');
+    btn.onclick = () => selectLevel(l);
+    btn.innerHTML = `
+      <span>Level ${l}</span>
+      ${count > 0 ? `<span class="badge-count">${count}</span>` : ''}
+    `;
+    list.appendChild(btn);
+  }
+}
+
+// ── Detail panel ─────────────────────────────────────────────────────────────
+function selectLevel(level) {
+  state.selectedLevel = level;
+  // Update sidebar active state
+  document.querySelectorAll('.level-btn').forEach((b, i) => {
+    b.classList.toggle('active', i + 1 === level);
+  });
+  document.getElementById('placeholderState').style.display = 'none';
+  renderDetail(level);
+}
+
+function xpForLevel(l) {
+  return l * (l - 1) / 2 * 300;
+}
+
+function renderDetail(level) {
+  const panel = document.getElementById('levelDetail');
+  panel.style.display = 'block';
+  const lvData = state.levels[level] || { zones: [], items: [] };
+  const zones = lvData.zones || [];
+  const items = lvData.items || [];
+
+  const totalXp = xpForLevel(level);
+  const xpLabel = totalXp > 0 ? `Total XP to reach: ${totalXp.toLocaleString()}` : 'Starting level';
+
+  panel.innerHTML = `
+    <div class="detail-header">
+      <h2>Level ${level}</h2>
+      <span class="xp-hint">${xpLabel}</span>
+    </div>
+
+    <!-- Zones Section -->
+    <div class="section">
+      <h3>🗺️ Zone Unlocks <span style="color:var(--text);font-style:normal;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400">(zones requiring level ${level} to enter)</span></h3>
+      <div id="zonesList">
+        ${zones.length === 0
+          ? '<div class="empty-state">No zones unlock at this level.</div>'
+          : zones.map(z => `
+            <div class="unlock-row" id="zone-row-${z.id}">
+              <span class="icon">🗺️</span>
+              <div class="name">
+                ${escHtml(z.name)}
+                <div class="sub">${escHtml(z.regionName)}</div>
+              </div>
+              <select style="width:90px;padding:4px 8px;font-size:12px"
+                      onchange="changeZoneLevel('${z.id}', this.value)"
+                      title="Move zone to a different level">
+                ${levelOptions(level)}
+              </select>
+              <button class="sm danger" onclick="removeZoneFromLevel('${z.id}')">Remove</button>
+            </div>
+          `).join('')
+        }
+      </div>
+      <div class="add-form">
+        <label>Add zone:</label>
+        <select id="addZoneSelect">
+          <option value="">— pick zone —</option>
+          ${state.allZones
+            .filter(z => z.levelRequirement !== level)
+            .map(z => `<option value="${z.id}">[Lv${z.levelRequirement}] ${escHtml(z.name)} (${escHtml(z.regionName)})</option>`)
+            .join('')}
+        </select>
+        <button class="success sm" onclick="addZoneToLevel(${level})">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Items Section -->
+    <div class="section">
+      <h3>🎁 Item Grants <span style="color:var(--text);font-style:normal;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400">(automatically granted on level-up)</span></h3>
+      <div id="itemsList">
+        ${items.length === 0
+          ? '<div class="empty-state">No items granted at this level.</div>'
+          : items.map(it => `
+            <div class="unlock-row" id="item-row-${it.id}">
+              <span class="icon">${escHtml(it.itemIcon || '📦')}</span>
+              <div class="name">
+                ${escHtml(it.itemName)}
+                <div class="sub">${it.dropChancePct}% chance${!it.isEnabled ? ' · <span style="color:var(--red)">disabled</span>' : ''}</div>
+              </div>
+              <button class="sm danger" onclick="removeItemReward('${it.id}')">Remove</button>
+            </div>
+          `).join('')
+        }
+      </div>
+      <div class="add-form">
+        <label>Add item:</label>
+        <select id="addItemSelect">
+          <option value="">— pick item —</option>
+          ${state.allItems.map(i => `<option value="${i.id}">${escHtml(i.icon || '')} ${escHtml(i.name)}</option>`).join('')}
+        </select>
+        <button class="success sm" onclick="addItemReward(${level})">+ Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function levelOptions(current) {
+  let html = '';
+  for (let l = 1; l <= 50; l++) {
+    html += `<option value="${l}" ${l === current ? 'selected' : ''}>Lv ${l}</option>`;
+  }
+  return html;
+}
+
+// ── Actions ──────────────────────────────────────────────────────────────────
+async function changeZoneLevel(zoneId, newLevel) {
+  try {
+    await apiFetch(`/api/admin/level-unlocks/zones/${zoneId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ levelRequirement: parseInt(newLevel) }),
+    });
+    toast(`Zone moved to level ${newLevel}.`, 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function removeZoneFromLevel(zoneId) {
+  try {
+    await apiFetch(`/api/admin/level-unlocks/zones/${zoneId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ levelRequirement: 1 }),
+    });
+    toast('Zone reset to level 1.', 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function addZoneToLevel(level) {
+  const sel = document.getElementById('addZoneSelect');
+  const zoneId = sel.value;
+  if (!zoneId) { toast('Pick a zone first.', 'err'); return; }
+  try {
+    await apiFetch(`/api/admin/level-unlocks/zones/${zoneId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ levelRequirement: level }),
+    });
+    toast(`Zone moved to level ${level}.`, 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function addItemReward(level) {
+  const sel = document.getElementById('addItemSelect');
+  const itemId = sel.value;
+  if (!itemId) { toast('Pick an item first.', 'err'); return; }
+  try {
+    await apiFetch('/api/admin/level-unlocks/item-rewards', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, level }),
+    });
+    toast(`Item grant added for level ${level}.`, 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function removeItemReward(ruleId) {
+  try {
+    await apiFetch(`/api/admin/level-unlocks/item-rewards/${ruleId}`, { method: 'DELETE' });
+    toast('Item grant removed.', 'ok');
+    await loadData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(function init() {
+  // Restore saved base URL selection
+  const saved = localStorage.getItem('ll_admin_baseUrl') || '';
+  const sel = document.getElementById('baseUrlInput');
+  for (const opt of sel.options) {
+    if (opt.value === saved) { opt.selected = true; break; }
+  }
+  // Restore token
+  const token = localStorage.getItem('ll_admin_token') || '';
+  if (token) document.getElementById('tokenInput').value = token;
+
+  boot();
+})();
+</script>
+</body>
+</html>
