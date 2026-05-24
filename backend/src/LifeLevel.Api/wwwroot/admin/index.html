@@ -689,6 +689,45 @@ async function apiFetch(path, opts = {}) {
   try { return await res.json(); } catch { return null; }
 }
 
+async function fetchAdminConfig() {
+  try {
+    const res = await fetch(getBaseUrl() + '/api/admin/config');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function autoLogin() {
+  const cfg = await fetchAdminConfig();
+  if (!cfg) return false;
+  try {
+    const res = await fetch(getBaseUrl() + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: cfg.email, password: cfg.password }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const token = data?.token;
+    if (!token) return false;
+    localStorage.setItem('ll_admin_token', token);
+    document.getElementById('tokenInput').value = token;
+    return true;
+  } catch { return false; }
+}
+
+async function boot() {
+  if (!getToken()) {
+    const ok = await autoLogin();
+    if (!ok) {
+      toast('Auto-login failed — paste an Admin JWT and click Save.', 'err');
+      return;
+    }
+  }
+  loadItems();
+  populateItemSelects();
+}
+
 // ── Toast ──────────────────────────────────────────────────────────────────
 let toastTimer;
 function toast(msg, type = 'ok') {
@@ -1994,7 +2033,7 @@ if (qToken) {
   const savedToken = getToken();
   if (savedToken) document.getElementById('tokenInput').value = savedToken;
 }
-loadItems();
+boot();
 </script>
 </body>
 </html>

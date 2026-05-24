@@ -24,11 +24,14 @@ public class AdminUserSeeder(AppDbContext db, IConfiguration config)
         if (await db.Users.AnyAsync(u => u.Email == email))
             return;
 
+        // Derive a username from the email prefix so it never conflicts with existing accounts.
+        var username = "admin_" + email.Split('@')[0];
+
         var userId = Guid.NewGuid();
         var user = new User
         {
             Id = userId,
-            Username = "admin",
+            Username = username,
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             Role = UserRole.Admin,
