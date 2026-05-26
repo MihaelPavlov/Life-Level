@@ -36,12 +36,12 @@ class AuthService {
   }
 
   Future<AuthResult> login({
-    required String email,
+    required String emailOrUsername,
     required String password,
   }) async {
     try {
       final res = await _dio.post('/auth/login', data: {
-        'email': email,
+        'emailOrUsername': emailOrUsername,
         'password': password,
       });
       return AuthResult.fromJson(_asMap(res.data));

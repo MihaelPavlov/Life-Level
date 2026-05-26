@@ -48,10 +48,8 @@ class TutorialController extends ChangeNotifier {
   bool get shouldShowOutroModal => _shouldShowOutroModal;
   bool get isTopicReplay => _topic != null;
 
-  /// Step 4 is gated — UI shows "Waiting…" instead of "Next". On a topic
-  /// replay we drop the gate so the user can just tap through.
-  bool get isActionGated =>
-      _step == TutorialStep.logActivity && !isTopicReplay;
+  /// Step 4 uses a CTA button (Connect Your Tracker) — never gated.
+  bool get isActionGated => false;
 
   // ── target registration ─────────────────────────────────────────────────
   /// Registers a GlobalKey for a step target. Safe to call multiple times —

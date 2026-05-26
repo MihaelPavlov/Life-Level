@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/nav_tab_notifier.dart';
 import '../providers/tutorial_provider.dart';
 import '../widgets/tutorial_progress_dots.dart';
 import '../widgets/tutorial_skip_sheet.dart';
 
-/// Full-screen step-0 modal. Shown on first build after a new character is
-/// created (when `tutorialStep == 0`). The integration pass decides whether
-/// to push this as a route or embed it in the shell's stack.
-///
-/// "Begin the quest" calls `controller.advance()` so the server bumps
-/// step 0 → 1 and awards the first +25 XP; the overlay then fades into
-/// the bubble for the XP card.
 class TutorialIntroScreen extends ConsumerWidget {
   const TutorialIntroScreen({super.key});
 
@@ -21,8 +15,6 @@ class TutorialIntroScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Radial backdrop — blue up-top + purple bottom glow, mirrors
-          // the character-setup intro styling.
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -52,89 +44,102 @@ class TutorialIntroScreen extends ConsumerWidget {
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 8),
-                  const _FirstQuestTag(),
-                  const SizedBox(height: 16),
-                  const _HeroCircle(
-                    emoji: '\uD83D\uDDE1',
-                    accent: AppColors.blue,
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight.isFinite
+                        ? constraints.maxHeight - 46
+                        : 0,
                   ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'A new adventurer arrives',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 8),
+                      const _FirstQuestTag(),
+                      const SizedBox(height: 16),
+                      const _HeroCircle(
+                        emoji: '🗡',
+                        accent: AppColors.blue,
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'A new adventurer arrives',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Your journey has begun. Let's learn how training in the real world makes you stronger in this one.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const _PillarCard(
+                        emoji: '📈',
+                        title: 'Train → Level up',
+                        desc: 'Workouts earn XP and raise stats',
+                      ),
+                      const SizedBox(height: 10),
+                      const _PillarCard(
+                        emoji: '🗺️',
+                        title: 'Explore the world',
+                        desc: 'Distance moves you across zones',
+                      ),
+                      const SizedBox(height: 10),
+                      const _PillarCard(
+                        emoji: '⚔️',
+                        title: 'Defeat bosses',
+                        desc: 'Daily raids reward gear & titles',
+                      ),
+                      const SizedBox(height: 18),
+                      const TutorialProgressDots(
+                        total: 8,
+                        activeIndex: 0,
+                        doneUpTo: 0,
+                        activeColor: AppColors.blue,
+                      ),
+                      const SizedBox(height: 16),
+                      _BeginButton(
+                        onPressed: () async {
+                          final controller =
+                              ref.read(tutorialControllerProvider);
+                          controller.dismissIntroModal();
+                          if (Navigator.of(context).canPop()) {
+                            Navigator.of(context).pop();
+                          }
+                          // Ensure Home tab is active so step-1 targets
+                          // (XP bar, stats row, quests card) are in the tree.
+                          NavTabNotifier.switchTo('home');
+                          await controller.advance();
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _SkipLink(
+                        onPressed: () async {
+                          final confirmed =
+                              await showTutorialSkipSheet(context);
+                          if (confirmed == true) {
+                            await ref.read(tutorialControllerProvider).skip();
+                            if (context.mounted &&
+                                Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop();
+                            }
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Your journey has begun. Let's learn how training in the real world makes you stronger in this one.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const _PillarCard(
-                    emoji: '\uD83D\uDCC8',
-                    title: 'Train \u2192 Level up',
-                    desc: 'Workouts earn XP and raise stats',
-                  ),
-                  const SizedBox(height: 10),
-                  const _PillarCard(
-                    emoji: '\uD83D\uDDFA\uFE0F',
-                    title: 'Explore the world',
-                    desc: 'Distance moves you across zones',
-                  ),
-                  const SizedBox(height: 10),
-                  const _PillarCard(
-                    emoji: '\u2694\uFE0F',
-                    title: 'Defeat bosses',
-                    desc: 'Daily raids reward gear & titles',
-                  ),
-                  const SizedBox(height: 18),
-                  const TutorialProgressDots(
-                    total: 8,
-                    activeIndex: 0,
-                    doneUpTo: 0,
-                    activeColor: AppColors.blue,
-                  ),
-                  const SizedBox(height: 16),
-                  _BeginButton(
-                    onPressed: () async {
-                      final controller = ref.read(tutorialControllerProvider);
-                      controller.dismissIntroModal();
-                      if (Navigator.of(context).canPop()) {
-                        Navigator.of(context).pop();
-                      }
-                      // `advance()` bumps the server 0 → 1 and (first time
-                      // only) awards +25 XP that the overlay will flash.
-                      await controller.advance();
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _SkipLink(
-                    onPressed: () async {
-                      final confirmed = await showTutorialSkipSheet(context);
-                      if (confirmed == true) {
-                        await ref.read(tutorialControllerProvider).skip();
-                        if (context.mounted && Navigator.of(context).canPop()) {
-                          Navigator.of(context).pop();
-                        }
-                      }
-                    },
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -152,7 +157,7 @@ class _FirstQuestTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        '\u2694 FIRST QUEST',
+        '⚔ FIRST QUEST',
         style: TextStyle(
           color: AppColors.orange,
           fontSize: 10,
@@ -283,7 +288,7 @@ class _BeginButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: const Text(
-          'BEGIN THE QUEST \u25B8',
+          'BEGIN THE QUEST ▸',
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,

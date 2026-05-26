@@ -72,7 +72,7 @@ enum TutorialStep {
       case TutorialStep.quests:
         return 'questsCard';
       case TutorialStep.logActivity:
-        return 'logFab';
+        return null; // centered bubble — no on-screen integrations target
       case TutorialStep.mapTab:
         return 'mapTab';
       case TutorialStep.bossFab:
@@ -102,45 +102,45 @@ class TutorialStepContent {
 /// Step → content map (bubble steps only).
 const Map<TutorialStep, TutorialStepContent> kTutorialStepContent = {
   TutorialStep.xpBar: TutorialStepContent(
-    emoji: '\u26A1',
+    emoji: '⚡',
     title: 'Your XP Bar',
     body:
         'Every workout fills this bar. Reach Level 2 to unlock new zones, items, and daily quests.',
     accent: AppColors.blue,
   ),
   TutorialStep.stats: TutorialStepContent(
-    emoji: '\uD83D\uDC8E',
+    emoji: '💎',
     title: 'Five Core Stats',
     body:
         'STR, END, AGI, FLX, STA — each activity raises different stats. Tap a gem to see what trains it.',
     accent: AppColors.purple,
   ),
   TutorialStep.quests: TutorialStepContent(
-    emoji: '\uD83D\uDCDC',
+    emoji: '📜',
     title: 'Daily Quests & Streaks',
     body:
         'Five quests refresh every day. A daily workout keeps your streak alive — shields protect you on rest days.',
     accent: AppColors.orange,
   ),
   TutorialStep.logActivity: TutorialStepContent(
-    emoji: '\uD83D\uDDE1',
-    title: 'Log Your First Activity',
+    emoji: '🔗',
+    title: 'Connect Your Tracker',
     body:
-        'Tap the sword. Any workout counts — even a 5-min walk. This step unlocks only when you log a real workout.',
-    accent: AppColors.blue,
+        'Link Strava, Apple Health, or Google Fit — every real workout auto-imports as XP and stat gains.',
+    accent: AppColors.green,
   ),
   TutorialStep.mapTab: TutorialStepContent(
-    emoji: '\uD83D\uDDFA\uFE0F',
+    emoji: '🗺️',
     title: 'The Adventure Map',
     body:
         'Every km you run or ride moves you across the world. Unlock zones like Forest of Endurance.',
     accent: AppColors.green,
   ),
   TutorialStep.bossFab: TutorialStepContent(
-    emoji: '\uD83D\uDD25',
+    emoji: '🔥',
     title: 'Strike the Boss',
     body:
-        'Every workout also damages today\u2019s boss. Defeat them before the 7-day timer for gear, XP, and a title.',
+        'Every workout also damages today’s boss. Defeat them before the 7-day timer for gear, XP, and a title.',
     accent: AppColors.red,
   ),
 };

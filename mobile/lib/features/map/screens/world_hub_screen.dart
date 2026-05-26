@@ -4,7 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../models/world_map_models.dart';
-import '../services/world_map_selection.dart';
 import '../services/world_zone_service.dart';
 import '../widgets/active_journey_banner.dart';
 import '../widgets/region_hero_card.dart';
@@ -15,11 +14,19 @@ import 'region_detail_screen.dart';
 ///
 /// Matches screen 1/6 of `design-mockup/map/WORLD-MAP-FINAL-MOCKUP.html`.
 class WorldHubScreen extends StatefulWidget {
-  const WorldHubScreen({super.key, this.onClose});
+  const WorldHubScreen({
+    super.key,
+    this.onClose,
+    this.autoOpenActiveRegion = false,
+  });
 
   /// Provided when the shell opens this as an overlay so the screen can show
   /// a back button. Null when rendered as a root nav tab.
   final VoidCallback? onClose;
+
+  /// When true, automatically opens the player's active region on load
+  /// (used when the bottom-nav "Map" tab is tapped directly).
+  final bool autoOpenActiveRegion;
 
   @override
   State<WorldHubScreen> createState() => WorldHubScreenState();
@@ -34,10 +41,8 @@ class WorldHubScreenState extends State<WorldHubScreen> {
   String? _error;
 
   // Inline region navigation so the shell's bottom nav bar stays visible.
-  // A nested Navigator.push would cover the whole Scaffold including the nav.
-  // Initial value comes from WorldMapSelection so the user returns to their
-  // last-viewed region after switching tabs.
-  String? _openRegionId = WorldMapSelection.openRegionId;
+  // Always starts at the hub list — tapping a region card opens RegionDetailScreen.
+  String? _openRegionId;
 
   @override
   void initState() {
@@ -67,17 +72,13 @@ class WorldHubScreenState extends State<WorldHubScreen> {
       setState(() {
         _data = data;
         _loading = false;
-        if (_openRegionId == null) {
-          RegionCard? active;
+        if (widget.autoOpenActiveRegion) {
+          _openRegionId = null;
           for (final r in data.regions) {
             if (r.status == RegionStatus.active) {
-              active = r;
+              _openRegionId = r.id;
               break;
             }
-          }
-          if (active != null) {
-            _openRegionId = active.id;
-            WorldMapSelection.openRegionId = active.id;
           }
         }
       });
@@ -101,12 +102,10 @@ class WorldHubScreenState extends State<WorldHubScreen> {
       );
       return;
     }
-    WorldMapSelection.openRegionId = region.id;
     setState(() => _openRegionId = region.id);
   }
 
   void _closeRegion() {
-    WorldMapSelection.openRegionId = null;
     setState(() => _openRegionId = null);
   }
 

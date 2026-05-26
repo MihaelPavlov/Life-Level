@@ -71,6 +71,7 @@ class _MainShellState extends ConsumerState<MainShell>
   /// CTA fires, cleared when the overlay closes).
   String? _pendingBossId;
   bool _loginRewardShown = false;
+  bool _worldAutoOpenActive = false;
 
   late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
   bool _wasOffline = false;
@@ -174,6 +175,13 @@ class _MainShellState extends ConsumerState<MainShell>
           ),
         );
         _introModalShown = false;
+        // Dismiss in the controller if the user pressed back without tapping
+        // BEGIN — prevents a stale shouldShowIntroModal == true from causing
+        // a premature re-push the next time replayAll() notifies.
+        if (mounted) {
+          final ctrl = ref.read(tutorialControllerProvider);
+          if (ctrl.shouldShowIntroModal) ctrl.dismissIntroModal();
+        }
       });
     }
     if (c.shouldShowOutroModal && !_outroModalShown) {
@@ -238,6 +246,7 @@ class _MainShellState extends ConsumerState<MainShell>
           if (navIndex != -1) _tabIndex = navIndex;
           _pendingOnZoneSelected = null;
           _worldOpen = true;
+          _worldAutoOpenActive = false;
           _titlesOpen = false;
           _bossOpen = false;
         });
@@ -697,8 +706,11 @@ class _MainShellState extends ConsumerState<MainShell>
                 Positioned.fill(
                   bottom: kNavBarH,
                   child: WorldHubScreen(
+                    key: ValueKey('world_$_worldAutoOpenActive'),
+                    autoOpenActiveRegion: _worldAutoOpenActive,
                     onClose: () => setState(() {
                       _worldOpen = false;
+                      _worldAutoOpenActive = false;
                       _pendingOnZoneSelected = null;
                     }),
                   ),
@@ -780,6 +792,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         _pendingOnZoneSelected = null;
                         _tabIndex = i;
                         _worldOpen = true;
+                        _worldAutoOpenActive = true;
                         _titlesOpen = false;
                         _bossOpen = false;
                       });
@@ -823,15 +836,16 @@ class _MainShellState extends ConsumerState<MainShell>
   void _onRingItemTap(String id) {
     _closeRadial();
     if (id == 'world') {
+      WorldZoneRefreshNotifier.notify();
       final navIndex = _navIds.indexOf('world');
-      if (navIndex != -1) {
-        setState(() => _tabIndex = navIndex);
-      } else {
-        setState(() {
-          _pendingOnZoneSelected = null;
-          _worldOpen = true;
-        });
-      }
+      setState(() {
+        if (navIndex != -1) _tabIndex = navIndex;
+        _pendingOnZoneSelected = null;
+        _worldOpen = true;
+        _worldAutoOpenActive = false;
+        _titlesOpen = false;
+        _bossOpen = false;
+      });
       return;
     }
     if (id == 'titles') {

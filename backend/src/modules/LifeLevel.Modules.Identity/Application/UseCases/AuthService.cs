@@ -65,11 +65,11 @@ public class AuthService(DbContext db, JwtService jwt, IEventPublisher events, I
     {
         var user = await db.Set<User>()
             .Include(u => u.RingItems)
-            .FirstOrDefaultAsync(u => u.Email == req.Email)
-            ?? throw new InvalidOperationException("Invalid email or password.");
+            .FirstOrDefaultAsync(u => u.Email == req.EmailOrUsername || u.Username == req.EmailOrUsername)
+            ?? throw new InvalidOperationException("Invalid email/username or password.");
 
         if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
-            throw new InvalidOperationException("Invalid email or password.");
+            throw new InvalidOperationException("Invalid email/username or password.");
 
         var ring = user.RingItems.Any()
             ? user.RingItems.OrderBy(r => r.SortOrder).Select(r => r.ItemType).ToList()

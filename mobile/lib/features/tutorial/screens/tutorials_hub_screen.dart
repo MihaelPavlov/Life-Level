@@ -47,10 +47,14 @@ class TutorialsHubScreen extends ConsumerWidget {
                   children: [
                     _PlayAllCard(
                       onPlay: () async {
-                        await controller.replayAll();
+                        // Pop the hub BEFORE replayAll() so it's off the
+                        // navigator stack when the intro screen is pushed.
+                        // If maybePop ran after replayAll()'s first notify,
+                        // it would pop the intro instead of the hub.
                         if (context.mounted) {
                           Navigator.of(context).maybePop();
                         }
+                        await controller.replayAll();
                       },
                     ),
                     const SizedBox(height: 14),

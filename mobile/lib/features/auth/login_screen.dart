@@ -15,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
+  final _identifierCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _authService = AuthService();
 
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final result = await _authService.login(
-        email: _emailCtrl.text.trim(),
+        emailOrUsername: _identifierCtrl.text.trim(),
         password: _passwordCtrl.text,
       );
       await ApiClient.saveToken(result.token);
@@ -94,14 +94,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // Email
+                  // Email or Username
                   _AuthField(
-                    controller: _emailCtrl,
-                    label: 'Email',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) => v != null && v.contains('@')
+                    controller: _identifierCtrl,
+                    label: 'Email or Username',
+                    keyboardType: TextInputType.text,
+                    validator: (v) => v != null && (v.contains('@') || v.length >= 3)
                         ? null
-                        : 'Enter a valid email',
+                        : 'Enter your email or username',
                   ),
                   const SizedBox(height: 16),
 

@@ -22,8 +22,11 @@ class TutorialBubble extends StatelessWidget {
   final List<bool> doneDots;
 
   /// Disables the Next button and renders the "Waiting…" pulse instead.
-  /// Used by step 4 in the first-run flow.
   final bool waiting;
+
+  /// When set, replaces the "GOT IT" button with a labelled CTA button.
+  final VoidCallback? onCta;
+  final String ctaLabel;
 
   final VoidCallback onNext;
   final VoidCallback onSkip;
@@ -39,6 +42,8 @@ class TutorialBubble extends StatelessWidget {
     required this.onNext,
     required this.onSkip,
     this.waiting = false,
+    this.onCta,
+    this.ctaLabel = 'CONNECT →',
   });
 
   @override
@@ -114,7 +119,13 @@ class TutorialBubble extends StatelessWidget {
               children: [
                 _SkipButton(onPressed: onSkip),
                 const Spacer(),
-                if (waiting)
+                if (onCta != null)
+                  _NextButton(
+                    accent: content.accent,
+                    label: ctaLabel,
+                    onPressed: onCta!,
+                  )
+                else if (waiting)
                   const _WaitingButton()
                 else
                   _NextButton(accent: accent, onPressed: onNext),
@@ -223,7 +234,12 @@ class _SkipButton extends StatelessWidget {
 class _NextButton extends StatelessWidget {
   final Color accent;
   final VoidCallback onPressed;
-  const _NextButton({required this.accent, required this.onPressed});
+  final String label;
+  const _NextButton({
+    required this.accent,
+    required this.onPressed,
+    this.label = 'GOT IT ▸',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -247,8 +263,8 @@ class _NextButton extends StatelessWidget {
             ),
           ],
         ),
-        child: const Text(
-          'GOT IT \u25B8',
+        child: Text(
+          label,
           style: TextStyle(
             color: Colors.white,
             fontSize: 11,

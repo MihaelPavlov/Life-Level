@@ -6,6 +6,7 @@ import '../models/tutorial_placement.dart';
 import '../models/tutorial_step.dart';
 import '../providers/tutorial_provider.dart';
 import '../tutorial_controller.dart';
+import '../../../features/integrations/screens/integrations_screen.dart';
 import 'tutorial_bubble.dart';
 import 'tutorial_bubble_tail.dart';
 import 'tutorial_dim_backdrop.dart';
@@ -164,6 +165,14 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                 totalSteps: kTutorialBubbleCount,
                 doneDots: _doneDotsFor(step),
                 waiting: c.isActionGated,
+                onCta: step == TutorialStep.logActivity
+                    ? () {
+                        c.advance();
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const IntegrationsScreen(),
+                        ));
+                      }
+                    : null,
                 enterAnim: _enterAnim,
                 onNext: c.advance,
                 onSkip: () => _handleSkip(c),
@@ -181,6 +190,14 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                       content: content,
                       doneDots: _doneDotsFor(step),
                       waiting: c.isActionGated,
+                      onCta: step == TutorialStep.logActivity
+                          ? () {
+                              c.advance();
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => const IntegrationsScreen(),
+                              ));
+                            }
+                          : null,
                       onNext: c.advance,
                       onSkip: () => _handleSkip(c),
                     ),
@@ -232,6 +249,7 @@ class _PositionedBubble extends StatelessWidget {
   final int totalSteps;
   final List<bool> doneDots;
   final bool waiting;
+  final VoidCallback? onCta;
   final Animation<double> enterAnim;
   final VoidCallback onNext;
   final VoidCallback onSkip;
@@ -245,6 +263,7 @@ class _PositionedBubble extends StatelessWidget {
     required this.totalSteps,
     required this.doneDots,
     required this.waiting,
+    this.onCta,
     required this.enterAnim,
     required this.onNext,
     required this.onSkip,
@@ -320,6 +339,7 @@ class _PositionedBubble extends StatelessWidget {
       content: content,
       doneDots: doneDots,
       waiting: waiting,
+      onCta: onCta,
       onNext: onNext,
       onSkip: onSkip,
     );
