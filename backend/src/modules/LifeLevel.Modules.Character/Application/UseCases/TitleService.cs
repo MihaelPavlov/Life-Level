@@ -1,6 +1,5 @@
 using LifeLevel.Modules.Character.Application.DTOs;
 using LifeLevel.Modules.Character.Domain.Entities;
-using LifeLevel.Modules.Character.Domain.Enums;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
@@ -56,13 +55,13 @@ public class TitleService(
         var nextRankThreshold = await GetNextRankThresholdAsync(currentRank, ct);
 
         var rankProgression = new RankProgressionDto(
-            CurrentRank: currentRank.ToString(),
+            CurrentRank: currentRank,
             BossesDefeated: bossCount,
             BossesRequiredForNextRank: nextRankThreshold?.BossesRequired ?? bossCount,
             BossesRemainingForNextRank: nextRankThreshold.HasValue
                 ? Math.Max(0, nextRankThreshold.Value.BossesRequired - bossCount)
                 : 0,
-            NextRank: nextRankThreshold?.Rank.ToString()
+            NextRank: nextRankThreshold?.Rank
         );
 
         string activeEmoji = string.Empty;
@@ -123,7 +122,7 @@ public class TitleService(
         {
             if (alreadyEarnedIds.Contains(title.Id)) continue;
 
-            if (EvaluateCriteria(title.UnlockCriteria, bossCount, currentStreakDays, questCount, character.Rank.ToString()))
+            if (EvaluateCriteria(title.UnlockCriteria, bossCount, currentStreakDays, questCount, character.Rank))
             {
                 db.Set<CharacterTitle>().Add(new CharacterTitle
                 {
@@ -149,7 +148,7 @@ public class TitleService(
             await db.SaveChangesAsync(ct);
 
         if (rankChanged)
-            await events.PublishAsync(new CharacterRankChangedEvent(userId, computedRank.ToString()), ct);
+            await events.PublishAsync(new CharacterRankChangedEvent(userId, computedRank), ct);
     }
 
     private static bool EvaluateCriteria(string criteria, int bossCount, int streakDays, int questCount, string rankName)
@@ -175,23 +174,23 @@ public class TitleService(
         return false;
     }
 
-    private async Task<CharacterRank> ComputeRankAsync(int bossCount, CancellationToken ct)
+    private async Task<string> ComputeRankAsync(int bossCount, CancellationToken ct)
     {
         var thresholds = await db.Set<RankThreshold>()
             .OrderByDescending(r => r.BossesRequired)
             .ToListAsync(ct);
         var match = thresholds.FirstOrDefault(t => bossCount >= t.BossesRequired);
-        return match != null ? Enum.Parse<CharacterRank>(match.Rank) : CharacterRank.Novice;
+        return match?.Rank ?? "Novice";
     }
 
-    private async Task<(CharacterRank Rank, int BossesRequired)?> GetNextRankThresholdAsync(CharacterRank current, CancellationToken ct)
+    private async Task<(string Rank, int BossesRequired)?> GetNextRankThresholdAsync(string current, CancellationToken ct)
     {
         var thresholds = await db.Set<RankThreshold>()
             .OrderBy(r => r.BossesRequired)
             .ToListAsync(ct);
-        var idx = thresholds.FindIndex(t => Enum.Parse<CharacterRank>(t.Rank) == current);
+        var idx = thresholds.FindIndex(t => t.Rank == current);
         if (idx < 0 || idx >= thresholds.Count - 1) return null;
         var next = thresholds[idx + 1];
-        return (Enum.Parse<CharacterRank>(next.Rank), next.BossesRequired);
+        return (next.Rank, next.BossesRequired);
     }
 }

@@ -5,27 +5,53 @@ namespace LifeLevel.Api.Infrastructure.Persistence;
 
 public class RankThresholdSeeder(AppDbContext db)
 {
-    private static readonly (string Rank, int BossesRequired)[] Defaults =
+    private static readonly (string Rank, string DisplayName, string Description, int BossesRequired)[] Defaults =
     [
-        ("Novice",   0),
-        ("Warrior",  1),
-        ("Veteran",  3),
-        ("Champion", 8),
-        ("Legend",   18),
+        ("Novice",   "Novice",   "Starting rank — all new players begin here",              0),
+        ("Warrior",  "Warrior",  "First milestone — proves commitment to the game",         1),
+        ("Veteran",  "Veteran",  "Mid-tier rank — seasoned adventurer",                     3),
+        ("Champion", "Champion", "High rank — only dedicated players reach this",           8),
+        ("Legend",   "Legend",   "Ultimate rank — the top of the ladder",                  18),
     ];
 
     public async Task SeedAsync()
     {
-        if (await db.RankThresholds.AnyAsync()) return;
+        var existing = await db.RankThresholds.ToListAsync();
 
-        foreach (var (rank, required) in Defaults)
+        if (existing.Count == 0)
         {
-            db.RankThresholds.Add(new RankThreshold
+            foreach (var (rank, displayName, description, required) in Defaults)
             {
-                Id = Guid.NewGuid(),
-                Rank = rank,
-                BossesRequired = required,
-            });
+                db.RankThresholds.Add(new RankThreshold
+                {
+                    Id = Guid.NewGuid(),
+                    Rank = rank,
+                    DisplayName = displayName,
+                    Description = description,
+                    BossesRequired = required,
+                });
+            }
+        }
+        else
+        {
+            // Backfill DisplayName/Description for rows that were seeded before those columns existed
+            bool dirty = false;
+            foreach (var row in existing)
+            {
+                var defaults = Defaults.FirstOrDefault(d => d.Rank == row.Rank);
+                if (defaults == default) continue;
+                if (string.IsNullOrEmpty(row.DisplayName))
+                {
+                    row.DisplayName = defaults.DisplayName;
+                    dirty = true;
+                }
+                if (string.IsNullOrEmpty(row.Description))
+                {
+                    row.Description = defaults.Description;
+                    dirty = true;
+                }
+            }
+            if (!dirty) return;
         }
 
         await db.SaveChangesAsync();

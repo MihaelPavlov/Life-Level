@@ -245,9 +245,33 @@
   .empty-state { color: var(--text2); font-size: 13px; padding: 16px; text-align: center; }
 
   .hidden { display: none !important; }
+
+  #loadingOverlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999; gap: 16px;
+    transition: opacity .25s;
+  }
+  #loadingOverlay.out { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loadingOverlay p { color: var(--text2); font-size: 13px; }
 </style>
 </head>
 <body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>Authenticating…</p>
+</div>
 
 <header>
   <h1>LifeLevel Admin — Map</h1>

@@ -87,9 +87,15 @@
     }
   }
 
+  function hideLoader() {
+    const el = document.getElementById('loadingOverlay');
+    if (el) { el.classList.add('out'); setTimeout(() => el.remove(), 300); }
+  }
+
   async function boot() {
     // 1) Try whatever token is already in localStorage.
     if (M.getToken() && await tryEnums()) {
+      hideLoader();
       await MapAdminWorlds.load();
       return;
     }
@@ -99,10 +105,12 @@
     if (cfg) {
       const loggedIn = await devLogin(cfg.email, cfg.password);
       if (loggedIn && await tryEnums()) {
+        hideLoader();
         await MapAdminWorlds.load();
         return;
       }
     }
+    hideLoader();
     M.toast('Auto-login failed — paste an Admin JWT manually and click Save.', 'err');
   }
 })();

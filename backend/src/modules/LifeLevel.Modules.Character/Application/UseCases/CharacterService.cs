@@ -79,7 +79,7 @@ public class CharacterService(
             AvatarEmoji: character.AvatarEmoji,
             ClassName: character.Class?.Name,
             ClassEmoji: character.Class?.Emoji,
-            Rank: character.Rank.ToString(),
+            Rank: character.Rank,
             Level: character.Level,
             Xp: character.Xp,
             XpForCurrentLevel: XpAtLevelStart(character.Level),

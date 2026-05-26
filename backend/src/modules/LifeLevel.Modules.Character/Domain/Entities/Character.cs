@@ -1,5 +1,3 @@
-using LifeLevel.Modules.Character.Domain.Enums;
-
 namespace LifeLevel.Modules.Character.Domain.Entities;
 
 public class Character
@@ -9,7 +7,7 @@ public class Character
 
     public int Level { get; set; } = 1;
     public long Xp { get; set; } = 0;
-    public CharacterRank Rank { get; set; } = CharacterRank.Novice;
+    public string Rank { get; set; } = "Novice";
 
     public int Strength { get; set; } = 0;
     public int Endurance { get; set; } = 0;

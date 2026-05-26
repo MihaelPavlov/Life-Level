@@ -64,7 +64,7 @@
   }
   .token-row label { color: var(--text2); font-size: 12px; }
 
-  input[type="text"], input[type="number"], select {
+  input[type="text"], input[type="number"], select, textarea {
     background: var(--surface2);
     border: 1px solid var(--border);
     color: var(--text);
@@ -73,8 +73,9 @@
     font-size: 13px;
     outline: none;
     transition: border-color .15s;
+    font-family: inherit;
   }
-  input:focus, select:focus { border-color: var(--blue); }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
   #tokenInput { width: 360px; }
 
   button {
@@ -90,39 +91,62 @@
   }
   button:hover { opacity: .85; }
   button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  button.sm { padding: 4px 12px; font-size: 12px; }
-  button.success { background: var(--green); }
+  button.danger    { background: var(--red); }
+  button.success   { background: var(--green); }
+  button.sm        { padding: 5px 12px; font-size: 12px; }
 
-  main { padding: 32px 24px; max-width: 680px; }
+  main { padding: 32px 24px; max-width: 720px; }
 
-  .page-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .page-sub {
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 24px;
-  }
+  .page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .page-sub   { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
 
+  /* Rank card */
   .rank-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px 20px;
     margin-bottom: 10px;
+  }
+  .rank-card-header {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    margin-bottom: 12px;
   }
-  .rank-icon { font-size: 28px; line-height: 1; }
-  .rank-info { flex: 1; }
-  .rank-info .rank-name { font-size: 15px; font-weight: 700; }
-  .rank-info .rank-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
-  .rank-edit { display: flex; align-items: center; gap: 8px; }
-  .rank-edit label { font-size: 12px; color: var(--text2); white-space: nowrap; }
-  .rank-edit input { width: 70px; padding: 5px 8px; font-size: 13px; }
+  .rank-emoji { font-size: 26px; line-height: 1; }
+  .rank-key   { font-size: 11px; color: var(--text2); font-family: monospace; }
+
+  .rank-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .rank-fields .full { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .field input, .field textarea { width: 100%; }
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  .rank-card-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* Add form */
+  .add-card {
+    background: var(--bg2);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .add-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--blue); }
+  .add-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .add-form-grid .full { grid-column: 1 / -1; }
 
   /* Toast */
   #toast {
@@ -135,9 +159,33 @@
   #toast.show { opacity: 1; }
   #toast.ok  { border-left: 4px solid var(--green); }
   #toast.err { border-left: 4px solid var(--red); }
+
+  #loadingOverlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999; gap: 16px;
+    transition: opacity .25s;
+  }
+  #loadingOverlay.out { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loadingOverlay p { color: var(--text2); font-size: 13px; }
 </style>
 </head>
 <body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>Authenticating…</p>
+</div>
 
 <header>
   <h1>⚔️ Rank Thresholds</h1>
@@ -161,24 +209,38 @@
 </header>
 
 <main>
-  <div class="page-title">Rank Progression Thresholds</div>
-  <div class="page-sub">
-    Ranks are earned by defeating bosses. Set how many boss defeats are required for each rank.
-    Novice is always 0 (starting rank) and cannot be changed meaningfully.
-  </div>
+  <div class="page-title">Rank Progression</div>
+  <div class="page-sub">Ranks are earned by defeating bosses. Customize names, descriptions, and thresholds. Built-in ranks cannot be deleted.</div>
   <div id="rankList">Loading…</div>
+
+  <!-- Add new rank -->
+  <div class="add-card">
+    <h3>+ Add Custom Rank</h3>
+    <div class="add-form-grid">
+      <div class="field">
+        <label>Display Name</label>
+        <input type="text" id="newName" placeholder="e.g. Elite">
+      </div>
+      <div class="field">
+        <label>Bosses Required</label>
+        <input type="number" id="newBosses" value="30" min="1" max="9999">
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <input type="text" id="newDesc" placeholder="Short description shown to players">
+      </div>
+    </div>
+    <button class="success" onclick="createRank()">Add Rank</button>
+  </div>
 </main>
 
 <div id="toast"></div>
 
 <script>
-const RANK_META = {
-  Novice:   { emoji: '🌱', color: '#8b949e', desc: 'Starting rank — all new players begin here' },
-  Warrior:  { emoji: '⚔️', color: '#3fb950', desc: 'First milestone — proves commitment to the game' },
-  Veteran:  { emoji: '🛡️', color: '#4f9eff', desc: 'Mid-tier rank — seasoned adventurer' },
-  Champion: { emoji: '👑', color: '#a371f7', desc: 'High rank — only dedicated players reach this' },
-  Legend:   { emoji: '🌟', color: '#f5a623', desc: 'Ultimate rank — the top of the ladder' },
+const RANK_EMOJI = {
+  Novice: '🌱', Warrior: '⚔️', Veteran: '🛡️', Champion: '👑', Legend: '🌟',
 };
+const DEFAULT_EMOJI = '✨';
 
 // ── Auth / base URL helpers ──────────────────────────────────────────────────
 function getBaseUrl() {
@@ -242,11 +304,21 @@ async function autoLogin() {
   } catch { return false; }
 }
 
+function hideLoader() {
+  const el = document.getElementById('loadingOverlay');
+  if (el) { el.classList.add('out'); setTimeout(() => el.remove(), 300); }
+}
+
 async function boot() {
   if (!getToken()) {
     const ok = await autoLogin();
-    if (!ok) { toast('Auto-login failed — paste an Admin JWT and click Save.', 'err'); return; }
+    if (!ok) {
+      hideLoader();
+      toast('Auto-login failed — paste an Admin JWT and click Save.', 'err');
+      return;
+    }
   }
+  hideLoader();
   await loadRanks();
 }
 
@@ -261,36 +333,82 @@ async function loadRanks() {
 }
 
 function renderRanks(thresholds) {
-  const container = document.getElementById('rankList');
-  container.innerHTML = thresholds.map(t => {
-    const meta = RANK_META[t.rank] || { emoji: '❓', color: '#fff', desc: '' };
+  document.getElementById('rankList').innerHTML = thresholds.map(t => {
+    const emoji = RANK_EMOJI[t.rank] || DEFAULT_EMOJI;
     return `
       <div class="rank-card">
-        <span class="rank-icon">${meta.emoji}</span>
-        <div class="rank-info">
-          <div class="rank-name" style="color:${meta.color}">${t.rank}</div>
-          <div class="rank-desc">${meta.desc}</div>
+        <div class="rank-card-header">
+          <span class="rank-emoji">${emoji}</span>
+          <div>
+            <div style="font-size:15px;font-weight:700">${escHtml(t.displayName || t.rank)}</div>
+            <div class="rank-key">${escHtml(t.rank)}</div>
+          </div>
+          <button class="sm danger" style="margin-left:auto" onclick="deleteRank('${t.id}','${escHtml(t.displayName || t.rank)}')">Delete</button>
         </div>
-        <div class="rank-edit">
-          <label>Bosses required:</label>
-          <input type="number" id="boss-${t.rank}" value="${t.bossesRequired}" min="0" max="9999"
-                 ${t.rank === 'Novice' ? 'disabled title="Novice is always 0"' : ''}>
-          <button class="sm success" onclick="saveRank('${t.rank}')"
-                  ${t.rank === 'Novice' ? 'disabled' : ''}>Save</button>
+        <div class="rank-fields">
+          <div class="field">
+            <label>Display Name</label>
+            <input type="text" id="name-${t.id}" value="${escHtml(t.displayName || t.rank)}">
+          </div>
+          <div class="field">
+            <label>Bosses Required</label>
+            <input type="number" id="boss-${t.id}" value="${t.bossesRequired}" min="0" max="9999">
+          </div>
+          <div class="field full">
+            <label>Description</label>
+            <textarea id="desc-${t.id}">${escHtml(t.description || '')}</textarea>
+          </div>
+        </div>
+        <div class="rank-card-actions">
+          <button class="sm success" onclick="saveRank('${t.id}')">Save</button>
         </div>
       </div>
     `;
   }).join('');
 }
 
-async function saveRank(rank) {
-  const val = parseInt(document.getElementById(`boss-${rank}`).value) || 0;
+// ── Actions ──────────────────────────────────────────────────────────────────
+async function saveRank(id) {
+  const displayName    = document.getElementById(`name-${id}`)?.value?.trim();
+  const description    = document.getElementById(`desc-${id}`)?.value?.trim() ?? '';
+  const bossesRequired = parseInt(document.getElementById(`boss-${id}`)?.value) || 0;
   try {
-    await apiFetch(`/api/admin/rank-thresholds/${rank}`, {
+    await apiFetch(`/api/admin/rank-thresholds/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ bossesRequired: val }),
+      body: JSON.stringify({ displayName, description, bossesRequired }),
     });
-    toast(`${rank} updated — requires ${val} boss${val !== 1 ? 'es' : ''}.`, 'ok');
+    toast(`"${displayName}" saved.`, 'ok');
+    await loadRanks();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function createRank() {
+  const displayName    = document.getElementById('newName').value.trim();
+  const description    = document.getElementById('newDesc').value.trim();
+  const bossesRequired = parseInt(document.getElementById('newBosses').value) || 0;
+  if (!displayName) { toast('Enter a display name.', 'err'); return; }
+  try {
+    await apiFetch('/api/admin/rank-thresholds', {
+      method: 'POST',
+      body: JSON.stringify({ displayName, description, bossesRequired }),
+    });
+    toast(`"${displayName}" created.`, 'ok');
+    document.getElementById('newName').value = '';
+    document.getElementById('newDesc').value = '';
+    document.getElementById('newBosses').value = '30';
+    await loadRanks();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+async function deleteRank(id, name) {
+  if (!confirm(`Delete rank "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/api/admin/rank-thresholds/${id}`, { method: 'DELETE' });
+    toast(`"${name}" deleted.`, 'ok');
     await loadRanks();
   } catch (e) {
     toast('Failed: ' + e.message, 'err');
@@ -298,6 +416,11 @@ async function saveRank(rank) {
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 let toastTimer;
 function toast(msg, type = 'ok') {
   const el = document.getElementById('toast');
