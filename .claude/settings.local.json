@@ -370,7 +370,9 @@
       "Bash(dir \"C:\\\\Users\\\\MihaelPavlov\\\\repos\\\\Home\\\\Life-Level\\\\mobile\\\\lib\" -Recurse -Filter \"*level*\")",
       "Bash(Select-Object FullName)",
       "Bash(xargs findstr -l \"BossListItemDto\")",
-      "PowerShell(Start-Process \"http://localhost:5128/admin/map.html\"; Start-Sleep -Milliseconds 500; Start-Process \"http://localhost:5128/admin/index.html\")"
+      "PowerShell(Start-Process \"http://localhost:5128/admin/map.html\"; Start-Sleep -Milliseconds 500; Start-Process \"http://localhost:5128/admin/index.html\")",
+      "Bash(Sort-Object Name)",
+      "Bash(Select-Object -ExpandProperty Name)"
     ]
   }
 }

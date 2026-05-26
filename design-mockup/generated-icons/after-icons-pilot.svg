@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="760" viewBox="0 0 960 760">
+  <defs>
+    <linearGradient id="llGold" x1="0" y1="4" x2="0" y2="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff3a6"/>
+      <stop offset=".48" stop-color="#f4b83f"/>
+      <stop offset="1" stop-color="#9d6514"/>
+    </linearGradient>
+    <linearGradient id="llBlue" x1="12" y1="8" x2="68" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8ce7ff"/>
+      <stop offset=".52" stop-color="#3486e6"/>
+      <stop offset="1" stop-color="#16346e"/>
+    </linearGradient>
+    <linearGradient id="llTeal" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#94ffe0"/>
+      <stop offset=".48" stop-color="#22bfae"/>
+      <stop offset="1" stop-color="#075f67"/>
+    </linearGradient>
+    <linearGradient id="llGreen" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#bdf46e"/>
+      <stop offset=".5" stop-color="#37bd55"/>
+      <stop offset="1" stop-color="#14612c"/>
+    </linearGradient>
+    <linearGradient id="llRose" x1="10" y1="6" x2="70" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff9fbd"/>
+      <stop offset=".48" stop-color="#f04b74"/>
+      <stop offset="1" stop-color="#7e1738"/>
+    </linearGradient>
+    <linearGradient id="llViolet" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d9afff"/>
+      <stop offset=".5" stop-color="#8d56f0"/>
+      <stop offset="1" stop-color="#35206f"/>
+    </linearGradient>
+    <linearGradient id="llFlame" x1="12" y1="76" x2="62" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b51f17"/>
+      <stop offset=".42" stop-color="#ff7a1a"/>
+      <stop offset="1" stop-color="#fff36d"/>
+    </linearGradient>
+    <linearGradient id="llSteel" x1="8" y1="4" x2="72" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset=".48" stop-color="#a7b8ce"/>
+      <stop offset="1" stop-color="#40516b"/>
+    </linearGradient>
+    <linearGradient id="llStone" x1="8" y1="4" x2="72" y2="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a7b0bf"/>
+      <stop offset=".48" stop-color="#566174"/>
+      <stop offset="1" stop-color="#232b38"/>
+    </linearGradient>
+    <linearGradient id="llDark" x1="0" y1="0" x2="0" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#344054"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="llLeather" x1="16" y1="4" x2="68" y2="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d9a165"/>
+      <stop offset=".5" stop-color="#8e552d"/>
+      <stop offset="1" stop-color="#432515"/>
+    </linearGradient>
+    <linearGradient id="llSand" x1="8" y1="6" x2="72" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe6a3"/>
+      <stop offset=".55" stop-color="#c89544"/>
+      <stop offset="1" stop-color="#7a4e24"/>
+    </linearGradient>
+    <filter id="llShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3.5" flood-color="#000" flood-opacity=".55"/>
+    </filter>
+    <filter id="llGlowGold" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ffd35c" flood-opacity=".75"/>
+    </filter>
+    <filter id="llGlowBlue" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#53c7ff" flood-opacity=".72"/>
+    </filter>
+    <filter id="llGlowRed" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ff4b3f" flood-opacity=".72"/>
+    </filter>
+  </defs>
+
+  <symbol id="home-base" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M40 5 70 18 74 50 40 76 6 50 10 18Z" fill="url(#llDark)" stroke="#5b6b86" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M40 13 65 33H15Z" fill="url(#llFlame)" stroke="#7d2117" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M19 33h42v30c0 3-2 5-5 5H24c-3 0-5-2-5-5Z" fill="url(#llSand)" stroke="#7b5122" stroke-width="2.5"/>
+      <path d="M30 68V49c0-6 4-10 10-10s10 4 10 10v19Z" fill="url(#llLeather)" stroke="#3b2113" stroke-width="2"/>
+      <path d="M25 42h10v9H25Zm20 0h10v9H45Z" fill="url(#llBlue)" stroke="#14437c" stroke-width="1.5"/>
+      <path d="M40 20 49 32H31Z" fill="#fff6c7" opacity=".28"/>
+      <circle cx="46" cy="56" r="2" fill="#ffe676"/>
+      <path d="M61 12 65 18 72 18 66 22 69 29 61 25 54 29 57 22 51 18 58 18Z" fill="url(#llGold)" stroke="#916316" stroke-width="1.3"/>
+    </g>
+  </symbol>
+
+  <symbol id="quest-scroll" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M17 14h43c5 0 8 3 8 8v38c0 5-3 8-8 8H17c4-4 4-11 0-15V14Z" fill="url(#llSand)" stroke="#7b5122" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M17 14c-8 0-11 7-7 13 3 5 11 4 14 0 4-6 1-13-7-13Z" fill="#d9a85f" stroke="#7b5122" stroke-width="2"/>
+      <path d="M22 23h31M25 33h26M25 42h20" stroke="#7b5122" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+      <path d="M43 58 66 35" stroke="url(#llSteel)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M61 30 70 39" stroke="url(#llGold)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M35 66 44 57" stroke="url(#llLeather)" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="33" cy="55" r="8" fill="url(#llRose)" stroke="#7e1738" stroke-width="2"/>
+      <path d="M29 55h8M33 51v8" stroke="#fff4f8" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="31" cy="18" rx="12" ry="4" fill="#fff" opacity=".2"/>
+    </g>
+  </symbol>
+
+  <symbol id="strength-gauntlet" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M40 5 68 17 73 47 40 76 7 47 12 17Z" fill="url(#llRose)" stroke="#7e1738" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M19 36c1-10 9-16 19-14l13 3c7 2 11 8 10 15l-4 18c-1 6-5 9-11 9H30c-7 0-12-5-12-12Z" fill="url(#llSteel)" stroke="#46556c" stroke-width="2.5"/>
+      <path d="M25 26c0-5 4-9 9-9 4 0 7 3 8 7l2 16H27Z" fill="url(#llSteel)" stroke="#46556c" stroke-width="2.2"/>
+      <path d="M42 24c0-5 4-8 8-7 5 1 8 5 7 10l-4 16H44Z" fill="url(#llSteel)" stroke="#46556c" stroke-width="2.2"/>
+      <path d="M25 43h32M25 52h30M30 61h17" stroke="#f9fbff" stroke-width="3" stroke-linecap="round" opacity=".38"/>
+      <path d="m17 36-8-5M18 48H8M22 60l-7 6" stroke="#ffd2dd" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+      <path d="M32 21c3-3 7-3 9 1M49 21c3 0 5 2 6 5" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>
+    </g>
+  </symbol>
+
+  <symbol id="agility-winged-boot" viewBox="0 0 80 80">
+    <g filter="url(#llGlowGold)">
+      <path d="M41 4 69 19 69 52 41 76 13 52 13 19Z" fill="url(#llDark)" stroke="#56657e" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M18 53c5-12 7-25 8-36h21l4 25h10c7 0 11 6 9 12l-2 7H26c-7 0-10-3-8-8Z" fill="url(#llBlue)" stroke="#123d75" stroke-width="2.5"/>
+      <path d="M19 59h50l-2 8H21Z" fill="#172033" stroke="#0b1020" stroke-width="1.7"/>
+      <path d="M31 24h16M30 32h18M28 40h21" stroke="#dff7ff" stroke-width="2.4" stroke-linecap="round" opacity=".65"/>
+      <path d="M55 18c9-2 16 0 21 7-8-1-14 2-20 8M55 29c7-1 13 1 18 6-7 0-12 2-17 6" fill="none" stroke="#fff4a8" stroke-width="4" stroke-linecap="round"/>
+      <path d="M16 30H5M16 39H8M17 48H3" stroke="#fff4a8" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+      <path d="M45 8 35 34h10l-8 24 22-35H47Z" fill="url(#llFlame)" stroke="#fff4a8" stroke-width="1.2"/>
+    </g>
+  </symbol>
+
+  <symbol id="endurance-heart-shield" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M40 5 69 17v25c0 17-10 28-29 34C21 70 11 59 11 42V17Z" fill="url(#llGreen)" stroke="#145f2d" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M40 58C27 47 18 41 18 31c0-8 6-13 14-12 4 1 7 4 8 8 2-4 5-7 9-8 8-1 14 4 14 12 0 10-10 16-23 27Z" fill="#fff8fb" stroke="#d4fff0" stroke-width="1.7"/>
+      <path d="M21 39h8l4-10 7 20 5-14h5l3 4h8" fill="none" stroke="url(#llTeal)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M40 14v50" stroke="#0c5b35" stroke-width="2" opacity=".28"/>
+      <ellipse cx="28" cy="17" rx="11" ry="5" fill="#fff" opacity=".25"/>
+    </g>
+  </symbol>
+
+  <symbol id="running-wing-shoe" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M9 52c4-12 7-25 8-38h22l5 24 12 2c10 2 15 9 13 18l-2 8H18c-8 0-12-5-9-14Z" fill="url(#llTeal)" stroke="#08606a" stroke-width="2.5"/>
+      <path d="M13 62h55l-3 9H15Z" fill="url(#llDark)" stroke="#0e1525" stroke-width="1.8"/>
+      <path d="M23 23h16M22 31h18M21 39h20" stroke="#eafffb" stroke-width="2.3" stroke-linecap="round" opacity=".6"/>
+      <path d="M46 24c8-8 17-9 27-3-9 2-15 6-21 13M49 35c7-5 14-5 22 0-7 2-13 5-18 10" fill="none" stroke="#f7fbff" stroke-width="4" stroke-linecap="round"/>
+      <path d="M10 26H2M11 36H0M10 46H4" stroke="#fff4a8" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+      <path d="M24 54c10-8 24-9 39-4" fill="none" stroke="url(#llFlame)" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="xp-crystal-burst" viewBox="0 0 80 80">
+    <g filter="url(#llGlowBlue)">
+      <path d="M40 5 46 22 64 14 56 32 75 40 56 48 64 66 46 58 40 75 34 58 16 66 24 48 5 40 24 32 16 14 34 22Z" fill="url(#llViolet)" stroke="#f4e7ff" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M40 15 57 33 49 61H31L23 33Z" fill="url(#llBlue)" stroke="#16346e" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M40 15v46M23 33h34M31 61l9-28 9 28" stroke="#c9f7ff" stroke-width="1.8" opacity=".55"/>
+      <path d="M40 23 47 34 40 43 33 34Z" fill="#fff" opacity=".35"/>
+      <circle cx="17" cy="18" r="3" fill="#fff4a8"/>
+      <circle cx="64" cy="22" r="2.5" fill="#fff4a8"/>
+      <circle cx="66" cy="61" r="3" fill="#d9afff"/>
+      <circle cx="16" cy="58" r="2.5" fill="#8ce7ff"/>
+    </g>
+  </symbol>
+
+  <symbol id="loot-chest" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M14 35c0-14 11-24 26-24s26 10 26 24v8H14Z" fill="url(#llLeather)" stroke="#3f2413" stroke-width="2.5"/>
+      <path d="M10 39h60v26c0 4-3 7-7 7H17c-4 0-7-3-7-7Z" fill="url(#llLeather)" stroke="#3f2413" stroke-width="2.5"/>
+      <path d="M10 42h60M23 12v60M57 12v60" stroke="url(#llGold)" stroke-width="5"/>
+      <rect x="32" y="41" width="16" height="18" rx="4" fill="url(#llGold)" stroke="#825711" stroke-width="2"/>
+      <circle cx="40" cy="49" r="3" fill="#1a2233"/>
+      <path d="M18 34c13-10 31-10 44 0" fill="none" stroke="#ffe99b" stroke-width="2.5" opacity=".45"/>
+      <path d="M28 32 40 14 52 32" fill="none" stroke="#8ce7ff" stroke-width="2.8" stroke-linecap="round" opacity=".85"/>
+      <path d="M32 31h16" stroke="#d9afff" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="forest-zone" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M40 5 69 18v30L40 75 11 48V18Z" fill="url(#llTeal)" stroke="#075f67" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M12 51c12-10 21-12 32-5 9 6 18 2 25-4v11L40 75Z" fill="#123927" opacity=".55"/>
+      <path d="M35 62h10V43h12L41 16 25 43h10Z" fill="url(#llGreen)" stroke="#145f2d" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M17 59h8V46h9L21 25 8 46h9Z" fill="#2f9b45" stroke="#145f2d" stroke-width="1.9" stroke-linejoin="round"/>
+      <path d="M56 56h7V44h8L60 27 49 44h7Z" fill="#58ca5d" stroke="#145f2d" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M38 29h5M34 40h13M31 51h18" stroke="#dfffd1" stroke-width="2" opacity=".45" stroke-linecap="round"/>
+      <circle cx="24" cy="20" r="3" fill="#fff4a8"/>
+    </g>
+  </symbol>
+
+  <symbol id="boss-skull-crest" viewBox="0 0 80 80">
+    <g filter="url(#llGlowRed)">
+      <path d="M40 4 70 19 74 48 40 76 6 48 10 19Z" fill="url(#llDark)" stroke="#6f1b1f" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M23 27c0-12 8-20 17-20s17 8 17 20c7 3 10 9 8 16-2 9-10 13-19 12v12H34V55c-9 1-17-3-19-12-2-7 1-13 8-16Z" fill="url(#llSteel)" stroke="#343f50" stroke-width="2.5"/>
+      <path d="M27 36c3-5 10-5 14 0-3 6-11 6-14 0Zm26 0c-3-5-10-5-14 0 3 6 11 6 14 0Z" fill="#111827"/>
+      <circle cx="34" cy="36" r="3" fill="#ff4b3f"/>
+      <circle cx="46" cy="36" r="3" fill="#ff4b3f"/>
+      <path d="M40 42 35 51h10Z" fill="#111827"/>
+      <path d="M28 58h24M32 58v8M40 58v9M48 58v8" stroke="#111827" stroke-width="2.3" stroke-linecap="round"/>
+      <path d="M18 17 7 9M62 17l11-8" stroke="url(#llFlame)" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="31" cy="18" rx="9" ry="5" fill="#fff" opacity=".2"/>
+    </g>
+  </symbol>
+
+  <symbol id="dragon-crest" viewBox="0 0 80 80">
+    <g filter="url(#llShadow)">
+      <path d="M40 5 72 23 67 60 40 76 13 60 8 23Z" fill="url(#llGreen)" stroke="#145f2d" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M20 21 6 12l7 20M60 21l14-9-7 20" fill="url(#llGold)" stroke="#825711" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M18 40c0-15 9-27 22-27s22 12 22 27c0 17-10 27-22 27S18 57 18 40Z" fill="#49c45f" stroke="#145f2d" stroke-width="2.4"/>
+      <path d="M28 25c4-6 9-11 12-17 3 6 8 11 12 17" fill="none" stroke="#dfffd1" stroke-width="4" stroke-linecap="round"/>
+      <path d="M27 38c4-5 10-5 14 0M53 38c-4-5-10-5-14 0" fill="none" stroke="#11251b" stroke-width="3" stroke-linecap="round"/>
+      <path d="M29 40h11M51 40H40" stroke="#fff4a8" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="40" cy="51" rx="15" ry="10" fill="#bdf46e" stroke="#145f2d" stroke-width="2"/>
+      <path d="M33 50h3M44 50h3M31 56c6 5 12 5 18 0" stroke="#145f2d" stroke-width="2.3" stroke-linecap="round"/>
+      <path d="M55 58c8 0 12 4 15 10-8 0-13-2-18-7" fill="url(#llFlame)" stroke="#8a1b16" stroke-width="1.5"/>
+      <ellipse cx="29" cy="21" rx="8" ry="5" fill="#fff" opacity=".22"/>
+    </g>
+  </symbol>
+
+  <symbol id="level-up-burst" viewBox="0 0 80 80">
+    <g filter="url(#llGlowGold)">
+      <path d="M40 4 49 23 70 14 61 35 76 40 61 45 70 66 49 57 40 76 31 57 10 66 19 45 4 40 19 35 10 14 31 23Z" fill="url(#llGold)" stroke="#fff0a6" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M40 15 62 41H49v22H31V41H18Z" fill="url(#llBlue)" stroke="#123d75" stroke-width="2.8" stroke-linejoin="round"/>
+      <path d="M40 23 53 39h-9v16h-8V39h-9Z" fill="#e9fbff" opacity=".32"/>
+      <path d="M25 67h30" stroke="#fff6c7" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="19" cy="20" r="3" fill="#fff"/>
+      <circle cx="62" cy="24" r="2.5" fill="#fff"/>
+    </g>
+  </symbol>
+
+  <rect width="960" height="760" fill="#151d2b"/>
+  <text x="40" y="54" fill="#e6edf3" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="28" font-weight="800">Life-Level After Icon Pilot</text>
+  <text x="40" y="82" fill="#9ba7b8" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14">Standalone SVG sheet plus reusable symbol sprite.</text>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#dbeafe">
+    <g transform="translate(40 120)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#home-base" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Home Base</text></g>
+    <g transform="translate(190 120)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#quest-scroll" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Quest</text></g>
+    <g transform="translate(340 120)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#strength-gauntlet" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Strength</text></g>
+    <g transform="translate(490 120)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#agility-winged-boot" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Agility</text></g>
+    <g transform="translate(640 120)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#endurance-heart-shield" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Endurance</text></g>
+    <g transform="translate(790 120)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#running-wing-shoe" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Running</text></g>
+    <g transform="translate(40 292)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#xp-crystal-burst" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">XP Gain</text></g>
+    <g transform="translate(190 292)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#loot-chest" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Loot</text></g>
+    <g transform="translate(340 292)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#forest-zone" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Forest</text></g>
+    <g transform="translate(490 292)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#boss-skull-crest" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Boss</text></g>
+    <g transform="translate(640 292)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#dragon-crest" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Dragon</text></g>
+    <g transform="translate(790 292)"><rect width="130" height="142" rx="12" fill="#1b2535" stroke="#2a3548"/><use href="#level-up-burst" x="25" y="18" width="80" height="80"/><text x="65" y="120" text-anchor="middle">Level Up</text></g>
+  </g>
+</svg>
