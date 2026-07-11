@@ -668,7 +668,6 @@ class _MainShellState extends ConsumerState<MainShell>
         if (!mounted) return;
         final c = ref.read(tutorialControllerProvider);
         c.registerKey('bossFab', _fabKey);
-        c.registerKey('logFab', _fabKey); // step 4 shares the FAB target
         c.registerKey('mapTab', _mapNavKey);
         _syncTutorialWithProfile();
       });

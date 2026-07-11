@@ -27,6 +27,7 @@ class TutorialController extends ChangeNotifier {
   bool _busy = false;
   bool _shouldShowIntroModal = false;
   bool _shouldShowOutroModal = false;
+  bool _suppressOutroOnReplay = false;
 
   /// Topic replay queue. Consumed one step at a time by `advance()`.
   /// When empty during a topic replay the controller calls `stop()`.
@@ -48,7 +49,7 @@ class TutorialController extends ChangeNotifier {
   bool get shouldShowOutroModal => _shouldShowOutroModal;
   bool get isTopicReplay => _topic != null;
 
-  /// Step 4 uses a CTA button (Connect Your Tracker) — never gated.
+  /// No tutorial step is action-gated in the current frontend flow.
   bool get isActionGated => false;
 
   // ── target registration ─────────────────────────────────────────────────
@@ -177,6 +178,7 @@ class TutorialController extends ChangeNotifier {
     _topicQueue.clear();
     _step = TutorialStep.intro;
     _shouldShowIntroModal = true;
+    _suppressOutroOnReplay = true;
     notifyListeners();
   }
 
@@ -213,8 +215,14 @@ class TutorialController extends ChangeNotifier {
         // but handle defensively).
         _step = null;
       } else if (next == TutorialStep.outro) {
-        _step = TutorialStep.outro;
-        _shouldShowOutroModal = true;
+        if (_suppressOutroOnReplay) {
+          _step = null;
+          _shouldShowOutroModal = false;
+          _suppressOutroOnReplay = false;
+        } else {
+          _step = TutorialStep.outro;
+          _shouldShowOutroModal = true;
+        }
       } else {
         _step = next;
       }
@@ -273,6 +281,7 @@ class TutorialController extends ChangeNotifier {
     _pendingXpReward = null;
     _shouldShowIntroModal = false;
     _shouldShowOutroModal = false;
+    _suppressOutroOnReplay = false;
     notifyListeners();
   }
 }

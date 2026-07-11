@@ -6,7 +6,6 @@ import '../models/tutorial_placement.dart';
 import '../models/tutorial_step.dart';
 import '../providers/tutorial_provider.dart';
 import '../tutorial_controller.dart';
-import '../../../features/integrations/screens/integrations_screen.dart';
 import 'tutorial_bubble.dart';
 import 'tutorial_bubble_tail.dart';
 import 'tutorial_dim_backdrop.dart';
@@ -136,8 +135,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
         final placement = c.currentPlacement(screenSize);
 
         // FAB + small round targets read nicer with a circular pulse ring.
-        final circular = step == TutorialStep.bossFab ||
-            step == TutorialStep.logActivity;
+        final circular = step == TutorialStep.bossFab;
 
         return Stack(
           clipBehavior: Clip.none,
@@ -165,14 +163,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                 totalSteps: kTutorialBubbleCount,
                 doneDots: _doneDotsFor(step),
                 waiting: c.isActionGated,
-                onCta: step == TutorialStep.logActivity
-                    ? () {
-                        c.advance();
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => const IntegrationsScreen(),
-                        ));
-                      }
-                    : null,
+                ctaLabel: 'GOT IT',
                 enterAnim: _enterAnim,
                 onNext: c.advance,
                 onSkip: () => _handleSkip(c),
@@ -190,14 +181,6 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                       content: content,
                       doneDots: _doneDotsFor(step),
                       waiting: c.isActionGated,
-                      onCta: step == TutorialStep.logActivity
-                          ? () {
-                              c.advance();
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) => const IntegrationsScreen(),
-                              ));
-                            }
-                          : null,
                       onNext: c.advance,
                       onSkip: () => _handleSkip(c),
                     ),
@@ -214,13 +197,13 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
 
   int _stepNumberFor(TutorialStep step) {
     switch (step) {
-      case TutorialStep.xpBar:
-        return 1;
-      case TutorialStep.stats:
-        return 2;
-      case TutorialStep.quests:
-        return 3;
       case TutorialStep.logActivity:
+        return 1;
+      case TutorialStep.xpBar:
+        return 2;
+      case TutorialStep.stats:
+        return 3;
+      case TutorialStep.quests:
         return 4;
       case TutorialStep.mapTab:
         return 5;
@@ -250,6 +233,7 @@ class _PositionedBubble extends StatelessWidget {
   final List<bool> doneDots;
   final bool waiting;
   final VoidCallback? onCta;
+  final String ctaLabel;
   final Animation<double> enterAnim;
   final VoidCallback onNext;
   final VoidCallback onSkip;
@@ -264,6 +248,7 @@ class _PositionedBubble extends StatelessWidget {
     required this.doneDots,
     required this.waiting,
     this.onCta,
+    required this.ctaLabel,
     required this.enterAnim,
     required this.onNext,
     required this.onSkip,
@@ -340,6 +325,7 @@ class _PositionedBubble extends StatelessWidget {
       doneDots: doneDots,
       waiting: waiting,
       onCta: onCta,
+      ctaLabel: ctaLabel,
       onNext: onNext,
       onSkip: onSkip,
     );

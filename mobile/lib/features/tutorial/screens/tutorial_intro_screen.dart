@@ -88,7 +88,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                       const SizedBox(height: 18),
                       const _PillarCard(
                         asset: AppIcons.rewardXpSparkle,
-                        title: 'Train -> Level up',
+                        title: 'Train & Level Up',
                         desc: 'Workouts earn XP and raise stats',
                       ),
                       const SizedBox(height: 10),
@@ -101,7 +101,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                       const _PillarCard(
                         asset: AppIcons.ringBoss,
                         title: 'Defeat bosses',
-                        desc: 'Daily raids reward gear and titles',
+                        desc: 'Boss fights reward gear and titles',
                       ),
                       const SizedBox(height: 18),
                       const TutorialProgressDots(
@@ -186,8 +186,8 @@ class _HeroCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 96,
-        height: 96,
+        width: 108,
+        height: 108,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
@@ -211,8 +211,8 @@ class _HeroCircle extends StatelessWidget {
         child: Center(
           child: AppIconImage(
             asset,
-            size: 52,
-            visualScale: 1.5,
+            size: 60,
+            visualScale: 1.55,
           ),
         ),
       ),
@@ -243,17 +243,20 @@ class _PillarCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.05),
+              ),
             ),
             child: Center(
               child: AppIconImage(
                 asset,
-                size: 18,
-                visualScale: 1.45,
+                size: 24,
+                visualScale: 1.5,
               ),
             ),
           ),

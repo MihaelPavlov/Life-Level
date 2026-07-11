@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../character/providers/character_provider.dart';
 import '../models/tutorial_topic.dart';
 import '../providers/tutorial_provider.dart';
 import '../tutorial_controller.dart';
 
-/// The hub pushed from Profile → Settings → "Tutorials". Shows:
-///   1. A "Play all" hero card that restarts the full walkthrough
-///   2. A list of 5 topic rows with ✓ / ○ indicators derived from the
-///      `tutorialTopicsSeen` bitmask on `CharacterProfile`
-///
-/// Tapping any row pops the hub + settings sheet and kicks off the matching
-/// controller action — the integration pass decides how the overlay surfaces
-/// back on Home. This screen itself only talks to the controller and the
-/// character profile provider.
 class TutorialsHubScreen extends ConsumerWidget {
   const TutorialsHubScreen({super.key});
 
@@ -23,9 +16,6 @@ class TutorialsHubScreen extends ConsumerWidget {
     final controller = ref.watch(tutorialControllerProvider);
     final profileAsync = ref.watch(characterProfileProvider);
 
-    // Prefer the live controller value (reflects the latest replay-topic
-    // response) but fall back to the server profile while the controller
-    // has no state yet.
     final topicsSeen = profileAsync.maybeWhen(
       data: (p) => controller.topicsSeen != 0
           ? controller.topicsSeen
@@ -47,10 +37,6 @@ class TutorialsHubScreen extends ConsumerWidget {
                   children: [
                     _PlayAllCard(
                       onPlay: () async {
-                        // Pop the hub BEFORE replayAll() so it's off the
-                        // navigator stack when the intro screen is pushed.
-                        // If maybePop ran after replayAll()'s first notify,
-                        // it would pop the intro instead of the hub.
                         if (context.mounted) {
                           Navigator.of(context).maybePop();
                         }
@@ -92,7 +78,6 @@ class TutorialsHubScreen extends ConsumerWidget {
   }
 }
 
-// ── header ──────────────────────────────────────────────────────────────────
 class _HubHeader extends StatelessWidget {
   final VoidCallback onBack;
   const _HubHeader({required this.onBack});
@@ -117,8 +102,11 @@ class _HubHeader extends StatelessWidget {
                 border: Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back,
-                  size: 18, color: AppColors.textPrimary),
+              child: const Icon(
+                Icons.arrow_back,
+                size: 18,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(width: 14),
@@ -153,7 +141,6 @@ class _HubHeader extends StatelessWidget {
   }
 }
 
-// ── play all hero ───────────────────────────────────────────────────────────
 class _PlayAllCard extends StatelessWidget {
   final VoidCallback onPlay;
   const _PlayAllCard({required this.onPlay});
@@ -200,7 +187,11 @@ class _PlayAllCard extends StatelessWidget {
                   ],
                 ),
                 child: const Center(
-                  child: Text('\u2728', style: TextStyle(fontSize: 22)),
+                  child: AppIconImage(
+                    AppIcons.questFirst,
+                    size: 24,
+                    visualScale: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -234,7 +225,7 @@ class _PlayAllCard extends StatelessWidget {
             children: [
               _MetaPill(label: '6 STEPS'),
               SizedBox(width: 8),
-              _MetaPill(label: '+0 XP ON REPLAY'),
+              _MetaPill(label: 'REWARD GATHER'),
             ],
           ),
           const SizedBox(height: 14),
@@ -247,7 +238,7 @@ class _PlayAllCard extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.blue, Color(0xFF2f7ad8)],
+                  colors: [AppColors.blue, Color(0xFF2F7AD8)],
                 ),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
@@ -323,7 +314,6 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── topic rows ──────────────────────────────────────────────────────────────
 class _TopicRow extends StatelessWidget {
   final TutorialTopic topic;
   final bool seen;
@@ -339,14 +329,14 @@ class _TopicRow extends StatelessWidget {
     switch (topic) {
       case TutorialTopic.xpStats:
         return AppColors.blue;
-      case TutorialTopic.questsStreaks:
+      case TutorialTopic.dailyQuests:
         return AppColors.orange;
-      case TutorialTopic.activityLogging:
-        return AppColors.blue;
+      case TutorialTopic.streakSystem:
+        return AppColors.orange;
       case TutorialTopic.worldMap:
         return AppColors.green;
       case TutorialTopic.bossSystem:
-        return AppColors.red;
+        return AppColors.blue;
     }
   }
 
@@ -375,9 +365,10 @@ class _TopicRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                child: Text(
-                  topic.emoji,
-                  style: const TextStyle(fontSize: 18),
+                child: AppIconImage(
+                  topic.iconAsset,
+                  size: 20,
+                  visualScale: 1.45,
                 ),
               ),
             ),
@@ -433,12 +424,11 @@ class _StatusDot extends StatelessWidget {
           color: seen
               ? AppColors.green.withValues(alpha: 0.4)
               : AppColors.border,
-          style: seen ? BorderStyle.solid : BorderStyle.solid,
         ),
       ),
       child: Center(
         child: Text(
-          seen ? '\u2713' : '\u25CB',
+          seen ? '✓' : '○',
           style: TextStyle(
             color: seen ? AppColors.green : AppColors.textSecondary,
             fontSize: 13,
@@ -465,7 +455,7 @@ class _HubFooter extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Text(
-        'Replays award no XP. First completion rewards are one-shot per account.',
+        'Replay any lesson anytime to refresh the basics and revisit the journey.',
         textAlign: TextAlign.center,
         style: TextStyle(
           color: AppColors.textSecondary,

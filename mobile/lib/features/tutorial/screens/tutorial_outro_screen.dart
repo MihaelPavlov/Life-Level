@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../providers/tutorial_provider.dart';
 import '../widgets/tutorial_progress_dots.dart';
 
-/// Full-screen step-7 modal. Shown after the final bubble (Boss FAB) is
-/// advanced. "Begin your adventure" calls `controller.advance()` once more
-/// so the server sets `tutorialStep = 99` (completed) and claims the final
-/// +250 XP + Novice title on the first run.
 class TutorialOutroScreen extends ConsumerWidget {
   const TutorialOutroScreen({super.key});
 
@@ -17,7 +15,6 @@ class TutorialOutroScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Orange + green radial backdrop — matches the outro mockup.
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -55,7 +52,7 @@ class TutorialOutroScreen extends ConsumerWidget {
                   const SizedBox(height: 40),
                   const Center(
                     child: Text(
-                      '\u2705 QUEST COMPLETE',
+                      'QUEST COMPLETE',
                       style: TextStyle(
                         color: AppColors.green,
                         fontSize: 10,
@@ -78,7 +75,7 @@ class TutorialOutroScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'You learned the basics. Now go train in the real world — your next level awaits.',
+                    'You learned the basics. Now go train in the real world - your next level awaits.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textSecondary,
@@ -98,17 +95,11 @@ class TutorialOutroScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   _BeginAdventureButton(
                     onPressed: () async {
-                      final controller =
-                          ref.read(tutorialControllerProvider);
+                      final controller = ref.read(tutorialControllerProvider);
                       controller.dismissOutroModal();
-                      // Close the outro screen first, then tell the server
-                      // we're done. `advance()` on step 7 flips the server
-                      // state to 99 and awards the final rewards (only the
-                      // first time per account).
                       if (Navigator.of(context).canPop()) {
                         Navigator.of(context).pop();
                       }
-                      await controller.advance();
                       await controller.stop();
                     },
                   ),
@@ -152,7 +143,11 @@ class _TrophyCircle extends StatelessWidget {
           ],
         ),
         child: const Center(
-          child: Text('\uD83C\uDFC6', style: TextStyle(fontSize: 52)),
+          child: AppIconImage(
+            AppIcons.rewardGrantItem,
+            size: 54,
+            visualScale: 1.55,
+          ),
         ),
       ),
     );
@@ -169,17 +164,18 @@ class _RewardRow extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _RewardChip(emoji: '\u2728', label: '+500 XP'),
-        _RewardChip(emoji: '\uD83C\uDFC5', label: 'Novice Title'),
+        _RewardChip(iconAsset: AppIcons.rewardXpSparkle, label: '+500 XP'),
+        _RewardChip(iconAsset: AppIcons.ringTitles, label: 'Novice Title'),
       ],
     );
   }
 }
 
 class _RewardChip extends StatelessWidget {
-  final String emoji;
+  final String iconAsset;
   final String label;
-  const _RewardChip({required this.emoji, required this.label});
+
+  const _RewardChip({required this.iconAsset, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +191,11 @@ class _RewardChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
+          AppIconImage(
+            iconAsset,
+            size: 14,
+            visualScale: 1.45,
+          ),
           const SizedBox(width: 6),
           Text(
             label,
@@ -214,6 +214,7 @@ class _RewardChip extends StatelessWidget {
 
 class _BeginAdventureButton extends StatelessWidget {
   final VoidCallback onPressed;
+
   const _BeginAdventureButton({required this.onPressed});
 
   @override
@@ -227,7 +228,7 @@ class _BeginAdventureButton extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.orange, Color(0xFFc7831a)],
+            colors: [AppColors.orange, Color(0xFFC7831A)],
           ),
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
@@ -240,7 +241,7 @@ class _BeginAdventureButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: const Text(
-          'BEGIN YOUR ADVENTURE \u25B8',
+          'BEGIN YOUR ADVENTURE',
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,

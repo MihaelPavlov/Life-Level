@@ -1,33 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../models/tutorial_step.dart';
 import 'tutorial_bubble_tail.dart';
 
-/// The 290-wide speech-bubble card shown next to the current target.
-/// Fixed-width layout, auto height. Tail is rendered as a sibling — this
-/// widget just draws the surface + content; the overlay positions the
-/// bubble and the tail separately so the tail can anchor to any edge.
 class TutorialBubble extends StatelessWidget {
-  /// Step index within the full flow (1..6). Used for "Quest · N of 6".
   final int stepNumber;
-
-  /// Total step count (6 in the default flow, 1 for topic replays etc.).
   final int totalSteps;
-
-  /// Step content — title, body, emoji, accent.
   final TutorialStepContent content;
-
-  /// Already-seen steps for the dots indicator (lowered from controller).
-  /// When a value is true the matching dot renders as "done" (green).
   final List<bool> doneDots;
-
-  /// Disables the Next button and renders the "Waiting…" pulse instead.
   final bool waiting;
-
-  /// When set, replaces the "GOT IT" button with a labelled CTA button.
   final VoidCallback? onCta;
   final String ctaLabel;
-
   final VoidCallback onNext;
   final VoidCallback onSkip;
 
@@ -43,7 +27,7 @@ class TutorialBubble extends StatelessWidget {
     required this.onSkip,
     this.waiting = false,
     this.onCta,
-    this.ctaLabel = 'CONNECT →',
+    this.ctaLabel = 'GOT IT',
   });
 
   @override
@@ -59,7 +43,7 @@ class TutorialBubble extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppColors.surfaceElevated, Color(0xFF1a212c)],
+            colors: [AppColors.surfaceElevated, Color(0xFF1A212C)],
           ),
           border: Border.all(color: accent.withValues(alpha: 0.45), width: 1),
           borderRadius: BorderRadius.circular(14),
@@ -85,12 +69,27 @@ class TutorialBubble extends StatelessWidget {
               totalSteps: totalSteps,
               doneDots: doneDots,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(content.emoji, style: const TextStyle(fontSize: 15)),
-                const SizedBox(width: 6),
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.10),
+                    border: Border.all(color: accent.withValues(alpha: 0.24)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: AppIconImage(
+                      content.iconAsset,
+                      size: 14,
+                      visualScale: 1.45,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     content.title,
@@ -138,7 +137,6 @@ class TutorialBubble extends StatelessWidget {
   }
 }
 
-// ── meta row (quest counter + dots) ─────────────────────────────────────────
 class _BubbleMetaRow extends StatelessWidget {
   final Color accent;
   final int stepNumber;
@@ -158,7 +156,7 @@ class _BubbleMetaRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'QUEST \u00B7 $stepNumber OF $totalSteps',
+          'QUEST · $stepNumber OF $totalSteps',
           style: TextStyle(
             color: accent,
             fontSize: 10,
@@ -200,7 +198,6 @@ class _BubbleMetaRow extends StatelessWidget {
   }
 }
 
-// ── buttons ─────────────────────────────────────────────────────────────────
 class _SkipButton extends StatelessWidget {
   final VoidCallback onPressed;
   const _SkipButton({required this.onPressed});
@@ -238,7 +235,7 @@ class _NextButton extends StatelessWidget {
   const _NextButton({
     required this.accent,
     required this.onPressed,
-    this.label = 'GOT IT ▸',
+    this.label = 'GOT IT',
   });
 
   @override
@@ -265,7 +262,7 @@ class _NextButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 11,
             fontWeight: FontWeight.w700,
@@ -312,7 +309,6 @@ class _WaitingButtonState extends State<_WaitingButton>
         border: Border.all(
           color: AppColors.border,
           width: 1,
-          style: BorderStyle.solid,
         ),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -337,7 +333,7 @@ class _WaitingButtonState extends State<_WaitingButton>
           ),
           const SizedBox(width: 6),
           const Text(
-            'WAITING\u2026',
+            'WAITING...',
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 11,
@@ -351,7 +347,4 @@ class _WaitingButtonState extends State<_WaitingButton>
   }
 }
 
-/// Re-exported so overlay code can import the tail from the bubble file
-/// without pulling a second import. The actual implementation lives in
-/// `tutorial_bubble_tail.dart`.
 typedef TutorialTailDirection = TailDirection;

@@ -57,7 +57,7 @@ class BossFab extends StatelessWidget {
                       style: TextStyle(fontSize: 26)),
             ),
             const SizedBox(height: 1),
-            Text(isOpen ? 'CLOSE' : 'BOSS',
+            Text(isOpen ? 'CLOSE' : 'MENU',
                 style: TextStyle(
                     fontSize: 8,
                     color: Colors.white.withOpacity(isOpen ? 0.6 : 0.85),

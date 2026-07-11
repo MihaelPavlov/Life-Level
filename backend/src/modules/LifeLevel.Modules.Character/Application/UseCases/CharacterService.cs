@@ -289,9 +289,6 @@ public class CharacterService(
             ?? throw new InvalidOperationException("Character not found.");
 
         // Step 4 → 5 transition is port-only (must be triggered by an actual activity log).
-        if (character.TutorialStep == 4)
-            throw new InvalidOperationException("Step 4 advances only after logging a real activity.");
-
         return await AdvanceFromStepInternalAsync(character, character.TutorialStep, ct);
     }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 
 /// Coach-mark step identifier. Values match the server's `tutorialStep` field
-/// (0 = intro modal, 1–6 = bubble steps, 7 = outro modal, -1 = skipped,
+/// (0 = intro modal, 1-6 = backend bubble steps, 7 = outro modal, -1 = skipped,
 /// 99 = fully completed).
 enum TutorialStep {
   intro, // 0
@@ -14,7 +15,6 @@ enum TutorialStep {
   bossFab, // 6
   outro; // 7
 
-  /// Server-side integer for this step.
   int get serverValue {
     switch (this) {
       case TutorialStep.intro:
@@ -36,20 +36,18 @@ enum TutorialStep {
     }
   }
 
-  /// Parse server integer back to an enum. Returns `null` for -1 (skipped)
-  /// and 99 (completed) — those are terminal states with no active bubble.
   static TutorialStep? fromServer(int value) {
     switch (value) {
       case 0:
         return TutorialStep.intro;
       case 1:
-        return TutorialStep.xpBar;
-      case 2:
-        return TutorialStep.stats;
-      case 3:
-        return TutorialStep.quests;
-      case 4:
         return TutorialStep.logActivity;
+      case 2:
+        return TutorialStep.xpBar;
+      case 3:
+        return TutorialStep.stats;
+      case 4:
+        return TutorialStep.quests;
       case 5:
         return TutorialStep.mapTab;
       case 6:
@@ -61,8 +59,6 @@ enum TutorialStep {
     }
   }
 
-  /// Human identifier for the GlobalKey that targets this step on Home.
-  /// `null` for modals (intro/outro have no target).
   String? get targetKeyId {
     switch (this) {
       case TutorialStep.xpBar:
@@ -72,7 +68,7 @@ enum TutorialStep {
       case TutorialStep.quests:
         return 'questsCard';
       case TutorialStep.logActivity:
-        return null; // centered bubble — no on-screen integrations target
+        return 'streakStrip';
       case TutorialStep.mapTab:
         return 'mapTab';
       case TutorialStep.bossFab:
@@ -84,66 +80,63 @@ enum TutorialStep {
   }
 }
 
-/// Presentation content for a bubble step.
 class TutorialStepContent {
-  final String emoji;
+  final String iconAsset;
   final String title;
   final String body;
   final Color accent;
 
   const TutorialStepContent({
-    required this.emoji,
+    required this.iconAsset,
     required this.title,
     required this.body,
     required this.accent,
   });
 }
 
-/// Step → content map (bubble steps only).
 const Map<TutorialStep, TutorialStepContent> kTutorialStepContent = {
   TutorialStep.xpBar: TutorialStepContent(
-    emoji: '⚡',
-    title: 'Your XP Bar',
+    iconAsset: AppIcons.mapDestination,
+    title: 'Your Next Stop',
     body:
-        'Every workout fills this bar. Reach Level 2 to unlock new zones, items, and daily quests.',
+        'This card shows your current map route and the next stop ahead. Distance from your workouts moves you forward through the world.',
     accent: AppColors.blue,
   ),
   TutorialStep.stats: TutorialStepContent(
-    emoji: '💎',
-    title: 'Five Core Stats',
+    iconAsset: AppIcons.rewardXpSparkle,
+    title: 'Banked Km, XP, Shields',
     body:
-        'STR, END, AGI, FLX, STA — each activity raises different stats. Tap a gem to see what trains it.',
+        'Banked km is the distance you have already earned and can use to progress on the route. This strip also shows your today XP and how many shields you currently hold.',
     accent: AppColors.purple,
   ),
   TutorialStep.quests: TutorialStepContent(
-    emoji: '📜',
-    title: 'Daily Quests & Streaks',
+    iconAsset: AppIcons.questGeneral,
+    title: 'Daily Quests',
     body:
-        'Five quests refresh every day. A daily workout keeps your streak alive — shields protect you on rest days.',
+        'Your active quests live here. Complete them for extra rewards and use them as your short-term checklist each day.',
     accent: AppColors.orange,
   ),
   TutorialStep.logActivity: TutorialStepContent(
-    emoji: '🔗',
-    title: 'Connect Your Tracker',
+    iconAsset: AppIcons.rewardStreakShield,
+    title: 'Streak Tracker',
     body:
-        'Link Strava, Apple Health, or Google Fit — every real workout auto-imports as XP and stat gains.',
-    accent: AppColors.green,
+        'This strip shows your current streak and your weekly rhythm. Come back consistently to keep the chain alive and build momentum day by day.',
+    accent: AppColors.orange,
   ),
   TutorialStep.mapTab: TutorialStepContent(
-    emoji: '🗺️',
+    iconAsset: AppIcons.mapDestination,
     title: 'The Adventure Map',
     body:
         'Every km you run or ride moves you across the world. Unlock zones like Forest of Endurance.',
     accent: AppColors.green,
   ),
   TutorialStep.bossFab: TutorialStepContent(
-    emoji: '🔥',
-    title: 'Strike the Boss',
+    iconAsset: AppIcons.ringTitles,
+    title: 'Quick Menu',
     body:
-        'Every workout also damages today’s boss. Defeat them before the 7-day timer for gear, XP, and a title.',
-    accent: AppColors.red,
+        'This center button opens the quick menu. From here you can jump to bosses, world, titles, stats, guild, and the rest of the extra navigation.',
+    accent: AppColors.blue,
   ),
 };
 
-/// Total number of bubble steps (1..6). Used by progress-dot indicators.
 const int kTutorialBubbleCount = 6;

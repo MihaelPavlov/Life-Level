@@ -28,6 +28,7 @@ enum BubblePlacement {
 ///   - Fallback → below.
 BubblePlacement choosePlacement(Rect target, Size screen) {
   final spaceAbove = target.top;
+  final bool isNearBottom = target.bottom > screen.height * 0.72;
 
   // FAB case: center-bottom, narrow, near the nav bar.
   final bool isFabLike = target.width < 80 &&
@@ -40,6 +41,10 @@ BubblePlacement choosePlacement(Rect target, Size screen) {
   final bool isRightEdge =
       target.right > screen.width - 80 && target.width < 100;
   if (isRightEdge) return BubblePlacement.aboveRightOffset;
+
+  // Lower-screen targets should always place the bubble above so it does not
+  // render off-screen below the nav area on shorter devices.
+  if (isNearBottom) return BubblePlacement.above;
 
   // Tall target with plenty of room above.
   if (spaceAbove > 280 && target.width >= 120) return BubblePlacement.above;

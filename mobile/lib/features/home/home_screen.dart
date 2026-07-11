@@ -38,6 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _xpCardKey = GlobalKey();
   final _statsRowKey = GlobalKey();
   final _questsCardKey = GlobalKey();
+  final _streakStripKey = GlobalKey();
   bool _tutorialKeysRegistered = false;
 
   @override
@@ -46,6 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     c.unregisterKey('xpCard');
     c.unregisterKey('statsRow');
     c.unregisterKey('questsCard');
+    c.unregisterKey('streakStrip');
     super.dispose();
   }
 
@@ -61,6 +63,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         c.registerKey('xpCard', _xpCardKey);
         c.registerKey('statsRow', _statsRowKey);
         c.registerKey('questsCard', _questsCardKey);
+        c.registerKey('streakStrip', _streakStripKey);
       });
     }
 
@@ -83,7 +86,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 HomeHeader(profile: profile),
                 const HomeXpStormBanner(state: xpStormState),
-                const HomeStreakStrip(),
+                Container(
+                  key: _streakStripKey,
+                  child: const HomeStreakStrip(),
+                ),
                 Padding(
                   key: _xpCardKey,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
