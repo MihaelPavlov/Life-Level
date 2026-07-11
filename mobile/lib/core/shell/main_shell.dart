@@ -124,10 +124,11 @@ class _MainShellState extends ConsumerState<MainShell>
 
   // LL-035 tutorial integration: hooked once, consumed every rebuild.
   bool _tutorialKeysRegistered = false;
-  bool _tutorialHydrated = false;
   bool _introModalShown = false;
   bool _outroModalShown = false;
   VoidCallback? _tutorialListener;
+  int? _lastTutorialServerStep;
+  int? _lastTutorialTopicsSeen;
 
   void _checkLoginReward(AsyncValue<Object?> profileAsync) {
     if (_loginRewardShown) return;
@@ -151,14 +152,20 @@ class _MainShellState extends ConsumerState<MainShell>
   }
 
   void _syncTutorialWithProfile() {
-    if (_tutorialHydrated) return;
     final profile = ref.read(characterProfileProvider).valueOrNull;
     if (profile == null) return;
-    _tutorialHydrated = true;
+    final serverStep = profile.tutorialStep;
+    final serverTopicsSeen = profile.tutorialTopicsSeen;
+    if (_lastTutorialServerStep == serverStep &&
+        _lastTutorialTopicsSeen == serverTopicsSeen) {
+      return;
+    }
+    _lastTutorialServerStep = serverStep;
+    _lastTutorialTopicsSeen = serverTopicsSeen;
     final c = ref.read(tutorialControllerProvider);
     c.hydrateFromProfile(
-      serverStep: profile.tutorialStep,
-      serverTopicsSeen: profile.tutorialTopicsSeen,
+      serverStep: serverStep,
+      serverTopicsSeen: serverTopicsSeen,
     );
   }
 
@@ -350,6 +357,7 @@ class _MainShellState extends ConsumerState<MainShell>
       final c = ref.read(tutorialControllerProvider);
       _tutorialListener = _onTutorialStateChanged;
       c.addListener(_tutorialListener!);
+      _onTutorialStateChanged();
     });
 
     // FCM push notifications: request permission, fetch+register token,

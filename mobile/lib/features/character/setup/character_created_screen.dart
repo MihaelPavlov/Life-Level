@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/class_icons.dart';
@@ -6,11 +7,12 @@ import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/widgets/main_shell.dart';
 import '../models/character_class.dart';
 import '../models/character_setup_result.dart';
+import '../providers/character_provider.dart';
 import '../services/character_service.dart';
 import 'setup_resume_service.dart';
 import 'welcome_setup_screen.dart' show setupProgressDots;
 
-class CharacterCreatedScreen extends StatefulWidget {
+class CharacterCreatedScreen extends ConsumerStatefulWidget {
   final CharacterClass selectedClass;
   final String avatarEmoji;
   final List<String> ringItems;
@@ -23,10 +25,12 @@ class CharacterCreatedScreen extends StatefulWidget {
   });
 
   @override
-  State<CharacterCreatedScreen> createState() => _CharacterCreatedScreenState();
+  ConsumerState<CharacterCreatedScreen> createState() =>
+      _CharacterCreatedScreenState();
 }
 
-class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
+class _CharacterCreatedScreenState
+    extends ConsumerState<CharacterCreatedScreen> {
   final _service = CharacterService();
   CharacterSetupResult? _result;
   bool _loading = true;
@@ -69,6 +73,7 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
 
   Future<void> _enterWorld() async {
     await SetupResumeService.instance.clear();
+    await ref.read(characterProfileProvider.notifier).refresh();
     if (!mounted) return;
 
     Navigator.pushAndRemoveUntil(

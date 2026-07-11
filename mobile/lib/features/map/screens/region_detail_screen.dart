@@ -617,16 +617,17 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   Widget _buildContent(RegionDetail region) {
     final theme = RegionThemeColors.of(region.theme);
     final avatar = ref.watch(characterProfileProvider).valueOrNull?.avatarEmoji;
+    final filteredRegion = _buildProgressiveRevealRegion(region);
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: _Banner(
-            region: region,
+            region: filteredRegion,
             theme: theme,
             onBack: widget.onBack ?? () => Navigator.pop(context),
           ),
         ),
-        SliverToBoxAdapter(child: _Summary(region: region)),
+        SliverToBoxAdapter(child: _Summary(region: filteredRegion)),
         const SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(16, 20, 16, 10),
@@ -643,8 +644,8 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         ),
         SliverToBoxAdapter(
           child: ZoneTrail(
-            nodes: region.nodes,
-            edges: region.edges,
+            nodes: filteredRegion.nodes,
+            edges: filteredRegion.edges,
             journey: _activeJourney,
             nextRegionName: _nextRegionName,
             regionTheme: region.theme,
@@ -665,6 +666,62 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
           ),
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
+    );
+  }
+
+  RegionDetail _buildProgressiveRevealRegion(RegionDetail region) {
+    final nodes = region.nodes;
+    if (nodes.isEmpty) return region;
+
+    final visibleIds = <String>{};
+    final branchRootIds = <String>{};
+
+    for (final node in nodes) {
+      switch (node.status) {
+        case ZoneNodeStatus.completed:
+        case ZoneNodeStatus.active:
+        case ZoneNodeStatus.next:
+          visibleIds.add(node.id);
+          if (node.isCrossroads && node.status == ZoneNodeStatus.active) {
+            branchRootIds.add(node.id);
+          }
+          break;
+        case ZoneNodeStatus.available:
+          if (node.branchOf != null && branchRootIds.contains(node.branchOf)) {
+            visibleIds.add(node.id);
+          }
+          break;
+        case ZoneNodeStatus.locked:
+          break;
+      }
+    }
+
+    int furthestVisibleIndex = -1;
+    for (int i = 0; i < nodes.length; i++) {
+      if (visibleIds.contains(nodes[i].id)) {
+        furthestVisibleIndex = i;
+      }
+    }
+
+    if (furthestVisibleIndex >= 0) {
+      for (int i = furthestVisibleIndex + 1; i < nodes.length; i++) {
+        final candidate = nodes[i];
+        if (visibleIds.contains(candidate.id)) continue;
+        visibleIds.add(candidate.id);
+        break;
+      }
+    }
+
+    final filteredNodes =
+        nodes.where((node) => visibleIds.contains(node.id)).toList();
+    final filteredEdges = region.edges
+        .where((edge) =>
+            visibleIds.contains(edge.fromId) && visibleIds.contains(edge.toId))
+        .toList();
+
+    return region.copyWith(
+      nodes: filteredNodes,
+      edges: filteredEdges,
     );
   }
 }

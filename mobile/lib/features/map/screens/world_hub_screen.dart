@@ -144,6 +144,9 @@ class WorldHubScreenState extends State<WorldHubScreen> {
   }
 
   Widget _buildContent(WorldMapData data) {
+    final visibleRegions = _visibleRegions(data.regions);
+    final hiddenRegionCount = data.regions.length - visibleRegions.length;
+
     return RefreshIndicator(
       color: AppColors.blue,
       onRefresh: _load,
@@ -159,19 +162,38 @@ class WorldHubScreenState extends State<WorldHubScreen> {
           ],
           _SectionTitle(
             label: 'REGIONS',
-            count:
-                '${data.unlockedRegionCount} / ${data.regions.length} UNLOCKED',
+            count: '${visibleRegions.length} SHOWN',
           ),
           const SizedBox(height: 10),
-          for (final region in data.regions)
+          for (final region in visibleRegions)
             RegionHeroCard(
               region: region,
               userLevel: data.user.level,
               onTap: () => _openRegion(region),
             ),
+          if (hiddenRegionCount > 0)
+            _UnknownRealmsCard(hiddenCount: hiddenRegionCount),
         ],
       ),
     );
+  }
+
+  List<RegionCard> _visibleRegions(List<RegionCard> regions) {
+    final visible = <RegionCard>[];
+    bool teaserAdded = false;
+
+    for (final region in regions) {
+      if (region.status != RegionStatus.locked) {
+        visible.add(region);
+        continue;
+      }
+      if (!teaserAdded) {
+        visible.add(region);
+        teaserAdded = true;
+      }
+    }
+
+    return visible;
   }
 }
 
@@ -271,6 +293,86 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _UnknownRealmsCard extends StatelessWidget {
+  final int hiddenCount;
+  const _UnknownRealmsCard({required this.hiddenCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final realmLabel = hiddenCount == 1 ? 'realm' : 'realms';
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.orange.withValues(alpha: 0.24),
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.orange.withValues(alpha: 0.08),
+            AppColors.purple.withValues(alpha: 0.05),
+          ],
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                style: BorderStyle.solid,
+              ),
+            ),
+            child: const Text(
+              '?',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Unknown Beyond',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$hiddenCount more $realmLabel wait behind the fog. Keep moving to reveal the next chapter.',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
