@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level - Adaptive Skill Tree</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #050913;
+  --bg-2: #0a101a;
+  --panel: #131b27;
+  --panel-2: #1a2433;
+  --line: #273347;
+  --text: #edf3fb;
+  --muted: #8a98ae;
+  --gold: #f2be58;
+  --blue: #5ca5ff;
+  --green: #57c785;
+  --orange: #f49b42;
+  --violet: #9b7bff;
+  --red: #f06262;
+}
+
+body {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(92,165,255,0.10), transparent 28%),
+    radial-gradient(circle at 85% 10%, rgba(155,123,255,0.08), transparent 24%),
+    linear-gradient(180deg, #04070f 0%, #070d18 100%);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 48px 24px 80px;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.page-title h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+
+.page-title p {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto 34px;
+}
+
+.summary-card {
+  background: rgba(19,27,39,0.9);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+}
+
+.summary-card .k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.summary-card .v {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.strip {
+  display: flex;
+  gap: 26px;
+  overflow-x: auto;
+  padding: 6px 18px 22px;
+  scrollbar-color: #334055 transparent;
+}
+
+.frame-wrap {
+  flex: 0 0 auto;
+  width: 390px;
+}
+
+.frame-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.frame-label .step {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--gold);
+  border: 1px solid rgba(242,190,88,0.34);
+  background: rgba(242,190,88,0.10);
+}
+
+.frame-label .note {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  border-radius: 42px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(92,165,255,0.18), transparent 24%),
+    linear-gradient(180deg, #09101b 0%, #040913 100%);
+  box-shadow: 0 0 0 8px rgba(10,13,20,0.95), 0 34px 88px rgba(0,0,0,0.65);
+}
+
+.status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  padding: 14px 22px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 20;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  padding: 54px 20px 28px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(242,190,88,0.22);
+  background: rgba(242,190,88,0.10);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hero h2 {
+  font-size: 28px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.insight {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(87,199,133,0.28);
+  background: rgba(87,199,133,0.08);
+  box-shadow: 0 0 26px rgba(87,199,133,0.08);
+}
+
+.insight .label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.insight .text {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.constellation {
+  position: relative;
+  margin-top: 18px;
+  height: 360px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06) 0 1px, transparent 1px) 0 0/28px 28px,
+    radial-gradient(circle at 75% 50%, rgba(92,165,255,0.07), transparent 26%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+    #0d1522;
+}
+
+.path {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(92,165,255,0.08), rgba(92,165,255,0.42));
+  transform-origin: left center;
+}
+
+.node {
+  position: absolute;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  box-shadow: inset 0 0 20px rgba(255,255,255,0.03);
+  text-align: center;
+}
+
+.node .icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.node .name {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.node.root {
+  width: 104px;
+  height: 104px;
+  left: 142px;
+  top: 128px;
+  border-color: rgba(242,190,88,0.45);
+  background: radial-gradient(circle at 50% 28%, rgba(242,190,88,0.20), rgba(242,190,88,0.04));
+  box-shadow: 0 0 40px rgba(242,190,88,0.16);
+}
+
+.node.active {
+  border-color: rgba(92,165,255,0.48);
+  box-shadow: 0 0 28px rgba(92,165,255,0.22);
+}
+
+.node.behavior {
+  border-color: rgba(87,199,133,0.38);
+  box-shadow: 0 0 28px rgba(87,199,133,0.14);
+}
+
+.node.mastery {
+  border-color: rgba(155,123,255,0.44);
+  box-shadow: 0 0 34px rgba(155,123,255,0.18);
+  background: radial-gradient(circle at 50% 30%, rgba(155,123,255,0.18), rgba(155,123,255,0.03));
+}
+
+.node.locked {
+  opacity: 0.35;
+  filter: grayscale(0.15);
+}
+
+.node.hidden {
+  border-style: dashed;
+  color: rgba(255,255,255,0.46);
+  background: rgba(255,255,255,0.02);
+}
+
+.legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.chip {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chip.green { color: var(--green); border-color: rgba(87,199,133,0.24); }
+.chip.blue { color: var(--blue); border-color: rgba(92,165,255,0.24); }
+.chip.violet { color: var(--violet); border-color: rgba(155,123,255,0.24); }
+
+.panel {
+  margin-top: 16px;
+  background: rgba(19,27,39,0.92);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.panel .k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.panel .title {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.panel .copy {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.choice-row {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.choice {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+  padding: 14px;
+}
+
+.choice.selected {
+  border-color: rgba(92,165,255,0.34);
+  background: rgba(92,165,255,0.08);
+}
+
+.choice .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.choice .name {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.choice .type {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.choice .desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.req {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.button {
+  margin-top: 14px;
+  height: 48px;
+  border-radius: 15px;
+  background: linear-gradient(180deg, #66b0ff 0%, #428ee6 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.mastery-card {
+  margin-top: 18px;
+  border-radius: 24px;
+  padding: 22px 18px;
+  border: 1px solid rgba(155,123,255,0.34);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(155,123,255,0.20), transparent 44%),
+    rgba(25,18,39,0.96);
+  box-shadow: 0 0 48px rgba(155,123,255,0.18);
+  text-align: center;
+}
+
+.mastery-card .sigil {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+  border: 1px solid rgba(155,123,255,0.42);
+  background: radial-gradient(circle at 50% 30%, rgba(155,123,255,0.24), rgba(155,123,255,0.05));
+}
+
+.mastery-card .eyebrow2 {
+  color: var(--violet);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.mastery-card h3 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.mastery-card p {
+  color: #c7bde9;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.stat {
+  border-radius: 14px;
+  padding: 12px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.stat .v {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gold);
+}
+
+.stat .k {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.footer-note {
+  max-width: 1020px;
+  margin: 28px auto 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+  <div class="page-title">
+    <h1>Adaptive Skill Tree</h1>
+    <p>A behavior-driven progression system for Life-Level. The class root gives identity, real workouts reveal branches, and player choices convert that proof into map, boss, quest, and streak perks.</p>
+  </div>
+
+  <div class="summary">
+    <div class="summary-card">
+      <div class="k">Step 1</div>
+      <div class="v">Start from class identity, not a giant generic tree.</div>
+    </div>
+    <div class="summary-card">
+      <div class="k">Step 2</div>
+      <div class="v">Reveal branches from real training patterns and engagement habits.</div>
+    </div>
+    <div class="summary-card">
+      <div class="k">Step 3</div>
+      <div class="v">Let players choose among earned nodes that change gameplay loops.</div>
+    </div>
+    <div class="summary-card">
+      <div class="k">Step 4</div>
+      <div class="v">Hide mastery paths until the game can say who the player is becoming.</div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="frame-wrap">
+      <div class="frame-label"><span class="step">1</span>Root Concept<span class="note">Class root visible, future branches teased, mastery still hidden.</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Life-Level</span></div>
+        <div class="screen">
+          <div class="eyebrow">Skill Tree • Identity First</div>
+          <div class="hero">
+            <h2>Your path begins with class, not points.</h2>
+            <p>The first screen should make the system readable immediately: one root, a few visible paths, and strong mystery around what comes later.</p>
+          </div>
+          <div class="constellation">
+            <div class="path" style="left: 112px; top: 172px; width: 88px; transform: rotate(-28deg);"></div>
+            <div class="path" style="left: 194px; top: 178px; width: 88px; transform: rotate(28deg);"></div>
+            <div class="path" style="left: 166px; top: 218px; width: 2px; height: 76px; background: linear-gradient(180deg, rgba(92,165,255,0.2), rgba(155,123,255,0.4)); transform: none;"></div>
+
+            <div class="node root">
+              <div class="icon">🏹</div>
+              <div class="name">Ranger</div>
+            </div>
+            <div class="node locked" style="left: 52px; top: 90px;">
+              <div class="icon">⚡</div>
+              <div class="name">Momentum</div>
+            </div>
+            <div class="node locked" style="left: 260px; top: 90px;">
+              <div class="icon">🧭</div>
+              <div class="name">Explorer</div>
+            </div>
+            <div class="node hidden" style="left: 156px; top: 270px;">
+              <div class="icon">✦</div>
+              <div class="name">Mastery</div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="chip">Class Root</div>
+            <div class="chip green">Behavior Unlock</div>
+            <div class="chip blue">Gameplay Perk</div>
+            <div class="chip violet">Hidden Mastery</div>
+          </div>
+          <div class="panel">
+            <div class="k">Design Intent</div>
+            <div class="title">Small first view, high curiosity</div>
+            <div class="copy">Do not show a giant web. Show one class root, 2-3 nearby branches, and one fogged mastery node. The player should feel guided, not overwhelmed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><span class="step">2</span>Behavior Reveal<span class="note">The game detects a real pattern and reveals a branch.</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Life-Level</span></div>
+        <div class="screen">
+          <div class="eyebrow">Adaptive Unlock • Real Proof</div>
+          <div class="hero">
+            <h2>You trained like a runner this week.</h2>
+            <p>The skill tree becomes special when unlocks feel like recognition. The game is not only rewarding effort. It is naming the player’s behavior.</p>
+          </div>
+          <div class="insight">
+            <div class="label">Behavior Insight</div>
+            <div class="text">3 running sessions, 18.4 km traveled, 5-day streak. The <b>Momentum</b> branch is now revealed.</div>
+          </div>
+          <div class="constellation">
+            <div class="path" style="left: 112px; top: 172px; width: 88px; transform: rotate(-28deg); background: linear-gradient(90deg, rgba(87,199,133,0.18), rgba(87,199,133,0.7));"></div>
+            <div class="path" style="left: 194px; top: 178px; width: 88px; transform: rotate(28deg);"></div>
+            <div class="path" style="left: 166px; top: 218px; width: 2px; height: 76px; background: linear-gradient(180deg, rgba(92,165,255,0.2), rgba(155,123,255,0.4)); transform: none;"></div>
+
+            <div class="node root">
+              <div class="icon">🏹</div>
+              <div class="name">Ranger</div>
+            </div>
+            <div class="node behavior active" style="left: 52px; top: 90px;">
+              <div class="icon">⚡</div>
+              <div class="name">Momentum</div>
+            </div>
+            <div class="node locked" style="left: 260px; top: 90px;">
+              <div class="icon">🧭</div>
+              <div class="name">Explorer</div>
+            </div>
+            <div class="node hidden" style="left: 156px; top: 270px;">
+              <div class="icon">✦</div>
+              <div class="name">Mastery</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="k">System Rule</div>
+            <div class="title">Unlock by proof, then let the player choose</div>
+            <div class="copy">This branch did not appear because the player reached level 8. It appeared because the player actually behaved like this branch.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><span class="step">3</span>Branch Choice<span class="note">Earned branch, meaningful node selection, direct ties to game loops.</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Life-Level</span></div>
+        <div class="screen">
+          <div class="eyebrow">Choose Node • Earned Options</div>
+          <div class="hero">
+            <h2>Momentum branch unlocked.</h2>
+            <p>Each choice should connect to a loop the player already understands: quests, map travel, streaks, bosses. Avoid passive filler nodes.</p>
+          </div>
+          <div class="panel">
+            <div class="k">Available Choices</div>
+            <div class="choice-row">
+              <div class="choice selected">
+                <div class="top">
+                  <div class="name">First Wind</div>
+                  <div class="type">Streak</div>
+                </div>
+                <div class="desc">The first activity of the day gains bonus XP and slightly strengthens streak momentum.</div>
+                <div class="req">Unlocked by: 3 running activities this week</div>
+              </div>
+              <div class="choice">
+                <div class="top">
+                  <div class="name">Trail Reach</div>
+                  <div class="type">Map</div>
+                </div>
+                <div class="desc">Distance-based activities grant extra world travel and faster route reveal.</div>
+                <div class="req">Unlocked by: 15 km travel in the current week</div>
+              </div>
+              <div class="choice">
+                <div class="top">
+                  <div class="name">Predator Pulse</div>
+                  <div class="type">Boss</div>
+                </div>
+                <div class="desc">Activities logged while a tracked boss is active deal bonus boss damage.</div>
+                <div class="req">Requires: next rank in Momentum</div>
+              </div>
+            </div>
+            <div class="button">Unlock First Wind</div>
+          </div>
+          <div class="panel">
+            <div class="k">UX Principle</div>
+            <div class="copy">Show 2-3 strong options, not 9 weak ones. The player should feel they are choosing a direction, not sorting through noise.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><span class="step">4</span>Node Detail<span class="note">Every node explains effect, trigger, and linked system in plain language.</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Life-Level</span></div>
+        <div class="screen">
+          <div class="eyebrow">Node Detail • Clear Effect</div>
+          <div class="hero">
+            <h2>First Wind</h2>
+            <p>The detail view should make the relationship between real behavior and game reward obvious. No vague text. No hidden math dependence.</p>
+          </div>
+          <div class="panel">
+            <div class="k">Perk Effect</div>
+            <div class="title">Your first workout of the day starts the chain faster.</div>
+            <div class="copy">On the first logged activity each day, gain bonus XP and a stronger streak-start signal. This node is built to make consistency feel better, not just more efficient.</div>
+          </div>
+          <div class="panel">
+            <div class="k">Connected Systems</div>
+            <div class="choice-row">
+              <div class="choice selected">
+                <div class="top">
+                  <div class="name">Daily Quests</div>
+                  <div class="type">Loop</div>
+                </div>
+                <div class="desc">Encourages early completion of daily quest chains.</div>
+              </div>
+              <div class="choice">
+                <div class="top">
+                  <div class="name">Streak System</div>
+                  <div class="type">Loop</div>
+                </div>
+                <div class="desc">Makes the start of a new activity day emotionally stronger.</div>
+              </div>
+              <div class="choice">
+                <div class="top">
+                  <div class="name">Profile Identity</div>
+                  <div class="type">Flavor</div>
+                </div>
+                <div class="desc">Adds visible Momentum affinity on the player profile.</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="k">Design Rule</div>
+            <div class="copy">Each node should answer two questions: what behavior earned this, and what gameplay loop changes because of it.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><span class="step">5</span>Mastery Reveal<span class="note">Late-game identity moment unlocked from long-term behavior patterns.</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Life-Level</span></div>
+        <div class="screen">
+          <div class="eyebrow">Hidden Path • Identity Reveal</div>
+          <div class="hero">
+            <h2>The game tells you what you became.</h2>
+            <p>This is the emotional payoff. A hidden mastery branch appears only after enough real evidence. That reveal is stronger than a normal level-up.</p>
+          </div>
+          <div class="mastery-card">
+            <div class="sigil">✦</div>
+            <div class="eyebrow2">Mastery Unlocked</div>
+            <h3>Trailborn</h3>
+            <p>You kept moving when others paused. Your path now bends toward exploration, route instincts, and long-range world pressure.</p>
+            <div class="stats">
+              <div class="stat">
+                <div class="v">+Map</div>
+                <div class="k">Travel Boost</div>
+              </div>
+              <div class="stat">
+                <div class="v">+Reveal</div>
+                <div class="k">Fog Sight</div>
+              </div>
+              <div class="stat">
+                <div class="v">+Quest</div>
+                <div class="k">Explorer Chain</div>
+              </div>
+            </div>
+            <div class="button" style="margin-top:16px;">Enter Trailborn Path</div>
+          </div>
+          <div class="panel">
+            <div class="k">Retention Value</div>
+            <div class="copy">Mastery reveal is where the tree becomes memorable. The player is no longer selecting a perk. They are receiving a title for their behavior.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Recommended build order: start with 4 class roots, 4 universal branches, and a small number of strong nodes tied to map travel, streaks, bosses, and quests. Keep the first release narrow and readable. The hidden mastery reveal is the differentiator.
+  </div>
+</body>
+</html>

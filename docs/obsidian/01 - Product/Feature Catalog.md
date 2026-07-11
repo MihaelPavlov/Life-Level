@@ -49,7 +49,7 @@ Strava (OAuth + real-time webhook), Health Connect (Android pull sync), Garmin (
 Design: friends, leaderboards, challenges, guilds with co-op raids. Implementation: **not yet started**. Phase 7/8 target.
 
 ## UI shell & radial FAB
-Stateful bottom-tab shell with a centre FAB that expands into a radial menu of 6 customisable items (World, Guild, Stats, Battle, Titles, Boss by default). → [[Shell and Radial FAB]]
+Stateful bottom-tab shell with a centre FAB that expands into a radial menu of 5 customisable items (World, Guild, Stats, Titles, Boss by default). → [[Shell and Radial FAB]]
 
 ## Global overlays
 Level-up celebration, item-obtained popup, inventory-full warning, login reward dialog — triggered by cross-feature events via broadcast streams. → [[Global Event Pattern]]

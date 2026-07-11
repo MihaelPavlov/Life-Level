@@ -10,8 +10,13 @@ import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/widgets/chest_opened_overlay.dart';
+import '../models/encounter_models.dart';
 import '../widgets/crossroads_choice_sheet.dart';
 import '../widgets/dungeon_floors_sheet.dart';
+import '../widgets/encounter_blocker_sheet.dart';
+import '../widgets/encounter_merchant_sheet.dart';
+import '../widgets/encounter_story_sheet.dart';
+import '../widgets/map_icon_resolver.dart';
 import '../widgets/world_map_theme.dart';
 import '../widgets/zone_detail_sheet.dart';
 import '../widgets/zone_trail.dart';
@@ -290,8 +295,8 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.red.withValues(alpha: 0.08),
                   border:
@@ -325,8 +330,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
                         side: const BorderSide(color: AppColors.border),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -343,8 +347,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.red,
                         foregroundColor: Colors.white,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -463,6 +466,27 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     WorldZoneRefreshNotifier.notify();
   }
 
+  void _showEncounterSheet(TrailEncounterNode enc) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => switch (enc.type) {
+        TrailEncounterType.merchant => MerchantSheet(encounter: enc),
+        TrailEncounterType.blocker => BlockerSheet(
+            encounter: enc,
+            onFight: _handleFightTrailBlocker,
+          ),
+        TrailEncounterType.story => StorySheet(encounter: enc),
+      },
+    );
+  }
+
+  void _handleFightTrailBlocker() {
+    Navigator.of(context).pop();
+    BossOverlayNotifier.notify();
+  }
+
   void _showNodeSheet(ZoneNode node) {
     assert(() {
       debugPrint(
@@ -504,22 +528,22 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       builder: (_) => ZoneDetailSheet(
         node: node,
         regionName: _region?.name ?? '',
+        regionTheme: _region?.theme,
         userLevel: _userLevel,
         activeJourney: _activeJourney,
         isDestination: isDestination,
-        onSetDestination:
-            canSet ? () => _handleSetDestination(node) : null,
+        onSetDestination: canSet ? () => _handleSetDestination(node) : null,
         onOpenChest: node.isChest && atZone && node.chestIsOpened != true
             ? () => _handleOpenChest(node)
             : null,
-        onEnterDungeon: node.isDungeon && atZone &&
+        onEnterDungeon: node.isDungeon &&
+                atZone &&
                 (node.dungeonStatus != DungeonRunStatus.completed &&
                     node.dungeonStatus != DungeonRunStatus.abandoned)
             ? () => _handleEnterDungeon(node)
             : null,
-        onFightBoss: node.isBoss && atZone
-            ? () => _handleFightBoss(node)
-            : null,
+        onFightBoss:
+            node.isBoss && atZone ? () => _handleFightBoss(node) : null,
         nextRegionName: node.isBoss ? _nextRegionName : null,
         parentCrossroadsName: parentCrossroads?.name,
         userAtParentCrossroads: userAtParentCrossroads,
@@ -535,8 +559,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     // Loud diagnostic every time a crossroads tap lands here. Stripped in
     // release via the `assert(() { ...; return true; }())` idiom.
     assert(() {
-      debugPrint(
-          '[crossroads] tap on ${crossroads.name} id=${crossroads.id} '
+      debugPrint('[crossroads] tap on ${crossroads.name} id=${crossroads.id} '
           'branchesFound=${branches.length} '
           'regionNodes=${allNodes.map((z) => "${z.name}(id=${z.id} branchOf=${z.branchOf})").join(" | ")}');
       return true;
@@ -560,6 +583,8 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       builder: (_) => CrossroadsChoiceSheet(
         crossroads: crossroads,
         branches: branches.take(2).toList(),
+        regionTheme: _region?.theme,
+        regionName: _region?.name,
         alreadyChosenBranchId: _region!.pathChoices[crossroads.id],
         onChoose: _handleSetDestination,
       ),
@@ -622,9 +647,13 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
             edges: region.edges,
             journey: _activeJourney,
             nextRegionName: _nextRegionName,
+            regionTheme: region.theme,
+            regionName: region.name,
             avatarEmoji: avatar,
             onTap: _showNodeSheet,
             activeNodeKey: _activeNodeKey,
+            encounters: region.encounters,
+            onEncounterTap: _showEncounterSheet,
           ),
         ),
         if (_activeJourney != null)
@@ -646,7 +675,8 @@ class _Banner extends StatelessWidget {
   final RegionDetail region;
   final RegionThemeColors theme;
   final VoidCallback onBack;
-  const _Banner({required this.region, required this.theme, required this.onBack});
+  const _Banner(
+      {required this.region, required this.theme, required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -689,7 +719,13 @@ class _Banner extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Text(region.emoji, style: const TextStyle(fontSize: 52)),
+              MapIconOrEmoji(
+                asset: regionIconAsset(region),
+                emoji: region.emoji,
+                size: 56,
+                emojiSize: 52,
+                visualScale: 1.35,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

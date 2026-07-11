@@ -258,6 +258,32 @@ public class MapReadService(
         var defeatedBossZoneIds = await bossDefeatRead.GetDefeatedWorldZoneIdsAsync(userId, ct);
         var summary = BuildRegionSummary(region, zones, unlocked, defeatedBossZoneIds, progress?.CurrentRegionId, level);
 
+        var templates = await db.Set<TrailEncounterTemplate>()
+            .Where(t => t.RegionId == region.Id && t.IsActive)
+            .ToListAsync(ct);
+
+        var encounters = new List<TrailEncounterNodeDto>();
+        if (templates.Count > 0 && edgeDtos.Count > 0)
+        {
+            var rng = new Random();
+            var usedTypes = new HashSet<string>();
+            foreach (var edge in edgeDtos.OrderBy(_ => rng.Next()))
+            {
+                if (encounters.Count >= 3) break;
+                var candidate = templates
+                    .Where(t => !usedTypes.Contains(t.Type))
+                    .Where(t => rng.NextDouble() < t.SpawnChance)
+                    .OrderBy(_ => rng.Next())
+                    .FirstOrDefault();
+                if (candidate == null) continue;
+                var tPos = 0.25 + rng.NextDouble() * 0.50;
+                var side = encounters.Count % 2 == 0 ? -80.0 : 80.0;
+                var toZoneName = zones.FirstOrDefault(z => z.Id == edge.ToId)?.Name ?? "";
+                encounters.Add(BuildEncounterNode(candidate, edge.FromId, edge.ToId, tPos, side, toZoneName));
+                usedTypes.Add(candidate.Type);
+            }
+        }
+
         return new RegionDetailDto(
             Id: summary.Id,
             Name: summary.Name,
@@ -276,7 +302,8 @@ public class MapReadService(
             Pins: summary.Pins,
             Nodes: nodes,
             Edges: edgeDtos,
-            PathChoices: pathChoiceDtos);
+            PathChoices: pathChoiceDtos,
+            Encounters: encounters);
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -505,6 +532,75 @@ public class MapReadService(
             DistanceTotalKm: totalKm,
             ArrivalXpReward: destZone.XpReward,
             ArrivalBonusLabel: null);
+    }
+
+    private static TrailEncounterNodeDto BuildEncounterNode(
+        TrailEncounterTemplate template,
+        Guid fromId, Guid toId,
+        double t, double side, string toZoneName)
+    {
+        var config = JsonSerializer.Deserialize<JsonElement>(template.ConfigJson);
+
+        MerchantEncounterDto? merchant = null;
+        BlockerEncounterDto? blocker = null;
+        StoryEncounterDto? story = null;
+
+        switch (template.Type)
+        {
+            case "merchant":
+                var items = config.TryGetProperty("items", out var itemsEl)
+                    ? itemsEl.EnumerateArray().Select(i => new MerchantItemDto(
+                        Emoji: i.GetProperty("emoji").GetString() ?? "",
+                        Name: i.GetProperty("name").GetString() ?? "",
+                        Description: i.GetProperty("description").GetString() ?? "",
+                        Rarity: i.GetProperty("rarity").GetString() ?? "",
+                        XpCost: i.GetProperty("xpCost").GetInt32()))
+                      .ToList()
+                    : new List<MerchantItemDto>();
+                merchant = new MerchantEncounterDto(
+                    Name: template.Name,
+                    TimeLeftSeconds: config.TryGetProperty("timeLeftHours", out var tlh)
+                        ? (int)(tlh.GetDouble() * 3600) : 0,
+                    PlayerXp: config.TryGetProperty("playerXp", out var pxp) ? pxp.GetInt32() : 0,
+                    Items: items);
+                break;
+
+            case "blocker":
+                var maxHp = config.TryGetProperty("maxHp", out var mhp) ? mhp.GetInt32() : 1000;
+                var retreatDays = config.TryGetProperty("retreatDays", out var rd) ? rd.GetInt32() : 1;
+                var rewards = config.TryGetProperty("rewards", out var rewardsEl)
+                    ? rewardsEl.EnumerateArray().Select(r => r.GetString() ?? "").ToList()
+                    : new List<string>();
+                blocker = new BlockerEncounterDto(
+                    Name: template.Name,
+                    BlockedZoneName: toZoneName,
+                    MaxHp: maxHp,
+                    CurrentHp: maxHp,
+                    PlayerDamageDone: 0,
+                    RetreatsInSeconds: retreatDays * 86400,
+                    Rewards: rewards);
+                break;
+
+            case "story":
+                story = new StoryEncounterDto(
+                    NpcName: template.Name,
+                    NpcTitle: config.TryGetProperty("npcTitle", out var nt) ? nt.GetString() ?? "" : "",
+                    Portrait: config.TryGetProperty("portrait", out var p) ? p.GetString() ?? template.Emoji : template.Emoji,
+                    Dialogue: config.TryGetProperty("dialogue", out var d) ? d.GetString() ?? "" : "",
+                    LoreXp: config.TryGetProperty("loreXp", out var lxp) ? lxp.GetInt32() : 0);
+                break;
+        }
+
+        return new TrailEncounterNodeDto(
+            Id: Guid.NewGuid().ToString(),
+            FromZoneId: fromId.ToString(),
+            ToZoneId: toId.ToString(),
+            T: t,
+            SideOffset: side,
+            Type: template.Type,
+            Merchant: merchant,
+            Blocker: blocker,
+            Story: story);
     }
 
     private static IReadOnlyList<RegionPinDto> DeserializePins(string json)

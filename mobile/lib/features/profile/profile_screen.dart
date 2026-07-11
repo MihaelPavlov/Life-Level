@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/class_icons.dart';
 import '../../core/session/invalidate_user_providers.dart';
+import '../../core/widgets/app_icon_image.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/screens/integrations_screen.dart';
@@ -148,7 +150,11 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
     final rankAccent = profileRankColor(profile.rank);
-    final titleText = '${profile.classEmoji ?? ''} ${profile.className ?? 'Hero'}'.trim();
+    final classAsset = classIconAsset(
+      className: profile.className,
+      classEmoji: profile.classEmoji,
+    );
+    final classText = profile.className ?? 'Hero';
 
     return Container(
       decoration: const BoxDecoration(
@@ -222,13 +228,31 @@ class ProfileHeader extends StatelessWidget {
                           border: Border.all(color: kPGold.withOpacity(0.40)),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          titleText,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: kPGold,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (classAsset != null) ...[
+                              AppIconImage(
+                                classAsset,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                            ] else if ((profile.classEmoji ?? '').isNotEmpty) ...[
+                              Text(
+                                profile.classEmoji!,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Text(
+                              classText,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: kPGold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 5),

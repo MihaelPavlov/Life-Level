@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/services/nav_tab_notifier.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../providers/tutorial_provider.dart';
 import '../widgets/tutorial_progress_dots.dart';
 import '../widgets/tutorial_skip_sheet.dart';
@@ -60,7 +62,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                       const _FirstQuestTag(),
                       const SizedBox(height: 16),
                       const _HeroCircle(
-                        emoji: '🗡',
+                        asset: AppIcons.questFirst,
                         accent: AppColors.blue,
                       ),
                       const SizedBox(height: 18),
@@ -75,7 +77,7 @@ class TutorialIntroScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        "Your journey has begun. Let's learn how training in the real world makes you stronger in this one.",
+                        'Your journey has begun. Let\'s learn how training in the real world makes you stronger in this one.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: AppColors.textSecondary,
@@ -85,21 +87,21 @@ class TutorialIntroScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 18),
                       const _PillarCard(
-                        emoji: '📈',
-                        title: 'Train → Level up',
+                        asset: AppIcons.rewardXpSparkle,
+                        title: 'Train -> Level up',
                         desc: 'Workouts earn XP and raise stats',
                       ),
                       const SizedBox(height: 10),
                       const _PillarCard(
-                        emoji: '🗺️',
+                        asset: AppIcons.mapDestination,
                         title: 'Explore the world',
                         desc: 'Distance moves you across zones',
                       ),
                       const SizedBox(height: 10),
                       const _PillarCard(
-                        emoji: '⚔️',
+                        asset: AppIcons.ringBoss,
                         title: 'Defeat bosses',
-                        desc: 'Daily raids reward gear & titles',
+                        desc: 'Daily raids reward gear and titles',
                       ),
                       const SizedBox(height: 18),
                       const TutorialProgressDots(
@@ -117,8 +119,6 @@ class TutorialIntroScreen extends ConsumerWidget {
                           if (Navigator.of(context).canPop()) {
                             Navigator.of(context).pop();
                           }
-                          // Ensure Home tab is active so step-1 targets
-                          // (XP bar, stats row, quests card) are in the tree.
                           NavTabNotifier.switchTo('home');
                           await controller.advance();
                         },
@@ -149,20 +149,27 @@ class TutorialIntroScreen extends ConsumerWidget {
   }
 }
 
-// ── pieces ──────────────────────────────────────────────────────────────────
 class _FirstQuestTag extends StatelessWidget {
   const _FirstQuestTag();
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        '⚔ FIRST QUEST',
-        style: TextStyle(
-          color: AppColors.orange,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.orange.withOpacity(0.1),
+          border: Border.all(color: AppColors.orange.withOpacity(0.28)),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: const Text(
+          'FIRST QUEST',
+          style: TextStyle(
+            color: AppColors.orange,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
+          ),
         ),
       ),
     );
@@ -170,9 +177,10 @@ class _FirstQuestTag extends StatelessWidget {
 }
 
 class _HeroCircle extends StatelessWidget {
-  final String emoji;
+  final String asset;
   final Color accent;
-  const _HeroCircle({required this.emoji, required this.accent});
+
+  const _HeroCircle({required this.asset, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +209,11 @@ class _HeroCircle extends StatelessWidget {
           ],
         ),
         child: Center(
-          child: Text(emoji, style: const TextStyle(fontSize: 44)),
+          child: AppIconImage(
+            asset,
+            size: 52,
+            visualScale: 1.5,
+          ),
         ),
       ),
     );
@@ -209,11 +221,12 @@ class _HeroCircle extends StatelessWidget {
 }
 
 class _PillarCard extends StatelessWidget {
-  final String emoji;
+  final String asset;
   final String title;
   final String desc;
+
   const _PillarCard({
-    required this.emoji,
+    required this.asset,
     required this.title,
     required this.desc,
   });
@@ -229,7 +242,21 @@ class _PillarCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: AppIconImage(
+                asset,
+                size: 18,
+                visualScale: 1.45,
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -262,6 +289,7 @@ class _PillarCard extends StatelessWidget {
 
 class _BeginButton extends StatelessWidget {
   final VoidCallback onPressed;
+
   const _BeginButton({required this.onPressed});
 
   @override
@@ -275,7 +303,7 @@ class _BeginButton extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.blue, Color(0xFF2f7ad8)],
+            colors: [AppColors.blue, Color(0xFF2F7AD8)],
           ),
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
@@ -288,7 +316,7 @@ class _BeginButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: const Text(
-          'BEGIN THE QUEST ▸',
+          'BEGIN THE QUEST',
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,
@@ -303,6 +331,7 @@ class _BeginButton extends StatelessWidget {
 
 class _SkipLink extends StatelessWidget {
   final VoidCallback onPressed;
+
   const _SkipLink({required this.onPressed});
 
   @override

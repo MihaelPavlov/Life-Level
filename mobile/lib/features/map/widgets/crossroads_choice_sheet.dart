@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
+import 'map_icon_resolver.dart';
 
 /// Bottom sheet shown when the user taps a crossroads zone. Presents the two
 /// branch paths (Easy / Hard) as side-by-side cards. Picking one sets it as
@@ -13,6 +14,8 @@ import '../models/world_map_models.dart';
 class CrossroadsChoiceSheet extends StatelessWidget {
   final ZoneNode crossroads;
   final List<ZoneNode> branches; // expect exactly 2
+  final RegionTheme? regionTheme;
+  final String? regionName;
   final String? alreadyChosenBranchId;
   final void Function(ZoneNode branch) onChoose;
 
@@ -20,6 +23,8 @@ class CrossroadsChoiceSheet extends StatelessWidget {
     super.key,
     required this.crossroads,
     required this.branches,
+    this.regionTheme,
+    this.regionName,
     required this.alreadyChosenBranchId,
     required this.onChoose,
   });
@@ -60,7 +65,12 @@ class CrossroadsChoiceSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              _Header(crossroads: crossroads, already: already),
+              _Header(
+                crossroads: crossroads,
+                already: already,
+                regionTheme: regionTheme,
+                regionName: regionName,
+              ),
               const SizedBox(height: 16),
               // IntrinsicHeight gives the Row a defined height = tallest
               // card, so crossAxisAlignment.stretch can make both siblings
@@ -76,6 +86,8 @@ class CrossroadsChoiceSheet extends StatelessWidget {
                       Expanded(
                         child: _PathCard(
                           branch: branches[i],
+                          regionTheme: regionTheme,
+                          regionName: regionName,
                           isChosen: already &&
                               branches[i].id == alreadyChosenBranchId,
                           isLocked: already &&
@@ -120,10 +132,23 @@ class CrossroadsChoiceSheet extends StatelessWidget {
 class _Header extends StatelessWidget {
   final ZoneNode crossroads;
   final bool already;
-  const _Header({required this.crossroads, required this.already});
+  final RegionTheme? regionTheme;
+  final String? regionName;
+  const _Header({
+    required this.crossroads,
+    required this.already,
+    required this.regionTheme,
+    required this.regionName,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final iconAsset = zoneNodeIconAsset(
+      crossroads,
+      regionTheme: regionTheme,
+      regionName: regionName,
+    );
+
     return Row(
       children: [
         Container(
@@ -135,9 +160,12 @@ class _Header extends StatelessWidget {
             border: Border.all(color: AppColors.purple.withOpacity(0.45)),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Text(
-            crossroads.emoji,
-            style: const TextStyle(fontSize: 28),
+          child: MapIconOrEmoji(
+            asset: iconAsset,
+            emoji: crossroads.emoji,
+            size: 32,
+            emojiSize: 28,
+            visualScale: 1.3,
           ),
         ),
         const SizedBox(width: 12),
@@ -174,12 +202,16 @@ class _Header extends StatelessWidget {
 
 class _PathCard extends StatelessWidget {
   final ZoneNode branch;
+  final RegionTheme? regionTheme;
+  final String? regionName;
   final bool isChosen;
   final bool isLocked;
   final VoidCallback? onChoose;
 
   const _PathCard({
     required this.branch,
+    required this.regionTheme,
+    required this.regionName,
     required this.isChosen,
     required this.isLocked,
     required this.onChoose,
@@ -200,6 +232,11 @@ class _PathCard extends StatelessWidget {
         ? AppColors.green.withOpacity(0.08)
         : AppColors.surfaceElevated;
     final radius = BorderRadius.circular(14);
+    final iconAsset = zoneNodeIconAsset(
+      branch,
+      regionTheme: regionTheme,
+      regionName: regionName,
+    );
 
     final content = Padding(
       padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
@@ -209,12 +246,20 @@ class _PathCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(branch.emoji, style: const TextStyle(fontSize: 24)),
+              MapIconOrEmoji(
+                asset: iconAsset,
+                emoji: branch.emoji,
+                size: 28,
+                emojiSize: 24,
+                visualScale: 1.35,
+                opacity: isLocked ? 0.55 : null,
+              ),
               const Spacer(),
               if (isChosen)
                 const _StatusPill(label: 'CHOSEN', color: AppColors.green),
               if (isLocked)
-                const _StatusPill(label: '🔒 LOCKED', color: AppColors.textMuted),
+                const _StatusPill(
+                    label: '🔒 LOCKED', color: AppColors.textMuted),
             ],
           ),
           const SizedBox(height: 8),

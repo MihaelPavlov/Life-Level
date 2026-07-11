@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 
 // ── Quest category string constants ────────────────────────────────────────────
 class QuestCategory {
@@ -30,6 +31,18 @@ String questCategoryEmoji(String category) {
       return '📅';
     default:
       return '🎯';
+  }
+}
+
+String questCategoryIcon(String category) {
+  switch (category.toLowerCase()) {
+    case QuestCategory.duration: return AppIcons.questDuration;
+    case QuestCategory.calories: return AppIcons.questCalories;
+    case QuestCategory.distance: return AppIcons.questDistance;
+    case QuestCategory.workouts: return AppIcons.questWorkoutCount;
+    case QuestCategory.streak:   return AppIcons.questWorkoutCount;
+    case QuestCategory.login:    return AppIcons.questDailyLogin;
+    default:                     return AppIcons.questGeneral;
   }
 }
 

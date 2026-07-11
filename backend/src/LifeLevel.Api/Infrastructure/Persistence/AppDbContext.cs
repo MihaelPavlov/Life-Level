@@ -77,6 +77,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorldZoneDungeonFloor> WorldZoneDungeonFloors => Set<WorldZoneDungeonFloor>();
     public DbSet<UserWorldDungeonState> UserWorldDungeonStates => Set<UserWorldDungeonState>();
     public DbSet<UserWorldDungeonFloorState> UserWorldDungeonFloorStates => Set<UserWorldDungeonFloorState>();
+    public DbSet<TrailEncounterTemplate> TrailEncounterTemplates => Set<TrailEncounterTemplate>();
 
     // Map
     public DbSet<MapNode> MapNodes => Set<MapNode>();

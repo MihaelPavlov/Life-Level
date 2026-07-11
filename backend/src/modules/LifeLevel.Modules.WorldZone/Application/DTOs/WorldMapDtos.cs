@@ -58,7 +58,8 @@ public record RegionDetailDto(
     IReadOnlyList<RegionPinDto> Pins,
     IReadOnlyList<ZoneNodeDto> Nodes,
     IReadOnlyList<ZoneEdgeDto> Edges,
-    IReadOnlyList<PathChoiceDto> PathChoices);
+    IReadOnlyList<PathChoiceDto> PathChoices,
+    IReadOnlyList<TrailEncounterNodeDto> Encounters);
 
 public record ZoneNodeDto(
     Guid Id,
@@ -118,3 +119,25 @@ public record DungeonFloorDto(
 // SetDestination response — includes forfeit count so the client can surface
 // a snackbar when leaving mid-dungeon abandons the run.
 public record SetWorldDestinationResult(int ForfeitedFloors);
+
+// Trail encounter DTOs — returned as part of RegionDetailDto.Encounters.
+public record TrailEncounterNodeDto(
+    string Id, string FromZoneId, string ToZoneId,
+    double T, double SideOffset, string Type,
+    MerchantEncounterDto? Merchant,
+    BlockerEncounterDto? Blocker,
+    StoryEncounterDto? Story);
+
+public record MerchantEncounterDto(
+    string Name, int TimeLeftSeconds, int PlayerXp,
+    IReadOnlyList<MerchantItemDto> Items);
+
+public record MerchantItemDto(
+    string Emoji, string Name, string Description, string Rarity, int XpCost);
+
+public record BlockerEncounterDto(
+    string Name, string BlockedZoneName, int MaxHp, int CurrentHp,
+    int PlayerDamageDone, int RetreatsInSeconds, IReadOnlyList<string> Rewards);
+
+public record StoryEncounterDto(
+    string NpcName, string NpcTitle, string Portrait, string Dialogue, int LoreXp);

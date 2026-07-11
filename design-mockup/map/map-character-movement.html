@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — 2D Character Map Movement</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#040810;
+  font-family:'Inter',-apple-system,sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+  padding:48px 40px; gap:64px;
+  min-height:100vh;
+}
+
+.page-header { text-align:center; }
+.page-header h1 { font-size:22px; color:#e6edf3; font-weight:700; margin-bottom:8px; }
+.page-header p  { font-size:13px; color:#8b949e; max-width:600px; line-height:1.6; }
+
+/* ── phone shell ─────────────────────────────────────────────── */
+.phone {
+  width:390px; height:844px;
+  border-radius:44px; overflow:hidden; position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.9);
+  flex-shrink:0; background:#040810;
+}
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px 0; z-index:200; pointer-events:none;
+}
+.st { font-size:13px; font-weight:600; color:#e6edf3; }
+.si { font-size:11px; color:#8b949e; }
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px;
+  background:#0d1117; border-top:1px solid #21262d;
+  display:flex; align-items:center; padding:0 8px 12px; z-index:200;
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.nav-icon { font-size:20px; }
+.nav-label { font-size:10px; }
+.nav-item.active .nav-icon,.nav-item.active .nav-label { color:#4f9eff; }
+.nav-item:not(.active) .nav-icon,.nav-item:not(.active) .nav-label { color:#8b949e; }
+
+/* ── flow row ─────────────────────────────────────────────────── */
+.flow-row { display:flex; align-items:flex-start; gap:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.badge { display:inline-block; border-radius:12px; padding:3px 14px; font-size:10px; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.badge-blue   { background:rgba(79,158,255,0.12);  border:1px solid rgba(79,158,255,0.4);  color:#4f9eff; }
+.badge-orange { background:rgba(245,166,35,0.12);  border:1px solid rgba(245,166,35,0.4);  color:#f5a623; }
+.badge-green  { background:rgba(63,185,80,0.12);   border:1px solid rgba(63,185,80,0.4);   color:#3fb950; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc  { font-size:11px; color:#8b949e; line-height:1.5; }
+.arrow { display:flex; flex-direction:column; align-items:center; justify-content:center; width:60px; padding-top:360px; flex-shrink:0; gap:6px; }
+.arrow span { font-size:22px; color:#30363d; }
+.arrow small { font-size:9px; color:#586070; font-weight:600; letter-spacing:0.06em; text-align:center; }
+
+/* ══════════════════════════════════════════════════════════════
+   MAP CANVAS — shared base
+══════════════════════════════════════════════════════════════ */
+.map-canvas {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(79,158,255,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(63,185,80,0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 20%, rgba(163,113,247,0.06) 0%, transparent 40%),
+    #040810;
+  overflow:hidden;
+}
+
+/* subtle grid texture */
+.map-canvas::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(79,158,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,158,255,0.025) 1px, transparent 1px);
+  background-size:40px 40px;
+  mask-image:radial-gradient(ellipse at 50% 50%, black 30%, transparent 80%);
+}
+
+/* ── SVG path lines ──────────────────────────────────────────── */
+.map-svg {
+  position:absolute; inset:0; width:100%; height:100%;
+  overflow:visible;
+}
+
+/* glowing path style */
+.path-base { stroke:#1e2632; stroke-width:4; fill:none; stroke-linecap:round; stroke-dasharray:8 6; }
+.path-active { stroke:#4f9eff; stroke-width:2; fill:none; stroke-linecap:round; opacity:0.6;
+               stroke-dasharray:8 6; stroke-dashoffset:0;
+               animation:dash 1.4s linear infinite; }
+.path-glow   { stroke:#4f9eff; stroke-width:6; fill:none; stroke-linecap:round; opacity:0.12;
+               filter:blur(3px); }
+
+.path-done-base   { stroke:#3fb950; stroke-width:4; fill:none; stroke-linecap:round; }
+.path-done-glow   { stroke:#3fb950; stroke-width:8; fill:none; stroke-linecap:round; opacity:0.18; filter:blur(3px); }
+
+@keyframes dash { to { stroke-dashoffset:-28; } }
+
+/* ── zone node ────────────────────────────────────────────────── */
+.zone-node {
+  position:absolute;
+  display:flex; flex-direction:column; align-items:center;
+  transform:translate(-50%,-50%);
+  cursor:pointer; z-index:10;
+}
+.zone-ring {
+  width:48px; height:48px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; position:relative;
+  border:2px solid;
+  box-shadow:0 0 0 4px;
+}
+.zone-ring.done  { background:rgba(63,185,80,0.15);  border-color:#3fb950; box-shadow:0 0 0 4px rgba(63,185,80,0.12),  0 0 18px rgba(63,185,80,0.3); }
+.zone-ring.here  { background:rgba(79,158,255,0.2);  border-color:#4f9eff; box-shadow:0 0 0 4px rgba(79,158,255,0.15), 0 0 22px rgba(79,158,255,0.5); animation:pulse-here 2s ease-in-out infinite; }
+.zone-ring.next  { background:rgba(245,166,35,0.1);  border-color:rgba(245,166,35,0.6); box-shadow:0 0 0 4px rgba(245,166,35,0.08); }
+.zone-ring.locked { background:rgba(30,38,50,0.8);   border-color:#30363d; box-shadow:0 0 0 4px rgba(30,38,50,0.3); opacity:0.5; }
+.zone-ring.new   { background:rgba(63,185,80,0.25);  border-color:#3fb950; box-shadow:0 0 0 4px rgba(63,185,80,0.2), 0 0 30px rgba(63,185,80,0.6); animation:pulse-new 1s ease-in-out infinite; }
+
+@keyframes pulse-here { 0%,100%{box-shadow:0 0 0 4px rgba(79,158,255,0.15),0 0 22px rgba(79,158,255,0.5)} 50%{box-shadow:0 0 0 8px rgba(79,158,255,0.08),0 0 32px rgba(79,158,255,0.7)} }
+@keyframes pulse-new  { 0%,100%{box-shadow:0 0 0 4px rgba(63,185,80,0.2),0 0 30px rgba(63,185,80,0.6)}  50%{box-shadow:0 0 0 12px rgba(63,185,80,0.1),0 0 50px rgba(63,185,80,0.9)} }
+
+.zone-label {
+  margin-top:6px; font-size:9px; font-weight:700; letter-spacing:0.04em;
+  color:#8b949e; text-align:center; max-width:60px; line-height:1.3; white-space:nowrap;
+}
+.zone-label.here  { color:#4f9eff; }
+.zone-label.done  { color:#3fb950; }
+.zone-label.new   { color:#3fb950; }
+.zone-label.next  { color:#f5a623; }
+
+/* ── "YOU ARE HERE" marker ────────────────────────────────────── */
+.you-here {
+  position:absolute; z-index:20;
+  background:rgba(79,158,255,0.12); border:1px solid rgba(79,158,255,0.5);
+  border-radius:10px; padding:4px 10px;
+  font-size:9px; font-weight:700; color:#4f9eff; letter-spacing:0.06em;
+  white-space:nowrap;
+  transform:translate(-50%, -200%);
+  animation:float-label 2.5s ease-in-out infinite;
+}
+@keyframes float-label { 0%,100%{transform:translate(-50%,-200%)} 50%{transform:translate(-50%,-220%)} }
+
+/* ── CHARACTER SPRITE ─────────────────────────────────────────── */
+/*
+  Using the Universal LPC Spritesheet (CC-BY-SA 3.0 / GPL 3.0)
+  from https://github.com/jrconway3/Universal-LPC-spritesheet
+  Walk right row: y=576px, 9 frames × 64px wide
+  If the network request fails, the CSS fallback character shows instead.
+*/
+.character-token {
+  position:absolute;
+  transform:translate(-50%,-50%);
+  z-index:50;
+  filter:drop-shadow(0 4px 12px rgba(79,158,255,0.5));
+}
+
+.sprite-frame {
+  width:42px; height:42px;
+  image-rendering:pixelated;
+  overflow:hidden; position:relative;
+}
+/* Sprite sheet walk-right animation */
+.sprite-sheet {
+  width:42px; height:42px;
+  background-image:url('https://raw.githubusercontent.com/jrconway3/Universal-LPC-spritesheet/master/sheet.png');
+  background-size:calc(9 * 42px) auto;
+  background-repeat:no-repeat;
+  image-rendering:pixelated;
+  /* walk-right row is row index 10 (y = 10 * 64px scaled) */
+}
+/* Fallback CSS character if sprite fails */
+.char-fallback {
+  width:36px; height:36px;
+  background:radial-gradient(circle at 50% 40%, #e6b87a, #c4923a);
+  border-radius:50% 50% 45% 45%;
+  border:2px solid #f5a623;
+  box-shadow:0 0 12px rgba(245,166,35,0.6);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  position:relative;
+}
+.char-fallback::after {
+  content:'⚔️'; position:absolute; font-size:12px; bottom:-8px; right:-6px;
+}
+
+/* idle bob */
+.idle-anim { animation:char-idle 1.8s ease-in-out infinite; }
+@keyframes char-idle { 0%,100%{transform:translate(-50%,-50%) translateY(0)} 50%{transform:translate(-50%,-50%) translateY(-5px)} }
+
+/* walking along path */
+.walk-anim {
+  animation:char-walk-path 3s ease-in-out infinite;
+  /* moves from Thornwood (200,340) toward Iron Peaks (290,180) */
+}
+@keyframes char-walk-path {
+  0%   { left:200px; top:340px; transform:translate(-50%,-50%) translateY(0); }
+  50%  { left:245px; top:260px; transform:translate(-50%,-50%) translateY(-4px); }
+  100% { left:200px; top:340px; transform:translate(-50%,-50%) translateY(0); }
+}
+
+/* footstep trail */
+.footstep {
+  position:absolute; width:5px; height:5px;
+  background:#4f9eff; border-radius:50%; opacity:0;
+  z-index:5;
+}
+.footstep-1 { animation:fade-foot 2s 0.0s infinite; }
+.footstep-2 { animation:fade-foot 2s 0.4s infinite; }
+.footstep-3 { animation:fade-foot 2s 0.8s infinite; }
+.footstep-4 { animation:fade-foot 2s 1.2s infinite; }
+@keyframes fade-foot { 0%,100%{opacity:0;transform:scale(0)} 30%{opacity:0.5;transform:scale(1)} 60%{opacity:0.2} }
+
+/* arrival burst particles */
+.particle {
+  position:absolute; width:6px; height:6px; border-radius:50%;
+  z-index:30; animation:burst 1.2s ease-out infinite;
+}
+@keyframes burst { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)} }
+
+/* ── bottom strip ─────────────────────────────────────────────── */
+.map-bottom {
+  position:absolute; bottom:82px; left:0; right:0;
+  background:linear-gradient(to top, rgba(4,8,16,0.97) 0%, rgba(4,8,16,0.8) 80%, transparent 100%);
+  padding:20px 20px 16px;
+  z-index:100;
+}
+
+/* ── journey banner (screen 2) ────────────────────────────────── */
+.journey-banner {
+  position:absolute; top:44px; left:0; right:0;
+  background:linear-gradient(135deg, rgba(79,158,255,0.18), rgba(163,113,247,0.12));
+  border-bottom:1px solid rgba(79,158,255,0.3);
+  padding:10px 20px;
+  display:flex; align-items:center; gap:12px;
+  z-index:150;
+}
+
+/* ── victory overlay (screen 3) ──────────────────────────────── */
+.victory-sheet {
+  position:absolute; bottom:82px; left:0; right:0;
+  background:linear-gradient(to top, #040810 0%, rgba(4,8,16,0.98) 100%);
+  border-top:1px solid rgba(63,185,80,0.4);
+  padding:20px; z-index:150;
+  box-shadow:0 -20px 60px rgba(63,185,80,0.1);
+}
+
+/* ── top mini-map compass ─────────────────────────────────────── */
+.compass {
+  position:absolute; top:54px; right:16px;
+  width:44px; height:44px; z-index:150;
+  background:rgba(13,17,23,0.9); border:1px solid #30363d; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>2D Character Map Movement</h1>
+  <p>Your character travels the world map as you log real workouts. Each km you run/cycle moves your hero closer to the next zone. Three states: idle, mid-journey, zone arrival.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="flow-row">
+
+  <!-- ══ SCREEN 1: IDLE ON MAP ══════════════════════════════════ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="badge badge-blue">SCREEN 1</div>
+      <div class="step-title">Map — Character Idle</div>
+      <div class="step-desc">Hero stands at current zone. Gentle idle float. Tap a node to see zone info.</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- MAP CANVAS -->
+      <div class="map-canvas">
+
+        <!-- SVG paths -->
+        <svg class="map-svg" viewBox="0 0 390 844">
+          <!-- Done paths (green) -->
+          <path class="path-done-glow" d="M195,690 Q160,620 170,560"/>
+          <path class="path-done-base" d="M195,690 Q160,620 170,560"/>
+          <path class="path-done-glow" d="M170,560 Q160,490 200,440"/>
+          <path class="path-done-base" d="M170,560 Q160,490 200,440"/>
+          <!-- Current/next paths (blue animated) -->
+          <path class="path-glow"   d="M200,440 Q220,390 210,340"/>
+          <path class="path-base"   d="M200,440 Q220,390 210,340"/>
+          <path class="path-active" d="M200,440 Q220,390 210,340"/>
+          <!-- Future locked paths -->
+          <path class="path-base" d="M210,340 Q250,290 290,240" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+          <path class="path-base" d="M210,340 Q160,260 140,200" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+          <path class="path-base" d="M290,240 Q310,190 280,150" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+        </svg>
+
+        <!-- Zone nodes (bottom to top) -->
+        <!-- 1. Starting Village — done -->
+        <div class="zone-node" style="left:195px;top:690px;">
+          <div class="zone-ring done">🏘️</div>
+          <div class="zone-label done">Starting<br>Village</div>
+        </div>
+
+        <!-- 2. Ashfield Plains — done -->
+        <div class="zone-node" style="left:170px;top:560px;">
+          <div class="zone-ring done">🌾</div>
+          <div class="zone-label done">Ashfield<br>Plains</div>
+        </div>
+
+        <!-- 3. Thornwood Forest — HERE -->
+        <div class="zone-node" style="left:200px;top:440px;">
+          <div class="zone-ring here">🌲</div>
+          <div class="zone-label here">Thornwood<br>Forest</div>
+        </div>
+        <div class="you-here" style="left:200px;top:440px;">YOU ARE HERE</div>
+
+        <!-- 4. Iron Peaks — next -->
+        <div class="zone-node" style="left:290px;top:240px;">
+          <div class="zone-ring next">⛰️</div>
+          <div class="zone-label next">Iron<br>Peaks</div>
+        </div>
+
+        <!-- 5. Crystal Wastes — next branch -->
+        <div class="zone-node" style="left:130px;top:200px;">
+          <div class="zone-ring locked">❄️</div>
+          <div class="zone-label locked">Crystal<br>Wastes</div>
+        </div>
+
+        <!-- 6. Summit Citadel — far locked -->
+        <div class="zone-node" style="left:280px;top:150px;">
+          <div class="zone-ring locked">🏰</div>
+          <div class="zone-label locked">Summit<br>Citadel</div>
+        </div>
+
+        <!-- CHARACTER: idle at Thornwood Forest -->
+        <div class="character-token idle-anim" style="left:200px;top:390px;">
+          <div class="char-fallback">🧙</div>
+        </div>
+
+      </div>
+
+      <!-- Compass -->
+      <div class="compass">🧭</div>
+
+      <!-- Bottom strip -->
+      <div class="map-bottom">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:42px;height:42px;background:rgba(79,158,255,0.12);border:2px solid rgba(79,158,255,0.4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px">🌲</div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:#4f9eff;font-weight:700;letter-spacing:0.06em">CURRENT ZONE</div>
+            <div style="font-size:16px;font-weight:700;color:#e6edf3">Thornwood Forest</div>
+          </div>
+          <div style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.4);border-radius:10px;padding:5px 10px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:#3fb950">Lv 3–8</div>
+          </div>
+        </div>
+        <!-- Distance to next -->
+        <div style="background:#161b22;border:1px solid #21262d;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px">⛰️</span>
+          <div style="flex:1">
+            <div style="font-size:10px;color:#f5a623;font-weight:700;margin-bottom:4px">NEXT: Iron Peaks</div>
+            <div style="height:4px;background:#1e2632;border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:36%;background:linear-gradient(to right,#4f9eff,#a371f7);border-radius:2px"></div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:12px;font-weight:700;color:#e6edf3">3.6 km</div>
+            <div style="font-size:9px;color:#8b949e">of 10 km</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><span>→</span><small>LOG A<br>WORKOUT</small></div>
+
+  <!-- ══ SCREEN 2: WALKING MID-JOURNEY ══════════════════════════ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="badge badge-orange">SCREEN 2</div>
+      <div class="step-title">Map — Mid-Journey</div>
+      <div class="step-desc">Workout logged. Hero walks the path in real-time. Footprints trail behind.</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- Journey banner top -->
+      <div class="journey-banner">
+        <div style="width:32px;height:32px;background:rgba(79,158,255,0.2);border:1px solid rgba(79,158,255,0.5);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🏃</div>
+        <div style="flex:1">
+          <div style="font-size:10px;font-weight:700;color:#4f9eff;letter-spacing:0.06em">JOURNEY IN PROGRESS</div>
+          <div style="font-size:12px;font-weight:600;color:#e6edf3">Running → Iron Peaks</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:700;color:#e6edf3">6.2<span style="font-size:9px;color:#8b949e;font-weight:400"> km</span></div>
+          <div style="font-size:9px;color:#8b949e">of 10 km</div>
+        </div>
+      </div>
+
+      <!-- MAP CANVAS -->
+      <div class="map-canvas">
+        <svg class="map-svg" viewBox="0 0 390 844">
+          <!-- Done paths -->
+          <path class="path-done-glow" d="M195,690 Q160,620 170,560"/>
+          <path class="path-done-base" d="M195,690 Q160,620 170,560"/>
+          <path class="path-done-glow" d="M170,560 Q160,490 200,440"/>
+          <path class="path-done-base" d="M170,560 Q160,490 200,440"/>
+          <!-- ACTIVE path — brighter, wider, fast dash -->
+          <path class="path-glow"   d="M200,440 Q220,390 210,340" style="stroke:#f5a623;opacity:0.3;stroke-width:10"/>
+          <path class="path-base"   d="M200,440 Q220,390 210,340" style="stroke:#f5a623;stroke-width:3"/>
+          <path class="path-active" d="M200,440 Q220,390 210,340" style="stroke:#f5a623;opacity:0.9;animation-duration:0.6s"/>
+          <!-- Remaining locked -->
+          <path class="path-base" d="M210,340 Q250,290 290,240" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+          <path class="path-base" d="M210,340 Q160,260 140,200" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+          <path class="path-base" d="M290,240 Q310,190 280,150" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+        </svg>
+
+        <!-- Zones -->
+        <div class="zone-node" style="left:195px;top:690px;"><div class="zone-ring done">🏘️</div><div class="zone-label done">Starting Village</div></div>
+        <div class="zone-node" style="left:170px;top:560px;"><div class="zone-ring done">🌾</div><div class="zone-label done">Ashfield Plains</div></div>
+        <div class="zone-node" style="left:200px;top:440px;"><div class="zone-ring done">🌲</div><div class="zone-label done">Thornwood Forest</div></div>
+        <!-- Iron Peaks — pulsing orange (destination) -->
+        <div class="zone-node" style="left:290px;top:240px;">
+          <div class="zone-ring next" style="animation:pulse-dest 1s ease-in-out infinite">⛰️</div>
+          <div class="zone-label next">Iron Peaks</div>
+        </div>
+        <div class="zone-node" style="left:130px;top:200px;"><div class="zone-ring locked">❄️</div><div class="zone-label locked">Crystal Wastes</div></div>
+        <div class="zone-node" style="left:280px;top:150px;"><div class="zone-ring locked">🏰</div><div class="zone-label locked">Summit Citadel</div></div>
+
+        <!-- Footstep trail -->
+        <div class="footstep footstep-1" style="left:204px;top:420px"></div>
+        <div class="footstep footstep-2" style="left:208px;top:400px"></div>
+        <div class="footstep footstep-3" style="left:212px;top:380px"></div>
+        <div class="footstep footstep-4" style="left:214px;top:358px"></div>
+
+        <!-- CHARACTER: walking mid-path (between Thornwood 440 and Iron Peaks 240) -->
+        <div class="character-token" style="left:214px;top:350px;animation:char-bounce 0.4s ease-in-out infinite alternate">
+          <div class="char-fallback" style="animation:none;border-color:#f5a623;box-shadow:0 0 16px rgba(245,166,35,0.7)">🏃</div>
+        </div>
+
+        <!-- XP popup floating -->
+        <div style="position:absolute;left:240px;top:330px;background:rgba(63,185,80,0.15);border:1px solid rgba(63,185,80,0.5);border-radius:10px;padding:4px 10px;font-size:10px;font-weight:700;color:#3fb950;white-space:nowrap;animation:float-xp 2s ease-in-out infinite;z-index:60">+120 XP ⚡</div>
+
+      </div>
+
+      <style>
+        @keyframes char-bounce { from{transform:translate(-50%,-50%) translateY(0)} to{transform:translate(-50%,-50%) translateY(-6px)} }
+        @keyframes float-xp    { 0%,100%{transform:translateY(0);opacity:0.8} 50%{transform:translateY(-12px);opacity:1} }
+        @keyframes pulse-dest  { 0%,100%{box-shadow:0 0 0 4px rgba(245,166,35,0.08)} 50%{box-shadow:0 0 0 10px rgba(245,166,35,0.15),0 0 28px rgba(245,166,35,0.5)} }
+      </style>
+
+      <!-- Compass -->
+      <div class="compass">🧭</div>
+
+      <!-- Bottom strip — progress -->
+      <div class="map-bottom">
+        <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-size:11px;color:#f5a623;font-weight:700;letter-spacing:0.06em">JOURNEY TO IRON PEAKS</div>
+          <div style="font-size:11px;color:#8b949e">62%</div>
+        </div>
+        <div style="height:8px;background:#161b22;border-radius:4px;overflow:hidden;margin-bottom:12px;position:relative">
+          <div style="height:100%;width:62%;background:linear-gradient(to right,#f5a623,#ff8c42);border-radius:4px;box-shadow:0 0 10px rgba(245,166,35,0.5)"></div>
+          <!-- character pip on bar -->
+          <div style="position:absolute;top:50%;left:62%;transform:translate(-50%,-50%);width:12px;height:12px;background:#f5a623;border-radius:50%;border:2px solid #040810;box-shadow:0 0 8px rgba(245,166,35,0.8)"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:#161b22;border:1px solid #21262d;border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:13px;font-weight:700;color:#e6edf3">6.2 km</div>
+            <div style="font-size:9px;color:#8b949e">Traveled</div>
+          </div>
+          <div style="flex:1;background:#161b22;border:1px solid #21262d;border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:13px;font-weight:700;color:#f5a623">3.8 km</div>
+            <div style="font-size:9px;color:#8b949e">Remaining</div>
+          </div>
+          <div style="flex:1;background:#161b22;border:1px solid #21262d;border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:13px;font-weight:700;color:#4f9eff">~2 runs</div>
+            <div style="font-size:9px;color:#8b949e">To arrive</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><span>→</span><small>10 KM<br>REACHED</small></div>
+
+  <!-- ══ SCREEN 3: ZONE ARRIVAL ══════════════════════════════════ -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="badge badge-green">SCREEN 3</div>
+      <div class="step-title">Zone Arrival!</div>
+      <div class="step-desc">Hero reaches Iron Peaks. Burst animation, zone unlocks, XP + rewards pop up.</div>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+      <!-- MAP CANVAS -->
+      <div class="map-canvas" style="background:radial-gradient(ellipse at 56% 28%, rgba(63,185,80,0.2) 0%, rgba(245,166,35,0.05) 30%, #040810 65%)">
+        <svg class="map-svg" viewBox="0 0 390 844">
+          <path class="path-done-glow" d="M195,690 Q160,620 170,560"/>
+          <path class="path-done-base" d="M195,690 Q160,620 170,560"/>
+          <path class="path-done-glow" d="M170,560 Q160,490 200,440"/>
+          <path class="path-done-base" d="M170,560 Q160,490 200,440"/>
+          <!-- All done now -->
+          <path class="path-done-glow" d="M200,440 Q220,390 210,340"/>
+          <path class="path-done-base" d="M200,440 Q220,390 210,340"/>
+          <!-- done path to Iron Peaks -->
+          <path class="path-done-glow" d="M210,340 Q250,290 290,240"/>
+          <path class="path-done-base" d="M210,340 Q250,290 290,240"/>
+          <!-- new locked branches -->
+          <path class="path-base" d="M290,240 Q310,190 280,150" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+          <path class="path-base" d="M290,240 Q240,200 140,200" style="stroke:#1a2030;stroke-dasharray:4 8"/>
+        </svg>
+
+        <!-- Zones -->
+        <div class="zone-node" style="left:195px;top:690px;"><div class="zone-ring done">🏘️</div><div class="zone-label done">Starting Village</div></div>
+        <div class="zone-node" style="left:170px;top:560px;"><div class="zone-ring done">🌾</div><div class="zone-label done">Ashfield Plains</div></div>
+        <div class="zone-node" style="left:200px;top:440px;"><div class="zone-ring done">🌲</div><div class="zone-label done">Thornwood Forest</div></div>
+        <div class="zone-node" style="left:210px;top:340px;"><div class="zone-ring done">🗻</div><div class="zone-label done">Foothills</div></div>
+
+        <!-- Iron Peaks — ARRIVED, pulsing green burst -->
+        <div class="zone-node" style="left:290px;top:240px;">
+          <div class="zone-ring new">⛰️</div>
+          <div class="zone-label new">Iron Peaks</div>
+        </div>
+        <!-- Burst particles around Iron Peaks -->
+        <div class="particle" style="left:290px;top:240px;background:#3fb950;--dx:-30px;--dy:-28px;animation-delay:0s"></div>
+        <div class="particle" style="left:290px;top:240px;background:#f5a623;--dx:28px;--dy:-32px;animation-delay:0.2s"></div>
+        <div class="particle" style="left:290px;top:240px;background:#4f9eff;--dx:-22px;--dy:30px;animation-delay:0.1s"></div>
+        <div class="particle" style="left:290px;top:240px;background:#a371f7;--dx:34px;--dy:20px;animation-delay:0.35s"></div>
+        <div class="particle" style="left:290px;top:240px;background:#3fb950;--dx:10px;--dy:-36px;animation-delay:0.15s;width:8px;height:8px"></div>
+        <div class="particle" style="left:290px;top:240px;background:#f5a623;--dx:-36px;--dy:6px;animation-delay:0.4s;width:8px;height:8px"></div>
+        <div class="particle" style="left:290px;top:240px;background:#e6edf3;--dx:14px;--dy:38px;animation-delay:0.05s"></div>
+        <div class="particle" style="left:290px;top:240px;background:#3fb950;--dx:-14px;--dy:-38px;animation-delay:0.3s"></div>
+
+        <!-- New locked zones tease -->
+        <div class="zone-node" style="left:280px;top:150px;"><div class="zone-ring locked">🏰</div><div class="zone-label locked">Summit Citadel</div></div>
+        <div class="zone-node" style="left:130px;top:200px;"><div class="zone-ring locked">❄️</div><div class="zone-label locked">Crystal Wastes</div></div>
+
+        <!-- CHARACTER: arrived at Iron Peaks, celebration -->
+        <div class="character-token" style="left:290px;top:200px;animation:char-arrive 1.5s ease-in-out infinite">
+          <div class="char-fallback" style="animation:none;background:radial-gradient(circle at 50% 40%,#3fb950,#2a8040);border-color:#3fb950;box-shadow:0 0 20px rgba(63,185,80,0.8)">🎉</div>
+        </div>
+
+        <!-- XP + Level chip floating -->
+        <div style="position:absolute;left:320px;top:165px;z-index:60;display:flex;flex-direction:column;gap:5px">
+          <div style="background:rgba(245,166,35,0.9);border:1px solid #f5a623;border-radius:10px;padding:4px 10px;font-size:10px;font-weight:700;color:#040810;white-space:nowrap;animation:float-chip 1.8s 0.0s ease-in-out infinite">+500 XP ⚡</div>
+          <div style="background:rgba(163,113,247,0.9);border:1px solid #a371f7;border-radius:10px;padding:4px 10px;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;animation:float-chip 1.8s 0.3s ease-in-out infinite">Lv 8 ↑</div>
+        </div>
+
+        <style>
+          @keyframes char-arrive { 0%,100%{transform:translate(-50%,-50%) scale(1) rotate(0deg)} 25%{transform:translate(-50%,-60%) scale(1.15) rotate(-5deg)} 75%{transform:translate(-50%,-60%) scale(1.15) rotate(5deg)} }
+          @keyframes float-chip  { 0%,100%{transform:translateY(0);opacity:0.9} 50%{transform:translateY(-10px);opacity:1} }
+        </style>
+      </div>
+
+      <!-- Compass -->
+      <div class="compass">🧭</div>
+
+      <!-- Victory sheet -->
+      <div class="victory-sheet">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:10px;color:#3fb950;font-weight:700;letter-spacing:0.1em;margin-bottom:6px">⚡ NEW ZONE DISCOVERED</div>
+          <div style="font-size:22px;font-weight:700;color:#e6edf3;margin-bottom:2px">Iron Peaks</div>
+          <div style="font-size:11px;color:#8b949e">Mountains of Strength · Level 8–15</div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <div style="flex:1;background:#161b22;border:1px solid rgba(63,185,80,0.3);border-radius:10px;padding:10px;text-align:center">
+            <div style="font-size:20px;margin-bottom:3px">⚡</div>
+            <div style="font-size:13px;font-weight:700;color:#3fb950">+500 XP</div>
+            <div style="font-size:9px;color:#8b949e">Discovery</div>
+          </div>
+          <div style="flex:1;background:#161b22;border:1px solid rgba(163,113,247,0.3);border-radius:10px;padding:10px;text-align:center">
+            <div style="font-size:20px;margin-bottom:3px">⛏️</div>
+            <div style="font-size:13px;font-weight:700;color:#a371f7">Iron Pick</div>
+            <div style="font-size:9px;color:#8b949e">RARE item</div>
+          </div>
+          <div style="flex:1;background:#161b22;border:1px solid rgba(245,166,35,0.3);border-radius:10px;padding:10px;text-align:center">
+            <div style="font-size:20px;margin-bottom:3px">🐉</div>
+            <div style="font-size:13px;font-weight:700;color:#f5a623">2 New</div>
+            <div style="font-size:9px;color:#8b949e">Bosses</div>
+          </div>
+        </div>
+
+        <!-- Explore CTA -->
+        <button style="background:linear-gradient(135deg,#3fb950,#4f9eff);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;padding:13px;width:100%;cursor:pointer">⛰️ Explore Iron Peaks</button>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item"><div class="nav-icon">⊞</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">🗺️</div><div class="nav-label">Map</div></div>
+        <div class="nav-item"><div class="nav-icon">📜</div><div class="nav-label">Quests</div></div>
+        <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── CONCEPT NOTES ──────────────────────────────────────────── -->
+<div style="max-width:1260px;width:100%;background:#161b22;border:1px solid #21262d;border-radius:16px;padding:24px 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+  <div>
+    <div style="font-size:10px;color:#4f9eff;font-weight:700;letter-spacing:0.08em;margin-bottom:8px">IMPLEMENTATION PATH</div>
+    <div style="font-size:12px;color:#8b949e;line-height:1.7">
+      Keep the existing node-graph data model. Add a <span style="color:#e6edf3">character token widget</span> on top of the map canvas.
+      Position = backend km progress → bezier path interpolation. Walk animation triggers when km increases from a new activity.
+      Pure Flutter <code style="background:#1e2632;padding:1px 5px;border-radius:4px;color:#4f9eff">CustomPainter</code> + <code style="background:#1e2632;padding:1px 5px;border-radius:4px;color:#4f9eff">AnimationController</code> — no new engine needed.
+    </div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:#a371f7;font-weight:700;letter-spacing:0.08em;margin-bottom:8px">CHARACTER SPRITE OPTIONS</div>
+    <div style="font-size:12px;color:#8b949e;line-height:1.7">
+      <span style="color:#e6edf3">Option A — LPC Spritesheet</span> (CC-BY-SA): 64×64px walk cycle from github.com/jrconway3/Universal-LPC-spritesheet · 9 walk frames · CSS background-position animation.<br><br>
+      <span style="color:#e6edf3">Option B — Kenney Top-Down</span> (CC0): simple isometric token from kenney.nl/assets/top-down-shooter.
+    </div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:#3fb950;font-weight:700;letter-spacing:0.08em;margin-bottom:8px">KEY MECHANICS</div>
+    <div style="font-size:12px;color:#8b949e;line-height:1.7">
+      Movement is <span style="color:#e6edf3">earned</span>, not tapped — hero walks when workouts are logged. Idle float animation on map when no journey active.
+      Footprint trail fades in behind walking character. XP chips float up on movement. Zone arrival triggers full burst + bottom sheet reveal.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

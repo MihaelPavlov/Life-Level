@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_icon_image.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
@@ -289,12 +290,10 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
           ),
           child: Row(
             children: [
-              // emoji icon
+              // stat icon
               SizedBox(
-                width: 32,
-                child: Text(widget.stat.emoji,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18)),
+                width: 40,
+                child: AppIconImage(widget.stat.iconAsset, size: 26),
               ),
               const SizedBox(width: 10),
 

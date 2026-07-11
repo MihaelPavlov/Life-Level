@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../models/encounter_models.dart';
 import '../models/world_map_models.dart';
 import 'zone_node_tile.dart';
 
@@ -13,6 +14,8 @@ class ZoneTrail extends StatelessWidget {
   final List<ZoneEdge> edges;
   final ActiveJourney? journey;
   final String? nextRegionName;
+  final RegionTheme? regionTheme;
+  final String? regionName;
 
   /// Character avatar rendered on the walker token. When null, the walker is
   /// suppressed — we'd rather show nothing than a placeholder.
@@ -25,15 +28,22 @@ class ZoneTrail extends StatelessWidget {
   /// `Scrollable.ensureVisible` to auto-scroll to the active zone.
   final Key? activeNodeKey;
 
+  final List<TrailEncounterNode> encounters;
+  final void Function(TrailEncounterNode)? onEncounterTap;
+
   const ZoneTrail({
     super.key,
     required this.nodes,
     required this.edges,
     required this.journey,
     required this.nextRegionName,
+    this.regionTheme,
+    this.regionName,
     required this.avatarEmoji,
     required this.onTap,
     this.activeNodeKey,
+    this.encounters = const [],
+    this.onEncounterTap,
   });
 
   static const double _rowHeight = 110;
@@ -48,10 +58,7 @@ class ZoneTrail extends StatelessWidget {
     final layouts = _buildLayouts(nodes);
     // Total height comes from how many tier-rows we actually used, not how
     // many nodes — branch rows pack two nodes into one row.
-    final rowCount = layouts
-            .map((l) => l.yCenter)
-            .toSet()
-            .length;
+    final rowCount = layouts.map((l) => l.yCenter).toSet().length;
     final totalHeight = _rowHeight * rowCount + _tailSpace;
     final traveling = journey != null;
 
@@ -62,7 +69,8 @@ class ZoneTrail extends StatelessWidget {
     final double? journeyProgress;
     if (journey != null && journey!.distanceTotalKm > 0) {
       journeyProgress =
-          (journey!.distanceTravelledKm / journey!.distanceTotalKm).clamp(0.0, 1.0);
+          (journey!.distanceTravelledKm / journey!.distanceTotalKm)
+              .clamp(0.0, 1.0);
     } else {
       journeyProgress = null;
     }
@@ -72,6 +80,16 @@ class ZoneTrail extends StatelessWidget {
       final walkerPos = (traveling && avatarEmoji != null)
           ? _walkerPlacement(nodes, layouts, journey!, width)
           : null;
+
+      final encounterPlacements =
+          <({TrailEncounterNode enc, Offset nodePos, Offset anchorPos})>[];
+      for (final enc in encounters) {
+        final pos = _encounterPlacement(enc, nodes, layouts, width);
+        if (pos != null) {
+          encounterPlacements
+              .add((enc: enc, nodePos: pos.node, anchorPos: pos.anchor));
+        }
+      }
 
       return SizedBox(
         width: width,
@@ -86,6 +104,13 @@ class ZoneTrail extends StatelessWidget {
                   edges: edges,
                   traveling: traveling,
                   journeyProgress: journeyProgress,
+                  connectors: encounterPlacements
+                      .map((p) => (
+                            anchor: p.anchorPos,
+                            node: p.nodePos,
+                            type: p.enc.type,
+                          ))
+                      .toList(),
                 ),
               ),
             ),
@@ -103,6 +128,8 @@ class ZoneTrail extends StatelessWidget {
                         : null,
                     node: nodes[i],
                     journey: journey,
+                    regionTheme: regionTheme,
+                    regionName: regionName,
                     nextRegionName: nodes[i].isBoss ? nextRegionName : null,
                     onTap: () => onTap(nodes[i]),
                   ),
@@ -120,6 +147,28 @@ class ZoneTrail extends StatelessWidget {
                   ),
                 ),
               ),
+            for (final p in encounterPlacements) ...[
+              if (p.enc.type == TrailEncounterType.blocker)
+                Positioned(
+                  top: p.anchorPos.dy - 12,
+                  left: 0,
+                  right: 0,
+                  child: const _BlockedBanner(),
+                ),
+              Positioned(
+                left: p.nodePos.dx,
+                top: p.nodePos.dy,
+                child: FractionalTranslation(
+                  translation: const Offset(-0.5, -0.5),
+                  child: _EncounterNodeWidget(
+                    type: p.enc.type,
+                    emoji: _encounterEmoji(p.enc),
+                    label: _encounterLabel(p.enc),
+                    onTap: () => onEncounterTap?.call(p.enc),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -231,14 +280,8 @@ Offset _cubicBezier(double t, Offset p0, Offset p1, Offset p2, Offset p3) {
   final uuu = uu * u;
   final tt = t * t;
   final ttt = tt * t;
-  final x = uuu * p0.dx +
-      3 * uu * t * p1.dx +
-      3 * u * tt * p2.dx +
-      ttt * p3.dx;
-  final y = uuu * p0.dy +
-      3 * uu * t * p1.dy +
-      3 * u * tt * p2.dy +
-      ttt * p3.dy;
+  final x = uuu * p0.dx + 3 * uu * t * p1.dx + 3 * u * tt * p2.dx + ttt * p3.dx;
+  final y = uuu * p0.dy + 3 * uu * t * p1.dy + 3 * u * tt * p2.dy + ttt * p3.dy;
   return Offset(x, y);
 }
 
@@ -269,6 +312,54 @@ Offset? _walkerPlacement(
     Offset(x1, midY),
     Offset(x1, y1),
   );
+}
+
+String _encounterEmoji(TrailEncounterNode enc) {
+  switch (enc.type) {
+    case TrailEncounterType.story:    return '🧙';
+    case TrailEncounterType.merchant: return '🪙';
+    case TrailEncounterType.blocker:  return '💀';
+  }
+}
+
+String _encounterLabel(TrailEncounterNode enc) {
+  switch (enc.type) {
+    case TrailEncounterType.story:    return 'Story';
+    case TrailEncounterType.merchant:
+      final d = enc.merchant?.timeLeft;
+      if (d == null) return 'Merchant';
+      final h = d.inHours;
+      return 'Merchant · ${h}h';
+    case TrailEncounterType.blocker:  return 'BLOCKED';
+  }
+}
+
+({Offset node, Offset anchor})? _encounterPlacement(
+  TrailEncounterNode enc,
+  List<ZoneNode> nodes,
+  List<_Layout> layouts,
+  double width,
+) {
+  final fromIdx = nodes.indexWhere((n) => n.id == enc.fromZoneId);
+  final toIdx = nodes.indexWhere((n) => n.id == enc.toZoneId);
+  if (fromIdx < 0 || toIdx < 0) return null;
+
+  final a = layouts[fromIdx];
+  final b = layouts[toIdx];
+  final x0 = _xFor(a.slot, width);
+  final y0 = a.yCenter;
+  final x1 = _xFor(b.slot, width);
+  final y1 = b.yCenter;
+  final midY = (y0 + y1) / 2;
+
+  final anchor = _cubicBezier(
+    enc.t,
+    Offset(x0, y0),
+    Offset(x0, midY),
+    Offset(x1, midY),
+    Offset(x1, y1),
+  );
+  return (node: anchor + Offset(enc.sideOffset, 0), anchor: anchor);
 }
 
 class _SlotAlign extends StatelessWidget {
@@ -304,12 +395,14 @@ class _TrailPainter extends CustomPainter {
   // Fraction of the active edge already covered (0..1). Null when no active
   // journey or the journey edge has no known total distance.
   final double? journeyProgress;
+  final List<({Offset anchor, Offset node, TrailEncounterType type})> connectors;
 
   _TrailPainter({
     required this.layouts,
     required this.edges,
     required this.traveling,
     required this.journeyProgress,
+    this.connectors = const [],
   });
 
   @override
@@ -369,8 +462,7 @@ class _TrailPainter extends CustomPainter {
               ..strokeWidth = 4
               ..strokeCap = StrokeCap.round
               ..color = doneGreen;
-            canvas.drawPath(
-                metric.extractPath(0, traveledLen), traveledPaint);
+            canvas.drawPath(metric.extractPath(0, traveledLen), traveledPaint);
           }
         } else {
           final paint = Paint()
@@ -408,6 +500,29 @@ class _TrailPainter extends CustomPainter {
         _drawDashed(canvas, path, paint, 7, 6);
       }
     }
+
+    for (final c in connectors) {
+      final typeColor = _encounterColor(c.type);
+      // Dashed connector line
+      final connPath = Path()
+        ..moveTo(c.node.dx, c.node.dy)
+        ..lineTo(c.anchor.dx, c.anchor.dy);
+      final connPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = typeColor.withOpacity(0.5);
+      _drawDashed(canvas, connPath, connPaint, 4, 3);
+      // Anchor dot
+      canvas.drawCircle(c.anchor, 5, Paint()..color = typeColor.withOpacity(0.85));
+    }
+  }
+
+  static Color _encounterColor(TrailEncounterType t) {
+    switch (t) {
+      case TrailEncounterType.story:    return const Color(0xFFa371f7);
+      case TrailEncounterType.merchant: return const Color(0xFFf5a623);
+      case TrailEncounterType.blocker:  return const Color(0xFFf85149);
+    }
   }
 
   static bool _isUnlocked(ZoneNodeStatus s) =>
@@ -438,8 +553,7 @@ class _TrailPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       double d = 0;
       while (d < metric.length) {
-        final next =
-            (d + dash).clamp(0.0, metric.length).toDouble();
+        final next = (d + dash).clamp(0.0, metric.length).toDouble();
         canvas.drawPath(metric.extractPath(d, next), paint);
         d = next + gap;
       }
@@ -452,6 +566,7 @@ class _TrailPainter extends CustomPainter {
     if (old.journeyProgress != journeyProgress) return true;
     if (old.layouts.length != layouts.length) return true;
     if (old.edges.length != edges.length) return true;
+    if (old.connectors.length != connectors.length) return true;
     for (int i = 0; i < layouts.length; i++) {
       if (old.layouts[i].slot != layouts[i].slot ||
           old.layouts[i].yCenter != layouts[i].yCenter ||
@@ -481,8 +596,7 @@ class _Walker extends StatefulWidget {
   State<_Walker> createState() => _WalkerState();
 }
 
-class _WalkerState extends State<_Walker>
-    with SingleTickerProviderStateMixin {
+class _WalkerState extends State<_Walker> with SingleTickerProviderStateMixin {
   late final AnimationController _bob;
 
   @override
@@ -591,4 +705,192 @@ class _WalkerBody extends StatelessWidget {
       ],
     );
   }
+}
+
+// ─── Encounter node widget ────────────────────────────────────────────────────
+
+class _EncounterNodeWidget extends StatefulWidget {
+  final TrailEncounterType type;
+  final String emoji;
+  final String label;
+  final VoidCallback onTap;
+
+  const _EncounterNodeWidget({
+    required this.type,
+    required this.emoji,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  State<_EncounterNodeWidget> createState() => _EncounterNodeWidgetState();
+}
+
+class _EncounterNodeWidgetState extends State<_EncounterNodeWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  late final Animation<double> _scale;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+    _scale = Tween<double>(begin: 1.0, end: 1.35).animate(
+      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+    );
+    _opacity = Tween<double>(begin: 0.6, end: 0.0).animate(
+      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _encounterNodeColor(widget.type);
+    final labelColor = _encounterNodeColor(widget.type);
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 54,
+            height: 54,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: _pulse,
+                  builder: (_, __) => Transform.scale(
+                    scale: _scale.value,
+                    child: Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: color.withOpacity(_opacity.value),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color.withOpacity(0.2),
+                    border: Border.all(color: color.withOpacity(0.7), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.3),
+                        blurRadius: 16,
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(widget.emoji, style: const TextStyle(fontSize: 18)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            widget.label,
+            style: TextStyle(
+              color: labelColor,
+              fontSize: 8,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _encounterNodeColor(TrailEncounterType t) {
+  switch (t) {
+    case TrailEncounterType.story:    return const Color(0xFFa371f7);
+    case TrailEncounterType.merchant: return const Color(0xFFf5a623);
+    case TrailEncounterType.blocker:  return const Color(0xFFf85149);
+  }
+}
+
+// ─── Blocked banner ───────────────────────────────────────────────────────────
+
+class _BlockedBanner extends StatelessWidget {
+  const _BlockedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          const Expanded(child: _DashedLine()),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0x2Ef85149),
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: const Color(0x99f85149)),
+            ),
+            child: const Text(
+              '⛔ PATH BLOCKED',
+              style: TextStyle(
+                color: Color(0xFFf85149),
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+          const Expanded(child: _DashedLine()),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashedLine extends StatelessWidget {
+  const _DashedLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 2,
+      child: CustomPaint(painter: _DashedLinePainter()),
+    );
+  }
+}
+
+class _DashedLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xB3f85149)
+      ..strokeWidth = 2;
+    double x = 0;
+    while (x < size.width) {
+      canvas.drawLine(Offset(x, 0), Offset((x + 6).clamp(0, size.width), 0), paint);
+      x += 12;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
 }

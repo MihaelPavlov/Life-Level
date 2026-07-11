@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 
 /// Tiny orange flame chip used in the home header.
 /// Matches `.home3-streak-chip` in home-v3.html.
@@ -15,9 +17,7 @@ class HomeStreakChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = streakDays == 1
-        ? '\uD83D\uDD25 1-day streak'
-        : '\uD83D\uDD25 $streakDays-day streak';
+    final label = streakDays == 1 ? '1-day streak' : '$streakDays-day streak';
 
     final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
@@ -26,14 +26,21 @@ class HomeStreakChip extends StatelessWidget {
         border: Border.all(color: AppColors.orange.withValues(alpha: 0.35)),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.orange,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppIconImage(AppIcons.rewardStreakFire, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.orange,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
 

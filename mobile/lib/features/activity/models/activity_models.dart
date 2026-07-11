@@ -1,3 +1,5 @@
+import '../../../core/constants/app_icons.dart';
+
 enum ActivityType { running, cycling, gym, yoga, swimming, hiking, climbing, walking }
 
 extension ActivityTypeExt on ActivityType {
@@ -21,6 +23,19 @@ extension ActivityTypeExt on ActivityType {
         return '🧗';
       case ActivityType.walking:
         return '🚶';
+    }
+  }
+
+  String get iconAsset {
+    switch (this) {
+      case ActivityType.running:  return AppIcons.activityRunning;
+      case ActivityType.cycling:  return AppIcons.activityCycling;
+      case ActivityType.gym:      return AppIcons.activityGym;
+      case ActivityType.yoga:     return AppIcons.activityYoga;
+      case ActivityType.swimming: return AppIcons.activitySwimming;
+      case ActivityType.hiking:   return AppIcons.activityHiking;
+      case ActivityType.climbing: return AppIcons.activityClimbing;
+      case ActivityType.walking:  return AppIcons.activityRunning;
     }
   }
 

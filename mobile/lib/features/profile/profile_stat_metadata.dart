@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_icons.dart';
 import '../character/models/character_profile.dart';
 
 // ── colour aliases (used across all profile files) ────────────────────────────
@@ -36,6 +37,7 @@ class StatMeta {
   final String key;
   final String label;
   final String emoji;
+  final String iconAsset;
   final Color color;
   final String description;
   final List<String> activities;
@@ -44,6 +46,7 @@ class StatMeta {
     this.key,
     this.label,
     this.emoji,
+    this.iconAsset,
     this.color,
     this.description,
     this.activities,
@@ -52,7 +55,7 @@ class StatMeta {
 }
 
 const kStrMeta = StatMeta(
-  'STR', 'Strength', '💪', AppColors.red,
+  'STR', 'Strength', '💪', AppIcons.statStrength, AppColors.red,
   'Raw physical power. Determines how much damage you deal in battles and '
   'how quickly you break through boss health bars.',
   ['🏋️ Gym workouts', '🪨 Climbing', '🚵 Weighted cycling'],
@@ -60,7 +63,7 @@ const kStrMeta = StatMeta(
 );
 
 const kEndMeta = StatMeta(
-  'END', 'Endurance', '🏃', AppColors.blue,
+  'END', 'Endurance', '🏃', AppIcons.statEndurance, AppColors.blue,
   'Your ability to sustain effort over time. High endurance lets you travel '
   'further on the map and complete longer quest chains.',
   ['🏃 Running', '🚴 Cycling', '🏊 Swimming'],
@@ -68,7 +71,7 @@ const kEndMeta = StatMeta(
 );
 
 const kAgiMeta = StatMeta(
-  'AGI', 'Agility', '⚡', Color(0xFF38d9c8),
+  'AGI', 'Agility', '⚡', AppIcons.statAgility, Color(0xFF38d9c8),
   'Speed and reaction time. Agility boosts your dodge chance in raids and '
   'increases XP gained from pace-based activities.',
   ['🏃 Running (pace-focused)', '🚴 Cycling sprints', '⛹️ HIIT'],
@@ -76,7 +79,7 @@ const kAgiMeta = StatMeta(
 );
 
 const kFlxMeta = StatMeta(
-  'FLX', 'Flexibility', '🧘', AppColors.purple,
+  'FLX', 'Flexibility', '🧘', AppIcons.statFlexibility, AppColors.purple,
   'Mobility and recovery. Flexibility reduces injury cooldowns and '
   'gives bonus XP on rest days when you do active recovery.',
   ['🧘 Yoga', '🤸 Stretching', '💆 Mobility sessions'],
@@ -84,7 +87,7 @@ const kFlxMeta = StatMeta(
 );
 
 const kStaMeta = StatMeta(
-  'STA', 'Stamina', '❤️', AppColors.orange,
+  'STA', 'Stamina', '❤️', AppIcons.statStamina, AppColors.orange,
   'Overall staying power across all activity types. Stamina grows from '
   'consistency — it feeds every other stat and your streak multiplier.',
   ['🏋️ Any gym session', '🧘 Any workout', '📅 Daily login streak'],
@@ -101,6 +104,7 @@ class StatData {
   String get key         => meta.key;
   String get label       => meta.label;
   String get emoji       => meta.emoji;
+  String get iconAsset   => meta.iconAsset;
   Color  get color       => meta.color;
   String get description => meta.description;
   List<String> get activities => meta.activities;

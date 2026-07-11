@@ -35,4 +35,17 @@ class CharacterClass {
         flxMultiplier: (json['flxMultiplier'] as num).toDouble(),
         staMultiplier: (json['staMultiplier'] as num).toDouble(),
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'emoji': emoji,
+        'description': description,
+        'tagline': tagline,
+        'strMultiplier': strMultiplier,
+        'endMultiplier': endMultiplier,
+        'agiMultiplier': agiMultiplier,
+        'flxMultiplier': flxMultiplier,
+        'staMultiplier': staMultiplier,
+      };
 }

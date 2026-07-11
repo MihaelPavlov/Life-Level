@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLevel Admin — Trail Encounters</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #040810;
+    --bg2:       #080e14;
+    --surface:   #161b22;
+    --surface2:  #1e2632;
+    --border:    #30363d;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --blue:      #4f9eff;
+    --purple:    #a371f7;
+    --orange:    #f5a623;
+    --red:       #f85149;
+    --green:     #3fb950;
+    --radius:    8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--purple); }
+
+  .nav-links { display: flex; gap: 8px; }
+  .nav-links a {
+    color: var(--text2);
+    font-size: 13px;
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: color .15s, border-color .15s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.active { color: var(--purple); border-color: var(--purple); }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .token-row label { color: var(--text2); font-size: 12px; }
+
+  input[type="text"], input[type="number"], input[type="checkbox"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+    font-family: inherit;
+  }
+  input[type="checkbox"] { width: 16px; height: 16px; padding: 0; cursor: pointer; }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+  #tokenInput { width: 360px; }
+
+  button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  button.danger    { background: var(--red); }
+  button.success   { background: var(--green); }
+  button.sm        { padding: 5px 12px; font-size: 12px; }
+
+  main { padding: 32px 24px; max-width: 960px; }
+
+  .page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .page-sub   { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .toolbar label { font-size: 13px; color: var(--text2); }
+  .toolbar select { min-width: 220px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:hover td { background: var(--surface2); }
+
+  /* Type badges */
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+  .badge-story    { background: #2a2250; color: var(--purple); }
+  .badge-merchant { background: #3d2a00; color: var(--orange); }
+  .badge-blocker  { background: #3d0c0c; color: var(--red); }
+
+  /* Spawn chance bar */
+  .chance-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  .chance-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .chance-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--green);
+  }
+  .chance-bar-label { font-size: 12px; color: var(--text2); white-space: nowrap; min-width: 36px; }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(4,8,16,.78);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 580px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .field textarea { resize: vertical; }
+  .field-inline { display: flex; align-items: center; gap: 8px; }
+  .field-inline label { font-size: 13px; color: var(--text2); text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+  /* Config hint */
+  .config-hint {
+    font-size: 11px;
+    color: var(--text2);
+    font-family: monospace;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 6px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: var(--radius);
+    font-size: 13px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 1000; max-width: 340px;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok  { border-left: 4px solid var(--green); }
+  #toast.err { border-left: 4px solid var(--red); }
+
+  #loadingOverlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999; gap: 16px;
+    transition: opacity .25s;
+  }
+  #loadingOverlay.out { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loadingOverlay p { color: var(--text2); font-size: 13px; }
+
+  .empty-state {
+    color: var(--text2);
+    font-size: 13px;
+    padding: 40px 0;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>Authenticating…</p>
+</div>
+
+<header>
+  <h1>🎲 Trail Encounters</h1>
+  <div class="nav-links">
+    <a href="index.html">⚙️ Items</a>
+    <a href="map.html">🗺️ Map</a>
+    <a href="level-unlocks.html">🏆 Levels</a>
+    <a href="rank-thresholds.html">⚔️ Ranks</a>
+    <a href="encounters.html" class="active">🎲 Encounters</a>
+  </div>
+  <div class="token-row">
+    <label for="baseUrlInput">API base URL</label>
+    <select id="baseUrlInput" style="width:220px">
+      <option value="">localhost (local)</option>
+      <option value="https://life-level-api-latest-1779363121.onrender.com">Production (Render)</option>
+    </select>
+    <button onclick="saveBaseUrl()">Switch</button>
+    <label for="tokenInput" style="margin-left:12px">JWT Token</label>
+    <input type="text" id="tokenInput" placeholder="Paste your Bearer token here…">
+    <button onclick="saveToken()">Save</button>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">Trail Encounter Templates</div>
+  <div class="page-sub">Templates are randomly selected per region and placed along zone edges when a player views the region detail. Each type (story, merchant, blocker) spawns at most once per region load.</div>
+
+  <div class="toolbar">
+    <label for="worldSelect">World:</label>
+    <select id="worldSelect" onchange="onWorldChange()">
+      <option value="">— select world —</option>
+    </select>
+    <label for="regionSelect">Region:</label>
+    <select id="regionSelect" onchange="loadEncounters()" disabled>
+      <option value="">— select region —</option>
+    </select>
+    <button onclick="openModal(null)" id="addBtn" disabled>+ Add Template</button>
+    <button class="secondary" onclick="loadEncounters()" id="refreshBtn" disabled>Refresh</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Emoji</th>
+          <th>Name</th>
+          <th>Spawn Chance</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="encountersTableBody">
+        <tr><td colspan="6"><div class="empty-state">Select a world and region to view encounter templates.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="encounterModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add Encounter Template</h3>
+    <input type="hidden" id="em_id">
+    <div class="form-grid">
+      <div class="field">
+        <label>Type</label>
+        <select id="em_type" onchange="onTypeChange()">
+          <option value="story">story</option>
+          <option value="merchant">merchant</option>
+          <option value="blocker">blocker</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Emoji</label>
+        <input type="text" id="em_emoji" placeholder="🧙">
+      </div>
+      <div class="field full">
+        <label>Name</label>
+        <input type="text" id="em_name" placeholder="The Elder Sage">
+      </div>
+      <div class="field">
+        <label>Spawn Chance (0–100%)</label>
+        <input type="number" id="em_spawnChance" value="50" min="0" max="100" step="1">
+      </div>
+      <div class="field" style="justify-content:flex-end;">
+        <label style="margin-bottom:4px">Active</label>
+        <div class="field-inline">
+          <input type="checkbox" id="em_isActive" checked>
+          <label for="em_isActive">Enabled</label>
+        </div>
+      </div>
+      <div class="field full">
+        <label>Config JSON</label>
+        <textarea id="em_configJson" rows="8" spellcheck="false">{}</textarea>
+        <div id="configHint" class="config-hint"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="success" onclick="saveEncounter()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Config JSON shape hints per type ─────────────────────────────────────────
+const CONFIG_HINTS = {
+  story: `{
+  "npcTitle": "Forest Guardian",
+  "portrait": "🧙",
+  "dialogue": "Brave traveller, heed my words…",
+  "loreXp": 150
+}`,
+  merchant: `{
+  "timeLeftHours": 4,
+  "playerXp": 50,
+  "items": [
+    { "emoji": "⚗️", "name": "XP Potion", "description": "+200 XP", "rarity": "Common", "xpCost": 200 }
+  ]
+}`,
+  blocker: `{
+  "maxHp": 1000,
+  "retreatDays": 1,
+  "rewards": ["+500 XP", "Rare item"]
+}`
+};
+
+const CONFIG_TEMPLATES = {
+  story: '{\n  "npcTitle": "",\n  "portrait": "",\n  "dialogue": "",\n  "loreXp": 100\n}',
+  merchant: '{\n  "timeLeftHours": 4,\n  "playerXp": 50,\n  "items": []\n}',
+  blocker: '{\n  "maxHp": 1000,\n  "retreatDays": 1,\n  "rewards": []\n}'
+};
+
+// ── Auth / base URL helpers ───────────────────────────────────────────────────
+function getBaseUrl() {
+  return (localStorage.getItem('ll_admin_baseUrl') || '').replace(/\/$/, '');
+}
+function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
+
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t) { toast('Paste a token first.', 'err'); return; }
+  localStorage.setItem('ll_admin_token', t);
+  toast('Token saved.', 'ok');
+  boot();
+}
+
+function saveBaseUrl() {
+  const url = document.getElementById('baseUrlInput').value.trim().replace(/\/$/, '');
+  localStorage.setItem('ll_admin_baseUrl', url);
+  localStorage.removeItem('ll_admin_token');
+  window.location.reload();
+}
+
+async function apiFetch(path, opts = {}) {
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(getBaseUrl() + path, { ...opts, headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`${res.status} ${text}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+
+// ── Auto-login ────────────────────────────────────────────────────────────────
+async function fetchAdminConfig() {
+  try {
+    const res = await fetch(getBaseUrl() + '/api/admin/config');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function autoLogin() {
+  const cfg = await fetchAdminConfig();
+  if (!cfg) return false;
+  try {
+    const res = await fetch(getBaseUrl() + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emailOrUsername: cfg.email, password: cfg.password }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const token = data?.token;
+    if (!token) return false;
+    localStorage.setItem('ll_admin_token', token);
+    document.getElementById('tokenInput').value = token;
+    return true;
+  } catch { return false; }
+}
+
+function hideLoader() {
+  const el = document.getElementById('loadingOverlay');
+  if (el) { el.classList.add('out'); setTimeout(() => el.remove(), 300); }
+}
+
+async function boot() {
+  if (!getToken()) {
+    const ok = await autoLogin();
+    if (!ok) {
+      hideLoader();
+      toast('Auto-login failed — paste an Admin JWT and click Save.', 'err');
+      return;
+    }
+  }
+  hideLoader();
+  await loadWorlds();
+}
+
+// ── Worlds / Regions cascade ──────────────────────────────────────────────────
+async function loadWorlds() {
+  try {
+    const worlds = await apiFetch('/api/admin/map/worlds');
+    const sel = document.getElementById('worldSelect');
+    sel.innerHTML = '<option value="">— select world —</option>';
+    for (const w of worlds) {
+      const opt = document.createElement('option');
+      opt.value = w.id;
+      opt.textContent = (w.name || w.id);
+      if (w.isActive) opt.textContent += ' (active)';
+      sel.appendChild(opt);
+    }
+    // Auto-select the active world
+    const active = worlds.find(w => w.isActive);
+    if (active) {
+      sel.value = active.id;
+      await onWorldChange();
+    }
+  } catch (e) {
+    toast('Failed to load worlds: ' + e.message, 'err');
+  }
+}
+
+async function onWorldChange() {
+  const worldId = document.getElementById('worldSelect').value;
+  const regionSel = document.getElementById('regionSelect');
+  regionSel.innerHTML = '<option value="">— select region —</option>';
+  regionSel.disabled = !worldId;
+  document.getElementById('addBtn').disabled = true;
+  document.getElementById('refreshBtn').disabled = true;
+  setTableEmpty('Select a region above to view encounter templates.');
+  if (!worldId) return;
+  try {
+    const regions = await apiFetch('/api/admin/map/worlds/' + worldId + '/regions');
+    for (const r of regions) {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = (r.emoji || '') + ' ' + r.name + ' (Ch.' + r.chapterIndex + ')';
+      regionSel.appendChild(opt);
+    }
+    regionSel.disabled = false;
+  } catch (e) {
+    toast('Failed to load regions: ' + e.message, 'err');
+  }
+}
+
+// ── Encounters CRUD ───────────────────────────────────────────────────────────
+async function loadEncounters() {
+  const regionId = document.getElementById('regionSelect').value;
+  if (!regionId) {
+    setTableEmpty('Select a region above to view encounter templates.');
+    document.getElementById('addBtn').disabled = true;
+    document.getElementById('refreshBtn').disabled = true;
+    return;
+  }
+  document.getElementById('addBtn').disabled = false;
+  document.getElementById('refreshBtn').disabled = false;
+  setTableLoading();
+  try {
+    const templates = await apiFetch('/api/admin/encounters?regionId=' + regionId);
+    renderTable(templates);
+  } catch (e) {
+    setTableEmpty('Error: ' + e.message);
+    toast('Failed to load encounters: ' + e.message, 'err');
+  }
+}
+
+function renderTable(templates) {
+  const tbody = document.getElementById('encountersTableBody');
+  if (!templates.length) {
+    setTableEmpty('No encounter templates yet. Click "+ Add Template" to create one.');
+    return;
+  }
+  tbody.innerHTML = templates.map(t => {
+    const pct = Math.round((t.spawnChance || 0) * 100);
+    return `
+      <tr>
+        <td>${typeBadge(t.type)}</td>
+        <td style="font-size:22px">${escHtml(t.emoji)}</td>
+        <td><strong>${escHtml(t.name)}</strong></td>
+        <td>
+          <div class="chance-bar">
+            <div class="chance-bar-track">
+              <div class="chance-bar-fill" style="width:${pct}%"></div>
+            </div>
+            <span class="chance-bar-label">${pct}%</span>
+          </div>
+        </td>
+        <td>
+          ${t.isActive
+            ? '<span style="color:var(--green);font-weight:700">✓</span>'
+            : '<span style="color:var(--red);font-weight:700">✗</span>'}
+        </td>
+        <td>
+          <button class="sm secondary" onclick="openEditModal('${t.id}')">Edit</button>
+          <button class="sm danger" style="margin-left:4px" onclick="deleteEncounter('${t.id}','${escHtml(t.name)}')">Delete</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function typeBadge(type) {
+  const cls = { story: 'badge-story', merchant: 'badge-merchant', blocker: 'badge-blocker' }[type] || 'badge-story';
+  return `<span class="badge ${cls}">${escHtml(type)}</span>`;
+}
+
+function setTableLoading() {
+  document.getElementById('encountersTableBody').innerHTML =
+    '<tr><td colspan="6"><div class="empty-state">Loading…</div></td></tr>';
+}
+
+function setTableEmpty(msg) {
+  document.getElementById('encountersTableBody').innerHTML =
+    `<tr><td colspan="6"><div class="empty-state">${escHtml(msg)}</div></td></tr>`;
+}
+
+// ── Modal open/close ──────────────────────────────────────────────────────────
+function openModal(template) {
+  document.getElementById('modalTitle').textContent = 'Add Encounter Template';
+  document.getElementById('em_id').value = '';
+  document.getElementById('em_type').value = 'story';
+  document.getElementById('em_emoji').value = '';
+  document.getElementById('em_name').value = '';
+  document.getElementById('em_spawnChance').value = '50';
+  document.getElementById('em_isActive').checked = true;
+  document.getElementById('em_configJson').value = CONFIG_TEMPLATES.story;
+  updateConfigHint('story');
+  document.getElementById('encounterModal').classList.add('open');
+}
+
+async function openEditModal(id) {
+  try {
+    const t = await apiFetch('/api/admin/encounters/' + id);
+    document.getElementById('modalTitle').textContent = 'Edit Encounter Template';
+    document.getElementById('em_id').value = t.id;
+    document.getElementById('em_type').value = t.type;
+    document.getElementById('em_emoji').value = t.emoji || '';
+    document.getElementById('em_name').value = t.name || '';
+    document.getElementById('em_spawnChance').value = Math.round((t.spawnChance || 0) * 100);
+    document.getElementById('em_isActive').checked = !!t.isActive;
+    document.getElementById('em_configJson').value = t.configJson || '{}';
+    updateConfigHint(t.type);
+    document.getElementById('encounterModal').classList.add('open');
+  } catch (e) {
+    toast('Failed to load template: ' + e.message, 'err');
+  }
+}
+
+function closeModal() {
+  document.getElementById('encounterModal').classList.remove('open');
+}
+
+document.querySelector('.modal-backdrop').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── Type change → update config hint ─────────────────────────────────────────
+function onTypeChange() {
+  const type = document.getElementById('em_type').value;
+  // Only replace the config JSON if it looks like a previous template value
+  const current = document.getElementById('em_configJson').value.trim();
+  const isTemplate = Object.values(CONFIG_TEMPLATES).some(t => t.trim() === current) || current === '{}';
+  if (isTemplate) {
+    document.getElementById('em_configJson').value = CONFIG_TEMPLATES[type] || '{}';
+  }
+  updateConfigHint(type);
+}
+
+function updateConfigHint(type) {
+  document.getElementById('configHint').textContent = 'Example: ' + (CONFIG_HINTS[type] || '{}');
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+async function saveEncounter() {
+  const id = document.getElementById('em_id').value;
+  const type = document.getElementById('em_type').value;
+  const name = document.getElementById('em_name').value.trim();
+  const emoji = document.getElementById('em_emoji').value.trim();
+  const spawnPct = parseFloat(document.getElementById('em_spawnChance').value) || 0;
+  const isActive = document.getElementById('em_isActive').checked;
+  const configJson = document.getElementById('em_configJson').value.trim() || '{}';
+  const regionId = document.getElementById('regionSelect').value;
+
+  if (!name) { toast('Name is required.', 'err'); return; }
+  if (!regionId) { toast('Select a region first.', 'err'); return; }
+
+  // Validate JSON
+  try { JSON.parse(configJson); } catch { toast('Config JSON is not valid JSON.', 'err'); return; }
+
+  const payload = {
+    regionId,
+    type,
+    name,
+    emoji,
+    spawnChance: spawnPct / 100,
+    isActive,
+    configJson
+  };
+
+  try {
+    if (id) {
+      await apiFetch('/api/admin/encounters/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+      toast('Template updated.', 'ok');
+    } else {
+      await apiFetch('/api/admin/encounters', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Template created.', 'ok');
+    }
+    closeModal();
+    await loadEncounters();
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'err');
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+async function deleteEncounter(id, name) {
+  if (!confirm(`Delete encounter template "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch('/api/admin/encounters/' + id, { method: 'DELETE' });
+    toast(`"${name}" deleted.`, 'ok');
+    await loadEncounters();
+  } catch (e) {
+    toast('Delete failed: ' + e.message, 'err');
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function init() {
+  const saved = localStorage.getItem('ll_admin_baseUrl') || '';
+  const sel = document.getElementById('baseUrlInput');
+  for (const opt of sel.options) {
+    if (opt.value === saved) { opt.selected = true; break; }
+  }
+  const qToken = new URLSearchParams(window.location.search).get('token');
+  if (qToken) {
+    localStorage.setItem('ll_admin_token', qToken);
+    document.getElementById('tokenInput').value = qToken;
+  } else {
+    const token = localStorage.getItem('ll_admin_token') || '';
+    if (token) document.getElementById('tokenInput').value = token;
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

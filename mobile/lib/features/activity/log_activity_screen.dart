@@ -6,6 +6,7 @@ import '../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
+import '../../core/widgets/app_icon_image.dart';
 import '../boss/providers/boss_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../quests/providers/quest_provider.dart';
@@ -267,7 +268,7 @@ class _ActivityTypeGrid extends StatelessWidget {
         return GestureDetector(
           onTap: () => onSelect(type),
           child: Container(
-            width: 76,
+            width: 88,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
             decoration: BoxDecoration(
               color: isSelected
@@ -291,7 +292,7 @@ class _ActivityTypeGrid extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text(type.emoji, style: const TextStyle(fontSize: 22)),
+                AppIconImage(type.iconAsset, size: 48),
                 const SizedBox(height: 4),
                 Text(
                   type.displayName,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
+import 'map_icon_resolver.dart';
 import 'region_status_chip.dart';
 import 'world_map_theme.dart';
 
@@ -53,8 +54,7 @@ class RegionHeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Banner(
-                    region: region, theme: theme, userLevel: userLevel),
+                _Banner(region: region, theme: theme, userLevel: userLevel),
                 _Body(region: region, userLevel: userLevel),
               ],
             ),
@@ -93,9 +93,12 @@ class _Banner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                region.emoji,
-                style: const TextStyle(fontSize: 40, height: 1),
+              MapIconOrEmoji(
+                asset: regionIconAsset(region),
+                emoji: region.emoji,
+                size: 44,
+                emojiSize: 40,
+                visualScale: 1.35,
               ),
               const Spacer(),
               _StatusBadge(region: region, userLevel: userLevel),
@@ -158,7 +161,8 @@ class _Pins extends StatelessWidget {
       }
     }
     return Row(children: [
-      for (final p in pins) Padding(padding: const EdgeInsets.only(right: 4), child: p),
+      for (final p in pins)
+        Padding(padding: const EdgeInsets.only(right: 4), child: p),
     ]);
   }
 
@@ -362,11 +366,12 @@ class _CtaRow extends StatelessWidget {
         final xpBit = region.totalXpEarned > 0
             ? '+${region.totalXpEarned} XP'
             : 'New region';
-        final bossBit = region.zonesUntilBoss != null && region.zonesUntilBoss! > 0
-            ? '${region.zonesUntilBoss} zones to boss'
-            : region.bossStatus == RegionBossStatus.defeated
-                ? '${region.bossName} defeated'
-                : '${region.bossName} awaits';
+        final bossBit =
+            region.zonesUntilBoss != null && region.zonesUntilBoss! > 0
+                ? '${region.zonesUntilBoss} zones to boss'
+                : region.bossStatus == RegionBossStatus.defeated
+                    ? '${region.bossName} defeated'
+                    : '${region.bossName} awaits';
         return '$xpBit · $bossBit';
       case RegionStatus.completed:
         return 'Rewards cleared · revisit anytime';

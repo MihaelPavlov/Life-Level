@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level - Progressive World Reveal</title>
+<style>
+:root {
+  --bg-deep:#040810;
+  --bg-base:#080e14;
+  --surface-1:#161b22;
+  --surface-2:#1e2632;
+  --border:#30363d;
+  --text-primary:#e6edf3;
+  --text-secondary:#8b949e;
+  --text-muted:#4d5b6b;
+  --blue:#4f9eff;
+  --purple:#a371f7;
+  --orange:#f5a623;
+  --red:#f85149;
+  --green:#3fb950;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(circle at top, rgba(79,158,255,0.08), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(163,113,247,0.08), transparent 28%),
+    var(--bg-deep);
+  color: var(--text-primary);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.label {
+  width: 390px;
+  text-align: center;
+}
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  background: rgba(245,166,35,0.12);
+  border: 1px solid rgba(245,166,35,0.35);
+  color: var(--orange);
+}
+.title {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.phone {
+  width: 390px;
+  height: 844px;
+  background: var(--bg-base);
+  border-radius: 44px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 32px 80px rgba(0,0,0,0.85);
+}
+.status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  padding: 14px 22px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  z-index: 20;
+}
+.status .icons { color: var(--text-secondary); font-size: 11px; }
+.scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 54px 16px 110px;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+.section {
+  margin-bottom: 18px;
+}
+.section-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.header .eyebrow {
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.header .h1 {
+  font-size: 22px;
+  font-weight: 800;
+}
+.level {
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 14px rgba(79,158,255,0.28);
+}
+.journey {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(79,158,255,0.42);
+  background: linear-gradient(135deg, rgba(79,158,255,0.15), rgba(163,113,247,0.09));
+  margin-bottom: 14px;
+}
+.journey-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: rgba(79,158,255,0.18);
+  border: 1px solid rgba(79,158,255,0.4);
+}
+.journey-copy { flex: 1; }
+.journey-copy .top {
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.journey-copy .bottom {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.journey-pct {
+  font-size: 14px;
+  font-weight: 800;
+}
+.region-card {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  margin-bottom: 12px;
+}
+.region-card.active {
+  border-color: rgba(63,185,80,0.55);
+  box-shadow: 0 0 24px rgba(63,185,80,0.14);
+}
+.region-card.teaser {
+  border-color: rgba(245,166,35,0.35);
+  box-shadow: inset 0 0 40px rgba(245,166,35,0.04);
+}
+.region-banner {
+  height: 78px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+.forest { background: linear-gradient(135deg, rgba(63,185,80,0.26), rgba(79,158,255,0.12)); }
+.ocean-tease { background: linear-gradient(135deg, rgba(79,158,255,0.16), rgba(163,113,247,0.14)); }
+.banner-emoji {
+  font-size: 42px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.45));
+}
+.banner-status {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+.status-active {
+  background: rgba(63,185,80,0.4);
+  border: 1px solid rgba(63,185,80,0.6);
+}
+.status-tease {
+  background: rgba(245,166,35,0.22);
+  border: 1px solid rgba(245,166,35,0.42);
+  color: #ffd89a;
+}
+.pins {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 5px;
+  display: flex;
+  gap: 5px;
+}
+.pin {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0,0,0,0.42);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.pin.active { background: rgba(79,158,255,0.42); border-color: rgba(79,158,255,0.5); }
+.pin.tease { background: rgba(245,166,35,0.24); border-color: rgba(245,166,35,0.4); color: #ffd89a; }
+.region-body {
+  padding: 13px 16px 15px;
+}
+.region-name {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+.region-lore {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+.progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+.progress-row .left {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+.progress-row .right {
+  font-weight: 800;
+}
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.fill-green {
+  height: 100%;
+  width: 58%;
+  background: linear-gradient(90deg, var(--green), #56d26a);
+}
+.fill-orange {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(245,166,35,0.9), rgba(245,166,35,0.32));
+}
+.cta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.meta {
+  flex: 1;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.btn {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.btn.enter {
+  background: linear-gradient(135deg, var(--green), #2ea043);
+  color: white;
+  border-color: rgba(63,185,80,0.55);
+}
+.btn.tease {
+  background: rgba(245,166,35,0.12);
+  color: #ffd89a;
+  border-color: rgba(245,166,35,0.35);
+}
+.fog-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(245,166,35,0.28);
+  background:
+    linear-gradient(135deg, rgba(245,166,35,0.06), rgba(163,113,247,0.04)),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.015), rgba(255,255,255,0.015) 8px, transparent 8px, transparent 16px);
+}
+.fog-orb {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.18);
+}
+.fog-title {
+  font-size: 12px;
+  font-weight: 800;
+}
+.fog-sub {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+.region-screen {
+  position: relative;
+}
+.hero {
+  height: 228px;
+  padding: 54px 16px 0;
+  background:
+    radial-gradient(circle at 85% 16%, rgba(255,255,255,0.06), transparent 30%),
+    linear-gradient(180deg, rgba(63,185,80,0.32), rgba(63,185,80,0.06) 68%, var(--bg-base));
+}
+.back {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: rgba(0,0,0,0.34);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.hero-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
+}
+.hero-emoji {
+  font-size: 58px;
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.5));
+}
+.hero-chapter {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.hero-name {
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+.hero-copy {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.tiles {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  margin-top: -12px;
+}
+.tile {
+  flex: 1;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+}
+.tile-top {
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tile-val {
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.trail {
+  padding: 0 0 0;
+  position: relative;
+}
+.curve {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.node {
+  position: relative;
+  min-height: 96px;
+  display: flex;
+  z-index: 2;
+}
+.left-node { justify-content: flex-start; padding-left: 54px; }
+.right-node { justify-content: flex-end; padding-right: 54px; }
+.center-node { justify-content: center; }
+.bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  position: relative;
+}
+.circle {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+}
+.completed .circle {
+  width: 48px;
+  height: 48px;
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(63,185,80,0.14);
+  font-size: 20px;
+}
+.current .circle {
+  width: 72px;
+  height: 72px;
+  border: 3px solid var(--blue);
+  background: linear-gradient(135deg, rgba(79,158,255,0.22), rgba(79,158,255,0.08));
+  box-shadow: 0 0 30px rgba(79,158,255,0.48), 0 0 0 8px rgba(79,158,255,0.08);
+  font-size: 30px;
+}
+.next .circle {
+  width: 68px;
+  height: 68px;
+  border: 2px dashed var(--orange);
+  background: linear-gradient(135deg, rgba(245,166,35,0.16), rgba(245,166,35,0.05));
+  box-shadow: 0 0 18px rgba(245,166,35,0.16);
+  font-size: 28px;
+}
+.teaser .circle {
+  width: 54px;
+  height: 54px;
+  border: 1px dashed rgba(255,255,255,0.18);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,255,255,0.06), transparent 58%),
+    rgba(255,255,255,0.02);
+  color: rgba(255,255,255,0.55);
+  backdrop-filter: blur(2px);
+  font-size: 18px;
+}
+.boss-shadow .circle {
+  width: 62px;
+  height: 62px;
+  border: 2px dashed rgba(248,81,73,0.32);
+  background: linear-gradient(135deg, rgba(248,81,73,0.08), rgba(248,81,73,0.03));
+  color: rgba(248,81,73,0.75);
+  font-size: 24px;
+}
+.label1 {
+  max-width: 130px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.label2 {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.completed .label2 { color: var(--green); }
+.current .label2 { color: var(--blue); }
+.next .label2 { color: var(--orange); }
+.teaser .label2 { color: rgba(255,255,255,0.42); }
+.boss-shadow .label2 { color: rgba(248,81,73,0.75); }
+.you {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--blue);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 10px rgba(79,158,255,0.5);
+}
+.note-card {
+  margin: 8px 16px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(245,166,35,0.28);
+  background: linear-gradient(135deg, rgba(245,166,35,0.09), rgba(163,113,247,0.05));
+}
+.note-top {
+  color: var(--orange);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.note-body {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 82px;
+  padding: 0 8px 12px;
+  display: flex;
+  align-items: center;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+  z-index: 10;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 10px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+.nav-item .icon { font-size: 20px; }
+.nav-item.active { color: var(--blue); }
+.fab {
+  position: absolute;
+  bottom: 93px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #ff4e4e, #c0392b);
+  box-shadow: 0 0 0 3px rgba(248,81,73,0.18), 0 0 24px rgba(248,81,73,0.45), 0 4px 12px rgba(0,0,0,0.45);
+  font-size: 22px;
+  z-index: 12;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="label">
+    <div class="badge">Progressive Reveal - World</div>
+    <div class="title">World screen with one active chapter and one teaser chapter</div>
+    <div class="desc">The player sees the current region clearly, gets a locked preview of the next region, and does not see the rest of the world yet. The reveal itself becomes part of the reward loop.</div>
+  </div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><span class="icons">●●● 🔋</span></div>
+    <div class="scroll">
+      <div class="header">
+        <div>
+          <div class="eyebrow">Explorer Kai</div>
+          <div class="h1">World Map</div>
+        </div>
+        <div class="level">Lv 12</div>
+      </div>
+
+      <div class="journey">
+        <div class="journey-icon">🏰</div>
+        <div class="journey-copy">
+          <div class="top">Traveling - Forest of Endurance</div>
+          <div class="bottom">→ Ember Forge · 2.7 / 5.0 km</div>
+        </div>
+        <div class="journey-pct">54%</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Active Chapter</div>
+        <div class="region-card active">
+          <div class="region-banner forest">
+            <div class="banner-emoji">🌲</div>
+            <div class="banner-status status-active">Active</div>
+            <div class="pins">
+              <div class="pin active">You are here · Misty Pine</div>
+              <div class="pin">2 zones to boss</div>
+            </div>
+          </div>
+          <div class="region-body">
+            <div class="region-name">Forest of Endurance</div>
+            <div class="region-lore">Endless woodlands that reward every kilometer logged. The forest reveals itself only to those who keep moving.</div>
+            <div class="progress-row">
+              <div class="left">Region progress</div>
+              <div class="right">4 / 7 revealed</div>
+            </div>
+            <div class="bar"><div class="fill-green"></div></div>
+            <div class="cta-row">
+              <div class="meta">Next reveal: Ember Forge after current travel</div>
+              <div class="btn enter">Enter →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Beyond The Fog</div>
+        <div class="region-card teaser">
+          <div class="region-banner ocean-tease">
+            <div class="banner-emoji">🌊</div>
+            <div class="banner-status status-tease">Teased</div>
+            <div class="pins">
+              <div class="pin tease">Boss ahead · Tide Sovereign</div>
+              <div class="pin">Unlock after Forest Warden</div>
+            </div>
+          </div>
+          <div class="region-body">
+            <div class="region-name">Ocean of Balance</div>
+            <div class="region-lore">Tides remember what the land forgets. Calm waters hide a region of breath, rhythm, and dangerous stillness.</div>
+            <div class="fog-row">
+              <div class="fog-orb">✦</div>
+              <div>
+                <div class="fog-title">A new chapter waits behind the Warden</div>
+                <div class="fog-sub">Players should feel the next reward before they fully unlock it. This teaser card is the engagement hook.</div>
+              </div>
+            </div>
+            <div class="cta-row">
+              <div class="meta">Defeat Forest Warden to reveal full route</div>
+              <div class="btn tease">Locked Preview</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Unknown Realms</div>
+        <div class="fog-row">
+          <div class="fog-orb">?</div>
+          <div>
+            <div class="fog-title">The world extends further than this</div>
+            <div class="fog-sub">Do not show later regions yet. Keep the sense that more exists, but let the player earn each reveal one chapter at a time.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <div class="nav-item"><div class="icon">⊾</div><div>Home</div></div>
+      <div class="nav-item active"><div class="icon">🗺️</div><div>Map</div></div>
+      <div class="nav-item"><div class="icon">📊</div><div>Stats</div></div>
+      <div class="nav-item"><div class="icon">👤</div><div>Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="label">
+    <div class="badge">Progressive Reveal - Region</div>
+    <div class="title">Region screen with current node, next node, and one fogged teaser</div>
+    <div class="desc">Inside a region, the player sees only the path they have earned, the next actionable destination, and one hidden marker beyond it. This creates a “one more workout” pull.</div>
+  </div>
+  <div class="phone region-screen">
+    <div class="status"><span>9:41</span><span class="icons">●●● 🔋</span></div>
+    <div class="scroll">
+      <div class="hero">
+        <div class="back">‹</div>
+        <div class="hero-row">
+          <div class="hero-emoji">🌲</div>
+          <div>
+            <div class="hero-chapter">Chapter 1 - Active</div>
+            <div class="hero-name">Forest of Endurance</div>
+          </div>
+        </div>
+        <div class="hero-copy">The forest no longer shows the entire road. It yields the next secret only after the last step has been earned.</div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile">
+          <div class="tile-top">Zones</div>
+          <div class="tile-val" style="color:var(--green)">4 / 7</div>
+        </div>
+        <div class="tile">
+          <div class="tile-top">Current goal</div>
+          <div class="tile-val" style="color:var(--orange)">5.0 km</div>
+        </div>
+        <div class="tile">
+          <div class="tile-top">Boss</div>
+          <div class="tile-val" style="color:var(--red)">Hidden</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin:20px 16px 10px">Your revealed path</div>
+
+      <div class="trail">
+        <svg class="curve" viewBox="0 0 390 650" preserveAspectRatio="none">
+          <path d="M 110 45 C 110 100, 280 100, 280 160" stroke="rgba(63,185,80,0.45)" stroke-width="4" fill="none"/>
+          <path d="M 280 160 C 280 220, 110 220, 110 300" stroke="rgba(63,185,80,0.45)" stroke-width="4" fill="none"/>
+          <path d="M 110 300 C 110 360, 280 360, 280 440" stroke="rgba(79,158,255,0.8)" stroke-width="4" fill="none"/>
+          <path d="M 280 440 C 280 500, 110 500, 110 570" stroke="#f5a623" stroke-width="3" stroke-dasharray="8 6" fill="none"/>
+          <path d="M 110 570 C 110 610, 275 610, 275 650" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" stroke-dasharray="4 7" fill="none"/>
+        </svg>
+
+        <div class="node left-node">
+          <div class="bubble completed">
+            <div class="circle">✓</div>
+            <div class="label1">Whispering Grove</div>
+            <div class="label2">Revealed</div>
+          </div>
+        </div>
+
+        <div class="node right-node">
+          <div class="bubble completed">
+            <div class="circle">✓</div>
+            <div class="label1">Dawn Camp</div>
+            <div class="label2">Cleared</div>
+          </div>
+        </div>
+
+        <div class="node left-node">
+          <div class="bubble current">
+            <div class="you">You Are Here</div>
+            <div class="circle">🌿</div>
+            <div class="label1">Misty Pine</div>
+            <div class="label2">Current Zone</div>
+          </div>
+        </div>
+
+        <div class="node right-node">
+          <div class="bubble next">
+            <div class="circle">🏰</div>
+            <div class="label1">Ember Forge</div>
+            <div class="label2">Next - 2.3 km</div>
+          </div>
+        </div>
+
+        <div class="node left-node">
+          <div class="bubble teaser">
+            <div class="circle">✦</div>
+            <div class="label1">Hidden Trail</div>
+            <div class="label2">Reveals After Arrival</div>
+          </div>
+        </div>
+
+        <div class="node right-node">
+          <div class="bubble boss-shadow">
+            <div class="circle">👁</div>
+            <div class="label1">Something watches deeper in</div>
+            <div class="label2">Boss still concealed</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-top">Reveal principle</div>
+        <div class="note-body">Do not show the full sequence. Each time the player reaches the next zone, the fogged marker becomes concrete and a new hidden marker appears ahead. The reveal itself becomes part of progression reward.</div>
+      </div>
+    </div>
+    <div class="fab">⚔️</div>
+    <div class="nav">
+      <div class="nav-item"><div class="icon">⊾</div><div>Home</div></div>
+      <div class="nav-item active"><div class="icon">🗺️</div><div>Map</div></div>
+      <div class="nav-item"><div class="icon">📊</div><div>Stats</div></div>
+      <div class="nav-item"><div class="icon">👤</div><div>Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -78,6 +78,7 @@ class HomeTodaysQuestsCard extends ConsumerWidget {
                     for (var i = 0; i < preview.length; i++)
                       HomeQuestItem(
                         icon: questCategoryEmoji(preview[i].category),
+                        iconAsset: questCategoryIcon(preview[i].category),
                         iconState: preview[i].isCompleted
                             ? HomeQuestState.done
                             : preview[i].progress > 0

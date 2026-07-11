@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
+import 'map_icon_resolver.dart';
 import 'world_map_theme.dart';
 
 /// Bottom sheet shown when a node on the region trail is tapped. Adaptive:
@@ -11,6 +12,7 @@ import 'world_map_theme.dart';
 class ZoneDetailSheet extends StatelessWidget {
   final ZoneNode node;
   final String regionName;
+  final RegionTheme? regionTheme;
   final int userLevel;
   final ActiveJourney? activeJourney;
   final bool isDestination;
@@ -53,6 +55,7 @@ class ZoneDetailSheet extends StatelessWidget {
     super.key,
     required this.node,
     required this.regionName,
+    this.regionTheme,
     required this.userLevel,
     required this.activeJourney,
     required this.isDestination,
@@ -83,7 +86,8 @@ class ZoneDetailSheet extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
         border: Border(top: BorderSide(color: AppColors.border)),
         boxShadow: [
-          BoxShadow(color: Color(0x8C000000), blurRadius: 40, offset: Offset(0, -18)),
+          BoxShadow(
+              color: Color(0x8C000000), blurRadius: 40, offset: Offset(0, -18)),
         ],
       ),
       child: SafeArea(
@@ -105,7 +109,12 @@ class ZoneDetailSheet extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 4, bottom: 14),
                 ),
               ),
-              _Head(node: node, regionName: regionName, isDestination: isDestination),
+              _Head(
+                node: node,
+                regionName: regionName,
+                regionTheme: regionTheme,
+                isDestination: isDestination,
+              ),
               const SizedBox(height: 14),
               if (node.isCrossroads)
                 _CrossroadsNote()
@@ -152,10 +161,12 @@ class ZoneDetailSheet extends StatelessWidget {
 class _Head extends StatelessWidget {
   final ZoneNode node;
   final String regionName;
+  final RegionTheme? regionTheme;
   final bool isDestination;
   const _Head({
     required this.node,
     required this.regionName,
+    required this.regionTheme,
     required this.isDestination,
   });
 
@@ -167,6 +178,11 @@ class _Head extends StatelessWidget {
         : node.isCrossroads
             ? AppColors.purple
             : colors.accent;
+    final iconAsset = zoneNodeIconAsset(
+      node,
+      regionTheme: regionTheme,
+      regionName: regionName,
+    );
 
     return Row(
       children: [
@@ -183,7 +199,13 @@ class _Head extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: chipColor.withOpacity(0.4)),
           ),
-          child: Text(node.emoji, style: const TextStyle(fontSize: 30)),
+          child: MapIconOrEmoji(
+            asset: iconAsset,
+            emoji: node.emoji,
+            size: 34,
+            emojiSize: 30,
+            visualScale: 1.35,
+          ),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -371,7 +393,8 @@ class _CrossroadsNote extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('✦', style: TextStyle(color: AppColors.purple, fontSize: 14)),
+          const Text('✦',
+              style: TextStyle(color: AppColors.purple, fontSize: 14)),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
@@ -402,7 +425,10 @@ class _JourneyCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.orange.withOpacity(0.1), AppColors.orange.withOpacity(0.04)],
+          colors: [
+            AppColors.orange.withOpacity(0.1),
+            AppColors.orange.withOpacity(0.04)
+          ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.orange.withOpacity(0.4)),

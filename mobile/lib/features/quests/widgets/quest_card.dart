@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../models/quest_models.dart';
 
 class QuestCard extends StatelessWidget {
@@ -75,10 +76,7 @@ class _QuestCardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          questCategoryEmoji(quest.category),
-          style: const TextStyle(fontSize: 20),
-        ),
+        AppIconImage(questCategoryIcon(quest.category), size: 36),
         const SizedBox(width: 10),
         Expanded(
           child: Text(

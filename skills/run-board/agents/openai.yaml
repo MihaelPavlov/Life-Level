@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run Board"
+  short_description: "Start the local LifeLevel board"
+  default_prompt: "Use $run-board to start the local project board and open it in Chrome."

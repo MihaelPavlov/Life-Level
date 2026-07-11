@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import 'home_palette.dart';
 import 'home_progress_bar.dart';
 
@@ -8,6 +9,7 @@ enum HomeQuestState { done, active, pending }
 
 class HomeQuestItem extends StatelessWidget {
   final String icon;
+  final String? iconAsset;
   final HomeQuestState iconState;
   final String name;
   final String sub;
@@ -20,6 +22,7 @@ class HomeQuestItem extends StatelessWidget {
   const HomeQuestItem({
     super.key,
     required this.icon,
+    this.iconAsset,
     required this.iconState,
     required this.name,
     required this.sub,
@@ -55,15 +58,17 @@ class HomeQuestItem extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: iconBg,
               border: Border.all(color: iconBorder),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
-              child: Text(icon, style: const TextStyle(fontSize: 15)),
+              child: iconAsset != null
+                  ? AppIconImage(iconAsset!, size: 30)
+                  : Text(icon, style: const TextStyle(fontSize: 18)),
             ),
           ),
           const SizedBox(width: 10),

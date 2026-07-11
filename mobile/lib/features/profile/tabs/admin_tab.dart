@@ -65,6 +65,19 @@ class AdminTab extends StatelessWidget {
             subtitle: 'Manage nodes, edges, and bosses on the adventure map',
             onTap: () => _openUrl(ApiClient.adminMapUrl),
           ),
+          const SizedBox(height: 20),
+          const Text(
+            'Encounters',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _kTextSec),
+          ),
+          const SizedBox(height: 10),
+          _AdminMenuCard(
+            icon: '🎲',
+            accentColor: _kPurple,
+            title: 'Trail Encounters',
+            subtitle: 'Configure random encounter templates per region',
+            onTap: () => _openUrl(ApiClient.adminEncountersUrl),
+          ),
         ],
       ),
     );

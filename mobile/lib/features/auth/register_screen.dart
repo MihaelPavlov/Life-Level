@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/api/api_client.dart';
+import '../character/setup/setup_resume_service.dart';
 import '../character/setup/welcome_setup_screen.dart';
 import 'services/auth_service.dart';
 
@@ -37,6 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         isAdmin: _isAdmin,
       );
       await ApiClient.saveToken(result.token);
+      await SetupResumeService.instance.saveWelcome(
+        ringItems: result.ringItems,
+      );
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,

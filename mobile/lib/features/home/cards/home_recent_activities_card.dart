@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../activity/models/activity_models.dart';
 import '../../activity/providers/activity_provider.dart';
 import '../widgets/home_card.dart';
@@ -97,7 +99,7 @@ class _ActivityRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final at = activity.activityType;
-    final emoji = at?.emoji ?? '🏃';
+    final iconAsset = at?.iconAsset ?? AppIcons.activityRunning;
     final name = at?.displayName ?? activity.type;
 
     return Column(
@@ -107,14 +109,14 @@ class _ActivityRow extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.green.withValues(alpha: 0.08),
                   border: Border.all(color: AppColors.green.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 18))),
+                child: Center(child: AppIconImage(iconAsset, size: 34)),
               ),
               const SizedBox(width: 10),
               Expanded(

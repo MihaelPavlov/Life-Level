@@ -194,6 +194,7 @@
     <a href="map.html">🗺️ Map</a>
     <a href="level-unlocks.html">🏆 Levels</a>
     <a href="rank-thresholds.html" class="active">⚔️ Ranks</a>
+    <a href="encounters.html">🎲 Encounters</a>
   </div>
   <div class="token-row">
     <label for="baseUrlInput">API base URL</label>
@@ -292,7 +293,7 @@ async function autoLogin() {
     const res = await fetch(getBaseUrl() + '/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: cfg.email, password: cfg.password }),
+      body: JSON.stringify({ emailOrUsername: cfg.email, password: cfg.password }),
     });
     if (!res.ok) return false;
     const data = await res.json();

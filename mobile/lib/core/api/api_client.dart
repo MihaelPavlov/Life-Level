@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../main.dart' show navigatorKey;
 import '../../features/auth/login_screen.dart';
 
 class ApiClient {
-  static const _baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:5128/api',
-  );
+  static const _configuredBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static final String _baseUrl = _configuredBaseUrl.isNotEmpty
+      ? _configuredBaseUrl
+      : kIsWeb
+          ? 'http://127.0.0.1:5128/api'
+          : 'http://10.0.2.2:5128/api';
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
@@ -71,6 +74,12 @@ class ApiClient {
   static Future<String> get adminMapUrl async {
     final token = await _storage.read(key: 'jwt_token');
     final base = '$_webBase/admin/map.html';
+    return token != null ? '$base?token=${Uri.encodeComponent(token)}' : base;
+  }
+
+  static Future<String> get adminEncountersUrl async {
+    final token = await _storage.read(key: 'jwt_token');
+    final base = '$_webBase/admin/encounters.html';
     return token != null ? '$base?token=${Uri.encodeComponent(token)}' : base;
   }
 

@@ -25,14 +25,19 @@ using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 // Register DbContext as base type so modules can inject it
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
@@ -196,7 +201,14 @@ app.MapGet("/admin-map", (IWebHostEnvironment env) =>
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    try
+    {
+        await db.Database.MigrateAsync();
+    }
+    catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.DuplicateTable)
+    {
+        app.Logger.LogWarning(ex, "Skipping duplicate-table migration error during local startup.");
+    }
 
     var seeder = scope.ServiceProvider.GetRequiredService<WorldSeeder>();
     await seeder.SeedAsync();

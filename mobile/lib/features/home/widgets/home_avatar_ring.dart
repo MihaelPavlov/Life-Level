@@ -1,7 +1,31 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import 'home_palette.dart';
+
+String? _avatarEmojiToAsset(String emoji) {
+  switch (emoji) {
+    case '🧙': return AppIcons.avatarWizard;
+    case '⚔️': return AppIcons.avatarWarrior;
+    case '🏹': return AppIcons.avatarArcher;
+    case '🛡️': return AppIcons.avatarPaladin;
+    case '🧘': return AppIcons.avatarMonk;
+    case '🐺': return AppIcons.avatarWolf;
+    case '🦊': return AppIcons.avatarFox;
+    case '🥷': return AppIcons.avatarNinja;
+    case '🦸': return AppIcons.avatarSuperhero;
+    case '🧝': return AppIcons.avatarElf;
+    case '👑': return AppIcons.avatarCrown;
+    case '🌟': return AppIcons.avatarStar;
+    case '💎': return AppIcons.avatarDiamond;
+    case '🔮': return AppIcons.avatarMystic;
+    case '⚡': return AppIcons.avatarLightning;
+    case '🌙': return AppIcons.avatarMoon;
+    default:   return null;
+  }
+}
 
 /// Circular avatar with XP progress ring and LV pill pinned to the bottom.
 /// Matches the `.home3-avatar` spec from home-v3.html.
@@ -52,7 +76,12 @@ class HomeAvatarRing extends StatelessWidget {
                 border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
               ),
               child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                child: () {
+                  final asset = _avatarEmojiToAsset(emoji);
+                  return asset != null
+                      ? AppIconImage(asset, size: 52)
+                      : Text(emoji, style: const TextStyle(fontSize: 28));
+                }(),
               ),
             ),
           ),

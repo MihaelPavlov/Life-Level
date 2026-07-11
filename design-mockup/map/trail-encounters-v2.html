@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trail Encounters v2 — Life Level</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    font-family: -apple-system, 'Inter', sans-serif;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 32px;
+    justify-content: center;
+  }
+
+  /* ── phone frame ── */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #040810;
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #1e2632;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px #0d1117;
+    flex-shrink: 0;
+  }
+  .phone-label {
+    color: #8b949e;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-align: center;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ── region header ── */
+  .region-header {
+    background: linear-gradient(180deg, rgba(79,158,255,0.28) 0%, rgba(79,158,255,0.06) 60%, #040810 100%);
+    padding: 52px 16px 16px;
+    position: relative;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #e6edf3; font-size: 20px; cursor: pointer;
+    margin-bottom: 14px;
+  }
+  .region-title-row {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .region-icon {
+    width: 56px; height: 56px;
+    background: rgba(79,158,255,0.15);
+    border: 1px solid rgba(79,158,255,0.3);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+  }
+  .region-chapter {
+    color: #4f9eff; font-size: 10px; font-weight: 800; letter-spacing: 1.4px;
+  }
+  .region-name {
+    color: #e6edf3; font-size: 24px; font-weight: 800; line-height: 1.1;
+    margin-top: 2px;
+  }
+  .region-lore {
+    color: #8b949e; font-size: 12px; line-height: 1.5; margin-top: 10px;
+  }
+
+  /* ── summary tiles ── */
+  .summary-row {
+    display: flex; gap: 8px; padding: 0 16px; margin-top: 4px;
+  }
+  .summary-tile {
+    flex: 1;
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    padding: 8px 10px;
+  }
+  .tile-icon-row {
+    display: flex; align-items: center; gap: 4px;
+    color: #8b949e; font-size: 9px; font-weight: 700; letter-spacing: 0.7px;
+    text-transform: uppercase;
+  }
+  .tile-value {
+    color: #e6edf3; font-size: 14px; font-weight: 800; margin-top: 2px;
+  }
+  .tile-value.green { color: #3fb950; }
+  .tile-value.orange { color: #f5a623; }
+
+  /* ── trail section ── */
+  .trail-label {
+    color: #8b949e; font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
+    padding: 20px 16px 10px;
+    text-transform: uppercase;
+  }
+  .trail-container {
+    position: relative;
+    padding: 0 0;
+  }
+
+  /* ── zone bubbles ── */
+  .zone-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+  }
+  .zone-circle {
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    position: relative;
+  }
+  .zone-circle.completed {
+    width: 68px; height: 68px;
+    background: rgba(63,185,80,0.14);
+    border: 2px solid rgba(63,185,80,0.5);
+  }
+  .zone-circle.active {
+    width: 74px; height: 74px;
+    background: rgba(79,158,255,0.18);
+    border: 2px solid rgba(79,158,255,0.7);
+    box-shadow: 0 0 22px rgba(79,158,255,0.3);
+  }
+  .zone-circle.traveling {
+    width: 74px; height: 74px;
+    background: rgba(245,166,35,0.16);
+    border: 2px solid rgba(245,166,35,0.6);
+    box-shadow: 0 0 20px rgba(245,166,35,0.25);
+  }
+  .zone-circle.next {
+    width: 68px; height: 68px;
+    background: rgba(79,158,255,0.08);
+    border: 2px dashed rgba(79,158,255,0.35);
+  }
+  .zone-circle.locked {
+    width: 64px; height: 64px;
+    background: rgba(33,38,45,0.6);
+    border: 2px dashed rgba(48,54,61,0.7);
+    filter: grayscale(0.7);
+  }
+  .zone-name {
+    color: #e6edf3; font-size: 11px; font-weight: 700; margin-top: 5px;
+    text-align: center; max-width: 110px; line-height: 1.2;
+  }
+  .zone-sub {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.5px; margin-top: 2px;
+    text-align: center;
+  }
+  .zone-sub.green { color: #3fb950; }
+  .zone-sub.blue { color: #4f9eff; }
+  .zone-sub.orange { color: #f5a623; }
+  .zone-sub.muted { color: #8b949e; }
+
+  .you-here-chip {
+    background: #4f9eff;
+    color: #fff; font-size: 8px; font-weight: 800; letter-spacing: 0.8px;
+    padding: 2px 8px; border-radius: 6px;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+  }
+  .dest-chip {
+    background: rgba(245,166,35,0.2);
+    border: 1px solid rgba(245,166,35,0.5);
+    color: #f5a623; font-size: 8px; font-weight: 800; letter-spacing: 0.8px;
+    padding: 2px 7px; border-radius: 6px;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ── SVG trail canvas (sits behind bubbles) ── */
+  .trail-svg {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+  }
+
+  /* ── walker token ── */
+  .walker {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center;
+    transform: translateX(-50%) translateY(-50%);
+    animation: walker-bob 1.6s ease-in-out infinite alternate;
+    z-index: 10;
+  }
+  @keyframes walker-bob {
+    from { transform: translateX(-50%) translateY(-50%); }
+    to   { transform: translateX(-50%) translateY(calc(-50% - 3px)); }
+  }
+  .walker-badge {
+    background: #4f9eff;
+    color: #fff; font-size: 8px; font-weight: 800; letter-spacing: 1px;
+    padding: 2px 7px; border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(79,158,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: -2px;
+    position: relative; z-index: 1;
+  }
+  .walker-token {
+    background: rgba(79,158,255,0.14);
+    border: 1.5px solid rgba(79,158,255,0.45);
+    border-radius: 14px;
+    padding: 7px 11px;
+    font-size: 22px;
+    box-shadow: 0 0 14px rgba(79,158,255,0.25);
+  }
+
+  /* ── encounter nodes on path ── */
+  .enc-node {
+    position: absolute;
+    transform: translateX(-50%) translateY(-50%);
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer;
+    z-index: 9;
+  }
+  .enc-ring {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    position: relative;
+  }
+  .enc-ring::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    animation: enc-pulse 2s ease-in-out infinite;
+  }
+  .enc-ring.story {
+    background: rgba(163,113,247,0.22);
+    border: 2px solid rgba(163,113,247,0.65);
+    box-shadow: 0 0 16px rgba(163,113,247,0.35);
+  }
+  .enc-ring.story::before {
+    border: 1.5px solid rgba(163,113,247,0.4);
+  }
+  .enc-ring.merchant {
+    background: rgba(245,166,35,0.2);
+    border: 2px solid rgba(245,166,35,0.7);
+    box-shadow: 0 0 16px rgba(245,166,35,0.3);
+  }
+  .enc-ring.merchant::before {
+    border: 1.5px solid rgba(245,166,35,0.4);
+  }
+  .enc-ring.blocker {
+    background: rgba(248,81,73,0.2);
+    border: 2px solid rgba(248,81,73,0.7);
+    box-shadow: 0 0 18px rgba(248,81,73,0.35);
+  }
+  .enc-ring.blocker::before {
+    border: 1.5px solid rgba(248,81,73,0.4);
+  }
+  @keyframes enc-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.35); opacity: 0; }
+  }
+  .enc-label {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.7px;
+    margin-top: 4px; text-transform: uppercase; white-space: nowrap;
+  }
+  .enc-label.story  { color: #a371f7; }
+  .enc-label.merchant { color: #f5a623; }
+  .enc-label.blocker { color: #f85149; }
+
+  /* ── BLOCKED banner across path ── */
+  .blocked-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px;
+    z-index: 8;
+  }
+  .blocked-dash {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, #f85149 0px, #f85149 6px, transparent 6px, transparent 12px);
+    opacity: 0.7;
+  }
+  .blocked-badge {
+    background: rgba(248,81,73,0.18);
+    border: 1px solid rgba(248,81,73,0.6);
+    color: #f85149; font-size: 8px; font-weight: 800; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── journey footer ── */
+  .journey-footer {
+    margin: 14px 16px 0;
+    background: linear-gradient(90deg, rgba(79,158,255,0.15), rgba(163,113,247,0.1));
+    border: 1px solid rgba(79,158,255,0.4);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .jf-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .jf-label { color: #4f9eff; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; }
+  .jf-km { color: #e6edf3; font-size: 11px; font-weight: 700; }
+  .jf-bar-bg {
+    height: 8px; background: #1e2632; border-radius: 4px; overflow: hidden;
+  }
+  .jf-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4f9eff, #f5a623);
+    border-radius: 4px;
+  }
+  .jf-bonus {
+    color: #8b949e; font-size: 10px; text-align: center; margin-top: 6px;
+  }
+
+  /* ══════════════════════════════════════════════
+     BOTTOM SHEET — shared scaffold
+  ══════════════════════════════════════════════ */
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; }
+
+  /* dim backdrop behind sheet */
+  .backdrop {
+    position: absolute; inset: 0;
+    background: rgba(4,8,16,0.65);
+    z-index: 20;
+  }
+
+  .sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: #161b22;
+    border-radius: 24px 24px 0 0;
+    border-top: 1px solid #21262d;
+    z-index: 21;
+    overflow: hidden;
+  }
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: #30363d; border-radius: 2px;
+    margin: 10px auto 0;
+  }
+  .sheet-inner { padding: 16px 20px 32px; }
+
+  /* ── sheet header ── */
+  .sheet-enc-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .sheet-enc-icon {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .sheet-enc-icon.merchant { background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.4); }
+  .sheet-enc-icon.blocker  { background: rgba(248,81,73,0.15);  border: 1px solid rgba(248,81,73,0.4); }
+  .sheet-enc-icon.story    { background: rgba(163,113,247,0.15); border: 1px solid rgba(163,113,247,0.4); }
+  .sheet-enc-type {
+    font-size: 9px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; margin-bottom: 2px;
+  }
+  .sheet-enc-type.merchant { color: #f5a623; }
+  .sheet-enc-type.blocker  { color: #f85149; }
+  .sheet-enc-type.story    { color: #a371f7; }
+  .sheet-enc-name { color: #e6edf3; font-size: 20px; font-weight: 800; line-height: 1.1; }
+  .sheet-enc-sub  { color: #8b949e; font-size: 12px; margin-top: 3px; }
+
+  /* ── timer pill ── */
+  .timer-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .timer-pill.merchant { background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.4); color: #f5a623; }
+  .timer-pill.blocker  { background: rgba(248,81,73,0.12);  border: 1px solid rgba(248,81,73,0.35); color: #f85149; }
+  .timer-dot { width: 6px; height: 6px; border-radius: 50%; animation: timer-blink 1s ease-in-out infinite alternate; }
+  .timer-dot.merchant { background: #f5a623; }
+  .timer-dot.blocker  { background: #f85149; }
+  @keyframes timer-blink {
+    from { opacity: 1; } to { opacity: 0.3; }
+  }
+
+  /* ── merchant items ── */
+  .items-xp-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .items-label { color: #8b949e; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+  .xp-balance {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 8px; padding: 3px 9px;
+    color: #f5a623; font-size: 11px; font-weight: 800;
+  }
+  .item-row {
+    background: #1e2632;
+    border: 1px solid #21262d;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .item-row:hover { border-color: rgba(79,158,255,0.4); }
+  .item-emoji {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .item-emoji.rare   { background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3); }
+  .item-emoji.uncommon { background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); }
+  .item-emoji.mystery { background: rgba(163,113,247,0.12); border: 1px solid rgba(163,113,247,0.3); }
+  .item-info { flex: 1; }
+  .item-name { color: #e6edf3; font-size: 13px; font-weight: 700; }
+  .item-desc { color: #8b949e; font-size: 10px; margin-top: 2px; line-height: 1.4; }
+  .item-rarity { display: inline-block; font-size: 8px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; }
+  .item-rarity.rare    { color: #4f9eff; }
+  .item-rarity.uncommon { color: #3fb950; }
+  .item-rarity.mystery { color: #a371f7; }
+  .item-cost {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+    flex-shrink: 0;
+  }
+  .item-cost-val { color: #f5a623; font-size: 13px; font-weight: 800; }
+  .item-cost-unit { color: #8b949e; font-size: 9px; font-weight: 600; text-transform: uppercase; }
+  .btn-full {
+    width: 100%; padding: 14px;
+    border-radius: 14px; border: none;
+    font-size: 14px; font-weight: 800; letter-spacing: 0.3px;
+    cursor: pointer; margin-top: 4px;
+  }
+  .btn-full.orange  { background: #f5a623; color: #0a0e17; }
+  .btn-full.red     { background: #f85149; color: #fff; }
+  .btn-full.purple  { background: #a371f7; color: #fff; }
+  .btn-full.outline {
+    background: transparent; color: #8b949e;
+    border: 1px solid #21262d; margin-top: 8px;
+    font-size: 13px;
+  }
+
+  /* ── boss HP bar ── */
+  .boss-hp-label-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .boss-hp-label { color: #f85149; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; }
+  .boss-hp-val { color: #e6edf3; font-size: 12px; font-weight: 800; }
+  .boss-hp-bar-bg {
+    height: 12px; background: #0d1117; border-radius: 6px; overflow: hidden;
+    border: 1px solid rgba(248,81,73,0.25);
+    margin-bottom: 14px;
+  }
+  .boss-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f85149, #ff6b3d);
+    border-radius: 6px;
+    position: relative;
+    transition: width 0.8s ease;
+  }
+  .boss-hp-fill::after {
+    content: '';
+    position: absolute; top: 2px; bottom: 2px; right: 0;
+    width: 3px; background: rgba(255,255,255,0.4); border-radius: 2px;
+  }
+
+  /* damage mechanic info box */
+  .info-box {
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+  }
+  .info-box.red   { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.25); }
+  .info-box.green { background: rgba(63,185,80,0.08);  border: 1px solid rgba(63,185,80,0.25); }
+  .info-box.purple { background: rgba(163,113,247,0.08); border: 1px solid rgba(163,113,247,0.25); }
+  .info-box-title { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+  .info-box-title.red   { color: #f85149; }
+  .info-box-title.green { color: #3fb950; }
+  .info-box-title.purple { color: #a371f7; }
+  .info-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: #8b949e; line-height: 1.5; margin-bottom: 4px;
+  }
+  .info-row:last-child { margin-bottom: 0; }
+  .info-row-icon { flex-shrink: 0; font-size: 13px; }
+
+  /* ── reward chips ── */
+  .rewards-row {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .reward-chip {
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+  }
+  .reward-chip.xp     { background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.4); color: #f5a623; }
+  .reward-chip.item   { background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.35); color: #4f9eff; }
+  .reward-chip.purple { background: rgba(163,113,247,0.12); border: 1px solid rgba(163,113,247,0.35); color: #a371f7; }
+  .reward-chip.green  { background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); color: #3fb950; }
+
+  /* ── story NPC ── */
+  .story-portrait-area {
+    display: flex; align-items: flex-end; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .story-portrait {
+    width: 62px; height: 62px; border-radius: 18px; flex-shrink: 0;
+    background: rgba(163,113,247,0.15); border: 1.5px solid rgba(163,113,247,0.45);
+    display: flex; align-items: center; justify-content: center; font-size: 34px;
+    box-shadow: 0 0 20px rgba(163,113,247,0.2);
+  }
+  .story-name-col { flex: 1; }
+  .story-npc-type { color: #a371f7; font-size: 9px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; }
+  .story-npc-name { color: #e6edf3; font-size: 18px; font-weight: 800; line-height: 1.2; }
+  .story-npc-title { color: #8b949e; font-size: 11px; margin-top: 2px; }
+
+  .dialogue-bubble {
+    background: #1e2632;
+    border: 1px solid rgba(163,113,247,0.25);
+    border-radius: 14px 14px 14px 4px;
+    padding: 12px 14px;
+    color: #c9d1d9; font-size: 13px; line-height: 1.55;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .choices-label { color: #8b949e; font-size: 9px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px; }
+  .choice-row {
+    background: #1e2632;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    padding: 11px 13px;
+    margin-bottom: 7px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+  }
+  .choice-row:hover { border-color: rgba(163,113,247,0.4); }
+  .choice-icon {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    flex-shrink: 0;
+  }
+  .choice-text { flex: 1; color: #e6edf3; font-size: 12.5px; font-weight: 600; line-height: 1.35; }
+  .choice-reward { color: #8b949e; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
+  /* ── encounter spawn visual on the trail screen ── */
+  .spawn-anim {
+    animation: spawn-bounce 2.4s ease-in-out infinite;
+  }
+  @keyframes spawn-bounce {
+    0%, 100% { transform: translateX(-50%) translateY(-50%) scale(1); }
+    50% { transform: translateX(-50%) translateY(calc(-50% - 2px)) scale(1.04); }
+  }
+
+  /* ── screen labels overlay ── */
+  .screen-title {
+    position: absolute; top: 12px; left: 0; right: 0;
+    text-align: center; z-index: 25; pointer-events: none;
+    color: rgba(255,255,255,0.0); /* hidden inside phone */
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1 — Trail with active journey + 3 encounter nodes
+══════════════════════════════════════════════ -->
+<div>
+  <div class="phone-label">SCREEN 1 — ACTIVE JOURNEY + TRAIL ENCOUNTERS</div>
+  <div class="phone">
+    <div class="screen" style="overflow-y:auto; overflow-x:hidden;">
+
+      <!-- Region header -->
+      <div class="region-header">
+        <div class="back-btn">‹</div>
+        <div class="region-title-row">
+          <div class="region-icon">🌲</div>
+          <div>
+            <div class="region-chapter">CHAPTER 1 · ACTIVE</div>
+            <div class="region-name">Forest of Endurance</div>
+          </div>
+        </div>
+        <div class="region-lore">Ancient paths wind through towering oaks. Each kilometre forged here tempers your endurance.</div>
+      </div>
+
+      <!-- Summary tiles -->
+      <div class="summary-row">
+        <div class="summary-tile">
+          <div class="tile-icon-row">🗝 Zones</div>
+          <div class="tile-value green">4 / 8</div>
+        </div>
+        <div class="summary-tile">
+          <div class="tile-icon-row">⭐ XP Earned</div>
+          <div class="tile-value">3,200</div>
+        </div>
+        <div class="summary-tile">
+          <div class="tile-icon-row">👹 Boss</div>
+          <div class="tile-value orange">2 zones</div>
+        </div>
+      </div>
+
+      <div class="trail-label">YOUR PATH THROUGH THE REGION</div>
+
+      <!-- Zone trail with encounter nodes -->
+      <!-- Total height: 5 rows × 110px + 24px tail = 574px -->
+      <div class="trail-container" style="height:574px; position:relative; overflow:visible;">
+
+        <!-- SVG for Bezier curves -->
+        <svg class="trail-svg" width="390" height="574" viewBox="0 0 390 574">
+          <!-- Row heights: 55, 165, 275, 385, 495 (centres at 0.5 × 110 of each row) -->
+
+          <!-- Edge: Z1(completed,left,x=110,y=55) → Z2(active,right,x=280,y=165) -->
+          <path d="M110,55 C110,110 280,110 280,165"
+            stroke="rgba(63,185,80,0.55)" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+          <!-- Edge: Z2(active,right,x=280,y=165) → Z3(next/traveling,left,x=110,y=275)
+               Split at ~45% for progressive fill -->
+          <!-- Traveled portion (green, 45%) -->
+          <path d="M280,165 C280,220 110,220 110,275"
+            stroke="none" fill="none" id="active-edge"/>
+          <!-- Done (green 45%) -->
+          <path d="M280,165 C280,220 110,220 110,275"
+            stroke="rgba(63,185,80,0.55)" stroke-width="4" fill="none" stroke-linecap="round"
+            stroke-dasharray="1000" stroke-dashoffset="550"
+            pathLength="1000"/>
+          <!-- Remaining (orange 55%) -->
+          <path d="M280,165 C280,220 110,220 110,275"
+            stroke="rgba(245,166,35,0.4)" stroke-width="4" fill="none" stroke-linecap="round"
+            stroke-dasharray="1000" stroke-dashoffset="-450"
+            pathLength="1000"/>
+          <!-- Halo glow on active edge -->
+          <path d="M280,165 C280,220 110,220 110,275"
+            stroke="rgba(245,166,35,0.12)" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+          <!-- Edge: Z3(left,x=110,y=275) → Z4(right,x=280,y=385) — dashed (locked) -->
+          <path d="M110,275 C110,330 280,330 280,385"
+            stroke="rgba(48,54,61,0.7)" stroke-width="3" fill="none" stroke-linecap="butt"
+            stroke-dasharray="7 6"/>
+
+          <!-- Edge: Z4(right,x=280,y=385) → Z5/boss(center,x=195,y=495) — dashed -->
+          <path d="M280,385 C280,440 195,440 195,495"
+            stroke="rgba(48,54,61,0.7)" stroke-width="3" fill="none" stroke-linecap="butt"
+            stroke-dasharray="7 6"/>
+
+          <!-- ── Encounter connectors: thin dashed lines from side nodes to path anchors ── -->
+          <!-- Story NPC: node(95,190) → path anchor(177,226) -->
+          <line x1="117" y1="192" x2="172" y2="223"
+            stroke="rgba(163,113,247,0.5)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <circle cx="177" cy="226" r="5" fill="rgba(163,113,247,0.85)"/>
+
+          <!-- Merchant: node(260,226) → path anchor(162,233) -->
+          <line x1="238" y1="227" x2="167" y2="232"
+            stroke="rgba(245,166,35,0.5)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <circle cx="162" cy="233" r="5" fill="rgba(245,166,35,0.85)"/>
+
+          <!-- Blocker: node(185,255) → path anchor(115,264) -->
+          <line x1="163" y1="256" x2="120" y2="263"
+            stroke="rgba(248,81,73,0.5)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <circle cx="115" cy="264" r="5" fill="rgba(248,81,73,0.85)"/>
+        </svg>
+
+        <!-- Zone 1 — completed, left -->
+        <div class="zone-bubble" style="left:40px; top:0; width:140px;">
+          <div class="zone-circle completed">🌿</div>
+          <div class="zone-name">Mossy Hollow</div>
+          <div class="zone-sub green">✓ Completed</div>
+        </div>
+
+        <!-- Zone 2 — active (YOU ARE HERE), right -->
+        <div class="zone-bubble" style="right:40px; top:110px; width:140px; align-items:center;">
+          <div class="you-here-chip">You are here</div>
+          <div class="zone-circle active">🍄</div>
+          <div class="zone-name">Fungal Glade</div>
+          <div class="zone-sub blue">Active zone</div>
+        </div>
+
+        <!-- Zone 3 — traveling to (destination), left -->
+        <div class="zone-bubble" style="left:40px; top:220px; width:140px;">
+          <div class="dest-chip">Destination</div>
+          <div class="zone-circle traveling">🌊</div>
+          <div class="zone-name">Riverstone Crossing</div>
+          <div class="zone-sub orange">4.5 / 10 km</div>
+        </div>
+
+        <!-- Zone 4 — next/locked, right -->
+        <div class="zone-bubble" style="right:40px; top:330px; width:140px; align-items:center;">
+          <div class="zone-circle next">🏔</div>
+          <div class="zone-name">Thornback Ridge</div>
+          <div class="zone-sub muted">Set as destination</div>
+        </div>
+
+        <!-- Zone 5 — boss, center -->
+        <div class="zone-bubble" style="left:50%; transform:translateX(-50%); top:440px; width:140px; align-items:center;">
+          <div class="zone-circle locked" style="width:70px;height:70px;background:rgba(248,81,73,0.1);border-color:rgba(248,81,73,0.3);">👹</div>
+          <div class="zone-name">Forest Warden</div>
+          <div class="zone-sub" style="color:#f85149;">Boss · Locked</div>
+        </div>
+
+        <!-- ── Encounter nodes — offset to sides so the trail curve stays visible ── -->
+        <!-- Story NPC: LEFT side, connected to path at t≈0.55 -->
+        <div class="enc-node spawn-anim" style="left:95px; top:190px;">
+          <div class="enc-ring story">🧙</div>
+          <div class="enc-label story">Story</div>
+        </div>
+
+        <!-- Wandering Merchant: RIGHT side, connected to path at t≈0.65 -->
+        <div class="enc-node spawn-anim" style="left:260px; top:226px; animation-delay:0.6s;">
+          <div class="enc-ring merchant">🪙</div>
+          <div class="enc-label merchant">Merchant · 14h</div>
+        </div>
+
+        <!-- Path Blocker: RIGHT of path at t≈0.82, near zone 3 entry -->
+        <div class="enc-node spawn-anim" style="left:185px; top:255px; animation-delay:1.2s;">
+          <div class="enc-ring blocker">💀</div>
+          <div class="enc-label blocker">BLOCKED</div>
+        </div>
+
+        <!-- BLOCKED line across path at blocker anchor (y≈264) -->
+        <div class="blocked-line" style="top:267px; padding: 0 24px;">
+          <div class="blocked-dash"></div>
+          <div class="blocked-badge">⛔ PATH BLOCKED</div>
+          <div class="blocked-dash"></div>
+        </div>
+
+        <!-- Walker token at t=0.45: (207,216) on the Bezier -->
+        <div class="walker" style="left:207px; top:216px;">
+          <div class="walker-badge">YOU · 4.5 KM</div>
+          <div class="walker-token">🧝</div>
+        </div>
+
+      </div><!-- end trail-container -->
+
+      <!-- Journey footer -->
+      <div class="journey-footer">
+        <div class="jf-row">
+          <span class="jf-label">🏃 Traveling</span>
+          <span class="jf-km">4.5 / 10.0 km</span>
+        </div>
+        <div class="jf-bar-bg">
+          <div class="jf-bar-fill" style="width:45%;"></div>
+        </div>
+        <div class="jf-bonus">Arrival bonus: +450 XP · Endurance +2</div>
+      </div>
+
+      <div style="height:32px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2 — Wandering Merchant sheet
+══════════════════════════════════════════════ -->
+<div>
+  <div class="phone-label">SCREEN 2 — WANDERING MERCHANT</div>
+  <div class="phone">
+    <div class="screen">
+
+      <!-- Blurred trail background (simplified) -->
+      <div style="width:100%;height:100%;background:linear-gradient(180deg,rgba(79,158,255,0.18) 0%,#040810 35%);display:flex;flex-direction:column;">
+        <div style="padding:52px 16px 16px;">
+          <div style="color:#4f9eff;font-size:10px;font-weight:800;letter-spacing:1.4px;">CHAPTER 1 · ACTIVE</div>
+          <div style="color:#e6edf3;font-size:24px;font-weight:800;margin-top:2px;">Forest of Endurance</div>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden;filter:blur(1px) brightness(0.5);">
+          <div style="color:#8b949e;font-size:10px;font-weight:800;letter-spacing:1.2px;padding:20px 16px 10px;text-transform:uppercase;filter:none;">YOUR PATH THROUGH THE REGION</div>
+        </div>
+      </div>
+
+      <!-- Backdrop -->
+      <div class="backdrop"></div>
+
+      <!-- Merchant sheet -->
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-inner">
+
+          <!-- Header -->
+          <div class="sheet-enc-header">
+            <div class="sheet-enc-icon merchant">🪙</div>
+            <div>
+              <div class="sheet-enc-type merchant">Wandering Merchant</div>
+              <div class="sheet-enc-name">Gornak's Wares</div>
+              <div class="sheet-enc-sub">Appears on your path · Rare goods</div>
+            </div>
+          </div>
+
+          <!-- Timer -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <div class="timer-pill merchant">
+              <div class="timer-dot merchant"></div>
+              Leaves in 14h 22m
+            </div>
+            <div style="color:#8b949e;font-size:11px;">· Gone after timer expires</div>
+          </div>
+
+          <!-- Items header -->
+          <div class="items-xp-row">
+            <div class="items-label">Available Items</div>
+            <div class="xp-balance">⭐ 2,450 XP</div>
+          </div>
+
+          <!-- Item 1 — RARE -->
+          <div class="item-row">
+            <div class="item-emoji rare">🛡</div>
+            <div class="item-info">
+              <div class="item-rarity rare">Rare</div>
+              <div class="item-name">Iron Bulwark</div>
+              <div class="item-desc">+18 STR · +12 STA · Reduces injury chance</div>
+            </div>
+            <div class="item-cost">
+              <div class="item-cost-val">950</div>
+              <div class="item-cost-unit">XP</div>
+            </div>
+          </div>
+
+          <!-- Item 2 — UNCOMMON -->
+          <div class="item-row">
+            <div class="item-emoji uncommon">👟</div>
+            <div class="item-info">
+              <div class="item-rarity uncommon">Uncommon</div>
+              <div class="item-name">Swift Striders</div>
+              <div class="item-desc">+10 AGI · +8 END · +5% trail speed</div>
+            </div>
+            <div class="item-cost">
+              <div class="item-cost-val">500</div>
+              <div class="item-cost-unit">XP</div>
+            </div>
+          </div>
+
+          <!-- Item 3 — MYSTERY -->
+          <div class="item-row">
+            <div class="item-emoji mystery">🎁</div>
+            <div class="item-info">
+              <div class="item-rarity mystery">??? Mystery</div>
+              <div class="item-name">Sealed Crate</div>
+              <div class="item-desc">Unknown contents · Guaranteed ≥ Uncommon</div>
+            </div>
+            <div class="item-cost">
+              <div class="item-cost-val">220</div>
+              <div class="item-cost-unit">XP</div>
+            </div>
+          </div>
+
+          <button class="btn-full outline">Not interested · Let merchant pass</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3 — Path Blocker (Mini-boss)
+══════════════════════════════════════════════ -->
+<div>
+  <div class="phone-label">SCREEN 3 — PATH BLOCKER · MINI-BOSS</div>
+  <div class="phone">
+    <div class="screen">
+
+      <!-- dim trail bg -->
+      <div style="width:100%;height:100%;background:linear-gradient(180deg,rgba(248,81,73,0.15) 0%,#040810 35%);"></div>
+      <div class="backdrop" style="background:rgba(4,8,16,0.72);"></div>
+
+      <!-- Blocker sheet -->
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-inner">
+
+          <!-- Header -->
+          <div class="sheet-enc-header">
+            <div class="sheet-enc-icon blocker">🐺</div>
+            <div>
+              <div class="sheet-enc-type blocker">⛔ Path Blocker</div>
+              <div class="sheet-enc-name">Ember Wolf</div>
+              <div class="sheet-enc-sub">Mini-boss · Blocking Riverstone Crossing</div>
+            </div>
+          </div>
+
+          <!-- Timer -->
+          <div class="timer-pill blocker" style="margin-bottom:14px;">
+            <div class="timer-dot blocker"></div>
+            Retreats in 2d 8h if ignored
+          </div>
+
+          <!-- HP Bar -->
+          <div class="boss-hp-label-row">
+            <div class="boss-hp-label">🔥 Boss HP</div>
+            <div class="boss-hp-val">3,800 / 5,000</div>
+          </div>
+          <div class="boss-hp-bar-bg">
+            <div class="boss-hp-fill" style="width:76%;"></div>
+          </div>
+
+          <!-- Blocked info box -->
+          <div class="info-box red">
+            <div class="info-box-title red">Your journey is paused</div>
+            <div class="info-row">
+              <div class="info-row-icon">⛔</div>
+              <div>Progress toward Riverstone Crossing is frozen until this creature is defeated or retreats.</div>
+            </div>
+          </div>
+
+          <!-- Damage mechanic -->
+          <div class="info-box green">
+            <div class="info-box-title green">How to deal damage</div>
+            <div class="info-row">
+              <div class="info-row-icon">🏋</div>
+              <div>Log any workout → damage scales with duration &amp; calories burned</div>
+            </div>
+            <div class="info-row">
+              <div class="info-row-icon">🏃</div>
+              <div>Running &amp; cycling deal bonus damage to this type of blocker</div>
+            </div>
+          </div>
+
+          <!-- Defeat rewards -->
+          <div style="color:#8b949e;font-size:9px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;">Defeat rewards</div>
+          <div class="rewards-row">
+            <div class="reward-chip xp">+800 XP</div>
+            <div class="reward-chip item">🛡 Rare Item</div>
+            <div class="reward-chip green">Journey unblocked</div>
+          </div>
+
+          <button class="btn-full red">⚔️ Start Fighting · Log a Workout</button>
+          <button class="btn-full outline">Wait for it to retreat (2d 8h)</button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 4 — Story NPC dialogue
+══════════════════════════════════════════════ -->
+<div>
+  <div class="phone-label">SCREEN 4 — STORY NPC · LORE ENCOUNTER</div>
+  <div class="phone">
+    <div class="screen">
+
+      <!-- dim trail bg -->
+      <div style="width:100%;height:100%;background:linear-gradient(180deg,rgba(163,113,247,0.12) 0%,#040810 35%);"></div>
+      <div class="backdrop" style="background:rgba(4,8,16,0.65);"></div>
+
+      <!-- Story NPC sheet -->
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-inner">
+
+          <!-- Portrait + name -->
+          <div class="story-portrait-area">
+            <div class="story-portrait">🧙</div>
+            <div class="story-name-col">
+              <div class="story-npc-type">Story Encounter</div>
+              <div class="story-npc-name">Aldric the Wanderer</div>
+              <div class="story-npc-title">Keeper of the Forest Paths</div>
+            </div>
+          </div>
+
+          <!-- Dialogue lore text unlock chip -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div class="reward-chip purple">📜 Lore Unlocked</div>
+            <div class="reward-chip xp">+50 XP</div>
+          </div>
+
+          <!-- Dialogue bubble -->
+          <div class="dialogue-bubble">
+            "Traveller — I have walked these woods a thousand years. Few reach the Riverstone Crossing, yet fewer still know what sleeps beneath its waters. Should you choose to carry this knowledge, the path ahead may hold fewer surprises."
+          </div>
+
+          <!-- Choices -->
+          <div class="choices-label">Your response</div>
+
+          <div class="choice-row">
+            <div class="choice-icon" style="background:rgba(245,166,35,0.14);border:1px solid rgba(245,166,35,0.35);">📖</div>
+            <div class="choice-text">"Tell me more about what lies ahead."</div>
+            <div class="choice-reward" style="color:#f5a623;">+zone lore</div>
+          </div>
+
+          <div class="choice-row">
+            <div class="choice-icon" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.3);">⚡</div>
+            <div class="choice-text">"I train every day. The forest will not slow me."</div>
+            <div class="choice-reward" style="color:#3fb950;">+20% travel speed (2h)</div>
+          </div>
+
+          <div class="choice-row">
+            <div class="choice-icon" style="background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.3);">🤝</div>
+            <div class="choice-text">"I'll carry your message to the next waypoint."</div>
+            <div class="choice-reward" style="color:#a371f7;">+150 XP quest</div>
+          </div>
+
+          <button class="btn-full outline">Pass by in silence · Dismiss</button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 5 — Path Blocker: mid-fight state
+══════════════════════════════════════════════ -->
+<div>
+  <div class="phone-label">SCREEN 5 — PATH BLOCKER · IN PROGRESS</div>
+  <div class="phone">
+    <div class="screen">
+      <div style="width:100%;height:100%;background:linear-gradient(180deg,rgba(248,81,73,0.18) 0%,#040810 35%);"></div>
+      <div class="backdrop" style="background:rgba(4,8,16,0.72);"></div>
+
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-inner">
+
+          <div class="sheet-enc-header">
+            <div class="sheet-enc-icon blocker">🐺</div>
+            <div>
+              <div class="sheet-enc-type blocker">⚔️ In Combat</div>
+              <div class="sheet-enc-name">Ember Wolf</div>
+              <div class="sheet-enc-sub">Your last hit: Running 5 km · −420 HP</div>
+            </div>
+          </div>
+
+          <!-- HP bar at 38% remaining -->
+          <div class="boss-hp-label-row">
+            <div class="boss-hp-label">🔥 Boss HP</div>
+            <div class="boss-hp-val">1,900 / 5,000</div>
+          </div>
+          <div class="boss-hp-bar-bg">
+            <div class="boss-hp-fill" style="width:38%;"></div>
+          </div>
+
+          <!-- Contributor leaderboard (guild-raid-style) -->
+          <div style="margin-bottom:12px;">
+            <div style="color:#8b949e;font-size:9px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Your Damage</div>
+            <div style="background:#1e2632;border:1px solid #21262d;border-radius:12px;padding:10px 13px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:20px;">🧝</div>
+                <div style="flex:1;">
+                  <div style="color:#e6edf3;font-size:13px;font-weight:700;">You</div>
+                  <div style="height:6px;background:#0d1117;border-radius:3px;margin-top:4px;overflow:hidden;">
+                    <div style="width:62%;height:100%;background:linear-gradient(90deg,#f85149,#ff6b3d);border-radius:3px;"></div>
+                  </div>
+                </div>
+                <div style="color:#f85149;font-size:13px;font-weight:800;">3,100 dmg</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress info -->
+          <div class="info-box red" style="margin-bottom:14px;">
+            <div class="info-box-title red">Journey still paused</div>
+            <div class="info-row">
+              <div class="info-row-icon">📍</div>
+              <div>Journey to Riverstone Crossing unfreezes the moment HP reaches 0.</div>
+            </div>
+          </div>
+
+          <!-- Projected finish -->
+          <div style="background:#1e2632;border:1px solid #21262d;border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="color:#8b949e;font-size:9px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;">Est. to defeat</div>
+              <div style="color:#e6edf3;font-size:13px;font-weight:700;margin-top:2px;">~1 more workout</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="color:#8b949e;font-size:9px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;">Retreats in</div>
+              <div style="color:#f85149;font-size:13px;font-weight:700;margin-top:2px;">2d 6h</div>
+            </div>
+          </div>
+
+          <button class="btn-full red">🏋 Log Workout · Deal More Damage</button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

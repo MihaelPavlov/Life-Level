@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../activity/providers/activity_provider.dart';
 import '../providers/world_progress_provider.dart';
@@ -34,10 +35,11 @@ class HomeStatStrip extends ConsumerWidget {
       child: Row(
         children: [
           HomeStatTile(
-            icon: '\uD83C\uDFE6', // 🏦
+            icon: '🏦',
+            iconAsset: AppIcons.mapCurrentLocation,
             label: bankedDim ? 'LOG A RUN' : 'BANKED',
             value: bankedDim
-                ? '\u2014'
+                ? '—'
                 : '${pendingKm.toStringAsFixed(1)} km',
             valueColor: AppColors.blue,
             primary: !bankedDim,
@@ -46,14 +48,16 @@ class HomeStatStrip extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           HomeStatTile(
-            icon: '\u2728', // ✨
+            icon: '✨',
+            iconAsset: AppIcons.rewardXpSparkle,
             label: 'TODAY',
             value: todaysXp > 0 ? '+$todaysXp XP' : '+0 XP',
             valueColor: AppColors.orange,
           ),
           const SizedBox(width: 8),
           HomeStatTile(
-            icon: '\uD83D\uDEE1', // 🛡
+            icon: '🛡',
+            iconAsset: AppIcons.rewardStreakShield,
             label: 'SHIELDS',
             value: '$shields',
             valueColor: AppColors.purple,

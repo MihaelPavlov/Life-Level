@@ -1,0 +1,21 @@
+{
+   "background": {
+      "service_worker": "background.js"
+   },
+   "description": "SentinelOne DeepVisibility plugin",
+   "host_permissions": [ "*://*/*" ],
+   "icons": {
+      "128": "images/s1-icon-128.png",
+      "16": "images/s1-icon-16.png",
+      "32": "images/s1-icon-32.png",
+      "48": "images/s1-icon-48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkDnZ7IMx+lGZK6nYJM/31lm0AalpWlraq7mut5Fq2fHdcSH+m5vHuh6TwLwfjANNomWq60fmoMgijWpxX9eFPnKCgj2S4mvdzgVELm72OKiJ4Mjr5775GMDgqQxzpiCCLbY50QEIMOngFE2cT/iX6CBO5WBr4C2zQjwzLl1CQQy//GFbGvLvsCK8/N/GmAFol5ix/pnAxDiSCGkwy3Kl5EDZclKZduEMeirrnp/7uHHPz+cdcK7udDxOqBYUY+w76IzVZiGR1eE5nipd7+V6TMWfMxeb7PW2fNQHDC4/ay7LmgC8l8RxLHDdH3Ar/gL2kHRDOZR4mYsYpdufupxcrwIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "91",
+   "name": "SentinelOne",
+   "permissions": [ "nativeMessaging", "webRequest", "alarms" ],
+   "short_name": "SentinelOne",
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "0.2.0"
+}

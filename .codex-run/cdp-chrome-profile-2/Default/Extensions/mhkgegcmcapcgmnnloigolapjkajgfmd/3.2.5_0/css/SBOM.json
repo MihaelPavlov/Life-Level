@@ -1,0 +1,38 @@
+{
+    "specVersion": "1.4",
+    "metadata": {
+        "tools": [
+            {
+                "vendor": "Sonatype",
+                "name": "LifeCycle",
+                "version": "202"
+            },
+            {
+                "vendor": "Zoho",
+                "name": "Hacksaw",
+                "version": "10.0.4"
+            },
+            {
+                "vendor": "Owasp",
+                "name": "Dependency Checker",
+                "version": "7.4.1"
+            }
+        ],
+        "timestamp": "2026-06-19T00:05:11.682703+05:30"
+    },
+    "components": [],
+    "bomFormat": "CycloneDX",
+    "services": [
+        {
+            "name": "BSP_NATIVE_TP",
+            "properties": [
+                {
+                    "name": "buildLabel",
+                    "value": "latest"
+                }
+            ]
+        }
+    ],
+    "version": 1,
+    "dependencies": []
+}

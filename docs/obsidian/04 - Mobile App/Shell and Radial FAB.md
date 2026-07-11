@@ -38,9 +38,9 @@ class NavTab {
 
 ## The catalog
 
-`kAllRingItems` — 10 ring items available: **World, Guild, Stats, Battle, Titles, Boss, Profile, Leaderboard, Map, Quests**.
+`kAllRingItems` — 9 ring items available: **World, Guild, Stats, Titles, Boss, Profile, Leaderboard, Map, Quests**.
 
-`kDefaultRingIds` — 6 shown out-of-box: **World, Guild, Stats, Battle, Titles, Boss**.
+`kDefaultRingIds` — 5 shown out-of-box: **World, Guild, Stats, Titles, Boss**.
 
 `kAllNavItems` — 8+ nav tabs available.
 
@@ -70,7 +70,6 @@ Long-press the FAB → `CustomizeRingSheet` bottom sheet:
 | World | Open [[Feature - Map|WorldMapScreen]] modal |
 | Guild | Placeholder (future) |
 | Stats | Placeholder |
-| Battle | Placeholder |
 | Titles | Open [[Feature - Titles|TitlesRanksScreen]] |
 | Boss | Open [[Feature - Boss|BossScreen]] |
 

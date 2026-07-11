@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import 'home_palette.dart';
 
 /// One tile inside the compact stat strip (Banked / Today's XP / Shields).
 /// Matches `.home3-strip__tile` in home-v3.html.
 class HomeStatTile extends StatelessWidget {
   final String icon;
+  final String? iconAsset;
   final String label; // uppercase token e.g. "BANKED"
   final String value;
   final Color valueColor;
@@ -16,6 +18,7 @@ class HomeStatTile extends StatelessWidget {
   const HomeStatTile({
     super.key,
     required this.icon,
+    this.iconAsset,
     required this.label,
     required this.value,
     required this.valueColor,
@@ -53,7 +56,9 @@ class HomeStatTile extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(icon, style: const TextStyle(fontSize: 13, height: 1)),
+              iconAsset != null
+                  ? AppIconImage(iconAsset!, size: 22)
+                  : Text(icon, style: const TextStyle(fontSize: 13, height: 1)),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(

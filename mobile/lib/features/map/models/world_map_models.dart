@@ -6,6 +6,8 @@
 //   • RegionDetail        → single region + ordered zone nodes + edges
 // ─────────────────────────────────────────────────────────────────────────────
 
+import 'encounter_models.dart';
+
 // ── Enums ────────────────────────────────────────────────────────────────────
 
 enum ZoneNodeStatus { completed, active, next, available, locked }
@@ -189,6 +191,10 @@ class RegionDetail extends RegionCard {
   /// normal progression rules, the sibling is permanently locked.
   final Map<String, String> pathChoices;
 
+  /// Trail encounter nodes (story NPCs, merchants, blockers) positioned along
+  /// the path between zone nodes. Empty when the backend doesn't supply them.
+  final List<TrailEncounterNode> encounters;
+
   const RegionDetail({
     required super.id,
     required super.name,
@@ -208,6 +214,7 @@ class RegionDetail extends RegionCard {
     required this.nodes,
     required this.edges,
     required this.pathChoices,
+    this.encounters = const [],
   });
 
   factory RegionDetail.fromJson(Map<String, dynamic> json) {
@@ -243,6 +250,55 @@ class RegionDetail extends RegionCard {
               .toList() ??
           const [],
       pathChoices: choices,
+      encounters: (json['encounters'] as List<dynamic>?)
+              ?.map((e) =>
+                  TrailEncounterNode.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
+
+  RegionDetail copyWith({
+    String? id,
+    String? name,
+    String? emoji,
+    String? lore,
+    String? bossName,
+    RegionTheme? theme,
+    int? chapterIndex,
+    int? levelRequirement,
+    int? completedZones,
+    int? totalZones,
+    int? totalXpEarned,
+    int? zonesUntilBoss,
+    RegionStatus? status,
+    RegionBossStatus? bossStatus,
+    List<RegionPin>? pins,
+    List<ZoneNode>? nodes,
+    List<ZoneEdge>? edges,
+    Map<String, String>? pathChoices,
+    List<TrailEncounterNode>? encounters,
+  }) {
+    return RegionDetail(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      emoji: emoji ?? this.emoji,
+      lore: lore ?? this.lore,
+      bossName: bossName ?? this.bossName,
+      theme: theme ?? this.theme,
+      chapterIndex: chapterIndex ?? this.chapterIndex,
+      levelRequirement: levelRequirement ?? this.levelRequirement,
+      completedZones: completedZones ?? this.completedZones,
+      totalZones: totalZones ?? this.totalZones,
+      totalXpEarned: totalXpEarned ?? this.totalXpEarned,
+      zonesUntilBoss: zonesUntilBoss ?? this.zonesUntilBoss,
+      status: status ?? this.status,
+      bossStatus: bossStatus ?? this.bossStatus,
+      pins: pins ?? this.pins,
+      nodes: nodes ?? this.nodes,
+      edges: edges ?? this.edges,
+      pathChoices: pathChoices ?? this.pathChoices,
+      encounters: encounters ?? this.encounters,
     );
   }
 }

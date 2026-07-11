@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/main_shell.dart';
+import '../character/setup/setup_resume_service.dart';
 import '../character/setup/welcome_setup_screen.dart';
 import 'services/auth_service.dart';
 import 'register_screen.dart';
@@ -35,6 +36,13 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordCtrl.text,
       );
       await ApiClient.saveToken(result.token);
+      if (result.isSetupComplete) {
+        await SetupResumeService.instance.clear();
+      } else {
+        await SetupResumeService.instance.saveWelcome(
+          ringItems: result.ringItems,
+        );
+      }
       if (mounted) {
         if (result.isSetupComplete) {
           Navigator.pushReplacement(

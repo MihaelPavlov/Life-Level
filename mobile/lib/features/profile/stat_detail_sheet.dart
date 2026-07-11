@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/widgets/app_icon_image.dart';
 import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
@@ -72,7 +73,7 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
                     border: Border.all(color: widget.stat.color.withOpacity(0.4)),
                   ),
                   child: Center(
-                    child: Text(widget.stat.emoji, style: const TextStyle(fontSize: 26)),
+                    child: AppIconImage(widget.stat.iconAsset, size: 45),
                   ),
                 ),
                 const SizedBox(width: 14),

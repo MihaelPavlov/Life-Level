@@ -85,11 +85,13 @@ class _MainShellState extends ConsumerState<MainShell>
 
   late List<String> _ringIds;
   List<RingItem> get _ringItems => _ringIds
+      .where((id) => kAllRingItems.any((e) => e.id == id))
       .map((id) => kAllRingItems.firstWhere((e) => e.id == id))
       .toList();
 
   late List<String> _navIds;
   List<NavTab> get _navItems => _navIds
+      .where((id) => kAllNavItems.any((e) => e.id == id))
       .map((id) => kAllNavItems.firstWhere((e) => e.id == id))
       .toList();
 

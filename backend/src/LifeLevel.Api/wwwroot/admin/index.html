@@ -319,6 +319,7 @@
     <a href="map.html" id="linkMap" style="color:var(--text2);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:8px">🗺️ Map</a>
     <a href="level-unlocks.html" style="color:var(--text2);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:8px">🏆 Levels</a>
     <a href="rank-thresholds.html" style="color:var(--text2);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:8px">⚔️ Ranks</a>
+    <a href="encounters.html" style="color:var(--text2);font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:8px">🎲 Encounters</a>
   </div>
   <div class="token-row">
     <label for="baseUrlInput">API base URL</label>
@@ -730,7 +731,7 @@ async function autoLogin() {
     const res = await fetch(getBaseUrl() + '/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: cfg.email, password: cfg.password }),
+      body: JSON.stringify({ emailOrUsername: cfg.email, password: cfg.password }),
     });
     if (!res.ok) return false;
     const data = await res.json();

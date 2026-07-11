@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/services/level_up_notifier.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../character/providers/character_provider.dart';
 import '../../login_reward/models/login_reward_models.dart';
 import '../../login_reward/providers/login_reward_provider.dart';
@@ -119,8 +121,8 @@ class _PendingVariant extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -136,10 +138,7 @@ class _PendingVariant extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: const Text(
-                '\uD83C\uDF81', // 🎁
-                style: TextStyle(fontSize: 18),
-              ),
+              child: const AppIconImage(AppIcons.rewardDailyBonus, size: 34),
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -394,7 +394,7 @@
   </div>
   <div class="actions">
     <span id="sourceState" class="source-state cached">Not loaded</span>
-    <button class="btn-hdr" id="btnConnect" title="Grant direct write access to docs/board.md (Chromium only)">🔗 Connect file</button>
+    <button class="btn-hdr" id="btnConnect" title="Open docs/board.md directly. In Chrome/Edge this can also grant write access.">🔗 Open board.md</button>
     <button class="btn-hdr" id="btnReload" title="Re-read docs/board.md">↻ Reload</button>
     <button class="btn-hdr primary" id="btnSave" title="Write changes back to docs/board.md">💾 Save</button>
   </div>
@@ -420,6 +420,7 @@
     <!-- populated by JS -->
   </div>
 </div>
+<input id="filePickerFallback" type="file" accept=".md,text/markdown" hidden>
 
 <script>
 // ──────────────────────────────────────────────────────────────
@@ -436,6 +437,14 @@ let draggedId = null;
 let fileHandle = null;        // File System Access API handle (if granted)
 let rawPreamble = '';         // text before first ticket column
 let rawEpilogue = '';         // text after last ticket column
+
+function applyBoardMarkdown(md, stateClass, stateText) {
+  const parsed = parseBoardMarkdown(md);
+  sections = parsed.sections;
+  rawPreamble = parsed.preamble;
+  rawEpilogue = parsed.epilogue;
+  setSourceState(stateClass, stateText);
+}
 
 // ──────────────────────────────────────────────────────────────
 // Markdown parser
@@ -618,11 +627,7 @@ async function loadFromFetch() {
     const res = await fetch(BOARD_PATH + '?t=' + Date.now(), { cache: 'no-cache' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const md = await res.text();
-    const parsed = parseBoardMarkdown(md);
-    sections = parsed.sections;
-    rawPreamble = parsed.preamble;
-    rawEpilogue = parsed.epilogue;
-    setSourceState('loaded', 'Loaded from file');
+    applyBoardMarkdown(md, 'loaded', 'Loaded from file');
     return true;
   } catch (e) {
     console.warn('fetch failed:', e);
@@ -635,11 +640,7 @@ async function loadFromHandle() {
   try {
     const file = await fileHandle.getFile();
     const md = await file.text();
-    const parsed = parseBoardMarkdown(md);
-    sections = parsed.sections;
-    rawPreamble = parsed.preamble;
-    rawEpilogue = parsed.epilogue;
-    setSourceState('linked', 'Linked to file');
+    applyBoardMarkdown(md, 'linked', `Opened: ${file.name}`);
     return true;
   } catch (e) {
     console.warn('handle read failed:', e);
@@ -675,13 +676,13 @@ async function initialLoad() {
     return;
   }
   if (await loadFromLocalStorage()) {
-    setSourceState('error', 'fetch failed — using cache');
+    setSourceState('cached', 'Local file mode blocked — using cache');
     render();
     return;
   }
   // Empty start — show one empty column
   sections = [{ title: '🟡 In Progress', cleanTitle: 'In Progress', tickets: [] }];
-  setSourceState('error', `Could not load ${BOARD_PATH}`);
+  setSourceState('error', 'Open docs/board.md to load locally');
   render();
 }
 
@@ -717,7 +718,7 @@ async function saveToFile() {
 
 async function connectFile() {
   if (!window.showOpenFilePicker) {
-    alert('File System Access API not available.\n\nUse Chrome, Edge, or another Chromium browser to grant direct write access.\n\nFor now, use "💾 Save" to download the file.');
+    document.getElementById('filePickerFallback').click();
     return;
   }
   try {
@@ -730,10 +731,30 @@ async function connectFile() {
     });
     fileHandle = handle;
     await loadFromHandle();
+    saveToLocalStorage();
     render();
   } catch (e) {
     if (e.name !== 'AbortError') console.error(e);
   }
+}
+
+async function reloadBoard() {
+  if (fileHandle && await loadFromHandle()) {
+    saveToLocalStorage();
+    render();
+    return;
+  }
+  if (await loadFromFetch()) {
+    saveToLocalStorage();
+    render();
+    return;
+  }
+  if (await loadFromLocalStorage()) {
+    setSourceState('cached', 'Reload failed — using cache');
+    render();
+    return;
+  }
+  setSourceState('error', 'Reload failed — open docs/board.md');
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1242,15 +1263,15 @@ function setSourceState(cls, text) {
 // Header buttons
 // ──────────────────────────────────────────────────────────────
 document.getElementById('btnSave').onclick = saveToFile;
-document.getElementById('btnReload').onclick = async () => {
-  if (fileHandle) {
-    await loadFromHandle();
-  } else {
-    await loadFromFetch();
-  }
-  render();
-};
+document.getElementById('btnReload').onclick = reloadBoard;
 document.getElementById('btnConnect').onclick = connectFile;
+document.getElementById('filePickerFallback').addEventListener('change', async (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  applyBoardMarkdown(await file.text(), 'linked', `Opened: ${file.name}`);
+  saveToLocalStorage();
+  render();
+});
 
 // ──────────────────────────────────────────────────────────────
 // Init

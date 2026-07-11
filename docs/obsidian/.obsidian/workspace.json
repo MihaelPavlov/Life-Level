@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "07 - Development/Plan - Level-Up Messages, Boss History, Combined Deploy.md",
+                "file": "02 - Game Design/World Lore and Region Story Seeds.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Plan - Level-Up Messages, Boss History, Combined Deploy"
+              "title": "World Lore and Region Story Seeds"
             }
           }
         ]
@@ -183,15 +183,21 @@
       "bases:Create new base": false
     }
   },
-  "active": "0b9cb93d96a46cda",
+  "active": "2456a66808104aad",
   "lastOpenFiles": [
-    "07 - Development/Plan - Level-Up Messages, Boss History, Combined Deploy 1.md",
+    "02 - Game Design/Plan - Adaptive Skill Tree.md",
+    "02 - Game Design/Plan - Progressive World Reveal.md",
+    "00 - Life-Level MOC.md",
+    "02 - Game Design/World Lore and Region Story Seeds.md",
+    "07 - Development/iOS Pre-Testing Setup.md",
+    "07 - Development/Known Issues.md",
+    "07 - Development/Plan - Guild System End-to-End.md",
     "07 - Development/Plan - Level-Up Messages, Boss History, Combined Deploy.md",
+    "07 - Development/Plan - Level-Up Messages, Boss History, Combined Deploy 1.md",
     "07 - Development/Internal Testing Findings.md",
     "07 - Development/Every-Session Startup.md",
     "07 - Development/Environment Setup.md",
     "07 - Development/Debug Endpoints.md",
-    "00 - Life-Level MOC.md",
     "01 - Product/The Forging - Unique Character Development.md",
     "01 - Product/The Forging - The Discipline Tree Library.md",
     "01 - Product/The Forging - Start Here (System Map).md",
@@ -205,12 +211,6 @@
     "01 - Product/Engagement Build Sequencing and Cost.md",
     "01 - Product/The Forging - Constellation, Inscriptions, Resonance.md",
     "01 - Product/Engagement Player Journey - Day-1 to Day-365.md",
-    "01 - Product/The Forging - The Awakening Bank.md",
-    "01 - Product/The Forging - Lineage and Long-Arc Mechanics.md",
-    "01 - Product/Engagement User Research Playbook.md",
-    "01 - Product/Engagement Design Principles.md",
-    "01 - Product/The Forging - Engineering Specs.md",
-    "01 - Product/Engagement Ship-Readiness Scorecard.md",
-    "01 - Product/Engagement Engineering Specs - Day-1, Autonomy, Competence.md"
+    "01 - Product/The Forging - The Awakening Bank.md"
   ]
 }

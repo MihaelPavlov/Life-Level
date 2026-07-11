@@ -1,14 +1,40 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/class_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../models/character_class.dart';
 import 'character_created_screen.dart';
+import 'setup_resume_service.dart';
 import 'welcome_setup_screen.dart' show setupProgressDots;
 
+class _AvatarOption {
+  final String emoji;
+  final String iconAsset;
+
+  const _AvatarOption(this.emoji, this.iconAsset);
+}
+
 const _kUnlockedAvatars = [
-  '🧙', '⚔️', '🏹', '🛡️', '🧘', '🐺', '🦊', '🥷', '🦸', '🧝',
+  _AvatarOption('🧙', AppIcons.avatarWizard),
+  _AvatarOption('⚔️', AppIcons.avatarWarrior),
+  _AvatarOption('🏹', AppIcons.avatarArcher),
+  _AvatarOption('🛡️', AppIcons.avatarPaladin),
+  _AvatarOption('🧘', AppIcons.avatarMonk),
+  _AvatarOption('🐺', AppIcons.avatarWolf),
+  _AvatarOption('🦊', AppIcons.avatarFox),
+  _AvatarOption('🥷', AppIcons.avatarNinja),
+  _AvatarOption('🦸', AppIcons.avatarSuperhero),
+  _AvatarOption('🧝', AppIcons.avatarElf),
 ];
+
 const _kLockedAvatars = [
-  '👑', '🌟', '💎', '🔮', '⚡', '🌙',
+  _AvatarOption('👑', AppIcons.avatarCrown),
+  _AvatarOption('🌟', AppIcons.avatarStar),
+  _AvatarOption('💎', AppIcons.avatarDiamond),
+  _AvatarOption('🔮', AppIcons.avatarMystic),
+  _AvatarOption('⚡', AppIcons.avatarLightning),
+  _AvatarOption('🌙', AppIcons.avatarMoon),
 ];
 
 class AvatarSelectionScreen extends StatefulWidget {
@@ -29,18 +55,31 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
   String? _selected;
 
   @override
+  void initState() {
+    super.initState();
+    SetupResumeService.instance.saveAvatarSelection(
+      ringItems: widget.ringItems,
+      selectedClass: widget.selectedClass,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final classAsset = classIconAsset(
+      className: widget.selectedClass.name,
+      classEmoji: widget.selectedClass.emoji,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Orange gradient glow at top
           Container(
             decoration: const BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment(0, -0.9),
                 radius: 1.2,
-                colors: [Color(0x12f5a623), Color(0x00040810)],
+                colors: [Color(0x12F5A623), Color(0x00040810)],
               ),
             ),
           ),
@@ -56,7 +95,15 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                       Row(
                         children: [
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () async {
+                              await SetupResumeService.instance.saveClassSelection(
+                                ringItems: widget.ringItems,
+                                selectedClass: widget.selectedClass,
+                              );
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
+                            },
                             child: Container(
                               width: 32,
                               height: 32,
@@ -64,7 +111,8 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: const Color(0xFF30363d)),
+                                  color: const Color(0xFF30363D),
+                                ),
                               ),
                               child: const Icon(
                                 Icons.arrow_back_ios_new,
@@ -77,10 +125,11 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                           const Text(
                             'STEP 3 OF 4',
                             style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
-                                letterSpacing: 0.6),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 0.6,
+                            ),
                           ),
                         ],
                       ),
@@ -88,17 +137,19 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                       const Text(
                         'Choose Your Avatar',
                         style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       const Text(
                         'This is how other players will see you on the map and leaderboards.',
                         style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            height: 1.5),
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       setupProgressDots(current: 2, total: 4),
@@ -112,23 +163,28 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Selected class badge
                         Row(
                           children: [
-                            Text(widget.selectedClass.emoji,
-                                style: const TextStyle(fontSize: 18)),
+                            if (classAsset != null) ...[
+                              AppIconImage(classAsset, size: 20),
+                            ] else ...[
+                              Text(
+                                widget.selectedClass.emoji,
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                            ],
                             const SizedBox(width: 8),
                             Text(
                               widget.selectedClass.name,
                               style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Preview circle
                         Center(
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
@@ -161,10 +217,30 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                               ],
                             ),
                             child: Center(
-                              child: Text(
-                                _selected ?? '?',
-                                style: const TextStyle(fontSize: 36),
-                              ),
+                              child: () {
+                                if (_selected == null) {
+                                  return const Text(
+                                    '?',
+                                    style: TextStyle(fontSize: 36),
+                                  );
+                                }
+
+                                final opt = _kUnlockedAvatars
+                                    .cast<_AvatarOption?>()
+                                    .firstWhere(
+                                      (o) => o?.emoji == _selected,
+                                      orElse: () => null,
+                                    );
+
+                                if (opt != null) {
+                                  return AppIconImage(opt.iconAsset, size: 56);
+                                }
+
+                                return Text(
+                                  _selected!,
+                                  style: const TextStyle(fontSize: 36),
+                                );
+                              }(),
                             ),
                           ),
                         ),
@@ -172,10 +248,11 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                         const Text(
                           'AVAILABLE',
                           style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 0.6),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 0.6,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         GridView.builder(
@@ -189,10 +266,18 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                           ),
                           itemCount: _kUnlockedAvatars.length,
                           itemBuilder: (_, i) {
-                            final emoji = _kUnlockedAvatars[i];
-                            final picked = _selected == emoji;
+                            final option = _kUnlockedAvatars[i];
+                            final picked = _selected == option.emoji;
+
                             return GestureDetector(
-                              onTap: () => setState(() => _selected = emoji),
+                              onTap: () async {
+                                setState(() => _selected = option.emoji);
+                                await SetupResumeService.instance.saveAvatarSelection(
+                                  ringItems: widget.ringItems,
+                                  selectedClass: widget.selectedClass,
+                                  avatarEmoji: _selected,
+                                );
+                              },
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 150),
                                 decoration: BoxDecoration(
@@ -209,16 +294,14 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                                   boxShadow: picked
                                       ? [
                                           BoxShadow(
-                                              color: AppColors.orange
-                                                  .withOpacity(0.15),
-                                              blurRadius: 10)
+                                            color: AppColors.orange.withOpacity(0.15),
+                                            blurRadius: 10,
+                                          ),
                                         ]
                                       : null,
                                 ),
                                 child: Center(
-                                  child: Text(emoji,
-                                      style:
-                                          const TextStyle(fontSize: 26)),
+                                  child: AppIconImage(option.iconAsset, size: 44),
                                 ),
                               ),
                             );
@@ -226,12 +309,13 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                         ),
                         const SizedBox(height: 20),
                         const Text(
-                          'LOCKED — UNLOCK AT HIGHER LEVELS',
+                          'LOCKED - UNLOCK AT HIGHER LEVELS',
                           style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 0.6),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 0.6,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         GridView.builder(
@@ -252,14 +336,15 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                                   decoration: BoxDecoration(
                                     color: AppColors.surface,
                                     border: Border.all(
-                                        color: AppColors.surfaceElevated),
-                                    borderRadius:
-                                        BorderRadius.circular(14),
+                                      color: AppColors.surfaceElevated,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Center(
-                                    child: Text(_kLockedAvatars[i],
-                                        style: const TextStyle(
-                                            fontSize: 26)),
+                                    child: AppIconImage(
+                                      _kLockedAvatars[i].iconAsset,
+                                      size: 44,
+                                    ),
                                   ),
                                 ),
                                 Positioned(
@@ -273,8 +358,11 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Center(
-                                      child: Text('🔒',
-                                          style: TextStyle(fontSize: 8)),
+                                      child: Icon(
+                                        Icons.lock,
+                                        size: 8,
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -292,15 +380,20 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                           ),
                           child: const Row(
                             children: [
-                              Text('💡', style: TextStyle(fontSize: 16)),
+                              Icon(
+                                Icons.lightbulb_outline,
+                                size: 16,
+                                color: AppColors.textSecondary,
+                              ),
                               SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   'More avatars unlock as you level up. Legendary avatars require Rank: Champion or higher.',
                                   style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.textSecondary,
-                                      height: 1.5),
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                    height: 1.5,
+                                  ),
                                 ),
                               ),
                             ],
@@ -313,7 +406,6 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
               ],
             ),
           ),
-          // Sticky CTA
           Positioned(
             left: 20,
             right: 20,
@@ -323,7 +415,14 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
               child: FilledButton(
                 onPressed: _selected == null
                     ? null
-                    : () => Navigator.push(
+                    : () async {
+                        await SetupResumeService.instance.saveCharacterCreated(
+                          ringItems: widget.ringItems,
+                          selectedClass: widget.selectedClass,
+                          avatarEmoji: _selected!,
+                        );
+                        if (!context.mounted) return;
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => CharacterCreatedScreen(
@@ -332,20 +431,23 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                               ringItems: widget.ringItems,
                             ),
                           ),
-                        ),
+                        );
+                      },
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.orange,
                   disabledBackgroundColor: AppColors.surface,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: const Text(
-                  'CONTINUE →',
+                  'CONTINUE',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.5,
-                      fontSize: 14),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),

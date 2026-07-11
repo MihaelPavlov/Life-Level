@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Trail Encounters</title>
+<style>
+:root {
+  --bg-deep:   #040810; --bg-base:  #080e14;
+  --s1: #161b22; --s2: #1e2632; --border: #30363d; --border-soft: #1e2632;
+  --tp: #e6edf3; --ts: #8b949e; --tm: #4d5b6b;
+  --blue: #4f9eff; --purple: #a371f7; --orange: #f5a623;
+  --red: #f85149; --green: #3fb950; --gold: #e3b341;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg-deep);
+  font-family:'Inter',-apple-system,sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+  padding:48px 32px; gap:60px;
+}
+.page-title { text-align:center; }
+.page-title h1 { font-size:22px; color:var(--tp); font-weight:800; margin-bottom:8px; }
+.page-title p  { font-size:13px; color:var(--ts); max-width:700px; line-height:1.6; }
+
+/* phone */
+.phone { width:390px; height:844px; background:var(--bg-base); border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:100; }
+.st { font-size:13px; font-weight:600; color:var(--tp); }
+.si { font-size:11px; color:var(--ts); }
+.nav { position:absolute; bottom:0; left:0; right:0; height:82px; background:var(--s1); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 8px 12px; z-index:100; }
+.ni { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:10px; }
+.ni-icon { font-size:20px; } .ni-label { font-size:10px; }
+.ni.active .ni-icon, .ni.active .ni-label { color:var(--blue); }
+.ni:not(.active) .ni-icon, .ni:not(.active) .ni-label { color:var(--ts); }
+.scroll { position:absolute; top:44px; left:0; right:0; bottom:82px; overflow-y:auto; scrollbar-width:none; }
+.scroll::-webkit-scrollbar { display:none; }
+
+/* flow layout */
+.flow-row { display:flex; align-items:flex-start; gap:0; }
+.sw { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.sl { text-align:center; max-width:390px; }
+.badge { display:inline-block; border-radius:12px; padding:3px 14px; font-size:10px; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.b-blue   { background:rgba(79,158,255,0.12);  border:1px solid rgba(79,158,255,0.4);  color:var(--blue); }
+.b-orange { background:rgba(245,166,35,0.12);  border:1px solid rgba(245,166,35,0.4);  color:var(--orange); }
+.b-red    { background:rgba(248,81,73,0.12);   border:1px solid rgba(248,81,73,0.4);   color:var(--red); }
+.b-purple { background:rgba(163,113,247,0.12); border:1px solid rgba(163,113,247,0.4); color:var(--purple); }
+.st-title { font-size:14px; color:var(--tp); font-weight:700; margin-bottom:3px; }
+.st-desc  { font-size:11px; color:var(--ts); line-height:1.5; }
+.arrow { display:flex; flex-direction:column; align-items:center; justify-content:center; width:56px; padding-top:360px; flex-shrink:0; gap:5px; }
+.arrow span { font-size:20px; color:#30363d; }
+.arrow small { font-size:9px; color:#586070; font-weight:600; letter-spacing:0.05em; text-align:center; }
+
+/* journey banner */
+.jbanner {
+  margin:8px 16px 0;
+  padding:10px 12px;
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(79,158,255,0.18),rgba(163,113,247,0.12));
+  border:1px solid rgba(79,158,255,0.4);
+  display:flex; align-items:center; gap:10px;
+}
+
+/* zone bubble */
+.zb {
+  width:64px; height:64px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; border:2px solid; position:relative;
+}
+.zb.done   { background:rgba(63,185,80,0.12);  border-color:var(--green);  box-shadow:0 0 0 4px rgba(63,185,80,0.12); }
+.zb.active { background:rgba(79,158,255,0.18); border-color:var(--blue);   box-shadow:0 0 0 4px rgba(79,158,255,0.15),0 0 20px rgba(79,158,255,0.4); animation:pulse-z 2s ease-in-out infinite; }
+.zb.next   { background:rgba(245,166,35,0.1);  border-color:rgba(245,166,35,0.5); box-shadow:0 0 0 3px rgba(245,166,35,0.08); }
+.zb.locked { background:rgba(30,38,50,0.7);    border-color:var(--border); opacity:0.5; }
+@keyframes pulse-z { 0%,100%{box-shadow:0 0 0 4px rgba(79,158,255,0.15),0 0 20px rgba(79,158,255,0.4)} 50%{box-shadow:0 0 0 8px rgba(79,158,255,0.08),0 0 32px rgba(79,158,255,0.6)} }
+
+/* NPC encounter node */
+.enc {
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; border:2px solid; position:absolute;
+  cursor:pointer; z-index:30;
+  transition:transform 0.15s;
+}
+.enc:hover { transform:translate(-50%,-50%) scale(1.1); }
+.enc.merchant { background:rgba(245,166,35,0.15); border-color:var(--orange); box-shadow:0 0 0 3px rgba(245,166,35,0.1),0 0 16px rgba(245,166,35,0.3); animation:pulse-enc-o 2.2s ease-in-out infinite; }
+.enc.miniboss { background:rgba(248,81,73,0.15);  border-color:var(--red);    box-shadow:0 0 0 3px rgba(248,81,73,0.1), 0 0 18px rgba(248,81,73,0.4);  animation:pulse-enc-r 1.6s ease-in-out infinite; }
+.enc.storynpc { background:rgba(163,113,247,0.15); border-color:var(--purple); box-shadow:0 0 0 3px rgba(163,113,247,0.1),0 0 14px rgba(163,113,247,0.3); animation:pulse-enc-p 2.4s ease-in-out infinite; }
+@keyframes pulse-enc-o { 0%,100%{box-shadow:0 0 0 3px rgba(245,166,35,0.1),0 0 16px rgba(245,166,35,0.3)} 50%{box-shadow:0 0 0 7px rgba(245,166,35,0.06),0 0 26px rgba(245,166,35,0.5)} }
+@keyframes pulse-enc-r { 0%,100%{box-shadow:0 0 0 3px rgba(248,81,73,0.1),0 0 18px rgba(248,81,73,0.4)} 50%{box-shadow:0 0 0 8px rgba(248,81,73,0.06),0 0 30px rgba(248,81,73,0.7)} }
+@keyframes pulse-enc-p { 0%,100%{box-shadow:0 0 0 3px rgba(163,113,247,0.1),0 0 14px rgba(163,113,247,0.3)} 50%{box-shadow:0 0 0 7px rgba(163,113,247,0.06),0 0 22px rgba(163,113,247,0.5)} }
+
+/* encounter badge on node */
+.enc-badge {
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  white-space:nowrap; font-size:8px; font-weight:800; letter-spacing:0.05em;
+  padding:2px 6px; border-radius:6px;
+}
+.enc-badge.o { background:var(--orange); color:#040810; }
+.enc-badge.r { background:var(--red);    color:#fff; }
+.enc-badge.p { background:var(--purple); color:#fff; }
+
+/* walker token */
+.walker {
+  position:absolute; z-index:40;
+  display:flex; flex-direction:column; align-items:center; gap:0;
+  transform:translate(-50%,-50%);
+  animation:walker-bob 1.8s ease-in-out infinite;
+}
+@keyframes walker-bob { 0%,100%{transform:translate(-50%,-50%) translateY(0)} 50%{transform:translate(-50%,-50%) translateY(-4px)} }
+.walker-badge { background:var(--blue); border-radius:6px; padding:2px 7px; font-size:8px; font-weight:800; color:#fff; letter-spacing:0.8px; white-space:nowrap; margin-bottom:3px; box-shadow:0 0 8px rgba(79,158,255,0.5); }
+.walker-body { background:rgba(79,158,255,0.14); border:2px solid rgba(79,158,255,0.5); border-radius:14px; padding:6px 10px; font-size:22px; box-shadow:0 0 14px rgba(79,158,255,0.3); }
+
+/* blocking overlay on trail */
+.block-line {
+  position:absolute; left:0; right:0;
+  border-top:2px dashed rgba(248,81,73,0.4);
+  z-index:20;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* bottom sheet */
+.bsheet {
+  position:absolute; bottom:82px; left:0; right:0;
+  border-radius:20px 20px 0 0;
+  z-index:150;
+  max-height:520px; overflow-y:auto;
+}
+.bsheet::-webkit-scrollbar { display:none; }
+.bsheet-handle { width:36px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; margin:0 auto 16px; }
+
+/* items in merchant */
+.item-row {
+  background:var(--s1); border:1px solid var(--border); border-radius:12px;
+  padding:12px 14px; display:flex; align-items:center; gap:12px; margin-bottom:8px;
+}
+.rarity-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* dialogue bubble */
+.dialogue {
+  background:var(--s1); border:1px solid var(--border); border-radius:0 14px 14px 14px;
+  padding:14px 16px; position:relative; margin-bottom:14px;
+}
+.dialogue::before {
+  content:''; position:absolute; top:-10px; left:0;
+  border-width:0 10px 10px 0; border-style:solid;
+  border-color:transparent var(--border) transparent transparent;
+}
+.dialogue::after {
+  content:''; position:absolute; top:-8px; left:1px;
+  border-width:0 9px 9px 0; border-style:solid;
+  border-color:transparent var(--s1) transparent transparent;
+}
+
+/* choice button */
+.choice-btn {
+  background:var(--s2); border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px; font-size:12px; color:var(--tp); font-weight:600;
+  display:flex; align-items:center; gap:8px; margin-bottom:7px; cursor:pointer;
+}
+
+/* map canvas for trail screen */
+.map-trail-bg {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 30% 40%,rgba(79,158,255,0.06) 0%,transparent 55%),
+    radial-gradient(ellipse at 70% 70%,rgba(163,113,247,0.04) 0%,transparent 45%),
+    var(--bg-base);
+}
+.map-trail-bg::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(rgba(79,158,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(79,158,255,0.018) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>Trail Encounters — Interactive NPCs</h1>
+  <p>Three encounter types spawn on the Bezier path while the Walker travels between zones. Each type interrupts the journey differently — story adds lore, merchants offer timed deals, mini-bosses block progress until defeated.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ ROW 1 -->
+<div class="flow-row">
+
+<!-- ══ SCREEN 1: TRAIL WITH ALL 3 ENCOUNTERS ═══════════════════ -->
+<div class="sw">
+  <div class="sl">
+    <div class="badge b-blue">SCREEN 1</div>
+    <div class="st-title">Trail — All 3 Encounters Spawned</div>
+    <div class="st-desc">Walker is mid-journey. A story NPC, merchant, and<br>mini-boss blocker are ahead on the path.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Background -->
+    <div class="map-trail-bg"></div>
+
+    <!-- Journey banner -->
+    <div style="position:absolute;top:52px;left:0;right:0;padding:0 16px;z-index:50">
+      <div class="jbanner">
+        <div style="width:30px;height:30px;background:rgba(79,158,255,0.2);border:1px solid rgba(79,158,255,0.5);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⛰️</div>
+        <div style="flex:1">
+          <div style="font-size:9px;font-weight:800;color:var(--blue);letter-spacing:0.08em">TRAVELING · FOREST OF ENDURANCE</div>
+          <div style="font-size:12px;font-weight:700;color:var(--tp)">→ Iron Peaks · 4.5 / 10.0 km</div>
+        </div>
+        <div style="font-size:13px;font-weight:800;color:var(--tp)">45%</div>
+      </div>
+      <!-- progress bar -->
+      <div style="height:5px;background:var(--s2);border-radius:3px;overflow:hidden;margin-top:6px;margin-left:0">
+        <div style="height:100%;width:45%;background:linear-gradient(to right,var(--blue),var(--orange));border-radius:3px"></div>
+      </div>
+    </div>
+
+    <!-- TRAIL CANVAS (scrollable) -->
+    <div class="scroll" style="top:130px">
+      <div style="position:relative;width:100%;height:780px;padding:0 0 20px">
+
+        <!-- ── SVG PATHS ─────────────────────────────────────── -->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" viewBox="0 0 390 780">
+          <!-- Zone1→Zone2 (done, green) -->
+          <path d="M110,60 C110,115 280,115 280,170" stroke="rgba(63,185,80,0.55)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M110,60 C110,115 280,115 280,170" stroke="rgba(63,185,80,0.12)" stroke-width="10" fill="none" stroke-linecap="round"/>
+          <!-- Zone2→Zone3 (done, green) -->
+          <path d="M280,170 C280,235 110,235 110,300" stroke="rgba(63,185,80,0.55)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M280,170 C280,235 110,235 110,300" stroke="rgba(63,185,80,0.12)" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+          <!-- Zone3(active)→Zone4(next): ACTIVE path with encounters -->
+          <!-- Done portion (green, Zone3 to Walker at ~45%) -->
+          <path d="M110,300 C110,375 280,375 280,450" stroke="rgba(63,185,80,0.0)" stroke-width="0" fill="none"/>
+
+          <!-- Full path background -->
+          <path d="M110,300 C110,375 280,375 280,450" stroke="rgba(30,38,50,0.9)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <!-- Halo glow on active edge -->
+          <path d="M110,300 C110,375 280,375 280,450" stroke="rgba(245,166,35,0.1)" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- Traveled (green) segment: t=0 to t=0.45 -->
+          <path d="M110,300 C110,337 166,362 182,363" stroke="rgba(63,185,80,0.65)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <!-- Remaining (orange dashed) from Walker to mini-boss -->
+          <path d="M182,363 C200,390 240,420 262,452" stroke="rgba(245,166,35,0.4)" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="6 5"/>
+          <!-- BLOCKED segment (red dashed) from mini-boss to Zone4 -->
+          <path d="M262,452 C268,462 278,448 280,450" stroke="rgba(248,81,73,0.5)" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="4 4"/>
+
+          <!-- Zone4→Zone5 (locked, grey dashed) -->
+          <path d="M280,450 C280,515 110,515 110,580" stroke="rgba(48,54,61,0.8)" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="6 6"/>
+        </svg>
+
+        <!-- ── ZONE NODES ──────────────────────────────────────── -->
+
+        <!-- Zone 1: Ashfield Plains (completed, right→left=left) -->
+        <div style="position:absolute;left:110px;top:60px;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="zb done">🌾</div>
+          <div style="font-size:9px;font-weight:700;color:var(--green);text-align:center">Ashfield Plains<br><span style="color:var(--ts);font-weight:400">Completed</span></div>
+        </div>
+
+        <!-- Zone 2: Misty Crossing (completed, right) -->
+        <div style="position:absolute;left:280px;top:170px;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="zb done">🌉</div>
+          <div style="font-size:9px;font-weight:700;color:var(--green);text-align:center">Misty Crossing<br><span style="color:var(--ts);font-weight:400">Completed</span></div>
+        </div>
+
+        <!-- Zone 3: Thornwood (ACTIVE, left) -->
+        <div style="position:absolute;left:110px;top:300px;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="zb active">🌲</div>
+          <div style="font-size:9px;font-weight:700;color:var(--blue);text-align:center">Thornwood Forest<br>
+            <span style="background:rgba(79,158,255,0.15);border:1px solid rgba(79,158,255,0.4);border-radius:5px;color:var(--blue);padding:1px 6px;font-size:8px;font-weight:800">YOU ARE HERE</span>
+          </div>
+        </div>
+
+        <!-- Zone 4: Iron Peaks (NEXT, right) -->
+        <div style="position:absolute;left:280px;top:450px;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="zb next">⛰️</div>
+          <div style="font-size:9px;font-weight:700;color:var(--orange);text-align:center">Iron Peaks<br><span style="color:var(--ts)">+500 XP on arrival</span></div>
+        </div>
+
+        <!-- Zone 5: Crystal Wastes (locked, left) -->
+        <div style="position:absolute;left:110px;top:580px;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="zb locked">❄️</div>
+          <div style="font-size:9px;color:var(--tm);text-align:center">Crystal Wastes<br><span style="font-size:8px">🔒 Locked</span></div>
+        </div>
+
+        <!-- ── ENCOUNTER NODES ─────────────────────────────────── -->
+
+        <!-- STORY NPC: t≈0.22, pos (132, 308) — BEHIND walker (already passed) -->
+        <!-- Actually let's put story NPC AHEAD of walker at t=0.25 but CLOSER, so walker is mid -->
+        <!-- Let me re-position: Story at (135, 316), Walker at (182, 363), Merchant at (220, 399), Boss at (262, 452) -->
+
+        <!-- STORY NPC at path t≈0.20, pos ~(130, 318) -->
+        <div class="enc storynpc" style="left:130px;top:318px;transform:translate(-50%,-50%)">
+          📖
+          <div class="enc-badge p">STORY</div>
+        </div>
+        <!-- label -->
+        <div style="position:absolute;left:60px;top:318px;transform:translateY(-50%);white-space:nowrap">
+          <div style="font-size:9px;font-weight:700;color:var(--purple)">Aldric the Wanderer</div>
+          <div style="font-size:8px;color:var(--ts)">Tap to listen</div>
+        </div>
+
+        <!-- WALKER at t≈0.45 -->
+        <div class="walker" style="left:182px;top:363px">
+          <div class="walker-badge">YOU · 4.5 KM</div>
+          <div class="walker-body">🧙</div>
+        </div>
+
+        <!-- MERCHANT at t≈0.60, pos ~(220, 399) — AHEAD -->
+        <div class="enc merchant" style="left:220px;top:399px;transform:translate(-50%,-50%)">
+          🛒
+          <div class="enc-badge o">18h</div>
+        </div>
+        <!-- label -->
+        <div style="position:absolute;left:247px;top:399px;transform:translateY(-50%);white-space:nowrap">
+          <div style="font-size:9px;font-weight:700;color:var(--orange)">Gornak the Trader</div>
+          <div style="font-size:8px;color:var(--ts)">3 items · 0.7 km ahead</div>
+        </div>
+
+        <!-- MINI-BOSS BLOCKER at t≈0.80, pos ~(262, 452) — BLOCKING entry -->
+        <div class="enc miniboss" style="left:262px;top:437px;transform:translate(-50%,-50%)">
+          💀
+          <div class="enc-badge r">BLOCKING</div>
+        </div>
+        <!-- label -->
+        <div style="position:absolute;left:62px;top:437px;transform:translateY(-50%);white-space:nowrap">
+          <div style="font-size:9px;font-weight:700;color:var(--red)">Ember Wolf</div>
+          <div style="font-size:8px;color:var(--ts)">Path blocked · Must defeat</div>
+        </div>
+
+        <!-- "BLOCKED" bar across the path near Zone4 -->
+        <div style="position:absolute;left:16px;right:16px;top:444px;display:flex;align-items:center;gap:8px;z-index:20;pointer-events:none">
+          <div style="flex:1;height:1px;background:rgba(248,81,73,0.3)"></div>
+          <div style="font-size:8px;font-weight:800;color:rgba(248,81,73,0.6);letter-spacing:0.08em;white-space:nowrap">⚠️ BLOCKED</div>
+          <div style="flex:1;height:1px;background:rgba(248,81,73,0.3)"></div>
+        </div>
+
+        <!-- Legend -->
+        <div style="position:absolute;bottom:10px;left:16px;right:16px;display:flex;justify-content:center;gap:12px">
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:50%;background:var(--purple);opacity:0.8"></div><span style="font-size:8px;color:var(--ts)">Story</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:50%;background:var(--orange);opacity:0.8"></div><span style="font-size:8px;color:var(--ts)">Merchant</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:50%;background:var(--red);opacity:0.8"></div><span style="font-size:8px;color:var(--ts)">Blocker</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="ni"><div class="ni-icon">⊞</div><div class="ni-label">Home</div></div>
+      <div class="ni active"><div class="ni-icon">🗺️</div><div class="ni-label">Map</div></div>
+      <div class="ni"><div class="ni-icon">📜</div><div class="ni-label">Quests</div></div>
+      <div class="ni"><div class="ni-icon">👤</div><div class="ni-label">Profile</div></div>
+    </div>
+  </div>
+</div><!-- /sw -->
+
+<div class="arrow"><span>→</span><small>TAP<br>MERCHANT</small></div>
+
+<!-- ══ SCREEN 2: MERCHANT SHEET ════════════════════════════════ -->
+<div class="sw">
+  <div class="sl">
+    <div class="badge b-orange">SCREEN 2</div>
+    <div class="st-title">Encounter — Wandering Merchant</div>
+    <div class="st-desc">Gornak appears for 18h. Miss him and he's gone.<br>Items bought with XP, timed scarcity creates urgency.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Dimmed trail in background -->
+    <div class="map-trail-bg" style="opacity:0.4"></div>
+
+    <!-- Dark overlay scrim -->
+    <div style="position:absolute;inset:0;background:rgba(4,8,16,0.6);z-index:50"></div>
+
+    <!-- Merchant bottom sheet -->
+    <div class="bsheet" style="background:linear-gradient(180deg,var(--s1) 0%,var(--bg-base) 100%);border-top:1px solid rgba(245,166,35,0.4);box-shadow:0 -20px 60px rgba(245,166,35,0.12)">
+      <div style="padding:16px 20px 24px">
+        <div class="bsheet-handle"></div>
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:52px;height:52px;background:rgba(245,166,35,0.12);border:2px solid rgba(245,166,35,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 20px rgba(245,166,35,0.3)">🛒</div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--orange);font-weight:800;letter-spacing:0.07em;margin-bottom:2px">⚡ WANDERING MERCHANT</div>
+            <div style="font-size:17px;font-weight:700;color:var(--tp)">Gornak the Trader</div>
+            <div style="font-size:11px;color:var(--ts)">"I carry only the finest — for a price."</div>
+          </div>
+          <!-- Urgency timer -->
+          <div style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.4);border-radius:10px;padding:6px 10px;text-align:center">
+            <div style="font-size:13px;font-weight:800;color:var(--red)">17h 42m</div>
+            <div style="font-size:8px;color:var(--ts)">remaining</div>
+          </div>
+        </div>
+
+        <!-- XP balance -->
+        <div style="background:rgba(79,158,255,0.08);border:1px solid rgba(79,158,255,0.2);border-radius:10px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:11px;color:var(--ts)">Your XP balance</span>
+          <span style="font-size:13px;font-weight:800;color:var(--blue)">⚡ 2,840 XP</span>
+        </div>
+
+        <div style="font-size:10px;color:var(--ts);font-weight:700;letter-spacing:0.07em;margin-bottom:10px">MERCHANT STOCK (3 items)</div>
+
+        <!-- Item 1: Rare -->
+        <div class="item-row">
+          <div style="width:42px;height:42px;background:rgba(79,158,255,0.1);border:2px solid rgba(79,158,255,0.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🛡️</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-size:13px;font-weight:700;color:var(--tp)">Iron Bulwark</span>
+              <span style="font-size:9px;font-weight:800;color:var(--blue);background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.3);border-radius:5px;padding:1px 5px">RARE</span>
+            </div>
+            <div style="font-size:10px;color:var(--ts)">+12 DEF · +4 STR · Shield slot</div>
+          </div>
+          <button style="background:rgba(79,158,255,0.15);border:1px solid rgba(79,158,255,0.4);border-radius:9px;padding:7px 10px;color:var(--blue);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap">800 XP</button>
+        </div>
+
+        <!-- Item 2: Uncommon -->
+        <div class="item-row">
+          <div style="width:42px;height:42px;background:rgba(63,185,80,0.1);border:2px solid rgba(63,185,80,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👟</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-size:13px;font-weight:700;color:var(--tp)">Swift Striders</span>
+              <span style="font-size:9px;font-weight:800;color:var(--green);background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.3);border-radius:5px;padding:1px 5px">UNCOMMON</span>
+            </div>
+            <div style="font-size:10px;color:var(--ts)">+6 AGI · +3 END · Boots slot</div>
+          </div>
+          <button style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.3);border-radius:9px;padding:7px 10px;color:var(--green);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap">450 XP</button>
+        </div>
+
+        <!-- Item 3: Mystery -->
+        <div class="item-row" style="border-color:rgba(163,113,247,0.3);background:rgba(163,113,247,0.04)">
+          <div style="width:42px;height:42px;background:rgba(163,113,247,0.12);border:2px solid rgba(163,113,247,0.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔮</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-size:13px;font-weight:700;color:var(--tp)">Mystery Vial</span>
+              <span style="font-size:9px;font-weight:800;color:var(--purple);background:rgba(163,113,247,0.12);border:1px solid rgba(163,113,247,0.3);border-radius:5px;padding:1px 5px">???</span>
+            </div>
+            <div style="font-size:10px;color:var(--ts)">Unknown effect · One-time use</div>
+          </div>
+          <button style="background:rgba(163,113,247,0.15);border:1px solid rgba(163,113,247,0.4);border-radius:9px;padding:7px 10px;color:var(--purple);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap">200 XP</button>
+        </div>
+
+        <div style="margin-top:12px;text-align:center;font-size:10px;color:var(--tm)">Merchant disappears in 17h 42m · items gone forever</div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="ni"><div class="ni-icon">⊞</div><div class="ni-label">Home</div></div>
+      <div class="ni active"><div class="ni-icon">🗺️</div><div class="ni-label">Map</div></div>
+      <div class="ni"><div class="ni-icon">📜</div><div class="ni-label">Quests</div></div>
+      <div class="ni"><div class="ni-icon">👤</div><div class="ni-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /flow-row 1 -->
+
+<!-- ═══════════════════════════════════════════════════════════ ROW 2 -->
+<div class="flow-row">
+
+<!-- ══ SCREEN 3: MINI-BOSS BLOCKER ════════════════════════════ -->
+<div class="sw">
+  <div class="sl">
+    <div class="badge b-red">SCREEN 3</div>
+    <div class="st-title">Encounter — Path Ambush</div>
+    <div class="st-desc">Mini-boss blocks the path. Journey frozen until<br>defeated by logging workouts. 3-day timer.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Red ambient bg -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 38%,rgba(248,81,73,0.18) 0%,var(--bg-base) 65%);z-index:1"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(rgba(79,158,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(79,158,255,0.018) 1px,transparent 1px);background-size:40px 40px;z-index:1;opacity:0.5"></div>
+
+    <div class="scroll" style="z-index:2">
+      <div style="padding:60px 20px 20px">
+
+        <!-- AMBUSH WARNING banner -->
+        <div style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.5);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:20px;box-shadow:0 0 20px rgba(248,81,73,0.15)">
+          <span style="font-size:20px">⚠️</span>
+          <div>
+            <div style="font-size:10px;font-weight:800;color:var(--red);letter-spacing:0.08em">PATH AMBUSH — JOURNEY FROZEN</div>
+            <div style="font-size:11px;color:var(--ts)">Defeat this creature to continue to Iron Peaks</div>
+          </div>
+        </div>
+
+        <!-- Boss card -->
+        <div style="background:rgba(22,27,34,0.97);border:2px solid rgba(248,81,73,0.5);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 0 30px rgba(248,81,73,0.15)">
+
+          <!-- Boss icon + name -->
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+            <div style="width:68px;height:68px;background:rgba(40,8,8,0.95);border:3px solid var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 28px rgba(248,81,73,0.5);flex-shrink:0;animation:boss-glow 1.4s ease-in-out infinite">🐺</div>
+            <div style="flex:1">
+              <div style="font-size:10px;color:var(--red);font-weight:800;letter-spacing:0.07em;margin-bottom:3px">💀 PATH BLOCKER · MINI-BOSS</div>
+              <div style="font-size:20px;font-weight:800;color:var(--tp)">Ember Wolf</div>
+              <div style="font-size:11px;color:var(--ts)">Forest of Endurance</div>
+            </div>
+          </div>
+          <style>@keyframes boss-glow { 0%,100%{box-shadow:0 0 28px rgba(248,81,73,0.5)} 50%{box-shadow:0 0 44px rgba(248,81,73,0.8)} }</style>
+
+          <!-- HP bar -->
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:5px">
+              <span style="color:var(--red);font-weight:700">BOSS HP</span>
+              <span style="color:var(--tp);font-weight:700">3,800 / 5,000 HP</span>
+            </div>
+            <div style="height:12px;background:var(--s2);border-radius:6px;overflow:hidden">
+              <div style="height:100%;width:76%;background:linear-gradient(to right,var(--red),#ff6b35);border-radius:6px;box-shadow:0 0 8px rgba(248,81,73,0.5)"></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-bottom:14px">
+            <span>1,200 damage dealt by you</span>
+            <span style="color:var(--orange);font-weight:700">⏱ 2d 14h left</span>
+          </div>
+
+          <!-- Damage mechanic explanation -->
+          <div style="background:rgba(79,158,255,0.06);border:1px solid rgba(79,158,255,0.2);border-radius:10px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:16px">💡</span>
+            <div style="font-size:11px;color:var(--ts);line-height:1.55">Each workout you log deals damage. Running 5 km = ~340 dmg. Gym 45 min = ~420 dmg. Log activities to destroy it.</div>
+          </div>
+
+          <!-- Last hit row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border-soft)">
+            <div style="font-size:10px;color:var(--ts)">Last hit</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--ts)">Running 6.2 km</span>
+              <span style="font-size:10px;font-weight:700;color:var(--red)">–420 HP</span>
+              <span style="font-size:9px;color:var(--tm)">2h ago</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rewards preview -->
+        <div style="background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-radius:12px;padding:12px 14px;margin-bottom:16px">
+          <div style="font-size:10px;color:var(--orange);font-weight:800;letter-spacing:0.07em;margin-bottom:8px">DEFEAT REWARDS</div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;background:var(--s2);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px">⚡</div><div style="font-size:11px;font-weight:700;color:var(--blue)">+800 XP</div></div>
+            <div style="flex:1;background:var(--s2);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px">🦴</div><div style="font-size:11px;font-weight:700;color:var(--orange)">Wolf Fang</div><div style="font-size:8px;color:var(--ts)">UNCOMMON</div></div>
+            <div style="flex:1;background:var(--s2);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px">🗺️</div><div style="font-size:11px;font-weight:700;color:var(--green)">Path clear</div></div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <button style="background:linear-gradient(135deg,var(--red),#c0392b);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;padding:14px;width:100%;cursor:pointer;letter-spacing:0.02em">🏃 Log a Workout to Deal Damage</button>
+
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="ni"><div class="ni-icon">⊞</div><div class="ni-label">Home</div></div>
+      <div class="ni active"><div class="ni-icon">🗺️</div><div class="ni-label">Map</div></div>
+      <div class="ni"><div class="ni-icon">📜</div><div class="ni-label">Quests</div></div>
+      <div class="ni"><div class="ni-icon">👤</div><div class="ni-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow"><span>→</span><small>TAP<br>STORY NPC</small></div>
+
+<!-- ══ SCREEN 4: STORY NPC DIALOGUE ════════════════════════════ -->
+<div class="sw">
+  <div class="sl">
+    <div class="badge b-purple">SCREEN 4</div>
+    <div class="st-title">Encounter — Story NPC</div>
+    <div class="st-desc">Lore figure on the road. No combat, no cost. Gives<br>context, foreshadowing, or a branching choice.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+
+    <!-- Purple ambient bg -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,rgba(163,113,247,0.14) 0%,var(--bg-base) 65%);z-index:1"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(rgba(163,113,247,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(163,113,247,0.015) 1px,transparent 1px);background-size:40px 40px;z-index:1"></div>
+
+    <div class="scroll" style="z-index:2">
+      <div style="padding:60px 20px 20px">
+
+        <!-- NPC header -->
+        <div style="text-align:center;margin-bottom:24px">
+          <!-- NPC big avatar -->
+          <div style="position:relative;display:inline-block;margin-bottom:12px">
+            <div style="width:80px;height:80px;background:rgba(163,113,247,0.12);border:3px solid rgba(163,113,247,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 0 30px rgba(163,113,247,0.3);margin:0 auto;animation:npc-float 3s ease-in-out infinite">🧙‍♂️</div>
+            <div style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--bg-base)">📖</div>
+          </div>
+          <style>@keyframes npc-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }</style>
+          <div style="font-size:10px;color:var(--purple);font-weight:800;letter-spacing:0.08em;margin-bottom:4px">📖 STRANGER ON THE ROAD</div>
+          <div style="font-size:18px;font-weight:700;color:var(--tp)">Aldric the Wanderer</div>
+          <div style="font-size:11px;color:var(--ts)">Ancient traveler · Forest of Endurance</div>
+        </div>
+
+        <!-- Dialogue bubble -->
+        <div class="dialogue">
+          <div style="font-size:13px;color:var(--tp);line-height:1.7;font-style:italic">"Ah, another soul walks the Iron Road... I have crossed these peaks a hundred times. The wolves grow bolder near the summit — they answer to something older than the stones. Be wary, traveler. Not all who block your path are enemies. And not all who offer gifts are friends."</div>
+          <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
+            <div style="width:6px;height:6px;background:var(--purple);border-radius:50%;animation:typing 1s 0s ease-in-out infinite"></div>
+            <div style="width:6px;height:6px;background:var(--purple);border-radius:50%;animation:typing 1s 0.2s ease-in-out infinite"></div>
+            <div style="width:6px;height:6px;background:var(--purple);border-radius:50%;animation:typing 1s 0.4s ease-in-out infinite;opacity:0.5"></div>
+            <span style="font-size:9px;color:var(--tm);margin-left:4px">Aldric is speaking...</span>
+          </div>
+          <style>@keyframes typing { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }</style>
+        </div>
+
+        <!-- Lore reward chip -->
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(163,113,247,0.08);border:1px solid rgba(163,113,247,0.25);border-radius:10px;padding:8px 12px;margin-bottom:16px">
+          <span style="font-size:14px">📜</span>
+          <div style="flex:1;font-size:11px;color:var(--ts)"><span style="color:var(--purple);font-weight:700">Lore unlocked:</span> "The Iron Road — Chapter 2"</div>
+          <span style="font-size:11px;font-weight:700;color:var(--blue)">+50 XP</span>
+        </div>
+
+        <!-- Response choices -->
+        <div style="font-size:10px;color:var(--ts);font-weight:700;letter-spacing:0.07em;margin-bottom:10px">YOUR RESPONSE</div>
+
+        <div class="choice-btn" style="border-color:rgba(163,113,247,0.3)">
+          <span style="font-size:16px">🗡️</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--tp)">"I fear nothing on these roads."</div>
+            <div style="font-size:10px;color:var(--ts)">Gain +STR flavor boost · Boss +10% dmg</div>
+          </div>
+        </div>
+
+        <div class="choice-btn" style="border-color:rgba(79,158,255,0.3)">
+          <span style="font-size:16px">🗺️</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--tp)">"Tell me more about the summit."</div>
+            <div style="font-size:10px;color:var(--ts)">Unlocks hidden zone hint · +30 XP</div>
+          </div>
+        </div>
+
+        <div class="choice-btn">
+          <span style="font-size:16px">👋</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--tp)">"Safe travels, old man."</div>
+            <div style="font-size:10px;color:var(--ts)">Continue journey · No bonus</div>
+          </div>
+        </div>
+
+        <!-- Flavor note -->
+        <div style="margin-top:14px;padding:10px 14px;background:rgba(163,113,247,0.06);border:1px solid rgba(163,113,247,0.2);border-radius:10px;text-align:center">
+          <div style="font-size:10px;color:var(--ts);line-height:1.5">This NPC will disappear once you leave the path segment. Some NPCs return on future journeys through this zone.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="ni"><div class="ni-icon">⊞</div><div class="ni-label">Home</div></div>
+      <div class="ni active"><div class="ni-icon">🗺️</div><div class="ni-label">Map</div></div>
+      <div class="ni"><div class="ni-icon">📜</div><div class="ni-label">Quests</div></div>
+      <div class="ni"><div class="ni-icon">👤</div><div class="ni-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /flow-row 2 -->
+
+<!-- ── CONCEPT NOTES ──────────────────────────────────────────── -->
+<div style="max-width:1340px;width:100%;background:var(--s1);border:1px solid var(--border-soft);border-radius:16px;padding:24px 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:20px">
+  <div>
+    <div style="font-size:10px;color:var(--purple);font-weight:700;letter-spacing:0.08em;margin-bottom:10px">📖 STORY NPC</div>
+    <div style="font-size:12px;color:var(--ts);line-height:1.7">Spawns on a specific path segment, persists 24–48h. One-time dialogue per journey. Grants lore entry + small XP. Optional branching response that gives minor mechanical bonuses (+STR flavor, hint unlock). Never blocks progress. Disappears when the Walker leaves the segment or timer expires. Some are recurring on repeat region traversal.</div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:var(--orange);font-weight:700;letter-spacing:0.08em;margin-bottom:10px">🛒 WANDERING MERCHANT</div>
+    <div style="font-size:12px;color:var(--ts);line-height:1.7">Spawns anywhere on any active path edge for 5–24h (random window). Stocks 3–5 items from a rarity-weighted pool. Purchased with XP. Does NOT block progress — Walker walks past the merchant and can shop any time while on that segment. Timer shown in red below 4h to create urgency. Backend: same entity as planned in Phase 7 Random Events.</div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:var(--red);font-weight:700;letter-spacing:0.08em;margin-bottom:10px">💀 PATH BLOCKER (AMBUSH)</div>
+    <div style="font-size:12px;color:var(--ts);line-height:1.7">Rare spawn (10–15% chance per edge traversal). FREEZES Walker progress — km no longer accumulate toward destination until boss is defeated. 3-day timer. Damage via normal activity logging (reuses BossService.CalculateDamageFromActivity). Has its own HP pool separate from zone bosses. Rewards: XP + uncommon item drop + path cleared. Shown as red BLOCKING badge on the trail node.</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../shell_constants.dart';
 import '../shell_models.dart';
+import '../../widgets/app_icon_image.dart';
 
 class RingItemTile extends StatelessWidget {
   final RingItem item;
@@ -22,7 +23,9 @@ class RingItemTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(item.emoji, style: const TextStyle(fontSize: 20)),
+          item.iconAsset != null
+              ? AppIconImage(item.iconAsset!, size: 28)
+              : Text(item.emoji, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 2),
           Text(item.label,
               style: TextStyle(

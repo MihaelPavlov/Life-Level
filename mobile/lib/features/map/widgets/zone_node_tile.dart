@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
+import 'map_icon_resolver.dart';
 import 'world_map_theme.dart';
 
 /// A single bubble on the region trail: emoji circle, name, sub-label, and an
@@ -14,6 +15,8 @@ import 'world_map_theme.dart';
 class ZoneNodeBubble extends StatefulWidget {
   final ZoneNode node;
   final ActiveJourney? journey;
+  final RegionTheme? regionTheme;
+  final String? regionName;
 
   /// Name of the region that defeating this zone's boss unlocks. Used only
   /// when [ZoneNode.isBoss] is true to render the "Boss · Unlocks X" sub-label.
@@ -25,6 +28,8 @@ class ZoneNodeBubble extends StatefulWidget {
     super.key,
     required this.node,
     this.journey,
+    this.regionTheme,
+    this.regionName,
     this.nextRegionName,
     this.onTap,
   });
@@ -63,7 +68,13 @@ class _ZoneNodeBubbleState extends State<ZoneNodeBubble>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _Circle(node: node, pulse: _pulse, accent: accent),
+        _Circle(
+          node: node,
+          pulse: _pulse,
+          accent: accent,
+          regionTheme: widget.regionTheme,
+          regionName: widget.regionName,
+        ),
         const SizedBox(height: 6),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 130),
@@ -124,19 +135,36 @@ class _Circle extends StatelessWidget {
   final ZoneNode node;
   final AnimationController pulse;
   final Color accent;
+  final RegionTheme? regionTheme;
+  final String? regionName;
   const _Circle({
     required this.node,
     required this.pulse,
     required this.accent,
+    required this.regionTheme,
+    required this.regionName,
   });
 
   @override
   Widget build(BuildContext context) {
     final size = _size(node);
-    final borderWidth =
-        node.status == ZoneNodeStatus.active ? 3.0 : 2.0;
+    final borderWidth = node.status == ZoneNodeStatus.active ? 3.0 : 2.0;
     final isCompleted = node.status == ZoneNodeStatus.completed;
     final isLocked = node.status == ZoneNodeStatus.locked;
+    final iconAsset = zoneNodeIconAsset(
+      node,
+      regionTheme: regionTheme,
+      regionName: regionName,
+    );
+    final nodeIcon = MapIconOrEmoji(
+      asset: iconAsset,
+      emoji: node.emoji,
+      size: _iconSize(node),
+      emojiSize: _emojiSize(node),
+      emojiColor: accent,
+      emojiWeight: FontWeight.w700,
+      visualScale: node.isCrossroads ? 1.25 : 1.45,
+    );
 
     Widget circle = Container(
       width: size,
@@ -149,18 +177,14 @@ class _Circle extends StatelessWidget {
           colors: [accent.withOpacity(0.22), accent.withOpacity(0.06)],
         ),
         shape: node.isCrossroads ? BoxShape.rectangle : BoxShape.circle,
-        borderRadius:
-            node.isCrossroads ? BorderRadius.circular(12) : null,
+        borderRadius: node.isCrossroads ? BorderRadius.circular(12) : null,
         border: Border.all(color: accent, width: borderWidth),
       ),
-      child: Text(
-        isCompleted ? '✓' : node.emoji,
-        style: TextStyle(
-          fontSize: _emojiSize(node),
-          color: isCompleted ? accent : null,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: isCompleted
+          ? Icon(Icons.check_rounded, size: _emojiSize(node) + 4, color: accent)
+          : node.isCrossroads
+              ? null
+              : nodeIcon,
     );
 
     // Crossroads renders as a rotated-45° square with an upright emoji.
@@ -168,10 +192,7 @@ class _Circle extends StatelessWidget {
       circle = Transform.rotate(angle: 0.785398, child: circle);
       circle = Stack(alignment: Alignment.center, children: [
         circle,
-        Text(
-          node.emoji,
-          style: TextStyle(fontSize: _emojiSize(node), color: accent),
-        ),
+        nodeIcon,
       ]);
     }
 
@@ -223,6 +244,14 @@ class _Circle extends StatelessWidget {
     if (n.status == ZoneNodeStatus.locked) return 18;
     if (n.status == ZoneNodeStatus.completed) return 20;
     return 24;
+  }
+
+  double _iconSize(ZoneNode n) {
+    if (n.status == ZoneNodeStatus.active) return 34;
+    if (n.isBoss) return 32;
+    if (n.status == ZoneNodeStatus.locked) return 22;
+    if (n.status == ZoneNodeStatus.completed) return 24;
+    return 28;
   }
 }
 

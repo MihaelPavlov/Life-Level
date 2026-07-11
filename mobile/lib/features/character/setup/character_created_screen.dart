@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/class_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/widgets/main_shell.dart';
-import '../services/character_service.dart';
 import '../models/character_class.dart';
 import '../models/character_setup_result.dart';
+import '../services/character_service.dart';
+import 'setup_resume_service.dart';
 import 'welcome_setup_screen.dart' show setupProgressDots;
 
 class CharacterCreatedScreen extends StatefulWidget {
@@ -19,8 +23,7 @@ class CharacterCreatedScreen extends StatefulWidget {
   });
 
   @override
-  State<CharacterCreatedScreen> createState() =>
-      _CharacterCreatedScreenState();
+  State<CharacterCreatedScreen> createState() => _CharacterCreatedScreenState();
 }
 
 class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
@@ -32,6 +35,11 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
   @override
   void initState() {
     super.initState();
+    SetupResumeService.instance.saveCharacterCreated(
+      ringItems: widget.ringItems,
+      selectedClass: widget.selectedClass,
+      avatarEmoji: widget.avatarEmoji,
+    );
     _setup();
   }
 
@@ -40,11 +48,13 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
       _loading = true;
       _error = null;
     });
+
     try {
       final result = await _service.setupCharacter(
         classId: widget.selectedClass.id,
         avatarEmoji: widget.avatarEmoji,
       );
+
       setState(() {
         _result = result;
         _loading = false;
@@ -57,11 +67,15 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
     }
   }
 
-  void _enterWorld() {
+  Future<void> _enterWorld() async {
+    await SetupResumeService.instance.clear();
+    if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-          builder: (_) => MainShell(initialRingIds: widget.ringItems)),
+        builder: (_) => MainShell(initialRingIds: widget.ringItems),
+      ),
       (_) => false,
     );
   }
@@ -72,13 +86,12 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Green gradient glow
           Container(
             decoration: const BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment(0, -0.3),
                 radius: 1.2,
-                colors: [Color(0x183fb950), Color(0x00040810)],
+                colors: [Color(0x183FB950), Color(0x00040810)],
               ),
             ),
           ),
@@ -91,9 +104,11 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                         CircularProgressIndicator(color: AppColors.green),
                         SizedBox(height: 16),
                         Text(
-                          'Forging your character\u2026',
+                          'Forging your character...',
                           style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13),
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -105,21 +120,26 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text('\u274c',
-                                  style: TextStyle(fontSize: 40)),
+                              const Icon(
+                                Icons.error_outline,
+                                size: 40,
+                                color: AppColors.red,
+                              ),
                               const SizedBox(height: 16),
                               Text(
                                 _error!,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13),
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
                               ),
                               const SizedBox(height: 24),
                               FilledButton(
                                 onPressed: _setup,
                                 style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.blue),
+                                  backgroundColor: AppColors.blue,
+                                ),
                                 child: const Text('Retry'),
                               ),
                             ],
@@ -135,13 +155,18 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
 
   Widget _buildSuccess() {
     final cls = widget.selectedClass;
+    final classAsset = classIconAsset(
+      className: cls.name,
+      classEmoji: cls.emoji,
+    );
+    final avatarAsset = _avatarAssetFor(widget.avatarEmoji);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),
       child: Column(
         children: [
           setupProgressDots(current: 3, total: 4),
           const SizedBox(height: 28),
-          // Glow avatar ring
           Container(
             width: 130,
             height: 130,
@@ -149,27 +174,37 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
               shape: BoxShape.circle,
               color: AppColors.green.withOpacity(0.08),
               border: Border.all(
-                  color: AppColors.green.withOpacity(0.35), width: 1.5),
+                color: AppColors.green.withOpacity(0.35),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.green.withOpacity(0.2),
-                    blurRadius: 40,
-                    spreadRadius: 4),
+                  color: AppColors.green.withOpacity(0.2),
+                  blurRadius: 40,
+                  spreadRadius: 4,
+                ),
                 BoxShadow(
-                    color: AppColors.green.withOpacity(0.1),
-                    blurRadius: 80),
+                  color: AppColors.green.withOpacity(0.1),
+                  blurRadius: 80,
+                ),
               ],
             ),
             child: Center(
-              child:
-                  Text(widget.avatarEmoji, style: const TextStyle(fontSize: 52)),
+              child: avatarAsset != null
+                  ? AppIconImage(
+                      avatarAsset,
+                      size: 76,
+                      visualScale: 1.55,
+                    )
+                  : Text(
+                      widget.avatarEmoji,
+                      style: const TextStyle(fontSize: 52),
+                    ),
             ),
           ),
           const SizedBox(height: 20),
-          // Badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             decoration: BoxDecoration(
               color: AppColors.green.withOpacity(0.1),
               border: Border.all(color: AppColors.green.withOpacity(0.3)),
@@ -178,29 +213,33 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
             child: const Text(
               'CHARACTER CREATED',
               style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.green,
-                  letterSpacing: 1.0),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppColors.green,
+                letterSpacing: 1.0,
+              ),
             ),
           ),
           const SizedBox(height: 14),
           const Text(
             'Your Hero Awaits!',
             style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary),
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 10),
           const Text(
             'Log your first workout to earn XP and begin your journey.',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 13, color: AppColors.textSecondary, height: 1.65),
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.65,
+            ),
           ),
           const SizedBox(height: 28),
-          // Character card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -215,10 +254,11 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                 const Text(
                   'YOUR CHARACTER',
                   style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 0.6),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.6,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Row(
@@ -235,17 +275,27 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                           ],
                         ),
                         border: Border.all(
-                            color: AppColors.blue.withOpacity(0.4),
-                            width: 2),
+                          color: AppColors.blue.withOpacity(0.4),
+                          width: 2,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                              color: AppColors.blue.withOpacity(0.2),
-                              blurRadius: 16)
+                            color: AppColors.blue.withOpacity(0.2),
+                            blurRadius: 16,
+                          ),
                         ],
                       ),
                       child: Center(
-                        child: Text(widget.avatarEmoji,
-                            style: const TextStyle(fontSize: 26)),
+                        child: avatarAsset != null
+                            ? AppIconImage(
+                                avatarAsset,
+                                size: 34,
+                                visualScale: 1.5,
+                              )
+                            : Text(
+                                widget.avatarEmoji,
+                                style: const TextStyle(fontSize: 26),
+                              ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -255,14 +305,15 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                         const Text(
                           'Level 1',
                           style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            _badge(cls.name, AppColors.purple),
+                            _classBadge(cls.name, AppColors.purple, classAsset),
                             const SizedBox(width: 6),
                             _badge('Novice', AppColors.orange),
                           ],
@@ -278,7 +329,7 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                     const SizedBox(width: 6),
                     _statChip('END', '0', AppColors.blue),
                     const SizedBox(width: 6),
-                    _statChip('AGI', '0', const Color(0xFF38d9c8)),
+                    _statChip('AGI', '0', const Color(0xFF38D9C8)),
                     const SizedBox(width: 6),
                     _statChip('FLX', '0', AppColors.purple),
                     const SizedBox(width: 6),
@@ -289,7 +340,6 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // Starter rewards
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -304,25 +354,41 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                 const Text(
                   'STARTER REWARDS',
                   style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 0.6),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.6,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Row(
                   children: [
                     Expanded(
-                        child: _rewardCard('⚡', '+500 XP',
-                            'Account\nbonus', AppColors.blue)),
+                      child: _rewardCard(
+                        AppIcons.rewardXpSparkle,
+                        '+500 XP',
+                        'Account\nbonus',
+                        AppColors.blue,
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
-                        child: _rewardCard('📜', '5 Quests',
-                            'Daily quests\nunlocked', AppColors.purple)),
+                      child: _rewardCard(
+                        AppIcons.questGeneral,
+                        '5 Quests',
+                        'Daily quests\nunlocked',
+                        AppColors.purple,
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
-                        child: _rewardCard('🗺️', 'Zone 1',
-                            'Forest of\nEndurance', AppColors.green)),
+                      child: _rewardCard(
+                        AppIcons.zoneThornwoodForest,
+                        'Zone 1',
+                        'Forest of\nEndurance',
+                        AppColors.green,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -337,25 +403,18 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
                 backgroundColor: AppColors.green,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: const Text(
-                'ENTER THE WORLD →',
+                'ENTER THE WORLD',
                 style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                    fontSize: 14),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                  fontSize: 14,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 14),
-          const Text(
-            'You can update your class and avatar anytime\nfrom Profile → Settings.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-                height: 1.55),
           ),
         ],
       ),
@@ -363,8 +422,7 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
   }
 
   Widget _badge(String text, Color color) => Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
           color: color.withOpacity(0.12),
           border: Border.all(color: color.withOpacity(0.3)),
@@ -373,7 +431,36 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
         child: Text(
           text,
           style: TextStyle(
-              fontSize: 10, fontWeight: FontWeight.w700, color: color),
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+      );
+
+  Widget _classBadge(String text, Color color, String? iconAsset) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconAsset != null) ...[
+              AppIconImage(iconAsset, size: 16),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
         ),
       );
 
@@ -386,46 +473,93 @@ class _CharacterCreatedScreenState extends State<CharacterCreatedScreen> {
           ),
           child: Column(
             children: [
-              Text(key,
-                  style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary)),
+              Text(
+                key,
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(val,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: color)),
+              Text(
+                val,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
             ],
           ),
         ),
       );
 
   Widget _rewardCard(
-          String emoji, String value, String label, Color color) =>
+    String iconAsset,
+    String value,
+    String label,
+    Color color,
+  ) =>
       Container(
-        padding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 22)),
+            AppIconImage(
+              iconAsset,
+              size: 20,
+              visualScale: 1.45,
+            ),
             const SizedBox(height: 6),
-            Text(value,
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: color)),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 9, color: AppColors.textSecondary)),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       );
+
+  String? _avatarAssetFor(String avatarEmoji) {
+    switch (avatarEmoji) {
+      case '🧙':
+        return AppIcons.avatarWizard;
+      case '⚔️':
+        return AppIcons.avatarWarrior;
+      case '🏹':
+        return AppIcons.avatarArcher;
+      case '🛡️':
+        return AppIcons.avatarPaladin;
+      case '🧘':
+        return AppIcons.avatarMonk;
+      case '🐺':
+        return AppIcons.avatarWolf;
+      case '🦊':
+        return AppIcons.avatarFox;
+      case '🥷':
+        return AppIcons.avatarNinja;
+      case '🦸':
+        return AppIcons.avatarSuperhero;
+      case '🧝':
+        return AppIcons.avatarElf;
+      default:
+        return null;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../shell_constants.dart';
 import '../shell_models.dart';
+import '../../widgets/app_icon_image.dart';
 
 class ShellNavBar extends StatelessWidget {
   final int currentIndex;
@@ -75,7 +76,13 @@ class ShellNavItem extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(tab.emoji, style: const TextStyle(fontSize: 20)),
+              tab.iconAsset != null
+                  ? AppIconImage(
+                      tab.iconAsset!,
+                      size: 24,
+                      opacity: active ? 1.0 : 0.5,
+                    )
+                  : Text(tab.emoji, style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 4),
               Text(tab.label,
                   style: TextStyle(
