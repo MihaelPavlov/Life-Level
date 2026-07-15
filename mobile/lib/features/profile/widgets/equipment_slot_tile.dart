@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/item_icon_image.dart';
 import '../../items/models/item_models.dart';
 import '../profile_stat_metadata.dart';
 
@@ -61,7 +62,13 @@ class EquipmentSlotTile extends StatelessWidget {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(item!.icon, style: const TextStyle(fontSize: 22)),
+                  ItemIconImage(
+                    itemId: item!.id,
+                    itemName: item!.name,
+                    emojiFallback: item!.icon,
+                    size: 28,
+                    emojiSize: 22,
+                  ),
                   const SizedBox(height: 4),
                   Container(
                     height: 3,

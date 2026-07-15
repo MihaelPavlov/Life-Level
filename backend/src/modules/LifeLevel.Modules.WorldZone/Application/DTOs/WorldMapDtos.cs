@@ -118,7 +118,18 @@ public record DungeonFloorDto(
 
 // SetDestination response — includes forfeit count so the client can surface
 // a snackbar when leaving mid-dungeon abandons the run.
-public record SetWorldDestinationResult(int ForfeitedFloors);
+// ActiveEncounter is non-null when movement was stopped by an NPC on the path.
+public record SetWorldDestinationResult(int ForfeitedFloors, ActiveEncounterDto? ActiveEncounter = null);
+
+/// Returned when movement is interrupted by a trail encounter.
+public record ActiveEncounterDto(
+    Guid TemplateId,
+    string Type,          // "story" | "merchant" | "blocker"
+    string Name,
+    string Emoji,
+    MerchantEncounterDto? Merchant,
+    BlockerEncounterDto?  Blocker,
+    StoryEncounterDto?    Story);
 
 // Trail encounter DTOs — returned as part of RegionDetailDto.Encounters.
 public record TrailEncounterNodeDto(

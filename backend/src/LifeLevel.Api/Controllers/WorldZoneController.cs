@@ -63,13 +63,24 @@ public class WorldZoneController(
         var userId = userContext.UserId;
         try
         {
-            await worldZoneService.AddDistanceAsync(userId, request.Km);
-            return NoContent();
+            var encounter = await worldZoneService.AddDistanceAsync(userId, request.Km);
+            return encounter != null ? Ok(encounter) : NoContent();
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Clears an active blocker encounter — call when the player has defeated the blocker.
+    /// </summary>
+    [HttpDelete("encounter/blocker")]
+    public async Task<IActionResult> ClearBlockerEncounter()
+    {
+        var userId = userContext.UserId;
+        await worldZoneService.ClearBlockerEncounterAsync(userId);
+        return NoContent();
     }
 
     [HttpPost("zone/{zoneId:guid}/complete")]

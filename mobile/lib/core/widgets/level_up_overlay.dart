@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/profile/widgets/equipment_slot_tile.dart' show rarityColor;
+import 'item_icon_image.dart';
 
 // ── constants matching home_screen palette ────────────────────────────────────
 const _surface1 = Color(0xFF161b22);
@@ -281,6 +282,7 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
       final rColor = rarityColor(item.rarity);
       tiles.add(_LuUnlock(
         icon: item.icon.isNotEmpty ? item.icon : '🎁',
+        itemId: item.itemId,
         name: item.name,
         desc: item.slot.isEmpty
             ? _prettyRarity(item.rarity)
@@ -356,6 +358,7 @@ class _PulsingRing extends StatelessWidget {
 
 class _LuUnlock extends StatelessWidget {
   final String icon;
+  final String? itemId;
   final String name;
   final String desc;
   final String badgeLabel;
@@ -363,6 +366,7 @@ class _LuUnlock extends StatelessWidget {
 
   const _LuUnlock({
     required this.icon,
+    this.itemId,
     required this.name,
     required this.desc,
     required this.badgeLabel,
@@ -380,7 +384,16 @@ class _LuUnlock extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
+          if (itemId != null)
+            ItemIconImage(
+              itemId: itemId!,
+              itemName: name,
+              emojiFallback: icon,
+              size: 26,
+              emojiSize: 20,
+            )
+          else
+            Text(icon, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

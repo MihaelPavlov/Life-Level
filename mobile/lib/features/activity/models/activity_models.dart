@@ -1,4 +1,5 @@
 import '../../../core/constants/app_icons.dart';
+import '../../map/services/world_zone_service.dart';
 
 enum ActivityType { running, cycling, gym, yoga, swimming, hiking, climbing, walking }
 
@@ -86,12 +87,18 @@ class CompletedQuestSummary {
 }
 
 class BlockedItemInfo {
+  final String? itemId;
   final String itemName;
   final String itemIcon;
 
-  const BlockedItemInfo({required this.itemName, required this.itemIcon});
+  const BlockedItemInfo({
+    this.itemId,
+    required this.itemName,
+    required this.itemIcon,
+  });
 
   factory BlockedItemInfo.fromJson(Map<String, dynamic> json) => BlockedItemInfo(
+        itemId: json['itemId'] as String?,
         itemName: json['itemName'] as String,
         itemIcon: json['itemIcon'] as String,
       );
@@ -249,6 +256,10 @@ class LogActivityResult {
   /// celebration overlay. Empty in the common case.
   final List<BossDefeatedInfo> bossDefeats;
 
+  /// Non-null when the distance processing was stopped by an NPC encounter.
+  /// The mobile client shows the encounter modal instead of navigating away.
+  final ActiveEncounterResult? activeEncounter;
+
   const LogActivityResult({
     required this.activityId,
     required this.xpGained,
@@ -269,6 +280,7 @@ class LogActivityResult {
     this.levelUpUnlocks,
     this.floorCreditResult,
     this.bossDefeats = const [],
+    this.activeEncounter,
   });
 
   factory LogActivityResult.fromJson(Map<String, dynamic> json) =>
@@ -307,6 +319,10 @@ class LogActivityResult {
         bossDefeats: (json['bossDefeats'] as List<dynamic>? ?? [])
             .map((e) => BossDefeatedInfo.fromJson(e as Map<String, dynamic>))
             .toList(),
+        activeEncounter: json['activeEncounter'] != null
+            ? ActiveEncounterResult.fromJson(
+                json['activeEncounter'] as Map<String, dynamic>)
+            : null,
       );
 }
 

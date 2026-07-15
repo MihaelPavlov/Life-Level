@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
@@ -208,13 +209,6 @@ public class WorldZoneService(
         progress.CurrentEdgeId = firstEdge.Id;
         if (!keepEdgeProgress) progress.DistanceTraveledOnEdge = 0;
 
-        // Capture banked km — we defer the actual drain to AddDistanceAsync
-        // below so the multi-hop arrival logic fires (zone unlocks, region
-        // updates, boss bridge spawning) and any leftover after the trip is
-        // re-banked instead of overshooting the edge length.
-        var pendingDrain = progress.PendingDistanceKm;
-        progress.PendingDistanceKm = 0;
-
         progress.UpdatedAt = DateTime.UtcNow;
 
         // Dungeon forfeit: if the user is currently standing on a dungeon
@@ -235,15 +229,11 @@ public class WorldZoneService(
 
         await db.SaveChangesAsync();
 
-        // Apply the captured banked km through the same path a logged
-        // workout takes. This handles arrival, zone unlocks, boss bridge
-        // spawning, and re-banks any overshoot past the destination.
-        if (pendingDrain > 0)
-        {
-            await AddDistanceAsync(userId, pendingDrain);
-        }
-
-        return new Application.DTOs.SetWorldDestinationResult(forfeitedFloors);
+        // Banked km are NOT drained here. They will be absorbed on the next
+        // AddDistanceAsync call (workout sync or debug-add-distance) so that
+        // encounters trigger at the right moment — during actual km processing,
+        // not at the instant the user taps to set a destination.
+        return new Application.DTOs.SetWorldDestinationResult(forfeitedFloors, null);
     }
 
     /// BFS from `fromZoneId` to `toZoneId` on the full edge graph, honouring
@@ -327,21 +317,30 @@ public class WorldZoneService(
         return firstEdge;
     }
 
-    public async Task AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
+    /// Explicit interface implementation — maps the full internal DTO to the shared-kernel port DTO.
+    async Task<SharedKernel.DTOs.ActiveEncounterPortDto?> IWorldZoneDistancePort.AddDistanceAsync(
+        Guid userId, double km, CancellationToken ct)
+    {
+        var enc = await AddDistanceAsync(userId, km, ct);
+        if (enc == null) return null;
+        return new SharedKernel.DTOs.ActiveEncounterPortDto(enc.TemplateId, enc.Type, enc.Name, enc.Emoji);
+    }
+
+    public async Task<ActiveEncounterDto?> AddDistanceAsync(Guid userId, double km, CancellationToken ct = default)
     {
         var log = logger ?? NullLogger<WorldZoneService>.Instance;
 
         if (km <= 0)
         {
             log.LogInformation("WorldZone.AddDistance SKIP user={UserId} incomingKm={Km} reason=non-positive", userId, km);
-            return;
+            return null;
         }
 
         var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive, ct);
         if (activeWorld == null)
         {
             log.LogInformation("WorldZone.AddDistance SKIP user={UserId} incomingKm={Km} reason=no-active-world", userId, km);
-            return;
+            return null;
         }
 
         var progress = await db.Set<UserWorldProgressEntity>()
@@ -358,18 +357,20 @@ public class WorldZoneService(
             await db.SaveChangesAsync(ct);
             log.LogInformation("WorldZone.AddDistance BANK user={UserId} incomingKm={Km} pendingKm={PendingKm}",
                 userId, km, progress.PendingDistanceKm);
-            return;
+            return null;
         }
 
         // Multi-hop support: a single AddDistance call may carry the user
-        // across several edges. Accumulate incoming km, then advance one
-        // edge at a time while km remains and the current edge's target
-        // isn't the final destination. Each hop unlocks the arrived-at
-        // zone and awards XP.
+        // across several edges. Absorb any banked km here so they process
+        // together with the incoming workout km — this is when encounters
+        // should trigger, not when the destination is first tapped.
+        var totalKm = km + progress.PendingDistanceKm;
+        progress.PendingDistanceKm = 0;
+
         var edge = await db.Set<WorldZoneEdgeEntity>().FindAsync([progress.CurrentEdgeId], ct)
             ?? throw new InvalidOperationException("Edge not found.");
 
-        var remainingKm = km;
+        var remainingKm = totalKm;
         var discoveredZones = new List<WorldZoneEntity>();
 
         while (remainingKm > 0 && progress.CurrentEdgeId != null && progress.DestinationZoneId != null)
@@ -379,6 +380,68 @@ public class WorldZoneService(
             log.LogInformation(
                 "WorldZone.AddDistance APPLY user={UserId} edge={EdgeId} incomingKm={Km} oldKm={OldKm} newKm={NewKm} edgeKm={EdgeKm}",
                 userId, progress.CurrentEdgeId, remainingKm, oldDist, progress.DistanceTraveledOnEdge, edge.DistanceKm);
+
+            // ── Encounter intercept ────────────────────────────────────────
+            // If a blocker is already active on this edge, cap movement at
+            // the encounter position and refuse to advance further.
+            if (progress.ActiveBlockerEncounterId.HasValue)
+            {
+                var blocker = await db.Set<TrailEncounterTemplate>()
+                    .FindAsync([progress.ActiveBlockerEncounterId.Value], ct);
+                if (blocker != null)
+                {
+                    var (_, bPos) = TrailEncounterHelper.ComputeEncounterSlot(
+                        edge.Id, blocker.Id, blocker.SpawnChance,
+                        edgeFromZoneId: edge.FromZoneId, edgeToZoneId: edge.ToZoneId,
+                        pinnedFromZone: blocker.PinnedFromZoneId, pinnedToZone: blocker.PinnedToZoneId,
+                        fixedPosition: blocker.PositionFraction);
+                    var blockKm = bPos * edge.DistanceKm;
+                    var blockerExcess = Math.Max(0.0, progress.DistanceTraveledOnEdge - blockKm);
+                    progress.PendingDistanceKm += blockerExcess;
+                    progress.DistanceTraveledOnEdge = blockKm;
+                    remainingKm = 0;
+                    progress.UpdatedAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync(ct);
+                    return BuildActiveEncounterDto(blocker);
+                }
+            }
+
+            // Check for new encounters the player would cross on this hop.
+            if (progress.CurrentRegionId.HasValue)
+            {
+                var regionTemplates = await db.Set<TrailEncounterTemplate>()
+                    .Where(t => t.RegionId == progress.CurrentRegionId.Value && t.IsActive)
+                    .OrderBy(t => t.Id)
+                    .ToListAsync(ct);
+
+                foreach (var template in regionTemplates)
+                {
+                    var (spawns, tPos) = TrailEncounterHelper.ComputeEncounterSlot(
+                        edge.Id, template.Id, template.SpawnChance,
+                        edgeFromZoneId: edge.FromZoneId, edgeToZoneId: edge.ToZoneId,
+                        pinnedFromZone: template.PinnedFromZoneId, pinnedToZone: template.PinnedToZoneId,
+                        fixedPosition: template.PositionFraction);
+                    if (!spawns) continue;
+
+                    var encounterKm = tPos * edge.DistanceKm;
+                    // Only trigger if we crossed this position on this hop
+                    if (oldDist < encounterKm && progress.DistanceTraveledOnEdge >= encounterKm)
+                    {
+                        var encounterExcess = Math.Max(0.0, progress.DistanceTraveledOnEdge - encounterKm);
+                        progress.PendingDistanceKm += encounterExcess;
+                        progress.DistanceTraveledOnEdge = encounterKm;
+                        remainingKm = 0;
+
+                        if (template.Type == "blocker")
+                            progress.ActiveBlockerEncounterId = template.Id;
+
+                        progress.UpdatedAt = DateTime.UtcNow;
+                        await db.SaveChangesAsync(ct);
+                        return BuildActiveEncounterDto(template);
+                    }
+                }
+            }
+            // ── End encounter intercept ────────────────────────────────────
 
             if (progress.DistanceTraveledOnEdge < edge.DistanceKm)
             {
@@ -502,6 +565,8 @@ public class WorldZoneService(
                     discovered.XpReward);
             }
         }
+
+        return null;
     }
 
     public async Task<CompleteZoneResult> CompleteZoneAsync(Guid userId, Guid zoneId)
@@ -729,5 +794,63 @@ public class WorldZoneService(
 
         await db.SaveChangesAsync();
         return progress;
+    }
+
+    public async Task ClearBlockerEncounterAsync(Guid userId)
+    {
+        var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive)
+            ?? throw new InvalidOperationException("No active world found.");
+        var progress = await db.Set<UserWorldProgressEntity>()
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id);
+        if (progress == null) return;
+        progress.ActiveBlockerEncounterId = null;
+        progress.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+    }
+
+    private static ActiveEncounterDto BuildActiveEncounterDto(TrailEncounterTemplate template)
+    {
+        MerchantEncounterDto? merchant = null;
+        BlockerEncounterDto? blocker = null;
+        StoryEncounterDto? story = null;
+
+        if (template.ConfigJson != null)
+        {
+            var config = JsonDocument.Parse(template.ConfigJson).RootElement;
+            if (template.Type == "merchant")
+            {
+                var items = config.TryGetProperty("items", out var itemsEl)
+                    ? itemsEl.EnumerateArray().Select(i => new MerchantItemDto(
+                        Emoji: i.TryGetProperty("emoji", out var ie) ? ie.GetString() ?? "" : "",
+                        Name: i.TryGetProperty("name", out var iname) ? iname.GetString() ?? "" : "",
+                        Description: i.TryGetProperty("description", out var idesc) ? idesc.GetString() ?? "" : "",
+                        Rarity: i.TryGetProperty("rarity", out var irar) ? irar.GetString() ?? "Common" : "Common",
+                        XpCost: i.TryGetProperty("xpCost", out var ixp) ? ixp.GetInt32() : 0)).ToList()
+                    : new List<MerchantItemDto>();
+                merchant = new MerchantEncounterDto(template.Name, 3600, 0, items);
+            }
+            else if (template.Type == "blocker")
+            {
+                var hp = config.TryGetProperty("maxHp", out var hpEl) ? hpEl.GetInt32() : 100;
+                var rewards = config.TryGetProperty("rewards", out var rewardsEl)
+                    ? rewardsEl.EnumerateArray()
+                        .Select(r => r.ValueKind == JsonValueKind.String
+                            ? r.GetString() ?? ""
+                            : r.TryGetProperty("name", out var rn) ? rn.GetString() ?? "" : r.ToString())
+                        .Where(s => s.Length > 0).ToList()
+                    : new List<string>();
+                blocker = new BlockerEncounterDto(template.Name, "Next Zone", hp, hp, 0, 0, rewards);
+            }
+            else if (template.Type == "story")
+            {
+                var npcName = config.TryGetProperty("npcName", out var nn) ? nn.GetString() ?? template.Name : template.Name;
+                var npcTitle = config.TryGetProperty("npcTitle", out var nt) ? nt.GetString() ?? "" : "";
+                var portrait = config.TryGetProperty("portrait", out var pp) ? pp.GetString() ?? template.Emoji : template.Emoji;
+                var dialogue = config.TryGetProperty("dialogue", out var dd) ? dd.GetString() ?? "" : "";
+                story = new StoryEncounterDto(npcName, npcTitle, portrait, dialogue, 0);
+            }
+        }
+
+        return new ActiveEncounterDto(template.Id, template.Type, template.Name, template.Emoji, merchant, blocker, story);
     }
 }

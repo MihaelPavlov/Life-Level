@@ -15,6 +15,7 @@ import 'activity_result_sheet.dart';
 import 'models/activity_models.dart';
 import 'providers/activity_provider.dart';
 import '../home/providers/world_progress_provider.dart';
+import '../map/widgets/encounter_intercept_sheet.dart';
 
 class LogActivityScreen extends ConsumerStatefulWidget {
   const LogActivityScreen({super.key});
@@ -206,6 +207,9 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       }
 
       if (mounted) {
+        // Capture encounter before pop — widget unmounts during pop animation
+        // so checking `mounted` after any await is unreliable.
+        final encounter = result.activeEncounter;
         Navigator.pop(context);
         showModalBottomSheet(
           context: context,
@@ -213,6 +217,21 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
           isScrollControlled: true,
           builder: (_) => ActivityResultSheet(result: result),
         );
+        if (encounter != null) {
+          // Show encounter sheet on top of the result sheet synchronously so
+          // the context is still valid (before the pop animation disposes this widget).
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            isDismissible: !encounter.isBlocker,
+            enableDrag: !encounter.isBlocker,
+            builder: (_) => EncounterInterceptSheet(
+              encounter: encounter,
+              destinationZoneName: 'your destination',
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() => _submitting = false);

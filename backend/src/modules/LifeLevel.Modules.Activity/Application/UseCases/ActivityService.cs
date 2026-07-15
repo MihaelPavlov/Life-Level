@@ -87,11 +87,12 @@ public class ActivityService(
         var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(request.Type),
             $"{request.Type} workout · {request.DurationMinutes} min", xp);
 
+        SharedKernel.DTOs.ActiveEncounterPortDto? activeEncounter = null;
         if (request.DistanceKm > 0)
         {
             logger.LogInformation("ActivityService.LogActivity user={UserId} type={Type} incomingDistanceKm={Km}",
                 userId, request.Type, request.DistanceKm);
-            await worldZoneDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
+            activeEncounter = await worldZoneDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
         }
 
         // Credit the activity against the user's active dungeon floor (if any).
@@ -182,6 +183,7 @@ public class ActivityService(
             LevelUpUnlocks = levelUpUnlocks,
             FloorCreditResult = floorCreditResult,
             BossDefeats = bossDefeats,
+            ActiveEncounter = activeEncounter,
         };
     }
 

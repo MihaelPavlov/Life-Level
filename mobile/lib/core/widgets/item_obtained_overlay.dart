@@ -5,6 +5,7 @@ import '../../features/character/providers/character_provider.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/services/items_service.dart';
 import '../../features/items/providers/items_provider.dart';
+import 'item_icon_image.dart';
 
 // ── constants ──────────────────────────────────────────────────────────────────
 const _kCardWidth    = 360.0;
@@ -103,7 +104,13 @@ class _ItemObtainedDialog extends ConsumerWidget {
                   ],
                 ),
                 child: Center(
-                  child: Text(item.icon, style: const TextStyle(fontSize: 28)),
+                  child: ItemIconImage(
+                    itemId: item.id,
+                    itemName: item.name,
+                    emojiFallback: item.icon,
+                    size: 52,
+                    emojiSize: 28,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

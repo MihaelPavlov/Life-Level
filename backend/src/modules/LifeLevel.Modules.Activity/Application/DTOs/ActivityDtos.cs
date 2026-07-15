@@ -1,6 +1,7 @@
 using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Ports;
+using ActiveEncounterPortDto = LifeLevel.SharedKernel.DTOs.ActiveEncounterPortDto;
 
 namespace LifeLevel.Modules.Activity.Application.DTOs;
 
@@ -13,7 +14,7 @@ public class LogActivityRequest
     public int? HeartRateAvg { get; set; }
 }
 
-public record BlockedItemInfo(string ItemName, string ItemIcon);
+public record BlockedItemInfo(Guid ItemId, string ItemName, string ItemIcon);
 
 public class LogActivityResult
 {
@@ -48,6 +49,13 @@ public class LogActivityResult
     /// a "you defeated &lt;boss&gt;" celebratory popup right after logging.
     /// </summary>
     public IReadOnlyList<BossDefeatedInfo> BossDefeats { get; init; } = [];
+
+    /// <summary>
+    /// Non-null when the workout's distance processing was stopped mid-path by
+    /// an NPC encounter. Remaining km are banked on the server. The mobile
+    /// client shows the encounter modal instead of navigating away.
+    /// </summary>
+    public ActiveEncounterPortDto? ActiveEncounter { get; init; }
 }
 
 public class ActivityHistoryDto

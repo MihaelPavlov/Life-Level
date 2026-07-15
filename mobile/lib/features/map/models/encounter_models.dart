@@ -62,6 +62,7 @@ class TrailEncounterNode {
 // ─── Merchant ────────────────────────────────────────────────────────────────
 
 class MerchantItem {
+  final String? itemId;
   final String emoji;
   final String name;
   final String description;
@@ -69,6 +70,7 @@ class MerchantItem {
   final int xpCost;
 
   const MerchantItem({
+    this.itemId,
     required this.emoji,
     required this.name,
     required this.description,
@@ -77,6 +79,7 @@ class MerchantItem {
   });
 
   factory MerchantItem.fromJson(Map<String, dynamic> j) => MerchantItem(
+        itemId: j['itemId'] as String?,
         emoji: j['emoji'] as String,
         name: j['name'] as String,
         description: j['description'] as String,
@@ -85,6 +88,7 @@ class MerchantItem {
       );
 
   Map<String, dynamic> toJson() => {
+        if (itemId != null) 'itemId': itemId,
         'emoji': emoji,
         'name': name,
         'description': description,

@@ -519,6 +519,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
+                    b.Property<int>("MapTutorialStep")
+                        .HasColumnType("integer");
+
                     b.Property<int>("MaxInventorySlots")
                         .HasColumnType("integer");
 
@@ -537,9 +540,6 @@ namespace LifeLevel.Api.Migrations
 
                     b.Property<bool>("TutorialRewardsClaimed")
                         .HasColumnType("boolean");
-
-                    b.Property<int>("MapTutorialStep")
-                        .HasColumnType("integer");
 
                     b.Property<int>("TutorialStep")
                         .HasColumnType("integer");
@@ -1800,6 +1800,59 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Regions");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.TrailEncounterTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("PinnedFromZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PinnedToZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double?>("PositionFraction")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("SpawnChance")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegionId");
+
+                    b.ToTable("TrailEncounterTemplates");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserPathChoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1914,6 +1967,9 @@ namespace LifeLevel.Api.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActiveBlockerEncounterId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CurrentEdgeId")
@@ -2624,6 +2680,17 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("World");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.TrailEncounterTemplate", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.Region", "Region")
+                        .WithMany()
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Region");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>

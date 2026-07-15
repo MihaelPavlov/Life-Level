@@ -18,6 +18,7 @@ import '../models/encounter_models.dart';
 import '../widgets/crossroads_choice_sheet.dart';
 import '../widgets/dungeon_floors_sheet.dart';
 import '../widgets/encounter_blocker_sheet.dart';
+import '../widgets/encounter_intercept_sheet.dart';
 import '../widgets/encounter_merchant_sheet.dart';
 import '../widgets/encounter_story_sheet.dart';
 import '../widgets/map_icon_resolver.dart';
@@ -279,10 +280,17 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       return;
     }
     if (!mounted) return;
-    Navigator.of(context).pop(); // close the sheet
+    Navigator.of(context).pop(); // close the zone detail sheet
     await _load();
     WorldZoneRefreshNotifier.notify();
     if (!mounted) return;
+
+    // Encounter intercept — movement was stopped at an NPC on the path
+    if (result.activeEncounter != null) {
+      await _showEncounterIntercept(result.activeEncounter!, node.name);
+      return;
+    }
+
     final forfeitMsg = result.forfeitedFloors > 0
         ? ' · ${result.forfeitedFloors} floor${result.forfeitedFloors == 1 ? "" : "s"} forfeited'
         : '';
@@ -293,6 +301,36 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  /// Shows the encounter intercept modal and handles the outcome:
+  ///   • story / merchant → player can re-tap the zone to continue
+  ///   • blocker → snackbar explains they must defeat the NPC first
+  Future<void> _showEncounterIntercept(
+      ActiveEncounterResult encounter, String destinationZoneName) async {
+    await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => EncounterInterceptSheet(
+        encounter: encounter,
+        destinationZoneName: destinationZoneName,
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (encounter.isBlocker) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '${encounter.emoji} ${encounter.name} blocks the path! Defeat them to continue.'),
+          backgroundColor: AppColors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+    // story / merchant: no snackbar — player just re-taps the zone to continue
   }
 
   /// Shows a friendlier, stakes-clear confirmation dialog before abandoning

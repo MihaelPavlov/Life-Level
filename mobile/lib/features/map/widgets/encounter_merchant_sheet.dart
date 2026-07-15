@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/item_icon_image.dart';
 import '../models/encounter_models.dart';
 
 class MerchantSheet extends StatefulWidget {
@@ -247,7 +248,13 @@ class _MerchantSheetState extends State<MerchantSheet>
                 border: Border.all(color: rarityColor.withOpacity(0.3)),
               ),
               alignment: Alignment.center,
-              child: Text(item.emoji, style: const TextStyle(fontSize: 22)),
+              child: ItemIconImage(
+                itemId: item.itemId ?? '',
+                itemName: item.name,
+                emojiFallback: item.emoji,
+                size: 32,
+                emojiSize: 22,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

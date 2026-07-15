@@ -150,6 +150,7 @@ public class MapReadService(
         var activeWorldId = region.WorldId;
         var progress = await db.Set<UserWorldProgressEntity>()
             .Include(p => p.UnlockedZones)
+            .Include(p => p.CurrentEdge)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorldId, ct);
 
         var unlocked = progress?.UnlockedZones.Select(u => u.WorldZoneId).ToHashSet() ?? [];
@@ -263,24 +264,34 @@ public class MapReadService(
             .ToListAsync(ct);
 
         var encounters = new List<TrailEncounterNodeDto>();
-        if (templates.Count > 0 && edgeDtos.Count > 0)
+        if (templates.Count > 0 && edges.Count > 0)
         {
-            var rng = new Random();
-            var usedTypes = new HashSet<string>();
-            foreach (var edge in edgeDtos.OrderBy(_ => rng.Next()))
+            // Movement checks templates per actual edge, so the read model
+            // must not suppress a blocker/merchant/story just because another
+            // edge has the same type. Future encounters stay hidden until the
+            // player's current edge progress reaches their position.
+            foreach (var edge in edges
+                         .OrderBy(e => progress?.CurrentEdgeId == e.Id ? 0 : 1)
+                         .ThenBy(e => zones.FirstOrDefault(z => z.Id == e.FromZoneId)?.Tier ?? int.MaxValue)
+                         .ThenBy(e => zones.FirstOrDefault(z => z.Id == e.ToZoneId)?.Tier ?? int.MaxValue)
+                         .ThenBy(e => e.Id))
             {
-                if (encounters.Count >= 3) break;
-                var candidate = templates
-                    .Where(t => !usedTypes.Contains(t.Type))
-                    .Where(t => rng.NextDouble() < t.SpawnChance)
-                    .OrderBy(_ => rng.Next())
-                    .FirstOrDefault();
-                if (candidate == null) continue;
-                var tPos = 0.25 + rng.NextDouble() * 0.50;
-                var side = encounters.Count % 2 == 0 ? -80.0 : 80.0;
-                var toZoneName = zones.FirstOrDefault(z => z.Id == edge.ToId)?.Name ?? "";
-                encounters.Add(BuildEncounterNode(candidate, edge.FromId, edge.ToId, tPos, side, toZoneName));
-                usedTypes.Add(candidate.Type);
+                foreach (var template in templates.OrderBy(t => t.Id))
+                {
+                    var (spawns, tPos) = TrailEncounterHelper.ComputeEncounterSlot(
+                        edge.Id, template.Id, template.SpawnChance,
+                        edgeFromZoneId: edge.FromZoneId,
+                        edgeToZoneId:   edge.ToZoneId,
+                        pinnedFromZone: template.PinnedFromZoneId,
+                        pinnedToZone:   template.PinnedToZoneId,
+                        fixedPosition:  template.PositionFraction);
+                    if (!spawns) continue;
+                    if (!ShouldShowEncounter(progress, edge, template, tPos)) continue;
+
+                    var side = encounters.Count % 2 == 0 ? -80.0 : 80.0;
+                    var toZoneName = zones.FirstOrDefault(z => z.Id == edge.ToZoneId)?.Name ?? "";
+                    encounters.Add(BuildEncounterNode(template, edge.FromZoneId, edge.ToZoneId, tPos, side, toZoneName));
+                }
             }
         }
 
@@ -550,11 +561,11 @@ public class MapReadService(
             case "merchant":
                 var items = config.TryGetProperty("items", out var itemsEl)
                     ? itemsEl.EnumerateArray().Select(i => new MerchantItemDto(
-                        Emoji: i.GetProperty("emoji").GetString() ?? "",
-                        Name: i.GetProperty("name").GetString() ?? "",
-                        Description: i.GetProperty("description").GetString() ?? "",
-                        Rarity: i.GetProperty("rarity").GetString() ?? "",
-                        XpCost: i.GetProperty("xpCost").GetInt32()))
+                        Emoji: i.TryGetProperty("emoji", out var ie) ? ie.GetString() ?? "" : "",
+                        Name: i.TryGetProperty("name", out var iname) ? iname.GetString() ?? "" : "",
+                        Description: i.TryGetProperty("description", out var idesc) ? idesc.GetString() ?? "" : "",
+                        Rarity: i.TryGetProperty("rarity", out var irar) ? irar.GetString() ?? "" : "Common",
+                        XpCost: i.TryGetProperty("xpCost", out var ixp) ? ixp.GetInt32() : 0))
                       .ToList()
                     : new List<MerchantItemDto>();
                 merchant = new MerchantEncounterDto(
@@ -569,7 +580,12 @@ public class MapReadService(
                 var maxHp = config.TryGetProperty("maxHp", out var mhp) ? mhp.GetInt32() : 1000;
                 var retreatDays = config.TryGetProperty("retreatDays", out var rd) ? rd.GetInt32() : 1;
                 var rewards = config.TryGetProperty("rewards", out var rewardsEl)
-                    ? rewardsEl.EnumerateArray().Select(r => r.GetString() ?? "").ToList()
+                    ? rewardsEl.EnumerateArray()
+                        .Select(r => r.ValueKind == JsonValueKind.String
+                            ? r.GetString() ?? ""
+                            : r.TryGetProperty("name", out var rn) ? rn.GetString() ?? "" : r.ToString())
+                        .Where(s => s.Length > 0)
+                        .ToList()
                     : new List<string>();
                 blocker = new BlockerEncounterDto(
                     Name: template.Name,
@@ -592,7 +608,7 @@ public class MapReadService(
         }
 
         return new TrailEncounterNodeDto(
-            Id: Guid.NewGuid().ToString(),
+            Id: $"{template.Id:N}:{fromId:N}:{toId:N}",
             FromZoneId: fromId.ToString(),
             ToZoneId: toId.ToString(),
             T: t,
@@ -601,6 +617,26 @@ public class MapReadService(
             Merchant: merchant,
             Blocker: blocker,
             Story: story);
+    }
+
+    private static bool ShouldShowEncounter(
+        UserWorldProgressEntity? progress,
+        WorldZoneEdgeEntity edge,
+        TrailEncounterTemplate template,
+        double tPos)
+    {
+        if (progress == null) return false;
+
+        if (progress.ActiveBlockerEncounterId == template.Id &&
+            progress.CurrentEdgeId == edge.Id)
+        {
+            return true;
+        }
+
+        if (progress.CurrentEdgeId != edge.Id) return false;
+
+        var encounterKm = tPos * edge.DistanceKm;
+        return progress.DistanceTraveledOnEdge >= encounterKm;
     }
 
     private static IReadOnlyList<RegionPinDto> DeserializePins(string json)

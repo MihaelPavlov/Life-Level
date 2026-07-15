@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/item_icon_image.dart';
 import '../../items/models/item_models.dart';
 import '../profile_stat_metadata.dart';
 import 'equipment_slot_tile.dart';
@@ -47,7 +48,13 @@ class EquipmentItemDetail extends StatelessWidget {
               border: Border.all(color: rColor.withOpacity(0.4)),
             ),
             child: Center(
-              child: Text(item.icon, style: const TextStyle(fontSize: 26)),
+              child: ItemIconImage(
+                itemId: item.id,
+                itemName: item.name,
+                emojiFallback: item.icon,
+                size: 38,
+                emojiSize: 26,
+              ),
             ),
           ),
           const SizedBox(width: 12),

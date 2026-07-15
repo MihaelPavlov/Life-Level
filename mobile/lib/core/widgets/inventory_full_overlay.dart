@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/nav_tab_notifier.dart';
 import '../../features/activity/models/activity_models.dart';
+import 'item_icon_image.dart';
 
 // ── constants ──────────────────────────────────────────────────────────────────
 const _kCardWidth    = 360.0;
@@ -118,9 +119,12 @@ class _InventoryFullDialog extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: Text(
-                    item.itemIcon,
-                    style: const TextStyle(fontSize: 32),
+                  child: ItemIconImage(
+                    itemId: item.itemId ?? '',
+                    itemName: item.itemName,
+                    emojiFallback: item.itemIcon,
+                    size: 48,
+                    emojiSize: 32,
                   ),
                 ),
               ),

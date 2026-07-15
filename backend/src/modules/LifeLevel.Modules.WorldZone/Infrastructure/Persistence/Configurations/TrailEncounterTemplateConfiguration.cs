@@ -17,6 +17,9 @@ public class TrailEncounterTemplateConfiguration : IEntityTypeConfiguration<Trai
         builder.Property(t => t.SpawnChance).IsRequired();
         builder.Property(t => t.IsActive).IsRequired();
         builder.Property(t => t.CreatedAt).IsRequired();
+        builder.Property(t => t.PinnedFromZoneId);
+        builder.Property(t => t.PinnedToZoneId);
+        builder.Property(t => t.PositionFraction);
 
         // FK to Region — cascade delete so templates are removed with the region.
         // Navigation property is not used in queries; FK scalar only.

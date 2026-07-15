@@ -83,16 +83,49 @@ class OpenChestResult {
       );
 }
 
+/// Returned when movement is interrupted by an NPC encounter on the path.
+class ActiveEncounterResult {
+  final String templateId;
+  final String type; // 'story' | 'merchant' | 'blocker'
+  final String name;
+  final String emoji;
+
+  const ActiveEncounterResult({
+    required this.templateId,
+    required this.type,
+    required this.name,
+    required this.emoji,
+  });
+
+  factory ActiveEncounterResult.fromJson(Map<String, dynamic> json) =>
+      ActiveEncounterResult(
+        templateId: json['templateId'] as String? ?? '',
+        type: json['type'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        emoji: json['emoji'] as String? ?? '',
+      );
+
+  bool get isBlocker => type == 'blocker';
+  bool get isMerchant => type == 'merchant';
+  bool get isStory => type == 'story';
+}
+
 /// Destination-set response. Returns the number of dungeon floors the user
 /// just forfeited by moving away from an in-progress dungeon — mobile uses
 /// this to surface a snackbar when the abandon was triggered server-side
 /// (e.g. auto-advance during AddDistance).
+/// [activeEncounter] is non-null when movement was stopped by an NPC on the path.
 class SetDestinationResult {
   final int forfeitedFloors;
-  const SetDestinationResult({required this.forfeitedFloors});
+  final ActiveEncounterResult? activeEncounter;
+  const SetDestinationResult({required this.forfeitedFloors, this.activeEncounter});
   factory SetDestinationResult.fromJson(Map<String, dynamic> json) =>
       SetDestinationResult(
         forfeitedFloors: (json['forfeitedFloors'] as num?)?.toInt() ?? 0,
+        activeEncounter: json['activeEncounter'] != null
+            ? ActiveEncounterResult.fromJson(
+                json['activeEncounter'] as Map<String, dynamic>)
+            : null,
       );
 }
 
@@ -200,8 +233,23 @@ class WorldZoneService {
     return null;
   }
 
-  Future<void> debugAddDistance(double km) async {
-    await ApiClient.instance.post('/world/debug/add-distance', data: {'km': km});
+  /// Adds debug distance km and returns an encounter if movement was stopped by one.
+  Future<ActiveEncounterResult?> debugAddDistance(double km) async {
+    final response = await ApiClient.instance.post(
+      '/world/debug/add-distance',
+      data: {'km': km},
+    );
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      return ActiveEncounterResult.fromJson(
+          response.data as Map<String, dynamic>);
+    }
+    return null;
+  }
+
+  /// Clears the active blocker encounter so the player can advance past it.
+  /// Call after the blocker has been defeated.
+  Future<void> clearBlockerEncounter() async {
+    await ApiClient.instance.delete('/world/encounter/blocker');
   }
 
   /// Teleports the user to the entry zone of [regionId]. Pass [force]=true

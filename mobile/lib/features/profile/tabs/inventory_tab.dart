@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/item_icon_image.dart';
 import '../../character/providers/character_provider.dart';
 import '../../items/models/item_models.dart';
 import '../../items/providers/items_provider.dart';
@@ -285,7 +286,13 @@ class _InventoryItemCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(item.icon, style: const TextStyle(fontSize: 24)),
+                  ItemIconImage(
+                    itemId: item.id,
+                    itemName: item.name,
+                    emojiFallback: item.icon,
+                    size: 30,
+                    emojiSize: 24,
+                  ),
                   const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -416,7 +423,13 @@ class _InventoryItemDetailState extends ConsumerState<_InventoryItemDetail> {
                   border: Border.all(color: rColor.withOpacity(0.4)),
                 ),
                 child: Center(
-                  child: Text(item.icon, style: const TextStyle(fontSize: 26)),
+                  child: ItemIconImage(
+                    itemId: item.id,
+                    itemName: item.name,
+                    emojiFallback: item.icon,
+                    size: 38,
+                    emojiSize: 26,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

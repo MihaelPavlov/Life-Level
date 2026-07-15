@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace LifeLevel.Modules.Items.Application.UseCases;
 
 public record GrantItemResult(CharacterItem? Item, bool InventoryFull);
-public record BlockedItemInfo(string ItemName, string ItemIcon);
+public record BlockedItemInfo(Guid ItemId, string ItemName, string ItemIcon);
 public record LevelUpGrantSummary(List<ItemDto> Granted, List<BlockedItemInfo> Blocked);
 
 public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead, IInventorySlotReadPort inventorySlotRead)
@@ -79,7 +79,7 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
             if (result.InventoryFull)
             {
                 var item = await db.Set<Item>().FindAsync([rule.ItemId], ct);
-                if (item != null) blocked.Add(new BlockedItemInfo(item.Name, item.Icon));
+                if (item != null) blocked.Add(new BlockedItemInfo(item.Id, item.Name, item.Icon));
             }
             else if (result.Item != null)
             {

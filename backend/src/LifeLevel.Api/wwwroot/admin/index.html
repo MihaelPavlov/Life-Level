@@ -304,6 +304,44 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   #loadingOverlay p { color: var(--text2); font-size: 13px; }
+
+  .item-icon-cell { width: 46px; }
+  .item-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(79, 158, 255, .08);
+    border: 1px solid rgba(79, 158, 255, .18);
+    overflow: hidden;
+    vertical-align: middle;
+  }
+  .item-icon img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    transform: scale(1.45);
+    transform-origin: center;
+    display: block;
+  }
+  .item-icon .emoji {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .item-select-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    color: var(--text2);
+    font-size: 12px;
+  }
+  .item-select-preview strong {
+    color: var(--text);
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -383,6 +421,7 @@
       <select id="drItemSelect" onchange="loadDropRules()" style="width:260px">
         <option value="">— Select an item —</option>
       </select>
+      <span id="drItemPreview" class="item-select-preview"></span>
       <button onclick="openRuleModal(null)" id="addRuleBtn" disabled>+ Add Rule</button>
     </div>
     <div id="ruleList" class="rule-list">
@@ -400,9 +439,10 @@
       </div>
       <div class="field">
         <label>Item</label>
-        <select id="grantItemSelect">
+        <select id="grantItemSelect" onchange="renderItemPreview('grantItemPreview', this.value)">
           <option value="">— Select an item —</option>
         </select>
+        <div id="grantItemPreview" class="item-select-preview"></div>
       </div>
       <button class="success" onclick="grantItem()">Grant Item</button>
       <div id="grantResult" style="font-size:13px;color:var(--text2)"></div>
@@ -800,6 +840,65 @@ document.querySelectorAll('.modal-backdrop').forEach(b =>
 // ── Items tab ──────────────────────────────────────────────────────────────
 let allItems = [];
 
+const ITEM_ICON_BY_ID = {
+  '10000000000000000000000000000001': 'item_apex_gps_pro.png',
+  '10000000000000000000000000000009': 'item_pulse_wristband.png',
+  '10000000000000000000000000000010': 'item_basic_step_counter.png',
+  '10000000000000000000000000000011': 'item_strava_sync_badge.png',
+  '10000000000000000000000000000003': 'item_cryo_jersey.png',
+  '10000000000000000000000000000007': 'item_iron_headband.png',
+  '10000000000000000000000000000012': 'item_storm_jacket.png',
+  '10000000000000000000000000000013': 'item_compression_shirt.png',
+  '10000000000000000000000000000014': 'item_elite_windbreaker.png',
+  '10000000000000000000000000000002': 'item_aero_race_cap.png',
+  '10000000000000000000000000000005': 'item_carbon_x3.png',
+  '10000000000000000000000000000008': 'item_trail_runner_x5.png',
+  '10000000000000000000000000000015': 'item_speed_spikes.png',
+  '10000000000000000000000000000016': 'item_recovery_slides.png',
+  '10000000000000000000000000000017': 'item_gravity_boots.png',
+  '10000000000000000000000000000004': 'item_grip_wraps.png',
+  '10000000000000000000000000000006': 'item_sport_buds.png',
+  '10000000000000000000000000000018': 'item_climbing_chalk_bag.png',
+  '10000000000000000000000000000019': 'item_resistance_band_set.png',
+  '10000000000000000000000000000020': 'item_champion_gloves.png',
+  '10000000000000000000000000000021': 'item_aura_stone.png',
+  '10000000000000000000000000000022': 'item_xp_booster.png',
+  '10000000000000000000000000000023': 'item_energy_gel.png',
+  '10000000000000000000000000000024': 'item_streak_shield.png',
+  '10000000000000000000000000000025': 'item_kt_tape_roll.png',
+  '10000000000000000000000000000026': 'item_phoenix_elixir.png',
+  '10000000000000000000000000000027': 'item_zone_compass.png',
+  '10000000000000000000000000000028': 'item_boss_scroll.png'
+};
+
+function normalizeItemId(id) {
+  return String(id || '').toLowerCase().replace(/[^a-f0-9]+/g, '');
+}
+
+function itemIconAsset(item) {
+  return ITEM_ICON_BY_ID[normalizeItemId(item?.id)];
+}
+
+function itemIconHtml(item) {
+  const asset = itemIconAsset(item);
+  const fallback = esc(item?.icon || '?');
+  if (!asset) return `<span class="item-icon"><span class="emoji">${fallback}</span></span>`;
+  return `<span class="item-icon"><img src="assets/items/${asset}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'${fallback}'}))"></span>`;
+}
+
+function itemById(id) {
+  return allItems.find(i => i.id === id);
+}
+
+function renderItemPreview(targetId, itemId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const item = itemById(itemId);
+  el.innerHTML = item
+    ? `${itemIconHtml(item)} <strong>${esc(item.name)}</strong>`
+    : '';
+}
+
 async function loadItems() {
   const tbody = document.getElementById('itemsTableBody');
   tbody.innerHTML = '<tr><td colspan="12" style="color:var(--text2);text-align:center;padding:32px">Loading…</td></tr>';
@@ -823,11 +922,11 @@ function renderItemsTable(items) {
   }
   tbody.innerHTML = items.map(i => `
     <tr>
-      <td style="font-size:20px">${i.icon}</td>
+      <td class="item-icon-cell">${itemIconHtml(i)}</td>
       <td><strong>${i.name}</strong><br><span style="color:var(--text2);font-size:11px">${i.id.slice(0,8)}…</span></td>
       <td>${rarityBadge(i.rarity)}</td>
       <td>${categoryBadge(i.category)}</td>
-      <td style="color:var(--text2)">${i.slotType}</td>
+      <td style="color:var(--text2)">${esc(i.slotType)}</td>
       <td>${i.xpBonusPct ? '<span style="color:var(--orange)">+' + i.xpBonusPct + '%</span>' : '<span style="color:var(--text2)">—</span>'}</td>
       <td class="stat">${stat(i.strBonus)}</td>
       <td class="stat">${stat(i.endBonus)}</td>
@@ -928,10 +1027,12 @@ function populateDropRuleItemSelect() {
     sel.appendChild(opt);
   });
   if (prev) { sel.value = prev; loadDropRules(); }
+  renderItemPreview('drItemPreview', sel.value);
 }
 
 async function loadDropRules() {
   const itemId = document.getElementById('drItemSelect').value;
+  renderItemPreview('drItemPreview', itemId);
   const btn = document.getElementById('addRuleBtn');
   if (!itemId) {
     document.getElementById('ruleList').innerHTML = '<p style="color:var(--text2);font-size:13px">Select an item above to view its drop rules.</p>';
@@ -1054,6 +1155,7 @@ function populateGrantItemSelect() {
     opt.textContent = i.icon + ' ' + i.name + ' (' + i.rarity + ')';
     sel.appendChild(opt);
   });
+  renderItemPreview('grantItemPreview', sel.value);
 }
 
 async function grantItem() {

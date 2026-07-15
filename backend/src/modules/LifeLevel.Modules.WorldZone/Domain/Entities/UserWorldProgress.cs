@@ -27,6 +27,10 @@ public class UserWorldProgress
     // region without joining through WorldZone.
     public Guid? CurrentRegionId { get; set; }
 
+    /// When non-null, a blocker encounter is blocking the player on the current edge.
+    /// Progress is capped at the blocker's position until cleared.
+    public Guid? ActiveBlockerEncounterId { get; set; }
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid WorldId { get; set; }

@@ -26,7 +26,10 @@ public class AdminEncountersController(AppDbContext db) : ControllerBase
                 t.Name,
                 t.Emoji,
                 t.SpawnChance,
-                t.IsActive
+                t.IsActive,
+                t.PinnedFromZoneId,
+                t.PinnedToZoneId,
+                t.PositionFraction
             })
             .ToListAsync();
 
@@ -50,8 +53,23 @@ public class AdminEncountersController(AppDbContext db) : ControllerBase
             template.SpawnChance,
             template.IsActive,
             template.ConfigJson,
-            template.CreatedAt
+            template.CreatedAt,
+            template.PinnedFromZoneId,
+            template.PinnedToZoneId,
+            template.PositionFraction
         });
+    }
+
+    // GET /api/admin/encounters/zones?regionId=X  — list zones in a region for the dropdowns
+    [HttpGet("zones")]
+    public async Task<IActionResult> GetZonesForRegion([FromQuery] Guid regionId)
+    {
+        var zones = await db.WorldZones
+            .Where(z => z.RegionId == regionId)
+            .OrderBy(z => z.Name)
+            .Select(z => new { z.Id, z.Name, z.Emoji })
+            .ToListAsync();
+        return Ok(zones);
     }
 
     // POST /api/admin/encounters
@@ -71,6 +89,11 @@ public class AdminEncountersController(AppDbContext db) : ControllerBase
             SpawnChance = Math.Clamp(req.SpawnChance, 0.0, 1.0),
             IsActive = req.IsActive,
             ConfigJson = string.IsNullOrWhiteSpace(req.ConfigJson) ? "{}" : req.ConfigJson.Trim(),
+            PinnedFromZoneId = req.PinnedFromZoneId,
+            PinnedToZoneId = req.PinnedToZoneId,
+            PositionFraction = req.PositionFraction.HasValue
+                ? Math.Clamp(req.PositionFraction.Value, 0.0, 1.0)
+                : null,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -92,6 +115,11 @@ public class AdminEncountersController(AppDbContext db) : ControllerBase
         template.SpawnChance = Math.Clamp(req.SpawnChance, 0.0, 1.0);
         template.IsActive = req.IsActive;
         template.ConfigJson = string.IsNullOrWhiteSpace(req.ConfigJson) ? "{}" : req.ConfigJson.Trim();
+        template.PinnedFromZoneId = req.PinnedFromZoneId;
+        template.PinnedToZoneId = req.PinnedToZoneId;
+        template.PositionFraction = req.PositionFraction.HasValue
+            ? Math.Clamp(req.PositionFraction.Value, 0.0, 1.0)
+            : null;
 
         await db.SaveChangesAsync();
         return Ok();
@@ -117,4 +145,7 @@ public record UpsertEncounterRequest(
     string Emoji,
     double SpawnChance,
     bool IsActive,
-    string ConfigJson);
+    string ConfigJson,
+    Guid? PinnedFromZoneId = null,
+    Guid? PinnedToZoneId = null,
+    double? PositionFraction = null);

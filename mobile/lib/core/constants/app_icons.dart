@@ -90,6 +90,36 @@ static const String ringBoss        = 'assets/icons/ring_boss.png';
   static const String rewardXpStorm      = 'assets/icons/reward_xp_storm.png';
   static const String uiNewItem          = 'assets/icons/ui_new_item.png';
 
+  // Items & Equipment
+  static const String itemApexGpsPro = 'assets/Items/item_apex_gps_pro.png';
+  static const String itemPulseWristband = 'assets/Items/item_pulse_wristband.png';
+  static const String itemBasicStepCounter = 'assets/Items/item_basic_step_counter.png';
+  static const String itemStravaSyncBadge = 'assets/Items/item_strava_sync_badge.png';
+  static const String itemCryoJersey = 'assets/Items/item_cryo_jersey.png';
+  static const String itemIronHeadband = 'assets/Items/item_iron_headband.png';
+  static const String itemStormJacket = 'assets/Items/item_storm_jacket.png';
+  static const String itemCompressionShirt = 'assets/Items/item_compression_shirt.png';
+  static const String itemEliteWindbreaker = 'assets/Items/item_elite_windbreaker.png';
+  static const String itemAeroRaceCap = 'assets/Items/item_aero_race_cap.png';
+  static const String itemCarbonX3 = 'assets/Items/item_carbon_x3.png';
+  static const String itemTrailRunnerX5 = 'assets/Items/item_trail_runner_x5.png';
+  static const String itemSpeedSpikes = 'assets/Items/item_speed_spikes.png';
+  static const String itemRecoverySlides = 'assets/Items/item_recovery_slides.png';
+  static const String itemGravityBoots = 'assets/Items/item_gravity_boots.png';
+  static const String itemGripWraps = 'assets/Items/item_grip_wraps.png';
+  static const String itemSportBuds = 'assets/Items/item_sport_buds.png';
+  static const String itemClimbingChalkBag = 'assets/Items/item_climbing_chalk_bag.png';
+  static const String itemResistanceBandSet = 'assets/Items/item_resistance_band_set.png';
+  static const String itemChampionGloves = 'assets/Items/item_champion_gloves.png';
+  static const String itemAuraStone = 'assets/Items/item_aura_stone.png';
+  static const String itemXpBooster = 'assets/Items/item_xp_booster.png';
+  static const String itemEnergyGel = 'assets/Items/item_energy_gel.png';
+  static const String itemStreakShield = 'assets/Items/item_streak_shield.png';
+  static const String itemKtTapeRoll = 'assets/Items/item_kt_tape_roll.png';
+  static const String itemPhoenixElixir = 'assets/Items/item_phoenix_elixir.png';
+  static const String itemZoneCompass = 'assets/Items/item_zone_compass.png';
+  static const String itemBossScroll = 'assets/Items/item_boss_scroll.png';
+
   // ── Avatars ─────────────────────────────────────────────────────────────────
   static const String avatarArcher    = 'assets/icons/avatar_archer.png';
   static const String avatarCrown     = 'assets/icons/avatar_crown.png';
