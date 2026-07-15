@@ -2,62 +2,110 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/services/nav_tab_notifier.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../character/providers/character_provider.dart';
-import '../models/tutorial_topic.dart';
+import '../models/tutorial_step.dart';
 import '../providers/tutorial_provider.dart';
-import '../tutorial_controller.dart';
 
-class TutorialsHubScreen extends ConsumerWidget {
+class TutorialsHubScreen extends ConsumerStatefulWidget {
   const TutorialsHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(tutorialControllerProvider);
-    final profileAsync = ref.watch(characterProfileProvider);
+  ConsumerState<TutorialsHubScreen> createState() => _TutorialsHubScreenState();
+}
 
-    final topicsSeen = profileAsync.maybeWhen(
-      data: (p) => controller.topicsSeen != 0
-          ? controller.topicsSeen
-          : p.tutorialTopicsSeen,
-      orElse: () => controller.topicsSeen,
-    );
+class _TutorialsHubScreenState extends ConsumerState<TutorialsHubScreen> {
+  _TutorialCatalogItem? _selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = ref.watch(tutorialControllerProvider);
+    final profile = ref.watch(characterProfileProvider).valueOrNull;
+
+    final tutorials = <_TutorialCatalogItem>[
+      _TutorialCatalogItem(
+        id: 'first-quest',
+        title: 'First Quest',
+        subtitle: 'Core app basics and first progression loop',
+        iconAsset: AppIcons.questFirst,
+        accent: AppColors.blue,
+        rewardLabel: '+500 XP · Novice Adventurer',
+        stepLabel: '6 steps',
+        completed: (profile?.tutorialStep ?? 0) >= 99,
+        inProgress: ((profile?.tutorialStep ?? 0) > 0 &&
+            (profile?.tutorialStep ?? 0) < 99),
+        steps: const [
+          TutorialStep.logActivity,
+          TutorialStep.xpBar,
+          TutorialStep.stats,
+          TutorialStep.quests,
+          TutorialStep.mapTab,
+          TutorialStep.bossFab,
+        ],
+        onStart: () async {
+          if (context.mounted) Navigator.of(context).maybePop();
+          await controller.replayAll();
+        },
+      ),
+      _TutorialCatalogItem(
+        id: 'map-tutorial',
+        title: 'Map Tutorial',
+        subtitle: 'World, regions, zones, and zone types',
+        iconAsset: AppIcons.mapDestination,
+        accent: AppColors.green,
+        rewardLabel: 'World Guide Reward',
+        stepLabel: '8 steps',
+        completed: (profile?.mapTutorialStep ?? 0) >= 99,
+        inProgress: ((profile?.mapTutorialStep ?? 0) > 0 &&
+            (profile?.mapTutorialStep ?? 0) < 99),
+        steps: const [
+          TutorialStep.mapWorldBack,
+          TutorialStep.mapRegions,
+          TutorialStep.mapZoneTrail,
+          TutorialStep.mapNormalZone,
+          TutorialStep.mapChestZone,
+          TutorialStep.mapSpecialZone,
+          TutorialStep.mapDungeonZone,
+          TutorialStep.mapBossZone,
+        ],
+        onStart: () async {
+          if (context.mounted) Navigator.of(context).maybePop();
+          await controller.replayMapTutorial();
+          NavTabNotifier.switchTo('world');
+        },
+      ),
+    ];
+
+    final selected = _selected;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundAlt,
       body: SafeArea(
         child: Column(
           children: [
-            _HubHeader(onBack: () => Navigator.of(context).maybePop()),
+            _HubHeader(
+              title: selected?.title ?? 'Tutorials',
+              subtitle: selected == null
+                  ? 'REPLAY ANYTIME'
+                  : 'STEPS AND REWARD',
+              onBack: () {
+                if (selected != null) {
+                  setState(() => _selected = null);
+                  return;
+                }
+                Navigator.of(context).maybePop();
+              },
+            ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _PlayAllCard(
-                      onPlay: () async {
-                        if (context.mounted) {
-                          Navigator.of(context).maybePop();
-                        }
-                        await controller.replayAll();
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                    const _SectionLabel('TOPICS'),
-                    const SizedBox(height: 10),
-                    for (final topic in TutorialTopic.values) ...[
-                      _TopicRow(
-                        topic: topic,
-                        seen: tutorialTopicSeen(topicsSeen, topic),
-                        onTap: () => _startTopic(context, controller, topic),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    const SizedBox(height: 10),
-                    const _HubFooter(),
-                  ],
-                ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: selected == null
+                    ? _TutorialListView(
+                        tutorials: tutorials,
+                        onOpen: (item) => setState(() => _selected = item),
+                      )
+                    : _TutorialDetailView(item: selected),
               ),
             ),
           ],
@@ -65,22 +113,46 @@ class TutorialsHubScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Future<void> _startTopic(
-    BuildContext context,
-    TutorialController controller,
-    TutorialTopic topic,
-  ) async {
-    await controller.startTopic(topic);
-    if (context.mounted) {
-      Navigator.of(context).maybePop();
-    }
-  }
+class _TutorialCatalogItem {
+  final String id;
+  final String title;
+  final String subtitle;
+  final String iconAsset;
+  final Color accent;
+  final String rewardLabel;
+  final String stepLabel;
+  final bool completed;
+  final bool inProgress;
+  final List<TutorialStep> steps;
+  final Future<void> Function() onStart;
+
+  const _TutorialCatalogItem({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.iconAsset,
+    required this.accent,
+    required this.rewardLabel,
+    required this.stepLabel,
+    required this.completed,
+    required this.inProgress,
+    required this.steps,
+    required this.onStart,
+  });
 }
 
 class _HubHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
   final VoidCallback onBack;
-  const _HubHeader({required this.onBack});
+
+  const _HubHeader({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -110,22 +182,22 @@ class _HubHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tutorials',
-                  style: TextStyle(
+                  title,
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'REPLAY ANYTIME',
-                  style: TextStyle(
+                  subtitle,
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -141,122 +213,97 @@ class _HubHeader extends StatelessWidget {
   }
 }
 
-class _PlayAllCard extends StatelessWidget {
-  final VoidCallback onPlay;
-  const _PlayAllCard({required this.onPlay});
+class _TutorialListView extends StatelessWidget {
+  final List<_TutorialCatalogItem> tutorials;
+  final ValueChanged<_TutorialCatalogItem> onOpen;
+
+  const _TutorialListView({
+    required this.tutorials,
+    required this.onOpen,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.blue.withValues(alpha: 0.14),
-            AppColors.purple.withValues(alpha: 0.1),
-          ],
-        ),
-        border: Border.all(
-          color: AppColors.blue.withValues(alpha: 0.4),
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return SingleChildScrollView(
+      key: const ValueKey('tutorial-list'),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.blue, AppColors.purple],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.blue.withValues(alpha: 0.35),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: AppIconImage(
-                    AppIcons.questFirst,
-                    size: 24,
-                    visualScale: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Play all (First Quest)',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Replay the full walkthrough',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const _SectionLabel('TUTORIALS'),
+          const SizedBox(height: 10),
+          for (final tutorial in tutorials) ...[
+            _TutorialCard(
+              item: tutorial,
+              onTap: () => onOpen(tutorial),
+            ),
+            const SizedBox(height: 10),
+          ],
+          const _HubFooter(
+            text:
+                'Open any tutorial to review its reward and step list before starting.',
           ),
-          const SizedBox(height: 12),
-          const Row(
-            children: [
-              _MetaPill(label: '6 STEPS'),
-              SizedBox(width: 8),
-              _MetaPill(label: 'REWARD GATHER'),
-            ],
-          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TutorialDetailView extends StatelessWidget {
+  final _TutorialCatalogItem item;
+
+  const _TutorialDetailView({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      key: ValueKey(item.id),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TutorialHero(item: item),
+          const SizedBox(height: 14),
+          const _SectionLabel('STEPS'),
+          const SizedBox(height: 10),
+          for (int i = 0; i < item.steps.length; i++) ...[
+            _TutorialStepRow(
+              index: i + 1,
+              total: item.steps.length,
+              step: item.steps[i],
+              accent: item.accent,
+            ),
+            const SizedBox(height: 8),
+          ],
           const SizedBox(height: 14),
           GestureDetector(
-            onTap: onPlay,
+            onTap: item.onStart,
             behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.blue, Color(0xFF2F7AD8)],
+                  colors: [item.accent, item.accent.withValues(alpha: 0.78)],
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.blue.withValues(alpha: 0.4),
+                    color: item.accent.withValues(alpha: 0.32),
                     blurRadius: 18,
-                    offset: const Offset(0, 6),
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
               alignment: Alignment.center,
-              child: const Text(
-                'START WALKTHROUGH',
-                style: TextStyle(
+              child: Text(
+                item.completed ? 'REPLAY TUTORIAL' : 'START TUTORIAL',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.7,
                 ),
               ),
             ),
@@ -267,26 +314,396 @@ class _PlayAllCard extends StatelessWidget {
   }
 }
 
+class _TutorialCard extends StatelessWidget {
+  final _TutorialCatalogItem item;
+  final VoidCallback onTap;
+
+  const _TutorialCard({
+    required this.item,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statusText = item.completed
+        ? 'COMPLETED'
+        : item.inProgress
+            ? 'IN PROGRESS'
+            : 'NOT STARTED';
+    final statusColor = item.completed
+        ? AppColors.green
+        : item.inProgress
+            ? item.accent
+            : AppColors.textSecondary;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              item.accent.withValues(alpha: 0.12),
+              AppColors.surface,
+            ],
+          ),
+          border: Border.all(color: item.accent.withValues(alpha: 0.28)),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    border: Border.all(
+                      color: item.accent.withValues(alpha: 0.35),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: AppIconImage(
+                      item.iconAsset,
+                      size: 24,
+                      visualScale: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.subtitle,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                  size: 22,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _MetaPill(
+                  label: item.stepLabel.toUpperCase(),
+                  color: item.accent,
+                ),
+                _MetaPill(
+                  label: item.rewardLabel.toUpperCase(),
+                  color: AppColors.orange,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              statusText,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.7,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TutorialHero extends StatelessWidget {
+  final _TutorialCatalogItem item;
+
+  const _TutorialHero({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            item.accent.withValues(alpha: 0.18),
+            AppColors.surface,
+          ],
+        ),
+        border: Border.all(color: item.accent.withValues(alpha: 0.32)),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  border: Border.all(color: item.accent.withValues(alpha: 0.36)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: AppIconImage(
+                    item.iconAsset,
+                    size: 28,
+                    visualScale: 1.6,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      item.subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _RewardPanel(item: item),
+        ],
+      ),
+    );
+  }
+}
+
+class _RewardPanel extends StatelessWidget {
+  final _TutorialCatalogItem item;
+
+  const _RewardPanel({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.orange.withValues(alpha: 0.12),
+              border: Border.all(
+                color: AppColors.orange.withValues(alpha: 0.3),
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: AppIconImage(
+                AppIcons.rewardXpSparkle,
+                size: 18,
+                visualScale: 1.35,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Reward',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.7,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  item.rewardLabel,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            item.stepLabel.toUpperCase(),
+            style: TextStyle(
+              color: item.accent,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TutorialStepRow extends StatelessWidget {
+  final int index;
+  final int total;
+  final TutorialStep step;
+  final Color accent;
+
+  const _TutorialStepRow({
+    required this.index,
+    required this.total,
+    required this.step,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final content = kTutorialStepContent[step];
+    final title = content?.title ?? step.name;
+    final body = content?.body ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              border: Border.all(color: accent.withValues(alpha: 0.3)),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$index',
+              style: TextStyle(
+                color: accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '$index/$total',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MetaPill extends StatelessWidget {
   final String label;
-  const _MetaPill({required this.label});
+  final Color color;
+
+  const _MetaPill({
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.blue.withValues(alpha: 0.1),
-        border: Border.all(color: AppColors.blue.withValues(alpha: 0.25)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.blue,
+        style: TextStyle(
+          color: color,
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
+          letterSpacing: 0.55,
         ),
       ),
     );
@@ -314,134 +731,9 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _TopicRow extends StatelessWidget {
-  final TutorialTopic topic;
-  final bool seen;
-  final VoidCallback onTap;
-
-  const _TopicRow({
-    required this.topic,
-    required this.seen,
-    required this.onTap,
-  });
-
-  Color get _accentColor {
-    switch (topic) {
-      case TutorialTopic.xpStats:
-        return AppColors.blue;
-      case TutorialTopic.dailyQuests:
-        return AppColors.orange;
-      case TutorialTopic.streakSystem:
-        return AppColors.orange;
-      case TutorialTopic.worldMap:
-        return AppColors.green;
-      case TutorialTopic.bossSystem:
-        return AppColors.blue;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated,
-                border: Border.all(
-                  color: _accentColor.withValues(alpha: 0.4),
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: AppIconImage(
-                  topic.iconAsset,
-                  size: 20,
-                  visualScale: 1.45,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    topic.label,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    seen ? 'COMPLETED' : 'NOT YET SEEN',
-                    style: TextStyle(
-                      color: seen ? AppColors.green : AppColors.textSecondary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _StatusDot(seen: seen),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusDot extends StatelessWidget {
-  final bool seen;
-  const _StatusDot({required this.seen});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: seen
-            ? AppColors.green.withValues(alpha: 0.15)
-            : AppColors.surfaceElevated,
-        border: Border.all(
-          color: seen
-              ? AppColors.green.withValues(alpha: 0.4)
-              : AppColors.border,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          seen ? '✓' : '○',
-          style: TextStyle(
-            color: seen ? AppColors.green : AppColors.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _HubFooter extends StatelessWidget {
-  const _HubFooter();
+  final String text;
+  const _HubFooter({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -449,15 +741,13 @@ class _HubFooter extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Text(
-        'Replay any lesson anytime to refresh the basics and revisit the journey.',
+      child: Text(
+        text,
         textAlign: TextAlign.center,
-        style: TextStyle(
+        style: const TextStyle(
           color: AppColors.textSecondary,
           fontSize: 11,
           height: 1.55,

@@ -11,16 +11,22 @@ public record ReplayTopicRequest(string Topic);
 public record AdvanceTutorialResponse(
     int TutorialStep,
     int TutorialTopicsSeen,
+    int MapTutorialStep,
     int XpAwarded);
 
 public record SkipTutorialResponse(
     int TutorialStep,
-    int TutorialTopicsSeen);
+    int TutorialTopicsSeen,
+    int MapTutorialStep);
 
 public record ReplayAllTutorialResponse(
     int TutorialStep,
-    int TutorialTopicsSeen);
+    int TutorialTopicsSeen,
+    int MapTutorialStep);
 
 public record ReplayTopicResponse(
     int TutorialStep,
-    int TutorialTopicsSeen);
+    int TutorialTopicsSeen,
+    int MapTutorialStep);
+
+public record MapTutorialResponse(int MapTutorialStep);

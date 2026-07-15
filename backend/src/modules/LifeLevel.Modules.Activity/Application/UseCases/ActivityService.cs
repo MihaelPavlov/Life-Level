@@ -87,11 +87,6 @@ public class ActivityService(
         var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(request.Type),
             $"{request.Type} workout · {request.DurationMinutes} min", xp);
 
-        // Publish event for other listeners (streak, etc.)
-        await events.PublishAsync(new ActivityLoggedEvent(
-            userId, activity.Id, request.Type, request.DurationMinutes,
-            request.DistanceKm ?? 0, request.Calories ?? 0));
-
         if (request.DistanceKm > 0)
         {
             logger.LogInformation("ActivityService.LogActivity user={UserId} type={Type} incomingDistanceKm={Km}",
@@ -144,6 +139,12 @@ public class ActivityService(
         var questResult = await questProgress.UpdateProgressFromActivityAsync(
             userId, request.Type, request.DurationMinutes,
             request.DistanceKm, request.Calories);
+
+        // Publish after quest progress so title checks see completed quests.
+        // Streak is registered before titles, so streak state is current too.
+        await events.PublishAsync(new ActivityLoggedEvent(
+            userId, activity.Id, request.Type, request.DurationMinutes,
+            request.DistanceKm ?? 0, request.Calories ?? 0));
 
         // Read back streak state for response
         var streak = await streakRead.GetCurrentStreakAsync(userId);
@@ -228,10 +229,6 @@ public class ActivityService(
         await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
             $"{type} workout · {durationMinutes} min", xp);
 
-        await events.PublishAsync(new ActivityLoggedEvent(
-            userId, activity.Id, type, durationMinutes,
-            distanceKm ?? 0, calories ?? 0));
-
         if (distanceKm > 0)
         {
             logger.LogInformation("ActivityService.LogExternalActivity user={UserId} type={Type} incomingDistanceKm={Km} externalId={ExternalId}",
@@ -241,6 +238,10 @@ public class ActivityService(
 
         await questProgress.UpdateProgressFromActivityAsync(
             userId, type, durationMinutes, distanceKm, calories);
+
+        await events.PublishAsync(new ActivityLoggedEvent(
+            userId, activity.Id, type, durationMinutes,
+            distanceKm ?? 0, calories ?? 0));
 
         return new ActivityLogPortResult(activity.Id, xp);
     }

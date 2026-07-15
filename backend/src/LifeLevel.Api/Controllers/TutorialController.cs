@@ -21,7 +21,8 @@ public class TutorialController(
         {
             var (newStep, xpAwarded) = await characterService.AdvanceTutorialAsync(userId, ct);
             var (_, topicsSeen) = await characterService.GetTutorialStateAsync(userId, ct);
-            return Ok(new AdvanceTutorialResponse(newStep, topicsSeen, xpAwarded));
+            var mapStep = await characterService.GetMapTutorialStepAsync(userId, ct);
+            return Ok(new AdvanceTutorialResponse(newStep, topicsSeen, mapStep, xpAwarded));
         }
         catch (InvalidOperationException ex)
         {
@@ -37,7 +38,8 @@ public class TutorialController(
         {
             await characterService.SkipTutorialAsync(userId, ct);
             var (step, topicsSeen) = await characterService.GetTutorialStateAsync(userId, ct);
-            return Ok(new SkipTutorialResponse(step, topicsSeen));
+            var mapStep = await characterService.GetMapTutorialStepAsync(userId, ct);
+            return Ok(new SkipTutorialResponse(step, topicsSeen, mapStep));
         }
         catch (InvalidOperationException ex)
         {
@@ -53,7 +55,8 @@ public class TutorialController(
         {
             await characterService.ReplayAllAsync(userId, ct);
             var (step, topicsSeen) = await characterService.GetTutorialStateAsync(userId, ct);
-            return Ok(new ReplayAllTutorialResponse(step, topicsSeen));
+            var mapStep = await characterService.GetMapTutorialStepAsync(userId, ct);
+            return Ok(new ReplayAllTutorialResponse(step, topicsSeen, mapStep));
         }
         catch (InvalidOperationException ex)
         {
@@ -69,11 +72,40 @@ public class TutorialController(
         {
             await characterService.ReplayTopicAsync(userId, req.Topic, ct);
             var (step, topicsSeen) = await characterService.GetTutorialStateAsync(userId, ct);
-            return Ok(new ReplayTopicResponse(step, topicsSeen));
+            var mapStep = await characterService.GetMapTutorialStepAsync(userId, ct);
+            return Ok(new ReplayTopicResponse(step, topicsSeen, mapStep));
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
+    }
+
+    [HttpPost("map/start")]
+    public async Task<IActionResult> StartMap(CancellationToken ct)
+    {
+        var step = await characterService.StartMapTutorialAsync(userContext.UserId, ct);
+        return Ok(new MapTutorialResponse(step));
+    }
+
+    [HttpPost("map/advance")]
+    public async Task<IActionResult> AdvanceMap(CancellationToken ct)
+    {
+        var step = await characterService.AdvanceMapTutorialAsync(userContext.UserId, ct);
+        return Ok(new MapTutorialResponse(step));
+    }
+
+    [HttpPost("map/skip")]
+    public async Task<IActionResult> SkipMap(CancellationToken ct)
+    {
+        var step = await characterService.SkipMapTutorialAsync(userContext.UserId, ct);
+        return Ok(new MapTutorialResponse(step));
+    }
+
+    [HttpPost("map/replay")]
+    public async Task<IActionResult> ReplayMap(CancellationToken ct)
+    {
+        var step = await characterService.ReplayMapTutorialAsync(userContext.UserId, ct);
+        return Ok(new MapTutorialResponse(step));
     }
 }

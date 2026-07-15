@@ -31,6 +31,10 @@ class CharacterProfile {
   /// bit 3 = world-map, bit 4 = boss-system.
   final int tutorialTopicsSeen;
 
+  /// Separate world-map walkthrough. 0 = not started, 1..8 = in progress,
+  /// -1 = skipped, 99 = completed.
+  final int mapTutorialStep;
+
   const CharacterProfile({
     required this.username,
     required this.avatarEmoji,
@@ -55,6 +59,7 @@ class CharacterProfile {
     this.gearBonuses,
     this.tutorialStep = 0,
     this.tutorialTopicsSeen = 0,
+    this.mapTutorialStep = 0,
   });
 
   factory CharacterProfile.fromJson(Map<String, dynamic> json) =>
@@ -85,6 +90,7 @@ class CharacterProfile {
             : null,
         tutorialStep: json['tutorialStep'] as int? ?? 0,
         tutorialTopicsSeen: json['tutorialTopicsSeen'] as int? ?? 0,
+        mapTutorialStep: json['mapTutorialStep'] as int? ?? 0,
       );
 
   double get xpProgress {

@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../character/providers/character_provider.dart';
 import 'providers/titles_provider.dart';
-import 'widgets/titles_profile_header.dart';
 import 'widgets/rank_ladder_widget.dart';
 import 'widgets/title_list_item.dart';
+import 'widgets/titles_profile_header.dart';
 
 class TitlesRanksScreen extends ConsumerWidget {
   final VoidCallback? onClose;
+
   const TitlesRanksScreen({super.key, this.onClose});
 
   @override
@@ -21,14 +22,16 @@ class TitlesRanksScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Custom app bar ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        size: 18, color: AppColors.textPrimary),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      size: 18,
+                      color: AppColors.textPrimary,
+                    ),
                     onPressed: onClose ?? () => Navigator.of(context).pop(),
                   ),
                   const Expanded(
@@ -42,13 +45,10 @@ class TitlesRanksScreen extends ConsumerWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  // Spacer to balance the back button width
                   const SizedBox(width: 40),
                 ],
               ),
             ),
-
-            // ── Body ────────────────────────────────────────────────────────
             Expanded(
               child: titlesAsync.when(
                 loading: () => const Center(
@@ -63,12 +63,15 @@ class TitlesRanksScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: AppColors.red, size: 40),
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.red,
+                          size: 40,
+                        ),
                         const SizedBox(height: 12),
-                        Text(
+                        const Text(
                           'Failed to load titles',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
                           ),
@@ -93,31 +96,20 @@ class TitlesRanksScreen extends ConsumerWidget {
 
                   return CustomScrollView(
                     slivers: [
-                      // Profile header
                       SliverToBoxAdapter(
                         child: profile != null
                             ? TitlesProfileHeader(
                                 data: data,
                                 profile: profile,
-                                onChangeTitleTap: () {
-                                  // Scroll down to earned titles — tap scrolls
-                                  // naturally since the section is visible in
-                                  // the same view. No extra action needed.
-                                },
                               )
                             : const SizedBox(height: 16),
                       ),
-
-                      // Rank progression section label
                       const SliverToBoxAdapter(
                         child: _SectionLabel('RANK PROGRESSION'),
                       ),
-
-                      // Rank ladder card
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -131,19 +123,15 @@ class TitlesRanksScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
-                      // Earned titles section label
                       SliverToBoxAdapter(
                         child: _SectionLabel(
-                            'EARNED TITLES (${data.earnedTitles.length})'),
+                          'EARNED TITLES (${data.earnedTitles.length})',
+                        ),
                       ),
-
-                      // Earned titles list
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (_, i) => Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                             child: TitleListItem(
                               title: data.earnedTitles[i],
                               onEquip: () =>
@@ -153,18 +141,13 @@ class TitlesRanksScreen extends ConsumerWidget {
                           childCount: data.earnedTitles.length,
                         ),
                       ),
-
-                      // Locked titles section label
                       const SliverToBoxAdapter(
                         child: _SectionLabel('LOCKED TITLES'),
                       ),
-
-                      // Locked titles list
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (_, i) => Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                             child: TitleListItem(
                               title: data.lockedTitles[i],
                               isLocked: true,
@@ -173,8 +156,6 @@ class TitlesRanksScreen extends ConsumerWidget {
                           childCount: data.lockedTitles.length,
                         ),
                       ),
-
-                      // Bottom padding
                       const SliverToBoxAdapter(
                         child: SizedBox(height: 32),
                       ),
@@ -190,9 +171,9 @@ class TitlesRanksScreen extends ConsumerWidget {
   }
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   final String text;
+
   const _SectionLabel(this.text);
 
   @override

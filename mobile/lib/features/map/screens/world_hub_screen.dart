@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
+import '../../tutorial/models/tutorial_step.dart';
+import '../../tutorial/providers/tutorial_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
 import '../widgets/active_journey_banner.dart';
@@ -13,7 +16,7 @@ import 'region_detail_screen.dart';
 /// Tapping a region pushes [RegionDetailScreen].
 ///
 /// Matches screen 1/6 of `design-mockup/map/WORLD-MAP-FINAL-MOCKUP.html`.
-class WorldHubScreen extends StatefulWidget {
+class WorldHubScreen extends ConsumerStatefulWidget {
   const WorldHubScreen({
     super.key,
     this.onClose,
@@ -29,16 +32,18 @@ class WorldHubScreen extends StatefulWidget {
   final bool autoOpenActiveRegion;
 
   @override
-  State<WorldHubScreen> createState() => WorldHubScreenState();
+  ConsumerState<WorldHubScreen> createState() => WorldHubScreenState();
 }
 
-class WorldHubScreenState extends State<WorldHubScreen> {
+class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
+  final GlobalKey _regionsKey = GlobalKey();
 
   WorldMapData? _data;
   bool _loading = true;
   String? _error;
+  TutorialStep? _lastTutorialStep;
 
   // Inline region navigation so the shell's bottom nav bar stays visible.
   // Always starts at the hub list — tapping a region card opens RegionDetailScreen.
@@ -49,11 +54,18 @@ class WorldHubScreenState extends State<WorldHubScreen> {
     super.initState();
     _refreshSub = WorldZoneRefreshNotifier.stream.listen((_) => _load());
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final c = ref.read(tutorialControllerProvider);
+      c.registerKey('mapRegions', _regionsKey);
+      c.ensureMapTutorialStarted();
+    });
   }
 
   @override
   void dispose() {
     _refreshSub.cancel();
+    ref.read(tutorialControllerProvider).unregisterKey('mapRegions');
     super.dispose();
   }
 
@@ -72,7 +84,9 @@ class WorldHubScreenState extends State<WorldHubScreen> {
       setState(() {
         _data = data;
         _loading = false;
-        if (widget.autoOpenActiveRegion) {
+        final tutorial = ref.read(tutorialControllerProvider);
+        if (widget.autoOpenActiveRegion ||
+            (tutorial.isMapTutorial && tutorial.mapTutorialStep == 1)) {
           _openRegionId = null;
           for (final r in data.regions) {
             if (r.status == RegionStatus.active) {
@@ -111,6 +125,37 @@ class WorldHubScreenState extends State<WorldHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tutorial = ref.watch(tutorialControllerProvider);
+    final tutorialStep = tutorial.step;
+    final needsRegionOpen = tutorial.isMapTutorial &&
+        tutorialStep != null &&
+        tutorialStep != TutorialStep.mapRegions;
+    final tutorialStepChanged = tutorialStep != _lastTutorialStep;
+    _lastTutorialStep = tutorialStep;
+
+    if (tutorial.isMapTutorial &&
+        tutorialStep == TutorialStep.mapRegions &&
+        _openRegionId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _openRegionId != null) {
+          _closeRegion();
+        }
+      });
+    }
+    if (needsRegionOpen &&
+        (_openRegionId == null || tutorialStepChanged) &&
+        _data != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _data == null) return;
+        for (final region in _data!.regions) {
+          if (region.status == RegionStatus.active) {
+            _openRegion(region);
+            break;
+          }
+        }
+      });
+    }
+
     return Container(
       color: AppColors.shellBackground,
       child: Stack(
@@ -161,6 +206,7 @@ class WorldHubScreenState extends State<WorldHubScreen> {
             const SizedBox(height: 14),
           ],
           _SectionTitle(
+            key: _regionsKey,
             label: 'REGIONS',
             count: '${visibleRegions.length} SHOWN',
           ),
@@ -267,7 +313,7 @@ class _HubHeader extends StatelessWidget {
 class _SectionTitle extends StatelessWidget {
   final String label;
   final String count;
-  const _SectionTitle({required this.label, required this.count});
+  const _SectionTitle({super.key, required this.label, required this.count});
 
   @override
   Widget build(BuildContext context) {

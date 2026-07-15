@@ -538,6 +538,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<bool>("TutorialRewardsClaimed")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("MapTutorialStep")
+                        .HasColumnType("integer");
+
                     b.Property<int>("TutorialStep")
                         .HasColumnType("integer");
 

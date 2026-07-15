@@ -28,10 +28,13 @@ class TutorialController extends ChangeNotifier {
   bool _shouldShowIntroModal = false;
   bool _shouldShowOutroModal = false;
   bool _suppressOutroOnReplay = false;
+  int _mapTutorialStep = 0;
+  bool _isMapTutorial = false;
 
   /// Topic replay queue. Consumed one step at a time by `advance()`.
   /// When empty during a topic replay the controller calls `stop()`.
   final List<TutorialStep> _topicQueue = [];
+  final List<TutorialStep> _mapQueue = [];
 
   /// Registered target `GlobalKey`s keyed by [TutorialStep.targetKeyId].
   /// MainShell + Home cards register themselves during `initState`; the
@@ -48,6 +51,8 @@ class TutorialController extends ChangeNotifier {
   bool get shouldShowIntroModal => _shouldShowIntroModal;
   bool get shouldShowOutroModal => _shouldShowOutroModal;
   bool get isTopicReplay => _topic != null;
+  bool get isMapTutorial => _isMapTutorial;
+  int get mapTutorialStep => _mapTutorialStep;
 
   /// No tutorial step is action-gated in the current frontend flow.
   bool get isActionGated => false;
@@ -99,11 +104,13 @@ class TutorialController extends ChangeNotifier {
   void hydrateFromProfile({
     required int serverStep,
     required int serverTopicsSeen,
+    required int mapTutorialStep,
   }) {
     _topicsSeen = serverTopicsSeen;
+    _mapTutorialStep = mapTutorialStep;
     // -1 = skipped, 99 = completed: nothing to show.
     if (serverStep < 0 || serverStep >= 99) {
-      if (_step != null) {
+      if (_step != null && !_isMapTutorial) {
         _step = null;
         _topic = null;
         notifyListeners();
@@ -111,7 +118,7 @@ class TutorialController extends ChangeNotifier {
       return;
     }
     // Only auto-start if we're not already running (e.g. a topic replay).
-    if (_topic != null) return;
+    if (_topic != null || _isMapTutorial) return;
 
     if (serverStep == 0) {
       _step = TutorialStep.intro;
@@ -160,6 +167,53 @@ class TutorialController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> ensureMapTutorialStarted() async {
+    if (_busy || _isMapTutorial) return;
+    if (_mapTutorialStep == -1 || _mapTutorialStep >= 99) return;
+
+    if (_mapTutorialStep == 0) {
+      _busy = true;
+      notifyListeners();
+      try {
+        final result = await _api.startMapTutorial();
+        _mapTutorialStep = result.mapTutorialStep;
+      } catch (_) {
+        _mapTutorialStep = 1;
+      } finally {
+        _busy = false;
+      }
+    }
+
+    if (_mapTutorialStep <= 0 || _mapTutorialStep >= 99) {
+      notifyListeners();
+      return;
+    }
+
+    _isMapTutorial = true;
+    _topic = null;
+    _topicQueue.clear();
+    _rebuildMapQueue();
+    notifyListeners();
+  }
+
+  void refreshMapTargets({
+    required bool hasNormalZone,
+    required bool hasChestZone,
+    required bool hasSpecialZone,
+    required bool hasDungeonZone,
+    required bool hasBossZone,
+  }) {
+    if (!_isMapTutorial) return;
+    _rebuildMapQueue(
+      hasNormalZone: hasNormalZone,
+      hasChestZone: hasChestZone,
+      hasSpecialZone: hasSpecialZone,
+      hasDungeonZone: hasDungeonZone,
+      hasBossZone: hasBossZone,
+    );
+    notifyListeners();
+  }
+
   /// Resets the backend to step 0 and restarts the full walkthrough.
   /// No XP on replay (server enforces one-shot rewards).
   Future<void> replayAll() async {
@@ -186,6 +240,29 @@ class TutorialController extends ChangeNotifier {
   /// full flow, calls `/advance` and trusts the server to move forward.
   Future<void> advance() async {
     if (_busy || _step == null) return;
+
+    if (_isMapTutorial) {
+      _busy = true;
+      notifyListeners();
+      try {
+        final result = await _api.advanceMapTutorial();
+        _mapTutorialStep = result.mapTutorialStep;
+        if (_mapTutorialStep == -1 || _mapTutorialStep >= 99) {
+          await stop();
+          return;
+        }
+        _rebuildMapQueue();
+      } catch (_) {
+        if (_mapQueue.isNotEmpty) {
+          _mapQueue.removeAt(0);
+          _step = _mapQueue.isEmpty ? null : _mapQueue.first;
+        }
+      } finally {
+        _busy = false;
+        notifyListeners();
+      }
+      return;
+    }
 
     // Topic replay: local-only progression, no server call, no rewards.
     if (_topic != null) {
@@ -263,8 +340,14 @@ class TutorialController extends ChangeNotifier {
     _busy = true;
     notifyListeners();
     try {
-      final result = await _api.skip();
-      _topicsSeen = result.tutorialTopicsSeen;
+      if (_isMapTutorial) {
+        final result = await _api.skipMapTutorial();
+        _mapTutorialStep = result.mapTutorialStep;
+      } else {
+        final result = await _api.skip();
+        _topicsSeen = result.tutorialTopicsSeen;
+        _mapTutorialStep = result.mapTutorialStep;
+      }
     } catch (_) {
       // Best-effort: still dismiss locally so the user isn't stuck.
     } finally {
@@ -282,6 +365,56 @@ class TutorialController extends ChangeNotifier {
     _shouldShowIntroModal = false;
     _shouldShowOutroModal = false;
     _suppressOutroOnReplay = false;
+    _isMapTutorial = false;
+    _mapQueue.clear();
     notifyListeners();
+  }
+
+  Future<void> replayMapTutorial() async {
+    if (_busy) return;
+    _busy = true;
+    notifyListeners();
+    try {
+      final result = await _api.replayMapTutorial();
+      _mapTutorialStep = result.mapTutorialStep;
+    } catch (_) {
+      _mapTutorialStep = 1;
+    } finally {
+      _busy = false;
+    }
+    _isMapTutorial = true;
+    _rebuildMapQueue();
+    notifyListeners();
+  }
+
+  void _rebuildMapQueue({
+    bool hasNormalZone = true,
+    bool hasChestZone = true,
+    bool hasSpecialZone = true,
+    bool hasDungeonZone = true,
+    bool hasBossZone = true,
+  }) {
+    final steps = <TutorialStep>[
+      TutorialStep.mapWorldBack,
+      TutorialStep.mapRegions,
+      TutorialStep.mapZoneTrail,
+      if (hasNormalZone) TutorialStep.mapNormalZone,
+      if (hasChestZone) TutorialStep.mapChestZone,
+      if (hasSpecialZone) TutorialStep.mapSpecialZone,
+      if (hasDungeonZone) TutorialStep.mapDungeonZone,
+      if (hasBossZone) TutorialStep.mapBossZone,
+    ];
+
+    final serverIndex = _mapTutorialStep <= 0 ? 0 : _mapTutorialStep - 1;
+    if (serverIndex >= steps.length) {
+      _step = null;
+      _mapQueue.clear();
+      return;
+    }
+
+    _mapQueue
+      ..clear()
+      ..addAll(steps.skip(serverIndex));
+    _step = _mapQueue.isEmpty ? null : _mapQueue.first;
   }
 }

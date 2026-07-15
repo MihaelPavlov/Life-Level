@@ -24,6 +24,7 @@ public class CharacterService(
     // LL-035: final step of the 7-step onboarding tutorial. Steps are 0..7 inclusive
     // (0 = not started, 7 = finished). -1 = user skipped.
     private const int TutorialFinalStep = 7;
+    private const int MapTutorialFinalStep = 8;
 
     public async Task<IReadOnlyList<CharacterClassResponse>> GetAllClassesAsync()
     {
@@ -99,7 +100,8 @@ public class CharacterService(
             DailyQuestsCompleted: ctx.DailyQuestsCompleted,
             LoginRewardAvailable: !ctx.HasClaimedLoginRewardToday,
             TutorialStep: character.TutorialStep,
-            TutorialTopicsSeen: character.TutorialTopicsSeen
+            TutorialTopicsSeen: character.TutorialTopicsSeen,
+            MapTutorialStep: character.MapTutorialStep
         );
     }
 
@@ -422,6 +424,69 @@ public class CharacterService(
         var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
             ?? throw new InvalidOperationException("Character not found.");
         return (character.TutorialStep, character.TutorialTopicsSeen);
+    }
+
+    public async Task<int> GetMapTutorialStepAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+        return character.MapTutorialStep;
+    }
+
+    public async Task<int> StartMapTutorialAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        if (character.MapTutorialStep == 0)
+        {
+            character.MapTutorialStep = 1;
+            character.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+        }
+
+        return character.MapTutorialStep;
+    }
+
+    public async Task<int> ReplayMapTutorialAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        character.MapTutorialStep = 1;
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+        return character.MapTutorialStep;
+    }
+
+    public async Task<int> SkipMapTutorialAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        if (character.MapTutorialStep != -1)
+        {
+            character.MapTutorialStep = -1;
+            character.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+        }
+
+        return character.MapTutorialStep;
+    }
+
+    public async Task<int> AdvanceMapTutorialAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        var current = character.MapTutorialStep;
+        if (current < 1 || current == -1 || current >= 99)
+            return current;
+
+        character.MapTutorialStep = current >= MapTutorialFinalStep ? 99 : current + 1;
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+        return character.MapTutorialStep;
     }
 
     private static long XpAtLevelStart(int level) =>

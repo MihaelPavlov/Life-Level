@@ -1,30 +1,32 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/avatar_icons.dart';
+import '../../../core/constants/title_rank_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../character/models/character_profile.dart';
 import '../models/title_models.dart';
 
 class TitlesProfileHeader extends StatelessWidget {
   final TitlesAndRanksResponse data;
   final CharacterProfile profile;
-  final VoidCallback? onChangeTitleTap;
 
   const TitlesProfileHeader({
     super.key,
     required this.data,
     required this.profile,
-    this.onChangeTitleTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasTitle =
         data.activeTitleEmoji.isNotEmpty && data.activeTitleName.isNotEmpty;
+    final activeTitleIcon = titleIconAsset(name: data.activeTitleName);
+    final avatarAsset = avatarIconAsset(profile.avatarEmoji);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Column(
         children: [
-          // Avatar circle
           Container(
             width: 72,
             height: 72,
@@ -48,16 +50,19 @@ class TitlesProfileHeader extends StatelessWidget {
               ],
             ),
             child: Center(
-              child: Text(
-                profile.avatarEmoji ?? '🧙',
-                style: const TextStyle(fontSize: 32),
-              ),
+              child: avatarAsset != null
+                  ? AppIconImage(
+                      avatarAsset,
+                      size: 46,
+                      visualScale: 1.45,
+                    )
+                  : Text(
+                      profile.avatarEmoji ?? '🧙',
+                      style: const TextStyle(fontSize: 32),
+                    ),
             ),
           ),
-
           const SizedBox(height: 12),
-
-          // Username
           Text(
             profile.username,
             style: const TextStyle(
@@ -66,14 +71,10 @@ class TitlesProfileHeader extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-
           const SizedBox(height: 8),
-
-          // Active title badge or fallback
           if (hasTitle)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.orange.withOpacity(0.10),
                 borderRadius: BorderRadius.circular(20),
@@ -88,53 +89,51 @@ class TitlesProfileHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Text(
-                '${data.activeTitleEmoji} ${data.activeTitleName}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.orange,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (activeTitleIcon != null) ...[
+                    AppIconImage(
+                      activeTitleIcon,
+                      size: 18,
+                      visualScale: 1.4,
+                    ),
+                    const SizedBox(width: 7),
+                  ] else ...[
+                    Text(
+                      data.activeTitleEmoji,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(width: 5),
+                  ],
+                  Flexible(
+                    child: Text(
+                      data.activeTitleName,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.orange,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             )
           else
-            Text(
+            const Text(
               'No title equipped',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,
               ),
             ),
-
           const SizedBox(height: 8),
-
-          // Level & XP subtext
           Text(
-            'Lv.${profile.level}  \u2022  ${profile.xp} XP',
+            'Lv.${profile.level}  •  ${profile.xp} XP',
             style: const TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Change active title button
-          TextButton(
-            onPressed: onChangeTitleTap,
-            style: TextButton.styleFrom(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text(
-              '\u270f\ufe0f Change Active Title',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppColors.orange,
-              ),
             ),
           ),
         ],

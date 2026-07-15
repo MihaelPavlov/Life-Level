@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/constants/app_icons.dart';
+import '../../core/widgets/app_icon_image.dart';
 import '../character/models/xp_history_entry.dart';
 import '../character/providers/character_provider.dart';
 import 'profile_stat_metadata.dart';
 
-// ── XpHistorySheet ────────────────────────────────────────────────────────────
 class XpHistorySheet extends ConsumerWidget {
   const XpHistorySheet({super.key});
 
@@ -23,7 +25,6 @@ class XpHistorySheet extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // handle
           Center(
             child: Container(
               width: 36,
@@ -35,8 +36,6 @@ class XpHistorySheet extends ConsumerWidget {
               ),
             ),
           ),
-
-          // header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
             child: Row(
@@ -50,7 +49,11 @@ class XpHistorySheet extends ConsumerWidget {
                     border: Border.all(color: kPBlue.withOpacity(0.4)),
                   ),
                   child: const Center(
-                    child: Text('⚡', style: TextStyle(fontSize: 22)),
+                    child: AppIconImage(
+                      AppIcons.rewardXpSparkle,
+                      size: 22,
+                      visualScale: 1.35,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -59,7 +62,11 @@ class XpHistorySheet extends ConsumerWidget {
                   children: [
                     Text(
                       'XP History',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kPTextPri),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: kPTextPri,
+                      ),
                     ),
                     SizedBox(height: 2),
                     Text(
@@ -71,25 +78,28 @@ class XpHistorySheet extends ConsumerWidget {
               ],
             ),
           ),
-
           const Divider(color: kPBorder2, height: 1),
-
-          // body
           Expanded(
             child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: kPBlue)),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator(color: kPBlue)),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
                       'Failed to load history',
-                      style: TextStyle(color: kPTextPri, fontSize: 14, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: kPTextPri,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     TextButton(
                       onPressed: () => ref.invalidate(xpHistoryProvider),
-                      child: const Text('Retry', style: TextStyle(color: kPBlue)),
+                      child:
+                          const Text('Retry', style: TextStyle(color: kPBlue)),
                     ),
                   ],
                 ),
@@ -99,11 +109,19 @@ class XpHistorySheet extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('⚡', style: TextStyle(fontSize: 40)),
+                          AppIconImage(
+                            AppIcons.rewardXpSparkle,
+                            size: 40,
+                            visualScale: 1.45,
+                          ),
                           SizedBox(height: 12),
                           Text(
                             'No XP earned yet',
-                            style: TextStyle(color: kPTextPri, fontSize: 14, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: kPTextPri,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           SizedBox(height: 4),
                           Text(
@@ -116,13 +134,12 @@ class XpHistorySheet extends ConsumerWidget {
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                       itemCount: list.length,
-                      separatorBuilder: (_, __) => const Divider(color: kPBorder2, height: 1),
+                      separatorBuilder: (_, __) =>
+                          const Divider(color: kPBorder2, height: 1),
                       itemBuilder: (_, i) => XpEntryRow(entry: list[i]),
                     ),
             ),
           ),
-
-          // total footer — only when data is loaded and non-empty
           if (entries != null && entries.isNotEmpty) ...[
             const Divider(color: kPBorder2, height: 1),
             Padding(
@@ -157,13 +174,15 @@ class XpHistorySheet extends ConsumerWidget {
   }
 }
 
-// ── XpEntryRow ────────────────────────────────────────────────────────────────
 class XpEntryRow extends StatelessWidget {
   final XpHistoryEntry entry;
+
   const XpEntryRow({super.key, required this.entry});
 
   @override
   Widget build(BuildContext context) {
+    final iconAsset = xpHistoryIconAsset(entry);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -177,7 +196,16 @@ class XpEntryRow extends StatelessWidget {
               border: Border.all(color: kPBlue.withOpacity(0.25)),
             ),
             child: Center(
-              child: Text(entry.sourceEmoji, style: const TextStyle(fontSize: 18)),
+              child: iconAsset != null
+                  ? AppIconImage(
+                      iconAsset,
+                      size: 18,
+                      visualScale: 1.3,
+                    )
+                  : Text(
+                      entry.sourceEmoji,
+                      style: const TextStyle(fontSize: 18),
+                    ),
             ),
           ),
           const SizedBox(width: 12),
@@ -185,11 +213,19 @@ class XpEntryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(entry.source,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kPTextPri)),
+                Text(
+                  entry.source,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: kPTextPri,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(entry.description,
-                    style: const TextStyle(fontSize: 11, color: kPTextSec)),
+                Text(
+                  entry.description,
+                  style: const TextStyle(fontSize: 11, color: kPTextSec),
+                ),
               ],
             ),
           ),
@@ -197,14 +233,89 @@ class XpEntryRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('+${entry.xp} XP',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kPBlue)),
+              Text(
+                '+${entry.xp} XP',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: kPBlue,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(entry.timeAgo, style: const TextStyle(fontSize: 10, color: kPTextSec)),
+              Text(
+                entry.timeAgo,
+                style: const TextStyle(fontSize: 10, color: kPTextSec),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+}
+
+String? xpHistoryIconAsset(XpHistoryEntry entry) {
+  switch (entry.source) {
+    case 'Activity':
+      return _activityXpHistoryIcon(entry.sourceEmoji, entry.description);
+    case 'Quest':
+      return AppIcons.questGeneral;
+    case 'DailyQuestBonus':
+      return AppIcons.rewardDailyBonus;
+    case 'DailyLogin':
+      return AppIcons.rewardDailyBonus;
+    case 'XpStorm':
+      return AppIcons.rewardXpStorm;
+    case 'Tutorial':
+      return AppIcons.questFirst;
+    case 'CharacterSetup':
+      return AppIcons.rewardGrantItem;
+    case 'Achievement':
+      return AppIcons.ringTitles;
+    case 'Chest':
+    case 'ChestReward':
+      return AppIcons.rewardTreasureChest;
+    case 'BossDefeated':
+    case 'MiniBossDefeated':
+      return AppIcons.ringBoss;
+    default:
+      return AppIcons.rewardXpSparkle;
+  }
+}
+
+String _normalizeXpText(String value) =>
+    value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
+
+String? _activityXpHistoryIcon(String sourceEmoji, String description) {
+  final text = _normalizeXpText(description);
+
+  if (text.contains('running')) return AppIcons.activityRunning;
+  if (text.contains('cycling')) return AppIcons.activityCycling;
+  if (text.contains('gym')) return AppIcons.activityGym;
+  if (text.contains('yoga')) return AppIcons.activityYoga;
+  if (text.contains('swimming')) return AppIcons.activitySwimming;
+  if (text.contains('hiking')) return AppIcons.activityHiking;
+  if (text.contains('walking')) return AppIcons.activityRunning;
+  if (text.contains('climbing')) return AppIcons.activityClimbing;
+
+  switch (sourceEmoji) {
+    case '🏃':
+      return AppIcons.activityRunning;
+    case '🚴':
+      return AppIcons.activityCycling;
+    case '💪':
+      return AppIcons.activityGym;
+    case '🧘':
+      return AppIcons.activityYoga;
+    case '🏊':
+      return AppIcons.activitySwimming;
+    case '🥾':
+      return AppIcons.activityHiking;
+    case '🚶':
+      return AppIcons.activityRunning;
+    case '🧗':
+      return AppIcons.activityClimbing;
+    default:
+      return AppIcons.activityGym;
   }
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/title_rank_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../profile/profile_stat_metadata.dart';
 import '../models/title_models.dart';
 
-// Ordered rank list used for index comparison.
 const _kRankOrder = [
   'Novice',
   'Warrior',
@@ -11,14 +12,6 @@ const _kRankOrder = [
   'Champion',
   'Legend',
 ];
-
-const _kRankEmojis = {
-  'Novice': '🌱',
-  'Warrior': '⚔️',
-  'Veteran': '🛡️',
-  'Champion': '👑',
-  'Legend': '🌟',
-};
 
 class RankLadderWidget extends StatelessWidget {
   final RankProgressionDto progression;
@@ -31,27 +24,20 @@ class RankLadderWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // Node row
         Row(
           children: [
             for (int i = 0; i < _kRankOrder.length; i++) ...[
               _RankNode(
                 rank: _kRankOrder[i],
-                emoji: _kRankEmojis[_kRankOrder[i]]!,
                 isUnlocked: i <= currentIndex,
                 isCurrent: i == currentIndex,
               ),
               if (i < _kRankOrder.length - 1)
-                _RankConnector(
-                  isUnlocked: i < currentIndex,
-                ),
+                _RankConnector(isUnlocked: i < currentIndex),
             ],
           ],
         ),
-
         const SizedBox(height: 14),
-
-        // Hint text
         if (progression.nextRank != null)
           Text(
             'Defeat ${progression.bossesRemainingForNextRank} more '
@@ -65,7 +51,7 @@ class RankLadderWidget extends StatelessWidget {
           )
         else
           const Text(
-            'Maximum rank achieved \u2728',
+            'Maximum rank achieved',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -78,30 +64,25 @@ class RankLadderWidget extends StatelessWidget {
   }
 }
 
-// ── Single rank node ──────────────────────────────────────────────────────────
 class _RankNode extends StatelessWidget {
   final String rank;
-  final String emoji;
   final bool isUnlocked;
   final bool isCurrent;
 
   const _RankNode({
     required this.rank,
-    required this.emoji,
     required this.isUnlocked,
     required this.isCurrent,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isUnlocked
-        ? profileRankColor(rank)
-        : AppColors.border;
+    final color = isUnlocked ? profileRankColor(rank) : AppColors.border;
+    final iconAsset = rankIconAsset(rank);
 
     return Expanded(
       child: Column(
         children: [
-          // "YOU" label above current rank node
           SizedBox(
             height: 14,
             child: isCurrent
@@ -117,18 +98,13 @@ class _RankNode extends StatelessWidget {
                   )
                 : null,
           ),
-
           const SizedBox(height: 4),
-
-          // Node circle
           Container(
             width: 38,
             height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isUnlocked
-                  ? color.withOpacity(0.15)
-                  : AppColors.surface,
+              color: isUnlocked ? color.withOpacity(0.15) : AppColors.surface,
               border: Border.all(
                 color: isCurrent ? color : color.withOpacity(0.5),
                 width: isCurrent ? 2.0 : 1.0,
@@ -143,18 +119,24 @@ class _RankNode extends StatelessWidget {
                   : null,
             ),
             child: Center(
-              child: Text(
-                emoji,
-                style: TextStyle(
-                  fontSize: isUnlocked ? 16 : 14,
-                ),
-              ),
+              child: iconAsset != null
+                  ? AppIconImage(
+                      iconAsset,
+                      size: 25,
+                      visualScale: 1.3,
+                      opacity: isUnlocked ? 1 : 0.45,
+                    )
+                  : Text(
+                      rank.characters.first,
+                      style: TextStyle(
+                        fontSize: isUnlocked ? 16 : 14,
+                        fontWeight: FontWeight.w800,
+                        color: isUnlocked ? color : AppColors.textSecondary,
+                      ),
+                    ),
             ),
           ),
-
           const SizedBox(height: 6),
-
-          // Rank name label
           Text(
             rank,
             style: TextStyle(
@@ -171,7 +153,6 @@ class _RankNode extends StatelessWidget {
   }
 }
 
-// ── Connector line between nodes ──────────────────────────────────────────────
 class _RankConnector extends StatelessWidget {
   final bool isUnlocked;
 
@@ -180,16 +161,14 @@ class _RankConnector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      // Visually align the connector with the node circles (top area).
       padding: const EdgeInsets.only(bottom: 20),
       child: SizedBox(
         width: 12,
         height: 2,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: isUnlocked
-                ? AppColors.orange.withOpacity(0.4)
-                : AppColors.border,
+            color:
+                isUnlocked ? AppColors.orange.withOpacity(0.4) : AppColors.border,
             borderRadius: BorderRadius.circular(1),
           ),
         ),

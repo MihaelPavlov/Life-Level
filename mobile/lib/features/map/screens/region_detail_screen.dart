@@ -2,10 +2,14 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../../character/providers/character_provider.dart';
+import '../../tutorial/models/tutorial_step.dart';
+import '../../tutorial/providers/tutorial_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
@@ -39,10 +43,14 @@ class RegionDetailScreen extends ConsumerStatefulWidget {
 class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
+  static const String _tutorialSampleZonePrefix = '__tutorial_sample_';
 
   // Attached to the active zone bubble inside ZoneTrail so we can call
   // Scrollable.ensureVisible to auto-scroll the user there on entry.
   final GlobalKey _activeNodeKey = GlobalKey();
+  final GlobalKey _backButtonKey = GlobalKey();
+  final GlobalKey _trailKey = GlobalKey();
+  final Map<String, GlobalKey> _tutorialZoneKeys = {};
 
   RegionDetail? _region;
   // Kept locally so the sheet can render "traveling" layouts without another
@@ -56,6 +64,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   int _userLevel = 1;
   bool _loading = true;
   String? _error;
+  TutorialStep? _lastTutorialStep;
 
   @override
   void initState() {
@@ -67,6 +76,14 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   @override
   void dispose() {
     _refreshSub.cancel();
+    final c = ref.read(tutorialControllerProvider);
+    c.unregisterKey('mapWorldBack');
+    c.unregisterKey('mapZoneTrail');
+    c.unregisterKey('mapNormalZone');
+    c.unregisterKey('mapChestZone');
+    c.unregisterKey('mapSpecialZone');
+    c.unregisterKey('mapDungeonZone');
+    c.unregisterKey('mapBossZone');
     super.dispose();
   }
 
@@ -94,10 +111,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         _userLevel = world.user.level;
         _loading = false;
       });
+      _syncTutorialTargets(_buildVisibleRegionForTutorial(region));
       // Once the trail has laid out, snap the viewport to the active zone so
       // the user always lands on their current position.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToActiveZone();
+        _scrollToCurrentTutorialTarget();
       });
     } catch (e) {
       if (!mounted) return;
@@ -122,6 +140,52 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       alignment: 0.3,
     );
   }
+
+  void _scrollToCurrentTutorialTarget() {
+    if (!mounted) return;
+    final tutorial = ref.read(tutorialControllerProvider);
+    if (tutorial.isMapTutorial && tutorial.step != null) {
+      final keyId = tutorial.step!.targetKeyId;
+      if (keyId != null && keyId != 'mapWorldBack') {
+        final key = _tutorialKeyForTarget(keyId);
+        final ctx = key?.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 520),
+            curve: Curves.easeOutCubic,
+            alignment: 0.36,
+          );
+          return;
+        }
+      }
+    }
+    _scrollToActiveZone();
+  }
+
+  GlobalKey? _tutorialKeyForTarget(String targetId) {
+    switch (targetId) {
+      case 'mapZoneTrail':
+        return _trailKey;
+      case 'mapNormalZone':
+        return _tutorialZoneKeyByTarget('mapNormalZone');
+      case 'mapChestZone':
+        return _tutorialZoneKeyByTarget('mapChestZone');
+      case 'mapSpecialZone':
+        return _tutorialZoneKeyByTarget('mapSpecialZone');
+      case 'mapDungeonZone':
+        return _tutorialZoneKeyByTarget('mapDungeonZone');
+      case 'mapBossZone':
+        return _tutorialZoneKeyByTarget('mapBossZone');
+      default:
+        return null;
+    }
+  }
+
+  final Map<String, GlobalKey> _tutorialTargetKeys = {};
+
+  GlobalKey? _tutorialZoneKeyByTarget(String targetId) =>
+      _tutorialTargetKeys[targetId];
 
   String? _findDestinationZoneId(RegionDetail region, WorldMapData world) {
     final journey = world.activeJourney;
@@ -488,6 +552,8 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   void _showNodeSheet(ZoneNode node) {
+    if (_isTutorialSampleZone(node)) return;
+
     assert(() {
       debugPrint(
           '[node-tap] ${node.name} id=${node.id} isCrossroads=${node.isCrossroads} status=${node.status} branchOf=${node.branchOf}');
@@ -617,7 +683,23 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   Widget _buildContent(RegionDetail region) {
     final theme = RegionThemeColors.of(region.theme);
     final avatar = ref.watch(characterProfileProvider).valueOrNull?.avatarEmoji;
-    final filteredRegion = _buildProgressiveRevealRegion(region);
+    final tutorial = ref.watch(tutorialControllerProvider);
+    final filteredRegion = _buildVisibleRegionForTutorial(region);
+
+    if (tutorial.isMapTutorial && _tutorialTargetKeys.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _syncTutorialTargets(filteredRegion);
+      });
+    }
+
+    if (tutorial.isMapTutorial && tutorial.step != _lastTutorialStep) {
+      _lastTutorialStep = tutorial.step;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCurrentTutorialTarget();
+      });
+    }
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -625,6 +707,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
             region: filteredRegion,
             theme: theme,
             onBack: widget.onBack ?? () => Navigator.pop(context),
+            backButtonKey: _backButtonKey,
           ),
         ),
         SliverToBoxAdapter(child: _Summary(region: filteredRegion)),
@@ -644,6 +727,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         ),
         SliverToBoxAdapter(
           child: ZoneTrail(
+            key: _trailKey,
             nodes: filteredRegion.nodes,
             edges: filteredRegion.edges,
             journey: _activeJourney,
@@ -653,6 +737,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
             avatarEmoji: avatar,
             onTap: _showNodeSheet,
             activeNodeKey: _activeNodeKey,
+            keysByNodeId: _tutorialZoneKeys,
             encounters: region.encounters,
             onEncounterTap: _showEncounterSheet,
           ),
@@ -724,6 +809,178 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       edges: filteredEdges,
     );
   }
+
+  RegionDetail _buildVisibleRegionForTutorial(RegionDetail region) {
+    final visible = _buildProgressiveRevealRegion(region);
+    final tutorial = ref.read(tutorialControllerProvider);
+    if (!tutorial.isMapTutorial) return visible;
+    return _withTutorialSampleZones(visible);
+  }
+
+  RegionDetail _withTutorialSampleZones(RegionDetail region) {
+    final nodes = [...region.nodes];
+    final edges = [...region.edges];
+    final existingIds = nodes.map((n) => n.id).toSet();
+    final maxTier = nodes.fold<int>(0, (max, n) => n.tier > max ? n.tier : max);
+    int nextTier = maxTier + 1;
+    String? previousId = nodes.isEmpty ? null : nodes.last.id;
+
+    void addSample(ZoneNode node) {
+      if (existingIds.contains(node.id)) return;
+      nodes.add(node);
+      existingIds.add(node.id);
+      if (previousId != null) {
+        edges.add(ZoneEdge(fromId: previousId!, toId: node.id));
+      }
+      previousId = node.id;
+    }
+
+    addSample(_tutorialSampleZone(
+      id: 'normal',
+      name: 'Training Glade',
+      tier: nextTier++,
+      description: 'Tutorial-only normal zone preview.',
+    ));
+    addSample(_tutorialSampleZone(
+      id: 'chest',
+      name: 'Tutorial Chest',
+      tier: nextTier++,
+      description: 'Tutorial-only chest zone preview.',
+      isChest: true,
+      chestRewardXp: 120,
+    ));
+    addSample(_tutorialSampleZone(
+      id: 'special',
+      name: 'Tutorial Fork',
+      tier: nextTier++,
+      description: 'Tutorial-only crossroads preview.',
+      isCrossroads: true,
+    ));
+    addSample(_tutorialSampleZone(
+      id: 'dungeon',
+      name: 'Tutorial Dungeon',
+      tier: nextTier++,
+      description: 'Tutorial-only dungeon zone preview.',
+      isDungeon: true,
+      dungeonFloorsTotal: 3,
+      dungeonFloorsCompleted: 0,
+      dungeonStatus: DungeonRunStatus.notEntered,
+    ));
+    addSample(_tutorialSampleZone(
+      id: 'boss',
+      name: 'Tutorial Boss Gate',
+      tier: nextTier++,
+      description: 'Tutorial-only boss zone preview.',
+      isBoss: true,
+      status: ZoneNodeStatus.locked,
+    ));
+
+    return region.copyWith(nodes: nodes, edges: edges);
+  }
+
+  ZoneNode _tutorialSampleZone({
+    required String id,
+    required String name,
+    required int tier,
+    required String description,
+    ZoneNodeStatus status = ZoneNodeStatus.available,
+    bool isCrossroads = false,
+    bool isBoss = false,
+    bool isChest = false,
+    bool isDungeon = false,
+    int? chestRewardXp,
+    int? dungeonFloorsTotal,
+    int? dungeonFloorsCompleted,
+    DungeonRunStatus? dungeonStatus,
+  }) {
+    return ZoneNode(
+      id: '$_tutorialSampleZonePrefix$id',
+      name: name,
+      emoji: '',
+      description: description,
+      tier: tier,
+      levelRequirement: _userLevel,
+      xpReward: isBoss ? 0 : 80,
+      distanceKm: isBoss ? 0 : 1.5,
+      status: status,
+      isCrossroads: isCrossroads,
+      isBoss: isBoss,
+      isChest: isChest,
+      isDungeon: isDungeon,
+      chestRewardXp: chestRewardXp,
+      chestIsOpened: isChest ? false : null,
+      dungeonFloorsTotal: dungeonFloorsTotal,
+      dungeonFloorsCompleted: dungeonFloorsCompleted,
+      dungeonFloorsForfeited: isDungeon ? 0 : null,
+      dungeonStatus: dungeonStatus,
+    );
+  }
+
+  bool _isTutorialSampleZone(ZoneNode node) =>
+      node.id.startsWith(_tutorialSampleZonePrefix);
+
+  void _syncTutorialTargets(RegionDetail region) {
+    final c = ref.read(tutorialControllerProvider);
+    c.registerKey('mapWorldBack', _backButtonKey);
+    c.registerKey('mapZoneTrail', _trailKey);
+
+    ZoneNode? normal;
+    ZoneNode? chest;
+    ZoneNode? special;
+    ZoneNode? dungeon;
+    ZoneNode? boss;
+
+    final sampleNodes =
+        region.nodes.where(_isTutorialSampleZone).toList(growable: false);
+    final targetNodes = sampleNodes.isNotEmpty ? sampleNodes : region.nodes;
+
+    for (final node in targetNodes) {
+      normal ??= (!node.isBoss &&
+              !node.isChest &&
+              !node.isDungeon &&
+              !node.isCrossroads &&
+              node.branchOf == null)
+          ? node
+          : null;
+      chest ??= node.isChest ? node : null;
+      special ??= node.isCrossroads ? node : null;
+      dungeon ??= node.isDungeon ? node : null;
+      boss ??= node.isBoss ? node : null;
+    }
+
+    _tutorialZoneKeys.clear();
+    _tutorialTargetKeys.clear();
+
+    void bind(String targetId, ZoneNode? node) {
+      if (node == null) {
+        c.unregisterKey(targetId);
+        return;
+      }
+      final key = GlobalKey();
+      _tutorialZoneKeys[node.id] = key;
+      _tutorialTargetKeys[targetId] = key;
+      c.registerKey(targetId, key);
+    }
+
+    bind('mapNormalZone', normal);
+    bind('mapChestZone', chest);
+    bind('mapSpecialZone', special);
+    bind('mapDungeonZone', dungeon);
+    bind('mapBossZone', boss);
+
+    c.refreshMapTargets(
+      hasNormalZone: normal != null,
+      hasChestZone: chest != null,
+      hasSpecialZone: special != null,
+      hasDungeonZone: dungeon != null,
+      hasBossZone: boss != null,
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scrollToCurrentTutorialTarget();
+    });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -732,8 +989,13 @@ class _Banner extends StatelessWidget {
   final RegionDetail region;
   final RegionThemeColors theme;
   final VoidCallback onBack;
-  const _Banner(
-      {required this.region, required this.theme, required this.onBack});
+  final Key? backButtonKey;
+  const _Banner({
+    required this.region,
+    required this.theme,
+    required this.onBack,
+    this.backButtonKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -756,6 +1018,7 @@ class _Banner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
+            key: backButtonKey,
             onTap: onBack,
             child: Container(
               width: 36,
@@ -852,7 +1115,7 @@ class _Summary extends StatelessWidget {
         children: [
           Expanded(
             child: _Tile(
-              icon: '🗝',
+              iconAsset: regionIconAsset(region),
               label: 'Zones',
               value: '${region.completedZones} / ${region.totalZones}',
               valueColor: AppColors.green,
@@ -861,7 +1124,7 @@ class _Summary extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _Tile(
-              icon: '⭐',
+              iconAsset: AppIcons.mapXpReward,
               label: 'XP earned',
               value: '${region.totalXpEarned}',
             ),
@@ -869,7 +1132,7 @@ class _Summary extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _Tile(
-              icon: '👹',
+              iconAsset: AppIcons.ringBoss,
               label: 'Boss',
               value: _bossLabel(region),
               valueColor: _bossColor(region),
@@ -902,12 +1165,12 @@ class _Summary extends StatelessWidget {
 }
 
 class _Tile extends StatelessWidget {
-  final String icon;
+  final String? iconAsset;
   final String label;
   final String value;
   final Color? valueColor;
   const _Tile({
-    required this.icon,
+    this.iconAsset,
     required this.label,
     required this.value,
     this.valueColor,
@@ -927,7 +1190,12 @@ class _Tile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 13)),
+              if (iconAsset != null)
+                AppIconImage(
+                  iconAsset!,
+                  size: 14,
+                  visualScale: 1.35,
+                ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(

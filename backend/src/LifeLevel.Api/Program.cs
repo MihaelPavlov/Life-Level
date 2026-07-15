@@ -73,11 +73,12 @@ builder.Services.AddSharedKernel();
 // Identity module (registers JwtService + AuthService)
 builder.Services.AddIdentityModule();
 
-// Character module (registers CharacterService + port interfaces)
-builder.Services.AddCharacterModule();
-
 // Streak module (registers StreakService + port interfaces)
 builder.Services.AddStreakModule();
+
+// Character module (registers CharacterService + port interfaces)
+// Register after Streak so ActivityLoggedEvent updates streak state before title checks.
+builder.Services.AddCharacterModule();
 
 // IUserReadPort — now served by CharacterModule's CharacterService via Identity module UserReadPortAdapter
 builder.Services.AddScoped<IUserReadPort>(sp =>

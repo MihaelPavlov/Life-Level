@@ -13,7 +13,15 @@ enum TutorialStep {
   logActivity, // 4
   mapTab, // 5
   bossFab, // 6
-  outro; // 7
+  outro, // 7
+  mapWorldBack,
+  mapRegions,
+  mapZoneTrail,
+  mapNormalZone,
+  mapChestZone,
+  mapSpecialZone,
+  mapDungeonZone,
+  mapBossZone;
 
   int get serverValue {
     switch (this) {
@@ -33,6 +41,15 @@ enum TutorialStep {
         return 6;
       case TutorialStep.outro:
         return 7;
+      case TutorialStep.mapWorldBack:
+      case TutorialStep.mapRegions:
+      case TutorialStep.mapZoneTrail:
+      case TutorialStep.mapNormalZone:
+      case TutorialStep.mapChestZone:
+      case TutorialStep.mapSpecialZone:
+      case TutorialStep.mapDungeonZone:
+      case TutorialStep.mapBossZone:
+        return -99;
     }
   }
 
@@ -76,6 +93,22 @@ enum TutorialStep {
       case TutorialStep.intro:
       case TutorialStep.outro:
         return null;
+      case TutorialStep.mapWorldBack:
+        return 'mapWorldBack';
+      case TutorialStep.mapRegions:
+        return 'mapRegions';
+      case TutorialStep.mapZoneTrail:
+        return 'mapZoneTrail';
+      case TutorialStep.mapNormalZone:
+        return 'mapNormalZone';
+      case TutorialStep.mapChestZone:
+        return 'mapChestZone';
+      case TutorialStep.mapSpecialZone:
+        return 'mapSpecialZone';
+      case TutorialStep.mapDungeonZone:
+        return 'mapDungeonZone';
+      case TutorialStep.mapBossZone:
+        return 'mapBossZone';
     }
   }
 }
@@ -136,6 +169,62 @@ const Map<TutorialStep, TutorialStepContent> kTutorialStepContent = {
     body:
         'This center button opens the quick menu. From here you can jump to bosses, world, titles, stats, guild, and the rest of the extra navigation.',
     accent: AppColors.blue,
+  ),
+  TutorialStep.mapWorldBack: TutorialStepContent(
+    iconAsset: AppIcons.mapDestination,
+    title: 'Back To World',
+    body:
+        'This button returns from a region to the world view so you can move between bigger areas.',
+    accent: AppColors.blue,
+  ),
+  TutorialStep.mapRegions: TutorialStepContent(
+    iconAsset: AppIcons.mapDestination,
+    title: 'Regions',
+    body:
+        'The world is split into regions. Each card is a chapter with its own route, rewards, and boss.',
+    accent: AppColors.green,
+  ),
+  TutorialStep.mapZoneTrail: TutorialStepContent(
+    iconAsset: AppIcons.mapDestination,
+    title: 'Zones',
+    body:
+        'Inside a region, your route is made of zones. Your workouts move you node by node along this trail.',
+    accent: AppColors.orange,
+  ),
+  TutorialStep.mapNormalZone: TutorialStepContent(
+    iconAsset: AppIcons.mapDestination,
+    title: 'Normal Zone',
+    body:
+        'A normal zone is a standard stop on the path. Reach it to collect its reward and continue forward.',
+    accent: AppColors.blue,
+  ),
+  TutorialStep.mapChestZone: TutorialStepContent(
+    iconAsset: AppIcons.rewardXpSparkle,
+    title: 'Chest Zone',
+    body:
+        'Chest zones give one-time rewards when you arrive there. Open them as soon as you stand on the node.',
+    accent: AppColors.orange,
+  ),
+  TutorialStep.mapSpecialZone: TutorialStepContent(
+    iconAsset: AppIcons.ringTitles,
+    title: 'Special Zone',
+    body:
+        'Special zones change the route. Crossroads let you choose which branch of the adventure you will follow.',
+    accent: AppColors.purple,
+  ),
+  TutorialStep.mapDungeonZone: TutorialStepContent(
+    iconAsset: AppIcons.ringTitles,
+    title: 'Dungeon Zone',
+    body:
+        'Dungeon zones contain multiple floors. Once you enter, your next activities clear the floors one by one.',
+    accent: AppColors.purple,
+  ),
+  TutorialStep.mapBossZone: TutorialStepContent(
+    iconAsset: AppIcons.ringTitles,
+    title: 'Boss Zone',
+    body:
+        'Boss zones are region gates. Beat the boss here to finish the chapter and unlock the next region.',
+    accent: AppColors.red,
   ),
 };
 

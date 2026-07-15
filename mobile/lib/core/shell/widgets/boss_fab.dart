@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+
+import '../../constants/app_icons.dart';
+import '../../widgets/app_icon_image.dart';
 import '../shell_constants.dart';
 
 class BossFab extends StatelessWidget {
   final bool isOpen;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+
   const BossFab({
     super.key,
     required this.isOpen,
@@ -19,16 +23,21 @@ class BossFab extends StatelessWidget {
       onLongPress: onLongPress,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 280),
-        width: kFabSize, height: kFabSize,
+        width: kFabSize,
+        height: kFabSize,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: isOpen
               ? const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFF1a2848), Color(0xFF1e3060)])
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1a2848), Color(0xFF1e3060)],
+                )
               : const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFff4040), Color(0xFFff8040)]),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFff4040), Color(0xFFff8040)],
+                ),
           border: Border.all(
             color: isOpen
                 ? const Color(0xFF4f9eff).withOpacity(0.5)
@@ -50,19 +59,32 @@ class BossFab extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: isOpen
-                  ? const Text('✕', key: ValueKey('x'),
-                      style: TextStyle(fontSize: 22, color: Colors.white,
-                          fontWeight: FontWeight.w300))
-                  : const Text('⚔️', key: ValueKey('s'),
-                      style: TextStyle(fontSize: 26)),
+                  ? const Text(
+                      'X',
+                      key: ValueKey('x'),
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w300,
+                      ),
+                      )
+                  : const AppIconImage(
+                      AppIcons.menuIcon,
+                      key: ValueKey('menu'),
+                      size: 28,
+                      visualScale: 1.38,
+                    ),
             ),
             const SizedBox(height: 1),
-            Text(isOpen ? 'CLOSE' : 'MENU',
-                style: TextStyle(
-                    fontSize: 8,
-                    color: Colors.white.withOpacity(isOpen ? 0.6 : 0.85),
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5)),
+            Text(
+              isOpen ? 'CLOSE' : 'MENU',
+              style: TextStyle(
+                fontSize: 8,
+                color: Colors.white.withOpacity(isOpen ? 0.6 : 0.85),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
           ],
         ),
       ),

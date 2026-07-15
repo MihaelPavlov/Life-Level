@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/title_rank_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../models/title_models.dart';
 
 class TitleListItem extends StatelessWidget {
@@ -16,6 +18,8 @@ class TitleListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconAsset = titleIconAsset(id: title.id, name: title.name);
+
     final Widget card = Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -38,7 +42,6 @@ class TitleListItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Emoji container
           Container(
             width: 44,
             height: 44,
@@ -49,10 +52,16 @@ class TitleListItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
-              child: Text(
-                title.emoji,
-                style: const TextStyle(fontSize: 22),
-              ),
+              child: iconAsset != null
+                  ? AppIconImage(
+                      iconAsset,
+                      size: 30,
+                      visualScale: 1.35,
+                    )
+                  : Text(
+                      title.emoji,
+                      style: const TextStyle(fontSize: 22),
+                    ),
             ),
           ),
 

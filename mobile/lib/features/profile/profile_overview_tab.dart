@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_icons.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
+import '../streak/widgets/streak_detail_sheet.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
-import 'xp_history_sheet.dart';
 import 'stat_detail_sheet.dart';
-import '../streak/widgets/streak_detail_sheet.dart';
+import 'xp_history_sheet.dart';
 
-// ── ProfileOverviewTab ────────────────────────────────────────────────────────
 class ProfileOverviewTab extends StatelessWidget {
   final CharacterProfile profile;
+
   const ProfileOverviewTab({super.key, required this.profile});
 
   @override
@@ -33,9 +35,9 @@ class ProfileOverviewTab extends StatelessWidget {
   }
 }
 
-// ── ProfileXpSection ──────────────────────────────────────────────────────────
 class ProfileXpSection extends StatelessWidget {
   final CharacterProfile profile;
+
   const ProfileXpSection({super.key, required this.profile});
 
   static void _showXPHistory(BuildContext context) {
@@ -66,10 +68,8 @@ class ProfileXpSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // level + xp label row
               Row(
                 children: [
-                  // level circle
                   Container(
                     width: 42,
                     height: 42,
@@ -81,7 +81,10 @@ class ProfileXpSection extends StatelessWidget {
                           kPBlue.withOpacity(0.05),
                         ],
                       ),
-                      border: Border.all(color: kPBlue.withOpacity(0.5), width: 1.5),
+                      border: Border.all(
+                        color: kPBlue.withOpacity(0.5),
+                        width: 1.5,
+                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -111,15 +114,21 @@ class ProfileXpSection extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '→ ${profile.level + 1}',
-                              style: const TextStyle(fontSize: 12, color: kPTextSec),
+                              '-> ${profile.level + 1}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: kPTextSec,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '${fmtXp(profile.xp)} / ${fmtXp(profile.xpForNextLevel)} XP  ·  ${fmtXp(remaining < 0 ? 0 : remaining)} to go',
-                          style: const TextStyle(fontSize: 10, color: kPTextSec),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: kPTextSec,
+                          ),
                         ),
                       ],
                     ),
@@ -136,10 +145,7 @@ class ProfileXpSection extends StatelessWidget {
                   const Icon(Icons.history, size: 14, color: kPTextSec),
                 ],
               ),
-
               const SizedBox(height: 12),
-
-              // XP bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Stack(
@@ -150,9 +156,7 @@ class ProfileXpSection extends StatelessWidget {
                       child: Container(
                         height: 8,
                         decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [kPBlue, kPPurple],
-                          ),
+                          gradient: LinearGradient(colors: [kPBlue, kPPurple]),
                         ),
                       ),
                     ),
@@ -167,10 +171,10 @@ class ProfileXpSection extends StatelessWidget {
   }
 }
 
-// ── ProfileStatsSection ───────────────────────────────────────────────────────
 class ProfileStatsSection extends StatelessWidget {
   final List<StatData> stats;
   final int availablePoints;
+
   const ProfileStatsSection({
     super.key,
     required this.stats,
@@ -195,7 +199,11 @@ class ProfileStatsSection extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('✨', style: TextStyle(fontSize: 14)),
+                  const AppIconImage(
+                    AppIcons.rewardGrantItem,
+                    size: 15,
+                    visualScale: 1.35,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '$availablePoints stat point${availablePoints == 1 ? '' : 's'} available — tap + to spend',
@@ -230,10 +238,10 @@ class ProfileStatsSection extends StatelessWidget {
   }
 }
 
-// ── ProfileStatCard ───────────────────────────────────────────────────────────
 class ProfileStatCard extends ConsumerStatefulWidget {
   final StatData stat;
   final int availablePoints;
+
   const ProfileStatCard({
     super.key,
     required this.stat,
@@ -262,9 +270,11 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
   Future<void> _spendPoint() async {
     setState(() => _spending = true);
     try {
-      await ref.read(characterProfileProvider.notifier).spendStatPoint(widget.stat.key);
+      await ref
+          .read(characterProfileProvider.notifier)
+          .spendStatPoint(widget.stat.key);
     } catch (_) {
-      // silently fail — provider will not refresh on error
+      // Keep silent; the provider refresh remains the source of truth.
     } finally {
       if (mounted) setState(() => _spending = false);
     }
@@ -290,68 +300,73 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
           ),
           child: Row(
             children: [
-              // stat icon
               SizedBox(
                 width: 40,
                 child: AppIconImage(widget.stat.iconAsset, size: 26),
               ),
               const SizedBox(width: 10),
-
-              // stat key
               SizedBox(
                 width: 34,
-                child: Text(widget.stat.key,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w700, color: kPTextPri)),
+                child: Text(
+                  widget.stat.key,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: kPTextPri,
+                  ),
+                ),
               ),
-
-              // bar
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(3),
-                  child: Stack(children: [
-                    Container(height: 5, color: kPSurface2),
-                    FractionallySizedBox(
-                      widthFactor: pct,
-                      child: Container(
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: widget.stat.color,
-                          boxShadow: [
-                            BoxShadow(
-                              color: widget.stat.color.withOpacity(0.5),
-                              blurRadius: 6,
-                            ),
-                          ],
+                  child: Stack(
+                    children: [
+                      Container(height: 5, color: kPSurface2),
+                      FractionallySizedBox(
+                        widthFactor: pct,
+                        child: Container(
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: widget.stat.color,
+                            boxShadow: [
+                              BoxShadow(
+                                color: widget.stat.color.withOpacity(0.5),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ]),
+                    ],
+                  ),
                 ),
               ),
-
               const SizedBox(width: 10),
-
-              // value (base + optional gear bonus chip)
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('${widget.stat.value}',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: widget.stat.color)),
+                  Text(
+                    '${widget.stat.value}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: widget.stat.color,
+                    ),
+                  ),
                   if (widget.stat.gearBonus > 0) ...[
                     const SizedBox(width: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1),
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.green.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                            color: AppColors.green.withOpacity(0.4)),
+                          color: AppColors.green.withOpacity(0.4),
+                        ),
                       ),
                       child: Text(
                         '+${widget.stat.gearBonus}',
@@ -365,8 +380,6 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
                   ],
                 ],
               ),
-
-              // + button — only when points available
               if (hasPoints) ...[
                 const SizedBox(width: 8),
                 GestureDetector(
@@ -377,7 +390,9 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
                     decoration: BoxDecoration(
                       color: widget.stat.color.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: widget.stat.color.withOpacity(0.6)),
+                      border: Border.all(
+                        color: widget.stat.color.withOpacity(0.6),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: widget.stat.color.withOpacity(0.3),
@@ -389,9 +404,15 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
                         ? Padding(
                             padding: const EdgeInsets.all(5),
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: widget.stat.color),
+                              strokeWidth: 2,
+                              color: widget.stat.color,
+                            ),
                           )
-                        : Icon(Icons.add, size: 16, color: widget.stat.color),
+                        : Icon(
+                            Icons.add,
+                            size: 16,
+                            color: widget.stat.color,
+                          ),
                   ),
                 ),
               ],
@@ -403,9 +424,9 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
   }
 }
 
-// ── ProfileActivitySummary ────────────────────────────────────────────────────
 class ProfileActivitySummary extends StatelessWidget {
   final CharacterProfile profile;
+
   const ProfileActivitySummary({super.key, required this.profile});
 
   @override
@@ -431,7 +452,9 @@ class ProfileActivitySummary extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
+              const SizedBox(width: 0),
               ProfileMiniCard(
+                iconAsset: AppIcons.activityRunning,
                 emoji: '🏃',
                 label: 'Runs',
                 value: '${profile.weeklyRuns}',
@@ -439,6 +462,7 @@ class ProfileActivitySummary extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               ProfileMiniCard(
+                iconAsset: AppIcons.mapCurrentLocation,
                 emoji: '📏',
                 label: 'Distance',
                 value: '${profile.weeklyDistanceKm.toStringAsFixed(1)} km',
@@ -449,6 +473,7 @@ class ProfileActivitySummary extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: () => showStreakDetailSheet(context),
                 child: ProfileMiniCard(
+                  iconAsset: AppIcons.rewardStreakFire,
                   emoji: '🔥',
                   label: 'Streak',
                   value: '${profile.currentStreak} days',
@@ -457,6 +482,7 @@ class ProfileActivitySummary extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               ProfileMiniCard(
+                iconAsset: AppIcons.rewardXpSparkle,
                 emoji: '⚡',
                 label: 'XP Earned',
                 value: fmtXp(profile.weeklyXpEarned),

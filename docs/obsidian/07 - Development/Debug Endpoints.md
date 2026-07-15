@@ -51,9 +51,18 @@ The Profile → Admin tab (admin-only) wraps many of these in tappable buttons. 
 
 ## Admin web panel
 
-`ApiClient.adminPanelUrl` returns the admin panel URL with your token as a query param:
-- `wwwroot/admin/index.html` — items + achievements management
-- `wwwroot/admin/map.html` — map node/edge editor
+Served by the ASP.NET API at `http://localhost:5128/admin/`. Auto-logins on page load via `/api/admin/config` (returns `Admin:Email` + `Admin:Password` from appsettings) — no manual JWT pasting needed while the API is running.
+
+| File | Contents |
+|------|----------|
+| `index.html` | Items catalog, drop rules, grant item to user, map editor tab |
+| `map.html` | Visual map node/edge editor (drag-and-drop, pan/zoom) |
+| `encounters.html` | NPC encounters, loot tables, drop configuration |
+| `rank-thresholds.html` | Rank XP thresholds |
+| `level-unlocks.html` | Per-level unlock configuration |
+| `autologin.html` | Accepts `?t=<jwt>` and stashes token to localStorage |
+
+Say **"open admin panel"** in Claude Code to launch it via the `/admin-panel` skill.
 
 ## Related
 - [[Map]]

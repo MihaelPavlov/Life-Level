@@ -11,6 +11,7 @@ class AppIcons {
   static const String navProfile = 'assets/icons/nav_profile.png';
   static const String navQuests  = 'assets/icons/nav_quests.png';
   static const String navStats   = 'assets/icons/nav_stats.png';
+  static const String menuIcon   = 'assets/menu_icon.png';
 
   // ── Ring Menu ───────────────────────────────────────────────────────────────
 static const String ringBoss        = 'assets/icons/ring_boss.png';
@@ -18,6 +19,21 @@ static const String ringBoss        = 'assets/icons/ring_boss.png';
   static const String ringLeaderboard = 'assets/icons/ring_leaderboard.png';
   static const String ringTitles      = 'assets/icons/ring_titles.png';
   static const String ringWorld       = 'assets/icons/ring_world.png';
+
+  // Titles & Ranks
+  static const String rankChampion = 'assets/Titles&Ranks/rank_champion.png';
+  static const String rankLegend   = 'assets/Titles&Ranks/rank_legend.png';
+  static const String rankNovice   = 'assets/Titles&Ranks/rank_novice.png';
+  static const String rankVeteran  = 'assets/Titles&Ranks/rank_veteran.png';
+  static const String rankWarrior  = 'assets/Titles&Ranks/rank_warrior.png';
+
+  static const String title5amClub          = 'assets/Titles&Ranks/title_5am_club.png';
+  static const String titleChampion         = 'assets/Titles&Ranks/title_champion.png';
+  static const String titleMarathoner       = 'assets/Titles&Ranks/title_marathoner.png';
+  static const String titleNoviceAdventurer = 'assets/Titles&Ranks/title_novice_adventurer.png';
+  static const String titleRaidVeteran      = 'assets/Titles&Ranks/title_raid_veteran.png';
+  static const String titleStreakMaster     = 'assets/Titles&Ranks/title_streak_master.png';
+  static const String titleUnstoppable      = 'assets/Titles&Ranks/title_unstoppable.png';
 
   // ── Activity Types ──────────────────────────────────────────────────────────
   static const String activityClimbing      = 'assets/icons/activity_climbing.png';

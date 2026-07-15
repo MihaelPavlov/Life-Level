@@ -9,11 +9,13 @@ import '../models/tutorial_topic.dart';
 class TutorialUpdateResult {
   final int tutorialStep;
   final int tutorialTopicsSeen;
+  final int mapTutorialStep;
   final int xpAwarded;
 
   const TutorialUpdateResult({
     required this.tutorialStep,
     required this.tutorialTopicsSeen,
+    required this.mapTutorialStep,
     required this.xpAwarded,
   });
 
@@ -21,7 +23,20 @@ class TutorialUpdateResult {
     return TutorialUpdateResult(
       tutorialStep: json['tutorialStep'] as int? ?? 0,
       tutorialTopicsSeen: json['tutorialTopicsSeen'] as int? ?? 0,
+      mapTutorialStep: json['mapTutorialStep'] as int? ?? 0,
       xpAwarded: json['xpAwarded'] as int? ?? 0,
+    );
+  }
+}
+
+class MapTutorialUpdateResult {
+  final int mapTutorialStep;
+
+  const MapTutorialUpdateResult({required this.mapTutorialStep});
+
+  factory MapTutorialUpdateResult.fromJson(Map<String, dynamic> json) {
+    return MapTutorialUpdateResult(
+      mapTutorialStep: json['mapTutorialStep'] as int? ?? 0,
     );
   }
 }
@@ -59,5 +74,25 @@ class TutorialService {
       data: {'topic': topic.apiValue},
     );
     return TutorialUpdateResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<MapTutorialUpdateResult> startMapTutorial() async {
+    final res = await _dio.post('/tutorial/map/start');
+    return MapTutorialUpdateResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<MapTutorialUpdateResult> advanceMapTutorial() async {
+    final res = await _dio.post('/tutorial/map/advance');
+    return MapTutorialUpdateResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<MapTutorialUpdateResult> skipMapTutorial() async {
+    final res = await _dio.post('/tutorial/map/skip');
+    return MapTutorialUpdateResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<MapTutorialUpdateResult> replayMapTutorial() async {
+    final res = await _dio.post('/tutorial/map/replay');
+    return MapTutorialUpdateResult.fromJson(res.data as Map<String, dynamic>);
   }
 }

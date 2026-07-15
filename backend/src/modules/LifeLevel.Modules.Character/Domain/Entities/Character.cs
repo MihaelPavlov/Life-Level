@@ -41,4 +41,7 @@ public class Character
 
     /// <summary>Bitmask of tutorial topics the user has seen. See tutorial topic mapping in ICharacterTutorialPort / TutorialTopic.</summary>
     public int TutorialTopicsSeen { get; set; } = 0;
+
+    /// <summary>Separate interactive world-map tutorial. 0 = not started, 1..8 = in progress, -1 = skipped, 99 = completed.</summary>
+    public int MapTutorialStep { get; set; } = 0;
 }

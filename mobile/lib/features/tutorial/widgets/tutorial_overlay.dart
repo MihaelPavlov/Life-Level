@@ -160,7 +160,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                 placement: placement,
                 content: content,
                 stepNumber: _stepNumberFor(step),
-                totalSteps: kTutorialBubbleCount,
+                totalSteps: _totalStepsFor(step),
                 doneDots: _doneDotsFor(step),
                 waiting: c.isActionGated,
                 ctaLabel: 'GOT IT',
@@ -177,7 +177,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                     opacity: _enterAnim,
                     child: TutorialBubble(
                       stepNumber: _stepNumberFor(step),
-                      totalSteps: kTutorialBubbleCount,
+                      totalSteps: _totalStepsFor(step),
                       content: content,
                       doneDots: _doneDotsFor(step),
                       waiting: c.isActionGated,
@@ -209,6 +209,22 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
         return 5;
       case TutorialStep.bossFab:
         return 6;
+      case TutorialStep.mapWorldBack:
+        return 1;
+      case TutorialStep.mapRegions:
+        return 2;
+      case TutorialStep.mapZoneTrail:
+        return 3;
+      case TutorialStep.mapNormalZone:
+        return 4;
+      case TutorialStep.mapChestZone:
+        return 5;
+      case TutorialStep.mapSpecialZone:
+        return 6;
+      case TutorialStep.mapDungeonZone:
+        return 7;
+      case TutorialStep.mapBossZone:
+        return 8;
       default:
         return 1;
     }
@@ -218,7 +234,23 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
   /// green "done" dots in the bubble's meta row.
   List<bool> _doneDotsFor(TutorialStep step) {
     final n = _stepNumberFor(step);
-    return List.generate(kTutorialBubbleCount, (i) => i < n - 1);
+    return List.generate(_totalStepsFor(step), (i) => i < n - 1);
+  }
+
+  int _totalStepsFor(TutorialStep step) {
+    switch (step) {
+      case TutorialStep.mapWorldBack:
+      case TutorialStep.mapRegions:
+      case TutorialStep.mapZoneTrail:
+      case TutorialStep.mapNormalZone:
+      case TutorialStep.mapChestZone:
+      case TutorialStep.mapSpecialZone:
+      case TutorialStep.mapDungeonZone:
+      case TutorialStep.mapBossZone:
+        return 8;
+      default:
+        return kTutorialBubbleCount;
+    }
   }
 }
 

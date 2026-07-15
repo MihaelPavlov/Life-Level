@@ -129,6 +129,7 @@ class _MainShellState extends ConsumerState<MainShell>
   VoidCallback? _tutorialListener;
   int? _lastTutorialServerStep;
   int? _lastTutorialTopicsSeen;
+  int? _lastMapTutorialStep;
 
   void _checkLoginReward(AsyncValue<Object?> profileAsync) {
     if (_loginRewardShown) return;
@@ -156,22 +157,42 @@ class _MainShellState extends ConsumerState<MainShell>
     if (profile == null) return;
     final serverStep = profile.tutorialStep;
     final serverTopicsSeen = profile.tutorialTopicsSeen;
+    final mapTutorialStep = profile.mapTutorialStep;
     if (_lastTutorialServerStep == serverStep &&
-        _lastTutorialTopicsSeen == serverTopicsSeen) {
+        _lastTutorialTopicsSeen == serverTopicsSeen &&
+        _lastMapTutorialStep == mapTutorialStep) {
       return;
     }
     _lastTutorialServerStep = serverStep;
     _lastTutorialTopicsSeen = serverTopicsSeen;
+    _lastMapTutorialStep = mapTutorialStep;
     final c = ref.read(tutorialControllerProvider);
     c.hydrateFromProfile(
       serverStep: serverStep,
       serverTopicsSeen: serverTopicsSeen,
+      mapTutorialStep: mapTutorialStep,
     );
   }
 
   void _onTutorialStateChanged() {
     if (!mounted) return;
     final c = ref.read(tutorialControllerProvider);
+
+    if (c.isMapTutorial && c.step != null && !_worldOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final navIndex = _navIds.indexOf('world');
+        setState(() {
+          if (navIndex != -1) _tabIndex = navIndex;
+          _pendingOnZoneSelected = null;
+          _worldOpen = true;
+          _worldAutoOpenActive = false;
+          _titlesOpen = false;
+          _bossOpen = false;
+        });
+        WorldZoneRefreshNotifier.notify();
+      });
+    }
 
     if (c.shouldShowIntroModal && !_introModalShown) {
       _introModalShown = true;

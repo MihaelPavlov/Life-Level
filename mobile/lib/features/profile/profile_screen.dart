@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/avatar_icons.dart';
 import '../../core/constants/class_icons.dart';
 import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/app_icon_image.dart';
@@ -9,19 +11,17 @@ import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/screens/integrations_screen.dart';
 import '../tutorial/screens/tutorials_hub_screen.dart';
+import 'profile_overview_tab.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
-import 'profile_overview_tab.dart';
+import 'tabs/achievements_tab.dart';
 import 'tabs/admin_tab.dart';
 import 'tabs/equipment_tab.dart';
-import 'tabs/achievements_tab.dart';
 import 'tabs/inventory_tab.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ProfileScreen
-// ─────────────────────────────────────────────────────────────────────────────
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -61,7 +61,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final profileAsync = ref.watch(characterProfileProvider);
     final profile = profileAsync.valueOrNull;
 
-    // Wait for both admin check and profile load.
     if (!_adminChecked || profile == null) {
       if (profileAsync.hasError) {
         return Scaffold(
@@ -74,7 +73,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 children: [
                   const Text(
                     'Failed to load profile',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: kPTextPri),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: kPTextPri,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -84,10 +87,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   ),
                   const SizedBox(height: 20),
                   TextButton(
-                    onPressed: () => ref.read(characterProfileProvider.notifier).refresh(),
+                    onPressed: () =>
+                        ref.read(characterProfileProvider.notifier).refresh(),
                     child: const Text(
                       'Retry',
-                      style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: AppColors.blue,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -104,7 +111,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     final tabs = [...kProfileTabs, if (_isAdmin) 'Admin'];
 
-    // Profile is available — show it. Silently refreshes in background.
     return Scaffold(
       backgroundColor: kPBg,
       body: Column(
@@ -128,12 +134,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 }
 
-// ── ProfileHeader ─────────────────────────────────────────────────────────────
 class ProfileHeader extends StatelessWidget {
   final TabController tabController;
   final List<String> tabs;
   final CharacterProfile profile;
-  const ProfileHeader({super.key, required this.tabController, required this.tabs, required this.profile});
+
+  const ProfileHeader({
+    super.key,
+    required this.tabController,
+    required this.tabs,
+    required this.profile,
+  });
 
   void _showSettings(BuildContext context) {
     showModalBottomSheet(
@@ -154,6 +165,7 @@ class ProfileHeader extends StatelessWidget {
       className: profile.className,
       classEmoji: profile.classEmoji,
     );
+    final avatarAsset = avatarIconAsset(profile.avatarEmoji);
     final classText = profile.className ?? 'Hero';
 
     return Container(
@@ -170,14 +182,11 @@ class ProfileHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: top + 12),
-
-          // ── avatar row ─────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // avatar
                 Container(
                   width: 64,
                   height: 64,
@@ -197,16 +206,19 @@ class ProfileHeader extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: Text(
-                      profile.avatarEmoji ?? '🧙',
-                      style: const TextStyle(fontSize: 30),
-                    ),
+                    child: avatarAsset != null
+                        ? AppIconImage(
+                            avatarAsset,
+                            size: 42,
+                            visualScale: 1.45,
+                          )
+                        : Text(
+                            profile.avatarEmoji ?? '🧙',
+                            style: const TextStyle(fontSize: 30),
+                          ),
                   ),
                 ),
-
                 const SizedBox(width: 14),
-
-                // identity
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,9 +232,11 @@ class ProfileHeader extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      // class badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: kPGold.withOpacity(0.10),
                           border: Border.all(color: kPGold.withOpacity(0.40)),
@@ -232,10 +246,7 @@ class ProfileHeader extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (classAsset != null) ...[
-                              AppIconImage(
-                                classAsset,
-                                size: 16,
-                              ),
+                              AppIconImage(classAsset, size: 16),
                               const SizedBox(width: 8),
                             ] else if ((profile.classEmoji ?? '').isNotEmpty) ...[
                               Text(
@@ -256,22 +267,25 @@ class ProfileHeader extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      // rank + level sub-text
                       Row(
                         children: [
-                          ProfileRankBadge(rank: profile.rank, color: rankAccent),
+                          ProfileRankBadge(
+                            rank: profile.rank,
+                            color: rankAccent,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Level ${profile.level}',
-                            style: const TextStyle(fontSize: 11, color: kPTextSec),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: kPTextSec,
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-
-                // settings sheet
                 GestureDetector(
                   onTap: () => _showSettings(context),
                   child: Container(
@@ -282,14 +296,16 @@ class ProfileHeader extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: kPBorder2),
                     ),
-                    child: const Icon(Icons.settings_outlined, size: 18, color: kPTextSec),
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      size: 18,
+                      color: kPTextSec,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-
-          // ── tab bar ────────────────────────────────────────────────
           Container(
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: kPBorder)),
@@ -300,8 +316,14 @@ class ProfileHeader extends StatelessWidget {
               tabAlignment: TabAlignment.start,
               labelColor: kPBlue,
               unselectedLabelColor: kPTextSec,
-              labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-              unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
               indicatorColor: kPBlue,
               indicatorWeight: 2,
               dividerColor: Colors.transparent,
@@ -315,9 +337,9 @@ class ProfileHeader extends StatelessWidget {
   }
 }
 
-// ── _SettingsSheet ─────────────────────────────────────────────────────────────
 class _SettingsSheet extends ConsumerWidget {
   final BuildContext parentContext;
+
   const _SettingsSheet({required this.parentContext});
 
   @override
@@ -328,7 +350,6 @@ class _SettingsSheet extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // drag handle
             Container(
               width: 36,
               height: 4,
@@ -359,11 +380,18 @@ class _SettingsSheet extends ConsumerWidget {
                 Navigator.pop(context);
                 Navigator.push(
                   parentContext,
-                  MaterialPageRoute(builder: (_) => const IntegrationsScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const IntegrationsScreen(),
+                  ),
                 );
               },
             ),
-            const Divider(height: 1, indent: 20, endIndent: 20, color: kPBorder),
+            const Divider(
+              height: 1,
+              indent: 20,
+              endIndent: 20,
+              color: kPBorder,
+            ),
             _SettingsTile(
               icon: Icons.auto_stories_outlined,
               label: 'Tutorials',
@@ -375,7 +403,12 @@ class _SettingsSheet extends ConsumerWidget {
                 );
               },
             ),
-            const Divider(height: 1, indent: 20, endIndent: 20, color: kPBorder),
+            const Divider(
+              height: 1,
+              indent: 20,
+              endIndent: 20,
+              color: kPBorder,
+            ),
             _SettingsTile(
               icon: Icons.logout,
               label: 'Logout',
@@ -400,6 +433,7 @@ class _SettingsTile extends StatelessWidget {
   final Color? labelColor;
   final Color? iconColor;
   final VoidCallback onTap;
+
   const _SettingsTile({
     required this.icon,
     required this.label,
@@ -421,7 +455,11 @@ class _SettingsTile extends StatelessWidget {
           color: labelColor ?? kPTextPri,
         ),
       ),
-      trailing: Icon(Icons.chevron_right, size: 18, color: iconColor ?? kPTextSec),
+      trailing: Icon(
+        Icons.chevron_right,
+        size: 18,
+        color: iconColor ?? kPTextSec,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
     );
   }

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<base href="/admin/">
 <title>LifeLevel Admin — Rank Thresholds</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -248,7 +249,10 @@ function getBaseUrl() {
   return (localStorage.getItem('ll_admin_baseUrl') || '').replace(/\/$/, '');
 }
 function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
-
+function isTokenExpired(token) {
+  try { return JSON.parse(atob(token.split('.')[1])).exp * 1000 < Date.now(); }
+  catch { return true; }
+}
 function saveToken() {
   const t = document.getElementById('tokenInput').value.trim();
   if (!t) { toast('Paste a token first.', 'err'); return; }
@@ -311,7 +315,8 @@ function hideLoader() {
 }
 
 async function boot() {
-  if (!getToken()) {
+  const tok = getToken();
+  if (!tok || isTokenExpired(tok)) {
     const ok = await autoLogin();
     if (!ok) {
       hideLoader();

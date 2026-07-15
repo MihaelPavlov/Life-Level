@@ -15,9 +15,12 @@ public class TitleService(
     IDailyQuestReadPort questPort,
     IEventPublisher events)
 {
+    private static readonly string[] RankOrder = ["Novice", "Warrior", "Veteran", "Champion", "Legend"];
 
     public async Task<TitlesAndRanksResponse> GetTitlesAndRanksAsync(Guid userId, CancellationToken ct = default)
     {
+        await CheckAndGrantTitlesAsync(userId, ct);
+
         var character = await db.Set<CharacterEntity>()
             .FirstOrDefaultAsync(c => c.UserId == userId, ct)
             ?? throw new InvalidOperationException("Character not found.");
@@ -117,12 +120,14 @@ public class TitleService(
         var questCount = await questPort.CountCompletedDailyQuestsAsync(userId, ct);
         var currentStreakDays = streak?.Current ?? 0;
 
+        var computedRank = await ComputeRankAsync(bossCount, ct);
+        bool rankChanged = character.Rank != computedRank;
         bool anyGranted = false;
         foreach (var title in allTitles)
         {
             if (alreadyEarnedIds.Contains(title.Id)) continue;
 
-            if (EvaluateCriteria(title.UnlockCriteria, bossCount, currentStreakDays, questCount, character.Rank))
+            if (EvaluateCriteria(title.UnlockCriteria, bossCount, currentStreakDays, questCount, computedRank))
             {
                 db.Set<CharacterTitle>().Add(new CharacterTitle
                 {
@@ -135,9 +140,6 @@ public class TitleService(
             }
         }
 
-        // Update rank based on boss defeats
-        var computedRank = await ComputeRankAsync(bossCount, ct);
-        bool rankChanged = character.Rank != computedRank;
         if (rankChanged)
         {
             character.Rank = computedRank;
@@ -168,10 +170,17 @@ public class TitleService(
         if (criteria.StartsWith("Rank:"))
         {
             var requiredRank = criteria["Rank:".Length..];
-            return rankName == requiredRank;
+            return RankMeetsRequirement(rankName, requiredRank);
         }
 
         return false;
+    }
+
+    private static bool RankMeetsRequirement(string currentRank, string requiredRank)
+    {
+        var currentIndex = Array.IndexOf(RankOrder, currentRank);
+        var requiredIndex = Array.IndexOf(RankOrder, requiredRank);
+        return currentIndex >= 0 && requiredIndex >= 0 && currentIndex >= requiredIndex;
     }
 
     private async Task<string> ComputeRankAsync(int bossCount, CancellationToken ct)

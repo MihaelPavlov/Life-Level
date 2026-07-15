@@ -36,5 +36,6 @@ public record CharacterProfileResponse(
     bool LoginRewardAvailable,
     int TutorialStep,
     int TutorialTopicsSeen,
+    int MapTutorialStep,
     GearBonuses? GearBonuses = null
 );

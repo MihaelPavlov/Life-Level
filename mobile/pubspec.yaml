@@ -59,7 +59,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/menu_icon.png
     - assets/images/
     - assets/icons/
+    - assets/Titles&Ranks/
     - assets/Classes/
     - assets/fonts/

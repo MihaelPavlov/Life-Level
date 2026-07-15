@@ -27,6 +27,7 @@ class ZoneTrail extends StatelessWidget {
   /// [ZoneNodeStatus.active]. Lets the parent screen call
   /// `Scrollable.ensureVisible` to auto-scroll to the active zone.
   final Key? activeNodeKey;
+  final Map<String, Key> keysByNodeId;
 
   final List<TrailEncounterNode> encounters;
   final void Function(TrailEncounterNode)? onEncounterTap;
@@ -42,6 +43,7 @@ class ZoneTrail extends StatelessWidget {
     required this.avatarEmoji,
     required this.onTap,
     this.activeNodeKey,
+    this.keysByNodeId = const {},
     this.encounters = const [],
     this.onEncounterTap,
   });
@@ -123,9 +125,10 @@ class ZoneTrail extends StatelessWidget {
                 child: _SlotAlign(
                   slot: layouts[i].slot,
                   child: ZoneNodeBubble(
-                    key: nodes[i].status == ZoneNodeStatus.active
-                        ? activeNodeKey
-                        : null,
+                    key: keysByNodeId[nodes[i].id] ??
+                        (nodes[i].status == ZoneNodeStatus.active
+                            ? activeNodeKey
+                            : null),
                     node: nodes[i],
                     journey: journey,
                     regionTheme: regionTheme,

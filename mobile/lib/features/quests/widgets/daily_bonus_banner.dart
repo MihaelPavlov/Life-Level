@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../providers/quest_provider.dart';
 
 class DailyBonusBanner extends ConsumerWidget {
@@ -27,7 +29,11 @@ class DailyBonusBanner extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            const Text('🎯', style: TextStyle(fontSize: 18)),
+            const AppIconImage(
+              AppIcons.questGeneral,
+              size: 18,
+              visualScale: 1.35,
+            ),
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
@@ -69,7 +75,11 @@ class DailyBonusBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Text('🎯', style: TextStyle(fontSize: 16)),
+          const AppIconImage(
+            AppIcons.questGeneral,
+            size: 16,
+            visualScale: 1.35,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
