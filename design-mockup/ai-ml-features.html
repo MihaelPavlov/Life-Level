@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level - AI/ML Feature Brainstorm</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #050913;
+  --panel: #131b27;
+  --panel-2: #1a2433;
+  --line: #273347;
+  --text: #edf3fb;
+  --muted: #8a98ae;
+  --gold: #f2be58;
+  --blue: #5ca5ff;
+  --green: #57c785;
+  --orange: #f49b42;
+  --violet: #9b7bff;
+  --red: #f06262;
+}
+
+body {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(92,165,255,0.10), transparent 28%),
+    radial-gradient(circle at 85% 10%, rgba(155,123,255,0.08), transparent 24%),
+    linear-gradient(180deg, #04070f 0%, #070d18 100%);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 48px 24px 80px;
+}
+
+.page-title { text-align: center; margin-bottom: 30px; }
+.page-title h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+.page-title p { max-width: 780px; margin: 0 auto; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+.section-label {
+  max-width: 1200px;
+  margin: 36px auto 14px;
+  padding: 0 18px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto 10px;
+  padding: 0 18px;
+}
+
+.summary-card {
+  background: rgba(19,27,39,0.9);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+}
+
+.summary-card .tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+.tag.visualized { color: var(--green); background: rgba(87,199,133,0.12); border: 1px solid rgba(87,199,133,0.3); }
+.tag.concept { color: var(--muted); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+
+.summary-card .k { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+.summary-card .v { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.summary-card .v b { color: var(--text); font-weight: 600; }
+
+.strip {
+  display: flex;
+  gap: 26px;
+  overflow-x: auto;
+  padding: 6px 18px 22px;
+  scrollbar-color: #334055 transparent;
+}
+
+.frame-wrap { flex: 0 0 auto; width: 390px; }
+
+.frame-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.frame-label .step {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--gold);
+  border: 1px solid rgba(242,190,88,0.34);
+  background: rgba(242,190,88,0.10);
+}
+.frame-label .note {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  border-radius: 42px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(92,165,255,0.18), transparent 24%),
+    linear-gradient(180deg, #09101b 0%, #040913 100%);
+  box-shadow: 0 0 0 8px rgba(10,13,20,0.95), 0 34px 88px rgba(0,0,0,0.65);
+}
+
+.status {
+  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  padding: 14px 22px 0;
+  display: flex; justify-content: space-between;
+  font-size: 12px; font-weight: 700; z-index: 20;
+}
+
+.screen { position: absolute; inset: 0; padding: 54px 20px 28px; overflow-y: auto; }
+
+.eyebrow {
+  display: inline-flex; gap: 8px; align-items: center;
+  padding: 6px 10px; border-radius: 999px;
+  border: 1px solid rgba(242,190,88,0.22);
+  background: rgba(242,190,88,0.10);
+  color: var(--gold);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hero h2 { font-size: 24px; line-height: 1.12; letter-spacing: -0.03em; margin-bottom: 8px; }
+.hero p { color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+.card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+}
+
+.card .label {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.card .text { font-size: 12.5px; line-height: 1.5; }
+
+.insight {
+  margin-top: 14px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(87,199,133,0.28);
+  background: rgba(87,199,133,0.08);
+  box-shadow: 0 0 26px rgba(87,199,133,0.08);
+}
+.insight .label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
+.insight .text { font-size: 13px; line-height: 1.45; }
+
+.warn {
+  margin-top: 14px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(244,155,66,0.3);
+  background: rgba(244,155,66,0.09);
+}
+.warn .label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); margin-bottom: 6px; }
+.warn .text { font-size: 13px; line-height: 1.45; }
+
+.danger {
+  margin-top: 14px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(240,98,98,0.32);
+  background: rgba(240,98,98,0.09);
+}
+.danger .label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
+.danger .text { font-size: 13px; line-height: 1.45; }
+
+.row { display: flex; gap: 10px; }
+.col { flex: 1; }
+
+.ring {
+  width: 96px; height: 96px; border-radius: 50%; margin: 6px auto 10px;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  background: conic-gradient(var(--blue) 0deg 295deg, rgba(255,255,255,0.06) 295deg 360deg);
+  position: relative;
+}
+.ring::before {
+  content: ""; position: absolute; inset: 8px; border-radius: 50%;
+  background: #0b1420;
+}
+.ring .num { position: relative; font-size: 24px; font-weight: 800; z-index: 1; }
+.ring .sub { position: relative; font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; z-index: 1; }
+
+.bars { display: flex; align-items: flex-end; gap: 3px; height: 60px; margin-top: 10px; }
+.bars .bar { flex: 1; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, var(--blue), rgba(92,165,255,0.15)); }
+.bars.hr .bar { background: linear-gradient(180deg, var(--red), rgba(240,98,98,0.15)); }
+
+.mini-card {
+  flex: 1; padding: 12px; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03);
+}
+.mini-card .name { font-size: 11px; font-weight: 800; margin-bottom: 4px; }
+.mini-card .stat { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+.mini-card .quest { font-size: 12px; font-weight: 700; color: var(--blue); }
+
+.band {
+  margin-top: 12px; height: 34px; border-radius: 10px; position: relative;
+  background: linear-gradient(90deg, rgba(240,98,98,0.18), rgba(87,199,133,0.22) 35%, rgba(87,199,133,0.22) 70%, rgba(240,98,98,0.18));
+}
+.band .marker {
+  position: absolute; top: -6px; width: 3px; height: 46px; background: var(--gold);
+  box-shadow: 0 0 10px rgba(242,190,88,0.6);
+}
+.band .caption { position: absolute; bottom: -18px; font-size: 9px; color: var(--muted); }
+
+.trend { display: flex; align-items: flex-end; gap: 4px; height: 50px; margin-top: 10px; }
+.trend .dot { flex: 1; border-radius: 2px; background: rgba(240,98,98,0.55); }
+
+.heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
+.heatmap .cell { aspect-ratio: 1; border-radius: 6px; background: rgba(255,255,255,0.05); }
+.heatmap .cell.h1 { background: rgba(92,165,255,0.25); }
+.heatmap .cell.h2 { background: rgba(92,165,255,0.55); }
+.heatmap .cell.h3 { background: rgba(92,165,255,0.9); box-shadow: 0 0 12px rgba(92,165,255,0.5); }
+
+.notif {
+  margin-top: 14px; padding: 12px 14px; border-radius: 14px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.notif .ic { font-size: 20px; }
+.notif .body .t { font-size: 12px; font-weight: 800; margin-bottom: 2px; }
+.notif .body .s { font-size: 11px; color: var(--muted); }
+
+.actions { display: flex; gap: 8px; margin-top: 14px; }
+.actions button {
+  flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04); color: var(--text); font-size: 11px; font-weight: 700;
+  font-family: inherit;
+}
+.actions button.approve { border-color: rgba(87,199,133,0.4); color: var(--green); }
+.actions button.reject { border-color: rgba(240,98,98,0.4); color: var(--red); }
+
+footer {
+  max-width: 1200px; margin: 40px auto 0; padding: 0 18px;
+  color: var(--muted); font-size: 12px; line-height: 1.6; text-align: center;
+}
+
+.chip-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.chip-row .chip {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 12px; border-radius: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-size: 11.5px;
+}
+.chip-row .chip .pct { font-weight: 800; color: var(--green); font-size: 11px; }
+
+.gap-row { display: flex; gap: 10px; margin-top: 10px; }
+.gap-row .slot {
+  flex: 1; padding: 10px; border-radius: 12px; text-align: center;
+  border: 1px dashed rgba(240,98,98,0.35); background: rgba(240,98,98,0.06);
+}
+.gap-row .slot.filled { border: 1px solid rgba(87,199,133,0.3); background: rgba(87,199,133,0.06); }
+.gap-row .slot .ic { font-size: 20px; margin-bottom: 4px; }
+.gap-row .slot .t { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.compare {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 10px;
+}
+.compare .rec {
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-size: 11.5px; display: flex; justify-content: space-between;
+}
+.compare .rec .src { font-weight: 800; }
+.match-score {
+  margin-top: 10px; text-align: center; font-size: 12px; font-weight: 800; color: var(--gold);
+}
+
+.eta-bar { margin-top: 12px; }
+.eta-bar .track { height: 10px; border-radius: 6px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.eta-bar .fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--violet)); border-radius: 6px; }
+.eta-bar .caption { margin-top: 6px; font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>AI / ML Feature Brainstorm</h1>
+  <p>Ten directions for using machine learning and deep learning to make Life-Level's progression feel smarter and more personal — grounded in systems already shipped (Activity, XP, Boss, Streak) or already planned (Adaptive Skill Tree, Random Events). Six are visualized below as phone mockups; the rest are concept notes.</p>
+</div>
+
+<div class="section-label">1 · Grounded in what already exists</div>
+<div class="summary">
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🧭 Effort Score (deep learning on HR + pace)</div>
+    <div class="v">The current XP formula is <b>duration × modifier + distance bonus + calorie bonus</b> — flat and easy to game. A small model trained on HR curve shape, pace variance, and a rolling personal baseline can output a normalized "effort" score so a beginner's hard 20-minute run counts fairly against a veteran's easy 20-minute run.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🌲 Adaptive Skill Tree — real classifier</div>
+    <div class="v">The <b>Plan - Adaptive Skill Tree</b> doc already wants behavior branches (Momentum/Power/Focus/Hybrid) and motivation branches (Explorer/Hunter/Discipline/Tactician) inferred from play patterns. Today that's hand-waved as "detect the pattern" — this is literally a supervised/clustering classification problem over activity-type mix, session timing, streak recovery, and map/boss engagement rate.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🎯 Adaptive quest & boss difficulty (bandit / RL)</div>
+    <div class="v">Daily quests and boss HP/timers are fixed thresholds today. A contextual bandit per user can tune quest targets (3km vs 7km run) to keep completion rate in a 65–85% "flow channel" — too easy churns from boredom, too hard churns from frustration.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">📉 Churn prediction → comeback intervention</div>
+    <div class="v">Streak System already has a "broken streak recovery screen." A sequence model (LSTM/small transformer) over login + activity cadence can predict a lapse <b>before</b> the streak actually breaks, triggering a personalized comeback nudge (favorite activity type, free shield) instead of a generic message.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">⚡ Personalized event timing</div>
+    <div class="v">XP Storms and Wandering Merchants are cron/flag-based today (Phase 7, partial). A per-user activity-time model can schedule storms to land inside each player's actual active window instead of a fixed global time, multiplying perceived luck and relevance.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🛡️ Anomaly detection for manual logging</div>
+    <div class="v">Manual activity entry (no GPS/HR proof) is the weak point for XP farming, especially once guild raids and leaderboards ship. A lightweight anomaly model (isolation forest on pace/HR/duration ratios vs. the user's own history) flags implausible entries for admin review without blocking real PRs.</div>
+  </div>
+</div>
+
+<div class="section-label">2 · Further out — concept notes (not mocked up)</div>
+<div class="summary">
+  <div class="summary-card">
+    <span class="tag concept">Concept</span>
+    <div class="k">✍️ Generated insight & lore copy (small LLM)</div>
+    <div class="v">The skill tree plan literally specifies copy like <b>"You trained like a Ranger this week."</b> A small fine-tuned/prompted model can generate that line, plus Wandering Merchant flavor text and region lore hooks, personalized to class/rank/recent history instead of static strings.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag concept">Concept</span>
+    <div class="k">🎁 Quest & item recommendation</div>
+    <div class="v">Instead of picking 5 daily quests at random from a category pool, a lightweight recommender (content-based, using completion history) picks the 5 most likely to be both completed and motivating for that specific player.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag concept">Concept</span>
+    <div class="k">⚔️ Guild raid matchmaking</div>
+    <div class="v">Guild raids are design-only (Phase 8). When built, matching players of similar activity-output level into the same raid (rather than random) avoids the "one person carries everyone" failure mode common in co-op HP-pool mechanics.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag concept">Concept</span>
+    <div class="k">🏃 On-device activity-type inference</div>
+    <div class="v">Health Connect / Garmin sometimes hand back ambiguous or generic "workout" sessions. A small on-device model (CNN/RNN over accelerometer + HR time series) can classify Walking vs Hiking vs Running when the source doesn't, instead of defaulting to a lowest-common-denominator type.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag concept">Concept</span>
+    <div class="k">🏋️ Camera-based rep counting (stretch)</div>
+    <div class="v">Pose-estimation (e.g. MediaPipe) could auto-log Gym sessions by counting reps/sets from the phone camera. High engineering cost — worth a spike only after the core ML loop (effort score, adaptive difficulty) proves out.</div>
+  </div>
+</div>
+
+<div class="section-label">3 · Screens</div>
+<div class="strip">
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">1</span>Home · AI Coach card<span class="note">Effort score + archetype insight + streak nudge, all in one home-feed card.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">🤖 AI COACH · NEW</div>
+        <div class="hero">
+          <h2>Your Week, Understood</h2>
+          <p>Patterns pulled from your last 14 activities, not just this run.</p>
+        </div>
+        <div class="insight">
+          <div class="label">Archetype signal</div>
+          <div class="text">You trained like a <b>Ranger</b> 🏹 this week — 3 runs, 1 yoga session. <b>Momentum branch 80% unlocked.</b></div>
+        </div>
+        <div class="card">
+          <div class="label">Effort score (vs. raw XP formula)</div>
+          <div class="row">
+            <div class="col" style="text-align:center">
+              <div class="ring"><span class="num">82</span><span class="sub">effort</span></div>
+              <div class="text" style="font-size:11px;color:var(--muted)">+12% vs last week</div>
+            </div>
+            <div class="col" style="padding-top:14px">
+              <div class="text">Normalized for your fitness baseline — today's run earned an <b style="color:var(--green)">+18% XP</b> effort bonus on top of distance.</div>
+            </div>
+          </div>
+        </div>
+        <div class="warn">
+          <div class="label">Streak nudge</div>
+          <div class="text">Cooling off — <b>1 more activity today</b> keeps your 6-day streak alive. Recommended: 25-min easy run (92% completion likelihood for you).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">2</span>Effort Score detail<span class="note">What replaces "duration × modifier" — HR curve + personal baseline instead of a flat formula.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">📈 EFFORT MODEL</div>
+        <div class="hero">
+          <h2>Beyond Duration &amp; Distance</h2>
+          <p>Two runners, same 5km, different effort. The model normalizes for YOU.</p>
+        </div>
+        <div class="card">
+          <div class="label">Raw formula (today)</div>
+          <div class="text">duration × 2 + distance × 10 + calories ÷ 5<br><span style="color:var(--muted)">→ same output for anyone at the same pace/distance</span></div>
+        </div>
+        <div class="card">
+          <div class="label">Heart-rate curve this session</div>
+          <div class="bars hr">
+            <div class="bar" style="height:30%"></div><div class="bar" style="height:42%"></div><div class="bar" style="height:58%"></div>
+            <div class="bar" style="height:74%"></div><div class="bar" style="height:88%"></div><div class="bar" style="height:95%"></div>
+            <div class="bar" style="height:82%"></div><div class="bar" style="height:70%"></div><div class="bar" style="height:60%"></div>
+            <div class="bar" style="height:40%"></div>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="label">AI effort model output</div>
+          <div class="text">Sustained 88–95% of your rolling max HR for 6 minutes — well above your personal baseline for this distance. <b>Effort Score: 82/100.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">3</span>Adaptive quest tuning<span class="note">Same quest slot, personalized target — bandit model keeps completion in the "flow" band.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">🎯 ADAPTIVE DIFFICULTY · BANDIT MODEL</div>
+        <div class="hero">
+          <h2>Quests That Learn From You</h2>
+          <p>Same daily quest slot, different target — tuned per player.</p>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <div class="mini-card">
+            <div class="name">Player A</div>
+            <div class="stat">avg 3.2 km / run</div>
+            <div class="quest">Quest: Run 3 km</div>
+          </div>
+          <div class="mini-card">
+            <div class="name">Player B</div>
+            <div class="stat">avg 8.1 km / run</div>
+            <div class="quest">Quest: Run 7 km</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="label">Completion-rate target band</div>
+          <div class="band"><div class="marker" style="left:52%"></div></div>
+          <div style="height:20px"></div>
+        </div>
+        <div class="insight">
+          <div class="label">Tuning rule</div>
+          <div class="text">Difficulty nudges up when completion rate &gt; 85%, down when &lt; 60% — keeps every player inside their own flow zone instead of one global target.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">4</span>Comeback intervention<span class="note">Predict the lapse before the streak breaks, not after.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">📉 CHURN PREDICTION</div>
+        <div class="hero">
+          <h2>Catching the Drift Early</h2>
+          <p>Sequence model over login + activity cadence, updated daily.</p>
+        </div>
+        <div class="card">
+          <div class="label">Activity frequency, last 14 days</div>
+          <div class="trend">
+            <div class="dot" style="height:80%"></div><div class="dot" style="height:70%"></div><div class="dot" style="height:75%"></div>
+            <div class="dot" style="height:55%"></div><div class="dot" style="height:50%"></div><div class="dot" style="height:38%"></div>
+            <div class="dot" style="height:30%"></div><div class="dot" style="height:22%"></div><div class="dot" style="height:20%"></div>
+            <div class="dot" style="height:15%"></div>
+          </div>
+        </div>
+        <div class="danger">
+          <div class="label">Return likelihood</div>
+          <div class="text">41% ↓ — predicted lapse in ~3 days, before the streak actually breaks.</div>
+        </div>
+        <div class="insight">
+          <div class="label">Personalized comeback path</div>
+          <div class="text">Your favorite: <b>15-min Yoga</b> · free Streak Shield included · easier daily quest swapped in for tomorrow only.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">5</span>Smart event timing<span class="note">XP Storms land inside YOUR active window, not a fixed global cron slot.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">⚡ PERSONALIZED EVENTS</div>
+        <div class="hero">
+          <h2>Storms Find You</h2>
+          <p>Your typical active hours, Mon–Sun.</p>
+        </div>
+        <div class="card">
+          <div class="label">Activity heatmap (7 days × 4 windows)</div>
+          <div class="heatmap">
+            <div class="cell"></div><div class="cell h1"></div><div class="cell"></div><div class="cell"></div><div class="cell h2"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell h1"></div><div class="cell"></div><div class="cell h3"></div><div class="cell h1"></div><div class="cell"></div>
+            <div class="cell h1"></div><div class="cell"></div><div class="cell"></div><div class="cell h1"></div><div class="cell h2"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell h1"></div><div class="cell"></div><div class="cell"></div>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="ic">⚡</div>
+          <div class="body">
+            <div class="t">XP Storm is live — ×2 for 2 hours</div>
+            <div class="s">Timed to your usual Tuesday evening run window</div>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="label">Why this beats fixed cron</div>
+          <div class="text">Same event budget, per-user schedule — ~3× more likely to land inside a session the player was already going to have.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">6</span>Anti-cheat flag · admin<span class="note">Protects leaderboards and guild raids without blocking legitimate PRs.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">🛡️ INTEGRITY MODEL · ADMIN</div>
+        <div class="hero">
+          <h2>Guarding Fair Progression</h2>
+          <p>Anomaly model on pace/HR/duration ratios vs. the player's own history.</p>
+        </div>
+        <div class="danger">
+          <div class="label">Flagged entry</div>
+          <div class="text">Manual · Running · <b>142 km in 4 min</b><br>Anomaly score: <b>0.97</b></div>
+        </div>
+        <div class="card">
+          <div class="label">Baseline comparison</div>
+          <div class="text">User's typical pace: <b>5:30 / km</b><br>Implied pace here: <b>1.7 s / km</b></div>
+        </div>
+        <div class="actions">
+          <button class="approve">Approve</button>
+          <button class="reject">Reject</button>
+          <button>Request proof</button>
+        </div>
+        <div class="insight">
+          <div class="label">Model, not a hard block</div>
+          <div class="text">Flags for admin review only — never auto-rejects, so legitimate outliers (a real PR) never get silently punished.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">4 · Round 2 — new ideas</div>
+<div class="summary">
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🎲 Smart daily quest mix (bandit, not "3 random")</div>
+    <div class="v"><b>Quest System</b> picks 1 Duration + 1 Calories/Distance, then <b>3 fully random</b> from the remaining pool. A per-player model can weight those 3 toward categories with high predicted completion — still random enough to feel fresh, but tuned toward actually landing the +300 XP all-5 bonus instead of sometimes handing out a slate nobody finishes.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🎁 Smart loot weighting (gap-aware drops)</div>
+    <div class="v"><b>ItemDropRule</b> is a flat <code>DropChancePct</code> per source today. A model can re-weight <i>which eligible item</i> drops toward a player's empty slots or under-built stats — Diablo-style "smart loot" — without touching the designed rarity odds, so drops stay fair but feel less wasted.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">📜 Dynamic boss & region lore (generative)</div>
+    <div class="v">The <b>World Lore and Region Story Seeds</b> doc has rich writer intent (Forest Warden as "protector, not villain") that today can only ship as static strings. A small grounded-generation model can turn a boss's fixed flavor text into a line that reacts to the player's actual recent training pattern and chapter arc.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">⏳ Personalized level/zone ETA (regression)</div>
+    <div class="v">XP bars and map travel show raw remaining numbers. A regression model over each player's rolling activity velocity (not a flat average) can caption "Level 12 in ~4 days at your pace" — a small touch that makes long-term goals feel reachable instead of abstract.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag visualized">Visualized</span>
+    <div class="k">🔗 Cross-provider dedup (similarity model)</div>
+    <div class="v"><b>Known Issues</b> flags this directly: if Garmin also pushes to Strava, the same workout is ingested twice under two different <code>ExternalId</code>s — double XP. A similarity model over start time ± tolerance, duration, and distance (instead of exact ID matching) can catch the near-duplicate and offer a merge prompt.</div>
+  </div>
+  <div class="summary-card">
+    <span class="tag concept">Concept</span>
+    <div class="k">🧪 QA triage assistant (dev-tooling NLP)</div>
+    <div class="v">The <b>Internal Testing Findings</b> log is free-text checklist items filed by testers. A lightweight NLP classifier could auto-suggest Area/Priority and flag likely duplicates against <b>Known Issues</b> as new findings are logged — internal tooling, not player-facing, so no mockup below.</div>
+  </div>
+</div>
+
+<div class="section-label">5 · Screens (round 2)</div>
+<div class="strip">
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">7</span>Smart quest mix<span class="note">Replaces "3 random" slots with completion-weighted picks — still keeps the daily bonus meaningful.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">🎲 SMART QUEST MIX · BANDIT MODEL</div>
+        <div class="hero">
+          <h2>Your 5 Quests, Not Just Any 5</h2>
+          <p>1 Duration + 1 Calories/Distance are fixed by design — the other 3 are now weighted, not blind-random.</p>
+        </div>
+        <div class="chip-row">
+          <div class="chip"><span>⏱️ 30 min active</span><span class="pct">94%</span></div>
+          <div class="chip"><span>📍 4 km distance</span><span class="pct">81%</span></div>
+          <div class="chip"><span>🏋️ 1 workout logged</span><span class="pct">97%</span></div>
+          <div class="chip"><span>🔥 Streak day</span><span class="pct">89%</span></div>
+          <div class="chip"><span>🔥 250 calories</span><span class="pct">76%</span></div>
+        </div>
+        <div class="insight">
+          <div class="label">All-5 completion forecast</div>
+          <div class="text"><b>71%</b> predicted — tuned toward the +300 XP bonus threshold without making it a guaranteed freebie.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">8</span>Smart loot weighting<span class="note">Same drop table, drop odds nudged toward gear you're actually missing.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">🎁 SMART LOOT · PERSONALIZED DROP MODEL</div>
+        <div class="hero">
+          <h2>Loot That Fills the Gaps</h2>
+          <p>Your current equipment coverage.</p>
+        </div>
+        <div class="gap-row">
+          <div class="slot filled"><div class="ic">🧢</div><div class="t">Head</div></div>
+          <div class="slot filled"><div class="ic">👕</div><div class="t">Chest</div></div>
+          <div class="slot"><div class="ic">🧤</div><div class="t">Hands</div></div>
+          <div class="slot"><div class="ic">👟</div><div class="t">Feet</div></div>
+        </div>
+        <div class="card">
+          <div class="label">Boss reward roll — Forest Warden</div>
+          <div class="text">Feet-slot items weighted <b>2.4×</b> for this drop, Hands-slot <b>1.6×</b> — rarity odds from the item's own <code>ItemDropRule</code> are untouched.</div>
+        </div>
+        <div class="insight">
+          <div class="label">Why this stays fair</div>
+          <div class="text">The model only re-weights <b>which eligible item</b> drops, never the rarity tier chance — loot stays fair, but stops feeling wasted on slots you've already filled.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">9</span>Dynamic boss lore<span class="note">Same fight, flavor text grounded in the player's real training pattern this week.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">📜 GENERATIVE LORE · SMALL LLM</div>
+        <div class="hero">
+          <h2>The Forest Remembers You</h2>
+          <p>Forest Warden · Chapter 1 · Regular Boss</p>
+        </div>
+        <div class="card">
+          <div class="label">Generated encounter line</div>
+          <div class="text">"Three dawns you have run past my roots without pause. Your rhythm is steady — but I test those who never rest."</div>
+        </div>
+        <div class="card">
+          <div class="label">Grounded on</div>
+          <div class="text">Writer note: Forest Warden as <i>"protector, not villain"</i> · this player's real 3-day running streak · Chapter 1 theme ("beginnings, rhythm, breath")</div>
+        </div>
+        <div class="insight">
+          <div class="label">Why generate instead of hand-write</div>
+          <div class="text">Same boss, same fight, same balance — but the flavor text adapts per player and per week instead of shipping one static string for every fight, forever.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">10</span>Personalized ETA<span class="note">Remaining XP and map distance translated into "at your pace" time, not a flat average.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">⏳ PROGRESS FORECAST · REGRESSION MODEL</div>
+        <div class="hero">
+          <h2>When You'll Actually Get There</h2>
+          <p>Modeled from your last 14 days of activity velocity.</p>
+        </div>
+        <div class="card">
+          <div class="label">Level 11 → 12</div>
+          <div class="eta-bar">
+            <div class="track"><div class="fill" style="width:68%"></div></div>
+            <div class="caption">Level 12 in <b style="color:var(--text)">~4 days</b> at your pace</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="label">Map travel — Ocean of Balance</div>
+          <div class="eta-bar">
+            <div class="track"><div class="fill" style="width:44%"></div></div>
+            <div class="caption">~2 workouts left · <b style="color:var(--text)">11.4 km</b> remaining</div>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="label">Why this beats a flat average</div>
+          <div class="text">Accounts for your weekday/weekend rhythm — a player who only runs on weekends gets "this Saturday," not a misleading "1.3 days."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="step">11</span>Cross-provider dedup<span class="note">Closes the double-XP gap from Garmin + Strava both pushing the same workout.</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="screen">
+        <div class="eyebrow">🔗 ACTIVITY DEDUP · SIMILARITY MODEL</div>
+        <div class="hero">
+          <h2>One Run, Not Two</h2>
+          <p>Two providers, same morning run.</p>
+        </div>
+        <div class="compare">
+          <div class="rec"><span class="src">Garmin</span><span>5.20 km · 28:40 · 07:14am</span></div>
+          <div class="rec"><span class="src">Strava</span><span>5.18 km · 28:35 · 07:14am</span></div>
+        </div>
+        <div class="match-score">96% match confidence</div>
+        <div class="warn">
+          <div class="label">Looks like a duplicate</div>
+          <div class="text">Same run arrived from both Garmin and Strava. Keep one to avoid double XP?</div>
+        </div>
+        <div class="actions">
+          <button class="approve">Merge</button>
+          <button>Keep both</button>
+        </div>
+        <div class="insight">
+          <div class="label">Why not just ExternalId matching</div>
+          <div class="text">Exact-ID dedup only catches re-syncs of the <i>same</i> provider. Matching on start time ± tolerance, duration, and distance vector similarity catches the same workout arriving from two <i>different</i> providers — the exact gap this repo's Known Issues doc flags.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Brainstorm generated 2026-07-15 from Product Vision, Feature Catalog, Activity/Boss/Streak/Quest/Items/Random Events design docs, the World Lore story-seed doc, Known Issues, and the existing Adaptive Skill Tree + Progressive World Reveal plans in <code>docs/obsidian</code>. Round 2 added after re-running the same brainstorm prompt — extends rather than repeats round 1. All eleven mockups use the shared dark theme tokens from <code>skill-tree-adaptive.html</code>.
+</footer>
+
+</body>
+</html>
