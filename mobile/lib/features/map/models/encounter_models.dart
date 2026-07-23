@@ -139,6 +139,7 @@ class BlockerEncounterData {
   final String? lastHitDescription;
   final Duration retreatsIn;
   final List<String> rewards;
+  final String? bossId;
 
   const BlockerEncounterData({
     required this.name,
@@ -149,6 +150,7 @@ class BlockerEncounterData {
     this.lastHitDescription,
     required this.retreatsIn,
     required this.rewards,
+    this.bossId,
   });
 
   bool get isInCombat => playerDamageDone > 0;
@@ -164,6 +166,7 @@ class BlockerEncounterData {
         lastHitDescription: j['lastHitDescription'] as String?,
         retreatsIn: Duration(seconds: j['retreatsInSeconds'] as int),
         rewards: List<String>.from(j['rewards'] as List),
+        bossId: j['bossId'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -175,6 +178,7 @@ class BlockerEncounterData {
         if (lastHitDescription != null) 'lastHitDescription': lastHitDescription,
         'retreatsInSeconds': retreatsIn.inSeconds,
         'rewards': rewards,
+        if (bossId != null) 'bossId': bossId,
       };
 }
 

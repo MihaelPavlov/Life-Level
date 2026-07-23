@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/boss_list_item.dart';
+import 'boss_icon.dart';
 
 class BossDefeatedCard extends StatelessWidget {
   final BossListItem boss;
@@ -31,9 +32,11 @@ class BossDefeatedCard extends StatelessWidget {
                   border: Border.all(color: AppColors.green.withValues(alpha: 0.4), width: 1.5),
                 ),
                 alignment: Alignment.center,
-                child: Opacity(
+                child: BossIcon(
+                  icon: boss.icon,
+                  size: 48,
+                  emojiSize: 26,
                   opacity: 0.7,
-                  child: Text(boss.icon, style: const TextStyle(fontSize: 26)),
                 ),
               ),
               Positioned(

@@ -6,7 +6,11 @@ typedef ZonePick = ({String zoneId, String zoneName});
 
 class WorldMapOpenRequest {
   final ValueChanged<ZonePick>? onZoneSelected;
-  const WorldMapOpenRequest({this.onZoneSelected});
+  final bool autoOpenActiveRegion;
+  const WorldMapOpenRequest({
+    this.onZoneSelected,
+    this.autoOpenActiveRegion = false,
+  });
 }
 
 class WorldMapNotifier {
@@ -17,6 +21,12 @@ class WorldMapNotifier {
 
   static Stream<WorldMapOpenRequest> get stream => _controller.stream;
 
-  static void open({ValueChanged<ZonePick>? onZoneSelected}) =>
-      _controller.add(WorldMapOpenRequest(onZoneSelected: onZoneSelected));
+  static void open({
+    ValueChanged<ZonePick>? onZoneSelected,
+    bool autoOpenActiveRegion = false,
+  }) =>
+      _controller.add(WorldMapOpenRequest(
+        onZoneSelected: onZoneSelected,
+        autoOpenActiveRegion: autoOpenActiveRegion,
+      ));
 }

@@ -15,6 +15,9 @@ public class BossConfiguration : IEntityTypeConfiguration<Boss>
         builder.Property(b => b.WorldZoneId);
         builder.HasIndex(b => b.WorldZoneId);
 
+        builder.Property(b => b.TrailEncounterTemplateId);
+        builder.HasIndex(b => b.TrailEncounterTemplateId);
+
         builder.Property(b => b.SuppressExpiry).IsRequired();
     }
 }

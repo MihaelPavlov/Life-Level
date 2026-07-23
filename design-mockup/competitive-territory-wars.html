@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Conquest — Zone Sieges &amp; Rivals (Competitive Mockup)</title>
+<style>
+  :root {
+    --bg: #040810;
+    --bg-alt: #080e14;
+    --surface: #161b22;
+    --surface-2: #1e2632;
+    --surface-3: #232b38;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #4d5b6b;
+    --blue: #4f9eff;
+    --blue-deep: #3578cc;
+    --purple: #a371f7;
+    --orange: #f5a623;
+    --red: #f85149;
+    --red-dark: #c0392b;
+    --green: #3fb950;
+    --gold: #f7c948;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 48px 24px 120px;
+    background:
+      radial-gradient(ellipse 700px 420px at 18% -8%, rgba(248,81,73,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 380px at 85% 15%, rgba(247,201,72,0.06) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 400 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+
+  .masthead { max-width: 860px; margin: 0 auto 8px; text-align: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 18px;
+  }
+  .eyebrow::before, .eyebrow::after { content: ""; width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .eyebrow::after { background: linear-gradient(90deg, var(--gold), transparent); }
+
+  h1 {
+    font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15;
+    margin: 0 0 14px; text-wrap: balance;
+    background: linear-gradient(100deg, #fff 10%, var(--gold) 55%, var(--red) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .lead {
+    color: var(--text-dim); max-width: 680px; margin: 0 auto 6px;
+    font-size: 15px; line-height: 1.7;
+  }
+  .lead strong { color: var(--text); font-weight: 600; }
+
+  .thesis {
+    max-width: 860px; margin: 40px auto 0; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden;
+  }
+  .thesis > div { background: var(--surface); padding: 20px 18px; }
+  .thesis .k { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .thesis .v { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .thesis .v b { color: var(--text); font-weight: 600; }
+
+  .topbar {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    max-width: 960px; margin: 40px auto 0;
+  }
+  .topbar a {
+    padding: 9px 15px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+    color: var(--text-dim); background: var(--surface); border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .topbar a:hover { color: var(--text); border-color: var(--text-dim); }
+  .topbar a.siege { color: var(--red); border-color: rgba(248,81,73,0.35); }
+  .topbar a.rival { color: var(--blue); border-color: rgba(79,158,255,0.35); }
+  .topbar a.legends { color: var(--gold); border-color: rgba(247,201,72,0.35); }
+  .topbar a.home { color: var(--green); border-color: rgba(63,185,80,0.35); }
+
+  .section-title {
+    text-align: center; font-size: 23px; font-weight: 700;
+    margin: 96px 0 6px; letter-spacing: -0.01em; scroll-margin-top: 40px;
+  }
+  .section-title .tag {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 5px; margin-right: 10px;
+    vertical-align: middle; position: relative; top: -2px;
+  }
+  .section-title.siege .tag { color: var(--red); background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3); }
+  .section-title.rival .tag { color: var(--blue); background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3); }
+  .section-title.legends .tag { color: var(--gold); background: rgba(247,201,72,0.12); border: 1px solid rgba(247,201,72,0.3); }
+  .section-title.home .tag { color: var(--green); background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); }
+  .section-sub { text-align: center; color: var(--text-dim); margin: 0 auto 40px; font-size: 13px; max-width: 620px; line-height: 1.6; }
+
+  .strip {
+    display: flex; gap: 28px; padding: 8px 8px 32px;
+    overflow-x: auto; max-width: 100%; margin: 0 auto; justify-content: center;
+    scroll-snap-type: x mandatory; scrollbar-color: var(--border) transparent;
+  }
+  .strip .frame-wrap { scroll-snap-align: start; flex-shrink: 0; }
+
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 12px; text-align: center; max-width: 390px;
+  }
+  .frame-label .note { display: block; font-size: 10.5px; color: var(--text-muted); opacity: 0.9; margin-top: 5px; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.5; }
+
+  .phone {
+    width: 390px; height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 1px solid #1c2230;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #0a0d14;
+    overflow: hidden; position: relative;
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 30px; background: #000; border-radius: 0 0 18px 18px; z-index: 100;
+  }
+  .status-bar {
+    position: absolute; top: 12px; left: 24px; right: 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 600; color: var(--text); z-index: 50;
+  }
+  .screen { position: absolute; inset: 0; padding-top: 52px; display: flex; flex-direction: column; background: var(--bg-alt); }
+  .screen-head { padding: 4px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .screen-head h2 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .scroll { flex: 1; overflow-y: auto; padding: 0 20px 24px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .card.elevated { background: var(--surface-2); }
+  .card.glow-red { border-color: rgba(248,81,73,0.4); box-shadow: 0 0 0 1px rgba(248,81,73,0.15), 0 8px 24px -8px rgba(248,81,73,0.25); }
+  .card.glow-blue { border-color: rgba(79,158,255,0.4); box-shadow: 0 0 0 1px rgba(79,158,255,0.15), 0 8px 24px -8px rgba(79,158,255,0.25); }
+  .card.glow-gold { border-color: rgba(247,201,72,0.4); box-shadow: 0 0 0 1px rgba(247,201,72,0.15), 0 8px 24px -8px rgba(247,201,72,0.25); }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: 20px;
+  }
+  .pill.contested { color: var(--red); background: rgba(248,81,73,0.14); }
+  .pill.owned { color: var(--green); background: rgba(63,185,80,0.14); }
+  .pill.unclaimed { color: var(--text-muted); background: rgba(255,255,255,0.05); }
+  .pill.win { color: var(--gold); background: rgba(247,201,72,0.14); }
+  .pill.loss { color: var(--text-muted); background: rgba(255,255,255,0.05); }
+
+  .hp-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-dim); margin-bottom: 5px; }
+  .hp-row b { color: var(--text); font-weight: 700; }
+  .hp-track { height: 12px; border-radius: 7px; background: #0d1319; overflow: hidden; position: relative; border: 1px solid var(--border); }
+  .hp-fill { height: 100%; border-radius: 7px 0 0 7px; }
+  .hp-fill.red { background: linear-gradient(90deg, var(--red-dark), var(--red)); }
+  .hp-fill.blue { background: linear-gradient(90deg, var(--blue-deep), var(--blue)); }
+  .hp-fill.gold { background: linear-gradient(90deg, #c99a1f, var(--gold)); }
+
+  .duel-track { height: 20px; border-radius: 10px; background: #0d1319; border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; }
+  .duel-track .side { height: 100%; }
+  .duel-track .mid-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--text-muted); opacity: 0.5; }
+
+  .leaderboard-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .leaderboard-row:last-child { border-bottom: none; }
+  .lb-rank { width: 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: center; }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-rank.top2 { color: #c7cad1; }
+  .lb-rank.top3 { color: #c98a4b; }
+  .lb-avatar { width: 32px; height: 32px; border-radius: 9px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .lb-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .lb-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+  .lb-val { margin-left: auto; text-align: right; font-size: 13px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .lb-val small { display: block; font-size: 9.5px; font-weight: 600; color: var(--text-muted); }
+
+  .btn {
+    display: block; width: 100%; text-align: center; padding: 13px; border-radius: 11px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.01em; border: none; cursor: pointer;
+  }
+  .btn.primary-red { background: linear-gradient(135deg, var(--red), var(--red-dark)); color: #fff; }
+  .btn.primary-blue { background: linear-gradient(135deg, var(--blue), var(--blue-deep)); color: #fff; }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tabs .t { flex: 1; text-align: center; padding: 9px 0; border-radius: 9px; font-size: 11.5px; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); }
+  .tabs .t.active { background: rgba(247,201,72,0.12); border-color: rgba(247,201,72,0.4); color: var(--gold); }
+
+  .countdown { display: flex; gap: 6px; }
+  .countdown .c { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; text-align: center; min-width: 40px; }
+  .countdown .c b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .countdown .c span { display: block; font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+
+  /* Screen 1 — World map with crests */
+  .map-canvas { position: relative; flex: 1; margin: 0 20px 16px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border);
+    background: radial-gradient(ellipse 500px 400px at 30% 20%, rgba(63,185,80,0.08), transparent 55%),
+                radial-gradient(ellipse 450px 350px at 75% 60%, rgba(79,158,255,0.07), transparent 55%),
+                radial-gradient(ellipse 400px 320px at 40% 85%, rgba(163,113,247,0.07), transparent 55%),
+                var(--surface); }
+  .zone-node { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .zone-node .dot { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; }
+  .zone-node .crest { position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 1.5px solid var(--bg-alt); }
+  .zone-node .lbl { font-size: 9.5px; font-weight: 700; color: var(--text); background: rgba(4,8,16,0.7); padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
+  .zone-node.owned-green .dot { background: rgba(63,185,80,0.18); border: 2px solid var(--green); }
+  .zone-node.owned-purple .dot { background: rgba(163,113,247,0.18); border: 2px solid var(--purple); }
+  .zone-node.contested .dot { background: rgba(248,81,73,0.18); border: 2px dashed var(--red); animation: pulse-ring 1.8s ease-in-out infinite; }
+  .zone-node.unclaimed .dot { background: rgba(255,255,255,0.04); border: 2px dashed var(--text-muted); }
+  @keyframes pulse-ring { 0%, 100% { box-shadow: 0 0 0 0 rgba(248,81,73,0.35); } 50% { box-shadow: 0 0 0 8px rgba(248,81,73,0); } }
+  .edge { position: absolute; background: var(--border); height: 2px; transform-origin: left center; }
+
+  .peek-sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface-2); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 14px 20px 22px; box-shadow: 0 -20px 40px -20px rgba(0,0,0,0.6); }
+  .peek-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 12px; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="eyebrow">Competitive Engagement Concept</div>
+  <h1>Conquest — the map itself becomes the leaderboard</h1>
+  <p class="lead">
+    Life-Level's zones already track real distance. <strong>Conquest</strong> makes that shared world
+    contestable: guilds fight to hold territory, and every player — guild or not — gets a low-commitment
+    rival to push against. Neither exists in Strava's flat kudos feed or Zwift's one-off races.
+  </p>
+</div>
+
+<div class="thesis">
+  <div>
+    <div class="k">Why not just leaderboards</div>
+    <div class="v">Global leaderboards are <b>demotivating past top 1%</b> and what Strava plateau users already have kudos-fatigue on. Conquest ranks <b>territory and rivals</b>, not raw totals.</div>
+  </div>
+  <div>
+    <div class="k">Reuses what's built</div>
+    <div class="v">Sieges reuse <b>WorldZone</b> + the Boss <b>damage formula</b> + the planned <b>Guild</b> module. Rivals reuses rank brackets from the <b>Title/Rank ladder</b>. No new game math.</div>
+  </div>
+  <div>
+    <div class="k">Fixes the cold-start risk</div>
+    <div class="v">Marketing flagged guilds as a promise we can't keep without critical mass. <b>Rivals need only 2 players</b> and work from day one — Sieges layer on once guilds exist.</div>
+  </div>
+</div>
+
+<nav class="topbar">
+  <a class="siege" href="#siege-map">① Contested Map</a>
+  <a class="siege" href="#siege-detail">② Siege Battle</a>
+  <a class="rival" href="#rivals">③ Rivals (Solo)</a>
+  <a class="legends" href="#legends">④ Hall of Legends</a>
+  <a class="home" href="#home-teaser">⑤ Home Surface</a>
+</nav>
+
+<h2 class="section-title siege" id="siege-map"><span class="tag">Zone Sieges</span>The world map, now a contested board</h2>
+<p class="section-sub">Every zone already exists. Conquest adds ownership: a guild controls a zone by out-training every rival guild's cumulative effort there over a rolling 7-day window. Ownership is visible to everyone traveling through.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">World Map — crest overlay<span class="note">Green crest = held by your guild · dashed red ring = actively contested · grey dashed = unclaimed, first guild to log a collective 50km there stakes a claim</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>World Map</h2>
+          <div class="icon-btn">⚔️</div>
+        </div>
+        <div class="map-canvas">
+          <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 350 480">
+            <line x1="110" y1="120" x2="230" y2="210" stroke="#30363d" stroke-width="2"/>
+            <line x1="230" y1="210" x2="150" y2="360" stroke="#30363d" stroke-width="2"/>
+            <line x1="110" y1="120" x2="150" y2="360" stroke="#30363d" stroke-width="2" stroke-dasharray="4 5"/>
+          </svg>
+          <div class="zone-node owned-green" style="top:96px; left:86px;">
+            <div class="dot">🌲<div class="crest" style="background:var(--green); color:#04250d;">IW</div></div>
+            <div class="lbl">Forest of Endurance</div>
+          </div>
+          <div class="zone-node contested" style="top:186px; left:206px;">
+            <div class="dot">⛰️</div>
+            <div class="lbl">Mountains of Strength</div>
+          </div>
+          <div class="zone-node unclaimed" style="top:336px; left:126px;">
+            <div class="dot">🌊</div>
+            <div class="lbl">Ocean of Balance</div>
+          </div>
+          <div class="peek-sheet">
+            <div class="peek-handle"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="font-size:14px; font-weight:700;">⛰️ Mountains of Strength</div>
+              <span class="pill contested">Contested</span>
+            </div>
+            <div class="hp-row"><span>🐺 Iron Wolves</span></div>
+            <div class="hp-track" style="margin-bottom:8px;"><div class="hp-fill red" style="width:64%;"></div></div>
+            <div class="hp-row"><span>🦅 Storm Talons</span></div>
+            <div class="hp-track"><div class="hp-fill blue" style="width:51%;"></div></div>
+            <div style="display:flex; justify-content:space-between; margin-top:12px; font-size:11px; color:var(--text-dim);">
+              <span>Siege closes in <b style="color:var(--text);">2d 14h</b></span>
+              <span style="color:var(--gold); font-weight:700;">View Siege →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title siege" id="siege-detail"><span class="tag">Zone Sieges</span>Inside the siege — your workout is reinforcement</h2>
+<p class="section-sub">Two guilds race the same effort bar the Boss system already uses (duration + distance + calories). Every member's logged activity ticks their guild's bar. The top individual contributor at close gets a zone-specific title.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Siege Battle — Mountains of Strength<span class="note">Same visual language as the existing Boss HP bar, mirrored for two sides instead of one</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>⛰️ Siege</h2>
+          <div class="countdown">
+            <div class="c"><b>2</b><span>Days</span></div>
+            <div class="c"><b>14</b><span>Hrs</span></div>
+          </div>
+        </div>
+        <div class="scroll">
+          <div class="card elevated glow-red" style="text-align:center;">
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">CUMULATIVE GUILD EFFORT</div>
+            <div class="hp-row" style="justify-content:space-between;"><span>🐺 <b>Iron Wolves</b></span><span>18,420 <small style="color:var(--text-muted);">/ 28,800</small></span></div>
+            <div class="hp-track" style="height:16px; margin-bottom:14px;"><div class="hp-fill red" style="width:64%;"></div></div>
+            <div class="hp-row" style="justify-content:space-between;"><span>🦅 <b>Storm Talons</b></span><span>14,680 <small style="color:var(--text-muted);">/ 28,800</small></span></div>
+            <div class="hp-track" style="height:16px;"><div class="hp-fill blue" style="width:51%;"></div></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:10px;">🏆 Siege reward</div>
+            <div style="font-size:12.5px; color:var(--text-dim); line-height:1.6;">Winning guild holds the zone for 7 days: <b style="color:var(--text);">+15% guild XP</b> on activities logged there, banner shown on the world map. Top individual contributor earns the title <b style="color:var(--gold);">"Warlord of the Mountains."</b></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Top reinforcements — Iron Wolves</div>
+            <div class="leaderboard-row">
+              <div class="lb-rank top1">1</div>
+              <div class="lb-avatar">🧝</div>
+              <div><div class="lb-name">Kestra</div><div class="lb-sub">6 activities this siege</div></div>
+              <div class="lb-val">5,120<small>effort</small></div>
+            </div>
+            <div class="leaderboard-row">
+              <div class="lb-rank top2">2</div>
+              <div class="lb-avatar">🧔</div>
+              <div><div class="lb-name">Bram</div><div class="lb-sub">4 activities this siege</div></div>
+              <div class="lb-val">4,310<small>effort</small></div>
+            </div>
+            <div class="leaderboard-row">
+              <div class="lb-rank top3">3</div>
+              <div class="lb-avatar">🧑</div>
+              <div><div class="lb-name">You</div><div class="lb-sub">3 activities this siege</div></div>
+              <div class="lb-val">3,890<small>effort</small></div>
+            </div>
+          </div>
+
+          <button class="btn primary-red">Log Activity to Reinforce</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title rival" id="rivals"><span class="tag">Rivals</span>No guild? You still get an opponent</h2>
+<p class="section-sub">Every player is auto-matched weekly against one opponent in the same rank bracket. One rotating stat category, a head-to-head bar, no leaderboard scroll to get lost in. This is the part that works with zero critical mass.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Rival Duel — this week's category: Endurance km<span class="note">Matched by Rank (Novice / Warrior / Champion / Legendary), not by guild — solo-viable by design</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>Your Rival</h2>
+          <div class="icon-btn">📜</div>
+        </div>
+        <div class="scroll">
+          <div class="card elevated glow-blue">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+              <div class="lb-avatar" style="width:44px; height:44px; font-size:20px;">🧑</div>
+              <div>
+                <div style="font-size:14px; font-weight:700;">You <span style="color:var(--text-muted); font-weight:400;">· Warrior</span></div>
+                <div class="lb-sub">Win streak: 2</div>
+              </div>
+              <div style="margin-left:auto; font-size:20px; color:var(--text-muted);">⚔️</div>
+              <div style="text-align:right;">
+                <div style="font-size:14px; font-weight:700;">Dax <span style="color:var(--text-muted); font-weight:400;">· Warrior</span></div>
+                <div class="lb-sub">Win streak: 0</div>
+              </div>
+              <div class="lb-avatar" style="width:44px; height:44px; font-size:20px;">🧌</div>
+            </div>
+            <div style="font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Endurance — km this week</div>
+            <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:700; margin-bottom:6px;"><span style="color:var(--blue);">22.4 km</span><span style="color:var(--text-muted);">18.9 km</span></div>
+            <div class="duel-track">
+              <div class="side" style="width:54%; background:linear-gradient(90deg, var(--blue-deep), var(--blue));"></div>
+              <div class="side" style="width:46%; background:linear-gradient(90deg, #3a3f47, #4d5560);"></div>
+              <div class="mid-line"></div>
+            </div>
+            <div style="text-align:center; margin-top:12px; font-size:11.5px; color:var(--text-dim);">You're ahead by <b style="color:var(--text);">3.5 km</b> · duel closes in <b style="color:var(--text);">2d 6h</b></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:10px;">Head-to-head record</div>
+            <div class="leaderboard-row">
+              <div style="font-size:12px; color:var(--text-dim);">Week of Jun 29</div>
+              <div class="lb-val" style="margin-left:auto;"><span class="pill win">Won</span></div>
+            </div>
+            <div class="leaderboard-row">
+              <div style="font-size:12px; color:var(--text-dim);">Week of Jun 22</div>
+              <div class="lb-val" style="margin-left:auto;"><span class="pill win">Won</span></div>
+            </div>
+            <div class="leaderboard-row">
+              <div style="font-size:12px; color:var(--text-dim);">Week of Jun 15</div>
+              <div class="lb-val" style="margin-left:auto;"><span class="pill loss">Lost</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">Win 3 duels in a row to unlock the title <b style="color:var(--gold);">"Unrelenting"</b> and a taunt emote Dax will see next week.</div>
+          </div>
+
+          <button class="btn primary-blue">Log a Run to Close the Gap</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title legends" id="legends"><span class="tag">Seasonal</span>Hall of Legends — where the bragging happens</h2>
+<p class="section-sub">A season runs 6 weeks and ends on <b style="color:var(--gold);">Reclamation Day</b>, when every zone resets to unclaimed and the map redraws. Guild banners and rival streaks are both scored here — pairs with the already-designed Seasonal Events reward ladder.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Hall of Legends<span class="note">Two tabs so solo Rival players and Guild players each see a leaderboard that's actually about them</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>Hall of Legends</h2>
+          <div class="countdown">
+            <div class="c"><b>11</b><span>Days</span></div>
+          </div>
+        </div>
+        <div class="scroll">
+          <div class="tabs">
+            <div class="t active">🏰 Guilds</div>
+            <div class="t">⚔️ Rivals</div>
+          </div>
+          <div class="card">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;">Zones controlled · Season 3</div>
+            <div class="leaderboard-row">
+              <div class="lb-rank top1">1</div>
+              <div class="lb-avatar" style="background:rgba(247,201,72,0.15);">🐺</div>
+              <div><div class="lb-name">Iron Wolves</div><div class="lb-sub">32 members</div></div>
+              <div class="lb-val">2 zones<small>held</small></div>
+            </div>
+            <div class="leaderboard-row">
+              <div class="lb-rank top2">2</div>
+              <div class="lb-avatar">🦅</div>
+              <div><div class="lb-name">Storm Talons</div><div class="lb-sub">28 members</div></div>
+              <div class="lb-val">1 zone<small>held</small></div>
+            </div>
+            <div class="leaderboard-row">
+              <div class="lb-rank top3">3</div>
+              <div class="lb-avatar">🐉</div>
+              <div><div class="lb-name">Ember Cohort</div><div class="lb-sub">19 members</div></div>
+              <div class="lb-val">0 zones<small>held</small></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">On Reclamation Day, the top guild's crest is <b style="color:var(--text);">permanently recorded</b> on that zone's lore page for the season. Every guild starts the next season from zero — no runaway leader.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title home" id="home-teaser"><span class="tag">Home Surface</span>Pulled onto Home, not buried in a menu</h2>
+<p class="section-sub">Follows the same glow-card pattern as the existing Boss card — Conquest status is visible the moment the app opens, without a dedicated tab.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Home feed — Siege + Rival widgets<span class="note">Inserted between HomeBossCard and HomeStatsRow in the existing feed order</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>Home</h2>
+          <div class="icon-btn">🔔</div>
+        </div>
+        <div class="scroll">
+          <div class="card elevated glow-red">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <span class="pill contested">⚔️ Siege Active</span>
+              <span style="font-size:11px; color:var(--text-dim);">2d 14h left</span>
+            </div>
+            <div style="font-size:13px; font-weight:600; margin-bottom:10px;">Mountains of Strength — Iron Wolves lead by 13%</div>
+            <div class="hp-track" style="height:8px;"><div class="hp-fill red" style="width:64%;"></div></div>
+          </div>
+          <div class="card elevated glow-blue">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <span class="pill" style="color:var(--blue); background:rgba(79,158,255,0.14);">⚔️ Rival Duel</span>
+              <span style="font-size:11px; color:var(--text-dim);">2d 6h left</span>
+            </div>
+            <div style="font-size:13px; font-weight:600; margin-bottom:10px;">You're ahead of Dax by 3.5 km</div>
+            <div class="duel-track" style="height:8px;">
+              <div class="side" style="width:54%; background:linear-gradient(90deg, var(--blue-deep), var(--blue));"></div>
+              <div class="side" style="width:46%; background:linear-gradient(90deg, #3a3f47, #4d5560);"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">STR · END · AGI · FLX · STA</div>
+            <div style="font-size:12px; color:var(--text-dim);">— existing stat row continues below —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

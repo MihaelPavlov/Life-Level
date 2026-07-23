@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02 - Game Design/World Lore and Region Story Seeds.md",
+                "file": "07 - Development/Plan - Guild System End-to-End.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "World Lore and Region Story Seeds"
+              "title": "Plan - Guild System End-to-End"
             }
           }
         ]
@@ -183,13 +183,21 @@
       "bases:Create new base": false
     }
   },
-  "active": "0b9cb93d96a46cda",
+  "active": "2456a66808104aad",
   "lastOpenFiles": [
+    "03 - Backend/Modules/Adventure.Encounters.md",
+    "02 - Game Design/Boss System.md",
+    "02 - Game Design/Adventure Map and World.md",
+    "02 - Game Design/Items and Equipment.md",
+    "06 - Design System/Colors and Typography.md",
+    "05 - Integrations/Activity Type Mapping.md",
+    "04 - Mobile App/Routing and Deep Links.md",
+    "04 - Mobile App/Global Event Pattern.md",
+    "00 - Life-Level MOC.md",
+    "02 - Game Design/World Lore and Region Story Seeds.md",
     "07 - Development/Debug Endpoints.md.tmp.27684.96389a8ea94e",
     "02 - Game Design/Plan - Adaptive Skill Tree.md",
     "02 - Game Design/Plan - Progressive World Reveal.md",
-    "00 - Life-Level MOC.md",
-    "02 - Game Design/World Lore and Region Story Seeds.md",
     "07 - Development/iOS Pre-Testing Setup.md",
     "07 - Development/Known Issues.md",
     "07 - Development/Plan - Guild System End-to-End.md",
@@ -204,13 +212,6 @@
     "01 - Product/The Forging - Start Here (System Map).md",
     "01 - Product/The Forging - Lineage Engineering Specs.md",
     "01 - Product/The Forging - The Lineage Content Library.md",
-    "01 - Product/The Forging - The Conjunction Rune Library.md",
-    "01 - Product/Engagement and Uniqueness Ideas.md.tmp.54672.1777164918712",
-    "01 - Product/The Forging - Constellation Engineering Specs.md",
-    "01 - Product/Engagement Observability and Measurement.md",
-    "01 - Product/The Forging - The Class Name Library.md",
-    "01 - Product/Engagement Build Sequencing and Cost.md",
-    "01 - Product/The Forging - Constellation, Inscriptions, Resonance.md",
-    "01 - Product/Engagement Player Journey - Day-1 to Day-365.md"
+    "01 - Product/Engagement and Uniqueness Ideas.md.tmp.54672.1777164918712"
   ]
 }

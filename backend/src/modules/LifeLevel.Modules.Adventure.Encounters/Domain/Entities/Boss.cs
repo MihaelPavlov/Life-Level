@@ -26,6 +26,13 @@ public class Boss
     public Guid? WorldZoneId { get; set; }
 
     /// <summary>
+    /// Soft bridge to a WorldZone TrailEncounterTemplate when a path blocker
+    /// becomes fightable through the boss surface. Null for legacy and
+    /// world-zone bosses.
+    /// </summary>
+    public Guid? TrailEncounterTemplateId { get; set; }
+
+    /// <summary>
     /// When true, the BossService damage pipeline skips 7-day expiry checks.
     /// World-zone bosses never expire until defeated.
     /// </summary>

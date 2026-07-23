@@ -148,7 +148,8 @@ public record MerchantItemDto(
 
 public record BlockerEncounterDto(
     string Name, string BlockedZoneName, int MaxHp, int CurrentHp,
-    int PlayerDamageDone, int RetreatsInSeconds, IReadOnlyList<string> Rewards);
+    int PlayerDamageDone, int RetreatsInSeconds, IReadOnlyList<string> Rewards,
+    Guid? BossId = null);
 
 public record StoryEncounterDto(
     string NpcName, string NpcTitle, string Portrait, string Dialogue, int LoreXp);

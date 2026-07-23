@@ -5,8 +5,13 @@ import '../models/encounter_models.dart';
 
 class MerchantSheet extends StatefulWidget {
   final TrailEncounterNode encounter;
+  final Future<void> Function()? onNotInterested;
 
-  const MerchantSheet({super.key, required this.encounter});
+  const MerchantSheet({
+    super.key,
+    required this.encounter,
+    this.onNotInterested,
+  });
 
   @override
   State<MerchantSheet> createState() => _MerchantSheetState();
@@ -15,6 +20,7 @@ class MerchantSheet extends StatefulWidget {
 class _MerchantSheetState extends State<MerchantSheet>
     with SingleTickerProviderStateMixin {
   late final AnimationController _blink;
+  bool _dismissing = false;
 
   MerchantEncounterData get _data => widget.encounter.merchant!;
 
@@ -320,7 +326,7 @@ class _MerchantSheetState extends State<MerchantSheet>
 
   Widget _buildDismissButton() {
     return OutlinedButton(
-      onPressed: () => Navigator.of(context).pop(),
+      onPressed: _dismissing ? null : _handleNotInterested,
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textSecondary,
         side: const BorderSide(color: AppColors.border),
@@ -328,8 +334,24 @@ class _MerchantSheetState extends State<MerchantSheet>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
       ),
-      child: const Text('Not interested · Let merchant pass'),
+      child: Text(_dismissing ? 'Continuing...' : 'Not interested · Let merchant pass'),
     );
+  }
+
+  Future<void> _handleNotInterested() async {
+    final callback = widget.onNotInterested;
+    if (callback == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() => _dismissing = true);
+    try {
+      await callback();
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _dismissing = false);
+    }
   }
 
   Color _rarityColor(String rarity) {

@@ -113,6 +113,7 @@ Day-to-day dev workflow.
 - [[Every-Session Startup]] — the 7-step checklist
 - [[Strava Webhook Registration]] — re-subscribe after ngrok churn
 - [[Debug Endpoints]] — teleport, add-distance, force-defeat
+- [[Map Encounter Updates]] — current trail encounter placement, banking, blocker, merchant, and story behavior
 - [[Known Issues]] — MIUI, Garmin PKCE crypto, webhook churn
 - [[Internal Testing Findings]] — active Google Play internal testing bugs and retest queue
 - [[iOS Pre-Testing Setup]] — APNs key, HealthKit cap, Xcode capabilities (deferred until Mac access)

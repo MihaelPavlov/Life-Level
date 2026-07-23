@@ -373,6 +373,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("TimerDays")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("TrailEncounterTemplateId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("WorldZoneId")
                         .HasColumnType("uuid");
 
@@ -380,6 +383,8 @@ namespace LifeLevel.Api.Migrations
 
                     b.HasIndex("NodeId")
                         .IsUnique();
+
+                    b.HasIndex("TrailEncounterTemplateId");
 
                     b.HasIndex("WorldZoneId");
 
@@ -1970,6 +1975,9 @@ namespace LifeLevel.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("ActiveBlockerEncounterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActiveTrailEncounterId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CurrentEdgeId")

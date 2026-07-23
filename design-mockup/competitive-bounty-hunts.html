@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Bounty Hunts — Race-to-First Objectives (Competitive Mockup)</title>
+<style>
+  :root {
+    --bg: #040810; --bg-alt: #080e14; --surface: #161b22; --surface-2: #1e2632; --surface-3: #232b38;
+    --border: #30363d; --text: #e6edf3; --text-dim: #8b949e; --text-muted: #4d5b6b;
+    --blue: #4f9eff; --blue-deep: #3578cc; --purple: #a371f7; --orange: #f5a623;
+    --red: #f85149; --red-dark: #c0392b; --green: #3fb950; --gold: #f7c948;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 48px 24px 120px;
+    background:
+      radial-gradient(ellipse 700px 420px at 18% -8%, rgba(245,166,35,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 380px at 85% 15%, rgba(248,81,73,0.06) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text); font: 400 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh;
+  }
+  .masthead { max-width: 860px; margin: 0 auto 8px; text-align: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange); margin-bottom: 18px; }
+  .eyebrow::before, .eyebrow::after { content: ""; width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--orange)); }
+  .eyebrow::after { background: linear-gradient(90deg, var(--orange), transparent); }
+  h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; text-wrap: balance;
+    background: linear-gradient(100deg, #fff 10%, var(--orange) 55%, var(--red) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .lead { color: var(--text-dim); max-width: 680px; margin: 0 auto 6px; font-size: 15px; line-height: 1.7; }
+  .lead strong { color: var(--text); font-weight: 600; }
+  .thesis { max-width: 860px; margin: 40px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .thesis > div { background: var(--surface); padding: 20px 18px; }
+  .thesis .k { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .thesis .v { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .thesis .v b { color: var(--text); font-weight: 600; }
+  .topbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 960px; margin: 40px auto 0; }
+  .topbar a { padding: 9px 15px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; color: var(--text-dim); background: var(--surface); border: 1px solid var(--border); transition: all 0.15s; }
+  .topbar a:hover { color: var(--text); border-color: var(--text-dim); }
+  .topbar a.orange { color: var(--orange); border-color: rgba(245,166,35,0.35); }
+  .topbar a.red { color: var(--red); border-color: rgba(248,81,73,0.35); }
+  .topbar a.gold { color: var(--gold); border-color: rgba(247,201,72,0.35); }
+  .section-title { text-align: center; font-size: 23px; font-weight: 700; margin: 96px 0 6px; letter-spacing: -0.01em; scroll-margin-top: 40px; }
+  .section-title .tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 5px; margin-right: 10px; vertical-align: middle; position: relative; top: -2px; }
+  .section-title.orange .tag { color: var(--orange); background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3); }
+  .section-title.red .tag { color: var(--red); background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3); }
+  .section-title.gold .tag { color: var(--gold); background: rgba(247,201,72,0.12); border: 1px solid rgba(247,201,72,0.3); }
+  .section-sub { text-align: center; color: var(--text-dim); margin: 0 auto 40px; font-size: 13px; max-width: 620px; line-height: 1.6; }
+  .strip { display: flex; gap: 28px; padding: 8px 8px 32px; overflow-x: auto; max-width: 100%; margin: 0 auto; justify-content: center;
+    scroll-snap-type: x mandatory; scrollbar-color: var(--border) transparent; }
+  .strip .frame-wrap { scroll-snap-align: start; flex-shrink: 0; }
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; text-align: center; max-width: 390px; }
+  .frame-label .note { display: block; font-size: 10.5px; color: var(--text-muted); opacity: 0.9; margin-top: 5px; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.5; }
+  .phone { width: 390px; height: 844px; background: var(--bg); border-radius: 44px; border: 1px solid #1c2230;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #0a0d14; overflow: hidden; position: relative; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 30px; background: #000; border-radius: 0 0 18px 18px; z-index: 100; }
+  .status-bar { position: absolute; top: 12px; left: 24px; right: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: var(--text); z-index: 50; }
+  .screen { position: absolute; inset: 0; padding-top: 52px; display: flex; flex-direction: column; background: var(--bg-alt); }
+  .screen-head { padding: 4px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .screen-head h2 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .scroll { flex: 1; overflow-y: auto; padding: 0 20px 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card.elevated { background: var(--surface-2); }
+  .card.glow-orange { border-color: rgba(245,166,35,0.4); box-shadow: 0 0 0 1px rgba(245,166,35,0.15), 0 8px 24px -8px rgba(245,166,35,0.28); }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: 20px; }
+  .btn { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 11px; font-size: 13px; font-weight: 700; letter-spacing: 0.01em; border: none; cursor: pointer; }
+  .btn.primary-orange { background: linear-gradient(135deg, var(--orange), #c97c10); color: #221200; }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+  .countdown { display: flex; gap: 6px; }
+  .countdown .c { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; text-align: center; min-width: 40px; }
+  .countdown .c b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .countdown .c span { display: block; font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+  .leaderboard-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .leaderboard-row:last-child { border-bottom: none; }
+  .lb-rank { width: 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: center; }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-avatar { width: 32px; height: 32px; border-radius: 9px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .lb-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .lb-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+  .lb-val { margin-left: auto; text-align: right; font-size: 13px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .lb-val small { display: block; font-size: 9.5px; font-weight: 600; color: var(--text-muted); }
+  .lb-row-you { background: rgba(245,166,35,0.07); margin: 0 -8px; padding: 9px 8px; border-radius: 8px; border-bottom: none !important; }
+  .gap-track { height: 10px; border-radius: 6px; background: #0d1319; border: 1px solid var(--border); overflow: hidden; }
+  .gap-fill { height: 100%; border-radius: 6px 0 0 6px; }
+
+  /* Bounty board list */
+  .bounty-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; position: relative; overflow: hidden; }
+  .bounty-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--orange); }
+  .bounty-card.hot::before { background: var(--red); }
+  .bounty-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .bounty-title { font-size: 13.5px; font-weight: 700; }
+  .bounty-desc { font-size: 11.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px; }
+  .bounty-foot { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); }
+  .bounty-foot .racing { color: var(--red); font-weight: 700; }
+  .bounty-reward { font-size: 11px; font-weight: 700; color: var(--gold); }
+
+  .scr-claim { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 32px;
+    background: radial-gradient(ellipse 500px 380px at 50% 30%, rgba(245,166,35,0.24), transparent 60%), radial-gradient(ellipse 400px 300px at 50% 85%, rgba(248,81,73,0.12), transparent 60%), var(--bg); }
+  .burst { width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(245,166,35,0.34), transparent 70%); display: flex; align-items: center; justify-content: center; font-size: 60px; margin-bottom: 20px; }
+  .scr-claim h3 { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+  .scr-claim .sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; max-width: 280px; margin: 0 auto 26px; }
+  .scr-claim .stat-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 8px 16px; font-size: 12px; font-weight: 700; margin-bottom: 24px; }
+
+  .ticker { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 11.5px; color: var(--text-dim); display: flex; gap: 8px; align-items: flex-start; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="eyebrow">Competitive Engagement Concept #4</div>
+  <h1>Bounty Hunts — one winner, real urgency</h1>
+  <p class="lead">
+    Where Thrones and Trials are always-on, <strong>Bounties</strong> are events: the Realm posts an objective
+    — "first solo Frost Wyrm kill," "first to 100 km of Yoga this season" — everyone racing sees everyone
+    else's progress, and only one hunter claims it. Losing racers still bank a consolation reward.
+  </p>
+</div>
+
+<div class="thesis">
+  <div>
+    <div class="k">A different feeling on purpose</div>
+    <div class="v">Thrones (persistent) and Trials (solo, evergreen) are low-pressure. Bounties are <b>scarce and time-boxed</b> — the one format designed to create FOMO and urgency, deliberately, in small doses.</div>
+  </div>
+  <div>
+    <div class="k">Reuses what's built</div>
+    <div class="v">A bounty is an <b>Achievement condition</b> (ConditionType/TargetValue) with a countdown and a single-claim rule, spotlighting a <b>Boss</b>, <b>zone</b>, or <b>stat</b> that's otherwise idle content.</div>
+  </div>
+  <div>
+    <div class="k">Free marketing content, generated not authored</div>
+    <div class="v">Every claim is a ready-made "Boss-fight highlight reel" moment from the Marketing doc's content pillars — the Realm Feed is the raw footage, with zero extra production cost.</div>
+  </div>
+</div>
+
+<nav class="topbar">
+  <a class="orange" href="#board">① Bounty Board</a>
+  <a class="red" href="#detail">② Bounty Detail</a>
+  <a class="gold" href="#claim">③ Claim Moment</a>
+  <a class="orange" href="#feed">④ Realm Feed</a>
+</nav>
+
+<h2 class="section-title orange" id="board"><span class="tag">Board</span>A handful of objectives, never a wall of quests</h2>
+<p class="section-sub">3–5 active bounties at a time, deliberately scarce so each one still feels like an event. A red edge and "racing" count signal which ones are close to being claimed.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Bounty Board<span class="note">Bounties spotlight existing systems (Boss, stat, zone) on rotation instead of requiring new content each time</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head"><h2>📜 Bounty Board</h2><div class="icon-btn">🏰</div></div>
+        <div class="scroll">
+          <div class="bounty-card hot">
+            <div class="bounty-head"><div class="bounty-title">🐺 First Solo Frost Wyrm Kill</div><span class="pill" style="color:var(--red); background:rgba(248,81,73,0.14);">3 racing</span></div>
+            <div class="bounty-desc">Be the first player to defeat the Frost Wyrm mini-boss solo, no guild assist.</div>
+            <div class="bounty-foot"><span>Closes in <b style="color:var(--text-dim);">1d 4h</b></span><span class="bounty-reward">🏆 Legendary title + 2,000 XP</span></div>
+          </div>
+          <div class="bounty-card">
+            <div class="bounty-head"><div class="bounty-title">🧘 100 km of Yoga — Season Total</div><span class="pill" style="color:var(--orange); background:rgba(245,166,35,0.14);">12 racing</span></div>
+            <div class="bounty-desc">First player to log a cumulative 100 km across Yoga sessions this season.</div>
+            <div class="bounty-foot"><span>Closes in <b style="color:var(--text-dim);">9d 2h</b></span><span class="bounty-reward">🏆 Rare mount + 1,200 XP</span></div>
+          </div>
+          <div class="bounty-card">
+            <div class="bounty-head"><div class="bounty-title">🏔 First to Level 20 STR</div><span class="pill" style="color:var(--orange); background:rgba(245,166,35,0.14);">7 racing</span></div>
+            <div class="bounty-desc">Be the first character to reach Strength stat level 20.</div>
+            <div class="bounty-foot"><span>Closes in <b style="color:var(--text-dim);">14d</b></span><span class="bounty-reward">🏆 Epic gauntlets + 1,500 XP</span></div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">Miss the claim? Everyone who logged progress still banks a <b style="color:var(--text);">consolation XP payout</b> scaled to their share of the effort — no wasted training.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title red" id="detail"><span class="tag">Detail</span>You can see exactly who you're racing</h2>
+<p class="section-sub">Transparency drives urgency: the live progress list shows the top hunters closing in, so the leader knows they're being chased and everyone else knows exactly how much ground is left.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Bounty Detail — Frost Wyrm<span class="note">Your own progress bar always pinned even if you're outside the visible top ranks</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>🐺 Frost Wyrm</h2>
+          <div class="countdown"><div class="c"><b>1</b><span>Day</span></div><div class="c"><b>04</b><span>Hrs</span></div></div>
+        </div>
+        <div class="scroll">
+          <div class="card elevated glow-orange">
+            <div style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-bottom:10px;">First solo hunter to bring the Frost Wyrm's HP to zero claims the bounty outright — no shared credit, no split reward.</div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:6px;"><span>Your damage: <b style="color:var(--text);">61%</b></span><span>Leader: <b style="color:var(--red);">88%</b></span></div>
+            <div class="gap-track"><div class="gap-fill" style="width:61%; background:linear-gradient(90deg, #6a4a12, var(--orange));"></div></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Hunters closing in</div>
+            <div class="leaderboard-row"><div class="lb-rank top1">1</div><div class="lb-avatar">🧌</div><div><div class="lb-name">Vex</div><div class="lb-sub">solo, no assist</div></div><div class="lb-val">88%</div></div>
+            <div class="leaderboard-row"><div class="lb-rank">2</div><div class="lb-avatar">🧝</div><div><div class="lb-name">Kestra</div><div class="lb-sub">solo, no assist</div></div><div class="lb-val">73%</div></div>
+            <div class="leaderboard-row lb-row-you"><div class="lb-rank">3</div><div class="lb-avatar">🧑</div><div><div class="lb-name">You</div><div class="lb-sub">solo, no assist</div></div><div class="lb-val">61%</div></div>
+          </div>
+
+          <button class="btn primary-orange">Log Activity to Deal Damage</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title gold" id="claim"><span class="tag">Moment</span>Claiming feels different from winning a ladder</h2>
+<p class="section-sub">One winner, full-screen, world-announced — the scarcity is the reward.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Bounty Claimed — winner's view<span class="note">Same broadcast-overlay mechanism as the other overlays, but this one also posts to the Realm Feed automatically</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="scr-claim">
+        <div class="burst">🏆</div>
+        <div class="stat-pill">🐺 Frost Wyrm Bounty</div>
+        <h3>Bounty Claimed!</h3>
+        <p class="sub">You struck the killing blow, solo, with 6 hours left on the clock. Vex and 1 other hunter earned consolation XP for their effort.</p>
+        <button class="btn primary-orange" style="max-width:260px;">Share the Kill</button>
+        <div style="margin-top:12px;"><button class="btn ghost" style="max-width:260px;">Continue</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title orange" id="feed"><span class="tag">Feed</span>The Realm Feed — news, not a notification pile</h2>
+<p class="section-sub">A lightweight, read-only ticker of every claim across the game — social proof for solo players deciding whether the next bounty is worth chasing, and raw material for the "Guild narratives" marketing pillar.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Realm Feed<span class="note">Reachable from the Bounty Board header icon — deliberately not a push-notification firehose</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head"><h2>🏰 Realm Feed</h2><div class="icon-btn">📜</div></div>
+        <div class="scroll">
+          <div class="ticker"><span>🏆</span><div><b style="color:var(--text);">Vex</b> claimed <b style="color:var(--orange);">First to Level 20 STR</b> — 2h ago</div></div>
+          <div class="ticker"><span>👑</span><div><b style="color:var(--text);">Dax</b> dethroned Kestra on the <b style="color:var(--green);">Throne of Agility</b> — 5h ago</div></div>
+          <div class="ticker"><span>🏁</span><div><b style="color:var(--text);">Sana</b> set a new Ring Champion time on <b style="color:var(--blue);">Ember Cross Corridor</b> — 8h ago</div></div>
+          <div class="ticker"><span>🏆</span><div><b style="color:var(--text);">Iron Wolves</b> guild claimed <b style="color:var(--orange);">100 km of Yoga — Season Total</b> collectively — 1d ago</div></div>
+          <div class="card">
+            <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">The feed is read-only and low-frequency by design — a handful of claims a day, not a stream to doomscroll.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

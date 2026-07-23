@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Ghost Trials — Time-Trial Racing (Competitive Mockup)</title>
+<style>
+  :root {
+    --bg: #040810; --bg-alt: #080e14; --surface: #161b22; --surface-2: #1e2632; --surface-3: #232b38;
+    --border: #30363d; --text: #e6edf3; --text-dim: #8b949e; --text-muted: #4d5b6b;
+    --blue: #4f9eff; --blue-deep: #3578cc; --purple: #a371f7; --orange: #f5a623;
+    --red: #f85149; --red-dark: #c0392b; --green: #3fb950; --gold: #f7c948;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 48px 24px 120px;
+    background:
+      radial-gradient(ellipse 700px 420px at 18% -8%, rgba(79,158,255,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 380px at 85% 15%, rgba(63,185,80,0.05) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text); font: 400 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh;
+  }
+  .masthead { max-width: 860px; margin: 0 auto 8px; text-align: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--blue); margin-bottom: 18px; }
+  .eyebrow::before, .eyebrow::after { content: ""; width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--blue)); }
+  .eyebrow::after { background: linear-gradient(90deg, var(--blue), transparent); }
+  h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; text-wrap: balance;
+    background: linear-gradient(100deg, #fff 10%, var(--blue) 55%, var(--green) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .lead { color: var(--text-dim); max-width: 680px; margin: 0 auto 6px; font-size: 15px; line-height: 1.7; }
+  .lead strong { color: var(--text); font-weight: 600; }
+  .thesis { max-width: 860px; margin: 40px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .thesis > div { background: var(--surface); padding: 20px 18px; }
+  .thesis .k { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .thesis .v { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .thesis .v b { color: var(--text); font-weight: 600; }
+  .topbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 960px; margin: 40px auto 0; }
+  .topbar a { padding: 9px 15px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; color: var(--text-dim); background: var(--surface); border: 1px solid var(--border); transition: all 0.15s; }
+  .topbar a:hover { color: var(--text); border-color: var(--text-dim); }
+  .topbar a.blue { color: var(--blue); border-color: rgba(79,158,255,0.35); }
+  .topbar a.green { color: var(--green); border-color: rgba(63,185,80,0.35); }
+  .topbar a.gold { color: var(--gold); border-color: rgba(247,201,72,0.35); }
+  .section-title { text-align: center; font-size: 23px; font-weight: 700; margin: 96px 0 6px; letter-spacing: -0.01em; scroll-margin-top: 40px; }
+  .section-title .tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 5px; margin-right: 10px; vertical-align: middle; position: relative; top: -2px; }
+  .section-title.blue .tag { color: var(--blue); background: rgba(79,158,255,0.12); border: 1px solid rgba(79,158,255,0.3); }
+  .section-title.green .tag { color: var(--green); background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); }
+  .section-title.gold .tag { color: var(--gold); background: rgba(247,201,72,0.12); border: 1px solid rgba(247,201,72,0.3); }
+  .section-sub { text-align: center; color: var(--text-dim); margin: 0 auto 40px; font-size: 13px; max-width: 620px; line-height: 1.6; }
+  .strip { display: flex; gap: 28px; padding: 8px 8px 32px; overflow-x: auto; max-width: 100%; margin: 0 auto; justify-content: center;
+    scroll-snap-type: x mandatory; scrollbar-color: var(--border) transparent; }
+  .strip .frame-wrap { scroll-snap-align: start; flex-shrink: 0; }
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; text-align: center; max-width: 390px; }
+  .frame-label .note { display: block; font-size: 10.5px; color: var(--text-muted); opacity: 0.9; margin-top: 5px; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.5; }
+  .phone { width: 390px; height: 844px; background: var(--bg); border-radius: 44px; border: 1px solid #1c2230;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #0a0d14; overflow: hidden; position: relative; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 30px; background: #000; border-radius: 0 0 18px 18px; z-index: 100; }
+  .status-bar { position: absolute; top: 12px; left: 24px; right: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: var(--text); z-index: 50; }
+  .screen { position: absolute; inset: 0; padding-top: 52px; display: flex; flex-direction: column; background: var(--bg-alt); }
+  .screen-head { padding: 4px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .screen-head h2 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .scroll { flex: 1; overflow-y: auto; padding: 0 20px 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card.elevated { background: var(--surface-2); }
+  .card.glow-blue { border-color: rgba(79,158,255,0.4); box-shadow: 0 0 0 1px rgba(79,158,255,0.15), 0 8px 24px -8px rgba(79,158,255,0.28); }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: 20px; }
+  .btn { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 11px; font-size: 13px; font-weight: 700; letter-spacing: 0.01em; border: none; cursor: pointer; }
+  .btn.primary-blue { background: linear-gradient(135deg, var(--blue), var(--blue-deep)); color: #fff; }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+  .leaderboard-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .leaderboard-row:last-child { border-bottom: none; }
+  .lb-rank { width: 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: center; }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-avatar { width: 32px; height: 32px; border-radius: 9px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .lb-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .lb-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+  .lb-val { margin-left: auto; text-align: right; font-size: 13px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .lb-val small { display: block; font-size: 9.5px; font-weight: 600; color: var(--text-muted); }
+  .lb-row-you { background: rgba(79,158,255,0.07); margin: 0 -8px; padding: 9px 8px; border-radius: 8px; border-bottom: none !important; }
+
+  /* Trial select list */
+  .trial-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+  .trial-icon { width: 42px; height: 42px; border-radius: 11px; background: rgba(79,158,255,0.14); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+  .trial-body { flex: 1; min-width: 0; }
+  .trial-name { font-size: 13.5px; font-weight: 700; }
+  .trial-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+  .trial-time { text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .trial-time .lbl { display: block; font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+
+  /* Race lane visualization */
+  .race-lane { position: relative; height: 78px; background: linear-gradient(180deg, #0d1319, #0a0f16); border: 1px solid var(--border); border-radius: 12px; margin: 6px 0 10px; overflow: hidden; }
+  .lane-track { position: absolute; left: 14px; right: 14px; top: 50%; height: 2px; background: repeating-linear-gradient(90deg, var(--border) 0 8px, transparent 8px 16px); }
+  .lane-cp { position: absolute; top: 8px; bottom: 8px; width: 1px; background: rgba(255,255,255,0.12); }
+  .lane-cp .cp-lbl { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--text-muted); white-space: nowrap; }
+  .racer { position: absolute; top: 50%; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; transform: translate(-50%, -50%); z-index: 5; }
+  .racer.you { background: var(--blue); box-shadow: 0 0 0 3px rgba(79,158,255,0.25), 0 4px 12px -2px rgba(79,158,255,0.6); }
+  .racer.ghostmark { background: rgba(255,255,255,0.1); border: 1.5px dashed rgba(255,255,255,0.4); }
+  .racer .delta { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 700; white-space: nowrap; }
+
+  .split-row { display: flex; align-items: center; font-size: 11.5px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .split-row:last-child { border-bottom: none; }
+  .split-cp { flex: 1; color: var(--text-dim); }
+  .split-you { width: 60px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .split-delta { width: 54px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .split-delta.ahead { color: var(--green); }
+  .split-delta.behind { color: var(--red); }
+
+  .scr-result { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 32px;
+    background: radial-gradient(ellipse 500px 380px at 50% 30%, rgba(63,185,80,0.2), transparent 60%), radial-gradient(ellipse 400px 300px at 50% 85%, rgba(79,158,255,0.12), transparent 60%), var(--bg); }
+  .burst { width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, rgba(63,185,80,0.32), transparent 70%); display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 18px; }
+  .scr-result h3 { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+  .scr-result .time { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--green); margin-bottom: 4px; }
+  .scr-result .sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; max-width: 280px; margin: 0 auto 26px; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="eyebrow">Competitive Engagement Concept #3</div>
+  <h1>Ghost Trials — race your own splits, not just your totals</h1>
+  <p class="lead">
+    A third axis: <strong>pace</strong>, not volume or mastery. Every zone path and dungeon corridor
+    already has a distance — Ghost Trials turns your logged pace on it into a replay you can race against
+    your own PB, a friend, or the fastest player in the game. No new art, no new zones.
+  </p>
+</div>
+
+<div class="thesis">
+  <div>
+    <div class="k">Fixes the #1 risk in the room</div>
+    <div class="v">Marketing's audit names <b>content production cost</b> as the category's actual killer — players outpace what a small team can author. Trials need <b>zero new content</b>: every existing path is already a course.</div>
+  </div>
+  <div>
+    <div class="k">Reuses what's built</div>
+    <div class="v">A trial is just an <b>Activity</b>'s duration/distance re-projected onto a <b>MapEdge</b>/dungeon corridor's checkpoints. No new backend math — a replay layer over data already logged.</div>
+  </div>
+  <div>
+    <div class="k">A different player, not the same one</div>
+    <div class="v">Thrones and Sieges reward volume. Trials reward <b>pace</b> — pulls in Strava's plateaued runners who already obsess over splits, not just distance.</div>
+  </div>
+</div>
+
+<nav class="topbar">
+  <a class="blue" href="#select">① Trial Select</a>
+  <a class="blue" href="#race">② Live Race</a>
+  <a class="green" href="#result">③ Result</a>
+  <a class="gold" href="#board">④ Corridor Board</a>
+</nav>
+
+<h2 class="section-title blue" id="select"><span class="tag">Select</span>Every path you've already walked is a course</h2>
+<p class="section-sub">A weekly "Torch" spotlights one corridor game-wide to keep attention rotating without shipping new zones — the rest stay open for anyone chasing their own PB anytime.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Trial Select<span class="note">Torch banner reuses the XP Storm push-notification pattern — a time-boxed spotlight, not new content</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head"><h2>👻 Ghost Trials</h2><div class="icon-btn">🔍</div></div>
+        <div class="scroll">
+          <div class="card elevated glow-blue">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <span class="pill" style="color:var(--gold); background:rgba(247,201,72,0.14);">🔥 Weekly Torch</span>
+              <span style="font-size:11px; color:var(--text-dim);">4d left</span>
+            </div>
+            <div style="font-size:14px; font-weight:700;">Ember Cross Corridor</div>
+            <div style="font-size:11.5px; color:var(--text-dim); margin-top:2px;">Ring Champion: <b style="color:var(--text);">Sana — 18:42</b> · Reward: title "Swiftblade of the Ember Cross"</div>
+          </div>
+
+          <div class="trial-row">
+            <div class="trial-icon">🌲</div>
+            <div class="trial-body"><div class="trial-name">Forest of Endurance — Lower Trail</div><div class="trial-sub">2.1 km · your PB set 12 days ago</div></div>
+            <div class="trial-time">21:04<span class="lbl">your best</span></div>
+          </div>
+          <div class="trial-row">
+            <div class="trial-icon">⛰️</div>
+            <div class="trial-body"><div class="trial-name">Mountains of Strength — Switchbacks</div><div class="trial-sub">3.4 km · no PB yet</div></div>
+            <div class="trial-time">—<span class="lbl">not run</span></div>
+          </div>
+          <div class="trial-row">
+            <div class="trial-icon">🏰</div>
+            <div class="trial-body"><div class="trial-name">Ember Cross Corridor</div><div class="trial-sub">1.8 km · torch active</div></div>
+            <div class="trial-time">19:15<span class="lbl">your best</span></div>
+          </div>
+          <div class="trial-row">
+            <div class="trial-icon">🌊</div>
+            <div class="trial-body"><div class="trial-name">Ocean of Balance — Tideline</div><div class="trial-sub">2.6 km · your PB set 3 days ago</div></div>
+            <div class="trial-time">24:51<span class="lbl">your best</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title blue" id="race"><span class="tag">Live</span>Watching yourself close the gap, checkpoint by checkpoint</h2>
+<p class="section-sub">Splits post-hoc from a synced activity, or live if the app is open during the workout. The ghost is translucent by design — a pace marker, not an opponent avatar to fear.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Live Race — Ember Cross Corridor vs your PB<span class="note">Blue dot = you, dashed outline = ghost. Currently 4s ahead at checkpoint 3 of 5</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head"><h2>Racing: PB Ghost</h2><div class="icon-btn">⏸</div></div>
+        <div class="scroll">
+          <div class="card elevated glow-blue" style="text-align:center;">
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:2px;">CURRENT SPLIT</div>
+            <div style="font-size:30px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--green);">−0:04</div>
+            <div style="font-size:11px; color:var(--text-dim);">ahead of your PB pace</div>
+          </div>
+
+          <div class="race-lane">
+            <div class="lane-track"></div>
+            <div class="lane-cp" style="left:20%;"><span class="cp-lbl">CP1</span></div>
+            <div class="lane-cp" style="left:40%;"><span class="cp-lbl">CP2</span></div>
+            <div class="lane-cp" style="left:60%;"><span class="cp-lbl">CP3</span></div>
+            <div class="lane-cp" style="left:80%;"><span class="cp-lbl">CP4</span></div>
+            <div class="racer ghostmark" style="left:58%;">👻</div>
+            <div class="racer you" style="left:63%;"><div class="delta" style="color:var(--green);">−0:04</div>🧑</div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Splits so far</div>
+            <div class="split-row"><div class="split-cp">Checkpoint 1</div><div class="split-you">4:02</div><div class="split-delta ahead">−0:02</div></div>
+            <div class="split-row"><div class="split-cp">Checkpoint 2</div><div class="split-you">8:47</div><div class="split-delta behind">+0:01</div></div>
+            <div class="split-row"><div class="split-cp">Checkpoint 3</div><div class="split-you">13:10</div><div class="split-delta ahead">−0:04</div></div>
+          </div>
+
+          <button class="btn primary-blue">Sync Latest Activity</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title green" id="result"><span class="tag">Result</span>A new PB is its own celebration</h2>
+<p class="section-sub">No opponent to feel bad about beating — the result screen frames every trial against yourself first, the Ring Champion second.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Trial Result — new Personal Best<span class="note">Same broadcast-overlay pattern as LevelUpOverlay, framed around self-improvement rather than defeating someone</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="scr-result">
+        <div class="burst">🏁</div>
+        <h3>New Personal Best!</h3>
+        <div class="time">19:11</div>
+        <p class="sub">4 seconds faster than your last PB on the Ember Cross Corridor. Only 31 seconds off Sana's Ring Champion time.</p>
+        <button class="btn primary-blue" style="max-width:260px;">Challenge the Ring Champion</button>
+        <div style="margin-top:12px;"><button class="btn ghost" style="max-width:260px;">View Corridor Board</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title gold" id="board"><span class="tag">Board</span>Fastest Ascent — the segment leaderboard, in-world</h2>
+<p class="section-sub">Strava-segment-familiar, but skinned as a torch-lit corridor board with a title reward instead of a KOM jersey — keeps the "gamified fitness" framing the Marketing doc explicitly warns against out of the copy.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Corridor Board — Ember Cross<span class="note">Friends toggle keeps this reachable the same way the Thrones concept does</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head"><h2>🏰 Ember Cross</h2><div class="icon-btn">👥</div></div>
+        <div class="scroll">
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Fastest Ascent — global</div>
+            <div class="leaderboard-row"><div class="lb-rank top1">👑</div><div class="lb-avatar">🧙</div><div><div class="lb-name">Sana</div><div class="lb-sub">Ring Champion</div></div><div class="lb-val">18:42</div></div>
+            <div class="leaderboard-row"><div class="lb-rank">2</div><div class="lb-avatar">🧔</div><div><div class="lb-name">Bram</div><div class="lb-sub">set 6 days ago</div></div><div class="lb-val">18:58</div></div>
+            <div class="leaderboard-row lb-row-you"><div class="lb-rank">14</div><div class="lb-avatar">🧑</div><div><div class="lb-name">You</div><div class="lb-sub">new PB today</div></div><div class="lb-val">19:11</div></div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">Hold the fastest time on a corridor when its Torch expires to earn a permanent line in that corridor's lore page — cosmetic only, no gear advantage.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

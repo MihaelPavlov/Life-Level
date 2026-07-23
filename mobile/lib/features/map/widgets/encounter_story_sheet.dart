@@ -2,12 +2,25 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/encounter_models.dart';
 
-class StorySheet extends StatelessWidget {
+class StorySheet extends StatefulWidget {
   final TrailEncounterNode encounter;
+  final Future<void> Function()? onContinue;
 
-  const StorySheet({super.key, required this.encounter});
+  const StorySheet({
+    super.key,
+    required this.encounter,
+    this.onContinue,
+  });
 
-  StoryEncounterData get _data => encounter.story!;
+  @override
+  State<StorySheet> createState() => _StorySheetState();
+}
+
+class _StorySheetState extends State<StorySheet> {
+  bool _continuing = false;
+
+  TrailEncounterNode get encounter => widget.encounter;
+  StoryEncounterData get _data => widget.encounter.story!;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +70,7 @@ class StorySheet extends StatelessWidget {
                     ..._data.choices.map((c) => _buildChoiceRow(context, c)),
                     const SizedBox(height: 4),
                     OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _continuing ? null : () => _continue(context),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textSecondary,
                         side: const BorderSide(color: AppColors.border),
@@ -67,7 +80,9 @@ class StorySheet extends StatelessWidget {
                         textStyle: const TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w800),
                       ),
-                      child: const Text('Pass by in silence · Dismiss'),
+                      child: Text(_continuing
+                          ? 'Continuing...'
+                          : 'Pass by in silence · Dismiss'),
                     ),
                   ],
                 ),
@@ -170,14 +185,16 @@ class StorySheet extends StatelessWidget {
 
   Widget _buildChoiceRow(BuildContext context, StoryChoice choice) {
     return GestureDetector(
-      onTap: () {
+      onTap: _continuing
+          ? null
+          : () async {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('You chose: ${choice.rewardLabel}'),
             duration: const Duration(seconds: 2),
           ),
         );
-        Navigator.of(context).pop();
+        await _continue(context);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 7),
@@ -225,6 +242,22 @@ class StorySheet extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _continue(BuildContext context) async {
+    final callback = widget.onContinue;
+    if (callback == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() => _continuing = true);
+    try {
+      await callback();
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _continuing = false);
+    }
   }
 }
 

@@ -1,4 +1,6 @@
+using System.Text.Json;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Character.Domain.Entities;
 using LifeLevel.Modules.Items.Domain.Entities;
 using LifeLevel.Modules.Items.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -82,5 +84,75 @@ public class ItemSeeder(AppDbContext db)
 
         db.ItemDropRules.AddRange(validRules);
         await db.SaveChangesAsync();
+    }
+
+    public async Task BackfillLevelReachedRewardsAsync(CancellationToken ct = default)
+    {
+        var levelRules = await db.ItemDropRules
+            .Where(r => r.TriggerType == AcquisitionTrigger.LevelReached
+                        && r.IsEnabled
+                        && r.DropChancePct >= 100)
+            .ToListAsync(ct);
+
+        var parsedRules = levelRules
+            .Select(rule => new
+            {
+                Rule = rule,
+                Level = TryReadRequiredLevel(rule.TriggerParameters)
+            })
+            .Where(x => x.Level.HasValue)
+            .ToList();
+
+        if (parsedRules.Count == 0) return;
+
+        var characters = await db.Set<Character>()
+            .Select(c => new { c.Id, c.Level, c.MaxInventorySlots })
+            .ToListAsync(ct);
+
+        foreach (var character in characters)
+        {
+            var existingItemIds = await db.CharacterItems
+                .Where(ci => ci.CharacterId == character.Id)
+                .Select(ci => ci.ItemId)
+                .ToHashSetAsync(ct);
+
+            var currentCount = existingItemIds.Count;
+            foreach (var parsed in parsedRules
+                         .Where(x => x.Level!.Value <= character.Level)
+                         .OrderBy(x => x.Level!.Value))
+            {
+                if (existingItemIds.Contains(parsed.Rule.ItemId)) continue;
+                if (currentCount >= character.MaxInventorySlots) break;
+
+                db.CharacterItems.Add(new CharacterItem
+                {
+                    Id = Guid.NewGuid(),
+                    CharacterId = character.Id,
+                    ItemId = parsed.Rule.ItemId,
+                    IsEquipped = false,
+                    AcquiredAt = DateTime.UtcNow
+                });
+                existingItemIds.Add(parsed.Rule.ItemId);
+                currentCount++;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static int? TryReadRequiredLevel(string triggerParameters)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(triggerParameters);
+            return doc.RootElement.TryGetProperty("level", out var level)
+                   && level.TryGetInt32(out var requiredLevel)
+                ? requiredLevel
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 }

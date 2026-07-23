@@ -25,15 +25,19 @@ public class ActivityBossDamageAdapter(
         int durationMinutes,
         double distanceKm,
         int calories,
+        DateTime activityLoggedAt,
         CancellationToken ct = default)
     {
         var log = logger ?? NullLogger<ActivityBossDamageAdapter>.Instance;
 
-        var activeBossIds = await db.Set<UserBossState>()
-            .Where(s => s.UserId == userId && !s.IsDefeated && !s.IsExpired)
-            .Select(s => s.BossId)
+        var activeStates = await db.Set<UserBossState>()
+            .Where(s => s.UserId == userId
+                        && !s.IsDefeated
+                        && !s.IsExpired
+                        && (!s.StartedAt.HasValue || s.StartedAt.Value <= activityLoggedAt))
             .ToListAsync(ct);
 
+        var activeBossIds = activeStates.Select(s => s.BossId).ToList();
         if (activeBossIds.Count == 0) return Array.Empty<BossDefeatedInfo>();
 
         var damage = BossService.CalculateDamageFromActivity(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/boss_list_item.dart';
+import 'boss_icon.dart';
 import 'boss_hp_bar.dart';
 
 class BossExpiredCard extends StatelessWidget {
@@ -38,10 +39,11 @@ class BossExpiredCard extends StatelessWidget {
                         ),
                       ),
                       alignment: Alignment.center,
-                      child: Opacity(
+                      child: BossIcon(
+                        icon: boss.icon,
+                        size: 48,
+                        emojiSize: 26,
                         opacity: 0.5,
-                        child: Text(boss.icon,
-                            style: const TextStyle(fontSize: 26)),
                       ),
                     ),
                     Positioned(

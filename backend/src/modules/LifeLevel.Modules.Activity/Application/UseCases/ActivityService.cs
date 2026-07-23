@@ -127,7 +127,8 @@ public class ActivityService(
                     request.Type.ToString(),
                     request.DurationMinutes,
                     request.DistanceKm ?? 0,
-                    request.Calories ?? 0);
+                    request.Calories ?? 0,
+                    activity.LoggedAt);
             }
             catch (Exception ex)
             {
@@ -228,8 +229,13 @@ public class ActivityService(
         await db.SaveChangesAsync(ct);
 
         await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta));
-        await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
+        var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
             $"{type} workout · {durationMinutes} min", xp);
+        if (xpResult.LeveledUp)
+        {
+            await levelUpItemGrant.EvaluateAndGrantAsync(
+                userId, xpResult.PreviousLevel, xpResult.NewLevel, ct);
+        }
 
         if (distanceKm > 0)
         {

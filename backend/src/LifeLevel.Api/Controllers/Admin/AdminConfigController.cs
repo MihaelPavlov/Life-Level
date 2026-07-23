@@ -13,3 +13,4 @@ public class AdminConfigController(IConfiguration config) : ControllerBase
         password = config["Admin:Password"] ?? "1qaz!QAZ",
     });
 }
+  

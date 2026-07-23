@@ -20,7 +20,8 @@ public class BossService(
     ICharacterXpPort characterXp,
     IEventPublisher events,
     IServiceProvider services,
-    IWorldZoneCompletionPort? worldZoneCompletion = null)
+    IWorldZoneCompletionPort? worldZoneCompletion = null,
+    IWorldBlockerCompletionPort? worldBlockerCompletion = null)
 {
     public async Task<List<BossListItemDto>> GetAllBossesForUserAsync(Guid userId)
     {
@@ -37,6 +38,26 @@ public class BossService(
             .Where(s => s.UserId == userId)
             .ToDictionaryAsync(s => s.BossId);
 
+        bosses = bosses
+            .Where(b => !b.TrailEncounterTemplateId.HasValue || userStates.ContainsKey(b.Id))
+            .ToList();
+
+        var blockerTimerChanged = false;
+        foreach (var boss in bosses.Where(b => b.TrailEncounterTemplateId.HasValue))
+        {
+            if (boss.TimerDays <= 0)
+            {
+                boss.TimerDays = 1;
+                blockerTimerChanged = true;
+            }
+            if (boss.SuppressExpiry)
+            {
+                boss.SuppressExpiry = false;
+                blockerTimerChanged = true;
+            }
+        }
+        if (blockerTimerChanged) await db.SaveChangesAsync();
+
         var progress = await db.Set<UserMapProgress>()
             .FirstOrDefaultAsync(p => p.UserId == userId);
         var currentNodeId = progress?.CurrentNodeId;
@@ -51,6 +72,7 @@ public class BossService(
             // the bridge already enforces by only spawning the Boss row on
             // arrival. Once spawned, the user is always eligible to fight.
             var canFight = boss.WorldZoneId.HasValue
+                || boss.TrailEncounterTemplateId.HasValue
                 || boss.IsMini
                 || (boss.NodeId.HasValue && currentNodeId == boss.NodeId.Value);
 
@@ -67,6 +89,7 @@ public class BossService(
                 NodeName = node?.Name ?? string.Empty,
                 LevelRequirement = node?.LevelRequirement ?? 0,
                 WorldZoneId = boss.WorldZoneId,
+                TrailEncounterTemplateId = boss.TrailEncounterTemplateId,
                 CanFight = canFight,
                 Activated = state != null,
                 HpDealt = state?.HpDealt ?? 0,
@@ -93,7 +116,7 @@ public class BossService(
         // World-zone bosses don't require local-map progress — the world-zone
         // bridge is the gate. Skip the node-position check entirely.
         Guid? userMapProgressId = null;
-        if (!boss.WorldZoneId.HasValue)
+        if (!boss.WorldZoneId.HasValue && !boss.TrailEncounterTemplateId.HasValue)
         {
             var progress = await db.Set<UserMapProgress>()
                 .FirstOrDefaultAsync(p => p.UserId == userId)
@@ -140,7 +163,7 @@ public class BossService(
             ?? throw new InvalidOperationException("Boss not found.");
 
         // World-zone bosses: skip the local-map position check.
-        if (!boss.WorldZoneId.HasValue)
+        if (!boss.WorldZoneId.HasValue && !boss.TrailEncounterTemplateId.HasValue)
         {
             var progress = await db.Set<UserMapProgress>()
                 .FirstOrDefaultAsync(p => p.UserId == userId)
@@ -168,6 +191,10 @@ public class BossService(
         {
             state.IsExpired = true;
             await db.SaveChangesAsync();
+            if (boss.TrailEncounterTemplateId.HasValue && worldBlockerCompletion != null)
+            {
+                await worldBlockerCompletion.ClearBlockerAsync(userId, boss.TrailEncounterTemplateId.Value);
+            }
             throw new InvalidOperationException($"Fight timer has expired ({boss.TimerDays} days elapsed).");
         }
 
@@ -196,6 +223,10 @@ public class BossService(
             if (boss.WorldZoneId.HasValue && worldZoneCompletion != null)
             {
                 await worldZoneCompletion.CompleteBossZoneAsync(userId, boss.WorldZoneId.Value);
+            }
+            if (boss.TrailEncounterTemplateId.HasValue && worldBlockerCompletion != null)
+            {
+                await worldBlockerCompletion.ClearBlockerAsync(userId, boss.TrailEncounterTemplateId.Value);
             }
         }
 
@@ -308,6 +339,10 @@ public class BossService(
             {
                 await worldZoneCompletion.CompleteBossZoneAsync(userId, boss.WorldZoneId.Value);
             }
+            if (boss.TrailEncounterTemplateId.HasValue && worldBlockerCompletion != null)
+            {
+                await worldBlockerCompletion.ClearBlockerAsync(userId, boss.TrailEncounterTemplateId.Value);
+            }
         }
     }
 
@@ -336,6 +371,10 @@ public class BossService(
             if (boss.WorldZoneId.HasValue && worldZoneCompletion != null)
             {
                 await worldZoneCompletion.CompleteBossZoneAsync(userId, boss.WorldZoneId.Value);
+            }
+            if (boss.TrailEncounterTemplateId.HasValue && worldBlockerCompletion != null)
+            {
+                await worldBlockerCompletion.ClearBlockerAsync(userId, boss.TrailEncounterTemplateId.Value);
             }
         }
     }
@@ -373,7 +412,7 @@ public class BossService(
         // World-zone bosses don't need a local-map progress row. Legacy
         // bosses still do (their list-view logic uses it).
         Guid? userMapProgressId = null;
-        if (!boss.WorldZoneId.HasValue)
+        if (!boss.WorldZoneId.HasValue && !boss.TrailEncounterTemplateId.HasValue)
         {
             var progress = await db.Set<UserMapProgress>()
                 .FirstOrDefaultAsync(p => p.UserId == userId)

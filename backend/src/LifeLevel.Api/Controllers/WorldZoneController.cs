@@ -72,6 +72,21 @@ public class WorldZoneController(
         }
     }
 
+    [HttpPost("encounter/continue")]
+    public async Task<IActionResult> ContinueAfterEncounter()
+    {
+        var userId = userContext.UserId;
+        try
+        {
+            var encounter = await worldZoneService.ContinuePendingDistanceAsync(userId);
+            return encounter != null ? Ok(encounter) : NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     /// <summary>
     /// Clears an active blocker encounter — call when the player has defeated the blocker.
     /// </summary>

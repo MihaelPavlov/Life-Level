@@ -57,6 +57,9 @@ String? zoneNodeIconAsset(
   if (node.isChest || _hasAny(key, ['chest', 'hoard', 'vault'])) {
     return AppIcons.rewardTreasureChest;
   }
+  if (node.isBoss && _hasAny(key, ['forest warden'])) {
+    return AppIcons.bossForestWarden;
+  }
   if (node.isBoss) return AppIcons.ringBoss;
   if (node.isCrossroads || _hasAny(key, ['fork', 'crossroads'])) {
     return AppIcons.zoneFirstFork;
@@ -81,6 +84,7 @@ class MapIconOrEmoji extends StatelessWidget {
   final Color? emojiColor;
   final FontWeight? emojiWeight;
   final double? opacity;
+  final Offset visualOffset;
 
   const MapIconOrEmoji({
     super.key,
@@ -92,6 +96,7 @@ class MapIconOrEmoji extends StatelessWidget {
     this.emojiColor,
     this.emojiWeight,
     this.opacity,
+    this.visualOffset = Offset.zero,
   });
 
   @override
@@ -101,6 +106,7 @@ class MapIconOrEmoji extends StatelessWidget {
         asset!,
         size: size,
         visualScale: visualScale,
+        visualOffset: visualOffset,
         opacity: opacity,
       );
     }

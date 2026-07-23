@@ -6,7 +6,7 @@ import 'equipment_slot_tile.dart';
 
 // ── EquipmentItemDetail ───────────────────────────────────────────────────────
 // Card displayed below the paperdoll when a slot with an item is selected.
-// Shows icon, name, rarity badge, stat bonuses, and a stubbed unequip button.
+// Shows icon, name, rarity badge, stat bonuses, and unequip action.
 class EquipmentItemDetail extends StatelessWidget {
   final ItemDto item;
   final String slotType;
@@ -118,19 +118,11 @@ class EquipmentItemDetail extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                // Move to Inventory button (stubbed)
                 SizedBox(
                   width: double.infinity,
                   height: 32,
                   child: OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Inventory coming soon'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
+                    onPressed: onUnequip,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: kPTextSec,
                       side: const BorderSide(color: kPBorder2),
@@ -140,7 +132,7 @@ class EquipmentItemDetail extends StatelessWidget {
                       padding: EdgeInsets.zero,
                     ),
                     child: const Text(
-                      'Move to Inventory',
+                      'Unequip',
                       style: TextStyle(
                           fontSize: 11, fontWeight: FontWeight.w600),
                     ),

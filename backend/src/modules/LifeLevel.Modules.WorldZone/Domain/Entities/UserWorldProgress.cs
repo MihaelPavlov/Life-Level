@@ -31,6 +31,10 @@ public class UserWorldProgress
     /// Progress is capped at the blocker's position until cleared.
     public Guid? ActiveBlockerEncounterId { get; set; }
 
+    /// When non-null, a trail encounter is waiting for explicit player action.
+    /// Used for merchants/stories so banked km cannot pass them implicitly.
+    public Guid? ActiveTrailEncounterId { get; set; }
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid WorldId { get; set; }

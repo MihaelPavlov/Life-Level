@@ -23,6 +23,7 @@ import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
 import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/login_reward/login_reward_screen.dart';
 import '../../features/quests/quests_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
@@ -36,6 +37,7 @@ import '../../features/titles/titles_ranks_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/boss/providers/boss_provider.dart';
+import '../../features/character/models/character_profile.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/providers/items_provider.dart';
 import 'shell_constants.dart';
@@ -131,11 +133,9 @@ class _MainShellState extends ConsumerState<MainShell>
   int? _lastTutorialTopicsSeen;
   int? _lastMapTutorialStep;
 
-  void _checkLoginReward(AsyncValue<Object?> profileAsync) {
+  void _checkLoginReward(CharacterProfile? profile) {
+    if (!mounted) return;
     if (_loginRewardShown) return;
-    // characterProfileProvider is AsyncNotifierProvider<_, CharacterProfile>
-    // We access valueOrNull which may be null while loading.
-    final profile = ref.read(characterProfileProvider).valueOrNull;
     if (profile == null) return;
     if (!profile.loginRewardAvailable) return;
     _loginRewardShown = true;
@@ -152,8 +152,9 @@ class _MainShellState extends ConsumerState<MainShell>
     });
   }
 
-  void _syncTutorialWithProfile() {
-    final profile = ref.read(characterProfileProvider).valueOrNull;
+  void _syncTutorialWithProfile([CharacterProfile? profile]) {
+    if (!mounted) return;
+    profile ??= ref.read(characterProfileProvider).valueOrNull;
     if (profile == null) return;
     final serverStep = profile.tutorialStep;
     final serverTopicsSeen = profile.tutorialTopicsSeen;
@@ -286,9 +287,15 @@ class _MainShellState extends ConsumerState<MainShell>
     });
     _worldMapSub = WorldMapNotifier.stream.listen((event) {
       if (!mounted) return;
+      WorldZoneRefreshNotifier.notify();
+      final navIndex = _navIds.indexOf('world');
       setState(() {
+        if (navIndex != -1) _tabIndex = navIndex;
         _pendingOnZoneSelected = event.onZoneSelected;
         _worldOpen = true;
+        _worldAutoOpenActive = event.autoOpenActiveRegion;
+        _titlesOpen = false;
+        _bossOpen = false;
       });
     });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
@@ -304,6 +311,9 @@ class _MainShellState extends ConsumerState<MainShell>
     });
     _bossDefeatedSub = BossDefeatedNotifier.stream.listen((info) {
       if (!mounted) return;
+      ref.invalidate(bossListProvider);
+      ref.invalidate(worldProgressProvider);
+      WorldZoneRefreshNotifier.notify();
       showBossDefeatedOverlay(context, info);
     });
     _bossOverlaySub = BossOverlayNotifier.stream.listen((intent) {
@@ -685,8 +695,10 @@ class _MainShellState extends ConsumerState<MainShell>
   Widget build(BuildContext context) {
     // Listen for the first successful profile load to check login reward + hydrate tutorial.
     ref.listen(characterProfileProvider, (_, next) {
-      _checkLoginReward(next);
-      _syncTutorialWithProfile();
+      if (!mounted) return;
+      final profile = next.valueOrNull;
+      _checkLoginReward(profile);
+      _syncTutorialWithProfile(profile);
     });
 
     // Register shell-level tutorial targets once after the first frame paints

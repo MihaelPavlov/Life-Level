@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life-Level · Thrones — Stat Mastery Ladder (Competitive Mockup)</title>
+<style>
+  :root {
+    --bg: #040810;
+    --bg-alt: #080e14;
+    --surface: #161b22;
+    --surface-2: #1e2632;
+    --surface-3: #232b38;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #4d5b6b;
+    --blue: #4f9eff;
+    --blue-deep: #3578cc;
+    --purple: #a371f7;
+    --orange: #f5a623;
+    --red: #f85149;
+    --red-dark: #c0392b;
+    --green: #3fb950;
+    --gold: #f7c948;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 48px 24px 120px;
+    background:
+      radial-gradient(ellipse 700px 420px at 18% -8%, rgba(247,201,72,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 380px at 85% 15%, rgba(163,113,247,0.06) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 400 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+
+  .masthead { max-width: 860px; margin: 0 auto 8px; text-align: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 18px;
+  }
+  .eyebrow::before, .eyebrow::after { content: ""; width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .eyebrow::after { background: linear-gradient(90deg, var(--gold), transparent); }
+
+  h1 {
+    font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15;
+    margin: 0 0 14px; text-wrap: balance;
+    background: linear-gradient(100deg, #fff 10%, var(--gold) 50%, var(--purple) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .lead { color: var(--text-dim); max-width: 680px; margin: 0 auto 6px; font-size: 15px; line-height: 1.7; }
+  .lead strong { color: var(--text); font-weight: 600; }
+
+  .thesis {
+    max-width: 860px; margin: 40px auto 0; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+  }
+  .thesis > div { background: var(--surface); padding: 20px 18px; }
+  .thesis .k { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .thesis .v { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .thesis .v b { color: var(--text); font-weight: 600; }
+
+  .topbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 960px; margin: 40px auto 0; }
+  .topbar a {
+    padding: 9px 15px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+    color: var(--text-dim); background: var(--surface); border: 1px solid var(--border); transition: all 0.15s;
+  }
+  .topbar a:hover { color: var(--text); border-color: var(--text-dim); }
+  .topbar a.gold { color: var(--gold); border-color: rgba(247,201,72,0.35); }
+  .topbar a.purple { color: var(--purple); border-color: rgba(163,113,247,0.35); }
+  .topbar a.red { color: var(--red); border-color: rgba(248,81,73,0.35); }
+  .topbar a.green { color: var(--green); border-color: rgba(63,185,80,0.35); }
+
+  .section-title { text-align: center; font-size: 23px; font-weight: 700; margin: 96px 0 6px; letter-spacing: -0.01em; scroll-margin-top: 40px; }
+  .section-title .tag {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 5px; margin-right: 10px; vertical-align: middle; position: relative; top: -2px;
+  }
+  .section-title.gold .tag { color: var(--gold); background: rgba(247,201,72,0.12); border: 1px solid rgba(247,201,72,0.3); }
+  .section-title.purple .tag { color: var(--purple); background: rgba(163,113,247,0.12); border: 1px solid rgba(163,113,247,0.3); }
+  .section-title.red .tag { color: var(--red); background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3); }
+  .section-title.green .tag { color: var(--green); background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); }
+  .section-sub { text-align: center; color: var(--text-dim); margin: 0 auto 40px; font-size: 13px; max-width: 620px; line-height: 1.6; }
+
+  .strip {
+    display: flex; gap: 28px; padding: 8px 8px 32px; overflow-x: auto; max-width: 100%;
+    margin: 0 auto; justify-content: center; scroll-snap-type: x mandatory; scrollbar-color: var(--border) transparent;
+  }
+  .strip .frame-wrap { scroll-snap-align: start; flex-shrink: 0; }
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; text-align: center; max-width: 390px; }
+  .frame-label .note { display: block; font-size: 10.5px; color: var(--text-muted); opacity: 0.9; margin-top: 5px; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.5; }
+
+  .phone { width: 390px; height: 844px; background: var(--bg); border-radius: 44px; border: 1px solid #1c2230;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #0a0d14; overflow: hidden; position: relative; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 30px; background: #000; border-radius: 0 0 18px 18px; z-index: 100; }
+  .status-bar { position: absolute; top: 12px; left: 24px; right: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: var(--text); z-index: 50; }
+  .screen { position: absolute; inset: 0; padding-top: 52px; display: flex; flex-direction: column; background: var(--bg-alt); }
+  .screen-head { padding: 4px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .screen-head h2 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .scroll { flex: 1; overflow-y: auto; padding: 0 20px 24px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card.elevated { background: var(--surface-2); }
+  .card.glow-gold { border-color: rgba(247,201,72,0.4); box-shadow: 0 0 0 1px rgba(247,201,72,0.15), 0 8px 24px -8px rgba(247,201,72,0.28); }
+
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: 20px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tabs .t { flex: 1; text-align: center; padding: 9px 0; border-radius: 9px; font-size: 11.5px; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); }
+  .tabs .t.active { background: rgba(247,201,72,0.12); border-color: rgba(247,201,72,0.4); color: var(--gold); }
+
+  /* Throne row (overview list) */
+  .throne-row {
+    display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; position: relative; overflow: hidden;
+  }
+  .throne-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .throne-row.str::before { background: var(--red); }
+  .throne-row.end::before { background: var(--blue); }
+  .throne-row.agi::before { background: var(--green); }
+  .throne-row.flx::before { background: var(--purple); }
+  .throne-row.sta::before { background: var(--orange); }
+  .throne-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .throne-row.str .throne-icon { background: rgba(248,81,73,0.14); }
+  .throne-row.end .throne-icon { background: rgba(79,158,255,0.14); }
+  .throne-row.agi .throne-icon { background: rgba(63,185,80,0.14); }
+  .throne-row.flx .throne-icon { background: rgba(163,113,247,0.14); }
+  .throne-row.sta .throne-icon { background: rgba(245,166,35,0.14); }
+  .throne-body { flex: 1; min-width: 0; }
+  .throne-stat { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+  .throne-monarch { font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+  .throne-reign { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+  .throne-you { text-align: right; flex-shrink: 0; }
+  .throne-you .gap { font-size: 12px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .throne-you .lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .crown-big { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 42px; margin: 4px auto 14px; position: relative; }
+  .crown-big::after { content: "👑"; position: absolute; top: -14px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 30px; }
+
+  .gap-track { height: 10px; border-radius: 6px; background: #0d1319; border: 1px solid var(--border); overflow: hidden; }
+  .gap-fill { height: 100%; border-radius: 6px 0 0 6px; }
+
+  .leaderboard-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .leaderboard-row:last-child { border-bottom: none; }
+  .lb-rank { width: 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: center; }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-avatar { width: 32px; height: 32px; border-radius: 9px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .lb-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .lb-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+  .lb-val { margin-left: auto; text-align: right; font-size: 13px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .lb-val small { display: block; font-size: 9.5px; font-weight: 600; color: var(--text-muted); }
+  .lb-row-you { background: rgba(247,201,72,0.06); margin: 0 -8px; padding: 9px 8px; border-radius: 8px; border-bottom: none !important; }
+
+  .btn { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 11px; font-size: 13px; font-weight: 700; letter-spacing: 0.01em; border: none; cursor: pointer; }
+  .btn.primary-gold { background: linear-gradient(135deg, var(--gold), #c99a1f); color: #241c05; }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+
+  .timeline { position: relative; padding-left: 18px; }
+  .timeline::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 2px; background: var(--border); }
+  .timeline-item { position: relative; padding-bottom: 16px; padding-left: 14px; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before { content: ""; position: absolute; left: -18px; top: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--text-muted); }
+  .timeline-item.current::before { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(247,201,72,0.2); }
+  .timeline-item .who { font-size: 12.5px; font-weight: 700; }
+  .timeline-item .when { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+
+  /* Dethrone celebration screen */
+  .scr-dethrone {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 60px 32px;
+    background: radial-gradient(ellipse 500px 380px at 50% 30%, rgba(247,201,72,0.22), transparent 60%),
+                radial-gradient(ellipse 400px 300px at 50% 85%, rgba(163,113,247,0.12), transparent 60%), var(--bg);
+  }
+  .burst { width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(247,201,72,0.35), transparent 70%); display: flex; align-items: center; justify-content: center; font-size: 64px; margin-bottom: 22px; animation: crown-pop 2.2s ease-in-out infinite; }
+  @keyframes crown-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .scr-dethrone h3 { font-size: 22px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .scr-dethrone .sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; max-width: 280px; margin: 0 auto 28px; }
+  .scr-dethrone .stat-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 8px 16px; font-size: 12px; font-weight: 700; margin-bottom: 30px; }
+
+  /* Profile crown integration */
+  .profile-head { padding: 20px; display: flex; align-items: center; gap: 14px; }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; position: relative; }
+  .profile-avatar .crown-tag { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+  .badge-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .badge-row .b { font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.03em; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="eyebrow">Competitive Engagement Concept #2</div>
+  <h1>Thrones — five crowns, always up for grabs</h1>
+  <p class="lead">
+    A different axis entirely: no teams, no matchmaking, no time window. Each of the five stats has one
+    <strong>Monarch</strong> — whoever has trained it the hardest, lifetime. Anyone, anytime, can dethrone them
+    simply by surpassing their number. Persistent prestige instead of a scheduled event.
+  </p>
+</div>
+
+<div class="thesis">
+  <div>
+    <div class="k">Stats cap at 100 — so what's the number?</div>
+    <div class="v">Stats stop at 100, so a raw-value throne would end in a permanent tie. Thrones rank by <b>Mastery</b> — an uncapped lifetime ledger of every stat-XP gain, the same numbers already fired by <b>ActivityLoggedEvent</b>, just never capped.</div>
+  </div>
+  <div>
+    <div class="k">Reuses what's built</div>
+    <div class="v">No new game math: Mastery is a running sum of existing stat-gain events. The crown badge and equippable "Monarch of X" title reuse the exact <b>Title/Rank</b> display pattern already on Profile.</div>
+  </div>
+  <div>
+    <div class="k">Reachable at every level</div>
+    <div class="v">Global throne is for veterans. <b>Friends</b> and <b>Guild</b> scopes give a level-8 player a crown worth chasing on day one — same cold-start fix as before, different shape.</div>
+  </div>
+</div>
+
+<nav class="topbar">
+  <a class="gold" href="#overview">① Thrones Overview</a>
+  <a class="red" href="#detail">② Throne Detail</a>
+  <a class="purple" href="#dethrone">③ Dethrone Moment</a>
+  <a class="green" href="#profile">④ Profile &amp; Home</a>
+</nav>
+
+<h2 class="section-title gold" id="overview"><span class="tag">Overview</span>Five crowns, one per stat</h2>
+<p class="section-sub">Scope tabs let you see who's #1 among your friends and guild before the intimidating global number. Each row shows the current Monarch and exactly how far you are from the crown.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Thrones — Global scope<span class="note">Left color bar matches the existing stat-gem palette (STR red · END blue · AGI green · FLX purple · STA orange)</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>👑 Thrones</h2>
+          <div class="icon-btn">ℹ️</div>
+        </div>
+        <div class="scroll">
+          <div class="tabs">
+            <div class="t active">Global</div>
+            <div class="t">Guild</div>
+            <div class="t">Friends</div>
+          </div>
+
+          <div class="throne-row str">
+            <div class="throne-icon">💪</div>
+            <div class="throne-body">
+              <div class="throne-stat">Strength</div>
+              <div class="throne-monarch">👑 Kestra</div>
+              <div class="throne-reign">Reigning 41 days · 88,420 mastery</div>
+            </div>
+            <div class="throne-you"><div class="gap">−6,210</div><div class="lbl">to crown</div></div>
+          </div>
+
+          <div class="throne-row end">
+            <div class="throne-icon">🏃</div>
+            <div class="throne-body">
+              <div class="throne-stat">Endurance</div>
+              <div class="throne-monarch">👑 You</div>
+              <div class="throne-reign">Reigning 6 days · 71,050 mastery</div>
+            </div>
+            <div class="throne-you"><div class="gap" style="color:var(--green);">Holding</div><div class="lbl">defend it</div></div>
+          </div>
+
+          <div class="throne-row agi">
+            <div class="throne-icon">🌀</div>
+            <div class="throne-body">
+              <div class="throne-stat">Agility</div>
+              <div class="throne-monarch">👑 Dax</div>
+              <div class="throne-reign">Reigning 3 days · 54,880 mastery</div>
+            </div>
+            <div class="throne-you"><div class="gap">−1,140</div><div class="lbl">to crown</div></div>
+          </div>
+
+          <div class="throne-row flx">
+            <div class="throne-icon">🧘</div>
+            <div class="throne-body">
+              <div class="throne-stat">Flexibility</div>
+              <div class="throne-monarch">👑 Sana</div>
+              <div class="throne-reign">Reigning 112 days · 61,930 mastery</div>
+            </div>
+            <div class="throne-you"><div class="gap">−22,700</div><div class="lbl">to crown</div></div>
+          </div>
+
+          <div class="throne-row sta">
+            <div class="throne-icon">🔥</div>
+            <div class="throne-body">
+              <div class="throne-stat">Stamina</div>
+              <div class="throne-monarch">👑 Bram</div>
+              <div class="throne-reign">Reigning 18 days · 95,600 mastery</div>
+            </div>
+            <div class="throne-you"><div class="gap">−31,050</div><div class="lbl">to crown</div></div>
+          </div>
+
+          <div class="card" style="text-align:center; margin-top:4px;">
+            <div style="font-size:12px; color:var(--text-dim);">🔔 You'll be notified the moment anyone gets within <b style="color:var(--text);">5%</b> of your Endurance crown.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title red" id="detail"><span class="tag">Detail</span>Every throne has a gap you can see closing</h2>
+<p class="section-sub">Not a scoreboard you scroll past — a single number standing between you and the crown, plus the challengers converging on it right now.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Throne of Agility — detail view<span class="note">"Challengers" surfaces the players closest to the current Monarch, not a full ranked list — keeps it tense rather than overwhelming</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>🌀 Agility</h2>
+          <div class="icon-btn">✕</div>
+        </div>
+        <div class="scroll">
+          <div class="card elevated glow-gold" style="text-align:center;">
+            <div class="crown-big" style="background:rgba(63,185,80,0.16); border:2px solid var(--green);">🧝</div>
+            <div style="font-size:16px; font-weight:800;">Dax</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">Monarch of Agility · Warrior rank</div>
+            <div style="font-size:20px; font-weight:800; color:var(--green); font-variant-numeric:tabular-nums; margin-bottom:2px;">54,880</div>
+            <div style="font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">lifetime mastery</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:10px;">Reigning for <b style="color:var(--text);">3 days</b> — dethroned Vex on Jul 17</div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:8px;"><span>Your mastery: <b style="color:var(--text);">53,740</b></span><span style="color:var(--gold); font-weight:700;">96% there</span></div>
+            <div class="gap-track"><div class="gap-fill" style="width:96%; background:linear-gradient(90deg, #3a3f47, var(--green));"></div></div>
+            <div style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-dim);">Just <b style="color:var(--text);">1,140 mastery</b> from the crown — roughly one solid cycling week.</div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Challengers closing in</div>
+            <div class="leaderboard-row"><div class="lb-rank top1">👑</div><div class="lb-avatar">🧝</div><div><div class="lb-name">Dax</div><div class="lb-sub">Monarch</div></div><div class="lb-val">54,880</div></div>
+            <div class="leaderboard-row lb-row-you"><div class="lb-rank">2</div><div class="lb-avatar">🧑</div><div><div class="lb-name">You</div><div class="lb-sub">96% to crown</div></div><div class="lb-val">53,740</div></div>
+            <div class="leaderboard-row"><div class="lb-rank">3</div><div class="lb-avatar">🧌</div><div><div class="lb-name">Vex</div><div class="lb-sub">former Monarch</div></div><div class="lb-val">52,110</div></div>
+            <div class="leaderboard-row"><div class="lb-rank">4</div><div class="lb-avatar">🧔</div><div><div class="lb-name">Orin</div><div class="lb-sub">closing fast</div></div><div class="lb-val">49,860</div></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px; font-weight:700; margin-bottom:10px;">Reign history</div>
+            <div class="timeline">
+              <div class="timeline-item current"><div class="who">👑 Dax</div><div class="when">Jul 17 — present · 3 days</div></div>
+              <div class="timeline-item"><div class="who">Vex</div><div class="when">May 28 – Jul 17 · 50 days</div></div>
+              <div class="timeline-item"><div class="who">Orin</div><div class="when">Apr 2 – May 28 · 56 days</div></div>
+            </div>
+          </div>
+
+          <button class="btn primary-gold">Log a Run to Close the Gap</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title purple" id="dethrone"><span class="tag">Moment</span>The dethrone is the highlight reel</h2>
+<p class="section-sub">A full-screen, shareable celebration the instant a crown changes hands — the exact "10-second highlight" format the Marketing doc already wants to produce, generated automatically instead of hand-cut.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Dethrone celebration — full screen overlay<span class="note">Fires via the same broadcast-stream overlay pattern as LevelUpOverlay / ItemObtainedOverlay</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="scr-dethrone">
+        <div class="burst">👑</div>
+        <div class="stat-pill">🌀 Throne of Agility</div>
+        <h3>You dethroned Dax!</h3>
+        <p class="sub">54,910 mastery — a new reign begins. Dax held the crown for 3 days before you closed the gap.</p>
+        <button class="btn primary-gold" style="max-width:260px;">Share the Moment</button>
+        <div style="margin-top:12px;"><button class="btn ghost" style="max-width:260px; background:transparent;">Continue</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section-title green" id="profile"><span class="tag">Surfacing</span>Worn on your profile, not buried in a tab</h2>
+<p class="section-sub">A held crown is a visible identity marker everywhere your character already appears — profile header, home feed, and the equipped-title slot.</p>
+<div class="strip">
+  <div class="frame-wrap">
+    <div class="frame-label">Profile header + Home teaser<span class="note">Crown renders above the avatar the same way HomePulsingLvBadge already renders on the home header</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="screen">
+        <div class="screen-head">
+          <h2>Profile</h2>
+          <div class="icon-btn">⚙️</div>
+        </div>
+        <div class="profile-head">
+          <div class="profile-avatar">🧑<span class="crown-tag">👑</span></div>
+          <div>
+            <div style="font-size:16px; font-weight:800;">You</div>
+            <div style="font-size:11.5px; color:var(--text-dim);">Warrior · Level 27</div>
+            <div class="badge-row">
+              <span class="b" style="color:var(--blue); background:rgba(79,158,255,0.14);">Monarch of Endurance</span>
+              <span class="b" style="color:var(--text-dim); background:var(--surface);">3 Titles</span>
+            </div>
+          </div>
+        </div>
+        <div class="scroll">
+          <div class="card elevated glow-gold">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <span class="pill" style="color:var(--green); background:rgba(63,185,80,0.14);">👑 Challenger Alert</span>
+              <span style="font-size:11px; color:var(--text-dim);">Agility</span>
+            </div>
+            <div style="font-size:13px; font-weight:600; margin-bottom:10px;">You're 96% of the way to dethroning Dax</div>
+            <div class="gap-track" style="height:8px;"><div class="gap-fill" style="width:96%; background:linear-gradient(90deg, #3a3f47, var(--green));"></div></div>
+          </div>
+          <div class="card">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">STR · END · AGI · FLX · STA</div>
+            <div style="font-size:12px; color:var(--text-dim);">— existing stat row continues below —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -181,7 +181,11 @@ class WorldFullData {
             .map((e) => WorldZoneEdgeModel.fromJson(e as Map<String, dynamic>))
             .toList(),
         userProgress: json['userProgress'] != null
-            ? WorldUserProgress.fromJson(json['userProgress'] as Map<String, dynamic>)
+            ? WorldUserProgress.fromJson({
+                ...(json['userProgress'] as Map<String, dynamic>),
+                if (json['currentRegionId'] != null)
+                  'currentRegionId': json['currentRegionId'],
+              })
             : const WorldUserProgress(
                 currentZoneId: '',
                 distanceTraveledOnEdge: 0,

@@ -103,7 +103,7 @@ class BlockerSheet extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: const Text(
-            '⚔️ Start Fighting · Log a Workout',
+            '⚔️ Start Fighting',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
         ),

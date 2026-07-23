@@ -25,6 +25,7 @@ class TutorialController extends ChangeNotifier {
   int _topicsSeen = 0;
   int? _pendingXpReward;
   bool _busy = false;
+  bool _profileHydrated = false;
   bool _shouldShowIntroModal = false;
   bool _shouldShowOutroModal = false;
   bool _suppressOutroOnReplay = false;
@@ -47,6 +48,7 @@ class TutorialController extends ChangeNotifier {
   int get topicsSeen => _topicsSeen;
   int? get pendingXpReward => _pendingXpReward;
   bool get isBusy => _busy;
+  bool get isProfileHydrated => _profileHydrated;
   bool get isActive => _step != null;
   bool get shouldShowIntroModal => _shouldShowIntroModal;
   bool get shouldShowOutroModal => _shouldShowOutroModal;
@@ -106,6 +108,7 @@ class TutorialController extends ChangeNotifier {
     required int serverTopicsSeen,
     required int mapTutorialStep,
   }) {
+    _profileHydrated = true;
     _topicsSeen = serverTopicsSeen;
     _mapTutorialStep = mapTutorialStep;
     // -1 = skipped, 99 = completed: nothing to show.
@@ -168,6 +171,7 @@ class TutorialController extends ChangeNotifier {
   }
 
   Future<void> ensureMapTutorialStarted() async {
+    if (!_profileHydrated) return;
     if (_busy || _isMapTutorial) return;
     if (_mapTutorialStep == -1 || _mapTutorialStep >= 99) return;
 

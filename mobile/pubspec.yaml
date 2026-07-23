@@ -62,6 +62,7 @@ flutter:
     - assets/menu_icon.png
     - assets/images/
     - assets/icons/
+    - assets/Bosses/
     - assets/Items/
     - assets/Titles&Ranks/
     - assets/Classes/

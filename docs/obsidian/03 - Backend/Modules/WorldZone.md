@@ -113,6 +113,7 @@ Seeded by [[Seeders|WorldSeeder]].
 
 ## Related
 - [[Adventure Map and World]]
+- [[Map Encounter Updates]]
 - [[Map]]
 - [[Activity]]
 - [[Seeders]]

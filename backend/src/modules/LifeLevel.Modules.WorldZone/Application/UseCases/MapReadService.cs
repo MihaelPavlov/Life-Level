@@ -1,4 +1,5 @@
 using System.Text.Json;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
@@ -26,6 +27,13 @@ public class MapReadService(
     IBossDefeatReadPort bossDefeatRead)
 {
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+    private sealed record BlockerFightSnapshot(
+        Guid BossId,
+        int MaxHp,
+        int HpDealt,
+        DateTime? StartedAt,
+        int TimerDays,
+        bool SuppressExpiry);
 
     public async Task<WorldMapDto> GetWorldMapAsync(Guid userId, CancellationToken ct = default)
     {
@@ -262,35 +270,71 @@ public class MapReadService(
         var templates = await db.Set<TrailEncounterTemplate>()
             .Where(t => t.RegionId == region.Id && t.IsActive)
             .ToListAsync(ct);
+        var defeatedBlockerTemplateIds = await db.Set<Boss>()
+            .Join(
+                db.Set<UserBossState>().Where(s => s.UserId == userId && s.IsDefeated),
+                boss => boss.Id,
+                state => state.BossId,
+                (boss, state) => boss.TrailEncounterTemplateId)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .ToListAsync(ct);
+        var defeatedBlockers = defeatedBlockerTemplateIds.ToHashSet();
+        var activeBlockerFights = new Dictionary<Guid, BlockerFightSnapshot>();
+        if (progress?.ActiveBlockerEncounterId is Guid activeBlockerTemplateId)
+        {
+            activeBlockerFights = await db.Set<Boss>()
+                .Join(
+                    db.Set<UserBossState>().Where(s => s.UserId == userId),
+                    boss => boss.Id,
+                    state => state.BossId,
+                    (boss, state) => new { boss, state })
+                .Where(x => x.boss.TrailEncounterTemplateId == activeBlockerTemplateId &&
+                            !x.state.IsDefeated &&
+                            !x.state.IsExpired)
+                .ToDictionaryAsync(
+                    x => x.boss.TrailEncounterTemplateId!.Value,
+                    x => new BlockerFightSnapshot(
+                        x.boss.Id,
+                        x.boss.MaxHp,
+                        x.state.HpDealt,
+                        x.state.StartedAt,
+                        x.boss.TimerDays,
+                        x.boss.SuppressExpiry),
+                    ct);
+        }
 
         var encounters = new List<TrailEncounterNodeDto>();
         if (templates.Count > 0 && edges.Count > 0)
         {
-            // Movement checks templates per actual edge, so the read model
-            // must not suppress a blocker/merchant/story just because another
-            // edge has the same type. Future encounters stay hidden until the
-            // player's current edge progress reaches their position.
+            // Movement selects one encounter per actual edge, so the read
+            // model uses the same selection before applying visibility rules.
+            // Future encounters stay hidden until the player's current edge
+            // progress reaches their position.
             foreach (var edge in edges
                          .OrderBy(e => progress?.CurrentEdgeId == e.Id ? 0 : 1)
                          .ThenBy(e => zones.FirstOrDefault(z => z.Id == e.FromZoneId)?.Tier ?? int.MaxValue)
                          .ThenBy(e => zones.FirstOrDefault(z => z.Id == e.ToZoneId)?.Tier ?? int.MaxValue)
                          .ThenBy(e => e.Id))
             {
-                foreach (var template in templates.OrderBy(t => t.Id))
+                var selectedEncounter = TrailEncounterHelper.SelectEncounterForEdge(
+                    templates,
+                    edge.Id,
+                    edge.FromZoneId,
+                    edge.ToZoneId);
+
+                if (selectedEncounter is { } encounter)
                 {
-                    var (spawns, tPos) = TrailEncounterHelper.ComputeEncounterSlot(
-                        edge.Id, template.Id, template.SpawnChance,
-                        edgeFromZoneId: edge.FromZoneId,
-                        edgeToZoneId:   edge.ToZoneId,
-                        pinnedFromZone: template.PinnedFromZoneId,
-                        pinnedToZone:   template.PinnedToZoneId,
-                        fixedPosition:  template.PositionFraction);
-                    if (!spawns) continue;
-                    if (!ShouldShowEncounter(progress, edge, template, tPos)) continue;
+                    var template = encounter.Template;
+                    if (defeatedBlockers.Contains(template.Id)) continue;
+                    if (!ShouldShowEncounter(progress, edge, template, encounter.T)) continue;
 
                     var side = encounters.Count % 2 == 0 ? -80.0 : 80.0;
                     var toZoneName = zones.FirstOrDefault(z => z.Id == edge.ToZoneId)?.Name ?? "";
-                    encounters.Add(BuildEncounterNode(template, edge.FromZoneId, edge.ToZoneId, tPos, side, toZoneName));
+                    activeBlockerFights.TryGetValue(template.Id, out var blockerFight);
+                    encounters.Add(BuildEncounterNode(
+                        template, edge.FromZoneId, edge.ToZoneId, encounter.T, side, toZoneName,
+                        blockerFight));
                 }
             }
         }
@@ -548,7 +592,8 @@ public class MapReadService(
     private static TrailEncounterNodeDto BuildEncounterNode(
         TrailEncounterTemplate template,
         Guid fromId, Guid toId,
-        double t, double side, string toZoneName)
+        double t, double side, string toZoneName,
+        BlockerFightSnapshot? blockerFight = null)
     {
         var config = JsonSerializer.Deserialize<JsonElement>(template.ConfigJson);
 
@@ -590,11 +635,14 @@ public class MapReadService(
                 blocker = new BlockerEncounterDto(
                     Name: template.Name,
                     BlockedZoneName: toZoneName,
-                    MaxHp: maxHp,
-                    CurrentHp: maxHp,
-                    PlayerDamageDone: 0,
-                    RetreatsInSeconds: retreatDays * 86400,
-                    Rewards: rewards);
+                    MaxHp: blockerFight?.MaxHp ?? maxHp,
+                    CurrentHp: Math.Max(0, (blockerFight?.MaxHp ?? maxHp) - (blockerFight?.HpDealt ?? 0)),
+                    PlayerDamageDone: blockerFight?.HpDealt ?? 0,
+                    RetreatsInSeconds: blockerFight != null
+                        ? RemainingSeconds(blockerFight)
+                        : retreatDays * 86400,
+                    Rewards: rewards,
+                    BossId: blockerFight?.BossId);
                 break;
 
             case "story":
@@ -633,10 +681,26 @@ public class MapReadService(
             return true;
         }
 
+        if (progress.ActiveTrailEncounterId == template.Id &&
+            progress.CurrentEdgeId == edge.Id)
+        {
+            return true;
+        }
+
         if (progress.CurrentEdgeId != edge.Id) return false;
 
         var encounterKm = tPos * edge.DistanceKm;
         return progress.DistanceTraveledOnEdge >= encounterKm;
+    }
+
+    private static int RemainingSeconds(BlockerFightSnapshot fight)
+    {
+        if (fight.SuppressExpiry || fight.StartedAt == null || fight.TimerDays <= 0)
+            return 0;
+
+        var expiresAt = fight.StartedAt.Value.AddDays(fight.TimerDays);
+        var remaining = expiresAt - DateTime.UtcNow;
+        return remaining <= TimeSpan.Zero ? 0 : (int)Math.Ceiling(remaining.TotalSeconds);
     }
 
     private static IReadOnlyList<RegionPinDto> DeserializePins(string json)

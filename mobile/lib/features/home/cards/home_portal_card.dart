@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/services/dungeon_floor_cleared_notifier.dart';
-import '../../../core/services/nav_tab_notifier.dart';
+import '../../../core/services/world_map_notifier.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../boss/models/boss_list_item.dart';
 import '../../boss/providers/boss_provider.dart';
+import '../../map/models/encounter_models.dart';
 import '../../map/models/world_map_models.dart';
 import '../../map/models/world_zone_models.dart';
 import '../../map/services/world_zone_service.dart';
@@ -16,6 +17,7 @@ import '../providers/world_progress_provider.dart';
 import '../widgets/home_card.dart';
 import '../widgets/home_hero_button.dart';
 import '../widgets/home_progress_bar.dart';
+import '../../boss/widgets/boss_icon.dart';
 
 /// The home screen's portal into the world map. Single morphing card at the
 /// top of home — always shows the player's current (or destination) world
@@ -223,6 +225,17 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
 
     final isTraveling = (world.userProgress.currentEdgeId ?? '').isNotEmpty;
     if (isTraveling) {
+      final encounter = _currentEdgeEncounter(world, region);
+      if (encounter != null) {
+        return _EncounterPortal(
+          encounter: encounter,
+          world: world,
+          destination: zone,
+          regionChip: regionChip,
+          regionId: regionId,
+          onSync: onSync,
+        );
+      }
       return _TravelingPortal(
         world: world,
         destination: zone,
@@ -369,13 +382,51 @@ String? _buildRegionChip(RegionCard? region) {
 /// Switch to the shell's 'world' tab so the world hub renders as an overlay
 /// above the bottom nav (instead of `Navigator.push`, which would cover the
 /// nav). The hub highlights the active region — one tap drills in. Region id
-/// is currently informational only; deep-link to RegionDetailScreen via the
-/// hub is a follow-up.
-void _openWorldDestination(BuildContext context, String? regionId) {
-  NavTabNotifier.switchTo('world');
+void _openWorldDestination(String? regionId) {
+  WorldMapNotifier.open(autoOpenActiveRegion: regionId != null);
 }
 
 // ── Variants ─────────────────────────────────────────────────────────────────
+
+TrailEncounterNode? _currentEdgeEncounter(
+  WorldFullData world,
+  RegionDetail? region,
+) {
+  final edgeId = world.userProgress.currentEdgeId;
+  if (edgeId == null || edgeId.isEmpty || region == null) return null;
+
+  final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
+        (e) => e?.id == edgeId,
+        orElse: () => null,
+      );
+  if (edge == null) return null;
+
+  final matches = region.encounters
+      .where((enc) =>
+          (enc.fromZoneId == edge.fromZoneId && enc.toZoneId == edge.toZoneId) ||
+          (edge.isBidirectional &&
+              enc.fromZoneId == edge.toZoneId &&
+              enc.toZoneId == edge.fromZoneId))
+      .toList()
+    ..sort((a, b) {
+      final typePriority =
+          _encounterPriority(a.type).compareTo(_encounterPriority(b.type));
+      return typePriority != 0 ? typePriority : b.t.compareTo(a.t);
+    });
+
+  return matches.firstOrNull;
+}
+
+int _encounterPriority(TrailEncounterType type) {
+  switch (type) {
+    case TrailEncounterType.blocker:
+      return 0;
+    case TrailEncounterType.merchant:
+      return 1;
+    case TrailEncounterType.story:
+      return 2;
+  }
+}
 
 class _BossRaidPortal extends StatelessWidget {
   final BossListItem boss;
@@ -395,6 +446,7 @@ class _BossRaidPortal extends StatelessWidget {
       labelColor: AppColors.red,
       title: boss.name,
       sub: 'Raid active. Every workout you log deals damage to ${boss.name}.',
+      leadingVisual: _BossPortalIcon(boss: boss),
       barLabel: 'Boss HP',
       barValue:
           '${_fmtNumber(hpRemaining)} / ${_fmtNumber(boss.maxHp)}',
@@ -404,6 +456,68 @@ class _BossRaidPortal extends StatelessWidget {
       primaryLabel: 'Fight →',
       primaryStyle: HomeHeroButtonStyle.solidRed,
       onPrimary: () => BossOverlayNotifier.notifyForBoss(boss.id),
+      onSync: onSync,
+    );
+  }
+}
+
+class _EncounterPortal extends StatelessWidget {
+  final TrailEncounterNode encounter;
+  final WorldFullData world;
+  final WorldZoneModel destination;
+  final String? regionChip;
+  final String? regionId;
+  final VoidCallback? onSync;
+
+  const _EncounterPortal({
+    required this.encounter,
+    required this.world,
+    required this.destination,
+    required this.regionChip,
+    required this.regionId,
+    required this.onSync,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final edgeId = world.userProgress.currentEdgeId;
+    final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
+          (e) => e?.id == edgeId,
+          orElse: () => null,
+        );
+    final travelled = world.userProgress.distanceTraveledOnEdge;
+    final total = edge?.distanceKm ?? 0;
+    final progress = total > 0 ? (travelled / total).clamp(0.0, 1.0) : 0.0;
+    final title = _encounterTitle(encounter);
+    final accent = _encounterAccent(encounter.type);
+    final label = _encounterPortalLabel(encounter.type);
+    final sub = _encounterSubtitle(encounter, destination);
+    final preview = _encounterPreview(encounter);
+
+    return _HeroShell(
+      accent: accent,
+      label: label,
+      labelColor: accent,
+      title: title,
+      sub: sub,
+      regionChip: regionChip,
+      barLabel: 'Distance reached',
+      barValue: total > 0
+          ? '${travelled.toStringAsFixed(1)} / ${total.toStringAsFixed(1)} km'
+          : 'Encounter reached',
+      barValueColor: accent,
+      barProgress: progress,
+      barColors: [accent, AppColors.orange],
+      branchPreview: preview,
+      primaryLabel: encounter.type == TrailEncounterType.blocker
+          ? 'View blocker'
+          : 'Open map ->',
+      primaryStyle: encounter.type == TrailEncounterType.blocker
+          ? HomeHeroButtonStyle.solidRed
+          : encounter.type == TrailEncounterType.merchant
+              ? HomeHeroButtonStyle.solidOrange
+              : HomeHeroButtonStyle.solidPurple,
+      onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
     );
   }
@@ -455,7 +569,7 @@ class _TravelingPortal extends StatelessWidget {
       barColors: const [AppColors.blue, AppColors.purple],
       primaryLabel: 'View on map →',
       primaryStyle: HomeHeroButtonStyle.solidBlue,
-      onPrimary: () => _openWorldDestination(context, regionId),
+      onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
     );
   }
@@ -494,7 +608,7 @@ class _StandardPortal extends StatelessWidget {
       barColors: const [AppColors.blue, AppColors.purple],
       primaryLabel: 'Open map →',
       primaryStyle: HomeHeroButtonStyle.solidBlue,
-      onPrimary: () => _openWorldDestination(context, regionId),
+      onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
     );
   }
@@ -590,9 +704,10 @@ class _ChestPortal extends StatelessWidget {
       barValueColor: AppColors.orange,
       barProgress: opened ? 1.0 : 0.6,
       barColors: const [AppColors.orange, AppColors.red],
+      showProgressBar: false,
       primaryLabel: opened ? 'View on map →' : 'Open chest →',
       primaryStyle: HomeHeroButtonStyle.solidOrange,
-      onPrimary: () => _openWorldDestination(context, regionId),
+      onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
     );
   }
@@ -692,7 +807,7 @@ class _DungeonPortal extends StatelessWidget {
       barColors: const [AppColors.purple, AppColors.blue],
       primaryLabel: 'Enter dungeon →',
       primaryStyle: HomeHeroButtonStyle.solidPurple,
-      onPrimary: () => _openWorldDestination(context, regionId),
+      onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
     );
   }
@@ -851,7 +966,7 @@ class _CrossroadsPortal extends StatelessWidget {
               HomeHeroButton(
                 label: 'Choose on map →',
                 style: HomeHeroButtonStyle.solidBlue,
-                onTap: () => _openWorldDestination(context, regionId),
+                onTap: () => _openWorldDestination(regionId),
               ),
             ],
           ),
@@ -1081,7 +1196,7 @@ class _NoZonePortal extends StatelessWidget {
       barColors: const [AppColors.blue, AppColors.purple],
       primaryLabel: 'Open map →',
       primaryStyle: HomeHeroButtonStyle.solidBlue,
-      onPrimary: () => _openWorldDestination(context, null),
+      onPrimary: () => _openWorldDestination(null),
       onSync: null,
     );
   }
@@ -1213,7 +1328,7 @@ class _NextZoneHintPortal extends StatelessWidget {
               HomeHeroButton(
                 label: 'Travel here →',
                 style: HomeHeroButtonStyle.solidBlue,
-                onTap: () => _openWorldDestination(context, regionId),
+                onTap: () => _openWorldDestination(regionId),
               ),
             ],
           ),
@@ -1248,6 +1363,39 @@ class _Pill extends StatelessWidget {
   }
 }
 
+class _BossPortalIcon extends StatelessWidget {
+  final BossListItem boss;
+
+  const _BossPortalIcon({required this.boss});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 74,
+      height: 74,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFF230808),
+        border: Border.all(color: AppColors.red, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.red.withValues(alpha: 0.38),
+            blurRadius: 24,
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: BossIcon(
+        icon: boss.icon,
+        size: 60,
+        emojiSize: 34,
+        visualScale: 1.15,
+        visualOffset: const Offset(-0.75, -1.5),
+      ),
+    );
+  }
+}
+
 String _typeLabel(String type) =>
     type.isEmpty ? 'Standard' : '${type[0].toUpperCase()}${type.substring(1)}';
 
@@ -1269,6 +1417,92 @@ Color _typeColor(String type) {
 }
 
 // ── Type badge + helpers ─────────────────────────────────────────────────────
+
+String _encounterTitle(TrailEncounterNode enc) {
+  switch (enc.type) {
+    case TrailEncounterType.blocker:
+      return '${_encounterEmoji(enc)} ${enc.blocker?.name ?? 'Path blocker'}';
+    case TrailEncounterType.merchant:
+      return '${_encounterEmoji(enc)} ${enc.merchant?.name ?? 'Trail merchant'}';
+    case TrailEncounterType.story:
+      return '${_encounterEmoji(enc)} ${enc.story?.npcName ?? 'Story encounter'}';
+  }
+}
+
+String _encounterEmoji(TrailEncounterNode enc) {
+  switch (enc.type) {
+    case TrailEncounterType.blocker:
+      return '💀';
+    case TrailEncounterType.merchant:
+      return '🪙';
+    case TrailEncounterType.story:
+      return enc.story?.portrait.isNotEmpty == true ? enc.story!.portrait : '🧙';
+  }
+}
+
+String _encounterPortalLabel(TrailEncounterType type) {
+  switch (type) {
+    case TrailEncounterType.blocker:
+      return 'PATH BLOCKED · NPC ENCOUNTER';
+    case TrailEncounterType.merchant:
+      return 'TRAIL MERCHANT · NPC ENCOUNTER';
+    case TrailEncounterType.story:
+      return 'STORY ENCOUNTER · NPC';
+  }
+}
+
+String _encounterSubtitle(
+  TrailEncounterNode enc,
+  WorldZoneModel destination,
+) {
+  switch (enc.type) {
+    case TrailEncounterType.blocker:
+      final name = enc.blocker?.name ?? 'This NPC';
+      return '$name is holding the road to ${destination.name}. Defeat them to keep traveling.';
+    case TrailEncounterType.merchant:
+      final count = enc.merchant?.items.length ?? 0;
+      return count > 0
+          ? 'A merchant is waiting on your route with $count item${count == 1 ? "" : "s"}.'
+          : 'A merchant is waiting on your route.';
+    case TrailEncounterType.story:
+      return enc.story?.dialogue.isNotEmpty == true
+          ? enc.story!.dialogue
+          : 'Someone on the trail has a story for you.';
+  }
+}
+
+String? _encounterPreview(TrailEncounterNode enc) {
+  switch (enc.type) {
+    case TrailEncounterType.blocker:
+      final blocker = enc.blocker;
+      if (blocker == null) return null;
+      final rewards = blocker.rewards.take(2).join(' · ');
+      return rewards.isEmpty
+          ? 'HP ${blocker.currentHp} / ${blocker.maxHp}'
+          : 'HP ${blocker.currentHp} / ${blocker.maxHp} · $rewards';
+    case TrailEncounterType.merchant:
+      final merchant = enc.merchant;
+      if (merchant == null || merchant.items.isEmpty) return null;
+      return merchant.items.take(2).map((i) => i.name).join(' · ');
+    case TrailEncounterType.story:
+      final story = enc.story;
+      if (story == null) return null;
+      return story.npcTitle.isNotEmpty
+          ? '${story.npcTitle} · +${story.loreXp} lore XP'
+          : '+${story.loreXp} lore XP';
+  }
+}
+
+Color _encounterAccent(TrailEncounterType type) {
+  switch (type) {
+    case TrailEncounterType.blocker:
+      return AppColors.red;
+    case TrailEncounterType.merchant:
+      return AppColors.orange;
+    case TrailEncounterType.story:
+      return AppColors.purple;
+  }
+}
 
 String _typeBadge(String type) {
   switch (type) {
@@ -1323,11 +1557,13 @@ class _HeroShell extends StatelessWidget {
   final String title;
   final String sub;
   final String? regionChip;
+  final Widget? leadingVisual;
   final String barLabel;
   final String barValue;
   final Color barValueColor;
   final double barProgress;
   final List<Color> barColors;
+  final bool showProgressBar;
   final String? branchPreview;
   final String primaryLabel;
   final HomeHeroButtonStyle primaryStyle;
@@ -1341,11 +1577,13 @@ class _HeroShell extends StatelessWidget {
     required this.title,
     required this.sub,
     this.regionChip,
+    this.leadingVisual,
     required this.barLabel,
     required this.barValue,
     required this.barValueColor,
     required this.barProgress,
     required this.barColors,
+    this.showProgressBar = true,
     this.branchPreview,
     required this.primaryLabel,
     required this.primaryStyle,
@@ -1393,28 +1631,67 @@ class _HeroShell extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              height: 1.15,
+          if (leadingVisual != null)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                leadingVisual!,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        sub,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                height: 1.15,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            sub,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              height: 1.4,
+            const SizedBox(height: 4),
+            Text(
+              sub,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
             ),
-          ),
+          ],
           if (branchPreview != null) ...[
             const SizedBox(height: 10),
             Container(
@@ -1437,33 +1714,65 @@ class _HeroShell extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                barLabel,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+          if (showProgressBar) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  barLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              Text(
-                barValue,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: barValueColor,
+                Text(
+                  barValue,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: barValueColor,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            HomeProgressBar(
+              progress: barProgress,
+              colors: barColors,
+              height: 10,
+            ),
+          ] else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.09),
+                border: Border.all(color: accent.withValues(alpha: 0.28)),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          HomeProgressBar(
-            progress: barProgress,
-            colors: barColors,
-            height: 10,
-          ),
+              child: Row(
+                children: [
+                  Text(
+                    barLabel,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    barValue,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: barValueColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 14),
           Row(
             children: [

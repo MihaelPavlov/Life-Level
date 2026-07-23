@@ -97,7 +97,7 @@
   button.success   { background: var(--green); }
   button.sm        { padding: 5px 12px; font-size: 12px; }
 
-  main { padding: 32px 24px; max-width: 960px; }
+  main { padding: 32px 24px; max-width: 1280px; }
 
   .page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .page-sub   { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
@@ -114,8 +114,8 @@
   .toolbar select { min-width: 220px; }
 
   /* Table */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
+  .table-wrap { overflow-x: auto; max-width: 100%; }
+  table { width: 100%; min-width: 1120px; border-collapse: collapse; }
   th {
     background: var(--surface2);
     color: var(--text2);
@@ -308,13 +308,15 @@
           <th>Name</th>
           <th>Spawn Chance</th>
           <th>Pinned Edge</th>
+          <th>From Zone</th>
+          <th>To Zone</th>
           <th>Position</th>
           <th>Active</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody id="encountersTableBody">
-        <tr><td colspan="6"><div class="empty-state">Select a world and region to view encounter templates.</div></td></tr>
+        <tr><td colspan="10"><div class="empty-state">Select a world and region to view encounter templates.</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -613,6 +615,8 @@ function renderTable(templates) {
     const pinned = (t.pinnedFromZoneId || t.pinnedToZoneId)
       ? `<span style="color:var(--blue);font-size:11px">📌 pinned</span>`
       : `<span style="color:var(--text2);font-size:11px">random</span>`;
+    const fromZone = formatZoneCell(t.pinnedFromZoneId);
+    const toZone = formatZoneCell(t.pinnedToZoneId);
     const pos = t.positionFraction != null
       ? `${Math.round(t.positionFraction * 100)}%`
       : `<span style="color:var(--text2)">seed</span>`;
@@ -630,6 +634,8 @@ function renderTable(templates) {
           </div>
         </td>
         <td>${pinned}</td>
+        <td>${fromZone}</td>
+        <td>${toZone}</td>
         <td>${pos}</td>
         <td>
           ${t.isActive
@@ -649,14 +655,23 @@ function typeBadge(type) {
   return `<span class="badge ${cls}">${escHtml(type)}</span>`;
 }
 
+function formatZoneCell(zoneId) {
+  if (!zoneId) return `<span style="color:var(--text2);font-size:11px">any</span>`;
+  const zone = _zonesCache.find(z => z.id === zoneId);
+  if (!zone) {
+    return `<span title="${escHtml(zoneId)}" style="color:var(--text2);font-size:11px">${escHtml(zoneId.slice(0, 8))}…</span>`;
+  }
+  return `<span title="${escHtml(zoneId)}">${escHtml(zone.emoji || '')} ${escHtml(zone.name)}</span>`;
+}
+
 function setTableLoading() {
   document.getElementById('encountersTableBody').innerHTML =
-    '<tr><td colspan="8"><div class="empty-state">Loading…</div></td></tr>';
+    '<tr><td colspan="10"><div class="empty-state">Loading…</div></td></tr>';
 }
 
 function setTableEmpty(msg) {
   document.getElementById('encountersTableBody').innerHTML =
-    `<tr><td colspan="8"><div class="empty-state">${escHtml(msg)}</div></td></tr>`;
+    `<tr><td colspan="10"><div class="empty-state">${escHtml(msg)}</div></td></tr>`;
 }
 
 // ── Modal open/close ──────────────────────────────────────────────────────────

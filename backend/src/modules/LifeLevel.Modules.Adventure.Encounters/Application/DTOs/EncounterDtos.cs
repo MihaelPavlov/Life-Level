@@ -22,6 +22,7 @@ public class BossListItemDto
     public string NodeName { get; set; } = string.Empty;
     public int LevelRequirement { get; set; }
     public Guid? WorldZoneId { get; set; }
+    public Guid? TrailEncounterTemplateId { get; set; }
 
     // Gameplay
     public bool CanFight { get; set; }

@@ -48,16 +48,50 @@ class BossScreenState extends ConsumerState<BossScreen> {
     });
   }
 
+  void _syncSelectedBoss(List<BossListItem> bosses) {
+    final selected = _selectedBoss;
+    if (selected == null) return;
+
+    final refreshed = bosses.cast<BossListItem?>().firstWhere(
+          (b) => b!.id == selected.id,
+          orElse: () => null,
+        );
+    if (refreshed == null || _sameBossSnapshot(selected, refreshed)) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final current = _selectedBoss;
+      if (current == null || current.id != refreshed.id) return;
+      setState(() => _selectedBoss = refreshed);
+    });
+  }
+
+  bool _sameBossSnapshot(BossListItem a, BossListItem b) {
+    return a.id == b.id &&
+        a.maxHp == b.maxHp &&
+        a.hpDealt == b.hpDealt &&
+        a.canFight == b.canFight &&
+        a.activated == b.activated &&
+        a.isDefeated == b.isDefeated &&
+        a.isExpired == b.isExpired &&
+        a.startedAt == b.startedAt &&
+        a.timerExpiresAt == b.timerExpiresAt &&
+        a.defeatedAt == b.defeatedAt;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bossAsync = ref.watch(bossListProvider);
+
     if (_selectedBoss != null) {
+      bossAsync.whenData(_syncSelectedBoss);
       return BossBattleView(
         boss: _selectedBoss!,
         onBack: _closeBattle,
+        onRefreshRequested: refresh,
       );
     }
 
-    final bossAsync = ref.watch(bossListProvider);
     bossAsync.whenData(_maybeAutoOpen);
 
     return Material(
@@ -168,7 +202,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
 
   void _goToMap() {
     widget.onClose?.call();
-    NavTabNotifier.switchTo('map');
+    NavTabNotifier.switchTo('world');
   }
 
   Widget _buildList(List<BossListItem> bosses) {

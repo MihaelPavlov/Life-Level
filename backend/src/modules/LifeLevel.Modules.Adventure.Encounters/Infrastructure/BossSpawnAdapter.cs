@@ -25,7 +25,7 @@ public class BossSpawnAdapter(DbContext db) : IBossSpawnPort
         // bosses still get the progress link populated when available so
         // existing list-view code keeps working.
         Guid? userMapProgressId = null;
-        if (!boss.WorldZoneId.HasValue)
+        if (!boss.WorldZoneId.HasValue && !boss.TrailEncounterTemplateId.HasValue)
         {
             var progress = await db.Set<UserMapProgress>()
                 .FirstOrDefaultAsync(p => p.UserId == userId, ct);

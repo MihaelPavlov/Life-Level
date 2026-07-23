@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/boss_list_item.dart';
+import 'boss_icon.dart';
 import 'boss_hp_bar.dart';
 
 class BossActiveCard extends StatelessWidget {
@@ -52,8 +53,8 @@ class BossActiveCard extends StatelessWidget {
                 children: [
                   // Boss avatar
                   Container(
-                    width: 64,
-                    height: 64,
+                    width: 92,
+                    height: 92,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xFF280808),
@@ -66,7 +67,13 @@ class BossActiveCard extends StatelessWidget {
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: Text(boss.icon, style: const TextStyle(fontSize: 32)),
+                    child: BossIcon(
+                      icon: boss.icon,
+                      size: 76,
+                      emojiSize: 42,
+                      visualScale: 1.15,
+                      visualOffset: const Offset(-0.75, -1.5),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   // Info

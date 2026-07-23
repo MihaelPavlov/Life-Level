@@ -121,7 +121,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               controller: _tab,
               children: [
                 ProfileOverviewTab(profile: profile),
-                const EquipmentTab(),
+                EquipmentTab(onOpenInventory: () => _tab?.animateTo(2)),
                 const InventoryTab(),
                 const AchievementsTab(),
                 if (_isAdmin) const AdminTab(),

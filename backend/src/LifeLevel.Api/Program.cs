@@ -217,6 +217,7 @@ using (var scope = app.Services.CreateScope())
     var itemSeeder = scope.ServiceProvider.GetRequiredService<ItemSeeder>();
     await itemSeeder.SeedCatalogAsync();
     await itemSeeder.SeedDropRulesAsync();
+    await itemSeeder.BackfillLevelReachedRewardsAsync();
 
     var achievementSeeder = scope.ServiceProvider.GetRequiredService<AchievementSeeder>();
     await achievementSeeder.SeedAsync();

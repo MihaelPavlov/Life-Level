@@ -10,7 +10,11 @@ using UserQuestProgressEntity = LifeLevel.Modules.Quest.Domain.Entities.UserQues
 
 namespace LifeLevel.Modules.Quest.Application.UseCases;
 
-public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
+public class QuestService(
+    DbContext db,
+    ICharacterXpPort characterXp,
+    IEventPublisher events,
+    ILevelUpItemGrantPort levelUpItemGrant)
     : IDailyQuestReadPort, IQuestProgressPort
 {
     // Far-future expiry used for special quests
@@ -172,7 +176,8 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPubl
                 progress.RewardClaimed = true;
 
                 await db.SaveChangesAsync();
-                await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {quest.Title}", quest.RewardXp);
+                var xpResult = await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {quest.Title}", quest.RewardXp);
+                await GrantLevelItemsIfNeededAsync(userId, xpResult);
                 await events.PublishAsync(new QuestCompletedEvent(userId, quest.Id, quest.Title, quest.RewardXp), CancellationToken.None);
 
                 updatedProgresses.Add(progress);
@@ -207,7 +212,8 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPubl
             if (!bonusAlreadyAwarded)
             {
                 await db.SaveChangesAsync();
-                await characterXp.AwardXpAsync(userId, "DailyQuestBonus", "🎯", "All 5 daily quests completed!", 300);
+                var xpResult = await characterXp.AwardXpAsync(userId, "DailyQuestBonus", "🎯", "All 5 daily quests completed!", 300);
+                await GrantLevelItemsIfNeededAsync(userId, xpResult);
 
                 // Mark bonus on the first progress record for today
                 var firstDailyProgress = await db.Set<UserQuestProgressEntity>()
@@ -352,6 +358,14 @@ public class QuestService(DbContext db, ICharacterXpPort characterXp, IEventPubl
         selected.AddRange(remaining);
 
         return selected;
+    }
+
+    private async Task GrantLevelItemsIfNeededAsync(Guid userId, XpAwardResult xpResult)
+    {
+        if (!xpResult.LeveledUp) return;
+
+        await levelUpItemGrant.EvaluateAndGrantAsync(
+            userId, xpResult.PreviousLevel, xpResult.NewLevel);
     }
 
     private static UserQuestProgressDto MapToDto(UserQuestProgressEntity p) => new()

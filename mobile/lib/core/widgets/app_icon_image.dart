@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Renders generated transparent PNG icons at the same visual footprint as the
 /// previous icon set while keeping the surrounding layout box unchanged.
@@ -8,6 +9,7 @@ class AppIconImage extends StatelessWidget {
   final String asset;
   final double size;
   final double visualScale;
+  final Offset visualOffset;
   final double? opacity;
 
   const AppIconImage(
@@ -15,11 +17,13 @@ class AppIconImage extends StatelessWidget {
     super.key,
     required this.size,
     this.visualScale = defaultVisualScale,
+    this.visualOffset = Offset.zero,
     this.opacity,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isSvg = asset.toLowerCase().endsWith('.svg');
     final image = SizedBox(
       width: size,
       height: size,
@@ -27,12 +31,22 @@ class AppIconImage extends StatelessWidget {
         child: Transform.scale(
           scale: visualScale,
           alignment: Alignment.center,
-          child: Image.asset(
-            asset,
-            width: size,
-            height: size,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
+          child: Transform.translate(
+            offset: visualOffset,
+            child: isSvg
+                ? SvgPicture.asset(
+                    asset,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.contain,
+                  )
+                : Image.asset(
+                    asset,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
           ),
         ),
       ),

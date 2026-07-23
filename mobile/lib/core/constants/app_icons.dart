@@ -1,6 +1,6 @@
 /// Central registry of every icon asset path in the app.
 ///
-/// All icons are full-colour RPG-style PNGs on transparent backgrounds.
+/// All icons are full-colour RPG-style assets on transparent backgrounds.
 /// Do NOT apply colour tinting (BlendMode.srcIn) — render them as-is.
 class AppIcons {
   AppIcons._();
@@ -14,11 +14,14 @@ class AppIcons {
   static const String menuIcon   = 'assets/menu_icon.png';
 
   // ── Ring Menu ───────────────────────────────────────────────────────────────
-static const String ringBoss        = 'assets/icons/ring_boss.png';
+  static const String ringBoss        = 'assets/icons/ring_boss.png';
   static const String ringGuild       = 'assets/icons/ring_guild.png';
   static const String ringLeaderboard = 'assets/icons/ring_leaderboard.png';
   static const String ringTitles      = 'assets/icons/ring_titles.png';
   static const String ringWorld       = 'assets/icons/ring_world.png';
+
+  // Bosses
+  static const String bossForestWarden = 'assets/Bosses/boss_forest_warden.svg';
 
   // Titles & Ranks
   static const String rankChampion = 'assets/Titles&Ranks/rank_champion.png';

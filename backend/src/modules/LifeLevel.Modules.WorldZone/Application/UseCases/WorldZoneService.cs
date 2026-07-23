@@ -1,4 +1,5 @@
 using System.Text.Json;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
@@ -227,13 +228,20 @@ public class WorldZoneService(
             }
         }
 
+        var pendingKm = progress.PendingDistanceKm;
+        if (pendingKm > 0) progress.PendingDistanceKm = 0;
         await db.SaveChangesAsync();
 
-        // Banked km are NOT drained here. They will be absorbed on the next
-        // AddDistanceAsync call (workout sync or debug-add-distance) so that
-        // encounters trigger at the right moment — during actual km processing,
-        // not at the instant the user taps to set a destination.
-        return new Application.DTOs.SetWorldDestinationResult(forfeitedFloors, null);
+        // Spend banked km immediately once the user picks a destination.
+        // AddDistanceAsync handles movement, multi-hop carryover, and any
+        // encounter reached while consuming the banked distance.
+        ActiveEncounterDto? activeEncounter = null;
+        if (pendingKm > 0)
+        {
+            activeEncounter = await AddDistanceAsync(userId, pendingKm);
+        }
+
+        return new Application.DTOs.SetWorldDestinationResult(forfeitedFloors, activeEncounter);
     }
 
     /// BFS from `fromZoneId` to `toZoneId` on the full edge graph, honouring
@@ -360,6 +368,18 @@ public class WorldZoneService(
             return null;
         }
 
+        if (progress.ActiveBlockerEncounterId.HasValue &&
+            await IsTrailBlockerDefeatedAsync(userId, progress.ActiveBlockerEncounterId.Value, ct))
+        {
+            if (progress.ActiveTrailEncounterId == progress.ActiveBlockerEncounterId.Value)
+            {
+                progress.ActiveTrailEncounterId = null;
+            }
+            progress.ActiveBlockerEncounterId = null;
+            progress.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+        }
+
         // Multi-hop support: a single AddDistance call may carry the user
         // across several edges. Absorb any banked km here so they process
         // together with the incoming workout km — this is when encounters
@@ -382,6 +402,32 @@ public class WorldZoneService(
                 userId, progress.CurrentEdgeId, remainingKm, oldDist, progress.DistanceTraveledOnEdge, edge.DistanceKm);
 
             // ── Encounter intercept ────────────────────────────────────────
+            // A merchant/story encounter must not be passed until the client
+            // calls ContinuePendingDistanceAsync. Keep banking any extra km.
+            if (progress.ActiveTrailEncounterId.HasValue &&
+                progress.ActiveBlockerEncounterId != progress.ActiveTrailEncounterId)
+            {
+                var activeEncounter = await db.Set<TrailEncounterTemplate>()
+                    .FindAsync([progress.ActiveTrailEncounterId.Value], ct);
+                if (activeEncounter != null)
+                {
+                    var (_, aPos) = TrailEncounterHelper.ComputeEncounterSlot(
+                        edge.Id, activeEncounter.Id, activeEncounter.SpawnChance,
+                        edgeFromZoneId: edge.FromZoneId, edgeToZoneId: edge.ToZoneId,
+                        pinnedFromZone: activeEncounter.PinnedFromZoneId, pinnedToZone: activeEncounter.PinnedToZoneId,
+                        fixedPosition: activeEncounter.PositionFraction);
+                    var encounterKm = aPos * edge.DistanceKm;
+                    var encounterExcess = Math.Max(0.0, progress.DistanceTraveledOnEdge - encounterKm);
+                    progress.PendingDistanceKm += encounterExcess;
+                    progress.DistanceTraveledOnEdge = encounterKm;
+                    remainingKm = 0;
+                    progress.UpdatedAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync(ct);
+                    return BuildActiveEncounterDto(activeEncounter);
+                }
+                progress.ActiveTrailEncounterId = null;
+            }
+
             // If a blocker is already active on this edge, cap movement at
             // the encounter position and refuse to advance further.
             if (progress.ActiveBlockerEncounterId.HasValue)
@@ -401,8 +447,12 @@ public class WorldZoneService(
                     progress.DistanceTraveledOnEdge = blockKm;
                     remainingKm = 0;
                     progress.UpdatedAt = DateTime.UtcNow;
+                    if (bossBridge != null)
+                    {
+                        await bossBridge.EnsureTrailBlockerSpawnedAsync(userId, blocker.Id, ct);
+                    }
                     await db.SaveChangesAsync(ct);
-                    return BuildActiveEncounterDto(blocker);
+                    return null;
                 }
             }
 
@@ -413,31 +463,42 @@ public class WorldZoneService(
                     .Where(t => t.RegionId == progress.CurrentRegionId.Value && t.IsActive)
                     .OrderBy(t => t.Id)
                     .ToListAsync(ct);
+                var defeatedBlockerTemplateIds = await GetDefeatedTrailBlockerTemplateIdsAsync(userId, ct);
 
-                foreach (var template in regionTemplates)
+                var selectedEncounter = TrailEncounterHelper.SelectEncounterForEdge(
+                    regionTemplates,
+                    edge.Id,
+                    edge.FromZoneId,
+                    edge.ToZoneId);
+
+                if (selectedEncounter is { } encounter)
                 {
-                    var (spawns, tPos) = TrailEncounterHelper.ComputeEncounterSlot(
-                        edge.Id, template.Id, template.SpawnChance,
-                        edgeFromZoneId: edge.FromZoneId, edgeToZoneId: edge.ToZoneId,
-                        pinnedFromZone: template.PinnedFromZoneId, pinnedToZone: template.PinnedToZoneId,
-                        fixedPosition: template.PositionFraction);
-                    if (!spawns) continue;
-
-                    var encounterKm = tPos * edge.DistanceKm;
+                    var template = encounter.Template;
+                    var encounterKm = encounter.T * edge.DistanceKm;
                     // Only trigger if we crossed this position on this hop
-                    if (oldDist < encounterKm && progress.DistanceTraveledOnEdge >= encounterKm)
+                    if (!defeatedBlockerTemplateIds.Contains(template.Id) &&
+                        oldDist < encounterKm &&
+                        progress.DistanceTraveledOnEdge >= encounterKm)
                     {
                         var encounterExcess = Math.Max(0.0, progress.DistanceTraveledOnEdge - encounterKm);
                         progress.PendingDistanceKm += encounterExcess;
                         progress.DistanceTraveledOnEdge = encounterKm;
                         remainingKm = 0;
+                        Guid? blockerBossId = null;
 
                         if (template.Type == "blocker")
+                        {
                             progress.ActiveBlockerEncounterId = template.Id;
+                            if (bossBridge != null)
+                            {
+                                blockerBossId = await bossBridge.EnsureTrailBlockerSpawnedAsync(userId, template.Id, ct);
+                            }
+                        }
+                        progress.ActiveTrailEncounterId = template.Id;
 
                         progress.UpdatedAt = DateTime.UtcNow;
                         await db.SaveChangesAsync(ct);
-                        return BuildActiveEncounterDto(template);
+                        return BuildActiveEncounterDto(template, blockerBossId);
                     }
                 }
             }
@@ -567,6 +628,29 @@ public class WorldZoneService(
         }
 
         return null;
+    }
+
+    public async Task<ActiveEncounterDto?> ContinuePendingDistanceAsync(
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive, ct)
+            ?? throw new InvalidOperationException("No active world found.");
+
+        var progress = await db.Set<UserWorldProgressEntity>()
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id, ct)
+            ?? await InitializeUserProgressAsync(userId, activeWorld.Id);
+
+        var pendingKm = progress.PendingDistanceKm;
+        if (pendingKm <= 0 || progress.CurrentEdgeId == null || progress.DestinationZoneId == null)
+            return null;
+
+        progress.ActiveTrailEncounterId = null;
+        progress.PendingDistanceKm = 0;
+        progress.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        return await AddDistanceAsync(userId, pendingKm, ct);
     }
 
     public async Task<CompleteZoneResult> CompleteZoneAsync(Guid userId, Guid zoneId)
@@ -798,17 +882,82 @@ public class WorldZoneService(
 
     public async Task ClearBlockerEncounterAsync(Guid userId)
     {
-        var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive)
-            ?? throw new InvalidOperationException("No active world found.");
-        var progress = await db.Set<UserWorldProgressEntity>()
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id);
-        if (progress == null) return;
-        progress.ActiveBlockerEncounterId = null;
-        progress.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
+        await ClearBlockerEncounterAsync(userId, null);
     }
 
-    private static ActiveEncounterDto BuildActiveEncounterDto(TrailEncounterTemplate template)
+    public async Task ClearBlockerEncounterAsync(
+        Guid userId,
+        Guid? trailEncounterTemplateId,
+        bool applyPendingDistance = true,
+        CancellationToken ct = default)
+    {
+        var activeWorld = await db.Set<WorldEntity>().FirstOrDefaultAsync(w => w.IsActive, ct)
+            ?? throw new InvalidOperationException("No active world found.");
+        var progress = await db.Set<UserWorldProgressEntity>()
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.WorldId == activeWorld.Id, ct);
+        if (progress == null) return;
+        if (trailEncounterTemplateId.HasValue &&
+            progress.ActiveBlockerEncounterId != trailEncounterTemplateId.Value)
+        {
+            return;
+        }
+        progress.ActiveBlockerEncounterId = null;
+        if (!trailEncounterTemplateId.HasValue ||
+            progress.ActiveTrailEncounterId == trailEncounterTemplateId.Value)
+        {
+            progress.ActiveTrailEncounterId = null;
+        }
+        var pendingKm = progress.PendingDistanceKm;
+        if (applyPendingDistance && pendingKm > 0)
+        {
+            progress.PendingDistanceKm = 0;
+        }
+        progress.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        if (applyPendingDistance &&
+            pendingKm > 0 &&
+            progress.CurrentEdgeId.HasValue &&
+            progress.DestinationZoneId.HasValue)
+        {
+            await AddDistanceAsync(userId, pendingKm, ct);
+        }
+    }
+
+    private async Task<bool> IsTrailBlockerDefeatedAsync(
+        Guid userId,
+        Guid trailEncounterTemplateId,
+        CancellationToken ct)
+    {
+        return await db.Set<Boss>()
+            .Join(
+                db.Set<UserBossState>().Where(s => s.UserId == userId),
+                boss => boss.Id,
+                state => state.BossId,
+                (boss, state) => new { boss, state })
+            .AnyAsync(x => x.boss.TrailEncounterTemplateId == trailEncounterTemplateId &&
+                           x.state.IsDefeated,
+                ct);
+    }
+
+    private async Task<HashSet<Guid>> GetDefeatedTrailBlockerTemplateIdsAsync(
+        Guid userId,
+        CancellationToken ct)
+    {
+        var ids = await db.Set<Boss>()
+            .Join(
+                db.Set<UserBossState>().Where(s => s.UserId == userId && s.IsDefeated),
+                boss => boss.Id,
+                state => state.BossId,
+                (boss, state) => boss.TrailEncounterTemplateId)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .ToListAsync(ct);
+
+        return ids.ToHashSet();
+    }
+
+    private static ActiveEncounterDto BuildActiveEncounterDto(TrailEncounterTemplate template, Guid? blockerBossId = null)
     {
         MerchantEncounterDto? merchant = null;
         BlockerEncounterDto? blocker = null;
@@ -832,6 +981,7 @@ public class WorldZoneService(
             else if (template.Type == "blocker")
             {
                 var hp = config.TryGetProperty("maxHp", out var hpEl) ? hpEl.GetInt32() : 100;
+                var retreatDays = config.TryGetProperty("retreatDays", out var retreatEl) ? retreatEl.GetInt32() : 1;
                 var rewards = config.TryGetProperty("rewards", out var rewardsEl)
                     ? rewardsEl.EnumerateArray()
                         .Select(r => r.ValueKind == JsonValueKind.String
@@ -839,7 +989,15 @@ public class WorldZoneService(
                             : r.TryGetProperty("name", out var rn) ? rn.GetString() ?? "" : r.ToString())
                         .Where(s => s.Length > 0).ToList()
                     : new List<string>();
-                blocker = new BlockerEncounterDto(template.Name, "Next Zone", hp, hp, 0, 0, rewards);
+                blocker = new BlockerEncounterDto(
+                    template.Name,
+                    "Next Zone",
+                    hp,
+                    hp,
+                    0,
+                    Math.Max(1, retreatDays) * 86400,
+                    rewards,
+                    blockerBossId);
             }
             else if (template.Type == "story")
             {

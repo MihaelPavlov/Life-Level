@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/activity/models/activity_models.dart';
+import '../../features/boss/widgets/boss_icon.dart';
 import '../constants/app_colors.dart';
 
 /// Celebration dialog fired whenever `BossDefeatedNotifier` emits an event —
@@ -135,7 +136,13 @@ class _BossDefeatedDialogState extends State<_BossDefeatedDialog>
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Text(iconGlyph, style: const TextStyle(fontSize: 50)),
+                        BossIcon(
+                          icon: iconGlyph,
+                          size: 82,
+                          emojiSize: 50,
+                          visualScale: 1.18,
+                          visualOffset: const Offset(-0.75, -1.5),
+                        ),
                         // Diagonal "slain" stroke — purely decorative.
                         Positioned(
                           right: 6,

@@ -372,7 +372,10 @@
       "Bash(xargs findstr -l \"BossListItemDto\")",
       "PowerShell(Start-Process \"http://localhost:5128/admin/map.html\"; Start-Sleep -Milliseconds 500; Start-Process \"http://localhost:5128/admin/index.html\")",
       "Bash(Sort-Object Name)",
-      "Bash(Select-Object -ExpandProperty Name)"
+      "Bash(Select-Object -ExpandProperty Name)",
+      "PowerShell(Start-Process \"http://localhost:5128/admin/index.html\")",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:5128/admin/map.html\" -UseBasicParsing -TimeoutSec 3; $r.StatusCode } catch { $_.Exception.Message })",
+      "Artifact"
     ]
   }
 }

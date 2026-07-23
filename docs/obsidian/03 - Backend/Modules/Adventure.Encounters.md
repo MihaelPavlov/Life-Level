@@ -16,6 +16,9 @@ class Boss {
   int MaxHp, RewardXp;
   int TimerDays = 7;            // mini bosses typically = 3
   bool IsMini;
+  Guid? WorldZoneId;            // world-zone boss bridge
+  Guid? TrailEncounterTemplateId; // trail blocker bridge
+  bool SuppressExpiry;          // true for permanent world-zone bosses
 }
 ```
 
@@ -72,6 +75,27 @@ damage = (durationMinutes * 2 + distanceKm * 10 + calories / 5) * activityMultip
 
 `activityMultiplier` is 1.0 for most activities.
 
+### Trail blocker bridge
+
+Blocker-type trail encounters are authored as `TrailEncounterTemplate` rows in [[WorldZone]], but the fight is handled here as a normal Boss.
+
+Flow:
+
+1. `WorldZoneService.AddDistanceAsync` detects a blocker on the current `WorldZoneEdge`.
+2. `WorldBossBridgeService` / `BossSpawnAdapter` creates or finds the linked Boss row.
+3. The Boss row stores `TrailEncounterTemplateId`.
+4. Mobile opens `BossScreen` / `BossBattleView` for that boss.
+5. Logged workouts deal boss damage through the normal boss damage pipeline.
+6. When defeated, `BossService` calls `IWorldBlockerCompletionPort.ClearBlockerAsync`.
+7. [[WorldZone]] clears the blocker and applies pending kilometers.
+
+Important behavior:
+
+- Trail blocker bosses can be fought from the blocker page even though they are not regular local-map boss nodes.
+- Blocker HP and retreat timer are surfaced back into the world map encounter DTO.
+- Defeated trail blockers are hidden from region detail and ignored by future movement.
+- Story and merchant trail encounters are not owned by this module; their active state lives in `UserWorldProgress.ActiveTrailEncounterId`. See [[Map Encounter Updates]].
+
 ### Debug methods
 - `DebugForceDefeatAsync`, `DebugForceExpireAsync`, `DebugSetHpAsync`, `DebugResetAsync`
 
@@ -86,6 +110,7 @@ damage = (durationMinutes * 2 + distanceKm * 10 + calories / 5) * activityMultip
 ## Ports consumed
 - `ICharacterXpPort`
 - `IMapProgressReadPort` (for CanFight / chest proximity)
+- `IWorldBlockerCompletionPort` (clear defeated trail blockers in [[WorldZone]])
 - `IEventPublisher` (for potential future events)
 
 ## Endpoints
@@ -108,6 +133,8 @@ damage = (durationMinutes * 2 + distanceKm * 10 + calories / 5) * activityMultip
 
 ## Related
 - [[Boss System]]
+- [[Map Encounter Updates]]
+- [[WorldZone]]
 - [[Map]]
 - [[Adventure.Dungeons]]
 - [[Items]] (chest drops)

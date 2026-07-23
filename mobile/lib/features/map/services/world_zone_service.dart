@@ -246,6 +246,17 @@ class WorldZoneService {
     return null;
   }
 
+  /// Spends distance that was banked when a non-blocker encounter interrupted
+  /// movement. Returns another encounter if the carried distance reaches one.
+  Future<ActiveEncounterResult?> continueAfterEncounter() async {
+    final response = await ApiClient.instance.post('/world/encounter/continue');
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      return ActiveEncounterResult.fromJson(
+          response.data as Map<String, dynamic>);
+    }
+    return null;
+  }
+
   /// Clears the active blocker encounter so the player can advance past it.
   /// Call after the blocker has been defeated.
   Future<void> clearBlockerEncounter() async {

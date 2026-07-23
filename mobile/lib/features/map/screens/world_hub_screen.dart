@@ -58,7 +58,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
       if (!mounted) return;
       final c = ref.read(tutorialControllerProvider);
       c.registerKey('mapRegions', _regionsKey);
-      c.ensureMapTutorialStarted();
+      _maybeStartMapTutorial();
     });
   }
 
@@ -123,9 +123,25 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
     setState(() => _openRegionId = null);
   }
 
+  void _maybeStartMapTutorial() {
+    if (!mounted) return;
+    final c = ref.read(tutorialControllerProvider);
+    if (!c.isProfileHydrated || c.isMapTutorial) return;
+    if (c.mapTutorialStep == -1 || c.mapTutorialStep >= 99) return;
+    c.ensureMapTutorialStarted();
+  }
+
   @override
   Widget build(BuildContext context) {
     final tutorial = ref.watch(tutorialControllerProvider);
+    if (tutorial.isProfileHydrated &&
+        !tutorial.isMapTutorial &&
+        tutorial.mapTutorialStep != -1 &&
+        tutorial.mapTutorialStep < 99) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _maybeStartMapTutorial();
+      });
+    }
     final tutorialStep = tutorial.step;
     final needsRegionOpen = tutorial.isMapTutorial &&
         tutorialStep != null &&

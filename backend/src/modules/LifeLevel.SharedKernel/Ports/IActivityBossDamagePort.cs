@@ -31,5 +31,6 @@ public interface IActivityBossDamagePort
         int durationMinutes,
         double distanceKm,
         int calories,
+        DateTime activityLoggedAt,
         CancellationToken ct = default);
 }

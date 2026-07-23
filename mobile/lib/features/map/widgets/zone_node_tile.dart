@@ -163,7 +163,12 @@ class _Circle extends StatelessWidget {
       emojiSize: _emojiSize(node),
       emojiColor: accent,
       emojiWeight: FontWeight.w700,
-      visualScale: node.isCrossroads ? 1.25 : 1.45,
+      visualScale: node.isBoss
+          ? 1.7
+          : node.isCrossroads
+              ? 1.25
+              : 1.45,
+      visualOffset: node.isBoss ? const Offset(-0.75, -1.5) : Offset.zero,
     );
 
     Widget circle = Container(

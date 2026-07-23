@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level - Guild MVP Pages</title>
+<style>
+:root {
+  --bg:#040810;
+  --phone:#080e14;
+  --surface:#161b22;
+  --surface2:#1e2632;
+  --border:#30363d;
+  --border2:#21262d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --dim:#586070;
+  --blue:#4f9eff;
+  --purple:#a371f7;
+  --red:#f85149;
+  --green:#3fb950;
+  --gold:#f5a623;
+  --orange:#ff6b35;
+  --cyan:#38d9c8;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(79,158,255,.12), transparent 24rem),
+    radial-gradient(circle at 76% 14%, rgba(163,113,247,.10), transparent 26rem),
+    var(--bg);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color:var(--text);
+  padding:44px 36px 64px;
+}
+.header { max-width:980px; margin-bottom:34px; }
+.eyebrow { color:var(--purple); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
+h1 { font-size:28px; line-height:1.1; margin-bottom:10px; }
+.header p { color:var(--muted); font-size:14px; line-height:1.6; max-width:760px; }
+.flow { display:flex; flex-direction:column; gap:54px; }
+.section-title { color:var(--blue); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:18px; }
+.row { display:flex; align-items:flex-start; gap:28px; overflow-x:auto; padding-bottom:24px; }
+.frame { width:390px; flex:0 0 390px; }
+.caption { text-align:center; min-height:62px; margin-bottom:14px; }
+.tag { display:inline-block; padding:4px 12px; border-radius:999px; font-size:10px; font-weight:800; letter-spacing:.08em; margin-bottom:7px; border:1px solid rgba(79,158,255,.35); color:var(--blue); background:rgba(79,158,255,.10); }
+.tag.purple { color:var(--purple); border-color:rgba(163,113,247,.42); background:rgba(163,113,247,.12); }
+.tag.red { color:var(--red); border-color:rgba(248,81,73,.42); background:rgba(248,81,73,.12); }
+.tag.green { color:var(--green); border-color:rgba(63,185,80,.42); background:rgba(63,185,80,.12); }
+.tag.gold { color:var(--gold); border-color:rgba(245,166,35,.42); background:rgba(245,166,35,.12); }
+.caption h2 { font-size:14px; margin-bottom:3px; }
+.caption p { font-size:11px; color:var(--muted); line-height:1.45; }
+.phone {
+  width:390px;
+  height:844px;
+  background:var(--phone);
+  border-radius:44px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 32px 80px rgba(0,0,0,.85);
+}
+.status {
+  position:absolute; top:0; left:0; right:0; height:44px; z-index:5;
+  display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0;
+  color:var(--text); font-size:13px; font-weight:700;
+}
+.sig { color:var(--muted); font-size:11px; }
+.scroll {
+  position:absolute; top:44px; left:0; right:0; bottom:82px; overflow-y:auto;
+  scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar { display:none; }
+.pad { padding:20px; }
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:82px; z-index:6;
+  background:#0d1117; border-top:1px solid var(--border2);
+  display:flex; padding:0 8px 12px; align-items:center;
+}
+.nav div { flex:1; text-align:center; color:var(--muted); font-size:10px; }
+.nav b { display:block; font-size:20px; font-weight:500; margin-bottom:4px; }
+.nav .active { color:var(--purple); }
+.hero-glow { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 18%, rgba(163,113,247,.13), transparent 58%); }
+.raid-glow { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 18%, rgba(248,81,73,.14), transparent 62%); }
+.victory-glow { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 20%, rgba(245,166,35,.16), transparent 62%); }
+.topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:18px; }
+.label { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; margin-bottom:5px; }
+.label.purple { color:var(--purple); }
+.label.red { color:var(--red); }
+.title { font-size:24px; font-weight:800; line-height:1.1; }
+.subtitle { color:var(--muted); font-size:12px; line-height:1.45; margin-top:5px; }
+.icon-btn {
+  width:36px; height:36px; border-radius:10px; background:var(--surface);
+  border:1px solid var(--border); color:var(--muted); display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex:0 0 auto;
+}
+.card {
+  background:rgba(22,27,34,.95);
+  border:1px solid var(--border2);
+  border-radius:14px;
+  padding:14px;
+}
+.card + .card { margin-top:10px; }
+.big-card { border-radius:18px; padding:22px 18px; text-align:center; }
+.shield-mark {
+  width:84px; height:84px; margin:0 auto 14px; border-radius:22px;
+  background:linear-gradient(145deg, rgba(163,113,247,.20), rgba(79,158,255,.12));
+  border:2px solid rgba(163,113,247,.45);
+  display:flex; align-items:center; justify-content:center; font-size:42px;
+  box-shadow:0 0 28px rgba(163,113,247,.18);
+}
+.rowline { display:flex; align-items:center; gap:12px; }
+.grow { flex:1; min-width:0; }
+.name { font-size:14px; font-weight:800; }
+.meta { color:var(--muted); font-size:11px; margin-top:3px; line-height:1.35; }
+.pill-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+.pill {
+  background:var(--surface2); border:1px solid rgba(255,255,255,.04); border-radius:8px;
+  padding:5px 8px; font-size:10px; color:var(--muted); white-space:nowrap;
+}
+.pill.green { color:var(--green); }
+.pill.red { color:var(--red); }
+.pill.gold { color:var(--gold); }
+.avatar {
+  width:42px; height:42px; border-radius:50%; background:var(--surface2);
+  border:2px solid var(--border); display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex:0 0 auto;
+}
+.guild-icon {
+  width:48px; height:48px; border-radius:14px; background:rgba(163,113,247,.12);
+  border:2px solid rgba(163,113,247,.38); display:flex; align-items:center; justify-content:center;
+  font-size:25px; flex:0 0 auto;
+}
+.field {
+  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  padding:13px 14px; font-size:13px; color:var(--text);
+}
+.field.focus { border-color:var(--purple); box-shadow:0 0 0 2px rgba(163,113,247,.14); }
+.textarea { min-height:94px; line-height:1.5; }
+.btn {
+  width:100%; border:0; border-radius:12px; padding:13px 14px;
+  color:#fff; font-size:13px; font-weight:800; background:linear-gradient(135deg,var(--blue),var(--purple));
+}
+.btn.purple { background:linear-gradient(135deg,var(--purple),var(--blue)); }
+.btn.red { background:linear-gradient(135deg,var(--red),var(--orange)); }
+.btn.green { background:linear-gradient(135deg,var(--green),var(--blue)); }
+.btn.ghost { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+.btn.small { width:auto; padding:8px 12px; border-radius:9px; font-size:11px; }
+.split { display:flex; gap:10px; }
+.stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0; }
+.stat { background:var(--surface); border:1px solid var(--border2); border-radius:12px; padding:11px 8px; text-align:center; }
+.stat strong { display:block; font-size:18px; color:var(--text); }
+.stat span { display:block; font-size:10px; color:var(--muted); margin-top:3px; }
+.section { margin-top:18px; }
+.member-row { padding:12px 14px; border-bottom:1px solid var(--border2); }
+.member-row:last-child { border-bottom:0; }
+.role { font-size:9px; font-weight:800; padding:2px 6px; border-radius:6px; border:1px solid rgba(245,166,35,.35); color:var(--gold); background:rgba(245,166,35,.10); }
+.boss-card { border:1px solid rgba(248,81,73,.32); background:rgba(248,81,73,.055); }
+.boss-icon {
+  width:66px; height:66px; border-radius:50%; border:2px solid rgba(248,81,73,.58);
+  background:rgba(40,10,10,.82); display:flex; align-items:center; justify-content:center;
+  font-size:34px; box-shadow:0 0 24px rgba(248,81,73,.22);
+}
+.hp-track { height:14px; background:var(--surface2); border-radius:99px; overflow:hidden; position:relative; }
+.hp-fill { height:100%; width:48%; background:linear-gradient(90deg,var(--red),var(--orange)); border-radius:99px; }
+.hp-fill.low { width:100%; background:linear-gradient(90deg,var(--green),var(--blue)); }
+.damage-bar { height:5px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-top:7px; }
+.damage-bar i { display:block; height:100%; border-radius:99px; background:var(--blue); }
+.damage-bar .purple { background:var(--purple); }
+.damage-bar .green { background:var(--green); }
+.damage-bar .gold { background:var(--gold); }
+.damage-bar .red { background:var(--red); }
+.timer { padding:7px 10px; border-radius:12px; background:rgba(248,81,73,.12); border:1px solid rgba(248,81,73,.35); text-align:center; }
+.timer strong { color:var(--red); font-size:14px; display:block; }
+.timer span { color:var(--muted); font-size:9px; }
+.reward-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.reward { background:var(--surface2); border-radius:10px; padding:10px 6px; text-align:center; }
+.reward b { display:block; font-size:12px; color:var(--text); margin-top:4px; }
+.reward span { display:block; font-size:9px; color:var(--muted); margin-top:2px; }
+.notice { display:flex; gap:10px; align-items:flex-start; border-radius:13px; padding:12px; background:rgba(248,81,73,.065); border:1px solid rgba(248,81,73,.30); }
+.notice.green { background:rgba(63,185,80,.075); border-color:rgba(63,185,80,.30); }
+.notice.gold { background:rgba(245,166,35,.075); border-color:rgba(245,166,35,.30); }
+.muted { color:var(--muted); }
+.mt8 { margin-top:8px; }
+.mt10 { margin-top:10px; }
+.mt14 { margin-top:14px; }
+.mt18 { margin-top:18px; }
+.mb10 { margin-bottom:10px; }
+.center { text-align:center; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="eyebrow">Life Level Guild MVP</div>
+    <h1>Guild pages for create, join, raid, contribution, and victory</h1>
+    <p>These mockups follow the current Life-Level dark RPG UI: compact phone surfaces, bottom navigation, boss-style HP bars, rarity-like accents, member rows, and activity-driven raid progress.</p>
+  </div>
+
+  <div class="flow">
+    <section>
+      <div class="section-title">Guild onboarding</div>
+      <div class="row">
+        <div class="frame">
+          <div class="caption">
+            <div class="tag purple">SCREEN 1</div>
+            <h2>No Guild</h2>
+            <p>First entry from the Guild ring item.</p>
+          </div>
+          <div class="phone">
+            <div class="hero-glow"></div>
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="topbar">
+                <div>
+                  <div class="label purple">Guild</div>
+                  <div class="title">Find Your Crew</div>
+                  <div class="subtitle">Train together. Fight together. Win together.</div>
+                </div>
+              </div>
+
+              <div class="card big-card">
+                <div class="shield-mark">&#128737;</div>
+                <div class="name">You are not in a guild</div>
+                <div class="meta">Join a small squad of up to 5 players and turn real workouts into shared raid damage.</div>
+              </div>
+
+              <div class="section">
+                <div class="card rowline">
+                  <div class="avatar">&#9876;</div>
+                  <div class="grow"><div class="name">Shared HP Raids</div><div class="meta">Every member's workout damages the same boss.</div></div>
+                </div>
+                <div class="card rowline">
+                  <div class="avatar">&#127942;</div>
+                  <div class="grow"><div class="name">Guild Rewards</div><div class="meta">All members earn XP, top contributor earns a bonus.</div></div>
+                </div>
+                <div class="card rowline">
+                  <div class="avatar">&#128293;</div>
+                  <div class="grow"><div class="name">Accountability</div><div class="meta">Inactive members risk boss regeneration in later phases.</div></div>
+                </div>
+              </div>
+
+              <div class="split mt18">
+                <button class="btn">Find Guild</button>
+                <button class="btn purple">Create</button>
+              </div>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <div class="caption">
+            <div class="tag">SCREEN 2</div>
+            <h2>Search Guilds</h2>
+            <p>Browse open guilds and join if slots are available.</p>
+          </div>
+          <div class="phone">
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="rowline mb10"><div class="icon-btn">&#8592;</div><div class="title" style="font-size:21px">Find a Guild</div></div>
+              <div class="field mb10">&#128269; Search guilds...</div>
+              <div class="label">Open guilds</div>
+
+              <div class="card">
+                <div class="rowline">
+                  <div class="guild-icon">&#128058;</div>
+                  <div class="grow"><div class="name">Iron Wolves</div><div class="meta">Warrior rank - morning runs and gym sessions</div></div>
+                  <button class="btn small red">Join</button>
+                </div>
+                <div class="pill-row"><span class="pill">3/5 members</span><span class="pill green">Open</span><span class="pill red">12 raids won</span></div>
+              </div>
+
+              <div class="card">
+                <div class="rowline">
+                  <div class="guild-icon">&#128302;</div>
+                  <div class="grow"><div class="name">Storm Mages</div><div class="meta">Mixed training guild, all activities welcome</div></div>
+                  <button class="btn small red">Join</button>
+                </div>
+                <div class="pill-row"><span class="pill">2/5 members</span><span class="pill green">Open</span><span class="pill red">7 raids won</span></div>
+              </div>
+
+              <div class="card" style="opacity:.58">
+                <div class="rowline">
+                  <div class="guild-icon">&#129413;</div>
+                  <div class="grow"><div class="name muted">Sky Raiders</div><div class="meta">Champion rank, currently full</div></div>
+                  <button class="btn small ghost">Full</button>
+                </div>
+                <div class="pill-row"><span class="pill">5/5 members</span><span class="pill">Closed</span></div>
+              </div>
+
+              <div class="card mt18 center">
+                <div class="meta mb10">No guild matches your rhythm?</div>
+                <button class="btn purple">Create My Guild</button>
+              </div>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <div class="caption">
+            <div class="tag purple">SCREEN 3</div>
+            <h2>Create Guild</h2>
+            <p>Name, icon, description, and MVP max-size rules.</p>
+          </div>
+          <div class="phone">
+            <div class="hero-glow"></div>
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="rowline mb10"><div class="icon-btn">&#8592;</div><div class="title" style="font-size:21px">Create Guild</div></div>
+
+              <div class="center mt18">
+                <div class="shield-mark">&#128737;</div>
+                <div class="meta">Choose a banner icon</div>
+              </div>
+
+              <div class="split mt14">
+                <div class="field focus" style="flex:1;text-align:center">&#128737;</div>
+                <div class="field" style="flex:1;text-align:center">&#128058;</div>
+                <div class="field" style="flex:1;text-align:center">&#9889;</div>
+                <div class="field" style="flex:1;text-align:center">&#128302;</div>
+              </div>
+
+              <div class="section">
+                <div class="label">Guild name</div>
+                <div class="field focus">Iron Wolves</div>
+              </div>
+              <div class="section">
+                <div class="label">Description</div>
+                <div class="field textarea">We run at dawn and lift until dusk. No excuses, just gains.</div>
+              </div>
+              <div class="notice gold mt18">
+                <div>&#9888;</div>
+                <div class="grow"><div class="name" style="font-size:12px;color:var(--gold)">MVP Guild Rules</div><div class="meta">Up to 5 members. Guilds are open by default. You become Leader.</div></div>
+              </div>
+              <button class="btn purple mt18">Create Guild</button>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">Guild home and raid start</div>
+      <div class="row">
+        <div class="frame">
+          <div class="caption">
+            <div class="tag green">SCREEN 4</div>
+            <h2>Guild Home</h2>
+            <p>Leader view with members, stats, and no active raid.</p>
+          </div>
+          <div class="phone">
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="topbar">
+                <div>
+                  <div class="label purple">Your guild</div>
+                  <div class="title">Iron Wolves</div>
+                  <div class="subtitle">Founded 2026 - Warrior rank</div>
+                </div>
+                <div class="guild-icon">&#128058;</div>
+              </div>
+
+              <div class="stat-grid">
+                <div class="stat"><strong>3/5</strong><span>Members</span></div>
+                <div class="stat"><strong>12</strong><span>Raids Won</span></div>
+                <div class="stat"><strong>42k</strong><span>Total Dmg</span></div>
+              </div>
+
+              <div class="section">
+                <div class="label">Members</div>
+                <div class="card" style="padding:0;overflow:hidden">
+                  <div class="member-row rowline"><div class="avatar">&#9876;</div><div class="grow"><div class="name">Alex <span class="role">Leader</span></div><div class="meta">You - active today</div></div><div class="pill green">Online</div></div>
+                  <div class="member-row rowline"><div class="avatar">&#129497;</div><div class="grow"><div class="name">Sara</div><div class="meta">Last workout 2h ago</div></div></div>
+                  <div class="member-row rowline"><div class="avatar">&#128481;</div><div class="grow"><div class="name">Mike</div><div class="meta">Last workout yesterday</div></div><button class="btn small ghost">Kick</button></div>
+                </div>
+              </div>
+
+              <div class="card big-card mt18 boss-card">
+                <div class="boss-icon" style="margin:0 auto 12px">&#128009;</div>
+                <div class="name">No Active Raid</div>
+                <div class="meta">Start a raid and every guild member's workout will hit the same boss.</div>
+                <button class="btn red mt14">Start Guild Raid</button>
+              </div>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <div class="caption">
+            <div class="tag red">SCREEN 5</div>
+            <h2>Start Raid</h2>
+            <p>Leader picks an available boss from the catalog.</p>
+          </div>
+          <div class="phone">
+            <div class="raid-glow"></div>
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="rowline mb10"><div class="icon-btn">&#8592;</div><div><div class="title" style="font-size:21px">Start Guild Raid</div><div class="subtitle">Choose one boss for Iron Wolves.</div></div></div>
+              <div class="notice gold mt14">
+                <div>&#9876;</div>
+                <div class="grow"><div class="name" style="font-size:12px;color:var(--gold)">Leader Action</div><div class="meta">Only the guild leader can launch a raid. One active raid at a time.</div></div>
+              </div>
+
+              <div class="section">
+                <div class="label red">Recommended boss</div>
+                <div class="card boss-card">
+                  <div class="rowline">
+                    <div class="boss-icon">&#128009;</div>
+                    <div class="grow"><div class="name">Ancient Wyrm</div><div class="meta">Mountains of Strength - 15,000 HP - 5 days</div></div>
+                  </div>
+                  <div class="reward-grid mt14">
+                    <div class="reward"><div>&#9889;</div><b>3,000 XP</b><span>each</span></div>
+                    <div class="reward"><div>&#128009;</div><b>Wyrm Scale</b><span>epic</span></div>
+                    <div class="reward"><div>&#127942;</div><b>+750 XP</b><span>top dmg</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card rowline">
+                <div class="boss-icon" style="width:52px;height:52px;font-size:27px">&#127794;</div>
+                <div class="grow"><div class="name">Forest Warden Echo</div><div class="meta">10,000 HP - easier starter raid</div></div>
+                <div class="pill green">Ready</div>
+              </div>
+              <div class="card rowline" style="opacity:.55">
+                <div class="boss-icon" style="width:52px;height:52px;font-size:27px">&#127754;</div>
+                <div class="grow"><div class="name muted">Ocean Leviathan</div><div class="meta">Unlocks after region 2</div></div>
+                <div class="pill">Locked</div>
+              </div>
+              <button class="btn red mt18">Launch Ancient Wyrm</button>
+              <div class="meta center mt8">All 3 members will see the raid on Guild.</div>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">Raid lifecycle</div>
+      <div class="row">
+        <div class="frame">
+          <div class="caption">
+            <div class="tag red">SCREEN 6</div>
+            <h2>Active Raid</h2>
+            <p>Shared HP and member contribution ranking.</p>
+          </div>
+          <div class="phone">
+            <div class="raid-glow"></div>
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="topbar">
+                <div><div class="label purple">Iron Wolves - raid</div><div class="title">Guild Raid</div></div>
+                <div class="timer"><strong>4d 12h</strong><span>remaining</span></div>
+              </div>
+
+              <div class="card boss-card">
+                <div class="rowline mb10">
+                  <div class="boss-icon">&#128009;</div>
+                  <div class="grow"><div class="label red">Guild boss raid</div><div class="name" style="font-size:18px">Ancient Wyrm</div><div class="meta">Mountains of Strength</div></div>
+                </div>
+                <div class="rowline mb10" style="justify-content:space-between"><div class="label red">Boss HP</div><div class="name" style="font-size:12px">7,200 / 15,000 HP</div></div>
+                <div class="hp-track"><div class="hp-fill"></div></div>
+                <div class="rowline mt8" style="justify-content:space-between"><div class="meta">7,800 damage dealt</div><div class="meta" style="color:var(--green)">48% defeated</div></div>
+              </div>
+
+              <div class="section">
+                <div class="label">Guild members - damage dealt</div>
+                <div class="card" style="padding:0;overflow:hidden">
+                  <div class="member-row">
+                    <div class="rowline"><div class="avatar" style="border-color:var(--blue)">&#9876;</div><div class="grow"><div class="name">Alex <span class="role" style="color:var(--blue);border-color:rgba(79,158,255,.35)">You</span></div><div class="damage-bar"><i style="width:85%"></i></div></div><div class="name" style="font-size:13px;color:var(--red)">2,100</div></div>
+                  </div>
+                  <div class="member-row">
+                    <div class="rowline"><div class="avatar" style="border-color:var(--purple)">&#129497;</div><div class="grow"><div class="name">Sara</div><div class="damage-bar"><i class="purple" style="width:74%"></i></div></div><div class="name" style="font-size:13px;color:var(--red)">1,850</div></div>
+                  </div>
+                  <div class="member-row">
+                    <div class="rowline"><div class="avatar" style="border-color:var(--green)">&#128481;</div><div class="grow"><div class="name">Mike</div><div class="damage-bar"><i class="green" style="width:64%"></i></div></div><div class="name" style="font-size:13px;color:var(--red)">1,600</div></div>
+                  </div>
+                  <div class="member-row">
+                    <div class="rowline"><div class="avatar" style="border-color:rgba(248,81,73,.45);opacity:.75">&#128564;</div><div class="grow"><div class="name muted">Carlos <span class="role" style="color:var(--red);border-color:rgba(248,81,73,.35)">Slacking</span></div><div class="damage-bar"><i class="red" style="width:10%"></i></div></div><div class="name" style="font-size:13px;color:var(--red)">250</div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="notice mt14">
+                <div>&#9888;</div>
+                <div class="grow"><div class="name" style="font-size:12px;color:var(--red)">Regeneration Warning</div><div class="meta">If Carlos does not log a workout in the next 18h, the boss regenerates 500 HP.</div></div>
+              </div>
+
+              <div class="card mt14">
+                <div class="label gold">Victory rewards</div>
+                <div class="reward-grid">
+                  <div class="reward"><div>&#9889;</div><b>+3,000</b><span>XP each</span></div>
+                  <div class="reward"><div>&#128009;</div><b>Scale</b><span>epic item</span></div>
+                  <div class="reward"><div>&#127942;</div><b>+750</b><span>top dmg</span></div>
+                </div>
+              </div>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <div class="caption">
+            <div class="tag green">SCREEN 7</div>
+            <h2>Raid Victory</h2>
+            <p>Shared reward celebration and final damage ranking.</p>
+          </div>
+          <div class="phone">
+            <div class="victory-glow"></div>
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad center">
+              <div style="font-size:58px;margin-top:8px">&#127942;</div>
+              <div class="label gold mt8">Guild raid victory</div>
+              <div class="title">Ancient Wyrm</div>
+              <div class="subtitle">Defeated by Iron Wolves</div>
+
+              <div class="boss-icon" style="margin:24px auto 18px;opacity:.55;filter:grayscale(.8)">&#128009;</div>
+
+              <div class="card mt14" style="text-align:left;border-color:rgba(245,166,35,.38);background:rgba(245,166,35,.06)">
+                <div class="label gold center">All members receive</div>
+                <div class="reward-grid">
+                  <div class="reward"><div>&#9889;</div><b>3,000 XP</b><span>base reward</span></div>
+                  <div class="reward"><div>&#128009;</div><b>Wyrm Scale</b><span>epic item</span></div>
+                  <div class="reward"><div>&#128737;</div><b>Raid Mark</b><span>guild record</span></div>
+                </div>
+              </div>
+
+              <div class="notice green mt14" style="text-align:left">
+                <div>&#128081;</div>
+                <div class="grow"><div class="name" style="font-size:12px;color:var(--green)">Top Damage Bonus</div><div class="meta">Alex dealt 2,100 damage and earns +750 XP.</div></div>
+              </div>
+
+              <div class="card mt14" style="padding:0;overflow:hidden;text-align:left">
+                <div class="member-row"><div class="rowline"><div class="pill gold">1</div><div class="avatar">&#9876;</div><div class="grow"><div class="name">Alex</div><div class="meta">Most damage</div></div><div class="name" style="color:var(--red)">2,100</div></div></div>
+                <div class="member-row"><div class="rowline"><div class="pill">2</div><div class="avatar">&#129497;</div><div class="grow"><div class="name">Sara</div></div><div class="name" style="color:var(--red)">1,850</div></div></div>
+                <div class="member-row"><div class="rowline"><div class="pill">3</div><div class="avatar">&#128481;</div><div class="grow"><div class="name">Mike</div></div><div class="name" style="color:var(--red)">1,600</div></div></div>
+              </div>
+
+              <button class="btn green mt18">Back to Guild</button>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <div class="caption">
+            <div class="tag gold">SCREEN 8</div>
+            <h2>Expired / Recovery</h2>
+            <p>Failure state after timer expiry with history preserved.</p>
+          </div>
+          <div class="phone">
+            <div class="raid-glow"></div>
+            <div class="status"><span>9:41</span><span class="sig">LTE 100%</span></div>
+            <div class="scroll"><div class="pad">
+              <div class="topbar">
+                <div><div class="label red">Raid expired</div><div class="title">Ancient Wyrm Escaped</div><div class="subtitle">Iron Wolves dealt 11,400 of 15,000 damage.</div></div>
+              </div>
+
+              <div class="card boss-card center">
+                <div class="boss-icon" style="margin:0 auto 14px;opacity:.55">&#128009;</div>
+                <div class="hp-track"><div class="hp-fill" style="width:76%"></div></div>
+                <div class="meta mt8">76% defeated before expiry</div>
+              </div>
+
+              <div class="notice gold mt14">
+                <div>&#9888;</div>
+                <div class="grow"><div class="name" style="font-size:12px;color:var(--gold)">No rewards granted</div><div class="meta">Raid rewards are only granted when the shared HP reaches zero before the timer ends.</div></div>
+              </div>
+
+              <div class="section">
+                <div class="label">Final contribution</div>
+                <div class="card" style="padding:0;overflow:hidden">
+                  <div class="member-row"><div class="rowline"><div class="avatar">&#9876;</div><div class="grow"><div class="name">Alex</div><div class="damage-bar"><i style="width:90%"></i></div></div><div class="name" style="color:var(--red)">4,200</div></div></div>
+                  <div class="member-row"><div class="rowline"><div class="avatar">&#129497;</div><div class="grow"><div class="name">Sara</div><div class="damage-bar"><i class="purple" style="width:75%"></i></div></div><div class="name" style="color:var(--red)">3,500</div></div></div>
+                  <div class="member-row"><div class="rowline"><div class="avatar">&#128564;</div><div class="grow"><div class="name muted">Carlos</div><div class="damage-bar"><i class="red" style="width:8%"></i></div></div><div class="name" style="color:var(--red)">350</div></div></div>
+                </div>
+              </div>
+
+              <div class="split mt18">
+                <button class="btn red">Start New Raid</button>
+                <button class="btn ghost">History</button>
+              </div>
+            </div></div>
+            <div class="nav"><div><b>&#8962;</b>Home</div><div class="active"><b>&#128737;</b>Guild</div><div><b>&#128506;</b>Map</div><div><b>&#128100;</b>Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

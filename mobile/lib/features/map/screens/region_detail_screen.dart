@@ -44,7 +44,6 @@ class RegionDetailScreen extends ConsumerStatefulWidget {
 class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
-  static const String _tutorialSampleZonePrefix = '__tutorial_sample_';
 
   // Attached to the active zone bubble inside ZoneTrail so we can call
   // Scrollable.ensureVisible to auto-scroll the user there on entry.
@@ -304,11 +303,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   /// Shows the encounter intercept modal and handles the outcome:
-  ///   • story / merchant → player can re-tap the zone to continue
+  ///   • story / merchant → consume banked km and continue the journey
   ///   • blocker → snackbar explains they must defeat the NPC first
   Future<void> _showEncounterIntercept(
       ActiveEncounterResult encounter, String destinationZoneName) async {
-    await showModalBottomSheet<String>(
+    final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -329,8 +328,36 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
           duration: const Duration(seconds: 4),
         ),
       );
+      return;
     }
-    // story / merchant: no snackbar — player just re-taps the zone to continue
+
+    if (action == 'continue') {
+      final nextEncounter = await _continueAfterEncounter();
+      if (!mounted) return;
+      if (nextEncounter != null) {
+        await _showEncounterIntercept(nextEncounter, destinationZoneName);
+      }
+    }
+  }
+
+  Future<ActiveEncounterResult?> _continueAfterEncounter() async {
+    try {
+      final nextEncounter = await _service.continueAfterEncounter();
+      if (!mounted) return nextEncounter;
+      await _load();
+      WorldZoneRefreshNotifier.notify();
+      return nextEncounter;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to continue journey: $e'),
+            backgroundColor: AppColors.red,
+          ),
+        );
+      }
+      return null;
+    }
   }
 
   /// Shows a friendlier, stakes-clear confirmation dialog before abandoning
@@ -569,29 +596,57 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   void _showEncounterSheet(TrailEncounterNode enc) {
-    showModalBottomSheet(
+    ActiveEncounterResult? nextEncounter;
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => switch (enc.type) {
-        TrailEncounterType.merchant => MerchantSheet(encounter: enc),
+        TrailEncounterType.merchant => MerchantSheet(
+            encounter: enc,
+            onNotInterested: () async {
+              nextEncounter = await _continueAfterEncounter();
+            },
+          ),
         TrailEncounterType.blocker => BlockerSheet(
             encounter: enc,
-            onFight: _handleFightTrailBlocker,
+            onFight: () => _handleFightTrailBlocker(enc),
           ),
-        TrailEncounterType.story => StorySheet(encounter: enc),
+        TrailEncounterType.story => StorySheet(
+            encounter: enc,
+            onContinue: () async {
+              nextEncounter = await _continueAfterEncounter();
+            },
+          ),
       },
-    );
+    ).then((_) async {
+      if (!mounted || nextEncounter == null) return;
+      await _showEncounterIntercept(
+        nextEncounter!,
+        _zoneNameById(enc.toZoneId) ?? 'your destination',
+      );
+    });
   }
 
-  void _handleFightTrailBlocker() {
-    Navigator.of(context).pop();
-    BossOverlayNotifier.notify();
+  String? _zoneNameById(String zoneId) {
+    final nodes = _region?.nodes;
+    if (nodes == null) return null;
+    for (final node in nodes) {
+      if (node.id == zoneId) return node.name;
+    }
+    return null;
+  }
+
+  void _handleFightTrailBlocker(TrailEncounterNode encounter) {
+    final bossId = encounter.blocker?.bossId;
+    if (bossId == null || bossId.isEmpty) {
+      BossOverlayNotifier.notify();
+      return;
+    }
+    BossOverlayNotifier.notifyForBoss(bossId);
   }
 
   void _showNodeSheet(ZoneNode node) {
-    if (_isTutorialSampleZone(node)) return;
-
     assert(() {
       debugPrint(
           '[node-tap] ${node.name} id=${node.id} isCrossroads=${node.isCrossroads} status=${node.status} branchOf=${node.branchOf}');
@@ -798,6 +853,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
 
     final visibleIds = <String>{};
     final branchRootIds = <String>{};
+    final nodeById = {for (final node in nodes) node.id: node};
+    final outgoing = <String, List<String>>{};
+    for (final edge in region.edges) {
+      outgoing.putIfAbsent(edge.fromId, () => <String>[]).add(edge.toId);
+    }
 
     for (final node in nodes) {
       switch (node.status) {
@@ -819,19 +879,26 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       }
     }
 
-    int furthestVisibleIndex = -1;
-    for (int i = 0; i < nodes.length; i++) {
-      if (visibleIds.contains(nodes[i].id)) {
-        furthestVisibleIndex = i;
+    var frontier = nodes
+        .where((node) =>
+            node.status == ZoneNodeStatus.active ||
+            node.status == ZoneNodeStatus.next)
+        .toList();
+    if (frontier.isEmpty) {
+      for (final node in nodes.reversed) {
+        if (node.status == ZoneNodeStatus.completed) {
+          frontier = [node];
+          break;
+        }
       }
     }
 
-    if (furthestVisibleIndex >= 0) {
-      for (int i = furthestVisibleIndex + 1; i < nodes.length; i++) {
-        final candidate = nodes[i];
-        if (visibleIds.contains(candidate.id)) continue;
-        visibleIds.add(candidate.id);
-        break;
+    for (final node in frontier) {
+      for (final nextId in outgoing[node.id] ?? const <String>[]) {
+        final next = nodeById[nextId];
+        if (next == null || visibleIds.contains(next.id)) continue;
+        if (_isHiddenBranchSibling(region, next)) continue;
+        visibleIds.add(next.id);
       }
     }
 
@@ -848,114 +915,17 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     );
   }
 
+  bool _isHiddenBranchSibling(RegionDetail region, ZoneNode node) {
+    final crossroadsId = node.branchOf;
+    if (crossroadsId == null) return false;
+    final chosenBranchId = region.pathChoices[crossroadsId];
+    return chosenBranchId != null && chosenBranchId != node.id;
+  }
+
   RegionDetail _buildVisibleRegionForTutorial(RegionDetail region) {
     final visible = _buildProgressiveRevealRegion(region);
-    final tutorial = ref.read(tutorialControllerProvider);
-    if (!tutorial.isMapTutorial) return visible;
-    return _withTutorialSampleZones(visible);
+    return visible;
   }
-
-  RegionDetail _withTutorialSampleZones(RegionDetail region) {
-    final nodes = [...region.nodes];
-    final edges = [...region.edges];
-    final existingIds = nodes.map((n) => n.id).toSet();
-    final maxTier = nodes.fold<int>(0, (max, n) => n.tier > max ? n.tier : max);
-    int nextTier = maxTier + 1;
-    String? previousId = nodes.isEmpty ? null : nodes.last.id;
-
-    void addSample(ZoneNode node) {
-      if (existingIds.contains(node.id)) return;
-      nodes.add(node);
-      existingIds.add(node.id);
-      if (previousId != null) {
-        edges.add(ZoneEdge(fromId: previousId!, toId: node.id));
-      }
-      previousId = node.id;
-    }
-
-    addSample(_tutorialSampleZone(
-      id: 'normal',
-      name: 'Training Glade',
-      tier: nextTier++,
-      description: 'Tutorial-only normal zone preview.',
-    ));
-    addSample(_tutorialSampleZone(
-      id: 'chest',
-      name: 'Tutorial Chest',
-      tier: nextTier++,
-      description: 'Tutorial-only chest zone preview.',
-      isChest: true,
-      chestRewardXp: 120,
-    ));
-    addSample(_tutorialSampleZone(
-      id: 'special',
-      name: 'Tutorial Fork',
-      tier: nextTier++,
-      description: 'Tutorial-only crossroads preview.',
-      isCrossroads: true,
-    ));
-    addSample(_tutorialSampleZone(
-      id: 'dungeon',
-      name: 'Tutorial Dungeon',
-      tier: nextTier++,
-      description: 'Tutorial-only dungeon zone preview.',
-      isDungeon: true,
-      dungeonFloorsTotal: 3,
-      dungeonFloorsCompleted: 0,
-      dungeonStatus: DungeonRunStatus.notEntered,
-    ));
-    addSample(_tutorialSampleZone(
-      id: 'boss',
-      name: 'Tutorial Boss Gate',
-      tier: nextTier++,
-      description: 'Tutorial-only boss zone preview.',
-      isBoss: true,
-      status: ZoneNodeStatus.locked,
-    ));
-
-    return region.copyWith(nodes: nodes, edges: edges);
-  }
-
-  ZoneNode _tutorialSampleZone({
-    required String id,
-    required String name,
-    required int tier,
-    required String description,
-    ZoneNodeStatus status = ZoneNodeStatus.available,
-    bool isCrossroads = false,
-    bool isBoss = false,
-    bool isChest = false,
-    bool isDungeon = false,
-    int? chestRewardXp,
-    int? dungeonFloorsTotal,
-    int? dungeonFloorsCompleted,
-    DungeonRunStatus? dungeonStatus,
-  }) {
-    return ZoneNode(
-      id: '$_tutorialSampleZonePrefix$id',
-      name: name,
-      emoji: '',
-      description: description,
-      tier: tier,
-      levelRequirement: _userLevel,
-      xpReward: isBoss ? 0 : 80,
-      distanceKm: isBoss ? 0 : 1.5,
-      status: status,
-      isCrossroads: isCrossroads,
-      isBoss: isBoss,
-      isChest: isChest,
-      isDungeon: isDungeon,
-      chestRewardXp: chestRewardXp,
-      chestIsOpened: isChest ? false : null,
-      dungeonFloorsTotal: dungeonFloorsTotal,
-      dungeonFloorsCompleted: dungeonFloorsCompleted,
-      dungeonFloorsForfeited: isDungeon ? 0 : null,
-      dungeonStatus: dungeonStatus,
-    );
-  }
-
-  bool _isTutorialSampleZone(ZoneNode node) =>
-      node.id.startsWith(_tutorialSampleZonePrefix);
 
   void _syncTutorialTargets(RegionDetail region) {
     final c = ref.read(tutorialControllerProvider);
@@ -968,11 +938,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     ZoneNode? dungeon;
     ZoneNode? boss;
 
-    final sampleNodes =
-        region.nodes.where(_isTutorialSampleZone).toList(growable: false);
-    final targetNodes = sampleNodes.isNotEmpty ? sampleNodes : region.nodes;
-
-    for (final node in targetNodes) {
+    for (final node in region.nodes) {
       normal ??= (!node.isBoss &&
               !node.isChest &&
               !node.isDungeon &&

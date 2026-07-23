@@ -1,21 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../activity/log_activity_screen.dart';
 import '../models/boss_list_item.dart';
 import '../providers/boss_provider.dart';
 import '../widgets/boss_damage_hit_row.dart';
 import '../widgets/boss_hp_bar.dart';
 import '../widgets/boss_damage_hint.dart';
+import '../widgets/boss_icon.dart';
 
 /// Inline battle view displayed within BossScreen (keeps bottom nav visible).
-class BossBattleView extends ConsumerWidget {
+class BossBattleView extends ConsumerStatefulWidget {
   final BossListItem boss;
   final VoidCallback onBack;
+  final VoidCallback? onRefreshRequested;
 
-  const BossBattleView({super.key, required this.boss, required this.onBack});
+  const BossBattleView({
+    super.key,
+    required this.boss,
+    required this.onBack,
+    this.onRefreshRequested,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BossBattleView> createState() => _BossBattleViewState();
+}
+
+class _BossBattleViewState extends ConsumerState<BossBattleView> {
+  BossListItem get boss => widget.boss;
+  VoidCallback get onBack => widget.onBack;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_refreshBattleData);
+  }
+
+  @override
+  void didUpdateWidget(covariant BossBattleView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.boss.id != widget.boss.id ||
+        oldWidget.boss.hpDealt != widget.boss.hpDealt) {
+      Future.microtask(_refreshBattleData);
+    }
+  }
+
+  void _refreshBattleData() {
+    ref.invalidate(bossDamageHistoryProvider(boss.id));
+    widget.onRefreshRequested?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final remaining = boss.timeRemaining;
     // World-zone bosses suppress the legacy 7-day expiry — backend returns
     // `timerExpiresAt: null` and `timerDays: 0`. Render ∞ / "no limit"
@@ -104,7 +140,7 @@ class BossBattleView extends ConsumerWidget {
                       const SizedBox(height: 16),
                       _buildRecentHits(ref),
                       const SizedBox(height: 16),
-                      _buildCtas(),
+                      _buildCtas(context),
                     ],
                   ),
                 ),
@@ -142,27 +178,27 @@ class BossBattleView extends ConsumerWidget {
           const SizedBox(height: 14),
           // Avatar with rings
           SizedBox(
-            width: 100,
-            height: 100,
+            width: 132,
+            height: 132,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: 100, height: 100,
+                  width: 132, height: 132,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.red.withValues(alpha: 0.2), width: 2),
                   ),
                 ),
                 Container(
-                  width: 80, height: 80,
+                  width: 106, height: 106,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.red.withValues(alpha: 0.3), width: 1.5),
                   ),
                 ),
                 Container(
-                  width: 78, height: 78,
+                  width: 104, height: 104,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFF230808),
@@ -173,7 +209,13 @@ class BossBattleView extends ConsumerWidget {
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(boss.icon, style: const TextStyle(fontSize: 38)),
+                  child: BossIcon(
+                    icon: boss.icon,
+                    size: 88,
+                    emojiSize: 50,
+                    visualScale: 1.15,
+                    visualOffset: const Offset(-0.75, -1.5),
+                  ),
                 ),
               ],
             ),
@@ -359,9 +401,10 @@ class BossBattleView extends ConsumerWidget {
                   ],
                 );
               }
+              final recent = hits.take(3);
               return Column(
                 children: [
-                  for (final hit in hits) BossDamageHitRow(hit: hit),
+                  for (final hit in recent) BossDamageHitRow(hit: hit),
                 ],
               );
             },
@@ -371,7 +414,7 @@ class BossBattleView extends ConsumerWidget {
     );
   }
 
-  Widget _buildCtas() {
+  Widget _buildCtas(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -388,7 +431,7 @@ class BossBattleView extends ConsumerWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(13),
-                  onTap: onBack,
+                  onTap: () => _showHistorySheet(context),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 13),
                     child: Text(
@@ -426,7 +469,7 @@ class BossBattleView extends ConsumerWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(13),
-                  onTap: onBack,
+                  onTap: () => _openLogWorkout(context),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 13),
                     child: Text(
@@ -456,5 +499,145 @@ class BossBattleView extends ConsumerWidget {
   static String _fmtNumber(int n) {
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
     return n.toString();
+  }
+
+  Future<void> _openLogWorkout(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const LogActivityScreen(),
+      ),
+    );
+    if (!mounted) return;
+    _refreshBattleData();
+  }
+
+  void _showHistorySheet(BuildContext context) {
+    _refreshBattleData();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _BossDamageHistorySheet(bossId: boss.id),
+    );
+  }
+}
+
+class _BossDamageHistorySheet extends ConsumerWidget {
+  final String bossId;
+
+  const _BossDamageHistorySheet({required this.bossId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(bossDamageHistoryProvider(bossId));
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.82;
+
+    return Container(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0d1117),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'Damage History',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () =>
+                        ref.invalidate(bossDamageHistoryProvider(bossId)),
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.border),
+            Flexible(
+              child: historyAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(color: AppColors.red),
+                  ),
+                ),
+                error: (err, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Couldn\'t load damage history.',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          err.toString(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                data: (hits) {
+                  if (hits.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(28),
+                        child: Text(
+                          'No workout hits yet.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+                    itemCount: hits.length,
+                    itemBuilder: (_, i) => BossDamageHitRow(hit: hits[i]),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
