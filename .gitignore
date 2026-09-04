@@ -425,6 +425,11 @@ mobile/.packages
 mobile/build/
 mobile/.pub-cache/
 mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/*.jks
+mobile/android/*.keystore
+mobile/android/app/*.jks
+mobile/android/app/*.keystore
 mobile/android/.gradle/
 mobile/ios/Pods/
 mobile/ios/.symlinks/

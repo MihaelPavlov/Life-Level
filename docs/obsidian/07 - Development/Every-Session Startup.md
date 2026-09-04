@@ -25,13 +25,13 @@ Copy the `https://XXXX.ngrok-free.app` URL from the output.
 
 ## Step 3 — Update API base URL in Flutter
 
-Edit `mobile/lib/core/api/api_client.dart`:
+Do not edit `mobile/lib/core/api/api_client.dart`. Pass the current tunnel URL at launch:
 
-```dart
-static const _baseUrl = 'https://XXXX.ngrok-free.app/api';
+```powershell
+flutter run -d <device-serial> --dart-define=API_BASE_URL=https://XXXX.ngrok-free.app/api
 ```
 
-> [!warning] **Do NOT commit this change.** Revert to the placeholder before any `git commit`.
+> [!warning] Use the runtime override so temporary tunnel URLs stay out of source control.
 
 ## Step 4 — Re-register the Strava webhook
 
@@ -53,7 +53,7 @@ Expected output: a serial number with status `device`. If `unauthorized` or empt
 
 ```bash
 cd mobile
-flutter run
+flutter run -d <device-serial> --dart-define=API_BASE_URL=https://XXXX.ngrok-free.app/api
 ```
 
 ## Related

@@ -4,6 +4,8 @@
 
 Life Level is a mobile fitness RPG that turns your workouts into RPG progression. Log real activities, level up your character, explore an adventure map, defeat bosses, and compete with friends.
 
+For a fresh machine, local development, Android testing, release builds, and backend deployment, start with [docs/new-machine-setup.md](docs/new-machine-setup.md).
+
 ---
 
 ## Features

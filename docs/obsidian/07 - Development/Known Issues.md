@@ -18,8 +18,8 @@ aliases: [Issues, Bugs, Troubleshooting]
 
 | Symptom | Fix |
 |---------|-----|
-| `ERR_NGROK_3200` | Session expired — restart ngrok, update `api_client.dart` `_baseUrl`, re-register Strava webhook |
-| Flutter `SocketException` | `_baseUrl` in `api_client.dart` not updated with current ngrok URL |
+| `ERR_NGROK_3200` | Session expired — restart ngrok, pass the new URL with `--dart-define=API_BASE_URL=...`, and re-register the Strava webhook |
+| Flutter `SocketException` | Pass the current tunnel URL with `--dart-define=API_BASE_URL=https://<host>/api`; do not edit `api_client.dart` |
 | Strava webhook events not arriving | Old subscription still points at dead ngrok URL — see [[Strava Webhook Registration]] |
 
 ## MIUI (Xiaomi) Health Connect

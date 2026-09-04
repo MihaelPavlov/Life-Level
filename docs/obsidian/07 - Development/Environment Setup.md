@@ -9,7 +9,7 @@ aliases: [Dev Environment, Setup, Prerequisites]
 ## Prerequisites
 
 - **Flutter SDK** — `flutter doctor` must pass
-- **.NET 8 SDK** — for the backend API
+- **.NET 10 SDK** — for the backend API (`LifeLevel.Api` targets `net10.0`)
 - **PostgreSQL connection string** — points to Supabase-hosted Postgres (in `appsettings.json`)
 - **ADB** — ships with Android Studio / Android SDK platform-tools
 - **ngrok** — for exposing the local backend to Strava webhooks and physical Android devices
@@ -39,17 +39,15 @@ Live in `backend/src/LifeLevel.Api/appsettings.json`:
 
 ## API base URL in Flutter
 
-`mobile/lib/core/api/api_client.dart` has:
+`mobile/lib/core/api/api_client.dart` defaults to:
 
-```dart
-static const _baseUrl = 'http://10.0.2.2:5128/api';
-```
+The Android default is `http://10.0.2.2:5128/api`; the web default is `http://127.0.0.1:5128/api`.
 
 - **Android emulator** — leave as-is (`10.0.2.2` maps to host `localhost`).
-- **Physical Android device** — swap to the current ngrok HTTPS URL (see [[Every-Session Startup]]).
+- **Physical Android device** — pass the current ngrok URL with `--dart-define=API_BASE_URL=https://<host>/api` (see [[Every-Session Startup]]).
 - **iOS Simulator** — use `http://localhost:5128/api`.
 
-> [!warning] The ngrok URL change in `api_client.dart` **must be reverted before committing**.
+> [!warning] Do not hardcode a temporary ngrok URL in `api_client.dart`; use the runtime override.
 
 ## iOS extra step (not yet done)
 

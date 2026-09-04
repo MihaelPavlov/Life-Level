@@ -42,7 +42,8 @@ lib/core/
 
 ```dart
 class ApiClient {
-  static const _baseUrl = 'http://10.0.2.2:5128/api';  // Android emulator → host
+  // Default is http://10.0.2.2:5128/api on Android emulator and
+  // http://127.0.0.1:5128/api on web. Override with API_BASE_URL at launch.
   static final Dio _dio = Dio(BaseOptions(
     baseUrl: _baseUrl,
     connectTimeout: Duration(seconds: 10),

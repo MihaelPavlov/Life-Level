@@ -24,7 +24,7 @@ If ngrok's background task exits unexpectedly, verify it's still alive via `Get-
 
 ## 3. Update the API base URL
 
-Edit `mobile/lib/core/api/api_client.dart` — replace the `_baseUrl` string with `<NGROK_URL>/api` (keep the `/api` suffix). Use `Edit`, not `Write`.
+Do not edit `mobile/lib/core/api/api_client.dart`. Pass the tunnel URL at launch with `--dart-define=API_BASE_URL=<NGROK_URL>/api`.
 
 ## 4. Verify the tunnel reaches Kestrel
 
@@ -32,7 +32,7 @@ One request: `Invoke-WebRequest "<NGROK_URL>/api/health" -Headers @{"ngrok-skip-
 
 ## 5. Launch Flutter on the device
 
-`cd mobile && flutter run -d <DEVICE_SERIAL>` via `Bash` with `run_in_background: true`. Then arm a `Monitor` (timeout 600000ms) watching for:
+`cd mobile && flutter run -d <DEVICE_SERIAL> --dart-define=API_BASE_URL=<NGROK_URL>/api` via `Bash` with `run_in_background: true`. Then arm a `Monitor` (timeout 600000ms) watching for:
 
 - Progress: `Built build|Installing|Syncing files|Dart VM Service on`
 - Failure: `error:|Error:|BUILD FAILED|FAILURE|Lost connection to device|Unhandled Exception|E/flutter`
