@@ -1,5 +1,6 @@
 using LifeLevel.Modules.Notifications.Application.Ports.In;
 using LifeLevel.Modules.Notifications.Application.Ports.Out;
+using LifeLevel.Modules.Notifications.Application.DTOs;
 using LifeLevel.Modules.Notifications.Domain.Entities;
 using LifeLevel.Modules.Notifications.Domain.Enums;
 using LifeLevel.SharedKernel.Contracts;
@@ -19,10 +20,6 @@ public class NotificationService(
     IFcmSender fcm,
     ICurrentClock clock) : INotificationService
 {
-    // Quiet hours in UTC. isCritical notifications bypass this check.
-    private static readonly HashSet<int> QuietHoursUtc =
-        new() { 22, 23, 0, 1, 2, 3, 4, 5, 6, 7 };
-
     // Non-critical notifications capped per user per UTC day.
     private const int DailyCap = 3;
 
@@ -36,6 +33,14 @@ public class NotificationService(
         CancellationToken ct = default)
     {
         var now = clock.UtcNow;
+        var preferences = await EnsurePreferencesAsync(userId, ct);
+
+        if (!ShouldSendCategory(preferences, category, isCritical))
+        {
+            await LogOutcomeAsync(userId, category, title, body, isCritical,
+                NotificationOutcome.SkippedPreferences, null, ct);
+            return new NotificationSendResult(false, "Preferences");
+        }
 
         // ── 1. Active tokens ─────────────────────────────────────────────────
         var tokens = await repo.GetActiveTokensAsync(userId, ct);
@@ -47,7 +52,9 @@ public class NotificationService(
         }
 
         // ── 2. Quiet hours (non-critical only) ───────────────────────────────
-        if (!isCritical && QuietHoursUtc.Contains(now.Hour))
+        if (!isCritical &&
+            preferences.QuietHoursEnabled &&
+            IsQuietHour(now.Hour, preferences.QuietHoursStartUtc, preferences.QuietHoursEndUtc))
         {
             await LogOutcomeAsync(userId, category, title, body, isCritical,
                 NotificationOutcome.SkippedQuietHours, null, ct);
@@ -159,6 +166,35 @@ public class NotificationService(
     public Task MarkAllReadAsync(Guid userId, CancellationToken ct = default) =>
         repo.MarkAllReadAsync(userId, ct);
 
+    public async Task<NotificationPreferencesDto> GetPreferencesAsync(
+        Guid userId,
+        CancellationToken ct = default) =>
+        ToDto(await EnsurePreferencesAsync(userId, ct));
+
+    public async Task<NotificationPreferencesDto> UpdatePreferencesAsync(
+        Guid userId,
+        UpdateNotificationPreferencesRequest req,
+        CancellationToken ct = default)
+    {
+        ValidateHour(req.QuietHoursStartUtc, nameof(req.QuietHoursStartUtc));
+        ValidateHour(req.QuietHoursEndUtc, nameof(req.QuietHoursEndUtc));
+
+        var preferences = await EnsurePreferencesAsync(userId, ct);
+        preferences.PushEnabled = req.PushEnabled;
+        preferences.LevelUpEnabled = req.LevelUpEnabled;
+        preferences.QuestEnabled = req.QuestEnabled;
+        preferences.BossEnabled = req.BossEnabled;
+        preferences.StreakEnabled = req.StreakEnabled;
+        preferences.RankEnabled = req.RankEnabled;
+        preferences.QuietHoursEnabled = req.QuietHoursEnabled;
+        preferences.QuietHoursStartUtc = req.QuietHoursStartUtc;
+        preferences.QuietHoursEndUtc = req.QuietHoursEndUtc;
+        preferences.UpdatedAt = clock.UtcNow;
+
+        await repo.SaveChangesAsync(ct);
+        return ToDto(preferences);
+    }
+
     private async Task LogOutcomeAsync(
         Guid userId,
         string category,
@@ -182,5 +218,79 @@ public class NotificationService(
             ErrorMessage = errorMessage
         }, ct);
         await repo.SaveChangesAsync(ct);
+    }
+
+    private async Task<NotificationPreference> EnsurePreferencesAsync(
+        Guid userId,
+        CancellationToken ct)
+    {
+        var preferences = await repo.GetPreferencesAsync(userId, ct);
+        if (preferences != null) return preferences;
+
+        preferences = new NotificationPreference
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            UpdatedAt = clock.UtcNow
+        };
+        await repo.AddPreferencesAsync(preferences, ct);
+        await repo.SaveChangesAsync(ct);
+        return preferences;
+    }
+
+    private static NotificationPreferencesDto ToDto(NotificationPreference p) =>
+        new(
+            p.PushEnabled,
+            p.LevelUpEnabled,
+            p.QuestEnabled,
+            p.BossEnabled,
+            p.StreakEnabled,
+            p.RankEnabled,
+            p.QuietHoursEnabled,
+            p.QuietHoursStartUtc,
+            p.QuietHoursEndUtc);
+
+    private static bool ShouldSendCategory(
+        NotificationPreference p,
+        string category,
+        bool isCritical)
+    {
+        if (!p.PushEnabled) return false;
+        if (isCritical) return true;
+
+        return NormalizeCategory(category) switch
+        {
+            "levelup" => p.LevelUpEnabled,
+            "quest" => p.QuestEnabled,
+            "boss" => p.BossEnabled,
+            "streak" => p.StreakEnabled,
+            "rank" => p.RankEnabled,
+            _ => true,
+        };
+    }
+
+    private static string NormalizeCategory(string category)
+    {
+        var lower = category.ToLowerInvariant().Replace("_", "-");
+        if (lower.Contains("level")) return "levelup";
+        if (lower.Contains("quest")) return "quest";
+        if (lower.Contains("boss")) return "boss";
+        if (lower.Contains("streak")) return "streak";
+        if (lower.Contains("rank")) return "rank";
+        return lower;
+    }
+
+    private static bool IsQuietHour(int hour, int start, int end)
+    {
+        if (start == end) return false;
+        return start < end
+            ? hour >= start && hour < end
+            : hour >= start || hour < end;
+    }
+
+    private static void ValidateHour(int hour, string name)
+    {
+        if (hour is < 0 or > 23)
+            throw new InvalidOperationException($"{name} must be between 0 and 23.");
     }
 }

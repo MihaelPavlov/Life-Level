@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life-Level Inventory Mockup</title>
+  <style>
+    :root {
+      --bg: #040810;
+      --phone: #080e14;
+      --shell: #090d1a;
+      --surface: #161b22;
+      --surface-2: #1e2632;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --faint: #4d5b6b;
+      --blue: #4f9eff;
+      --purple: #a371f7;
+      --orange: #f5a623;
+      --green: #3fb950;
+      --red: #f85149;
+      --rare: #4f9eff;
+      --epic: #a371f7;
+      --legendary: #f5a623;
+      --common: #8b949e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 34px;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(79, 158, 255, 0.14), transparent 32%),
+        radial-gradient(circle at 82% 8%, rgba(163, 113, 247, 0.12), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      max-width: 1120px;
+      margin: 0 auto 22px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .intro h1 {
+      margin: 0 0 7px;
+      font-size: 26px;
+      line-height: 1.1;
+      font-weight: 850;
+    }
+
+    .intro p {
+      margin: 0;
+      max-width: 740px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      min-width: 330px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 26px;
+      padding: 0 9px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(22, 27, 34, 0.74);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .stage {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 390px 390px minmax(360px, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .phone {
+      position: sticky;
+      top: 22px;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      border-radius: 44px;
+      background: var(--phone);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 32px 80px rgba(0, 0, 0, 0.9);
+    }
+
+    .status {
+      height: 44px;
+      padding: 14px 22px 0;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .scroll {
+      position: absolute;
+      inset: 44px 0 82px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .scroll::-webkit-scrollbar { display: none; }
+
+    .profile-header {
+      padding: 12px 20px 14px;
+      background: linear-gradient(to bottom, rgba(79, 158, 255, 0.08), transparent);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      font-size: 26px;
+      box-shadow: 0 0 20px rgba(79, 158, 255, 0.3);
+    }
+
+    .header-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .header-copy b {
+      display: block;
+      color: var(--text);
+      font-size: 20px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .header-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .capacity-pill {
+      padding: 6px 9px;
+      border: 1px solid rgba(79, 158, 255, 0.35);
+      border-radius: 10px;
+      background: rgba(79, 158, 255, 0.1);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 2px;
+      height: 38px;
+      padding: 0 20px;
+      background: #0d1117;
+      border-bottom: 1px solid #1e2632;
+    }
+
+    .tab {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      color: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .content {
+      padding: 12px 14px 0;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 9px 7px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 13px;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .filter-row {
+      height: 34px;
+      display: flex;
+      gap: 7px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .filter {
+      min-width: 58px;
+      padding: 0 10px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .filter.active {
+      border-color: rgba(79, 158, 255, 0.55);
+      background: rgba(79, 158, 255, 0.12);
+      color: var(--blue);
+    }
+
+    .inventory-panel {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(79, 158, 255, 0.06), transparent 58%),
+        var(--surface);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .equipment-tab-preview {
+      border: 1px solid rgba(79, 158, 255, 0.28);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(163, 113, 247, 0.07), transparent 58%),
+        var(--surface);
+      padding: 10px;
+      margin-top: 12px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .panel-head span:last-child {
+      color: var(--blue);
+    }
+
+    .bag-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .equipment-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .inventory-item,
+    .equipment-slot {
+      position: relative;
+      height: 92px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+
+    .equipment-slot.empty {
+      border-style: dashed;
+      opacity: 0.7;
+      background: rgba(30, 38, 50, 0.58);
+    }
+
+    .equipment-slot.equipped {
+      border-color: rgba(79, 158, 255, 0.55);
+      background: linear-gradient(180deg, rgba(79, 158, 255, 0.08), var(--surface-2));
+    }
+
+    .equipment-slot.legendary {
+      border-color: rgba(245, 166, 35, 0.72);
+      background: linear-gradient(180deg, rgba(245, 166, 35, 0.1), var(--surface-2));
+    }
+
+    .inventory-item.common { border-color: rgba(139, 148, 158, 0.48); }
+    .inventory-item.rare {
+      border-color: rgba(79, 158, 255, 0.64);
+      background: linear-gradient(180deg, rgba(79, 158, 255, 0.09), var(--surface-2));
+    }
+    .inventory-item.epic {
+      border-color: rgba(163, 113, 247, 0.64);
+      background: linear-gradient(180deg, rgba(163, 113, 247, 0.09), var(--surface-2));
+    }
+    .inventory-item.legendary {
+      border-color: rgba(245, 166, 35, 0.75);
+      background: linear-gradient(180deg, rgba(245, 166, 35, 0.1), var(--surface-2));
+      box-shadow: 0 0 16px rgba(245, 166, 35, 0.08);
+    }
+    .item-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: rgba(4, 8, 16, 0.38);
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .item-name {
+      max-width: 64px;
+      color: var(--muted);
+      font-size: 8px;
+      line-height: 1.15;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .item-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2px;
+      width: 100%;
+      padding: 0 5px;
+    }
+
+    .stat {
+      min-width: 24px;
+      padding: 1px 3px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 5px;
+      background: rgba(4, 8, 16, 0.32);
+      color: var(--text);
+      font-size: 7px;
+      line-height: 1.25;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .stat.xp { color: var(--orange); }
+    .stat.end, .stat.sta { color: var(--green); }
+    .stat.agi { color: var(--blue); }
+    .stat.str { color: var(--red); }
+    .stat.flx { color: var(--purple); }
+
+    .rarity-bar {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 5px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--common);
+    }
+
+    .rare .rarity-bar { background: var(--rare); }
+    .epic .rarity-bar { background: var(--epic); }
+    .legendary .rarity-bar { background: var(--legendary); }
+
+    .equipped-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 16px;
+      height: 16px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: var(--blue);
+      color: #04101f;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 82px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .nav-item.active {
+      color: var(--blue);
+    }
+
+    .notes {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(22, 27, 34, 0.82);
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 7px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .feature {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(30, 38, 50, 0.55);
+    }
+
+    .mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: rgba(79, 158, 255, 0.12);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .feature b {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 12px;
+    }
+
+    .feature span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .loadout-card {
+      border: 1px solid rgba(79, 158, 255, 0.3);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(79, 158, 255, 0.07), transparent 64%),
+        var(--surface);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .equipment-paperdoll {
+      --slot-w: 84px;
+      --slot-h: 92px;
+      --side-x: 14px;
+      --body-w: 116px;
+      --body-h: 156px;
+      position: relative;
+      height: 408px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(79, 158, 255, 0.08), rgba(163, 113, 247, 0.04));
+      box-shadow: inset 0 1px 0 rgba(230, 237, 243, 0.04);
+      overflow: hidden;
+    }
+
+    .paperdoll-slot {
+      position: absolute;
+      z-index: 2;
+      width: var(--slot-w);
+      height: var(--slot-h);
+    }
+
+    .paperdoll-slot.head {
+      left: calc(50% - (var(--slot-w) / 2));
+      top: 12px;
+    }
+    .paperdoll-slot.clothing {
+      left: calc(50% - (var(--body-w) / 2));
+      top: 116px;
+      width: var(--body-w);
+      height: var(--body-h);
+      padding: 12px;
+    }
+    .paperdoll-slot.clothing .item-icon {
+      width: 48px;
+      height: 48px;
+      font-size: 24px;
+    }
+    .paperdoll-slot.clothing .item-name {
+      max-width: 92px;
+      color: var(--text);
+      font-size: 10px;
+    }
+    .paperdoll-slot.clothing .item-stats {
+      gap: 4px;
+      padding: 0;
+    }
+    .paperdoll-slot.gloves { left: var(--side-x); top: 148px; }
+    .paperdoll-slot.tracker { right: var(--side-x); top: 148px; }
+    .paperdoll-slot.footwear {
+      left: calc(50% - (var(--slot-w) / 2));
+      bottom: 12px;
+    }
+    .paperdoll-slot.accessory { left: var(--side-x); bottom: 58px; }
+    .paperdoll-slot.bag { right: var(--side-x); bottom: 58px; }
+
+    .gear-bonuses {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .bonus {
+      padding: 8px 6px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .bonus b {
+      display: block;
+      font-size: 13px;
+    }
+
+    .bonus span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 18px 10px; }
+      .intro { display: block; max-width: 390px; }
+      .intro h1 { font-size: 22px; }
+      .legend { justify-content: flex-start; min-width: 0; margin-top: 12px; }
+      .stage { grid-template-columns: 1fr; max-width: 390px; }
+      .phone { position: relative; top: auto; width: 100%; }
+      .notes { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="intro">
+    <div>
+      <h1>Inventory Redesign: Life-Level Grid</h1>
+      <p>Updated to follow the current app style: dark blue surfaces, compact profile tabs, rounded panels, rarity bars, and the existing blue/purple/orange accent system. Inventory is a readable item grid; Equipment is a paperdoll-style equipped-items view.</p>
+    </div>
+    <div class="legend" aria-label="Rarity legend">
+      <span style="color: var(--common)"><i class="dot"></i>Common</span>
+      <span style="color: var(--rare)"><i class="dot"></i>Rare</span>
+      <span style="color: var(--epic)"><i class="dot"></i>Epic</span>
+      <span style="color: var(--legendary)"><i class="dot"></i>Legendary</span>
+    </div>
+  </header>
+
+  <main class="stage">
+    <section class="phone" aria-label="Mobile inventory mockup">
+      <div class="status"><span>9:41</span><span>Wi-Fi 100%</span></div>
+
+      <div class="scroll">
+        <section class="profile-header">
+          <div class="header-row">
+            <div class="avatar">R</div>
+            <div class="header-copy">
+              <b>Mihael</b>
+              <span>Level 12 - Balanced Explorer</span>
+            </div>
+            <div class="capacity-pill">32 / 50</div>
+          </div>
+        </section>
+
+        <nav class="tabs" aria-label="Profile tabs">
+          <div class="tab">Overview</div>
+          <div class="tab">Equipment</div>
+          <div class="tab active">Inventory</div>
+        </nav>
+
+        <section class="content">
+          <div class="summary">
+            <div class="metric"><b>18</b><span>Stored</span></div>
+            <div class="metric"><b>4</b><span>Equipped</span></div>
+            <div class="metric"><b>10</b><span>Open</span></div>
+          </div>
+
+          <div class="filter-row" aria-label="Inventory filters">
+            <div class="filter active">All</div>
+            <div class="filter">Tracker</div>
+            <div class="filter">Clothing</div>
+            <div class="filter">Footwear</div>
+            <div class="filter">Accessory</div>
+          </div>
+
+          <section class="inventory-panel" aria-label="Inventory grid">
+            <div class="panel-head">
+              <span>Inventory</span>
+              <span>Same-size item cells</span>
+            </div>
+
+            <div class="bag-grid">
+              <div class="inventory-item legendary">
+                <div class="equipped-badge">E</div>
+                <div class="item-icon">V</div>
+                <div class="item-name">Suntrail Vest</div>
+                <div class="item-stats"><span class="stat end">+12 END</span><span class="stat xp">+6% XP</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item rare">
+                <div class="item-icon">W</div>
+                <div class="item-name">Pace Watch</div>
+                <div class="item-stats"><span class="stat sta">+4 STA</span><span class="stat xp">+3% XP</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item epic">
+                <div class="item-icon">R</div>
+                <div class="item-name">Streak Ring</div>
+                <div class="item-stats"><span class="stat flx">+5 FLX</span><span class="stat sta">+3 STA</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item common">
+                <div class="item-icon">N</div>
+                <div class="item-name">Nut Bar</div>
+                <div class="item-stats"><span class="stat xp">+60 XP</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+
+              <div class="inventory-item rare">
+                <div class="equipped-badge">E</div>
+                <div class="item-icon">G</div>
+                <div class="item-name">Grip Gloves</div>
+                <div class="item-stats"><span class="stat str">+4 STR</span><span class="stat end">+2 END</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item rare">
+                <div class="item-icon">B</div>
+                <div class="item-name">Trail Boots</div>
+                <div class="item-stats"><span class="stat agi">+5 AGI</span><span class="stat sta">+2 STA</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item epic">
+                <div class="item-icon">S</div>
+                <div class="item-name">Hill Shoes</div>
+                <div class="item-stats"><span class="stat agi">+8 AGI</span><span class="stat end">+4 END</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item common">
+                <div class="item-icon">F</div>
+                <div class="item-name">Focus Flask</div>
+                <div class="item-stats"><span class="stat flx">+2 FLX</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+
+              <div class="inventory-item rare">
+                <div class="item-icon">C</div>
+                <div class="item-name">Route Compass</div>
+                <div class="item-stats"><span class="stat xp">+4% XP</span><span class="stat agi">+2 AGI</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item common">
+                <div class="item-icon">M</div>
+                <div class="item-name">Zone Chart</div>
+                <div class="item-stats"><span class="stat xp">+1 map</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item rare">
+                <div class="item-icon">H</div>
+                <div class="item-name">Trail Cap</div>
+                <div class="item-stats"><span class="stat end">+3 END</span><span class="stat flx">+2 FLX</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+              <div class="inventory-item common">
+                <div class="item-icon">P</div>
+                <div class="item-name">Protein Bar</div>
+                <div class="item-stats"><span class="stat str">+2 STR</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+            </div>
+          </section>
+        </section>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <div class="nav-item"><span class="nav-icon">H</span><span>Home</span></div>
+        <div class="nav-item"><span class="nav-icon">Q</span><span>Quests</span></div>
+        <div class="nav-item"><span class="nav-icon">M</span><span>Map</span></div>
+        <div class="nav-item active"><span class="nav-icon">P</span><span>Profile</span></div>
+      </nav>
+    </section>
+
+    <section class="phone" aria-label="Mobile equipment mockup">
+      <div class="status"><span>9:41</span><span>Wi-Fi 100%</span></div>
+
+      <div class="scroll">
+        <section class="profile-header">
+          <div class="header-row">
+            <div class="avatar">R</div>
+            <div class="header-copy">
+              <b>Mihael</b>
+              <span>Level 12 - Balanced Explorer</span>
+            </div>
+            <div class="capacity-pill">4 / 8</div>
+          </div>
+        </section>
+
+        <nav class="tabs" aria-label="Profile tabs">
+          <div class="tab">Overview</div>
+          <div class="tab active">Equipment</div>
+          <div class="tab">Inventory</div>
+        </nav>
+
+        <section class="content">
+          <section class="loadout-card" aria-label="Current equipped loadout">
+            <div class="panel-head">
+              <span>Current Loadout</span>
+              <span>Paperdoll</span>
+            </div>
+
+            <div class="equipment-paperdoll" aria-label="Equipped item paperdoll">
+              <div class="equipment-slot empty paperdoll-slot head">
+                <div class="item-icon">H</div>
+                <div class="item-name">Headwear</div>
+                <div class="item-stats"><span class="stat">Empty</span></div>
+              </div>
+
+              <div class="equipment-slot legendary paperdoll-slot clothing">
+                <div class="equipped-badge">E</div>
+                <div class="item-icon">C</div>
+                <div class="item-name">Clothing</div>
+                <div class="item-stats"><span class="stat end">+12 END</span><span class="stat xp">+6% XP</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+
+              <div class="equipment-slot equipped paperdoll-slot gloves">
+                <div class="equipped-badge">E</div>
+                <div class="item-icon">G</div>
+                <div class="item-name">Gloves</div>
+                <div class="item-stats"><span class="stat str">+4 STR</span><span class="stat end">+2 END</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+
+              <div class="equipment-slot equipped paperdoll-slot tracker">
+                <div class="equipped-badge">E</div>
+                <div class="item-icon">T</div>
+                <div class="item-name">Tracker</div>
+                <div class="item-stats"><span class="stat sta">+4 STA</span><span class="stat xp">+3% XP</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+
+              <div class="equipment-slot equipped paperdoll-slot footwear">
+                <div class="equipped-badge">E</div>
+                <div class="item-icon">S</div>
+                <div class="item-name">Footwear</div>
+                <div class="item-stats"><span class="stat agi">+5 AGI</span><span class="stat sta">+2 STA</span></div>
+                <div class="rarity-bar"></div>
+              </div>
+
+              <div class="equipment-slot empty paperdoll-slot accessory">
+                <div class="item-icon">A</div>
+                <div class="item-name">Accessory</div>
+                <div class="item-stats"><span class="stat">Empty</span></div>
+              </div>
+
+              <div class="equipment-slot empty paperdoll-slot bag">
+                <div class="item-icon">B</div>
+                <div class="item-name">Bag</div>
+                <div class="item-stats"><span class="stat">Empty</span></div>
+              </div>
+            </div>
+
+            <div class="gear-bonuses">
+              <div class="bonus"><b>+19</b><span>Endurance</span></div>
+              <div class="bonus"><b>+8%</b><span>Outdoor XP</span></div>
+              <div class="bonus"><b>4/8</b><span>Equipped</span></div>
+            </div>
+          </section>
+        </section>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <div class="nav-item"><span class="nav-icon">H</span><span>Home</span></div>
+        <div class="nav-item"><span class="nav-icon">Q</span><span>Quests</span></div>
+        <div class="nav-item"><span class="nav-icon">M</span><span>Map</span></div>
+        <div class="nav-item active"><span class="nav-icon">P</span><span>Profile</span></div>
+      </nav>
+    </section>
+
+    <section class="notes" aria-label="Design notes">
+      <div class="panel">
+        <h2>Updated Direction</h2>
+        <p>This version keeps the ARPG inventory flavor but preserves the app structure. The Inventory tab is only the item grid. The Equipment tab uses an aligned paperdoll layout with a larger Clothing slot as the center piece.</p>
+        <div class="feature-list">
+          <div class="feature">
+            <div class="mark">1</div>
+            <div><b>Same grid for every item</b><span>Use one tile size for clothing, tracker, gloves, footwear, accessories, consumables, and map items.</span></div>
+          </div>
+          <div class="feature">
+            <div class="mark">2</div>
+            <div><b>No backpack section label</b><span>The inventory itself is the backpack/storage surface, so the section label is simply Inventory.</span></div>
+          </div>
+          <div class="feature">
+            <div class="mark">3</div>
+            <div><b>Fits existing Life-Level style</b><span>Uses current app colors, profile tabs, compact cards, bottom nav, and stat-chip style action buttons.</span></div>
+          </div>
+          <div class="feature">
+            <div class="mark">4</div>
+            <div><b>Equipment paperdoll</b><span>Use positioned slot tiles around the larger Clothing slot for Headwear, Gloves, Tracker, Footwear, Accessory, and Bag.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

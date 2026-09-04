@@ -24,7 +24,8 @@ public class ActivityService(
     ICharacterTutorialPort characterTutorial,
     ILogger<ActivityService> logger,
     IWorldDungeonActivityPort? worldDungeonActivity = null,
-    IActivityBossDamagePort? activityBossDamage = null)
+    IActivityBossDamagePort? activityBossDamage = null,
+    IGuildRaidActivityPort? guildRaidActivity = null)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort, IActivityHistoryReadPort
 {
     // LL-035: the "log your first activity" tutorial step gate. We advance the character
@@ -137,6 +138,27 @@ public class ActivityService(
             }
         }
 
+        IReadOnlyList<GuildRaidDefeatedInfo> guildRaidDefeats = Array.Empty<GuildRaidDefeatedInfo>();
+        if (guildRaidActivity != null)
+        {
+            try
+            {
+                guildRaidDefeats = await guildRaidActivity.ApplyActivityAsync(
+                    userId,
+                    activity.Id,
+                    request.Type.ToString(),
+                    request.DurationMinutes,
+                    request.DistanceKm ?? 0,
+                    request.Calories ?? 0,
+                    activity.LoggedAt);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Guild raid activity damage failed for user {UserId}", userId);
+                guildRaidDefeats = Array.Empty<GuildRaidDefeatedInfo>();
+            }
+        }
+
         // Update quest progress and capture which quests were just completed
         var questResult = await questProgress.UpdateProgressFromActivityAsync(
             userId, request.Type, request.DurationMinutes,
@@ -184,6 +206,7 @@ public class ActivityService(
             LevelUpUnlocks = levelUpUnlocks,
             FloorCreditResult = floorCreditResult,
             BossDefeats = bossDefeats,
+            GuildRaidDefeats = guildRaidDefeats,
             ActiveEncounter = activeEncounter,
         };
     }
@@ -242,6 +265,26 @@ public class ActivityService(
             logger.LogInformation("ActivityService.LogExternalActivity user={UserId} type={Type} incomingDistanceKm={Km} externalId={ExternalId}",
                 userId, type, distanceKm, externalId);
             await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+        }
+
+        if (guildRaidActivity != null)
+        {
+            try
+            {
+                await guildRaidActivity.ApplyActivityAsync(
+                    userId,
+                    activity.Id,
+                    type.ToString(),
+                    durationMinutes,
+                    distanceKm ?? 0,
+                    calories ?? 0,
+                    activity.LoggedAt,
+                    ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Guild raid external activity damage failed for user {UserId}", userId);
+            }
         }
 
         await questProgress.UpdateProgressFromActivityAsync(

@@ -6,8 +6,7 @@ namespace LifeLevel.Api.Controllers.Admin;
 [Route("api/admin/config")]
 public class AdminConfigController(IConfiguration config) : ControllerBase
 {
-    [HttpGet]
-    public IActionResult Get() => Ok(new
+    [HttpGet]    public IActionResult Get() => Ok(new
     {
         email = config["Admin:Email"] ?? "local@lifelevel.com",
         password = config["Admin:Password"] ?? "1qaz!QAZ",

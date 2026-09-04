@@ -18,6 +18,7 @@ public class CharacterController(
     IStreakReadPort streakReadPort,
     ILoginRewardReadPort loginRewardReadPort,
     IDailyQuestReadPort dailyQuestReadPort,
+    IBossDefeatedCountReadPort bossDefeatedCountReadPort,
     IUserReadPort userReadPort,
     IGearBonusReadPort gearBonusReadPort) : ControllerBase
 {
@@ -47,7 +48,8 @@ public class CharacterController(
                 WeeklyStats: await activityStatsPort.GetWeeklyStatsAsync(userId),
                 Streak: await streakReadPort.GetCurrentStreakAsync(userId),
                 HasClaimedLoginRewardToday: await loginRewardReadPort.HasClaimedTodayAsync(userId),
-                DailyQuestsCompleted: await dailyQuestReadPort.CountCompletedDailyQuestsAsync(userId)
+                DailyQuestsCompleted: await dailyQuestReadPort.CountCompletedDailyQuestsAsync(userId),
+                BossesDefeated: await bossDefeatedCountReadPort.GetDefeatedCountAsync(userId)
             );
             var profile = await characterService.GetProfileAsync(userId, ctx);
             var gearBonuses = await gearBonusReadPort.GetEquippedBonusesAsync(userId);
@@ -57,6 +59,37 @@ public class CharacterController(
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("avatars")]
+    public async Task<IActionResult> GetAvatars(CancellationToken ct)
+    {
+        var userId = userContext.UserId;
+        try
+        {
+            var ctx = await BuildProfileContextAsync(userId, ct);
+            return Ok(await characterService.GetAvatarsAsync(userId, ctx, ct));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("avatar")]
+    public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarRequest req, CancellationToken ct)
+    {
+        var userId = userContext.UserId;
+        try
+        {
+            var ctx = await BuildProfileContextAsync(userId, ct);
+            await characterService.UpdateAvatarAsync(userId, req, ctx, ct);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -82,4 +115,14 @@ public class CharacterController(
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    private async Task<CharacterProfileContext> BuildProfileContextAsync(Guid userId, CancellationToken ct) =>
+        new(
+            Username: await userReadPort.GetUsernameAsync(userId) ?? string.Empty,
+            WeeklyStats: await activityStatsPort.GetWeeklyStatsAsync(userId, ct),
+            Streak: await streakReadPort.GetCurrentStreakAsync(userId, ct),
+            HasClaimedLoginRewardToday: await loginRewardReadPort.HasClaimedTodayAsync(userId, ct),
+            DailyQuestsCompleted: await dailyQuestReadPort.CountCompletedDailyQuestsAsync(userId, ct),
+            BossesDefeated: await bossDefeatedCountReadPort.GetDefeatedCountAsync(userId, ct)
+        );
 }

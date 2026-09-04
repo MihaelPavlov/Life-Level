@@ -48,6 +48,9 @@ public class CharacterService(
         var characterClass = await db.Set<CharacterClassEntity>().FirstOrDefaultAsync(c => c.Id == req.ClassId && c.IsActive)
             ?? throw new InvalidOperationException("Invalid class selected.");
 
+        if (!IsStarterAvatar(req.AvatarEmoji))
+            throw new InvalidOperationException("Avatar is locked.");
+
         character.ClassId = req.ClassId;
         character.AvatarEmoji = req.AvatarEmoji;
         character.IsSetupComplete = true;
@@ -103,6 +106,44 @@ public class CharacterService(
             TutorialTopicsSeen: character.TutorialTopicsSeen,
             MapTutorialStep: character.MapTutorialStep
         );
+    }
+
+    public async Task<IReadOnlyList<AvatarOptionResponse>> GetAvatarsAsync(
+        Guid userId,
+        CharacterProfileContext ctx,
+        CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>()
+            .FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        return AvatarCatalog.All
+            .Select(a => a.ToResponse(
+                IsAvatarUnlocked(a, character, ctx),
+                a.Emoji == character.AvatarEmoji))
+            .OrderBy(a => a.SortOrder)
+            .ToList();
+    }
+
+    public async Task UpdateAvatarAsync(
+        Guid userId,
+        UpdateAvatarRequest req,
+        CharacterProfileContext ctx,
+        CancellationToken ct = default)
+    {
+        var avatar = AvatarCatalog.Find(req.AvatarEmoji)
+            ?? throw new InvalidOperationException("Unknown avatar.");
+
+        var character = await db.Set<CharacterEntity>()
+            .FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        if (!IsAvatarUnlocked(avatar, character, ctx))
+            throw new InvalidOperationException(avatar.UnlockRequirement);
+
+        character.AvatarEmoji = avatar.Emoji;
+        character.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
     }
 
     /// <summary>Implements ICharacterXpPort</summary>
@@ -491,4 +532,35 @@ public class CharacterService(
 
     private static long XpAtLevelStart(int level) =>
         (long)level * (level - 1) / 2 * 300;
+
+    private static bool IsStarterAvatar(string avatarEmoji) =>
+        AvatarCatalog.Find(avatarEmoji)?.UnlockType == AvatarUnlockType.Starter;
+
+    private static bool IsAvatarUnlocked(
+        AvatarDefinition avatar,
+        CharacterEntity character,
+        CharacterProfileContext ctx) =>
+        avatar.UnlockType switch
+        {
+            AvatarUnlockType.Starter => true,
+            AvatarUnlockType.Level => character.Level >= avatar.RequiredValue,
+            AvatarUnlockType.Rank => RankMeetsRequirement(character.Rank, avatar.RequiredRank),
+            AvatarUnlockType.Streak => (ctx.Streak?.Current ?? 0) >= avatar.RequiredValue,
+            AvatarUnlockType.DailyQuests => ctx.DailyQuestsCompleted >= avatar.RequiredValue,
+            AvatarUnlockType.BossesDefeated => ctx.BossesDefeated >= avatar.RequiredValue,
+            _ => false,
+        };
+
+    private static bool RankMeetsRequirement(string currentRank, string? requiredRank)
+    {
+        if (string.IsNullOrWhiteSpace(requiredRank)) return true;
+
+        string[] order = ["Novice", "Warrior", "Veteran", "Champion", "Legend", "Legendary"];
+        var currentIndex = Array.FindIndex(order, r =>
+            string.Equals(r, currentRank, StringComparison.OrdinalIgnoreCase));
+        var requiredIndex = Array.FindIndex(order, r =>
+            string.Equals(r, requiredRank, StringComparison.OrdinalIgnoreCase));
+
+        return currentIndex >= 0 && requiredIndex >= 0 && currentIndex >= requiredIndex;
+    }
 }

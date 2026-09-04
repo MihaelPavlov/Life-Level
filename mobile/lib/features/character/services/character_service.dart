@@ -2,6 +2,7 @@ import '../../../core/api/api_client.dart';
 import '../models/character_class.dart';
 import '../models/character_profile.dart';
 import '../models/character_setup_result.dart';
+import '../models/avatar_option.dart';
 import '../models/xp_history_entry.dart';
 
 class CharacterService {
@@ -38,5 +39,16 @@ class CharacterService {
 
   Future<void> spendStatPoint(String stat) async {
     await _dio.post('/character/spend-stat', data: {'stat': stat});
+  }
+
+  Future<List<AvatarOption>> getAvatars() async {
+    final res = await _dio.get('/character/avatars');
+    return (res.data as List<dynamic>)
+        .map((e) => AvatarOption.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<void> updateAvatar(String avatarEmoji) async {
+    await _dio.put('/character/avatar', data: {'avatarEmoji': avatarEmoji});
   }
 }

@@ -7,7 +7,8 @@ public record CharacterProfileContext(
     WeeklyActivityStatsDto WeeklyStats,
     StreakReadDto? Streak,
     bool HasClaimedLoginRewardToday,
-    int DailyQuestsCompleted
+    int DailyQuestsCompleted,
+    int BossesDefeated = 0
 );
 
 public record CharacterProfileResponse(

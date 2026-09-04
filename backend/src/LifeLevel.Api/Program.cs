@@ -1,6 +1,7 @@
 using System.Text;
 using LifeLevel.Api.Application.Adapters;
 using LifeLevel.Api.Application.BackgroundJobs;
+using LifeLevel.Api.Application.Realtime;
 using LifeLevel.Api.Application.Services;
 using LifeLevel.Api.Infrastructure;
 using LifeLevel.Api.Infrastructure.Persistence;
@@ -15,6 +16,7 @@ using LifeLevel.Modules.Quest.Infrastructure;
 using LifeLevel.Modules.Streak.Infrastructure;
 using LifeLevel.Modules.WorldZone.Infrastructure;
 using LifeLevel.Modules.Items.Infrastructure;
+using LifeLevel.Modules.Guild.Infrastructure;
 using LifeLevel.Modules.Integrations.Application;
 using LifeLevel.Modules.Achievements.Infrastructure;
 using LifeLevel.Modules.Integrations.Infrastructure;
@@ -58,6 +60,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs/guild-raid"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(opts =>
@@ -66,6 +83,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
+builder.Services.AddSignalR();
 
 // Shared kernel (registers IEventPublisher)
 builder.Services.AddSharedKernel();
@@ -108,6 +126,10 @@ builder.Services.AddDungeonsModule();
 // Items module
 builder.Services.AddItemsModule();
 
+// Guild module
+builder.Services.AddGuildModule();
+builder.Services.AddScoped<IGuildRaidRealtimePort, GuildRaidRealtimePublisher>();
+
 // Achievements module
 builder.Services.AddAchievementsModule();
 
@@ -136,6 +158,7 @@ builder.Services.AddScoped<IUserContext, HttpUserContext>();
 
 // Background jobs
 builder.Services.AddHostedService<DailyResetJob>();
+builder.Services.AddHostedService<GuildRaidExpiryJob>();
 
 // CORS — allow Flutter dev clients + local HTML files (Origin: null from file://)
 builder.Services.AddCors(options =>
@@ -182,6 +205,7 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<GuildRaidHub>("/hubs/guild-raid");
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "ok",

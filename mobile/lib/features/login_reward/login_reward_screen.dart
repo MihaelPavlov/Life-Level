@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../character/providers/character_provider.dart';
 import 'models/login_reward_models.dart';
@@ -275,27 +276,18 @@ class _LoginRewardScreenState extends ConsumerState<LoginRewardScreen> {
       ref.invalidate(loginRewardStatusProvider);
       setState(() => _claiming = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.red),
-        );
+        AppToast.error(context, e.message);
         widget.onDismiss();
       }
     } on LoginRewardException catch (e) {
       setState(() => _claiming = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.red),
-        );
+        AppToast.error(context, e.message);
       }
     } catch (e) {
       setState(() => _claiming = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to claim reward: $e'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        AppToast.error(context, 'Failed to claim reward: $e');
       }
     }
   }

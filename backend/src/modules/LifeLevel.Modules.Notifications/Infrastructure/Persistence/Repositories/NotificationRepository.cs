@@ -64,6 +64,15 @@ public class NotificationRepository(DbContext db) : INotificationRepository
         await db.SaveChangesAsync(ct);
     }
 
+    public Task<NotificationPreference?> GetPreferencesAsync(Guid userId, CancellationToken ct = default) =>
+        db.Set<NotificationPreference>()
+            .FirstOrDefaultAsync(p => p.UserId == userId, ct);
+
+    public async Task AddPreferencesAsync(NotificationPreference preferences, CancellationToken ct = default)
+    {
+        await db.Set<NotificationPreference>().AddAsync(preferences, ct);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);
 }

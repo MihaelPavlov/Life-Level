@@ -202,6 +202,62 @@ class BossDefeatedInfo {
       );
 }
 
+class GuildRaidVictoryInfo {
+  final String guildId;
+  final String guildRaidId;
+  final String bossName;
+  final String bossIcon;
+  final int rewardXp;
+  final int mvpBonusXp;
+  final String? topContributorUsername;
+  final int topContributorDamage;
+  final int yourDamage;
+  final int totalDamage;
+
+  const GuildRaidVictoryInfo({
+    required this.guildId,
+    required this.guildRaidId,
+    required this.bossName,
+    required this.bossIcon,
+    required this.rewardXp,
+    this.mvpBonusXp = 0,
+    this.topContributorUsername,
+    this.topContributorDamage = 0,
+    this.yourDamage = 0,
+    this.totalDamage = 0,
+  });
+
+  factory GuildRaidVictoryInfo.fromJson(Map<String, dynamic> json) =>
+      GuildRaidVictoryInfo(
+        guildId: _stringValue(json, 'guildId'),
+        guildRaidId: _stringValue(json, 'guildRaidId'),
+        bossName: _stringValue(json, 'bossName'),
+        bossIcon: _stringValue(json, 'bossIcon'),
+        rewardXp: _intValue(json, 'rewardXp'),
+        mvpBonusXp: _intValue(json, 'mvpBonusXp'),
+        topContributorUsername:
+            _nullableStringValue(json, 'topContributorUsername'),
+        topContributorDamage: _intValue(json, 'topContributorDamage'),
+        yourDamage: _intValue(json, 'yourDamage'),
+        totalDamage: _intValue(json, 'totalDamage'),
+      );
+}
+
+String _stringValue(Map<String, dynamic> json, String key) =>
+    _value(json, key)?.toString() ?? '';
+
+String? _nullableStringValue(Map<String, dynamic> json, String key) =>
+    _value(json, key)?.toString();
+
+int _intValue(Map<String, dynamic> json, String key) =>
+    (_value(json, key) as num?)?.toInt() ?? 0;
+
+dynamic _value(Map<String, dynamic> json, String key) {
+  if (json.containsKey(key)) return json[key];
+  final pascal = key.isEmpty ? key : '${key[0].toUpperCase()}${key.substring(1)}';
+  return json[pascal];
+}
+
 class DungeonFloorCreditInfo {
   final String dungeonName;
   final int clearedFloorOrdinal;
@@ -256,6 +312,8 @@ class LogActivityResult {
   /// celebration overlay. Empty in the common case.
   final List<BossDefeatedInfo> bossDefeats;
 
+  final List<GuildRaidVictoryInfo> guildRaidDefeats;
+
   /// Non-null when the distance processing was stopped by an NPC encounter.
   /// The mobile client shows the encounter modal instead of navigating away.
   final ActiveEncounterResult? activeEncounter;
@@ -280,6 +338,7 @@ class LogActivityResult {
     this.levelUpUnlocks,
     this.floorCreditResult,
     this.bossDefeats = const [],
+    this.guildRaidDefeats = const [],
     this.activeEncounter,
   });
 
@@ -318,6 +377,10 @@ class LogActivityResult {
                 json['floorCreditResult'] as Map<String, dynamic>),
         bossDefeats: (json['bossDefeats'] as List<dynamic>? ?? [])
             .map((e) => BossDefeatedInfo.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        guildRaidDefeats: (json['guildRaidDefeats'] as List<dynamic>? ?? [])
+            .map((e) =>
+                GuildRaidVictoryInfo.fromJson(e as Map<String, dynamic>))
             .toList(),
         activeEncounter: json['activeEncounter'] != null
             ? ActiveEncounterResult.fromJson(

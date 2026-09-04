@@ -21,10 +21,10 @@ class TutorialUpdateResult {
 
   factory TutorialUpdateResult.fromJson(Map<String, dynamic> json) {
     return TutorialUpdateResult(
-      tutorialStep: json['tutorialStep'] as int? ?? 0,
-      tutorialTopicsSeen: json['tutorialTopicsSeen'] as int? ?? 0,
-      mapTutorialStep: json['mapTutorialStep'] as int? ?? 0,
-      xpAwarded: json['xpAwarded'] as int? ?? 0,
+      tutorialStep: _readInt(json, 'tutorialStep') ?? 0,
+      tutorialTopicsSeen: _readInt(json, 'tutorialTopicsSeen') ?? 0,
+      mapTutorialStep: _readInt(json, 'mapTutorialStep') ?? 0,
+      xpAwarded: _readInt(json, 'xpAwarded') ?? 0,
     );
   }
 }
@@ -36,9 +36,16 @@ class MapTutorialUpdateResult {
 
   factory MapTutorialUpdateResult.fromJson(Map<String, dynamic> json) {
     return MapTutorialUpdateResult(
-      mapTutorialStep: json['mapTutorialStep'] as int? ?? 0,
+      mapTutorialStep: _readInt(json, 'mapTutorialStep') ?? 0,
     );
   }
+}
+
+int? _readInt(Map<String, dynamic> json, String camelCaseKey) {
+  final pascalCaseKey =
+      camelCaseKey[0].toUpperCase() + camelCaseKey.substring(1);
+  final value = json[camelCaseKey] ?? json[pascalCaseKey];
+  return value is int ? value : (value is num ? value.toInt() : null);
 }
 
 /// Thin wrapper over the four tutorial endpoints.

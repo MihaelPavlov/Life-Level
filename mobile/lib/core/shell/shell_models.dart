@@ -32,6 +32,20 @@ RingItem('titles',      '🏅', 'Titles',      Color(0xFFe8b86d), iconAsset: App
 
 const kDefaultRingIds = ['world', 'guild', 'stats', 'titles', 'boss'];
 
+List<String> sanitizeRingIds(List<String>? ids) {
+  final validIds = kAllRingItems.map((e) => e.id).toSet();
+  final sanitized = <String>[];
+  for (final raw in ids ?? const <String>[]) {
+    final id = raw.toLowerCase();
+    if (validIds.contains(id) && !sanitized.contains(id)) {
+      sanitized.add(id);
+    }
+  }
+  return sanitized.isEmpty
+      ? List<String>.from(kDefaultRingIds)
+      : sanitized.take(6).toList();
+}
+
 // ── nav tab data ──────────────────────────────────────────────────────────────
 class NavTab {
   final String id;
@@ -53,3 +67,23 @@ const kAllNavItems = [
 ];
 
 const kDefaultNavIds = ['home', 'quests', 'world', 'profile'];
+
+List<String> sanitizeNavIds(List<String>? ids) {
+  final validIds = kAllNavItems.map((e) => e.id).toSet();
+  final sanitized = <String>[];
+  for (final raw in ids ?? const <String>[]) {
+    final id = raw.toLowerCase();
+    if (validIds.contains(id) && !sanitized.contains(id)) {
+      sanitized.add(id);
+    }
+  }
+  for (final id in kDefaultNavIds) {
+    if (sanitized.length >= 4) break;
+    if (!sanitized.contains(id)) sanitized.add(id);
+  }
+  for (final item in kAllNavItems) {
+    if (sanitized.length >= 4) break;
+    if (!sanitized.contains(item.id)) sanitized.add(item.id);
+  }
+  return sanitized.take(4).toList();
+}

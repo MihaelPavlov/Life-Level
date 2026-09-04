@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_toast.dart';
 import '../activity/providers/activity_provider.dart';
 import '../boss/providers/boss_provider.dart';
 import '../character/providers/character_provider.dart';
@@ -126,9 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Sync handler (wired into the Adventure Hero "Sync" button) ──────────
   Future<void> _handleSync(BuildContext context, WidgetRef ref) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Syncing activities...')),
-    );
+    AppToast.info(context, 'Syncing activities...', icon: Icons.sync_rounded);
 
     int imported = 0;
     int skipped = 0;
@@ -163,8 +162,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : skipped > 0
             ? 'Already up to date ($skipped synced)'
             : 'No new activities found';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    AppToast.success(context, msg);
   }
 }

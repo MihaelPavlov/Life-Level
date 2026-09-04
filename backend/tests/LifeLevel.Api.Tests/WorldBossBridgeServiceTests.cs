@@ -208,7 +208,7 @@ public class WorldBossBridgeServiceTests
         Assert.True(boss.SuppressExpiry);
         Assert.Null(boss.NodeId);
         Assert.Equal(fx.ForestBoss.Name, boss.Name);
-        Assert.Equal(fx.ForestBoss.Emoji, boss.Icon);
+        Assert.Equal("assets/Bosses/boss_forest_warden.svg", boss.Icon);
         Assert.Equal(fx.ForestBoss.XpReward, boss.RewardXp);
         // HP formula: 500 * max(chapter=1,1) + 250 * max(tier=6,1) = 500 + 1500 = 2000
         Assert.Equal(500 * 1 + 250 * 6, boss.MaxHp);

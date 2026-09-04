@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/services/boss_defeated_notifier.dart';
 import '../../core/services/dungeon_floor_cleared_notifier.dart';
+import '../../core/services/guild_raid_victory_notifier.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../boss/providers/boss_provider.dart';
+import '../guild/providers/guild_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../quests/providers/quest_provider.dart';
 import '../streak/providers/streak_provider.dart';
@@ -175,6 +178,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       ref.invalidate(streakProvider);
       ref.invalidate(worldProgressProvider);
       ref.invalidate(bossListProvider);
+      ref.invalidate(guildProvider);
 
       WorldZoneRefreshNotifier.notify();
 
@@ -192,6 +196,10 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       // boss, in the order the backend killed them).
       for (final boss in result.bossDefeats) {
         BossDefeatedNotifier.notify(boss);
+      }
+
+      for (final raid in result.guildRaidDefeats) {
+        GuildRaidVictoryNotifier.notify(raid);
       }
 
       // Dungeon floor credit → global toast + overlay refresh.
@@ -236,12 +244,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
     } catch (e) {
       setState(() => _submitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to log activity: $e'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        AppToast.error(context, 'Failed to log activity: $e');
       }
     }
   }

@@ -13,3 +13,25 @@ public record NotificationItemDto(
     DateTime CreatedAt,
     bool IsRead
 );
+
+public record NotificationPreferencesDto(
+    bool PushEnabled,
+    bool LevelUpEnabled,
+    bool QuestEnabled,
+    bool BossEnabled,
+    bool StreakEnabled,
+    bool RankEnabled,
+    bool QuietHoursEnabled,
+    int QuietHoursStartUtc,
+    int QuietHoursEndUtc);
+
+public record UpdateNotificationPreferencesRequest(
+    bool PushEnabled,
+    bool LevelUpEnabled,
+    bool QuestEnabled,
+    bool BossEnabled,
+    bool StreakEnabled,
+    bool RankEnabled,
+    bool QuietHoursEnabled,
+    int QuietHoursStartUtc,
+    int QuietHoursEndUtc);

@@ -11,6 +11,9 @@ import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/screens/integrations_screen.dart';
 import '../tutorial/screens/tutorials_hub_screen.dart';
+import 'account_settings_screen.dart';
+import 'edit_avatar_screen.dart';
+import 'notification_preferences_screen.dart';
 import 'profile_overview_tab.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
@@ -345,11 +348,12 @@ class _SettingsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Container(
               width: 36,
               height: 4,
@@ -372,6 +376,61 @@ class _SettingsSheet extends ConsumerWidget {
                   ),
                 ),
               ),
+            ),
+            _SettingsTile(
+              icon: Icons.face_retouching_natural_outlined,
+              label: 'Change Avatar',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(builder: (_) => const EditAvatarScreen()),
+                );
+              },
+            ),
+            const Divider(
+              height: 1,
+              indent: 20,
+              endIndent: 20,
+              color: kPBorder,
+            ),
+            _SettingsTile(
+              icon: Icons.lock_outline,
+              label: 'Email & Password',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(
+                    builder: (_) => const AccountSettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(
+              height: 1,
+              indent: 20,
+              endIndent: 20,
+              color: kPBorder,
+            ),
+            _SettingsTile(
+              icon: Icons.notifications_outlined,
+              label: 'Notifications',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationPreferencesScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(
+              height: 1,
+              indent: 20,
+              endIndent: 20,
+              color: kPBorder,
             ),
             _SettingsTile(
               icon: Icons.cable_outlined,
@@ -420,7 +479,8 @@ class _SettingsSheet extends ConsumerWidget {
                 await performLogout(parentContext);
               },
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

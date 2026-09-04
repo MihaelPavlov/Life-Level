@@ -51,6 +51,11 @@ public class LogActivityResult
     public IReadOnlyList<BossDefeatedInfo> BossDefeats { get; init; } = [];
 
     /// <summary>
+    /// Guild raids defeated by this activity's guild damage tick.
+    /// </summary>
+    public IReadOnlyList<GuildRaidDefeatedInfo> GuildRaidDefeats { get; init; } = [];
+
+    /// <summary>
     /// Non-null when the workout's distance processing was stopped mid-path by
     /// an NPC encounter. Remaining km are banked on the server. The mobile
     /// client shows the encounter modal instead of navigating away.

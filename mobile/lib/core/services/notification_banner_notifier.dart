@@ -12,7 +12,7 @@ class NotificationBannerPayload {
 /// Global notifier for foreground push notification banners.
 ///
 /// NotificationsService fires this whenever a message arrives while the app
-/// is open. MainShell listens and shows a SnackBar banner.
+/// is open. MainShell listens and shows an AppToast banner.
 class NotificationBannerNotifier {
   NotificationBannerNotifier._();
 

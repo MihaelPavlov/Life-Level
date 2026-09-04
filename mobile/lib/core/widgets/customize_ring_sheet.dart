@@ -1,6 +1,14 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'main_shell.dart' show kAllRingItems, RingItem, kAllNavItems, NavTab, anglesFor;
+import 'main_shell.dart'
+    show
+        kAllRingItems,
+        RingItem,
+        kAllNavItems,
+        NavTab,
+        anglesFor,
+        sanitizeRingIds,
+        sanitizeNavIds;
 
 const _kSheetBg   = Color(0xFF0f1828);
 const _kCardBg    = Color(0xFF1a2848);
@@ -37,8 +45,8 @@ class _CustomizeRingSheetState extends State<CustomizeRingSheet> {
   @override
   void initState() {
     super.initState();
-    _ids    = List.from(widget.currentIds);
-    _navIds = List.from(widget.currentNavIds);
+    _ids    = sanitizeRingIds(widget.currentIds);
+    _navIds = sanitizeNavIds(widget.currentNavIds);
   }
 
   // ── ring helpers ──────────────────────────────────────────────────────────
@@ -123,7 +131,7 @@ class _CustomizeRingSheetState extends State<CustomizeRingSheet> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    widget.onSave(_ids, _navIds);
+                    widget.onSave(sanitizeRingIds(_ids), sanitizeNavIds(_navIds));
                     Navigator.pop(context);
                   },
                   child: Container(
@@ -245,7 +253,7 @@ class _RingPreview extends StatelessWidget {
     const itemSize = 24.0;
     const boxSize = 120.0;
 
-    final items = ids
+    final items = sanitizeRingIds(ids)
         .map((id) => kAllRingItems.firstWhere((e) => e.id == id))
         .toList();
     final n = items.length;
@@ -375,7 +383,7 @@ class _NavPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = navIds
+    final tabs = sanitizeNavIds(navIds)
         .map((id) => kAllNavItems.firstWhere((e) => e.id == id))
         .toList();
     final half = tabs.length ~/ 2;

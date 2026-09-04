@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'models/tutorial_placement.dart';
 import 'models/tutorial_step.dart';
 import 'models/tutorial_topic.dart';
+import 'services/map_tutorial_local_store.dart';
 import 'services/tutorial_service.dart';
 
 /// Drives the tutorial state machine. Owns the "currently visible step",
@@ -18,6 +19,7 @@ class TutorialController extends ChangeNotifier {
       : _api = service ?? TutorialService();
 
   final TutorialService _api;
+  final MapTutorialLocalStore _mapLocalStore = MapTutorialLocalStore();
 
   // ── state ────────────────────────────────────────────────────────────────
   TutorialStep? _step;
@@ -95,8 +97,7 @@ class TutorialController extends ChangeNotifier {
   }
 
   /// Returns true if `topic` has been replayed / seen at least once.
-  bool hasSeenTopic(TutorialTopic t) =>
-      (_topicsSeen & (1 << t.bitIndex)) != 0;
+  bool hasSeenTopic(TutorialTopic t) => (_topicsSeen & (1 << t.bitIndex)) != 0;
 
   // ── lifecycle ────────────────────────────────────────────────────────────
 
@@ -175,6 +176,13 @@ class TutorialController extends ChangeNotifier {
     if (_busy || _isMapTutorial) return;
     if (_mapTutorialStep == -1 || _mapTutorialStep >= 99) return;
 
+    final localTerminalStep = await _mapLocalStore.readTerminalStep();
+    if (localTerminalStep == -1 || (localTerminalStep ?? 0) >= 99) {
+      _mapTutorialStep = localTerminalStep!;
+      notifyListeners();
+      return;
+    }
+
     if (_mapTutorialStep == 0) {
       _busy = true;
       notifyListeners();
@@ -249,9 +257,15 @@ class TutorialController extends ChangeNotifier {
       _busy = true;
       notifyListeners();
       try {
+        final previousStep = _mapTutorialStep;
+        final completingLocalStep = _mapQueue.length <= 1;
         final result = await _api.advanceMapTutorial();
-        _mapTutorialStep = result.mapTutorialStep;
+        _mapTutorialStep =
+            result.mapTutorialStep <= previousStep && previousStep > 0
+                ? (completingLocalStep ? 99 : previousStep + 1)
+                : result.mapTutorialStep;
         if (_mapTutorialStep == -1 || _mapTutorialStep >= 99) {
+          await _mapLocalStore.saveTerminalStep(_mapTutorialStep);
           await stop();
           return;
         }
@@ -259,7 +273,14 @@ class TutorialController extends ChangeNotifier {
       } catch (_) {
         if (_mapQueue.isNotEmpty) {
           _mapQueue.removeAt(0);
-          _step = _mapQueue.isEmpty ? null : _mapQueue.first;
+          if (_mapQueue.isEmpty) {
+            _mapTutorialStep = 99;
+            await _mapLocalStore.saveTerminalStep(99);
+            await stop();
+            return;
+          }
+          _mapTutorialStep += 1;
+          _step = _mapQueue.first;
         }
       } finally {
         _busy = false;
@@ -345,8 +366,13 @@ class TutorialController extends ChangeNotifier {
     notifyListeners();
     try {
       if (_isMapTutorial) {
-        final result = await _api.skipMapTutorial();
-        _mapTutorialStep = result.mapTutorialStep;
+        try {
+          final result = await _api.skipMapTutorial();
+          _mapTutorialStep = result.mapTutorialStep;
+        } finally {
+          if (_mapTutorialStep != -1) _mapTutorialStep = -1;
+          await _mapLocalStore.saveTerminalStep(_mapTutorialStep);
+        }
       } else {
         final result = await _api.skip();
         _topicsSeen = result.tutorialTopicsSeen;
@@ -379,6 +405,7 @@ class TutorialController extends ChangeNotifier {
     _busy = true;
     notifyListeners();
     try {
+      await _mapLocalStore.clearTerminalStep();
       final result = await _api.replayMapTutorial();
       _mapTutorialStep = result.mapTutorialStep;
     } catch (_) {

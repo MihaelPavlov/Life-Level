@@ -9,6 +9,7 @@ public static class IdentityModule
     {
         services.AddScoped<JwtService>();
         services.AddScoped<AuthService>();
+        services.AddScoped<AccountService>();
         return services;
     }
 }

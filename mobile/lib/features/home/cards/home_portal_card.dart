@@ -7,6 +7,7 @@ import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../../core/services/world_map_notifier.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../../boss/models/boss_list_item.dart';
 import '../../boss/providers/boss_provider.dart';
 import '../../map/models/encounter_models.dart';
@@ -81,28 +82,16 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
       await WorldZoneService().setDestination(branch.id);
       WorldZoneRefreshNotifier.notify();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Heading to ${branch.name}')),
-      );
+      AppToast.info(context, 'Heading to ${branch.name}', icon: Icons.alt_route_rounded);
     } on PathAlreadyChosenException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You already chose a different path here.'),
-        ),
-      );
+      AppToast.warning(context, 'You already chose a different path here.');
     } on BranchRequiresCrossroadsArrivalException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Travel to the crossroads first, then pick a branch.'),
-        ),
-      );
+      AppToast.warning(context, 'Travel to the crossroads first, then pick a branch.');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not choose path: $e')),
-      );
+      AppToast.error(context, 'Could not choose path: $e');
     } finally {
       if (mounted) setState(() => _pickingBranchId = null);
     }
@@ -296,7 +285,6 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     }
   }
 }
-
 // ── Zone picker ──────────────────────────────────────────────────────────────
 WorldZoneModel? _pickPortalZone(WorldFullData world) {
   final destId = world.userProgress.destinationZoneId;
@@ -656,10 +644,10 @@ class _BossZonePortal extends ConsumerWidget {
           // Lazy-spawn race or list still loading: fall back to the boss
           // list (no preselect) and tell the user to retry.
           BossOverlayNotifier.notify();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Boss is spawning — log a workout to engage.'),
-            ),
+          AppToast.info(
+            context,
+            'Boss is spawning - log a workout to engage.',
+            icon: Icons.sports_martial_arts_rounded,
           );
           return;
         }

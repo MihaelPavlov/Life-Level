@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../models/streak_models.dart';
 import '../providers/streak_provider.dart';
 
@@ -127,21 +128,14 @@ class _StreakDetailSheetState extends ConsumerState<StreakDetailSheet> {
       final result =
           await ref.read(streakProvider.notifier).useShield();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message),
-          backgroundColor:
-              result.success ? AppColors.green : AppColors.red,
-        ),
-      );
+      if (result.success) {
+        AppToast.success(context, result.message);
+      } else {
+        AppToast.error(context, result.message);
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to use shield: $e'),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, 'Failed to use shield: $e');
     } finally {
       if (mounted) setState(() => _shieldBusy = false);
     }

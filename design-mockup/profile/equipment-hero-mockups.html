@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life-Level Equipment Hero Mockups</title>
+  <style>
+    :root {
+      --bg: #050a11;
+      --phone: #080e17;
+      --panel: #121a26;
+      --panel-2: #172131;
+      --line: #29364a;
+      --text: #e7edf5;
+      --muted: #8c99aa;
+      --blue: #4f9eff;
+      --purple: #a371f7;
+      --green: #42d77d;
+      --orange: #f5a623;
+      --gold: #f6d36d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 34px;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.4 Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    .intro { max-width: 1180px; margin: 0 auto 24px; }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    .intro p { max-width: 780px; color: var(--muted); margin: 0; }
+    .grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(260px, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+    .concept h2 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .concept p { color: var(--muted); font-size: 12px; margin: 0 0 10px; min-height: 34px; }
+    .recommended { color: var(--green); }
+    .phone {
+      height: 760px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #2c394d;
+      border-radius: 22px;
+      background: var(--phone);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .status { height: 30px; padding: 10px 16px 0; display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .topbar { padding: 12px 16px 8px; display: flex; align-items: center; gap: 10px; }
+    .back, .more { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); background: var(--panel); }
+    .topbar strong { flex: 1; font-size: 18px; }
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); padding: 7px 16px 0; gap: 6px; }
+    .tab { padding: 8px 3px; text-align: center; color: var(--muted); font-size: 10px; font-weight: 800; border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--blue); border-color: var(--blue); }
+    .content { padding: 14px 16px 82px; }
+    .hero {
+      min-height: 344px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(160deg, #18283c 0%, #121a29 54%, #111720 100%);
+      padding: 16px;
+    }
+    .hero::after { content: ''; position: absolute; width: 240px; height: 170px; right: -70px; bottom: -45px; background: rgba(79,158,255,.12); filter: blur(2px); transform: rotate(-12deg); }
+    .hero-head { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+    .avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--purple)); font-size: 25px; }
+    .hero-head b { display: block; font-size: 15px; }
+    .hero-head span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .title { display: inline-flex; margin-top: 5px; padding: 3px 7px; border: 1px solid rgba(245,166,35,.45); border-radius: 6px; color: var(--orange); font-size: 9px; font-weight: 800; }
+    .figure { height: 176px; display: grid; place-items: center; position: relative; z-index: 1; }
+    .figure::before { content: ''; position: absolute; width: 148px; height: 20px; bottom: 12px; border-radius: 50%; background: rgba(0,0,0,.35); }
+    .body { width: 72px; height: 118px; position: relative; border-radius: 34px 34px 24px 24px; background: linear-gradient(90deg, #263950, #5d82aa 48%, #263950); box-shadow: 0 0 0 7px rgba(79,158,255,.08); }
+    .body::before { content: ''; position: absolute; width: 56px; height: 56px; left: 8px; top: -42px; border-radius: 50%; background: #b88364; border: 7px solid #222e40; }
+    .body::after { content: ''; position: absolute; width: 118px; height: 28px; left: -23px; top: 28px; border-radius: 20px; background: #344d67; transform: rotate(-7deg); }
+    .loadout { position: absolute; z-index: 2; display: grid; gap: 8px; }
+    .loadout.left { left: 12px; top: 119px; }
+    .loadout.right { right: 12px; top: 119px; }
+    .gear { width: 74px; padding: 7px 4px; text-align: center; border: 1px solid var(--line); border-radius: 9px; background: rgba(8,14,23,.78); font-size: 9px; color: var(--muted); }
+    .gear b { display: block; margin-top: 2px; color: var(--text); font-size: 10px; }
+    .gear em { font-style: normal; color: var(--gold); font-size: 18px; }
+    .hero-foot { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 3; }
+    .xp-line { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .track { height: 6px; margin-top: 5px; border-radius: 5px; background: #0a101a; overflow: hidden; }
+    .fill { height: 100%; width: 68%; background: linear-gradient(90deg, var(--blue), var(--purple)); }
+    .chips { display: flex; gap: 7px; margin-top: 13px; }
+    .chip { flex: 1; padding: 8px 4px; text-align: center; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); font-size: 9px; color: var(--muted); }
+    .chip b { display: block; color: var(--text); font-size: 12px; }
+    .section { margin: 16px 0 8px; color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .row { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .row + .row { margin-top: 7px; }
+    .row .icon { font-size: 20px; }
+    .row .copy { flex: 1; }
+    .row b { display: block; font-size: 12px; }
+    .row span { color: var(--muted); font-size: 10px; }
+    .arrow { color: var(--muted); font-size: 18px; }
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 65px; display: grid; grid-template-columns: repeat(4, 1fr); padding-top: 10px; background: #121a27; border-top: 1px solid var(--line); }
+    .nav div { text-align: center; color: var(--muted); font-size: 10px; }
+    .nav b { display: block; margin-bottom: 3px; color: var(--blue); font-size: 17px; }
+    .note { max-width: 1180px; margin: 24px auto 0; padding: 14px 16px; border-left: 3px solid var(--green); background: rgba(66,215,125,.07); color: var(--muted); font-size: 12px; }
+    .note strong { color: var(--text); }
+    @media (max-width: 900px) { body { padding: 20px 12px; } .grid { grid-template-columns: 1fr; max-width: 390px; } .concept p { min-height: auto; } }
+  </style>
+</head>
+<body>
+  <section class="intro">
+    <h1>Equipment Hero: Make the Loadout Feel Personal</h1>
+    <p>The hero should connect the user's real progress to their RPG identity. The core stays familiar: character in the center, equipment around it, XP below. The extra context gives the loadout a reason to matter.</p>
+  </section>
+
+  <main class="grid">
+    <section class="concept">
+      <h2>Option 1: Clean Loadout</h2>
+      <p>Minimal upgrade to the current paperdoll. Best when equipment is the only focus.</p>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Wi-Fi&nbsp; 100%</span></div>
+        <div class="topbar"><div class="back">‹</div><strong>Profile</strong><div class="more">•••</div></div>
+        <div class="tabs"><div class="tab">Overview</div><div class="tab active">Equipment</div><div class="tab">Inventory</div></div>
+        <div class="content">
+          <div class="hero">
+            <div class="hero-head"><div class="avatar">🏃</div><div><b>Mihael</b><span>Level 12 · 2,840 XP</span><div class="title">FOREST RUNNER</div></div></div>
+            <div class="loadout left"><div class="gear"><em>🪖</em><b>Trail Helm</b></div><div class="gear"><em>🧥</em><b>Endurance Vest</b></div></div>
+            <div class="figure"><div class="body"></div></div>
+            <div class="loadout right"><div class="gear"><em>🧤</em><b>Grip Gloves</b></div><div class="gear"><em>🥾</em><b>Path Boots</b></div></div>
+            <div class="hero-foot"><div class="xp-line"><span>Next level</span><b>68%</b></div><div class="track"><div class="fill"></div></div></div>
+          </div>
+          <div class="section">Gear bonus</div>
+          <div class="row"><div class="icon">⚡</div><div class="copy"><b>Endurance</b><span>+8 from equipped items</span></div><div class="arrow">›</div></div>
+          <div class="row"><div class="icon">◆</div><div class="copy"><b>4 of 6 slots equipped</b><span>Find two more items to complete the set</span></div><div class="arrow">›</div></div>
+        </div>
+        <div class="nav"><div><b>⌂</b>Home</div><div><b>✓</b>Quests</div><div><b>◆</b>Map</div><div><b>◉</b>Profile</div></div>
+      </div>
+    </section>
+
+    <section class="concept">
+      <h2 class="recommended">Option 2: Identity Hero · Recommended</h2>
+      <p>Put the player's title, level, streak, and current region directly into the hero. It feels owned without adding complex new systems.</p>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Wi-Fi&nbsp; 100%</span></div>
+        <div class="topbar"><div class="back">‹</div><strong>Profile</strong><div class="more">•••</div></div>
+        <div class="tabs"><div class="tab">Overview</div><div class="tab active">Equipment</div><div class="tab">Inventory</div></div>
+        <div class="content">
+          <div class="hero">
+            <div class="hero-head"><div class="avatar">🏃</div><div><b>Mihael</b><span>Level 12 · Forest of Endurance</span><div class="title">🔥 7 DAY STREAK · FOREST RUNNER</div></div></div>
+            <div class="loadout left"><div class="gear"><em>🪖</em><b>Trail Helm</b></div><div class="gear"><em>🧥</em><b>Endurance Vest</b></div></div>
+            <div class="figure"><div class="body"></div></div>
+            <div class="loadout right"><div class="gear"><em>🧤</em><b>Grip Gloves</b></div><div class="gear"><em>🥾</em><b>Path Boots</b></div></div>
+            <div class="hero-foot"><div class="xp-line"><span>2,840 / 4,200 XP</span><b>68%</b></div><div class="track"><div class="fill"></div></div><div class="chips"><div class="chip"><b>+8</b>Endurance</div><div class="chip"><b>7</b>Day streak</div><div class="chip"><b>4/6</b>Slots</div></div></div>
+          </div>
+          <div class="section">Your current build</div>
+          <div class="row"><div class="icon">🛡</div><div class="copy"><b>Balanced Explorer</b><span>Built for consistent daily progress</span></div><div class="arrow">›</div></div>
+          <div class="row"><div class="icon">✦</div><div class="copy"><b>Next milestone: 3,000 XP</b><span>360 XP remaining this level</span></div><div class="arrow">›</div></div>
+        </div>
+        <div class="nav"><div><b>⌂</b>Home</div><div><b>✓</b>Quests</div><div><b>◆</b>Map</div><div><b>◉</b>Profile</div></div>
+      </div>
+    </section>
+
+    <section class="concept">
+      <h2>Option 3: Readiness Hero</h2>
+      <p>Turn the hero into a live “today” surface with the next workout target. More useful, but requires stronger activity and recommendation data.</p>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Wi-Fi&nbsp; 100%</span></div>
+        <div class="topbar"><div class="back">‹</div><strong>Profile</strong><div class="more">•••</div></div>
+        <div class="tabs"><div class="tab">Overview</div><div class="tab active">Equipment</div><div class="tab">Inventory</div></div>
+        <div class="content">
+          <div class="hero">
+            <div class="hero-head"><div class="avatar">🏃</div><div><b>Mihael</b><span>Level 12 · Ready for today's quest</span><div class="title">⚡ 72 READINESS · BALANCED EXPLORER</div></div></div>
+            <div class="loadout left"><div class="gear"><em>🪖</em><b>Trail Helm</b></div><div class="gear"><em>🧥</em><b>Endurance Vest</b></div></div>
+            <div class="figure"><div class="body"></div></div>
+            <div class="loadout right"><div class="gear"><em>🧤</em><b>Grip Gloves</b></div><div class="gear"><em>🥾</em><b>Path Boots</b></div></div>
+            <div class="hero-foot"><div class="xp-line"><span>Recommended today</span><b>20 min walk</b></div><div class="track"><div class="fill" style="width:72%; background:linear-gradient(90deg,var(--green),var(--blue));"></div></div><div class="chips"><div class="chip"><b>72</b>Readiness</div><div class="chip"><b>+8</b>Endurance</div><div class="chip"><b>1</b>Quest ready</div></div></div>
+          </div>
+          <div class="section">Today's direction</div>
+          <div class="row"><div class="icon">🏃</div><div class="copy"><b>Walk the Ruined Pass</b><span>20 min · +180 XP estimated</span></div><div class="arrow">›</div></div>
+          <div class="row"><div class="icon">⌁</div><div class="copy"><b>Swap one item</b><span>Improve build balance in Inventory</span></div><div class="arrow">›</div></div>
+        </div>
+        <div class="nav"><div><b>⌂</b>Home</div><div><b>✓</b>Quests</div><div><b>◆</b>Map</div><div><b>◉</b>Profile</div></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="note"><strong>Suggested implementation:</strong> start with Option 2. It only needs data already present or easy to derive: username, level, XP, title, current region, streak, equipped item count, and gear bonuses. Keep the character art as the visual anchor, and make the lower rows tappable into Inventory or the relevant stat detail.</div>
+</body>
+</html>

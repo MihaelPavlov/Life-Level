@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../../character/providers/character_provider.dart';
 import '../../tutorial/models/tutorial_step.dart';
 import '../../tutorial/providers/tutorial_provider.dart';
@@ -240,42 +241,25 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     } on PathAlreadyChosenException catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop(); // close whichever sheet is open
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, e.message);
       return;
     } on BranchRequiresCrossroadsArrivalException catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Reach ${e.crossroadsName} first, then pick a path.'),
-          backgroundColor: AppColors.red,
-          duration: const Duration(seconds: 3),
-        ),
+      AppToast.warning(
+        context,
+        'Reach ${e.crossroadsName} first, then pick a path.',
+        duration: const Duration(seconds: 3),
       );
       return;
     } on DioException catch (e) {
       if (!mounted) return;
       final msg = _humanizeSetDestinationError(e, node);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, msg);
       return;
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to set destination: $e'),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, 'Failed to set destination: $e');
       return;
     }
     if (!mounted) return;
@@ -293,12 +277,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     final forfeitMsg = result.forfeitedFloors > 0
         ? ' · ${result.forfeitedFloors} floor${result.forfeitedFloors == 1 ? "" : "s"} forfeited'
         : '';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Destination set · ${node.name}$forfeitMsg'),
-        backgroundColor: AppColors.surfaceElevated,
-        duration: const Duration(seconds: 2),
-      ),
+    AppToast.success(
+      context,
+      'Destination set - ${node.name}$forfeitMsg',
+      icon: Icons.flag_rounded,
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -320,13 +303,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     if (!mounted) return;
 
     if (encounter.isBlocker) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              '${encounter.emoji} ${encounter.name} blocks the path! Defeat them to continue.'),
-          backgroundColor: AppColors.red,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.error(
+        context,
+        '${encounter.emoji} ${encounter.name} blocks the path! Defeat them to continue.',
+        duration: const Duration(seconds: 4),
       );
       return;
     }
@@ -349,12 +329,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       return nextEncounter;
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to continue journey: $e'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        AppToast.error(context, 'Failed to continue journey: $e');
       }
       return null;
     }
@@ -527,20 +502,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     } on ChestAlreadyOpenedException catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to open chest: $e'),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, 'Failed to open chest: $e');
     }
   }
 
@@ -552,12 +517,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       await _service.spawnWorldBoss(node.id);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to summon boss: $e'),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, 'Failed to summon boss: $e');
       return;
     }
     if (!mounted) return;
@@ -572,12 +532,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       await _service.enterDungeon(node.id);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to enter dungeon: $e'),
-          backgroundColor: AppColors.red,
-        ),
-      );
+      AppToast.error(context, 'Failed to enter dungeon: $e');
       return;
     }
     if (!mounted) return;
@@ -725,13 +680,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     }());
 
     if (branches.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'No branches found for ${crossroads.name}. (${branches.length} matched — check logs.)'),
-          backgroundColor: AppColors.red,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.error(
+        context,
+        'No branches found for ${crossroads.name}. (${branches.length} matched - check logs.)',
+        duration: const Duration(seconds: 4),
       );
       return;
     }

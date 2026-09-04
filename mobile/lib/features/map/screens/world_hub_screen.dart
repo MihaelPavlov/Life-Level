@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../../tutorial/models/tutorial_step.dart';
 import '../../tutorial/providers/tutorial_provider.dart';
 import '../models/world_map_models.dart';
@@ -107,12 +108,10 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
 
   void _openRegion(RegionCard region) {
     if (region.status == RegionStatus.locked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              '${region.name} unlocks at level ${region.levelRequirement}'),
-          duration: const Duration(seconds: 2),
-        ),
+      AppToast.warning(
+        context,
+        '${region.name} unlocks at level ${region.levelRequirement}',
+        duration: const Duration(seconds: 2),
       );
       return;
     }

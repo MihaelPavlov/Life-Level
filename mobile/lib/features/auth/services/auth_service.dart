@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../core/api/api_client.dart';
+import '../models/account_models.dart';
 
 class AuthService {
   final _dio = ApiClient.instance;
@@ -49,6 +50,48 @@ class AuthService {
       throw AuthException(_serverMessage(
         e,
         fallback: 'Invalid email or password.',
+      ));
+    }
+  }
+
+  Future<AccountInfo> getAccount() async {
+    final res = await _dio.get('/auth/account');
+    return AccountInfo.fromJson(_asMap(res.data));
+  }
+
+  Future<UpdateEmailResult> updateEmail({
+    required String email,
+    required String currentPassword,
+  }) async {
+    try {
+      final res = await _dio.put('/auth/email', data: {
+        'email': email,
+        'currentPassword': currentPassword,
+      });
+      return UpdateEmailResult.fromJson(_asMap(res.data));
+    } on DioException catch (e) {
+      throw AuthException(_serverMessage(
+        e,
+        fallback: 'Email update failed.',
+      ));
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      await _dio.put('/auth/password', data: {
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+        'confirmPassword': confirmPassword,
+      });
+    } on DioException catch (e) {
+      throw AuthException(_serverMessage(
+        e,
+        fallback: 'Password update failed.',
       ));
     }
   }

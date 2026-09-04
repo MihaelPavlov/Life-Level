@@ -60,6 +60,27 @@ public class NotificationsController(
         return NoContent();
     }
 
+    [HttpGet("preferences")]
+    public async Task<IActionResult> GetPreferences(CancellationToken ct)
+    {
+        return Ok(await notifications.GetPreferencesAsync(userContext.UserId, ct));
+    }
+
+    [HttpPut("preferences")]
+    public async Task<IActionResult> UpdatePreferences(
+        [FromBody] UpdateNotificationPreferencesRequest req,
+        CancellationToken ct)
+    {
+        try
+        {
+            return Ok(await notifications.UpdatePreferencesAsync(userContext.UserId, req, ct));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpPost("send-test")]
     public async Task<IActionResult> SendTest(CancellationToken ct)
     {

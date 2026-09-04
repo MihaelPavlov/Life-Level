@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/services/level_up_notifier.dart';
 import '../../../core/widgets/app_icon_image.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../../character/providers/character_provider.dart';
 import '../../login_reward/models/login_reward_models.dart';
 import '../../login_reward/providers/login_reward_provider.dart';
@@ -63,25 +64,17 @@ class _HomeLoginRewardChipState
       ref.invalidate(characterProfileProvider);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '+${result.xpAwarded} XP claimed'
-              '${result.includesShield ? ' \u00B7 +Shield' : ''}'
-              '${result.isXpStorm ? ' \u00B7 XP Storm!' : ''}',
-            ),
-            backgroundColor: AppColors.green,
-          ),
+        AppToast.success(
+          context,
+          '+${result.xpAwarded} XP claimed'
+          '${result.includesShield ? ' \u00B7 +Shield' : ''}'
+          '${result.isXpStorm ? ' \u00B7 XP Storm!' : ''}',
+          icon: Icons.redeem_rounded,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Claim failed: $e'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        AppToast.error(context, 'Claim failed: $e');
       }
     } finally {
       if (mounted) setState(() => _claiming = false);

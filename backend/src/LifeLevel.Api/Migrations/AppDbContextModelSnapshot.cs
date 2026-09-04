@@ -846,6 +846,217 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("XpHistoryEntries");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.Guild", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("character varying(240)");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxMembers")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("Guilds");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex("GuildId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("GuildMembers");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaid", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BossId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DefeatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("GuildSizeAtStart")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDefeated")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsExpired")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxHp")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RewardClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RewardXp")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StartedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalDamage")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BossId");
+
+                    b.HasIndex("GuildId", "IsDefeated", "IsExpired");
+
+                    b.ToTable("GuildRaids");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaidContribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DamageDealt")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("GuildRaidId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LastActivityAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LastActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("GuildRaidId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("GuildRaidContributions");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaidExpiryAcknowledgement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildRaidId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("GuildRaidId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("GuildRaidExpiryAcknowledgements");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaidVictoryAcknowledgement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildRaidId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("GuildRaidId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("GuildRaidVictoryAcknowledgements");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1449,6 +1660,53 @@ namespace LifeLevel.Api.Migrations
                     b.HasIndex("UserId", "SentAt");
 
                     b.ToTable("NotificationLogs");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Notifications.Domain.Entities.NotificationPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("BossEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LevelUpEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PushEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("QuestEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("QuietHoursEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("QuietHoursEndUtc")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuietHoursStartUtc")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RankEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("StreakEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("NotificationPreferences");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.Quest", b =>
@@ -2461,6 +2719,100 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.Guild", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildMember", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Guild.Domain.Entities.Guild", "Guild")
+                        .WithMany("Members")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaid", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Boss", null)
+                        .WithMany()
+                        .HasForeignKey("BossId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Guild.Domain.Entities.Guild", "Guild")
+                        .WithMany("Raids")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaidContribution", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Guild.Domain.Entities.GuildRaid", "GuildRaid")
+                        .WithMany("Contributions")
+                        .HasForeignKey("GuildRaidId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuildRaid");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaidExpiryAcknowledgement", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Guild.Domain.Entities.GuildRaid", "GuildRaid")
+                        .WithMany()
+                        .HasForeignKey("GuildRaidId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuildRaid");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaidVictoryAcknowledgement", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Guild.Domain.Entities.GuildRaid", "GuildRaid")
+                        .WithMany()
+                        .HasForeignKey("GuildRaidId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuildRaid");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.UserRingItem", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", "User")
@@ -2653,6 +3005,15 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Notifications.Domain.Entities.NotificationPreference", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.UserQuestProgress", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Quest.Domain.Entities.Quest", "Quest")
@@ -2817,6 +3178,18 @@ namespace LifeLevel.Api.Migrations
             modelBuilder.Entity("LifeLevel.Modules.Adventure.Encounters.Domain.Entities.Chest", b =>
                 {
                     b.Navigation("UserStates");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.Guild", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Raids");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Guild.Domain.Entities.GuildRaid", b =>
+                {
+                    b.Navigation("Contributions");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Identity.Domain.Entities.User", b =>

@@ -28,3 +28,18 @@ public interface INotificationPort
         bool isCritical = false,
         CancellationToken ct = default);
 }
+
+public sealed class NoOpNotificationPort : INotificationPort
+{
+    public Task<NotificationSendResult> SendToUserAsync(
+        Guid userId,
+        string category,
+        string title,
+        string body,
+        IDictionary<string, string>? data = null,
+        bool isCritical = false,
+        CancellationToken ct = default)
+    {
+        return Task.FromResult(new NotificationSendResult(false, "NoOp"));
+    }
+}

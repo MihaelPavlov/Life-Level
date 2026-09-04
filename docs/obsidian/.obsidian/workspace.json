@@ -13,15 +13,40 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "07 - Development/Plan - Guild System End-to-End.md",
+                "file": "Unique Animation for Skill Tree/DESCRIPTION BASED.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Plan - Guild System End-to-End"
+              "title": "DESCRIPTION BASED"
+            }
+          },
+          {
+            "id": "24b52a027f4c2f3f",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.13.4"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.13.4"
+            }
+          },
+          {
+            "id": "e0d323f4f6f2c0b3",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.13.7"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.13.7"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -41,7 +66,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "Files"
@@ -183,8 +210,24 @@
       "bases:Create new base": false
     }
   },
-  "active": "2456a66808104aad",
+  "active": "e0d323f4f6f2c0b3",
   "lastOpenFiles": [
+    "Unique Animation for Skill Tree/Frames.md",
+    "Unique Animation for Skill Tree/DESCRIPTION BASED.md",
+    "Unique Animation for Skill Tree/frame_018.jpg",
+    "Comment “MAP” and I’ll send you the complete breakdown 🤝I just built a team of 137 AI agents th (online-video-cutter.com).mp4",
+    "Unique Animation for Skill Tree/frame_001.jpg",
+    "Unique Animation for Skill Tree/frame_002.jpg",
+    "Unique Animation for Skill Tree/frame_003.jpg",
+    "Unique Animation for Skill Tree/frame_004.jpg",
+    "Unique Animation for Skill Tree/frame_005.jpg",
+    "Unique Animation for Skill Tree/frame_006.jpg",
+    "Unique Animation for Skill Tree/frame_007.jpg",
+    "Unique Animation for Skill Tree/frame_009.jpg",
+    "Unique Animation for Skill Tree/frame_011.jpg",
+    "Comment “MAP” and I’ll send you the complete breakdown 🤝I just built a team of 137 AI agents th.mp4",
+    "07 - Development/Plan - Guild System End-to-End.md",
+    "Unique Animation for Skill Tree",
     "03 - Backend/Modules/Adventure.Encounters.md",
     "02 - Game Design/Boss System.md",
     "02 - Game Design/Adventure Map and World.md",
@@ -200,7 +243,6 @@
     "02 - Game Design/Plan - Progressive World Reveal.md",
     "07 - Development/iOS Pre-Testing Setup.md",
     "07 - Development/Known Issues.md",
-    "07 - Development/Plan - Guild System End-to-End.md",
     "07 - Development/Plan - Level-Up Messages, Boss History, Combined Deploy.md",
     "07 - Development/Plan - Level-Up Messages, Boss History, Combined Deploy 1.md",
     "07 - Development/Internal Testing Findings.md",
@@ -210,8 +252,6 @@
     "01 - Product/The Forging - Unique Character Development.md",
     "01 - Product/The Forging - The Discipline Tree Library.md",
     "01 - Product/The Forging - Start Here (System Map).md",
-    "01 - Product/The Forging - Lineage Engineering Specs.md",
-    "01 - Product/The Forging - The Lineage Content Library.md",
     "01 - Product/Engagement and Uniqueness Ideas.md.tmp.54672.1777164918712"
   ]
 }

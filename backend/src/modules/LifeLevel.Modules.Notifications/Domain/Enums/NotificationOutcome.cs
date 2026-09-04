@@ -6,6 +6,7 @@ public enum NotificationOutcome
     SkippedQuietHours,
     SkippedDailyCap,
     SkippedDedupe,
+    SkippedPreferences,
     NoActiveTokens,
     FcmError
 }

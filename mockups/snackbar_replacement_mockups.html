@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Life-Level Toast Mockups</title>
+  <style>
+    :root {
+      --bg: #040810;
+      --shell: #090d1a;
+      --surface: #161b22;
+      --raised: #1e2632;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #4f9eff;
+      --purple: #a371f7;
+      --orange: #f5a623;
+      --red: #f85149;
+      --green: #3fb950;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(79, 158, 255, .12), transparent 26%),
+        radial-gradient(circle at 82% 22%, rgba(163, 113, 247, .12), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 44px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-end;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 680px;
+    }
+
+    .recommendation {
+      border: 1px solid rgba(63, 185, 80, .42);
+      background: rgba(63, 185, 80, .08);
+      color: var(--green);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-weight: 800;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: rgba(22, 27, 34, .72);
+      border-radius: 8px;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .panel p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .phone {
+      position: relative;
+      height: 640px;
+      border: 1px solid #263242;
+      border-radius: 28px;
+      background: var(--shell);
+      overflow: hidden;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, .42);
+    }
+
+    .status {
+      height: 30px;
+      display: flex;
+      justify-content: space-between;
+      padding: 9px 20px 0;
+      color: #bfccd9;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .appbar {
+      padding: 14px 18px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .chip {
+      border: 1px solid rgba(163, 113, 247, .45);
+      color: var(--purple);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 10px;
+      font-weight: 900;
+      background: rgba(163, 113, 247, .09);
+    }
+
+    .content {
+      padding: 8px 16px 0;
+    }
+
+    .hero-card {
+      border: 1px solid rgba(248, 81, 73, .36);
+      background: linear-gradient(180deg, rgba(248, 81, 73, .12), rgba(22, 27, 34, .86));
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .boss-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .boss-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #f5f1e6;
+      border: 2px solid var(--red);
+      color: #5b3c16;
+      font-size: 28px;
+      box-shadow: 0 0 20px rgba(248, 81, 73, .24);
+      flex: 0 0 auto;
+    }
+
+    .boss-name {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .boss-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hp {
+      height: 9px;
+      margin-top: 14px;
+      background: #0f1522;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #263242;
+    }
+
+    .hp span {
+      display: block;
+      width: 62%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--red), var(--orange));
+    }
+
+    .list {
+      margin-top: 14px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: rgba(30, 38, 50, .72);
+      border: 1px solid rgba(48, 54, 61, .9);
+      font-size: 12px;
+      color: #d7dee7;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 66px;
+      background: #10162a;
+      border-top: 1px solid #1f2b45;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      color: #8390a5;
+      font-size: 10px;
+    }
+
+    .nav-item {
+      text-align: center;
+      display: grid;
+      gap: 3px;
+    }
+
+    .nav-item strong {
+      color: var(--orange);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .toast-zone {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 76px;
+      display: grid;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .flushbar {
+      min-height: 64px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #252e3c, #161b22);
+      border: 1px solid rgba(163, 113, 247, .42);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .42);
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flushbar:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 34%;
+      bottom: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+    }
+
+    .flush-icon,
+    .bot-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(163, 113, 247, .16);
+      color: var(--purple);
+      border: 1px solid rgba(163, 113, 247, .36);
+      font-size: 20px;
+    }
+
+    .toast-title {
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 2px;
+    }
+
+    .toast-copy {
+      color: #a9b4c0;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .game-toast {
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(163, 113, 247, .22), transparent 42%),
+        linear-gradient(180deg, #1e2632, #101622);
+      border: 1px solid rgba(163, 113, 247, .62);
+      box-shadow:
+        0 0 24px rgba(163, 113, 247, .18),
+        0 12px 34px rgba(0, 0, 0, .5);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 52px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .game-toast:before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(var(--purple), var(--blue));
+    }
+
+    .game-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #f5f1e6;
+      border: 2px solid var(--orange);
+      color: #613b12;
+      font-size: 25px;
+      box-shadow: 0 0 18px rgba(245, 166, 35, .22);
+    }
+
+    .reward-pill {
+      border: 1px solid rgba(245, 166, 35, .45);
+      color: var(--orange);
+      background: rgba(245, 166, 35, .09);
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .bot-toast {
+      width: fit-content;
+      max-width: 92%;
+      justify-self: center;
+      min-height: 46px;
+      border-radius: 999px;
+      background: rgba(30, 38, 50, .96);
+      border: 1px solid rgba(79, 158, 255, .34);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .38);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 13px 7px 8px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .bot-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+      color: var(--blue);
+      background: rgba(79, 158, 255, .14);
+      border-color: rgba(79, 158, 255, .35);
+    }
+
+    .success { border-color: rgba(63, 185, 80, .55); }
+    .success .flush-icon, .success .bot-icon { color: var(--green); border-color: rgba(63, 185, 80, .36); background: rgba(63, 185, 80, .14); }
+    .error { border-color: rgba(248, 81, 73, .58); }
+    .error .flush-icon, .error .bot-icon { color: var(--red); border-color: rgba(248, 81, 73, .42); background: rgba(248, 81, 73, .14); }
+    .xp { border-color: rgba(245, 166, 35, .55); }
+    .xp .flush-icon, .xp .bot-icon { color: var(--orange); border-color: rgba(245, 166, 35, .42); background: rgba(245, 166, 35, .14); }
+
+    .samples {
+      margin-top: 14px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .sample-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+      border-top: 1px solid rgba(48, 54, 61, .7);
+      padding-top: 10px;
+    }
+
+    .badge {
+      color: var(--text);
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 999px;
+      padding: 4px 7px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .phone { height: 620px; max-width: 390px; margin: 0 auto; }
+      .header { align-items: flex-start; flex-direction: column; }
+      .recommendation { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <h1>Snackbar Replacement Mockups</h1>
+        <p class="subtitle">Three directions for replacing all current Flutter SnackBars with a consistent Life-Level notification style.</p>
+      </div>
+      <div class="recommendation">Recommended: Custom GameToast</div>
+    </header>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>1. Flushbar Style</h2>
+        <p>Closest to a package replacement. Strong enough for app feedback, but still feels like a styled system banner.</p>
+        <div class="phone">
+          <div class="status"><span>09:41</span><span>5G 82%</span></div>
+          <div class="appbar"><div class="title">Guild Raid</div><div class="chip">Dog Owners</div></div>
+          <div class="content">
+            <div class="hero-card">
+              <div class="boss-row">
+                <div class="boss-icon">♜</div>
+                <div><div class="boss-name">Forest Warden</div><div class="boss-meta">3 members · 145/145 HP</div></div>
+              </div>
+              <div class="hp"><span></span></div>
+            </div>
+            <div class="list">
+              <div class="row"><span>rapito11</span><strong>60 DMG</strong></div>
+              <div class="row"><span>Mihael</span><strong>45 DMG</strong></div>
+              <div class="row"><span>Alex</span><strong>40 DMG</strong></div>
+            </div>
+          </div>
+          <div class="toast-zone">
+            <div class="flushbar success">
+              <div class="flush-icon">✓</div>
+              <div><div class="toast-title">Raid Started</div><div class="toast-copy">Forest Warden is active. Log workouts to deal damage.</div></div>
+            </div>
+            <div class="flushbar error">
+              <div class="flush-icon">!</div>
+              <div><div class="toast-title">Guild Unavailable</div><div class="toast-copy">Could not load the latest guild state.</div></div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><strong>⌂</strong>Home</div>
+            <div class="nav-item"><strong>☑</strong>Quests</div>
+            <div class="nav-item"><strong>☰</strong>Menu</div>
+            <div class="nav-item"><strong>⚑</strong>Map</div>
+            <div class="nav-item"><strong>◉</strong>Profile</div>
+          </div>
+        </div>
+        <div class="samples">
+          <div class="sample-label"><span>Implementation effort</span><span class="badge">Medium</span></div>
+          <div class="sample-label"><span>Visual identity</span><span class="badge">Good</span></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>2. Custom GameToast</h2>
+        <p>Best fit for Life-Level. Reusable service, RPG icon slot, reward pill, glow, and category-specific color states.</p>
+        <div class="phone">
+          <div class="status"><span>09:41</span><span>5G 82%</span></div>
+          <div class="appbar"><div class="title">Guild Raid</div><div class="chip">Dog Owners</div></div>
+          <div class="content">
+            <div class="hero-card">
+              <div class="boss-row">
+                <div class="boss-icon">♜</div>
+                <div><div class="boss-name">Forest Warden</div><div class="boss-meta">3 members · 145/145 HP</div></div>
+              </div>
+              <div class="hp"><span></span></div>
+            </div>
+            <div class="list">
+              <div class="row"><span>Raid expires</span><strong>2m 31s</strong></div>
+              <div class="row"><span>Reward</span><strong>+463 XP</strong></div>
+              <div class="row"><span>MVP bonus</span><strong>+116 XP</strong></div>
+            </div>
+          </div>
+          <div class="toast-zone">
+            <div class="game-toast">
+              <div class="game-icon">♜</div>
+              <div><div class="toast-title">Forest Warden Awakened</div><div class="toast-copy">Dog Owners started a guild raid.</div></div>
+              <div class="reward-pill">+463 XP</div>
+            </div>
+            <div class="game-toast xp">
+              <div class="game-icon">✦</div>
+              <div><div class="toast-title">Workout Logged</div><div class="toast-copy">You dealt 42 raid damage.</div></div>
+              <div class="reward-pill">42 DMG</div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><strong>⌂</strong>Home</div>
+            <div class="nav-item"><strong>☑</strong>Quests</div>
+            <div class="nav-item"><strong>☰</strong>Menu</div>
+            <div class="nav-item"><strong>⚑</strong>Map</div>
+            <div class="nav-item"><strong>◉</strong>Profile</div>
+          </div>
+        </div>
+        <div class="samples">
+          <div class="sample-label"><span>Implementation effort</span><span class="badge">Medium-high</span></div>
+          <div class="sample-label"><span>Visual identity</span><span class="badge">Best</span></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>3. BotToast Style</h2>
+        <p>Lightweight global toast pattern. Good for tiny confirmations, less effective for raid, XP, and notification moments.</p>
+        <div class="phone">
+          <div class="status"><span>09:41</span><span>5G 82%</span></div>
+          <div class="appbar"><div class="title">Guild Raid</div><div class="chip">Dog Owners</div></div>
+          <div class="content">
+            <div class="hero-card">
+              <div class="boss-row">
+                <div class="boss-icon">♜</div>
+                <div><div class="boss-name">Forest Warden</div><div class="boss-meta">3 members · 145/145 HP</div></div>
+              </div>
+              <div class="hp"><span></span></div>
+            </div>
+            <div class="list">
+              <div class="row"><span>Invite sent</span><strong>✓</strong></div>
+              <div class="row"><span>Guild synced</span><strong>Now</strong></div>
+              <div class="row"><span>Raid alert</span><strong>Unread</strong></div>
+            </div>
+          </div>
+          <div class="toast-zone">
+            <div class="bot-toast success"><span class="bot-icon">✓</span><span>Guild synced</span></div>
+            <div class="bot-toast xp"><span class="bot-icon">✦</span><span>+120 XP earned</span></div>
+            <div class="bot-toast error"><span class="bot-icon">!</span><span>Could not start raid</span></div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><strong>⌂</strong>Home</div>
+            <div class="nav-item"><strong>☑</strong>Quests</div>
+            <div class="nav-item"><strong>☰</strong>Menu</div>
+            <div class="nav-item"><strong>⚑</strong>Map</div>
+            <div class="nav-item"><strong>◉</strong>Profile</div>
+          </div>
+        </div>
+        <div class="samples">
+          <div class="sample-label"><span>Implementation effort</span><span class="badge">Low-medium</span></div>
+          <div class="sample-label"><span>Visual identity</span><span class="badge">Basic</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

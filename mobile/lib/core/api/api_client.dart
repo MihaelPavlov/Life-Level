@@ -65,6 +65,8 @@ class ApiClient {
         : _baseUrl;
   }
 
+  static String get realtimeBaseUrl => _webBase;
+
   static Future<String> get adminPanelUrl async {
     final token = await _storage.read(key: 'jwt_token');
     final base = '$_webBase/admin/index.html';

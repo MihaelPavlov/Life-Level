@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life-Level Mount Equipment Mockups</title>
+  <style>
+    :root {
+      --bg: #080d14;
+      --panel: #0f1622;
+      --panel-2: #141c2a;
+      --border: #263348;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --dim: #586070;
+      --green: #3fb950;
+      --blue: #4f9eff;
+      --purple: #a371f7;
+      --orange: #f5a623;
+      --red: #f85149;
+      --gold: #f7d774;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 28px;
+    }
+
+    .page-head {
+      max-width: 1180px;
+      margin: 0 auto 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-end;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .rule {
+      border: 1px solid rgba(163, 113, 247, 0.42);
+      background: rgba(163, 113, 247, 0.09);
+      color: var(--purple);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 9px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    .grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(250px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .frame-label {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .phone {
+      width: 100%;
+      min-height: 720px;
+      border: 1px solid #2a3445;
+      border-radius: 18px;
+      background: #080d17;
+      overflow: hidden;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.36);
+      position: relative;
+    }
+
+    .status {
+      height: 28px;
+      padding: 8px 16px 0;
+      display: flex;
+      justify-content: space-between;
+      color: var(--dim);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .appbar {
+      padding: 10px 16px 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back, .more {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--panel);
+      font-size: 17px;
+    }
+
+    .app-title {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .app-title b {
+      display: block;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .app-title span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 8px 16px 0;
+    }
+
+    .tab {
+      text-align: center;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 8px 6px;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .tab.active {
+      border-color: rgba(163, 113, 247, 0.52);
+      background: rgba(163, 113, 247, 0.12);
+      color: var(--purple);
+    }
+
+    .content { padding: 14px 16px 96px; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin: 12px 0 8px;
+    }
+
+    .paperdoll {
+      display: grid;
+      grid-template-columns: 64px 1fr 64px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .slot {
+      height: 64px;
+      border: 1px dashed #344052;
+      border-radius: 12px;
+      background: rgba(20, 28, 42, 0.78);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      position: relative;
+    }
+
+    .slot.equipped {
+      border-style: solid;
+      border-color: rgba(163, 113, 247, 0.72);
+      box-shadow: inset 0 0 18px rgba(163, 113, 247, 0.13);
+    }
+
+    .slot.selected {
+      border-color: rgba(245, 166, 35, 0.82);
+      box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.12), inset 0 0 18px rgba(245, 166, 35, 0.10);
+    }
+
+    .slot .ico { font-size: 22px; line-height: 1; }
+    .slot .lbl { color: var(--muted); font-size: 8px; font-weight: 900; }
+    .slot .rarity-bar {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 7px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--purple);
+    }
+
+    .hero {
+      height: 142px;
+      border: 1px solid rgba(79, 158, 255, 0.35);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(79, 158, 255, 0.22), transparent 42%),
+        linear-gradient(180deg, rgba(163, 113, 247, 0.14), rgba(20, 28, 42, 0.92));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero .runner { font-size: 44px; transform: translateY(-5px); }
+    .hero .mount {
+      position: absolute;
+      right: 34px;
+      bottom: 28px;
+      font-size: 34px;
+      filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6));
+    }
+
+    .mount-strip {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mount-token {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      border: 1px solid rgba(245, 166, 35, 0.55);
+      background: rgba(245, 166, 35, 0.08);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+    }
+
+    .mount-copy { flex: 1; min-width: 0; }
+    .mount-copy b { display: block; font-size: 13px; }
+    .mount-copy span { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; line-height: 1.35; }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .pill {
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(79, 158, 255, 0.34);
+      background: rgba(79, 158, 255, 0.09);
+      color: var(--blue);
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .pill.gold {
+      border-color: rgba(245, 166, 35, 0.42);
+      background: rgba(245, 166, 35, 0.09);
+      color: var(--orange);
+    }
+
+    .bonus-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--dim);
+      font-size: 8px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .metric b { color: var(--text); font-size: 13px; }
+
+    .mount-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+    }
+
+    .mount-card {
+      min-height: 138px;
+      position: relative;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .mount-card.active {
+      border-color: rgba(245, 166, 35, 0.68);
+      background: rgba(245, 166, 35, 0.055);
+    }
+
+    .mount-card.locked { opacity: 0.55; }
+    .mount-card .badge {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      border-radius: 999px;
+      background: rgba(245, 166, 35, 0.14);
+      color: var(--orange);
+      border: 1px solid rgba(245, 166, 35, 0.42);
+      padding: 3px 6px;
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .mount-card .big { font-size: 34px; line-height: 1; }
+    .mount-card .name { font-size: 12px; font-weight: 900; }
+    .mount-card .bonus { color: var(--muted); font-size: 10px; line-height: 1.25; font-weight: 700; }
+    .tier {
+      border: 1px solid rgba(163, 113, 247, 0.38);
+      border-radius: 999px;
+      padding: 3px 7px;
+      color: var(--purple);
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .lock {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: rgba(8, 13, 20, 0.68);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      padding: 18px;
+      line-height: 1.3;
+    }
+
+    .item-row {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .item-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 13px;
+      border: 1px solid rgba(163, 113, 247, 0.62);
+      background: rgba(163, 113, 247, 0.10);
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      flex: 0 0 auto;
+    }
+
+    .item-main { flex: 1; min-width: 0; }
+    .item-main b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-main span { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(245, 166, 35, 0.58);
+      background: var(--orange);
+      color: #16100a;
+      font-size: 11px;
+      font-weight: 950;
+      border-radius: 10px;
+      padding: 10px 12px;
+      min-width: 72px;
+    }
+
+    .button.ghost {
+      background: transparent;
+      color: var(--orange);
+    }
+
+    .detail-hero {
+      min-height: 184px;
+      border-radius: 15px;
+      background:
+        radial-gradient(circle at 50% 25%, rgba(245, 166, 35, 0.26), transparent 42%),
+        linear-gradient(180deg, rgba(20,28,42,1), rgba(8,13,20,1));
+      border: 1px solid rgba(245, 166, 35, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      text-align: center;
+    }
+
+    .detail-hero .beast { font-size: 62px; line-height: 1; }
+    .detail-hero b { font-size: 18px; }
+    .detail-hero span { color: var(--muted); font-size: 11px; font-weight: 700; }
+
+    .source-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .source {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(20, 28, 42, 0.64);
+    }
+
+    .source .sico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--panel-2); }
+    .source b { display:block; font-size: 11px; }
+    .source span { display:block; color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+    .map-card {
+      height: 268px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      border: 1px solid rgba(63,185,80,0.32);
+      background:
+        radial-gradient(circle at 25% 20%, rgba(63,185,80,0.22), transparent 30%),
+        radial-gradient(circle at 75% 70%, rgba(79,158,255,0.16), transparent 32%),
+        #0b131d;
+    }
+
+    .trail {
+      position: absolute;
+      left: 50%;
+      top: -16px;
+      width: 82px;
+      height: 320px;
+      border-left: 5px solid rgba(63,185,80,0.42);
+      border-radius: 55% 45% 55% 45%;
+      transform: translateX(-50%) rotate(-8deg);
+    }
+
+    .node {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 2px solid rgba(63,185,80,0.75);
+      color: var(--green);
+      background: #07100c;
+      font-weight: 900;
+    }
+
+    .node.a { left: 42px; top: 42px; }
+    .node.b { right: 42px; top: 76px; }
+    .node.c { left: 68px; bottom: 44px; }
+
+    .walker {
+      position: absolute;
+      left: 130px;
+      top: 126px;
+      width: 78px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65));
+    }
+
+    .walker .rider { position: absolute; top: -4px; font-size: 24px; z-index: 2; }
+    .walker .beast { position: absolute; bottom: 0; font-size: 38px; }
+
+    .journey-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: rgba(20,28,42,0.96);
+      border: 1px solid rgba(79,158,255,0.34);
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+    }
+
+    .journey-chip b { font-size: 11px; }
+    .journey-chip span { color: var(--muted); font-size: 10px; }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 74px;
+      background: #10182a;
+      border-top: 1px solid #1f2a40;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      padding: 4px 8px 8px;
+    }
+
+    .nav-item {
+      text-align: center;
+      color: var(--dim);
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .nav-item .nicon { display: block; font-size: 18px; margin-bottom: 4px; }
+    .nav-item.active { color: var(--orange); }
+
+    @media (max-width: 1180px) {
+      .grid { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      body { padding: 18px 12px; }
+      .page-head { display: block; }
+      .rule { display: inline-block; margin-top: 12px; white-space: normal; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-head">
+    <div>
+      <h1>Mount Equipment Mockups</h1>
+      <div class="sub">Focused proposal: mounts become a real inventory/equipment slot, but stay mostly cosmetic with small capped bonuses. These screens show the core MVP flow before adding deeper seasonal systems.</div>
+    </div>
+    <div class="rule">MVP rule: 1 mount equipped · +0-3% XP or +1-2 stat max</div>
+  </header>
+
+  <main class="grid">
+    <section>
+      <div class="frame-label">Equipment tab · real mount slot</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>LTE 82%</span></div>
+        <div class="appbar">
+          <div class="back">‹</div>
+          <div class="app-title"><b>Profile</b><span>Equipment loadout</span></div>
+          <div class="more">⋮</div>
+        </div>
+        <div class="tabs">
+          <div class="tab">Overview</div>
+          <div class="tab active">Equipment</div>
+          <div class="tab">Inventory</div>
+        </div>
+        <div class="content">
+          <div class="card">
+            <div class="paperdoll">
+              <div class="slot"><div class="ico">🧢</div><div class="lbl">HEAD</div></div>
+              <div class="hero">
+                <div class="runner">🏃</div>
+                <div class="mount">🦌</div>
+              </div>
+              <div class="slot equipped"><div class="ico">🎧</div><div class="lbl">ACC 1</div><div class="rarity-bar"></div></div>
+              <div class="slot equipped"><div class="ico">🎽</div><div class="lbl">CHEST</div><div class="rarity-bar" style="background:var(--blue)"></div></div>
+              <div class="slot selected equipped"><div class="ico">🦌</div><div class="lbl">MOUNT</div><div class="rarity-bar" style="background:var(--orange)"></div></div>
+              <div class="slot"><div class="ico">🧤</div><div class="lbl">HANDS</div></div>
+              <div class="slot equipped"><div class="ico">👟</div><div class="lbl">FEET</div><div class="rarity-bar" style="background:var(--green)"></div></div>
+              <div></div>
+              <div class="slot"><div class="ico">🧭</div><div class="lbl">ACC 2</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="mount-strip">
+              <div class="mount-token">🦌</div>
+              <div class="mount-copy">
+                <b>Mossback Stag</b>
+                <span>Uncommon mount · Forest reward</span>
+                <div class="pill-row">
+                  <div class="pill">END +1</div>
+                  <div class="pill gold">Equipped</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section" style="margin-top:0">Total gear bonuses</div>
+            <div class="bonus-grid">
+              <div class="metric"><span>XP</span><b>+4%</b></div>
+              <div class="metric"><span>END</span><b>+3</b></div>
+              <div class="metric"><span>STA</span><b>+1</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><span class="nicon">🏠</span>Home</div>
+          <div class="nav-item"><span class="nicon">📜</span>Quests</div>
+          <div class="nav-item active"><span class="nicon">🎒</span>Menu</div>
+          <div class="nav-item"><span class="nicon">🗺️</span>Map</div>
+          <div class="nav-item"><span class="nicon">⚙️</span>Profile</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="frame-label">Mount stable · collection view</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>LTE 82%</span></div>
+        <div class="appbar">
+          <div class="back">‹</div>
+          <div class="app-title"><b>Mount Stable</b><span>3 owned · 4 locked</span></div>
+          <div class="more">⋮</div>
+        </div>
+        <div class="content">
+          <div class="card">
+            <div class="mount-strip">
+              <div class="mount-token">🐺</div>
+              <div class="mount-copy">
+                <b>Bannerback Wolf</b>
+                <span>Epic guild raid mount. Other players see it in guild ranking and map ghost previews.</span>
+                <div class="pill-row">
+                  <div class="pill gold">STA +2</div>
+                  <div class="pill">Guild reward</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">Owned and unlockable</div>
+          <div class="mount-grid">
+            <div class="mount-card active">
+              <div class="badge">Active</div>
+              <div class="big">🐺</div>
+              <div class="name">Bannerback Wolf</div>
+              <div class="bonus">STA +2</div>
+              <div class="tier" style="color:var(--orange);border-color:rgba(245,166,35,.44)">EPIC</div>
+            </div>
+            <div class="mount-card">
+              <div class="big">🦌</div>
+              <div class="name">Mossback Stag</div>
+              <div class="bonus">END +1</div>
+              <div class="tier" style="color:var(--blue);border-color:rgba(79,158,255,.44)">UNCOMMON</div>
+            </div>
+            <div class="mount-card">
+              <div class="big">🐏</div>
+              <div class="name">Ironhorn Ram</div>
+              <div class="bonus">STR +1 · STA +1</div>
+              <div class="tier">RARE</div>
+            </div>
+            <div class="mount-card locked">
+              <div class="big">🌊</div>
+              <div class="name">Tidefin Ray</div>
+              <div class="bonus">FLX +1 · XP +1%</div>
+              <div class="tier">RARE</div>
+              <div class="lock">Unlock Ocean of Balance</div>
+            </div>
+            <div class="mount-card locked">
+              <div class="big">🔥</div>
+              <div class="name">Ember Yak</div>
+              <div class="bonus">STR +2</div>
+              <div class="tier" style="color:var(--orange);border-color:rgba(245,166,35,.44)">EPIC</div>
+              <div class="lock">Defeat Stone Titan</div>
+            </div>
+            <div class="mount-card locked">
+              <div class="big">❄️</div>
+              <div class="name">Frostmane Stag</div>
+              <div class="bonus">XP +3%</div>
+              <div class="tier" style="color:var(--red);border-color:rgba(248,81,73,.44)">LEGENDARY</div>
+              <div class="lock">Season reward</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><span class="nicon">🏠</span>Home</div>
+          <div class="nav-item"><span class="nicon">📜</span>Quests</div>
+          <div class="nav-item active"><span class="nicon">🎒</span>Menu</div>
+          <div class="nav-item"><span class="nicon">🗺️</span>Map</div>
+          <div class="nav-item"><span class="nicon">⚙️</span>Profile</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="frame-label">Inventory detail · equip mount</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>LTE 82%</span></div>
+        <div class="appbar">
+          <div class="back">‹</div>
+          <div class="app-title"><b>Inventory</b><span>Mount item selected</span></div>
+          <div class="more">⋮</div>
+        </div>
+        <div class="content">
+          <div class="detail-hero">
+            <div class="beast">🐏</div>
+            <b>Ironhorn Ram</b>
+            <span>Rare Mount · Mountains of Strength</span>
+            <div class="pill-row" style="justify-content:center">
+              <div class="pill">STR +1</div>
+              <div class="pill">STA +1</div>
+              <div class="pill gold">Mount slot</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <div class="section" style="margin-top:0">Equip result</div>
+            <div class="item-row">
+              <div class="item-icon">🐺</div>
+              <div class="item-main"><b>Bannerback Wolf</b><span>Currently equipped · returns to inventory</span></div>
+              <div class="button ghost">Swap</div>
+            </div>
+            <div class="item-row">
+              <div class="item-icon">🐏</div>
+              <div class="item-main"><b>Ironhorn Ram</b><span>Selected mount · fits Mount slot</span></div>
+              <div class="button">Equip</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section" style="margin-top:0">Source</div>
+            <div class="source-list">
+              <div class="source">
+                <div class="sico">⛰️</div>
+                <div><b>Mountains of Strength</b><span>Rare drop from mountain bosses</span></div>
+              </div>
+              <div class="source">
+                <div class="sico">🏋️</div>
+                <div><b>Training type</b><span>Strength-themed mount, best for gym identity</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><span class="nicon">🏠</span>Home</div>
+          <div class="nav-item"><span class="nicon">📜</span>Quests</div>
+          <div class="nav-item active"><span class="nicon">🎒</span>Menu</div>
+          <div class="nav-item"><span class="nicon">🗺️</span>Map</div>
+          <div class="nav-item"><span class="nicon">⚙️</span>Profile</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="frame-label">World preview · cosmetic visibility</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>LTE 82%</span></div>
+        <div class="appbar">
+          <div class="back">‹</div>
+          <div class="app-title"><b>Forest Trail</b><span>Equipped mount is visible</span></div>
+          <div class="more">⋮</div>
+        </div>
+        <div class="content">
+          <div class="map-card">
+            <div class="trail"></div>
+            <div class="node a">✓</div>
+            <div class="node b">✓</div>
+            <div class="node c">!</div>
+            <div class="walker">
+              <div class="rider">🏃</div>
+              <div class="beast">🐺</div>
+            </div>
+            <div class="journey-chip">
+              <div style="font-size:24px">🐺</div>
+              <div>
+                <b>Bannerback Wolf equipped</b><br>
+                <span>Cosmetic trail marker · guildmates see this ghost</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <div class="section" style="margin-top:0">MVP behavior</div>
+            <div class="source-list">
+              <div class="source">
+                <div class="sico">✅</div>
+                <div><b>Visible on map/profile</b><span>Makes mounts desirable without overpowering gear</span></div>
+              </div>
+              <div class="source">
+                <div class="sico">🛡️</div>
+                <div><b>No boss damage multiplier</b><span>Keeps guild raid contribution ranking clean</span></div>
+              </div>
+              <div class="source">
+                <div class="sico">🎁</div>
+                <div><b>Reward source ready</b><span>Bosses, guild raids, seasons, merchants</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><span class="nicon">🏠</span>Home</div>
+          <div class="nav-item"><span class="nicon">📜</span>Quests</div>
+          <div class="nav-item"><span class="nicon">🎒</span>Menu</div>
+          <div class="nav-item active"><span class="nicon">🗺️</span>Map</div>
+          <div class="nav-item"><span class="nicon">⚙️</span>Profile</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

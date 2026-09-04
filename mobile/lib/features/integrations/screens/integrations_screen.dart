@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../models/integration_models.dart';
 import '../providers/integrations_provider.dart';
 import '../services/garmin_service.dart';
@@ -50,9 +51,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     } catch (e) {
       debugPrint('Strava OAuth error: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Strava error: $e')),
-        );
+        AppToast.error(context, 'Strava error: $e');
       }
     }
   }
@@ -68,9 +67,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     } catch (e) {
       debugPrint('Garmin OAuth error: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Garmin error: $e')),
-        );
+        AppToast.error(context, 'Garmin error: $e');
       }
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../models/encounter_models.dart';
 
 class StorySheet extends StatefulWidget {
@@ -188,11 +189,11 @@ class _StorySheetState extends State<StorySheet> {
       onTap: _continuing
           ? null
           : () async {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('You chose: ${choice.rewardLabel}'),
-            duration: const Duration(seconds: 2),
-          ),
+        AppToast.info(
+          context,
+          'You chose: ${choice.rewardLabel}',
+          icon: Icons.auto_stories_rounded,
+          duration: const Duration(seconds: 2),
         );
         await _continue(context);
       },

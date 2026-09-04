@@ -12,12 +12,15 @@ import '../services/boss_defeated_notifier.dart';
 import '../services/boss_overlay_notifier.dart';
 import '../services/deep_link_notifier.dart';
 import '../services/dungeon_floor_cleared_notifier.dart';
+import '../services/guild_raid_victory_notifier.dart';
 import '../services/level_up_notifier.dart';
 import '../services/item_obtained_notifier.dart';
 import '../services/inventory_full_notifier.dart';
 import '../services/notification_banner_notifier.dart';
 import '../widgets/boss_defeated_overlay.dart';
 import '../widgets/dungeon_floor_cleared_overlay.dart';
+import '../widgets/guild_raid_expired_overlay.dart';
+import '../widgets/guild_raid_victory_overlay.dart';
 import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
@@ -35,11 +38,16 @@ import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/titles/titles_ranks_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
+import '../../features/guild/providers/guild_provider.dart';
+import '../../features/guild/models/guild_models.dart';
+import '../../features/guild/screens/guild_screen.dart';
+import '../../features/guild/services/guild_realtime_service.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/boss/providers/boss_provider.dart';
 import '../../features/character/models/character_profile.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/providers/items_provider.dart';
+import '../widgets/app_toast.dart';
 import 'shell_constants.dart';
 import 'shell_models.dart';
 import 'widgets/ring_item_tile.dart';
@@ -68,12 +76,20 @@ class _MainShellState extends ConsumerState<MainShell>
   ValueChanged<ZonePick>? _pendingOnZoneSelected;
   bool _titlesOpen = false;
   bool _bossOpen = false;
+  bool _guildOpen = false;
   /// Carried alongside `_bossOpen` to deep-link the boss overlay straight
   /// into a specific boss's battle view (set when the home portal "Fight →"
   /// CTA fires, cleared when the overlay closes).
   String? _pendingBossId;
   bool _loginRewardShown = false;
   bool _worldAutoOpenActive = false;
+  bool _checkingPendingGuildVictories = false;
+  bool _checkingPendingGuildExpiries = false;
+  final Set<String> _guildVictoryInFlight = <String>{};
+  final Set<String> _guildVictoryShownThisSession = <String>{};
+  final Set<String> _guildExpiryInFlight = <String>{};
+  final Set<String> _guildExpiryShownThisSession = <String>{};
+  String? _lastRealtimeGuildId;
 
   late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
   bool _wasOffline = false;
@@ -84,16 +100,15 @@ class _MainShellState extends ConsumerState<MainShell>
   late final Animation<double> _openAnim;
 
   final _authService = AuthService();
+  final _guildRealtime = GuildRealtimeService();
 
   late List<String> _ringIds;
-  List<RingItem> get _ringItems => _ringIds
-      .where((id) => kAllRingItems.any((e) => e.id == id))
+  List<RingItem> get _ringItems => sanitizeRingIds(_ringIds)
       .map((id) => kAllRingItems.firstWhere((e) => e.id == id))
       .toList();
 
   late List<String> _navIds;
-  List<NavTab> get _navItems => _navIds
-      .where((id) => kAllNavItems.any((e) => e.id == id))
+  List<NavTab> get _navItems => sanitizeNavIds(_navIds)
       .map((id) => kAllNavItems.firstWhere((e) => e.id == id))
       .toList();
 
@@ -110,12 +125,15 @@ class _MainShellState extends ConsumerState<MainShell>
   late final AnimationController _hintCtrl;
   late final Animation<double>   _hintAnim;
   Timer? _hintTimer;
+  Timer? _guildVictoryPollTimer;
+  Timer? _guildExpiryPollTimer;
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
   late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
+  late final StreamSubscription<GuildRaidVictoryInfo> _guildRaidVictorySub;
   late final StreamSubscription<BossOpenIntent> _bossOverlaySub;
   late final StreamSubscription<BossDefeatedInfo> _bossDefeatedSub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
@@ -190,6 +208,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _worldAutoOpenActive = false;
           _titlesOpen = false;
           _bossOpen = false;
+          _guildOpen = false;
         });
         WorldZoneRefreshNotifier.notify();
       });
@@ -241,6 +260,9 @@ class _MainShellState extends ConsumerState<MainShell>
       final isOnline = results.any((r) => r != ConnectivityResult.none);
       if (_wasOffline && isOnline) {
         _invalidateAllProviders();
+        unawaited(_startGuildRealtime());
+        _checkPendingGuildRaidVictories();
+        _checkPendingGuildRaidExpiries();
       }
       _wasOffline = !isOnline;
     });
@@ -280,10 +302,16 @@ class _MainShellState extends ConsumerState<MainShell>
           _worldAutoOpenActive = false;
           _titlesOpen = false;
           _bossOpen = false;
+          _guildOpen = false;
         });
         return;
       }
-      if (navIndex != -1) setState(() => _tabIndex = navIndex);
+      if (navIndex != -1) {
+        setState(() {
+          _tabIndex = navIndex;
+          _guildOpen = false;
+        });
+      }
     });
     _worldMapSub = WorldMapNotifier.stream.listen((event) {
       if (!mounted) return;
@@ -296,6 +324,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _worldAutoOpenActive = event.autoOpenActiveRegion;
         _titlesOpen = false;
         _bossOpen = false;
+        _guildOpen = false;
       });
     });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
@@ -308,6 +337,10 @@ class _MainShellState extends ConsumerState<MainShell>
     _dungeonFloorSub = DungeonFloorClearedNotifier.stream.listen((event) {
       if (!mounted) return;
       showDungeonFloorClearedOverlay(context, event);
+    });
+    _guildRaidVictorySub = GuildRaidVictoryNotifier.stream.listen((info) {
+      if (!mounted) return;
+      _showAndAcknowledgeGuildRaidVictory(info);
     });
     _bossDefeatedSub = BossDefeatedNotifier.stream.listen((info) {
       if (!mounted) return;
@@ -328,11 +361,12 @@ class _MainShellState extends ConsumerState<MainShell>
         _worldOpen = false;
         _titlesOpen = false;
         _bossOpen = true;
+        _guildOpen = false;
         _pendingBossId = intent.bossId;
       });
     });
-    _ringIds = List.from(widget.initialRingIds ?? kDefaultRingIds);
-    _navIds  = List.from(widget.initialNavIds  ?? kDefaultNavIds);
+    _ringIds = sanitizeRingIds(widget.initialRingIds);
+    _navIds  = sanitizeNavIds(widget.initialNavIds);
 
     // OAuth deep-link handling — runs for both cold starts and warm resumes.
     // Cold start: getInitialLink() delivers the URI that launched the app.
@@ -346,38 +380,15 @@ class _MainShellState extends ConsumerState<MainShell>
     // stays in one place (see DeepLinkNotifier + NotificationsService).
     _deepLinkNotifierSub = DeepLinkNotifier.stream.listen(_handleDeepLink);
 
-    // Foreground push notification banners — shown as a floating SnackBar
-    // while the user is already inside the app.
+    // Foreground push notification banners shown as AppToast overlays.
     _notificationBannerSub =
         NotificationBannerNotifier.stream.listen((payload) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                payload.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              if (payload.body.isNotEmpty)
-                Text(
-                  payload.body,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1e2632),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.info(
+        context,
+        payload.body.isEmpty ? payload.title : '${payload.title}\n${payload.body}',
+        icon: Icons.notifications_active_rounded,
+        duration: const Duration(seconds: 4),
       );
     });
 
@@ -394,6 +405,20 @@ class _MainShellState extends ConsumerState<MainShell>
     // FCM push notifications: request permission, fetch+register token,
     // attach listeners. Idempotent — safe to call on every shell mount.
     NotificationsService.instance.initialize(ref);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_startGuildRealtime());
+      _checkPendingGuildRaidVictories();
+      _checkPendingGuildRaidExpiries();
+    });
+    _guildVictoryPollTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _checkPendingGuildRaidVictories(),
+    );
+    _guildExpiryPollTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _checkPendingGuildRaidExpiries(),
+    );
 
     _openCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 350));
@@ -466,6 +491,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _worldOpen = false;
             _titlesOpen = false;
             _bossOpen = false;
+            _guildOpen = false;
           });
         }
 
@@ -477,6 +503,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _worldOpen = false;
             _titlesOpen = false;
             _bossOpen = false;
+            _guildOpen = false;
           });
         }
 
@@ -486,6 +513,18 @@ class _MainShellState extends ConsumerState<MainShell>
           _worldOpen = false;
           _titlesOpen = false;
           _bossOpen = true;
+          _guildOpen = false;
+        });
+
+      case 'guild':
+        final navIndex = _navIds.indexOf('guild');
+        setState(() {
+          _radialOpen = false;
+          _worldOpen = false;
+          _titlesOpen = false;
+          _bossOpen = false;
+          _guildOpen = navIndex == -1;
+          if (navIndex != -1) _tabIndex = navIndex;
         });
 
       case 'map':
@@ -498,6 +537,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _worldOpen = true;
           _titlesOpen = false;
           _bossOpen = false;
+          _guildOpen = false;
         });
 
       case 'profile':
@@ -508,6 +548,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _worldOpen = false;
             _titlesOpen = false;
             _bossOpen = false;
+            _guildOpen = false;
           });
         }
     }
@@ -515,22 +556,20 @@ class _MainShellState extends ConsumerState<MainShell>
 
   void _handleStravaCallback(String code) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Connecting to Strava...')),
-    );
+    AppToast.info(context, 'Connecting to Strava...', icon: Icons.sync_rounded);
     ref.read(integrationSyncProvider.notifier).connectStrava(code).then((error) async {
       _oauthCallbackHandled = false;
       await ref.read(integrationSyncProvider.notifier).refresh();
       if (!mounted) return;
       final connected = ref.read(integrationSyncProvider).isStravaConnected;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(connected
-              ? 'Strava connected!'
-              : 'Failed: ${error ?? 'unknown error'}'),
-          duration: const Duration(seconds: 8),
-        ),
-      );
+      final message = connected
+          ? 'Strava connected!'
+          : 'Failed: ${error ?? 'unknown error'}';
+      if (connected) {
+        AppToast.success(context, message, duration: const Duration(seconds: 8));
+      } else {
+        AppToast.error(context, message, duration: const Duration(seconds: 8));
+      }
     });
   }
 
@@ -540,6 +579,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _levelUpSub.cancel();
     _itemObtainedSub.cancel();
     _dungeonFloorSub.cancel();
+    _guildRaidVictorySub.cancel();
     _bossOverlaySub.cancel();
     _bossDefeatedSub.cancel();
     _navTabSub.cancel();
@@ -549,7 +589,10 @@ class _MainShellState extends ConsumerState<MainShell>
     _deepLinkSub?.cancel();
     _deepLinkNotifierSub.cancel();
     _notificationBannerSub.cancel();
+    unawaited(_guildRealtime.stop());
     _hintTimer?.cancel();
+    _guildVictoryPollTimer?.cancel();
+    _guildExpiryPollTimer?.cancel();
     _openCtrl.dispose();
     _snapCtrl.dispose();
     _hintCtrl.dispose();
@@ -564,6 +607,9 @@ class _MainShellState extends ConsumerState<MainShell>
     if (state == AppLifecycleState.resumed) {
       _triggerForegroundHealthSync();
       _invalidateAllProviders();
+      unawaited(_startGuildRealtime());
+      _checkPendingGuildRaidVictories();
+      _checkPendingGuildRaidExpiries();
     }
   }
 
@@ -584,6 +630,129 @@ class _MainShellState extends ConsumerState<MainShell>
   void _invalidateAllProviders() {
     if (!mounted) return;
     invalidateUserScopedProviders(ref);
+  }
+
+  Future<void> _startGuildRealtime() async {
+    await _guildRealtime.start(
+      onStarted: (info) {
+        if (!mounted) return;
+        ref.invalidate(guildProvider);
+        ref.invalidate(guildRaidHistoryProvider);
+        AppToast.info(
+          context,
+          '${info.bossName} guild raid started',
+          icon: Icons.shield_rounded,
+        );
+      },
+      onHpUpdated: (info) {
+        if (!mounted) return;
+        ref.invalidate(guildProvider);
+        ref.invalidate(guildRaidHistoryProvider);
+      },
+      onDefeated: (info) {
+        if (!mounted) return;
+        ref.invalidate(guildProvider);
+        ref.invalidate(guildRaidHistoryProvider);
+        _checkPendingGuildRaidVictories();
+      },
+      onExpired: (info) {
+        if (!mounted) return;
+        ref.invalidate(guildProvider);
+        ref.invalidate(guildRaidHistoryProvider);
+        unawaited(_showAndAcknowledgeGuildRaidExpiry(info));
+      },
+    );
+  }
+
+  Future<void> _checkPendingGuildRaidVictories() async {
+    if (!mounted || _checkingPendingGuildVictories) return;
+    _checkingPendingGuildVictories = true;
+    try {
+      final pending = await ref.read(guildServiceProvider).pendingRaidVictories();
+      for (final info in pending) {
+        if (!mounted) return;
+        await _showAndAcknowledgeGuildRaidVictory(info);
+      }
+    } catch (_) {
+      // Non-blocking: missing guild, auth refresh, or network issues should not
+      // interrupt app startup.
+    } finally {
+      _checkingPendingGuildVictories = false;
+    }
+  }
+
+  Future<void> _showAndAcknowledgeGuildRaidVictory(
+    GuildRaidVictoryInfo info,
+  ) async {
+    if (!mounted) return;
+    final key = info.guildRaidId.isNotEmpty
+        ? info.guildRaidId
+        : '${info.guildId}:${info.bossName}:${info.rewardXp}';
+    if (_guildVictoryInFlight.contains(key) ||
+        _guildVictoryShownThisSession.contains(key)) {
+      return;
+    }
+
+    _guildVictoryInFlight.add(key);
+    ref.invalidate(guildProvider);
+    try {
+      await showGuildRaidVictoryOverlay(context, info);
+      _guildVictoryShownThisSession.add(key);
+      if (!mounted || info.guildRaidId.isEmpty) return;
+      try {
+        await ref.read(guildServiceProvider).acknowledgeRaidVictory(info.guildRaidId);
+      } catch (_) {
+        // If acknowledgement fails, the backend can offer the modal again on a
+        // later sign-in. The session guard still prevents duplicate popups now.
+      }
+    } finally {
+      _guildVictoryInFlight.remove(key);
+    }
+  }
+
+  Future<void> _checkPendingGuildRaidExpiries() async {
+    if (!mounted || _checkingPendingGuildExpiries) return;
+    _checkingPendingGuildExpiries = true;
+    try {
+      final pending = await ref.read(guildServiceProvider).pendingRaidExpiries();
+      for (final info in pending) {
+        if (!mounted) return;
+        await _showAndAcknowledgeGuildRaidExpiry(info);
+      }
+    } catch (_) {
+      // Non-blocking: expiry modals are retried by polling and lifecycle hooks.
+    } finally {
+      _checkingPendingGuildExpiries = false;
+    }
+  }
+
+  Future<void> _showAndAcknowledgeGuildRaidExpiry(
+    GuildRaidExpiredInfo info,
+  ) async {
+    if (!mounted) return;
+    final key = info.guildRaidId.isNotEmpty
+        ? info.guildRaidId
+        : '${info.guildId}:${info.bossName}:expired';
+    if (_guildExpiryInFlight.contains(key) ||
+        _guildExpiryShownThisSession.contains(key)) {
+      return;
+    }
+
+    _guildExpiryInFlight.add(key);
+    ref.invalidate(guildProvider);
+    ref.invalidate(guildRaidHistoryProvider);
+    try {
+      await showGuildRaidExpiredOverlay(context, info);
+      _guildExpiryShownThisSession.add(key);
+      if (!mounted || info.guildRaidId.isEmpty) return;
+      try {
+        await ref.read(guildServiceProvider).acknowledgeRaidExpiry(info.guildRaidId);
+      } catch (_) {
+        // Keep the session guard; backend pending state can retry after restart.
+      }
+    } finally {
+      _guildExpiryInFlight.remove(key);
+    }
   }
 
   // ── open / close ──────────────────────────────────────────────────────────
@@ -635,12 +804,14 @@ class _MainShellState extends ConsumerState<MainShell>
         currentIds: List.from(_ringIds),
         currentNavIds: List.from(_navIds),
         onSave: (newRingIds, newNavIds) {
+          final sanitizedRingIds = sanitizeRingIds(newRingIds);
+          final sanitizedNavIds = sanitizeNavIds(newNavIds);
           setState(() {
-            _ringIds = newRingIds;
-            _navIds  = newNavIds;
+            _ringIds = sanitizedRingIds;
+            _navIds  = sanitizedNavIds;
             if (_tabIndex >= _navIds.length) _tabIndex = 0;
           });
-          _authService.saveRingConfig(newRingIds);
+          _authService.saveRingConfig(sanitizedRingIds);
         },
       ),
     );
@@ -684,6 +855,7 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'profile': return const ProfileScreen();
       case 'titles':  return const TitlesRanksScreen();
       case 'boss':    return const BossScreen();
+      case 'guild':   return const GuildScreen();
       default:        return Center(
         child: Text(id, style: const TextStyle(color: Colors.white38)),
       );
@@ -699,6 +871,17 @@ class _MainShellState extends ConsumerState<MainShell>
       final profile = next.valueOrNull;
       _checkLoginReward(profile);
       _syncTutorialWithProfile(profile);
+    });
+    ref.listen(guildProvider, (previous, next) {
+      if (!mounted) return;
+      final guildId = next.valueOrNull?.id;
+      if (guildId == _lastRealtimeGuildId) return;
+      _lastRealtimeGuildId = guildId;
+      unawaited(_guildRealtime.refreshGuildGroup());
+      if (guildId != null) {
+        _checkPendingGuildRaidVictories();
+        _checkPendingGuildRaidExpiries();
+      }
     });
 
     // Register shell-level tutorial targets once after the first frame paints
@@ -780,6 +963,15 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
+              // ── guild overlay ──────────────────────────────────────────
+              if (_guildOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: GuildScreen(
+                    onClose: () => setState(() => _guildOpen = false),
+                  ),
+                ),
+
               // ── backdrop ────────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
@@ -837,10 +1029,17 @@ class _MainShellState extends ConsumerState<MainShell>
                         _worldAutoOpenActive = true;
                         _titlesOpen = false;
                         _bossOpen = false;
+                        _guildOpen = false;
                       });
                       return;
                     }
-                    setState(() { _tabIndex = i; _worldOpen = false; _titlesOpen = false; _bossOpen = false; });
+                    setState(() {
+                      _tabIndex = i;
+                      _worldOpen = false;
+                      _titlesOpen = false;
+                      _bossOpen = false;
+                      _guildOpen = false;
+                    });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
                       invalidateUserScopedProviders(ref);
@@ -887,21 +1086,46 @@ class _MainShellState extends ConsumerState<MainShell>
         _worldAutoOpenActive = false;
         _titlesOpen = false;
         _bossOpen = false;
+        _guildOpen = false;
       });
       return;
     }
     if (id == 'titles') {
-      setState(() => _titlesOpen = true);
+      setState(() {
+        _titlesOpen = true;
+        _guildOpen = false;
+      });
       return;
     }
     if (id == 'boss') {
-      setState(() => _bossOpen = true);
+      setState(() {
+        _bossOpen = true;
+        _guildOpen = false;
+      });
+      return;
+    }
+    if (id == 'guild') {
+      final navIndex = _navIds.indexOf('guild');
+      setState(() {
+        if (navIndex != -1) {
+          _tabIndex = navIndex;
+          _guildOpen = false;
+        } else {
+          _worldOpen = false;
+          _titlesOpen = false;
+          _bossOpen = false;
+          _guildOpen = true;
+        }
+      });
       return;
     }
     // If the id is already in the nav bar, switch to that tab.
     final navIndex = _navIds.indexOf(id);
     if (navIndex != -1) {
-      setState(() => _tabIndex = navIndex);
+      setState(() {
+        _tabIndex = navIndex;
+        _guildOpen = false;
+      });
       return;
     }
     // Otherwise push the screen as a full-screen route.

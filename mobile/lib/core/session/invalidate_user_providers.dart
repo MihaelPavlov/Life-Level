@@ -5,6 +5,7 @@ import '../../features/activity/providers/activity_provider.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/boss/providers/boss_provider.dart';
 import '../../features/character/providers/character_provider.dart';
+import '../../features/guild/providers/guild_provider.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
@@ -23,6 +24,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
+  ref.invalidate(guildProvider);
 }
 
 // Container-scoped variant for call sites where the calling widget may be
@@ -40,6 +42,7 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(equipmentProvider);
   container.invalidate(inventoryProvider);
   container.invalidate(bossListProvider);
+  container.invalidate(guildProvider);
 }
 
 /// Clears the JWT, routes to LoginScreen, and invalidates user-scoped providers.

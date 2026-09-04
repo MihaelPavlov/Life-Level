@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_colors.dart';
+import 'app_toast.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/services/items_service.dart';
@@ -237,12 +238,7 @@ class _ItemObtainedDialog extends ConsumerWidget {
       ref.read(characterProfileProvider.notifier).refresh();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not equip item: $e'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        AppToast.error(context, 'Could not equip item: $e');
       }
     }
     if (context.mounted) Navigator.of(context).pop();

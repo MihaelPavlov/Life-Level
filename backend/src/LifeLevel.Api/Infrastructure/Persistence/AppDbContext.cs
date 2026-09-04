@@ -20,6 +20,8 @@ using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Infrastructure;
 using LifeLevel.Modules.Items.Domain.Entities;
 using LifeLevel.Modules.Items.Infrastructure;
+using LifeLevel.Modules.Guild.Domain.Entities;
+using LifeLevel.Modules.Guild.Infrastructure;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.Modules.Integrations.Infrastructure;
 using LifeLevel.Modules.Achievements.Domain.Entities;
@@ -105,6 +107,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<EquipmentSlot> EquipmentSlots => Set<EquipmentSlot>();
     public DbSet<ItemDropRule> ItemDropRules => Set<ItemDropRule>();
 
+    // Guild
+    public DbSet<Guild> Guilds => Set<Guild>();
+    public DbSet<GuildMember> GuildMembers => Set<GuildMember>();
+    public DbSet<GuildRaid> GuildRaids => Set<GuildRaid>();
+    public DbSet<GuildRaidContribution> GuildRaidContributions => Set<GuildRaidContribution>();
+    public DbSet<GuildRaidVictoryAcknowledgement> GuildRaidVictoryAcknowledgements => Set<GuildRaidVictoryAcknowledgement>();
+    public DbSet<GuildRaidExpiryAcknowledgement> GuildRaidExpiryAcknowledgements => Set<GuildRaidExpiryAcknowledgement>();
+
     // Integrations
     public DbSet<ExternalActivityRecord> ExternalActivityRecords => Set<ExternalActivityRecord>();
     public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
@@ -117,6 +127,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Notifications
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -132,6 +143,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EncountersModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DungeonsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ItemsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(GuildModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IntegrationsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AchievementsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationsModule).Assembly);
@@ -294,7 +306,44 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(s => s.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Guild cross-module: membership/ownership/contributions -> User, raid -> Boss
+        modelBuilder.Entity<Guild>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(g => g.OwnerUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GuildMember>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(m => m.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GuildRaid>()
+            .HasOne<Boss>()
+            .WithMany()
+            .HasForeignKey(r => r.BossId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GuildRaidContribution>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Integrations cross-module: ExternalActivityRecord → Character
+        modelBuilder.Entity<GuildRaidVictoryAcknowledgement>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GuildRaidExpiryAcknowledgement>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<ExternalActivityRecord>()
             .HasOne<Character>()
             .WithMany()
@@ -334,6 +383,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<User>()
             .WithMany()
             .HasForeignKey(l => l.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NotificationPreference>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Level unlock rewards — cross-module: LevelTitleGrant → Title

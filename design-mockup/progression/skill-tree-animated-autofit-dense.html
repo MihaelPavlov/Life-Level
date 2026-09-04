@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life-Level - Skill Tree (Auto-Fit, Density Stress Test)</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #050913;
+  --panel: #131b27;
+  --line: #273347;
+  --text: #edf3fb;
+  --muted: #8a98ae;
+  --gold: #f2be58;
+  --blue: #4f9eff;
+  --green: #3fb950;
+  --orange: #f5a623;
+  --violet: #a371f7;
+  --red: #f85149;
+  --cyan: #38bdf8;
+}
+
+body {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(92,165,255,0.10), transparent 28%),
+    radial-gradient(circle at 85% 10%, rgba(163,113,247,0.08), transparent 24%),
+    linear-gradient(180deg, #04070f 0%, #070d18 100%);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 48px 24px 80px;
+}
+
+.page-title { text-align: center; margin-bottom: 30px; }
+.page-title h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+.page-title p { max-width: 720px; margin: 0 auto; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+.stage-row {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 34px;
+}
+
+/* ---------- Phone frame ---------- */
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  border-radius: 42px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: radial-gradient(circle at 50% 0%, rgba(92,165,255,0.10), transparent 30%), #05070d;
+  box-shadow: 0 0 0 8px rgba(10,13,20,0.95), 0 34px 88px rgba(0,0,0,0.65);
+}
+
+.status {
+  position: absolute; top: 0; left: 0; right: 0; height: 40px;
+  padding: 13px 22px 0; display: flex; justify-content: space-between;
+  font-size: 12px; font-weight: 700; z-index: 40; pointer-events: none;
+}
+
+.head {
+  position: absolute; top: 40px; left: 0; right: 0; z-index: 30;
+  padding: 12px 18px 10px;
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(180deg, rgba(5,9,19,0.92), rgba(5,9,19,0.0));
+}
+
+.back-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex: 0 0 auto;
+  opacity: 0; transform: scale(0.7); pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.stage-wrap.mode-category .back-btn,
+.stage-wrap.mode-node .back-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+.head-text .h1 { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+.head-text .h2 { font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 1px; }
+
+/* ---------- Camera viewport ---------- */
+.stage {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.world {
+  position: absolute;
+  left: 0; top: 0;
+  width: 1px; height: 1px; /* content is positioned via left/top offsets from 0,0 */
+  will-change: transform;
+}
+
+svg.edges {
+  position: absolute; left: -1000px; top: -1000px;
+  width: 2000px; height: 2000px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.edge {
+  fill: none;
+  stroke: rgba(255,255,255,0.14);
+  stroke-width: 1.6;
+  transition: stroke .3s ease;
+}
+.edge.dim { stroke: rgba(255,255,255,0.04); }
+
+/* ---------- Nodes ---------- */
+.node {
+  position: absolute;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  border: 1.6px solid rgba(255,255,255,0.16);
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  color: var(--text);
+  transition: opacity .35s ease, box-shadow .3s ease;
+}
+
+.node .node-icon { font-size: 20px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.node.n-child .node-icon { font-size: 15px; }
+.node .node-label {
+  position: absolute; top: 100%; left: 50%;
+  margin-top: 6px; width: 96px; font-size: 10px; font-weight: 800;
+  letter-spacing: 0.03em; text-transform: uppercase; color: var(--text);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+  /* Counter-scales against the camera's world zoom (--label-scale, set in
+     applyCamera()) so text renders at a fixed screen size no matter how far
+     the camera is zoomed in or out — only the node's own position/size
+     follows the camera, never its label's legibility. */
+  transform: translateX(-50%) scale(var(--label-scale, 1));
+  transform-origin: top center;
+}
+.node.n-child .node-label { font-size: 9.5px; width: 82px; color: var(--muted); }
+
+/* Dense branches (Power, here) hide child labels by default — with this many
+   nodes, fixed-size labels start overlapping even when the circles don't.
+   Label only appears on hover, or once the node is selected. */
+.node.n-child.dense-mode .node-label { opacity: 0; transition: opacity .18s ease; }
+.node.n-child.dense-mode:hover .node-label,
+.node.n-child.dense-mode.selected .node-label { opacity: 1; }
+
+.node.n-root { border-color: rgba(242,190,88,0.55); box-shadow: 0 0 34px rgba(242,190,88,0.20); background: radial-gradient(circle at 50% 28%, rgba(242,190,88,0.22), rgba(242,190,88,0.04)); }
+
+.node.n-hub { border-color: var(--accent); box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 40%, transparent); }
+
+.node.locked { opacity: 0.4; border-style: dashed; filter: grayscale(0.2); }
+.node.available { border-color: var(--accent); animation: nodePulse 2.6s ease-in-out infinite; }
+.node.in-progress { border-color: var(--accent); }
+.node.completed { border-color: var(--accent); background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--accent) 35%, transparent), rgba(255,255,255,0.02)); }
+
+.node.type-boss.n-child { width: 62px !important; height: 62px !important; margin-left: -31px !important; margin-top: -31px !important; border-width: 2px; }
+
+@keyframes nodePulse {
+  0%, 100% { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent); }
+  50% { box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 75%, transparent); }
+}
+
+.node-badge {
+  position: absolute; top: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--green); color: #052110; font-size: 10px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg);
+}
+.node-new {
+  position: absolute; top: -2px; left: -2px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--red); border: 2px solid var(--bg);
+  box-shadow: 0 0 8px rgba(248,81,73,0.7);
+}
+
+.node-ring {
+  position: absolute; inset: -6px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--progress,50) * 1%), rgba(255,255,255,0.10) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+
+.node.floaty { animation: floatNode var(--fdur, 5s) ease-in-out infinite; animation-delay: var(--fdelay, 0s); }
+@keyframes floatNode {
+  0%, 100% { transform: translate(0px, 0px); }
+  50% { transform: translate(var(--fx, 2px), var(--fy, -2px)); }
+}
+
+.node.selected {
+  z-index: 20;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.55), 0 0 34px var(--accent);
+}
+.node.dimmed { opacity: 0.25 !important; filter: grayscale(0.4); }
+
+/* ---------- Center particle cloud ---------- */
+.center-cloud {
+  position: absolute; left: -70px; top: -70px; width: 140px; height: 140px;
+  pointer-events: none;
+}
+.center-cloud .dot {
+  position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: rgba(163,113,247,0.55);
+  animation: driftDot 6s ease-in-out infinite;
+}
+@keyframes driftDot {
+  0%, 100% { transform: translate(0,0); opacity: .35; }
+  50% { transform: translate(var(--dx,4px), var(--dy,-4px)); opacity: .85; }
+}
+.center-cloud.hot { pointer-events: auto; cursor: pointer; }
+.center-cloud.hot .dot { background: rgba(242,190,88,0.85); }
+.mastery-hint-ring {
+  position: absolute; left: -46px; top: -46px; width: 92px; height: 92px;
+  border-radius: 50%; border: 1px dashed rgba(242,190,88,0.5);
+  opacity: 0; pointer-events: none;
+}
+.center-cloud.hot .mastery-hint-ring { opacity: 1; animation: hintSpin 12s linear infinite; }
+@keyframes hintSpin { to { transform: rotate(360deg); } }
+
+/* ---------- Title flash ---------- */
+.title-flash {
+  position: absolute; inset: 0; z-index: 25;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4,7,15,0.0);
+  pointer-events: none; opacity: 0;
+}
+.title-flash .t {
+  font-size: 34px; font-weight: 900; letter-spacing: 0.08em;
+  color: var(--accent2, var(--gold));
+  text-shadow: 0 0 30px var(--accent2, var(--gold));
+  opacity: 0;
+}
+
+/* ---------- Legend ---------- */
+.legend-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 15;
+  padding: 10px 16px 16px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: linear-gradient(0deg, rgba(5,9,19,0.95), rgba(5,9,19,0.0));
+  transition: opacity .3s ease, transform .3s ease;
+}
+.stage-wrap:not(.mode-overview) .legend-bar { opacity: 0; transform: translateY(8px); pointer-events: none; }
+
+.legend-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
+}
+.legend-chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ---------- Fit badge (shown briefly on category open) ---------- */
+.fit-badge {
+  position: absolute; left: 50%; top: 96px; z-index: 16;
+  transform: translate(-50%, -6px); background: rgba(19,27,39,0.94);
+  border: 1px solid rgba(242,190,88,0.28); border-radius: 999px;
+  padding: 6px 12px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.04em;
+  color: var(--gold); text-transform: uppercase; white-space: nowrap;
+  opacity: 0; transition: opacity .3s ease, transform .3s ease; pointer-events: none;
+}
+.fit-badge.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Node detail sheet ---------- */
+.sheet-backdrop {
+  position: absolute; inset: 0; z-index: 34;
+  background: rgba(3,5,10,0.55);
+  opacity: 0; pointer-events: none; transition: opacity .3s ease;
+}
+.stage-wrap.mode-node .sheet-backdrop { opacity: 1; pointer-events: auto; }
+
+.node-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 35;
+  background: linear-gradient(180deg, #131b27 0%, #0c1320 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  padding: 14px 18px 22px;
+  transform: translateY(105%);
+  transition: transform .38s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 -20px 50px rgba(0,0,0,0.45);
+}
+.stage-wrap.mode-node .node-sheet { transform: translateY(0); }
+
+.sheet-handle { width: 36px; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.18); margin: 0 auto 14px; }
+
+.sheet-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.sheet-icon {
+  width: 44px; height: 44px; border-radius: 14px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.sheet-title { font-size: 16px; font-weight: 800; }
+.sheet-badges { display: flex; gap: 6px; margin-top: 4px; }
+.sheet-badge {
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); color: var(--muted);
+}
+.sheet-desc { font-size: 12px; color: var(--muted); line-height: 1.55; margin-bottom: 12px; }
+
+.sheet-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; }
+.sheet-row .k { color: var(--muted); font-weight: 700; }
+.sheet-row .v { font-weight: 800; text-align: right; }
+
+.sheet-btn {
+  margin-top: 14px; height: 46px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12.5px; font-weight: 800; letter-spacing: 0.03em;
+  background: linear-gradient(180deg, #66b0ff 0%, #428ee6 100%); color: white;
+}
+.sheet-btn.disabled { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+/* ---------- Mastery overlay ---------- */
+.mastery-overlay {
+  position: absolute; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 30%, rgba(163,113,247,0.24), transparent 55%), rgba(4,3,10,0.94);
+  opacity: 0; pointer-events: none; transition: opacity .4s ease;
+  padding: 30px;
+}
+.mastery-overlay.show { opacity: 1; pointer-events: auto; }
+.mastery-card { text-align: center; transform: scale(0.9); transition: transform .4s cubic-bezier(0.22,1,0.36,1); }
+.mastery-overlay.show .mastery-card { transform: scale(1); }
+.mastery-card .sigil {
+  width: 92px; height: 92px; border-radius: 50%; margin: 0 auto 16px;
+  display: grid; place-items: center; font-size: 40px;
+  border: 1px solid rgba(163,113,247,0.5);
+  background: radial-gradient(circle at 50% 30%, rgba(163,113,247,0.28), rgba(163,113,247,0.05));
+  box-shadow: 0 0 50px rgba(163,113,247,0.3);
+  animation: sigilPulse 3s ease-in-out infinite;
+}
+@keyframes sigilPulse { 0%,100% { box-shadow: 0 0 30px rgba(163,113,247,0.25); } 50% { box-shadow: 0 0 60px rgba(163,113,247,0.45); } }
+.mastery-card .eyebrow { color: var(--violet); font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
+.mastery-card h3 { font-size: 26px; margin-bottom: 10px; }
+.mastery-card p { color: #cabdec; font-size: 12.5px; line-height: 1.6; max-width: 280px; margin: 0 auto; }
+.mastery-close {
+  margin-top: 22px; display: inline-block; padding: 12px 22px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--text);
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: absolute; left: 50%; bottom: 100px; z-index: 45;
+  transform: translate(-50%, 12px); background: rgba(19,27,39,0.96);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;
+  padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: var(--text);
+  white-space: nowrap; opacity: 0; transition: opacity .3s ease, transform .3s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Notes panel ---------- */
+.notes {
+  max-width: 900px; margin: 0 auto; display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.notes .card {
+  background: rgba(19,27,39,0.9); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px; padding: 18px 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+}
+.notes .card h3 { font-size: 13px; font-weight: 800; letter-spacing: 0.03em; margin-bottom: 10px; color: var(--gold); }
+.notes .card p, .notes .card li { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.notes .card ul { padding-left: 18px; margin-top: 4px; }
+.notes .card code { color: #b9d4ff; background: rgba(79,158,255,0.1); padding: 1px 5px; border-radius: 5px; font-size: 11px; }
+.notes .stack-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.06); }
+.notes .stack-row .pkg { font-weight: 800; color: var(--text); }
+.notes .stack-row .use { color: var(--muted); text-align: right; }
+.footer-note { max-width: 900px; margin: 22px auto 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="page-title">
+    <h1>Skill Tree — Density Stress Test</h1>
+    <p>Same auto-fit camera + zoom-independent labels as the tuned baseline (<code>skill-tree-animated-autofit.html</code>) — <b>untouched</b>. The only change here: <b>Power</b> now has 19 skills instead of 4 (15 added), laid out in concentric rings, to see how the current approach copes once a single branch gets dense. Every other category is still 4 skills, unchanged, for comparison.</p>
+  </div>
+
+  <div class="stage-row">
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>Life-Level</span></div>
+      <div class="head">
+        <div class="back-btn" id="backBtn">←</div>
+        <div class="head-text">
+          <div class="h1" id="headTitle">Skill Tree</div>
+          <div class="h2" id="headSub">Ranger • tap a branch to explore</div>
+        </div>
+      </div>
+
+      <div class="stage-wrap mode-overview" id="stageWrap">
+        <div class="stage" id="stage">
+          <div class="world" id="world">
+            <svg class="edges" id="edgesSvg"><g id="edgesGroup"></g></svg>
+            <div class="center-cloud" id="centerCloud">
+              <div class="mastery-hint-ring"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="title-flash" id="titleFlash"><div class="t" id="titleFlashText"></div></div>
+        <div class="fit-badge" id="fitBadge">Zoom auto-fit</div>
+
+        <div class="legend-bar">
+          <div class="legend-chip"><span class="dot" style="background:rgba(255,255,255,0.35)"></span>Locked</div>
+          <div class="legend-chip"><span class="dot" style="background:var(--blue)"></span>Available</div>
+          <div class="legend-chip"><span class="dot" style="background:var(--orange)"></span>In progress</div>
+          <div class="legend-chip"><span class="dot" style="background:var(--green)"></span>Completed</div>
+          <div class="legend-chip"><span class="dot" style="background:var(--red)"></span>Boss node</div>
+        </div>
+
+        <div class="sheet-backdrop" id="sheetBackdrop"></div>
+        <div class="node-sheet" id="nodeSheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-top">
+            <div class="sheet-icon" id="sheetIcon">⚡</div>
+            <div>
+              <div class="sheet-title" id="sheetTitle">Node</div>
+              <div class="sheet-badges">
+                <div class="sheet-badge" id="sheetTypeBadge">Type</div>
+                <div class="sheet-badge" id="sheetStateBadge">State</div>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-desc" id="sheetDesc">Description</div>
+          <div class="sheet-row"><div class="k">Unlock condition</div><div class="v" id="sheetReq">—</div></div>
+          <div class="sheet-row"><div class="k">Reward</div><div class="v" id="sheetReward">—</div></div>
+          <div class="sheet-btn" id="sheetBtn">Unlock</div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <div class="mastery-overlay" id="masteryOverlay">
+          <div class="mastery-card">
+            <div class="sigil">✦</div>
+            <div class="eyebrow">Mastery Unlocked</div>
+            <h3>Trailborn</h3>
+            <p>You kept moving when others paused. Your path now bends toward exploration, route instincts, and long-range world pressure.</p>
+            <div class="mastery-close" id="masteryClose">Continue</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="card">
+      <h3>What changed vs. the baseline</h3>
+      <ul>
+        <li><b>Power now has 19 children</b> (was 4) — a mix of quest/streak/boss/identity nodes at every state, to stress-test crowding.</li>
+        <li>Attempt 1 kept the radial fan and added "rings" — still crowded labels and clipped off-screen. Attempt 2 swapped the fan for a flat grid — fixed the crowding, but lost the branching-tree look entirely. Attempt 3 used straight chains (hub → node → node → node) — closer, but still too uniform/mechanical next to the reference.</li>
+        <li><b>Current fix — dense branches actually fork</b>, matching <code>frame_017</code>/<code>frame_018</code> in the source folder: each of the 4 sub-branches has one node (index 1) whose <b>two children diverge</b> instead of one continuing in a straight line — one child keeps leaning outward, the other splits off toward the branch's own centerline as a shorter offshoot. A small random angle/distance wobble (<code>WOBBLE_ANGLE</code>/<code>WOBBLE_DIST</code>) is layered on every node so it doesn't read as a rigid formula, the way the reference's branches visibly wander rather than sitting on a perfect curve.</li>
+        <li><b>Labels still hidden by default on dense branches</b>, shown only on hover or once a node is selected — unchanged, since that fix was already independent of layout shape.</li>
+        <li>Categories at or under the threshold are completely unaffected — same single-fan layout as the tuned baseline.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What to watch for when you open Power</h3>
+      <p>Look for the actual fork shape: node index 1 of each of the 4 branches should visibly split into two diverging edges, not one line continuing straight. Depth-synchronized reveal still applies — both fork children appear together since they share a depth, then whatever continues past them appears next. Hover (or tap) any node to confirm its label only appears then.</p>
+      <p style="margin-top:8px">Reload the page a couple of times — the wobble uses <code>Math.random()</code>, so the exact branch shapes differ slightly each time, which is itself closer to how organic/force-directed graphs like the reference never look pixel-identical twice.</p>
+    </div>
+    <div class="card">
+      <h3>Where this still has a ceiling</h3>
+      <p>4 forking branches of ~5 nodes each reads fine; a branch with, say, 60 nodes would still need scrolling/pagination through its branches rather than fitting everything in one static view, per the source doc's two-layout recommendation (Section 4). Combining this forking-branch approach with the <b>pannable camera</b> variant (drag + scroll to zoom) would be the most robust real-world combo for branches that ever get that dense.</p>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    This file is a throwaway stress test, not a new tuned baseline — <code>skill-tree-animated-autofit.html</code> stays as the reference, untouched. This version demonstrates the actual structural fix for dense branches: swap the radial fan for a grid once a threshold is crossed, and hide labels until hover/select.
+  </div>
+
+<script>
+(function () {
+  var TYPE_META = {
+    quest:    { icon: '📜', color: 'var(--blue)',   label: 'Quest' },
+    travel:   { icon: '🧭', color: 'var(--cyan)',   label: 'Travel' },
+    boss:     { icon: '⚔️', color: 'var(--red)',    label: 'Boss' },
+    streak:   { icon: '🔥', color: 'var(--orange)', label: 'Streak' },
+    identity: { icon: '✦',  color: 'var(--violet)', label: 'Identity' }
+  };
+  var STATE_LABEL = { locked: 'Locked', available: 'Available', 'in-progress': 'In Progress', completed: 'Completed' };
+
+  var root = { id: 'root', title: 'Ranger', icon: '🏹' };
+
+  var categories = [
+    { id: 'power',      title: 'Power',      icon: '💪', angle: 0,   accent: '#f5794a', tagline: 'Gym & strength discipline — 19 skills (stress test)', children: [
+      { id: 'iron-grip',   title: 'Iron Grip',      type: 'quest',    state: 'completed', desc: 'Complete 3 strength sessions in a single week to prove raw discipline.', req: '3 gym sessions in one week', reward: '+1 daily quest slot' },
+      { id: 'heavy-hands',  title: 'Heavy Hands',    type: 'streak',   state: 'available', desc: 'Strength activities logged on streak days grant a stacking power buff for your next workout.', req: 'Power branch revealed', reward: '+10% STR gain on streak days' },
+      { id: 'stone-prep',   title: 'Stone Guardian Prep', type: 'boss', state: 'locked', desc: 'Prepares your character for the Stone Guardian encounter with a bonus damage window on strength-logged days.', req: 'Requires: Heavy Hands', reward: '+15% boss damage (strength days)' },
+      { id: 'titans-mark',  title: "Titan's Mark",  type: 'identity', state: 'locked',    desc: 'A visible strength aura and title fragment shown on your profile once your Power branch matures.', req: 'Requires: Rank 3 in Power', reward: 'Titan aura + profile flavor' },
+      { id: 'warmup-ritual', title: 'Warm-up Ritual', type: 'quest', state: 'completed', desc: 'Log a warm-up set before your main lift 5 times.', req: '5 logged warm-up sets', reward: '+1 daily quest slot' },
+      { id: 'deadlift-discipline', title: 'Deadlift Discipline', type: 'quest', state: 'completed', desc: 'Complete 10 strength sessions total.', req: '10 gym sessions lifetime', reward: '+Small XP boost on gym days' },
+      { id: 'grip-of-steel', title: 'Grip of Steel', type: 'streak', state: 'available', desc: 'Consecutive strength days slowly increase your grip-based stat gain.', req: 'Requires: Heavy Hands', reward: '+STR gain scaling with streak length' },
+      { id: 'progressive-overload', title: 'Progressive Overload', type: 'streak', state: 'in-progress', progress: 40, desc: 'Logging heavier sessions week over week is building toward a permanent stat bonus.', req: '4 / 10 escalating weeks logged', reward: '+Permanent STR multiplier' },
+      { id: 'pr-chaser', title: 'PR Chaser', type: 'quest', state: 'available', desc: 'Log a personal-record session to trigger a one-time reward chest.', req: 'Power branch revealed', reward: 'PR reward chest' },
+      { id: 'spotters-bond', title: "Spotter's Bond", type: 'identity', state: 'locked', desc: 'Training with a guild-mate on strength days grants a shared buff.', req: 'Requires: Grip of Steel', reward: 'Shared strength buff (guild)' },
+      { id: 'plateau-breaker', title: 'Plateau Breaker', type: 'quest', state: 'locked', desc: 'Unlocks a chained quest that appears only after 2 flat weeks of strength training.', req: 'Requires: Progressive Overload', reward: 'Plateau-break bonus quest' },
+      { id: 'forged-tendons', title: 'Forged Tendons', type: 'streak', state: 'locked', desc: 'Long-term strength streaks slightly reduce injury-style setbacks in-game.', req: 'Requires: Rank 2 in Power', reward: '+Setback resistance' },
+      { id: 'iron-will', title: 'Iron Will', type: 'identity', state: 'locked', desc: 'A visible iron-forged aura once your Power branch is fully matured.', req: 'Requires: Rank 4 in Power', reward: 'Iron aura + profile flavor' },
+      { id: 'colossus-prep', title: 'Colossus Prep', type: 'boss', state: 'locked', desc: 'Prepares you for the Colossus encounter with bonus damage on heavy-lift days.', req: 'Requires: Stone Guardian Prep', reward: '+Boss damage (heavy-lift days)' },
+      { id: 'rack-master', title: 'Rack Master', type: 'quest', state: 'locked', desc: 'Unlocks a bonus quest for varied equipment usage in the gym.', req: 'Requires: Rank 2 in Power', reward: 'Equipment variety bonus quest' },
+      { id: 'unshakable-core', title: 'Unshakable Core', type: 'streak', state: 'locked', desc: 'Core-focused sessions on streak days slightly boost overall stamina gain.', req: 'Requires: Forged Tendons', reward: '+STA gain on streak days' },
+      { id: 'titans-forge', title: "Titan's Forge", type: 'boss', state: 'locked', desc: 'A late-game buff active during any boss fight after maxing the Power branch.', req: 'Requires: Colossus Prep', reward: '+Boss damage (all fights)' },
+      { id: 'strength-sage', title: 'Strength Sage', type: 'identity', state: 'locked', desc: 'A mentor badge shown to guild-mates once you fully master Power.', req: 'Requires: Iron Will', reward: 'Mentor badge (guild)' },
+      { id: 'overload-mastery', title: 'Overload Mastery', type: 'quest', state: 'locked', desc: 'The capstone Power quest chain, unlocked only after every other Power node.', req: 'Requires: all other Power nodes', reward: 'Capstone reward chest' }
+    ]},
+    { id: 'momentum',   title: 'Momentum',   icon: '⚡', angle: 45,  accent: '#4f9eff', tagline: 'Running & cycling rhythm', children: [
+      { id: 'pace-setter',  title: 'Pace Setter',  type: 'quest',  state: 'completed', desc: 'Log 5 running or cycling sessions in a rolling two-week window.', req: '5 sessions in 14 days', reward: '+1 weekly quest reroll' },
+      { id: 'first-wind',   title: 'First Wind',   type: 'streak', state: 'available', desc: 'The first activity of the day grants bonus XP and a stronger streak-start signal.', req: 'Momentum branch revealed', reward: 'Bonus XP on first daily activity' },
+      { id: 'trail-reach',  title: 'Trail Reach',  type: 'travel', state: 'in-progress', progress: 55, desc: 'Distance logged this week is building toward extra world travel and faster route reveal.', req: '12.4 / 20 km this week', reward: '+Map travel per km' },
+      { id: 'predator-pulse', title: 'Predator Pulse', type: 'boss', state: 'locked', desc: 'Activity logged while a tracked boss is active deals extra boss damage.', req: 'Requires: Trail Reach', reward: '+Boss damage on active days' }
+    ]},
+    { id: 'explorer',   title: 'Explorer',   icon: '🧭', angle: 90,  accent: '#38bdf8', tagline: 'Map travel & discovery', children: [
+      { id: 'pathfinder',   title: 'Pathfinder',    type: 'travel',   state: 'completed', desc: 'Distance-based activities grant bonus world travel and faster route reveal.', req: '25 km total distance', reward: '+World travel per activity' },
+      { id: 'fog-sight',    title: 'Fog Sight',     type: 'travel',   state: 'available', desc: 'Reveals a wider radius of fogged map tiles after each completed activity.', req: 'Explorer branch revealed', reward: 'Wider fog reveal radius' },
+      { id: 'scouts-eye',   title: "Scout's Eye",   type: 'quest',    state: 'locked',    desc: 'Occasionally surfaces a bonus scouting quest tied to unexplored zones.', req: 'Requires: Fog Sight', reward: 'Bonus scouting quest chance' },
+      { id: 'wanderers-mark', title: "Wanderer's Mark", type: 'identity', state: 'locked', desc: 'A cartographer-styled title fragment and map trail cosmetic.', req: 'Requires: Rank 3 in Explorer', reward: 'Map trail cosmetic' }
+    ]},
+    { id: 'hunter',     title: 'Hunter',     icon: '🗡️', angle: 135, accent: '#f85149', tagline: 'Boss prep & damage windows', children: [
+      { id: 'boss-instinct', title: 'Boss Instinct', type: 'boss',     state: 'available', desc: 'Activity logged while a tracked boss is active deals extra damage in the fight.', req: 'Hunter branch revealed', reward: '+Boss damage while tracked' },
+      { id: 'damage-window',  title: 'Damage Window', type: 'boss',     state: 'locked', desc: 'Extends the bonus-damage window after logging a qualifying activity.', req: 'Requires: Boss Instinct', reward: '+Damage window duration' },
+      { id: 'prep-ritual',    title: 'Prep Ritual',  type: 'quest',    state: 'locked', desc: 'Unlocks a short pre-boss quest chain that grants prep buffs.', req: 'Requires: Rank 2 in Hunter', reward: 'Pre-boss buff chain' },
+      { id: 'trophy-hunter',  title: 'Trophy Hunter', type: 'identity', state: 'locked', desc: 'A trophy case cosmetic on your profile tracking defeated bosses.', req: 'Requires: 3 bosses defeated', reward: 'Trophy case cosmetic' }
+    ]},
+    { id: 'discipline', title: 'Discipline', icon: '🛡️', angle: 180, accent: '#f5a623', tagline: 'Streaks & consistency', children: [
+      { id: 'shielded-will', title: 'Shielded Will', type: 'streak',   state: 'completed', desc: 'Long streaks slightly improve the value of your streak shield.', req: '14-day streak reached', reward: '+Streak shield value' },
+      { id: 'comeback-fire',  title: 'Comeback Fire', type: 'streak',   state: 'available', desc: 'Recovering from a broken streak grants a temporary comeback XP boost.', req: 'Discipline branch revealed', reward: 'Comeback XP boost' },
+      { id: 'discipline-chain', title: 'Discipline Chain', type: 'quest', state: 'locked', desc: 'Unlocks a chained daily quest that only appears on active streak days.', req: 'Requires: Comeback Fire', reward: 'Streak-exclusive quest chain' },
+      { id: 'unbreakable',    title: 'Unbreakable',   type: 'identity', state: 'locked', desc: 'A visible resilience badge for players with the longest streak history.', req: 'Requires: 30-day streak', reward: 'Resilience badge' }
+    ]},
+    { id: 'tactician',  title: 'Tactician',  icon: '🎯', angle: 225, accent: '#d86a75', tagline: 'Quest chaining & timing', children: [
+      { id: 'focused-cycle', title: 'Focused Cycle', type: 'quest',    state: 'available', desc: 'Repeating the same training style in a week gives a controlled bonus reward.', req: 'Tactician branch revealed', reward: 'Weekly focus bonus' },
+      { id: 'chain-reroll',   title: 'Chain Reroll',  type: 'quest',    state: 'locked', desc: 'Grants an extra reroll for chained quest lines.', req: 'Requires: Focused Cycle', reward: '+1 chain reroll' },
+      { id: 'efficient-window', title: 'Efficient Window', type: 'travel', state: 'locked', desc: 'Extends favorable timing windows for event and quest efficiency bonuses.', req: 'Requires: Rank 2 in Tactician', reward: 'Extended bonus windows' },
+      { id: 'tacticians-eye', title: "Tactician's Eye", type: 'identity', state: 'locked', desc: 'Highlights optimal quest and event timing directly on the quest tab.', req: 'Requires: Rank 3 in Tactician', reward: 'Optimal-timing UI hint' }
+    ]},
+    { id: 'focus',      title: 'Focus',      icon: '🧘', angle: 270, accent: '#3fb950', tagline: 'Yoga & balance training', children: [
+      { id: 'flow-state',   title: 'Flow State',   type: 'quest',    state: 'completed', desc: 'Complete 3 yoga or balance sessions in a single week.', req: '3 yoga sessions / week', reward: '+1 daily quest slot' },
+      { id: 'steady-breath',  title: 'Steady Breath', type: 'streak', state: 'available', desc: 'Balance activities on streak days grant a stacking calm buff for recovery.', req: 'Focus branch revealed', reward: '+FLX recovery on streak days' },
+      { id: 'balance-point',  title: 'Balance Point', type: 'travel', state: 'locked', desc: 'Balance-tagged activities grant a small amount of bonus world travel.', req: 'Requires: Steady Breath', reward: '+Travel from balance activities' },
+      { id: 'calm-instinct',  title: 'Calm Instinct', type: 'boss',   state: 'locked', desc: 'Reduces incoming boss pressure for a short window after a balance activity.', req: 'Requires: Rank 2 in Focus', reward: 'Reduced boss pressure window' }
+    ]},
+    { id: 'hybrid',     title: 'Hybrid',     icon: '🌀', angle: 315, accent: '#a371f7', tagline: 'Mixed training versatility', children: [
+      { id: 'hybrid-spark', title: 'Hybrid Spark', type: 'quest',    state: 'available', desc: 'Using 3 different activity types in one week gives a reward chest.', req: 'Hybrid branch revealed', reward: 'Weekly reward chest', isNew: true },
+      { id: 'cross-trainer', title: 'Cross Trainer', type: 'identity', state: 'locked', desc: 'A shifting profile aura that reflects your most recent training mix.', req: 'Requires: Hybrid Spark', reward: 'Adaptive profile aura' },
+      { id: 'versatile-edge', title: 'Versatile Edge', type: 'streak', state: 'locked', desc: 'Alternating activity types on consecutive days strengthens streak resilience.', req: 'Requires: Rank 2 in Hybrid', reward: '+Streak resilience' },
+      { id: 'all-terrain',  title: 'All-Terrain',  type: 'travel', state: 'locked', desc: 'Removes travel penalties when switching between zone terrain types.', req: 'Requires: Rank 3 in Hybrid', reward: 'No cross-terrain travel penalty' }
+    ]}
+  ];
+
+  // ---------- layout (frozen, computed once) ----------
+  // Two layout strategies, chosen per category by child count:
+  //
+  // - Small branches (<= DENSE_THRESHOLD children, i.e. every category here
+  //   except Power) keep the baseline's radial "ring" fan: children wrap
+  //   into groups of RING_SIZE, each ring sitting RING_GAP further out, with
+  //   24°-per-sibling spacing capped by MAX_FAN. With <= RING_SIZE children
+  //   this reduces to exactly the tuned baseline's single-fan layout.
+  //
+  // - Dense branches (> DENSE_THRESHOLD children, i.e. Power's 19) split into
+  //   a handful of sub-branches that actually FORK, matching the reference
+  //   frames (frame_017/frame_018 in the source folder) more closely than a
+  //   straight chain or a grid ever could: those show organic, wandering
+  //   branches where one node occasionally splits into two diverging
+  //   children, not a uniform smooth curve. Each chain here does the same —
+  //   node 1 of every chain forks into two children, one continuing the
+  //   branch deeper, the other a shorter offshoot leaning back toward the
+  //   chain's own centerline — plus a small random wobble per node so it
+  //   doesn't read as a rigid formula.
+  var HUB_R = 210;
+  var CHILD_SPREAD = 24;   // degrees between siblings within a ring
+  var CHILD_DIST_BASE = 140;
+  var RING_SIZE = 5;
+  var RING_GAP = 90;
+  var MAX_FAN = 150;
+
+  var DENSE_THRESHOLD = 8;
+  var CHAIN_COUNT = 4;      // sub-branches a dense category splits into
+  var CHAIN_SPREAD = 40;    // degrees between chain centerlines
+  var CHAIN_STEP = 90;      // radial distance added per step along a branch
+  var CHAIN_DRIFT = 4;      // degrees a branch continues to lean per step
+  var FORK_SPREAD = 16;     // degrees the second fork child diverges by
+  var WOBBLE_ANGLE = 3;     // ± random angle wobble per node (organic feel)
+  var WOBBLE_DIST = 10;     // ± random distance wobble per node
+
+  categories.forEach(function (cat) {
+    var rad = cat.angle * Math.PI / 180;
+    cat.hub = { x: Math.sin(rad) * HUB_R, y: -Math.cos(rad) * HUB_R };
+    var n = cat.children.length;
+    cat.dense = n > DENSE_THRESHOLD;
+
+    if (cat.dense) {
+      var chainSize = Math.ceil(n / CHAIN_COUNT);
+
+      // Group children back into per-chain arrays, indexed by their
+      // position within the chain, so each node can look up its parent by
+      // in-chain index once the parent has already been placed.
+      var chains = [];
+      cat.children.forEach(function (child, idx) {
+        var chain = Math.floor(idx / chainSize);
+        var i = idx % chainSize;
+        chains[chain] = chains[chain] || [];
+        chains[chain][i] = child;
+      });
+
+      chains.forEach(function (chainNodes, chain) {
+        var chainOffset = (chain - (CHAIN_COUNT - 1) / 2) * CHAIN_SPREAD;
+        var driftSign = chainOffset < 0 ? -1 : 1; // lean away from center, never toward a neighbor
+        var childCount = {}; // in-chain parent index -> children already assigned (2nd = a fork)
+
+        chainNodes.forEach(function (child, i) {
+          // Node index 1 in every chain is the fork point: both node 2 and
+          // node 3 are its children instead of a single linear continuation.
+          var parentIdx = (i === 3) ? 1 : i - 1;
+          var parentAngle, parentDist, parentX, parentY;
+          if (parentIdx < 0) {
+            parentAngle = cat.angle + chainOffset;
+            parentDist = HUB_R;
+            parentX = cat.hub.x; parentY = cat.hub.y;
+          } else {
+            var p = chainNodes[parentIdx];
+            parentAngle = p.branchAngle; parentDist = p.branchDist;
+            parentX = p.x; parentY = p.y;
+          }
+
+          var whichChild = childCount[parentIdx] || 0;
+          childCount[parentIdx] = whichChild + 1;
+
+          var angle, dist;
+          if (whichChild === 0) {
+            angle = parentAngle + driftSign * CHAIN_DRIFT;
+            dist = parentDist + CHAIN_STEP;
+          } else {
+            // A fork — diverge to the other side instead of continuing the lean.
+            angle = parentAngle - driftSign * FORK_SPREAD;
+            dist = parentDist + CHAIN_STEP * 0.85;
+          }
+          angle += (Math.random() * 2 - 1) * WOBBLE_ANGLE;
+          dist += (Math.random() * 2 - 1) * WOBBLE_DIST;
+
+          var crad = angle * Math.PI / 180;
+          child.branchAngle = angle;
+          child.branchDist = dist;
+          child.x = Math.sin(crad) * dist;
+          child.y = -Math.cos(crad) * dist;
+          child.cat = cat;
+          child.ring = chain;
+          child.depth = parentIdx < 0 ? 1 : chainNodes[parentIdx].depth + 1;
+          child.edgeFrom = { x: parentX, y: parentY };
+        });
+      });
+    } else {
+      cat.children.forEach(function (child, idx) {
+        var ring = Math.floor(idx / RING_SIZE);
+        var ringStart = ring * RING_SIZE;
+        var ringCount = Math.min(RING_SIZE, n - ringStart);
+        var idxInRing = idx - ringStart;
+        var spread = ringCount > 1 ? Math.min(CHILD_SPREAD, MAX_FAN / (ringCount - 1)) : 0;
+        var childAngle = cat.angle + (idxInRing - (ringCount - 1) / 2) * spread;
+        var childDist = HUB_R + CHILD_DIST_BASE + ring * RING_GAP + (idx % 2 === 0 ? 0 : 20);
+        var crad = childAngle * Math.PI / 180;
+        child.x = Math.sin(crad) * childDist;
+        child.y = -Math.cos(crad) * childDist;
+        child.cat = cat;
+        child.ring = ring;
+      });
+    }
+  });
+
+  // ---------- DOM refs ----------
+  var stage = document.getElementById('stage');
+  var stageWrap = document.getElementById('stageWrap');
+  var world = document.getElementById('world');
+  var edgesGroup = document.getElementById('edgesGroup');
+  var centerCloud = document.getElementById('centerCloud');
+  var titleFlash = document.getElementById('titleFlash');
+  var titleFlashText = document.getElementById('titleFlashText');
+  var fitBadge = document.getElementById('fitBadge');
+  var headTitle = document.getElementById('headTitle');
+  var headSub = document.getElementById('headSub');
+  var backBtn = document.getElementById('backBtn');
+  var sheetBackdrop = document.getElementById('sheetBackdrop');
+  var nodeSheet = document.getElementById('nodeSheet');
+  var toastEl = document.getElementById('toast');
+  var masteryOverlay = document.getElementById('masteryOverlay');
+
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function makeEdge(from, to, id) {
+    var mx = (from.x + to.x) / 2;
+    var my = Math.min(from.y, to.y) - 26;
+    var path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', 'M ' + from.x + ' ' + from.y + ' Q ' + mx + ' ' + my + ' ' + to.x + ' ' + to.y);
+    path.setAttribute('class', 'edge');
+    path.dataset.id = id;
+    edgesGroup.appendChild(path);
+    return path;
+  }
+
+  function makeNode(data, opts) {
+    var el = document.createElement('div');
+    el.className = 'node ' + opts.baseClass;
+    el.style.left = data.x + 'px';
+    el.style.top = data.y + 'px';
+    var size = opts.size;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.marginLeft = (-size / 2) + 'px';
+    el.style.marginTop = (-size / 2) + 'px';
+    if (opts.accent) el.style.setProperty('--accent', opts.accent);
+    if (data.state) el.classList.add(data.state, 'type-' + data.type);
+    if (data.state === 'in-progress') {
+      el.style.setProperty('--progress', data.progress || 50);
+      var ring = document.createElement('div');
+      ring.className = 'node-ring';
+      el.appendChild(ring);
+    }
+    var core = document.createElement('span');
+    core.className = 'node-icon';
+    core.textContent = opts.icon;
+    el.appendChild(core);
+    if (opts.label) {
+      var label = document.createElement('div');
+      label.className = 'node-label';
+      label.textContent = opts.label;
+      el.appendChild(label);
+    }
+    if (data.state === 'completed') {
+      var badge = document.createElement('span');
+      badge.className = 'node-badge';
+      badge.textContent = '✓';
+      el.appendChild(badge);
+    }
+    if (data.isNew) {
+      var dot = document.createElement('span');
+      dot.className = 'node-new';
+      el.appendChild(dot);
+    }
+    world.appendChild(el);
+    return el;
+  }
+
+  // root node
+  var rootEl = makeNode({ x: 0, y: 0 }, { baseClass: 'n-root floaty', size: 92, icon: root.icon, label: root.title });
+  rootEl.style.setProperty('--fx', '2px'); rootEl.style.setProperty('--fy', '-3px');
+  rootEl.style.setProperty('--fdur', '6s');
+
+  // center cloud particles
+  for (var i = 0; i < 30; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'dot';
+    var a = Math.random() * Math.PI * 2, r = Math.random() * 60;
+    dot.style.left = (70 + Math.cos(a) * r) + 'px';
+    dot.style.top = (70 + Math.sin(a) * r) + 'px';
+    dot.style.setProperty('--dx', (Math.random() * 8 - 4) + 'px');
+    dot.style.setProperty('--dy', (Math.random() * 8 - 4) + 'px');
+    dot.style.animationDelay = (Math.random() * 4) + 's';
+    dot.style.animationDuration = (5 + Math.random() * 3) + 's';
+    centerCloud.appendChild(dot);
+  }
+
+  categories.forEach(function (cat, ci) {
+    cat.edgeToRoot = makeEdge({ x: 0, y: 0 }, cat.hub, 'root-' + cat.id);
+    cat.hubEl = makeNode(cat.hub, { baseClass: 'n-hub floaty', size: 78, icon: cat.icon, label: cat.title, accent: cat.accent });
+    cat.hubEl.style.setProperty('--fx', (2 + (ci % 3)) + 'px');
+    cat.hubEl.style.setProperty('--fy', (-2 - (ci % 2)) + 'px');
+    cat.hubEl.style.setProperty('--fdur', (4.5 + (ci % 4) * 0.6) + 's');
+    cat.hubEl.style.animationDelay = (ci * 0.25) + 's';
+    cat.hubEl.addEventListener('click', function (e) { e.stopPropagation(); openCategory(cat); });
+
+    cat.children.forEach(function (child) {
+      var meta = TYPE_META[child.type];
+      child.edge = makeEdge(child.edgeFrom || cat.hub, child, cat.id + '-' + child.id);
+      child.edge.classList.add('hidden-edge');
+      child.edge.style.opacity = '0';
+      child.el = makeNode(child, { baseClass: 'n-child' + (cat.dense ? ' dense-mode' : ''), size: 58, icon: meta.icon, label: child.title, accent: cat.accent });
+      child.el.style.opacity = '0';
+      child.el.style.pointerEvents = 'none';
+      child.el.style.transform = 'scale(0.4)';
+      child.el.addEventListener('click', function (e) { e.stopPropagation(); selectNode(child, cat); });
+    });
+  });
+
+  // pre-measure edge lengths for draw-in animation
+  function edgeLength(path) { return path.getTotalLength(); }
+
+  // ---------- camera ----------
+  var OVERVIEW_ZOOM = 0.55;
+  var camera = { x: 0, y: 0, zoom: OVERVIEW_ZOOM };
+  var stageRect = { w: 390, h: 700 };
+
+  function refreshStageRect() {
+    var r = stage.getBoundingClientRect();
+    stageRect.w = r.width; stageRect.h = r.height;
+  }
+  refreshStageRect();
+  window.addEventListener('resize', refreshStageRect);
+
+  function applyCamera() {
+    world.style.transform =
+      'translate(' + (stageRect.w / 2) + 'px,' + (stageRect.h / 2) + 'px) ' +
+      'scale(' + camera.zoom + ') ' +
+      'translate(' + (-camera.x) + 'px,' + (-camera.y) + 'px)';
+    // Labels counter-scale against the camera so their on-screen size stays
+    // fixed — the camera is now free to frame loosely for safety without
+    // ever making text harder to read.
+    var labelScale = Math.max(0.5, Math.min(1 / camera.zoom, 2));
+    world.style.setProperty('--label-scale', labelScale);
+  }
+  applyCamera();
+
+  // ---------- auto-fit: bounding box of hub + children, padded, clamped ----------
+  // No overshoot needed anymore — labels no longer depend on zoom for
+  // legibility, so the camera can frame loosely with generous padding.
+  // Unchanged from the tuned baseline — this is the file under test.
+  var FIT_OVERSHOOT = 1.0;
+
+  function computeCategoryFit(cat) {
+    var pad = 80;
+    var minX = cat.hub.x, maxX = cat.hub.x, minY = cat.hub.y, maxY = cat.hub.y;
+    cat.children.forEach(function (c) {
+      minX = Math.min(minX, c.x); maxX = Math.max(maxX, c.x);
+      minY = Math.min(minY, c.y); maxY = Math.max(maxY, c.y);
+    });
+    minX -= pad; maxX += pad;
+    minY -= pad; maxY += pad + 34; // extra room for labels sitting below child nodes
+
+    var bw = Math.max(maxX - minX, 1);
+    var bh = Math.max(maxY - minY, 1);
+    var zoom = Math.min(stageRect.w / bw, stageRect.h / bh) * FIT_OVERSHOOT;
+    zoom = Math.max(0.55, Math.min(zoom, 1.5));
+
+    return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, zoom: zoom };
+  }
+
+  // ---------- state machine ----------
+  var mode = 'overview';
+  var activeCategory = null;
+  var activeNode = null;
+  var openedCategories = new Set();
+
+  function setMode(m) {
+    mode = m;
+    stageWrap.className = 'stage-wrap mode-' + m;
+  }
+
+  function flashTitle(text, accent) {
+    titleFlashText.textContent = text;
+    titleFlash.style.setProperty('--accent2', accent);
+    gsap.timeline()
+      .to(titleFlashText, { opacity: 1, duration: 0.28, ease: 'power1.out' })
+      .to(titleFlashText, { opacity: 1, duration: 0.4 })
+      .to(titleFlashText, { opacity: 0, duration: 0.28, ease: 'power1.in' });
+  }
+
+  function flashFitBadge(zoom) {
+    fitBadge.textContent = 'Auto-fit • zoom ' + zoom.toFixed(2) + 'x';
+    fitBadge.classList.add('show');
+    setTimeout(function () { fitBadge.classList.remove('show'); }, 1600);
+  }
+
+  function openCategory(cat) {
+    if (mode !== 'overview') return;
+    setMode('opening');
+    activeCategory = cat;
+    headTitle.textContent = cat.title;
+    headSub.textContent = cat.tagline;
+
+    categories.forEach(function (other) {
+      if (other === cat) return;
+      gsap.to(other.hubEl, { opacity: 0.08, duration: 0.5, ease: 'power1.out' });
+      gsap.to(other.edgeToRoot, { opacity: 0.05, duration: 0.5 });
+    });
+    gsap.to(centerCloud, { opacity: 0.15, duration: 0.5 });
+
+    flashTitle(cat.title.toUpperCase(), cat.accent);
+
+    var fit = computeCategoryFit(cat);
+    gsap.to(camera, {
+      x: fit.x, y: fit.y, zoom: fit.zoom,
+      duration: 0.9, ease: 'power3.inOut',
+      onUpdate: applyCamera,
+      onComplete: function () {
+        setMode('category');
+        revealChildren(cat);
+        openedCategories.add(cat.id);
+        updateMasteryHint();
+        flashFitBadge(fit.zoom);
+      }
+    });
+  }
+
+  function revealChildren(cat) {
+    cat.children.forEach(function (child, idx) {
+      var len = edgeLength(child.edge);
+      child.edge.style.strokeDasharray = len;
+      child.edge.style.strokeDashoffset = len;
+      // Chains grow depth-synchronized — every chain's 1st node appears
+      // together, then every 2nd node, and so on, instead of one chain
+      // fully drawing in before the next starts.
+      var delay = (child.depth != null) ? (child.depth - 1) * 0.12 + (child.ring || 0) * 0.035 : idx * 0.09;
+      gsap.to(child.edge, { strokeDashoffset: 0, opacity: 0.6, duration: 0.5, delay: delay, ease: 'power2.out' });
+      gsap.to(child.el, { opacity: 1, scale: 1, duration: 0.45, delay: delay + 0.08, ease: 'back.out(1.6)',
+        onStart: function () { child.el.style.pointerEvents = 'auto'; } });
+    });
+  }
+
+  function hideChildren(cat) {
+    cat.children.forEach(function (child) {
+      gsap.to(child.el, { opacity: 0, scale: 0.4, duration: 0.25, ease: 'power1.in',
+        onStart: function () { child.el.style.pointerEvents = 'none'; },
+        onComplete: function () { child.el.classList.remove('dimmed', 'selected'); } });
+      gsap.to(child.edge, { opacity: 0, duration: 0.2 });
+    });
+  }
+
+  function closeCategory() {
+    if (mode !== 'category') return;
+    var cat = activeCategory;
+    hideChildren(cat);
+
+    gsap.to(camera, {
+      x: 0, y: 0, zoom: OVERVIEW_ZOOM,
+      duration: 0.85, ease: 'power3.inOut',
+      onUpdate: applyCamera,
+      onComplete: function () {
+        setMode('overview');
+        activeCategory = null;
+        headTitle.textContent = 'Skill Tree';
+        headSub.textContent = 'Ranger • tap a branch to explore';
+      }
+    });
+    categories.forEach(function (other) {
+      gsap.to(other.hubEl, { opacity: 1, duration: 0.6, delay: 0.15 });
+      gsap.to(other.edgeToRoot, { opacity: 1, duration: 0.6, delay: 0.15 });
+    });
+    gsap.to(centerCloud, { opacity: 1, duration: 0.6, delay: 0.15 });
+  }
+
+  function selectNode(child, cat) {
+    if (mode !== 'category' && mode !== 'node') return;
+    activeNode = child;
+    setMode('node');
+
+    cat.children.forEach(function (c) {
+      if (c === child) {
+        c.el.classList.add('selected');
+        c.el.classList.remove('dimmed');
+        gsap.to(c.el, { scale: 1.15, duration: 0.3, ease: 'back.out(2)' });
+      } else {
+        c.el.classList.add('dimmed');
+        c.el.classList.remove('selected');
+        gsap.to(c.el, { scale: 1, duration: 0.3 });
+      }
+    });
+
+    var meta = TYPE_META[child.type];
+    document.getElementById('sheetIcon').textContent = meta.icon;
+    document.getElementById('sheetIcon').style.setProperty('--accent', cat.accent);
+    document.getElementById('sheetTitle').textContent = child.title;
+    document.getElementById('sheetTypeBadge').textContent = meta.label;
+    var stateBadge = document.getElementById('sheetStateBadge');
+    stateBadge.textContent = STATE_LABEL[child.state];
+    document.getElementById('sheetDesc').textContent = child.desc;
+    document.getElementById('sheetReq').textContent = child.req;
+    document.getElementById('sheetReward').textContent = child.reward;
+
+    var btn = document.getElementById('sheetBtn');
+    btn.classList.remove('disabled');
+    if (child.state === 'completed') { btn.textContent = 'Completed ✓'; btn.classList.add('disabled'); }
+    else if (child.state === 'available') { btn.textContent = 'Unlock ' + child.title; }
+    else if (child.state === 'in-progress') { btn.textContent = 'View Progress (' + (child.progress || 0) + '%)'; }
+    else { btn.textContent = 'Requirements not met'; btn.classList.add('disabled'); }
+  }
+
+  function closeNode() {
+    if (mode !== 'node') return;
+    var cat = activeCategory;
+    activeNode = null;
+    cat.children.forEach(function (c) {
+      c.el.classList.remove('dimmed', 'selected');
+      gsap.to(c.el, { scale: 1, duration: 0.25 });
+    });
+    setMode('category');
+  }
+
+  backBtn.addEventListener('click', function () {
+    if (mode === 'node') closeNode();
+    else if (mode === 'category') closeCategory();
+  });
+
+  stage.addEventListener('click', function (e) {
+    if (e.target !== stage && e.target !== world) return;
+    if (mode === 'node') closeNode();
+    else if (mode === 'category') closeCategory();
+  });
+
+  sheetBackdrop.addEventListener('click', closeNode);
+
+  // ---------- center cloud / mastery ----------
+  var toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+  }
+
+  function updateMasteryHint() {
+    if (openedCategories.size >= 3) centerCloud.classList.add('hot');
+  }
+
+  centerCloud.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (mode !== 'overview') return;
+    if (openedCategories.size >= 3) {
+      openMastery();
+    } else {
+      showToast('Mastery path still forming — ' + openedCategories.size + ' / 3 branches explored');
+    }
+  });
+
+  function openMastery() {
+    masteryOverlay.classList.add('show');
+  }
+  document.getElementById('masteryClose').addEventListener('click', function (e) {
+    e.stopPropagation();
+    masteryOverlay.classList.remove('show');
+  });
+})();
+</script>
+</body>
+</html>

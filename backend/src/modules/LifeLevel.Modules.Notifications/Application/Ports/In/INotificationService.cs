@@ -1,5 +1,6 @@
 using LifeLevel.Modules.Notifications.Domain.Entities;
 using LifeLevel.Modules.Notifications.Domain.Enums;
+using LifeLevel.Modules.Notifications.Application.DTOs;
 using LifeLevel.SharedKernel.Ports;
 
 namespace LifeLevel.Modules.Notifications.Application.Ports.In;
@@ -15,4 +16,9 @@ public interface INotificationService : INotificationPort
     Task UnregisterTokenAsync(string token, CancellationToken ct = default);
     Task<List<NotificationLog>> GetNotificationsAsync(Guid userId, CancellationToken ct = default);
     Task MarkAllReadAsync(Guid userId, CancellationToken ct = default);
+    Task<NotificationPreferencesDto> GetPreferencesAsync(Guid userId, CancellationToken ct = default);
+    Task<NotificationPreferencesDto> UpdatePreferencesAsync(
+        Guid userId,
+        UpdateNotificationPreferencesRequest req,
+        CancellationToken ct = default);
 }

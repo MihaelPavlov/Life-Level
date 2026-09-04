@@ -3,10 +3,9 @@ import '../../items/models/item_models.dart';
 import '../profile_stat_metadata.dart';
 import 'equipment_slot_tile.dart';
 
-// ── EquipmentPaperdoll ────────────────────────────────────────────────────────
-// 3×3 grid layout mirroring the RPG paperdoll design:
+// 3x3 grid layout mirroring the RPG paperdoll design:
 //   Head         | Character center | Accessory1
-//   Chest        | Mount badge      | Hands
+//   Chest        | (spacer)         | Hands
 //   Feet         | (spacer)         | Accessory2
 class EquipmentPaperdoll extends StatelessWidget {
   final CharacterEquipmentResponse equipment;
@@ -32,7 +31,6 @@ class EquipmentPaperdoll extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Row 1: Head | Character | Accessory1
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -42,17 +40,15 @@ class EquipmentPaperdoll extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Row 2: Chest | Mount | Hands
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _slot('Chest'),
-              _mountBadge(),
+              const SizedBox(width: 60),
               _slot('Hands'),
             ],
           ),
           const SizedBox(height: 12),
-          // Row 3: Feet | (spacer) | Accessory2
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -96,28 +92,6 @@ class EquipmentPaperdoll extends StatelessWidget {
       ),
       child: const Center(
         child: Text('🏃', style: TextStyle(fontSize: 32)),
-      ),
-    );
-  }
-
-  Widget _mountBadge() {
-    return SizedBox(
-      width: 72,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🐾', style: TextStyle(fontSize: 20)),
-          const SizedBox(height: 2),
-          Text(
-            'MOUNT',
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-              color: kPTextSec,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
       ),
     );
   }

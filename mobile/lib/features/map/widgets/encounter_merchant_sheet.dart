@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../../../core/widgets/item_icon_image.dart';
 import '../models/encounter_models.dart';
 
@@ -229,11 +230,11 @@ class _MerchantSheetState extends State<MerchantSheet>
   Widget _buildItemRow(MerchantItem item) {
     final rarityColor = _rarityColor(item.rarity);
     return GestureDetector(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Purchase coming soon'),
-          duration: Duration(seconds: 2),
-        ),
+      onTap: () => AppToast.info(
+        context,
+        'Purchase coming soon',
+        icon: Icons.storefront_rounded,
+        duration: const Duration(seconds: 2),
       ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
