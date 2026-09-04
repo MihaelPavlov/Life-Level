@@ -31,6 +31,10 @@ x86/
 bld/
 [Oo]bj/
 [Oo]ut/
+# Keep hexagonal-architecture driven-port folders (module Application/Ports/Out),
+# which the generic [Oo]ut/ build-output pattern above would otherwise ignore.
+!**/Ports/Out/
+!**/Ports/Out/**
 [Ll]og/
 [Ll]ogs/
 
