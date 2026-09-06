@@ -37,6 +37,7 @@ import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/titles/titles_ranks_screen.dart';
+import '../../features/season/season_track_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
 import '../../features/guild/providers/guild_provider.dart';
 import '../../features/guild/models/guild_models.dart';
@@ -77,6 +78,7 @@ class _MainShellState extends ConsumerState<MainShell>
   bool _titlesOpen = false;
   bool _bossOpen = false;
   bool _guildOpen = false;
+  bool _seasonOpen = false;
   /// Carried alongside `_bossOpen` to deep-link the boss overlay straight
   /// into a specific boss's battle view (set when the home portal "Fight →"
   /// CTA fires, cleared when the overlay closes).
@@ -209,6 +211,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _seasonOpen = false;
         });
         WorldZoneRefreshNotifier.notify();
       });
@@ -303,6 +306,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _seasonOpen = false;
         });
         return;
       }
@@ -310,6 +314,7 @@ class _MainShellState extends ConsumerState<MainShell>
         setState(() {
           _tabIndex = navIndex;
           _guildOpen = false;
+          _seasonOpen = false;
         });
       }
     });
@@ -325,6 +330,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _seasonOpen = false;
       });
     });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
@@ -362,6 +368,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = true;
         _guildOpen = false;
+        _seasonOpen = false;
         _pendingBossId = intent.bossId;
       });
     });
@@ -492,6 +499,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _seasonOpen = false;
           });
         }
 
@@ -504,6 +512,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _seasonOpen = false;
           });
         }
 
@@ -514,6 +523,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = true;
           _guildOpen = false;
+          _seasonOpen = false;
         });
 
       case 'guild':
@@ -524,7 +534,18 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = navIndex == -1;
+          _seasonOpen = false;
           if (navIndex != -1) _tabIndex = navIndex;
+        });
+
+      case 'season':
+        setState(() {
+          _radialOpen = false;
+          _worldOpen = false;
+          _titlesOpen = false;
+          _bossOpen = false;
+          _guildOpen = false;
+          _seasonOpen = true;
         });
 
       case 'map':
@@ -538,6 +559,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _seasonOpen = false;
         });
 
       case 'profile':
@@ -549,6 +571,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _seasonOpen = false;
           });
         }
     }
@@ -854,6 +877,7 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'world':   return const SizedBox.shrink();
       case 'profile': return const ProfileScreen();
       case 'titles':  return const TitlesRanksScreen();
+      case 'season':  return const SeasonTrackScreen();
       case 'boss':    return const BossScreen();
       case 'guild':   return const GuildScreen();
       default:        return Center(
@@ -972,6 +996,15 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
+              // ── season overlay ─────────────────────────────────────────
+              if (_seasonOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: SeasonTrackScreen(
+                    onClose: () => setState(() => _seasonOpen = false),
+                  ),
+                ),
+
               // ── backdrop ────────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
@@ -1030,6 +1063,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         _titlesOpen = false;
                         _bossOpen = false;
                         _guildOpen = false;
+                        _seasonOpen = false;
                       });
                       return;
                     }
@@ -1039,6 +1073,7 @@ class _MainShellState extends ConsumerState<MainShell>
                       _titlesOpen = false;
                       _bossOpen = false;
                       _guildOpen = false;
+                      _seasonOpen = false;
                     });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
@@ -1087,12 +1122,23 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _seasonOpen = false;
       });
       return;
     }
     if (id == 'titles') {
       setState(() {
         _titlesOpen = true;
+        _guildOpen = false;
+        _seasonOpen = false;
+      });
+      return;
+    }
+    if (id == 'season') {
+      setState(() {
+        _seasonOpen = true;
+        _titlesOpen = false;
+        _bossOpen = false;
         _guildOpen = false;
       });
       return;
@@ -1101,6 +1147,7 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _bossOpen = true;
         _guildOpen = false;
+        _seasonOpen = false;
       });
       return;
     }
@@ -1110,6 +1157,7 @@ class _MainShellState extends ConsumerState<MainShell>
         if (navIndex != -1) {
           _tabIndex = navIndex;
           _guildOpen = false;
+          _seasonOpen = false;
         } else {
           _worldOpen = false;
           _titlesOpen = false;
@@ -1125,6 +1173,7 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _tabIndex = navIndex;
         _guildOpen = false;
+        _seasonOpen = false;
       });
       return;
     }

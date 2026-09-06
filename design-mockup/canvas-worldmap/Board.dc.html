@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#050810; --panel:#0b1119; --line:#212a36;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+      --parch:#e9dcb8; --parch-dim:#cdbd92; --ink:#2a1f14; --ink-dim:#6b5a44; --wood:#7a5230;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .tile{position:absolute;width:72px;height:72px;transform:translate(-50%,-50%);border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+    .tile .n{position:absolute;top:5px;left:7px;font-size:8px;font-weight:800;color:var(--ink-dim)}
+    .tile .t{font-size:8px;font-weight:700;color:var(--ink);text-align:center;line-height:1.1;padding:0 4px}
+    .pip{width:6px;height:6px;border-radius:50%;background:var(--ink)}
+    @media (prefers-reduced-motion:no-preference){
+      .token{animation:bob 2s ease-in-out infinite}
+      @keyframes bob{0%,100%{transform:translate(-50%,-62%)}50%{transform:translate(-50%,-72%)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:
+     radial-gradient(420px 320px at 50% 42%,rgba(245,166,35,.08),transparent 65%),var(--bg)">
+
+  <!-- HEADER -->
+  <div style="padding:16px 16px 8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:36px;height:36px;border:1px solid var(--line);border-radius:11px;background:var(--panel);display:flex;align-items:center;justify-content:center">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div style="flex:1">
+        <div class="lab" style="color:var(--green)">Chapter I · Forest of Endurance</div>
+        <h1 class="num" style="font-size:19px;letter-spacing:.02em;margin:2px 0 0">THE SEASON BOARD</h1>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:9px 12px;border-radius:13px;border:1px solid var(--line);background:var(--panel)">
+      <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(180deg,#fff8e6,var(--parch));border:1px solid var(--wood);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:2px;padding:5px;flex:none">
+        <span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11.5px;font-weight:700">This week's roll: <span style="color:var(--orange)">6</span></div>
+        <div class="mono" style="font-size:9.5px;color:var(--mute)">42 km logged → 6 spaces forward</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOARD PANEL -->
+  <div style="position:absolute;left:14px;right:14px;top:150px;height:492px;border-radius:20px;
+       background:linear-gradient(180deg,#5a3f2a,#3d2b1f);box-shadow:0 26px 50px -22px #000,inset 0 0 0 1px #2a1c12;padding:10px">
+    <div style="position:relative;width:100%;height:100%;border-radius:13px;background:
+         linear-gradient(160deg,#f2e4bf,#dccb9c 55%,#cdb987);
+         box-shadow:inset 0 0 0 2px #b49c6c,inset 0 2px 18px rgba(122,82,48,.35)">
+
+      <div style="text-align:center;padding-top:9px">
+        <span class="mono" style="font-size:9px;font-weight:700;color:var(--ink-dim);letter-spacing:.14em">SEASON 1 · TRAIL OF EMBERS</span>
+      </div>
+
+      <!-- TRACK -->
+      <svg viewBox="0 0 362 472" width="362" height="472" style="position:absolute;left:0;top:0">
+        <polyline points="52,338 136,338 220,338 304,338 304,254 220,254 136,254 52,254 52,170 136,170 220,170 304,170 304,86 220,86 136,86 52,86"
+          fill="none" stroke="#8a6a44" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+        <polyline points="52,338 136,338 220,338 304,338 304,254 220,254 136,254 52,254"
+          fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 8"/>
+        <polyline points="52,254 52,170 136,170 220,170 304,170 304,86 220,86 136,86 52,86"
+          fill="none" stroke="#8a6a44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 8" opacity=".7"/>
+      </svg>
+
+      <!-- SPACE 1: START -->
+      <div class="tile" style="left:52px;top:338px;background:linear-gradient(180deg,#d7ecd9,#b9dcc0);border:1.6px solid #3fb950">
+        <span class="n">1</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e6b2e" stroke-width="2.2" stroke-linecap="round"><path d="M5 21V4h11l-2 4 2 4H5"/></svg>
+        <div class="t" style="color:#1e6b2e">START</div>
+      </div>
+      <!-- SPACE 2: quest -->
+      <div class="tile" style="left:136px;top:338px;background:linear-gradient(180deg,#f2e4bf,#dccb9c);border:1.6px solid #b49c6c">
+        <span class="n">2</span>
+        <img src="quest_general.png" width="26" height="26" alt="">
+      </div>
+      <!-- SPACE 3: chest -->
+      <div class="tile" style="left:220px;top:338px;background:linear-gradient(180deg,#f2e4bf,#dccb9c);border:1.6px solid #b49c6c">
+        <span class="n">3</span>
+        <img src="reward_treasure_chest.png" width="28" height="28" alt="">
+      </div>
+      <!-- SPACE 4: regular -->
+      <div class="tile" style="left:304px;top:338px;background:linear-gradient(180deg,#f2e4bf,#dccb9c);border:1.6px solid #b49c6c">
+        <span class="n">4</span>
+        <span class="mono" style="font-size:16px;font-weight:800;color:var(--ink-dim)">·</span>
+      </div>
+      <!-- SPACE 5: quest -->
+      <div class="tile" style="left:304px;top:254px;background:linear-gradient(180deg,#f2e4bf,#dccb9c);border:1.6px solid #b49c6c">
+        <span class="n">5</span>
+        <img src="quest_general.png" width="26" height="26" alt="">
+      </div>
+      <!-- SPACE 6: SHORTCUT -->
+      <div class="tile" style="left:220px;top:254px;background:linear-gradient(180deg,#ffe8b3,#f0c987);border:1.6px solid var(--orange)">
+        <span class="n">6</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a4b00" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M9 6h9v9"/></svg>
+        <div class="t" style="color:#8a4b00">SHORTCUT</div>
+      </div>
+      <!-- SPACE 7: regular -->
+      <div class="tile" style="left:136px;top:254px;background:linear-gradient(180deg,#f2e4bf,#dccb9c);border:1.6px solid #b49c6c">
+        <span class="n">7</span>
+        <span class="mono" style="font-size:16px;font-weight:800;color:var(--ink-dim)">·</span>
+      </div>
+      <!-- SPACE 8: CURRENT -->
+      <div class="tile" style="left:52px;top:254px;background:linear-gradient(180deg,#fff6dc,#ffe9b0);border:2.4px solid var(--blue);box-shadow:0 0 0 4px rgba(79,158,255,.22)">
+        <span class="n">8</span>
+        <div class="t" style="color:#0b4a8a;font-weight:800">IRON<br>OVERLOOK</div>
+      </div>
+      <div class="token" style="position:absolute;left:52px;top:254px;transform:translate(-50%,-62%);width:36px;height:36px;border-radius:50%;background:#fff;border:2.4px solid var(--blue);box-shadow:0 6px 12px rgba(0,0,0,.35);overflow:hidden;z-index:3">
+        <img src="mystic_icon.png" width="36" height="36" alt="" style="object-fit:cover">
+      </div>
+
+      <!-- SPACE 9: regular, next up -->
+      <div class="tile" style="left:52px;top:170px;background:linear-gradient(180deg,#e6d8b0,#d3c298);border:1.6px solid #b49c6c;opacity:.8">
+        <span class="n">9</span>
+        <span class="mono" style="font-size:16px;font-weight:800;color:var(--ink-dim)">·</span>
+      </div>
+      <!-- SPACE 10: merchant -->
+      <div class="tile" style="left:136px;top:170px;background:linear-gradient(180deg,#e6d8b0,#d3c298);border:1.6px solid #b49c6c;opacity:.7">
+        <span class="n">10</span>
+        <img src="reward_grant_item.png" width="24" height="24" alt="" style="opacity:.75">
+      </div>
+      <!-- SPACE 11: quest -->
+      <div class="tile" style="left:220px;top:170px;background:linear-gradient(180deg,#e6d8b0,#d3c298);border:1.6px solid #b49c6c;opacity:.7">
+        <span class="n">11</span>
+        <img src="quest_general.png" width="24" height="24" alt="" style="opacity:.75">
+      </div>
+      <!-- SPACE 12: regular -->
+      <div class="tile" style="left:304px;top:170px;background:linear-gradient(180deg,#e6d8b0,#d3c298);border:1.6px solid #b49c6c;opacity:.65">
+        <span class="n">12</span>
+        <span class="mono" style="font-size:16px;font-weight:800;color:var(--ink-dim)">·</span>
+      </div>
+      <!-- SPACE 13: chest -->
+      <div class="tile" style="left:304px;top:86px;background:linear-gradient(180deg,#e6d8b0,#d3c298);border:1.6px solid #b49c6c;opacity:.6">
+        <span class="n">13</span>
+        <img src="reward_treasure_chest.png" width="24" height="24" alt="" style="opacity:.7">
+      </div>
+      <!-- SPACE 14: guild -->
+      <div class="tile" style="left:220px;top:86px;background:linear-gradient(180deg,#e2d6ea,#d0bfe0);border:1.6px solid var(--purple);opacity:.6">
+        <span class="n">14</span>
+        <img src="ring_guild.png" width="24" height="24" alt="" style="opacity:.8">
+      </div>
+      <!-- SPACE 15: regular -->
+      <div class="tile" style="left:136px;top:86px;background:linear-gradient(180deg,#e6d8b0,#d3c298);border:1.6px solid #b49c6c;opacity:.55">
+        <span class="n">15</span>
+        <span class="mono" style="font-size:16px;font-weight:800;color:var(--ink-dim)">·</span>
+      </div>
+      <!-- SPACE 16: BOSS (final) -->
+      <div class="tile" style="left:52px;top:86px;width:80px;height:80px;background:linear-gradient(180deg,#f0c3b8,#e0a89a);border:2px solid var(--red);opacity:.7">
+        <span class="n">16</span>
+        <img src="boss_forest_warden.png" width="34" height="34" alt="" style="filter:sepia(.2)">
+        <div class="t" style="color:#7a1d18;font-weight:800">FOREST<br>WARDEN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCK -->
+  <div style="position:absolute;left:14px;right:14px;top:656px;background:var(--panel);border:1px solid #25405e;border-radius:16px;padding:12px 13px;display:flex;align-items:center;gap:11px">
+    <div style="width:34px;height:34px;border-radius:50%;background:#0c1622;border:1.6px solid var(--blue);display:flex;align-items:center;justify-content:center;flex:none">
+      <span class="mono" style="font-size:12px;font-weight:800;color:var(--blue)">8</span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:700;font-size:12.5px">Iron Overlook · space 8 of 16</div>
+      <div style="font-size:10.5px;color:var(--dim);margin-top:1px">2 more spaces lands you on a <span style="color:var(--orange)">Shortcut</span></div>
+    </div>
+    <button style="flex:none;height:36px;padding:0 13px;border-radius:11px;font-weight:800;font-size:11px;color:#05101f;background:linear-gradient(180deg,#66acff,var(--blue))">Log &nbsp;→</button>
+  </div>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 14px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Season</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="25" height="25" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--orange)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

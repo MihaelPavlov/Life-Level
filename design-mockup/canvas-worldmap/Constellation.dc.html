@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --reddark:#c0392b; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .catlabel{font-size:10.5px;font-weight:800;letter-spacing:.03em;text-shadow:0 2px 8px #000;white-space:nowrap}
+    @media (prefers-reduced-motion:no-preference){
+      .pulse{animation:pl 3s ease-in-out infinite}
+      @keyframes pl{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
+      .twinkle{animation:tw 4.5s ease-in-out infinite}
+      @keyframes tw{0%,100%{opacity:.3}50%{opacity:.8}}
+      .glimmer{animation:gl 5.5s ease-in-out infinite}
+      @keyframes gl{0%,100%{opacity:.18;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.5;transform:translate(-50%,-50%) scale(1.15)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;height:844px;position:relative;overflow:hidden;
+     background:
+       radial-gradient(340px 340px at 195px 420px,rgba(163,113,247,.14),transparent 68%),
+       radial-gradient(600px 500px at 50% 90%,rgba(79,158,255,.06),transparent 70%),
+       var(--bg);
+     background-image:
+       radial-gradient(1px 1px at 8% 12%,#fff,transparent),radial-gradient(1px 1px at 22% 8%,#fff,transparent),
+       radial-gradient(1.4px 1.4px at 35% 18%,#fff,transparent),radial-gradient(1px 1px at 62% 6%,#fff,transparent),
+       radial-gradient(1px 1px at 80% 15%,#fff,transparent),radial-gradient(1.2px 1.2px at 92% 22%,#fff,transparent),
+       radial-gradient(1px 1px at 5% 45%,#fff,transparent),radial-gradient(1.3px 1.3px at 95% 55%,#fff,transparent),
+       radial-gradient(1px 1px at 12% 78%,#fff,transparent),radial-gradient(1px 1px at 88% 80%,#fff,transparent),
+       radial-gradient(1.4px 1.4px at 48% 92%,#fff,transparent),radial-gradient(1px 1px at 70% 88%,#fff,transparent),
+       radial-gradient(1px 1px at 25% 60%,#fff,transparent),radial-gradient(1px 1px at 75% 40%,#fff,transparent),
+       radial-gradient(340px 340px at 195px 420px,rgba(163,113,247,.14),transparent 68%),
+       radial-gradient(600px 500px at 50% 90%,rgba(79,158,255,.06),transparent 70%),var(--bg);
+     background-size:2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,2px 2px,auto,auto,auto;
+     background-repeat:no-repeat">
+
+  <!-- CONNECTIONS -->
+  <svg viewBox="0 0 390 844" width="390" height="844" style="position:absolute;inset:0">
+    <g fill="none" stroke-linecap="round">
+      <!-- center -> hub -->
+      <path d="M195,420 Q210,345 195,280" stroke="var(--blue)" stroke-width="1.4" opacity=".45"/>
+      <path d="M195,420 Q275,355 316,350" stroke="var(--red)" stroke-width="1.4" opacity=".3"/>
+      <path d="M195,420 Q275,485 316,490" stroke="var(--orange)" stroke-width="1.4" opacity=".45"/>
+      <path d="M195,420 Q180,495 195,560" stroke="var(--reddark)" stroke-width="1.4" opacity=".25"/>
+      <path d="M195,420 Q115,485 74,490" stroke="var(--green)" stroke-width="1.4" opacity=".4"/>
+      <path d="M195,420 Q115,355 74,350" stroke="var(--purple)" stroke-width="1.8" opacity=".6"/>
+      <!-- hub -> child1 -> child2 -->
+      <path d="M195,280 L195,245 L195,215" stroke="var(--blue)" stroke-width="1.2" opacity=".4"/>
+      <path d="M316,350 L347,332.5 L373,317.5" stroke="var(--red)" stroke-width="1.2" opacity=".28"/>
+      <path d="M316,490 L347,507.5 L373,522.5" stroke="var(--orange)" stroke-width="1.2" opacity=".45"/>
+      <path d="M195,560 L195,595 L195,625" stroke="var(--reddark)" stroke-width="1.2" opacity=".22"/>
+      <path d="M74,490 L43,507.5 L17,522.5" stroke="var(--green)" stroke-width="1.2" opacity=".38"/>
+      <path d="M74,350 L43,332.5 L17,317.5" stroke="var(--purple)" stroke-width="1.6" opacity=".55"/>
+      <!-- hidden mastery, far above -->
+      <path d="M195,280 Q195,210 195,140" stroke="#4a5866" stroke-width="1" stroke-dasharray="1 6" opacity=".4"/>
+    </g>
+  </svg>
+
+  <!-- CENTER: class root / particle cloud -->
+  <div class="twinkle" style="position:absolute;left:195px;top:420px;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;background:radial-gradient(closest-side,rgba(163,113,247,.45),transparent);pointer-events:none"></div>
+  <div style="position:absolute;left:195px;top:420px;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:#0d0a17;border:2px solid var(--purple);display:flex;align-items:center;justify-content:center;box-shadow:0 0 22px rgba(163,113,247,.5)">
+    <img src="mystic_icon.png" width="42" height="42" alt="" style="object-fit:cover;border-radius:50%">
+  </div>
+  <div style="position:absolute;left:195px;top:466px;transform:translateX(-50%);text-align:center;white-space:nowrap">
+    <div class="mono" style="font-size:8.5px;color:var(--purple);letter-spacing:.1em">MYSTIC · ROOT</div>
+  </div>
+
+  <!-- HIDDEN MASTERY teaser (far above, per Progressive World Reveal: one teaser only) -->
+  <div class="glimmer" style="position:absolute;left:195px;top:140px;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 14px 4px rgba(255,255,255,.5)"></div>
+  <div style="position:absolute;left:195px;top:158px;transform:translateX(-50%);text-align:center;white-space:nowrap">
+    <span class="mono" style="font-size:8px;color:var(--mute);letter-spacing:.08em">??? · hidden mastery</span>
+  </div>
+
+  <!-- MOMENTUM (top) -->
+  <div style="position:absolute;left:195px;top:245px;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:var(--blue)"></div>
+  <div style="position:absolute;left:195px;top:215px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px solid #2a3f57;background:#0c121b"></div>
+  <div style="position:absolute;left:195px;top:280px;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#0a1420;border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(79,158,255,.4)">
+    <img src="stat_endurance.png" width="26" height="26" alt="">
+  </div>
+  <div style="position:absolute;left:195px;top:312px;transform:translateX(-50%);text-align:center">
+    <div class="catlabel" style="color:#9ecbff">MOMENTUM</div>
+    <div class="mono" style="font-size:8px;color:var(--mute)">1/3 · running &amp; cycling</div>
+  </div>
+
+  <!-- POWER (upper right) — starter available, pulsing -->
+  <div style="position:absolute;left:347px;top:332.5px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px solid #4a2420;background:#160d0e"></div>
+  <div style="position:absolute;left:373px;top:317.5px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px solid #4a2420;background:#160d0e"></div>
+  <div class="pulse" style="position:absolute;left:316px;top:350px;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#160d0e;border:2px dashed var(--red);display:flex;align-items:center;justify-content:center">
+    <img src="stat_strength.png" width="26" height="26" alt="" style="opacity:.85">
+  </div>
+  <div style="position:absolute;left:316px;top:382px;transform:translateX(-50%);text-align:center">
+    <div class="catlabel" style="color:#ff9a94">POWER</div>
+    <div class="mono" style="font-size:8px;color:var(--red)">starter ready · gym</div>
+  </div>
+
+  <!-- DISCIPLINE (lower right) -->
+  <div style="position:absolute;left:347px;top:507.5px;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:var(--orange)"></div>
+  <div style="position:absolute;left:373px;top:522.5px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px solid #4b3d1c;background:#0f0c05"></div>
+  <div style="position:absolute;left:316px;top:490px;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#120d05;border:2px solid var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(245,166,35,.35)">
+    <img src="reward_streak_fire.png" width="28" height="28" alt="">
+  </div>
+  <div style="position:absolute;left:316px;top:460px;transform:translate(-50%,-100%);text-align:center">
+    <div class="catlabel" style="color:#ffcf7a">DISCIPLINE</div>
+    <div class="mono" style="font-size:8px;color:var(--mute)">2/3 · streaks</div>
+  </div>
+
+  <!-- HUNTER (bottom, fully locked / teased) -->
+  <div style="position:absolute;left:195px;top:595px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px dotted #3a1e1a;background:transparent"></div>
+  <div style="position:absolute;left:195px;top:625px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px dotted #3a1e1a;background:transparent"></div>
+  <div style="position:absolute;left:195px;top:560px;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:#0c0a0a;border:1.6px dotted #4a2c26;display:flex;align-items:center;justify-content:center">
+    <img src="ring_boss.png" width="24" height="24" alt="" style="opacity:.4;filter:grayscale(.5)">
+  </div>
+  <div style="position:absolute;left:195px;top:530px;transform:translate(-50%,-100%);text-align:center">
+    <div class="catlabel" style="color:var(--mute)">HUNTER</div>
+    <div class="mono" style="font-size:8px;color:var(--mute)">locked · defeat Forest Warden</div>
+  </div>
+
+  <!-- EXPLORER (lower left) -->
+  <div style="position:absolute;left:43px;top:507.5px;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:var(--green)"></div>
+  <div style="position:absolute;left:17px;top:522.5px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px solid #1e3a24;background:#0a1310"></div>
+  <div style="position:absolute;left:74px;top:490px;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#0a1712;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(63,185,80,.35)">
+    <img src="map_destination.png" width="26" height="26" alt="">
+  </div>
+  <div style="position:absolute;left:74px;top:460px;transform:translate(-50%,-100%);text-align:center">
+    <div class="catlabel" style="color:#8fe0a0">EXPLORER</div>
+    <div class="mono" style="font-size:8px;color:var(--mute)">1/3 · map &amp; travel</div>
+  </div>
+
+  <!-- FOCUS (upper left) — furthest along, matches Mystic's strength -->
+  <div style="position:absolute;left:43px;top:332.5px;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:var(--purple)"></div>
+  <div style="position:absolute;left:17px;top:317.5px;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.4px solid #3a2a52;background:#0d0a17"></div>
+  <div style="position:absolute;left:74px;top:350px;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:#100a1c;border:2px solid var(--purple);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(163,113,247,.5)">
+    <img src="stat_flexibility.png" width="28" height="28" alt="">
+  </div>
+  <div style="position:absolute;left:74px;top:382px;transform:translateX(-50%);text-align:center">
+    <div class="catlabel" style="color:#cbb2ff">FOCUS</div>
+    <div class="mono" style="font-size:8px;color:var(--purple)">2/3 · closest to mastery</div>
+  </div>
+
+  <!-- HEADER -->
+  <div style="position:absolute;left:0;right:0;top:0;padding:14px 14px 20px;background:linear-gradient(180deg,rgba(4,7,13,.94),rgba(4,7,13,.4) 75%,transparent)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:38px;height:38px;border:1px solid var(--line);border-radius:11px;background:rgba(11,17,25,.8);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div style="flex:1;min-width:0">
+        <div class="lab" style="color:var(--purple)">Shaped by how you train</div>
+        <h1 class="num" style="font-size:19px;letter-spacing:.02em;margin:2px 0 0">YOUR CONSTELLATION</h1>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;margin-top:11px;padding:7px 11px;border-radius:999px;border:1px solid #3a2a52;background:rgba(163,113,247,.08);width:fit-content">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--purple);flex:none"></span>
+      <span style="font-size:10.5px;color:#cbb2ff">You trained like a <b>Focus-seeker</b> this week</span>
+    </div>
+  </div>
+
+  <!-- DOCK -->
+  <div style="position:absolute;left:12px;right:12px;bottom:92px;background:rgba(9,13,20,.92);backdrop-filter:blur(6px);border:1px solid #3a2a52;border-radius:16px;padding:12px 13px;box-shadow:0 26px 55px -26px #000">
+    <div style="display:flex;align-items:center;gap:11px">
+      <img src="stat_flexibility.png" width="30" height="30" alt="" style="flex:none">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:12.5px">Focus · 2/3 unlocked</div>
+        <div style="font-size:10.5px;color:var(--dim);margin-top:1px">One more yoga session unlocks <b style="color:var(--text)">"Still Water"</b></div>
+      </div>
+      <button style="flex:none;height:36px;padding:0 13px;border-radius:11px;font-weight:800;font-size:11px;color:#0b0714;background:linear-gradient(180deg,#cbb2ff,var(--purple))">Train &nbsp;→</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 14px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Season</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="25" height="25" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--purple)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<base href="/admin/">
+<title>LifeLevel Admin — Seasons</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#040810; --bg2:#080e14; --surface:#161b22; --surface2:#1e2632;
+    --border:#30363d; --text:#e6edf3; --text2:#8b949e;
+    --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    --radius:8px;
+  }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Inter",sans-serif; font-size:14px; min-height:100vh; }
+  header { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  header h1 { font-size:20px; font-weight:700; color:var(--orange); }
+  .nav-links { display:flex; gap:8px; }
+  .nav-links a { color:var(--text2); font-size:13px; text-decoration:none; padding:6px 12px; border:1px solid var(--border); border-radius:8px; transition:color .15s,border-color .15s; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-links a.active { color:var(--orange); border-color:var(--orange); }
+  .token-row { display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap; }
+  .token-row label { color:var(--text2); font-size:12px; }
+  input[type="text"], input[type="number"], input[type="datetime-local"], select, textarea {
+    background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    border-radius:var(--radius); padding:8px 12px; font-size:13px; outline:none;
+    transition:border-color .15s; font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus { border-color:var(--blue); }
+  #tokenInput { width:320px; }
+  button { background:var(--blue); color:#fff; border:none; border-radius:var(--radius); padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; transition:opacity .15s; }
+  button:hover { opacity:.85; }
+  button.secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+  button.danger { background:var(--red); }
+  button.success { background:var(--green); }
+  button.warn { background:var(--orange); color:#05101f; }
+  button.sm { padding:5px 12px; font-size:12px; }
+  main { padding:32px 24px; max-width:1100px; }
+  .page-title { font-size:18px; font-weight:700; margin-bottom:4px; }
+  .page-sub { font-size:13px; color:var(--text2); margin-bottom:24px; }
+  .season-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:14px; }
+  .season-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .badge { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:3px 9px; border-radius:999px; border:1px solid var(--border); }
+  .badge.active { color:var(--green); border-color:var(--green); }
+  .badge.scheduled { color:var(--blue); border-color:var(--blue); }
+  .badge.ended { color:var(--text2); }
+  .season-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:12px; }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field label { font-size:11px; color:var(--text2); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .field input, .field select { width:100%; }
+  .season-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .tier-toggle { margin-top:12px; }
+  .tier-table { margin-top:12px; border-top:1px solid var(--border); padding-top:12px; display:none; }
+  .tier-table.open { display:block; }
+  .tier-row { display:grid; grid-template-columns:48px 1fr 1fr; gap:10px; align-items:start; padding:8px 0; border-bottom:1px solid #20262f; }
+  .tier-no { font-weight:800; color:var(--orange); font-size:13px; padding-top:6px; }
+  .lane { border:1px solid var(--border); border-radius:6px; padding:8px; background:var(--bg2); }
+  .lane h4 { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--text2); margin-bottom:6px; }
+  .lane.founder h4 { color:var(--orange); }
+  .lane-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .lane-grid .full { grid-column:1/-1; }
+  .lane-grid input, .lane-grid select { padding:5px 8px; font-size:12px; }
+  .lane-grid label { font-size:9px; }
+  .add-card { background:var(--bg2); border:2px dashed var(--border); border-radius:var(--radius); padding:20px; margin-top:24px; }
+  .add-card h3 { font-size:14px; font-weight:700; margin-bottom:14px; color:var(--blue); }
+  .pass-card { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--orange); border-radius:var(--radius); padding:16px 20px; margin-top:14px; }
+  .pass-card h3 { font-size:14px; font-weight:700; margin-bottom:10px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  #toast { position:fixed; bottom:24px; right:24px; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:12px 20px; border-radius:var(--radius); font-size:13px; opacity:0; transition:opacity .3s; pointer-events:none; z-index:1000; max-width:360px; }
+  #toast.show { opacity:1; }
+  #toast.ok { border-left:4px solid var(--green); }
+  #toast.err { border-left:4px solid var(--red); }
+  #loadingOverlay { position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; gap:16px; transition:opacity .25s; }
+  #loadingOverlay.out { opacity:0; pointer-events:none; }
+  .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .75s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #loadingOverlay p { color:var(--text2); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p>Authenticating…</p></div>
+
+<header>
+  <h1>🎫 Seasons</h1>
+  <div class="nav-links">
+    <a href="index.html">⚙️ Items</a>
+    <a href="map.html">🗺️ Map</a>
+    <a href="level-unlocks.html">🏆 Levels</a>
+    <a href="rank-thresholds.html">⚔️ Ranks</a>
+    <a href="encounters.html">🎲 Encounters</a>
+    <a href="seasons.html" class="active">🎫 Season</a>
+  </div>
+  <div class="token-row">
+    <label for="baseUrlInput">API base URL</label>
+    <select id="baseUrlInput" style="width:200px">
+      <option value="">localhost (local)</option>
+      <option value="https://life-level-api-latest-1779363121.onrender.com">Production (Render)</option>
+    </select>
+    <button onclick="saveBaseUrl()">Switch</button>
+    <label for="tokenInput" style="margin-left:12px">JWT</label>
+    <input type="text" id="tokenInput" placeholder="Paste Bearer token…">
+    <button onclick="saveToken()">Save</button>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">Season Track &amp; Founder Pass</div>
+  <div class="page-sub">
+    Configure the Season Track. <b>Restart</b> resets a season's timer to now and
+    <b>wipes every tester's progress, claims and Founder&nbsp;Pass</b> for that season — use it
+    right before go-live. <b>Rollover now</b> forces the scheduled maintenance pass.
+    <button class="sm warn" style="margin-left:10px" onclick="runRollover()">Rollover now</button>
+  </div>
+
+  <div id="seasonList">Loading…</div>
+
+  <div class="add-card">
+    <h3>+ Create Season</h3>
+    <div class="season-grid">
+      <div class="field"><label>Number</label><input type="number" id="nNumber" value="2" min="1"></div>
+      <div class="field"><label>Name</label><input type="text" id="nName" placeholder="Tide Reckoning"></div>
+      <div class="field"><label>Theme slug</label><input type="text" id="nTheme" value="tide"></div>
+      <div class="field"><label>Starts at (UTC)</label><input type="datetime-local" id="nStart"></div>
+      <div class="field"><label>Ends at (UTC)</label><input type="datetime-local" id="nEnd"></div>
+      <div class="field"><label>XP per tier</label><input type="number" id="nXpPerTier" value="600" min="1"></div>
+      <div class="field"><label>Tier count</label><input type="number" id="nTierCount" value="25" min="1"></div>
+      <div class="field"><label>Milestone tier</label><input type="number" id="nMilestone" value="25" min="1"></div>
+    </div>
+    <button class="success" onclick="createSeason()">Create (Scheduled)</button>
+  </div>
+
+  <div class="pass-card">
+    <h3>Founder Pass — grant / revoke (tester)</h3>
+    <div class="row">
+      <input type="text" id="passUser" placeholder="user id, email, or username" style="width:320px">
+      <button class="success sm" onclick="grantPass()">Grant on active season</button>
+      <button class="danger sm" onclick="revokePass()">Revoke</button>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const REWARD_TYPES = ['SeasonXp','Xp','Item','StreakShield','Title','Cosmetic'];
+
+function getBaseUrl() { return (localStorage.getItem('ll_admin_baseUrl') || '').replace(/\/$/, ''); }
+function getToken() { return localStorage.getItem('ll_admin_token') || ''; }
+function isTokenExpired(token) {
+  try { return JSON.parse(atob(token.split('.')[1])).exp * 1000 < Date.now(); } catch { return true; }
+}
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t) { toast('Paste a token first.', 'err'); return; }
+  localStorage.setItem('ll_admin_token', t); toast('Token saved.', 'ok'); boot();
+}
+function saveBaseUrl() {
+  const url = document.getElementById('baseUrlInput').value.trim().replace(/\/$/, '');
+  localStorage.setItem('ll_admin_baseUrl', url);
+  localStorage.removeItem('ll_admin_token');
+  window.location.reload();
+}
+async function apiFetch(path, opts = {}) {
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(getBaseUrl() + path, { ...opts, headers });
+  if (!res.ok) { const text = await res.text().catch(() => ''); throw new Error(`${res.status} ${text}`); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+async function fetchAdminConfig() {
+  try { const res = await fetch(getBaseUrl() + '/api/admin/config'); return res.ok ? await res.json() : null; }
+  catch { return null; }
+}
+async function autoLogin() {
+  const cfg = await fetchAdminConfig();
+  if (!cfg) return false;
+  try {
+    const res = await fetch(getBaseUrl() + '/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emailOrUsername: cfg.email, password: cfg.password }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data?.token) return false;
+    localStorage.setItem('ll_admin_token', data.token);
+    document.getElementById('tokenInput').value = data.token;
+    return true;
+  } catch { return false; }
+}
+function hideLoader() {
+  const el = document.getElementById('loadingOverlay');
+  if (el) { el.classList.add('out'); setTimeout(() => el.remove(), 300); }
+}
+async function boot() {
+  const tok = getToken();
+  if (!tok || isTokenExpired(tok)) {
+    const ok = await autoLogin();
+    if (!ok) { hideLoader(); toast('Auto-login failed — paste an Admin JWT and click Save.', 'err'); return; }
+  }
+  hideLoader();
+  await loadSeasons();
+}
+
+// ── Load & render ───────────────────────────────────────────────────────────
+async function loadSeasons() {
+  try { renderSeasons(await apiFetch('/api/admin/seasons')); }
+  catch (e) { toast('Failed to load: ' + e.message, 'err'); }
+}
+
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+function renderSeasons(seasons) {
+  const host = document.getElementById('seasonList');
+  if (!seasons.length) { host.innerHTML = '<p style="color:var(--text2)">No seasons yet — create one below.</p>'; return; }
+  host.innerHTML = seasons.map(s => {
+    const st = (s.state || '').toLowerCase();
+    return `
+    <div class="season-card">
+      <div class="season-head">
+        <span style="font-size:16px;font-weight:800">S${s.number} · ${escHtml(s.name)}</span>
+        <span class="badge ${st}">${escHtml(s.state)}</span>
+        <span style="color:var(--text2);font-size:12px">${escHtml(s.theme)} · ${s.tierCount} tiers · ${s.xpPerTier} XP/tier</span>
+        <div style="margin-left:auto" class="row">
+          ${st !== 'active' ? `<button class="sm success" onclick="activateSeason('${s.id}')">Activate</button>` : ''}
+          <button class="sm warn" onclick="restartSeason('${s.id}','${escHtml(s.name)}')">Restart</button>
+          <button class="sm secondary" onclick="toggleTiers('${s.id}')">Tiers</button>
+        </div>
+      </div>
+      <div class="season-grid">
+        <div class="field"><label>Number</label><input type="number" id="f-number-${s.id}" value="${s.number}"></div>
+        <div class="field"><label>Name</label><input type="text" id="f-name-${s.id}" value="${escHtml(s.name)}"></div>
+        <div class="field"><label>Theme</label><input type="text" id="f-theme-${s.id}" value="${escHtml(s.theme)}"></div>
+        <div class="field"><label>Starts at (UTC)</label><input type="datetime-local" id="f-start-${s.id}" value="${toLocalInput(s.startsAt)}"></div>
+        <div class="field"><label>Ends at (UTC)</label><input type="datetime-local" id="f-end-${s.id}" value="${toLocalInput(s.endsAt)}"></div>
+        <div class="field"><label>XP per tier</label><input type="number" id="f-xppt-${s.id}" value="${s.xpPerTier}"></div>
+        <div class="field"><label>Tier count</label><input type="number" id="f-tc-${s.id}" value="${s.tierCount}"></div>
+        <div class="field"><label>Milestone</label><input type="number" id="f-ms-${s.id}" value="${s.milestoneTier}"></div>
+      </div>
+      <div class="season-actions">
+        <button class="sm" onclick="saveSeason('${s.id}')">Save season</button>
+      </div>
+      <div class="tier-table" id="tiers-${s.id}">${renderTiers(s)}</div>
+    </div>`;
+  }).join('');
+}
+
+function tierByKey(tiers, tier, track) {
+  return tiers.find(t => t.tier === tier && t.track === track) || {};
+}
+
+function laneEditor(seasonId, tier, track, r) {
+  const p = `${seasonId}-${tier}-${track}`;
+  const opts = REWARD_TYPES.map(v => `<option value="${v}" ${r.rewardType===v?'selected':''}>${v}</option>`).join('');
+  return `
+    <div class="lane ${track.toLowerCase()}">
+      <h4>${track}</h4>
+      <div class="lane-grid">
+        <div class="field"><label>Type</label><select id="t-type-${p}">${opts}</select></div>
+        <div class="field"><label>Amount</label><input type="number" id="t-amt-${p}" value="${r.amount ?? 0}"></div>
+        <div class="field full"><label>Label</label><input type="text" id="t-label-${p}" value="${escHtml(r.label || '')}"></div>
+        <div class="field"><label>Icon key</label><input type="text" id="t-icon-${p}" value="${escHtml(r.iconKey || '')}"></div>
+        <div class="field"><label>Rarity</label><input type="text" id="t-rar-${p}" value="${escHtml(r.rarity || '')}"></div>
+        <div class="field"><label>Item id (RewardRefId)</label><input type="text" id="t-ref-${p}" value="${escHtml(r.rewardRefId || '')}"></div>
+        <div class="field"><label>Title key</label><input type="text" id="t-key-${p}" value="${escHtml(r.rewardKey || '')}"></div>
+      </div>
+      <button class="sm success" style="margin-top:6px" onclick="saveTier('${seasonId}',${tier},'${track}')">Save ${track} T${tier}</button>
+    </div>`;
+}
+
+function renderTiers(s) {
+  let rows = '';
+  for (let tier = 1; tier <= s.tierCount; tier++) {
+    rows += `
+      <div class="tier-row">
+        <div class="tier-no">T${tier}${tier === s.milestoneTier ? ' ★' : ''}</div>
+        ${laneEditor(s.id, tier, 'Free', tierByKey(s.tiers, tier, 'Free'))}
+        ${laneEditor(s.id, tier, 'Founder', tierByKey(s.tiers, tier, 'Founder'))}
+      </div>`;
+  }
+  return rows;
+}
+
+function toggleTiers(id) { document.getElementById(`tiers-${id}`).classList.toggle('open'); }
+
+// ── Actions ────────────────────────────────────────────────────────────────
+function toIsoUtc(localVal) {
+  if (!localVal) return null;
+  return new Date(localVal + ':00Z').toISOString();
+}
+
+async function saveSeason(id) {
+  const body = {
+    number: parseInt(document.getElementById(`f-number-${id}`).value) || 1,
+    name: document.getElementById(`f-name-${id}`).value.trim(),
+    theme: document.getElementById(`f-theme-${id}`).value.trim(),
+    startsAt: toIsoUtc(document.getElementById(`f-start-${id}`).value),
+    endsAt: toIsoUtc(document.getElementById(`f-end-${id}`).value),
+    xpPerTier: parseInt(document.getElementById(`f-xppt-${id}`).value) || 0,
+    tierCount: parseInt(document.getElementById(`f-tc-${id}`).value) || 0,
+    milestoneTier: parseInt(document.getElementById(`f-ms-${id}`).value) || 0,
+  };
+  try { await apiFetch(`/api/admin/seasons/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+    toast('Season saved.', 'ok'); await loadSeasons(); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+async function saveTier(seasonId, tier, track) {
+  const p = `${seasonId}-${tier}-${track}`;
+  const g = id => document.getElementById(id)?.value?.trim() ?? '';
+  const body = {
+    rewardType: g(`t-type-${p}`),
+    amount: parseInt(g(`t-amt-${p}`)) || 0,
+    label: g(`t-label-${p}`),
+    iconKey: g(`t-icon-${p}`),
+    rarity: g(`t-rar-${p}`) || null,
+    rewardRefId: g(`t-ref-${p}`) || null,
+    rewardKey: g(`t-key-${p}`) || null,
+  };
+  try { await apiFetch(`/api/admin/seasons/${seasonId}/tiers/${tier}/${track}`, { method: 'PUT', body: JSON.stringify(body) });
+    toast(`${track} T${tier} saved.`, 'ok'); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+async function createSeason() {
+  const body = {
+    number: parseInt(document.getElementById('nNumber').value) || 1,
+    name: document.getElementById('nName').value.trim(),
+    theme: document.getElementById('nTheme').value.trim(),
+    startsAt: toIsoUtc(document.getElementById('nStart').value),
+    endsAt: toIsoUtc(document.getElementById('nEnd').value),
+    xpPerTier: parseInt(document.getElementById('nXpPerTier').value) || 600,
+    tierCount: parseInt(document.getElementById('nTierCount').value) || 25,
+    milestoneTier: parseInt(document.getElementById('nMilestone').value) || 25,
+  };
+  if (!body.name) { toast('Name is required.', 'err'); return; }
+  if (!body.startsAt || !body.endsAt) { toast('Set start and end.', 'err'); return; }
+  try { await apiFetch('/api/admin/seasons', { method: 'POST', body: JSON.stringify(body) });
+    toast(`Season "${body.name}" created.`, 'ok'); await loadSeasons(); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+async function activateSeason(id) {
+  if (!confirm('Activate this season? Any other Active season is set to Ended.')) return;
+  try { await apiFetch(`/api/admin/seasons/${id}/activate`, { method: 'POST' });
+    toast('Activated.', 'ok'); await loadSeasons(); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+async function restartSeason(id, name) {
+  if (!confirm(`RESTART "${name}"?\n\nThis resets the timer to now and DELETES every tester's progress, claims and Founder Pass for this season. Cannot be undone.`)) return;
+  try { await apiFetch(`/api/admin/seasons/${id}/restart`, { method: 'POST' });
+    toast(`"${name}" restarted — all tester progress wiped.`, 'ok'); await loadSeasons(); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+async function runRollover() {
+  try { const r = await apiFetch('/api/admin/seasons/rollover', { method: 'POST' });
+    toast(`Rollover done — ${r.closed} season(s) closed.`, 'ok'); await loadSeasons(); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+async function grantPass() {
+  const v = document.getElementById('passUser').value.trim();
+  if (!v) { toast('Enter a user id / email / username.', 'err'); return; }
+  try { await apiFetch('/api/admin/seasons/pass/grant', { method: 'POST', body: JSON.stringify({ userIdOrEmail: v }) });
+    toast('Founder Pass granted.', 'ok'); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+async function revokePass() {
+  const v = document.getElementById('passUser').value.trim();
+  if (!v) { toast('Enter a user id / email / username.', 'err'); return; }
+  try { await apiFetch('/api/admin/seasons/pass/revoke', { method: 'POST', body: JSON.stringify({ userIdOrEmail: v }) });
+    toast('Founder Pass revoked.', 'ok'); }
+  catch (e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+(function init() {
+  const saved = localStorage.getItem('ll_admin_baseUrl') || '';
+  const sel = document.getElementById('baseUrlInput');
+  for (const opt of sel.options) { if (opt.value === saved) { opt.selected = true; break; } }
+  const token = localStorage.getItem('ll_admin_token') || '';
+  if (token) document.getElementById('tokenInput').value = token;
+  // default new-season dates: now .. now+56d
+  const now = new Date();
+  const plus56 = new Date(now.getTime() + 56 * 864e5);
+  const fmt = d => `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}T${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+  document.getElementById('nStart').value = fmt(now);
+  document.getElementById('nEnd').value = fmt(plus56);
+  boot();
+})();
+</script>
+</body>
+</html>

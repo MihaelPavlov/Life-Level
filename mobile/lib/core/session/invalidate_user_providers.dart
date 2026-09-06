@@ -10,6 +10,7 @@ import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/quests/providers/quest_provider.dart';
+import '../../features/season/providers/season_provider.dart';
 import '../../features/streak/providers/streak_provider.dart';
 
 // Call on logout, app resume, and offline→online transitions so we never
@@ -25,6 +26,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
   ref.invalidate(guildProvider);
+  ref.invalidate(seasonProvider);
 }
 
 // Container-scoped variant for call sites where the calling widget may be
@@ -43,6 +45,7 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(inventoryProvider);
   container.invalidate(bossListProvider);
   container.invalidate(guildProvider);
+  container.invalidate(seasonProvider);
 }
 
 /// Clears the JWT, routes to LoginScreen, and invalidates user-scoped providers.

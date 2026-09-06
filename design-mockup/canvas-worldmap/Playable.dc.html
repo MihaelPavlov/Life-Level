@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#040810; --panel:#0b1119; --panel-2:#0f1620; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    @media (prefers-reduced-motion:no-preference){
+      .tug{animation:tg 1.6s ease-in-out infinite}
+      @keyframes tg{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(-4px,2px) rotate(-6deg)}}
+      .spin-idle{animation:sp 14s linear infinite}
+      @keyframes sp{to{transform:rotate(360deg)}}
+      .glow{animation:gw 1.8s ease-in-out infinite}
+      @keyframes gw{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,.35)}50%{box-shadow:0 0 0 10px rgba(248,81,73,0)}}
+      .shimmer{animation:sh 2.4s linear infinite}
+      @keyframes sh{to{background-position:200% 0}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:1180px;position:relative;padding:14px 14px 96px;
+     background:
+       radial-gradient(700px 320px at 20% -6%,rgba(79,158,255,.10),transparent 62%),
+       radial-gradient(560px 400px at 100% 30%,rgba(163,113,247,.09),transparent 60%),var(--bg)">
+
+  <!-- HEADER -->
+  <div style="display:flex;align-items:center;gap:10px">
+    <button aria-label="Back" style="width:36px;height:36px;border:1px solid var(--line);border-radius:11px;background:var(--panel);display:flex;align-items:center;justify-content:center">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+    </button>
+    <div style="flex:1">
+      <div class="lab" style="color:var(--green)">Chapter I · Forest of Endurance</div>
+      <h1 class="num" style="font-size:20px;letter-spacing:.02em;margin:2px 0 0">THE LIVING TRAIL</h1>
+    </div>
+  </div>
+  <p style="margin:8px 2px 0;font-size:11px;color:var(--dim)">Drag it, spin it, scratch it, tap it — the trail is something you play, not just read.</p>
+
+  <!-- 1. DRAG TO TRAVEL -->
+  <section class="panel" style="margin-top:16px;padding:14px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lab" style="color:var(--blue)">① Drag to travel</span>
+      <span class="mono" style="font-size:10px;color:var(--dim)">2.1 / 3.0 km banked</span>
+    </div>
+    <div style="position:relative;height:120px;margin-top:10px">
+      <svg viewBox="0 0 340 120" width="100%" height="120" style="position:absolute;inset:0">
+        <path d="M28,86 Q120,30 300,40" fill="none" stroke="#1b2431" stroke-width="10" stroke-linecap="round"/>
+        <path d="M28,86 Q95,52 172,50" fill="none" stroke="var(--blue)" stroke-width="5" stroke-linecap="round"/>
+        <path d="M172,50 Q230,45 300,40" fill="none" stroke="#2b3644" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 10"/>
+      </svg>
+      <!-- start node -->
+      <div style="position:absolute;left:28px;top:86px;transform:translate(-50%,-50%)">
+        <img src="zone_thornwood_forest.png" width="34" height="34" alt="" style="opacity:.7">
+      </div>
+      <!-- token being dragged, mid-pull -->
+      <div class="tug" style="position:absolute;left:172px;top:50px;transform:translate(-50%,-50%)">
+        <div style="width:40px;height:40px;border-radius:50%;background:#0c1622;border:2.4px solid var(--blue);overflow:hidden;box-shadow:0 0 16px rgba(79,158,255,.5)">
+          <img src="mystic_icon.png" width="40" height="40" alt="" style="object-fit:cover">
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:-10px;bottom:-8px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))">
+          <path d="M9 11V6a1.5 1.5 0 0 1 3 0v4M12 10V5a1.5 1.5 0 0 1 3 0v5M15 10.5V7a1.5 1.5 0 0 1 3 0v7c0 3-2 6-6 6s-5.5-2-7-4l-2-3c-.6-1 .3-2.2 1.4-1.8L7 12"/>
+        </svg>
+      </div>
+      <!-- destination -->
+      <div style="position:absolute;left:300px;top:40px;transform:translate(-50%,-50%);text-align:center">
+        <img src="zone_first_fork.png" width="34" height="34" alt="">
+      </div>
+    </div>
+    <div style="height:6px;border-radius:999px;background:#161f2b;margin-top:2px;overflow:hidden"><div style="width:70%;height:100%;background:linear-gradient(90deg,var(--blue),#82bcff)"></div></div>
+    <p style="margin:9px 0 0;font-size:11px;color:var(--dim)">Pull your token toward First Fork — every logged km loads the sling. Let go at 3.0 km to launch.</p>
+  </section>
+
+  <!-- 2. SPIN THE FORK -->
+  <section class="panel" style="margin-top:12px;padding:14px 16px">
+    <span class="lab" style="color:var(--orange)">② Spin the fork</span>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:10px">
+      <div style="position:relative;width:104px;height:104px;flex:none">
+        <svg width="8" height="10" viewBox="0 0 8 10" style="position:absolute;left:50%;top:-2px;transform:translateX(-50%);z-index:2"><path d="M4 10 0 0h8z" fill="#e6edf3"/></svg>
+        <div class="spin-idle" style="width:104px;height:104px;border-radius:50%;
+             background:conic-gradient(var(--blue) 0 33%, var(--orange) 33% 66%, var(--purple) 66% 100%);
+             border:3px solid #1e2732;position:relative">
+          <div style="position:absolute;inset:8px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center">
+            <img src="map_destination.png" width="30" height="30" alt="">
+          </div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--dim);line-height:1.5">
+          <span style="color:var(--blue)">●</span> Standard · 3.0 km&nbsp;&nbsp;
+          <span style="color:var(--orange)">●</span> Ridge · 4.2 km, faster XP&nbsp;&nbsp;
+          <span style="color:var(--purple)">●</span> Mystery
+        </div>
+        <button class="glow" style="margin-top:10px;height:38px;padding:0 16px;border-radius:11px;font-weight:800;font-size:12px;color:#0b0714;background:linear-gradient(90deg,var(--orange),#ffcf7a)">SPIN TO CHOOSE</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. SCRATCH THE FOG -->
+  <section class="panel" style="margin-top:12px;padding:14px 16px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lab" style="color:var(--purple)">③ Scratch the fog</span>
+      <span class="mono" style="font-size:10px;color:var(--dim)">62% revealed</span>
+    </div>
+    <div style="position:relative;height:96px;border-radius:12px;margin-top:10px;overflow:hidden;border:1px solid var(--line)">
+      <!-- revealed layer underneath -->
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#241a33,#150f1e);display:flex;align-items:center;justify-content:center;gap:10px">
+        <img src="reward_xp_sparkle.png" width="34" height="34" alt="">
+        <span style="font-size:12.5px;font-weight:700;color:#cbb2ff">+1 mystery reward waits ahead</span>
+      </div>
+      <!-- scratch foil, partially cleared -->
+      <div class="shimmer" style="position:absolute;left:0;top:0;bottom:0;width:38%;
+           background:repeating-linear-gradient(115deg,#8a94a3,#8a94a3 8px,#a5aebc 8px,#a5aebc 16px);
+           background-size:200% 100%;
+           clip-path:polygon(0 0,100% 0,86% 100%,0 100%)"></div>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e6edf3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:26%;top:38%;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))">
+        <path d="M3 21 8 8l8-5 5 5-5 8-13 5z"/><path d="M13 8 16 11"/>
+      </svg>
+    </div>
+    <p style="margin:9px 0 0;font-size:11px;color:var(--dim)">Every workout scratches a little more silver away. Fully clear it to name what's north.</p>
+  </section>
+
+  <!-- 4. TAP TO STRIKE -->
+  <section class="panel" style="margin-top:12px;padding:14px 16px;border-color:#4a2420;background:linear-gradient(180deg,rgba(248,81,73,.08),var(--panel) 60%)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lab" style="color:var(--red)">④ Tap to strike</span>
+      <span class="mono" style="font-size:10px;color:var(--red)">×14 combo</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:10px">
+      <button style="position:relative;width:74px;height:74px;flex:none;border-radius:50%;background:radial-gradient(closest-side,#3a1614,#160d0e);border:2.6px solid var(--red)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff9a94" stroke-width="1.8" stroke-linecap="round" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)">
+          <path d="M14.5 3.5 21 10l-2 2-2-2-5 5 2 2-2 2-6.5-6.5 2-2 2 2 5-5-2-2z"/>
+        </svg>
+      </button>
+      <div style="flex:1">
+        <div style="height:10px;border-radius:999px;background:#2a1614;overflow:hidden"><div style="width:58%;height:100%;background:linear-gradient(90deg,var(--red),#ff8a80)"></div></div>
+        <p style="margin:8px 0 0;font-size:11px;color:var(--dim)">Log a workout while the Warden is near to land a hit — tap in rhythm with your pace to chain combos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 14px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Season</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="25" height="25" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--blue)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

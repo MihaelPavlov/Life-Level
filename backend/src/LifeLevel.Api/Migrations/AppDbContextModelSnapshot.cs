@@ -1963,6 +1963,197 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserQuestProgress");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.Season", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MilestoneTier")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("TierCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("XpPerTier")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("State");
+
+                    b.ToTable("Seasons");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.SeasonRewardTier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IconKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Rarity")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("RewardKey")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("RewardRefId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RewardType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Track")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SeasonId", "Tier", "Track")
+                        .IsUnique();
+
+                    b.ToTable("SeasonRewardTiers");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.UserFounderPass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcquiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "SeasonId")
+                        .IsUnique();
+
+                    b.ToTable("UserFounderPasses");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.UserSeasonClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Track")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("WasAutoGranted")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "SeasonId", "Tier", "Track")
+                        .IsUnique();
+
+                    b.ToTable("UserSeasonClaims");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.UserSeasonProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CurrentTier")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("SeasonXp")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "SeasonId")
+                        .IsUnique();
+
+                    b.ToTable("UserSeasonProgresses");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Streak.Domain.Entities.Streak", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3031,6 +3222,44 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("Quest");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.SeasonRewardTier", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Seasons.Domain.Entities.Season", "Season")
+                        .WithMany("Tiers")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Season");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.UserFounderPass", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.UserSeasonClaim", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.UserSeasonProgress", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Streak.Domain.Entities.Streak", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
@@ -3212,6 +3441,11 @@ namespace LifeLevel.Api.Migrations
             modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.Quest", b =>
                 {
                     b.Navigation("UserProgress");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Seasons.Domain.Entities.Season", b =>
+                {
+                    b.Navigation("Tiers");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.Region", b =>

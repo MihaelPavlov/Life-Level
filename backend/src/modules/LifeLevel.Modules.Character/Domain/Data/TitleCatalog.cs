@@ -66,5 +66,10 @@ public static class TitleCatalog
     public static readonly IReadOnlyDictionary<string, Guid> KeyToId = new Dictionary<string, Guid>
     {
         ["novice-adventurer"] = Guid.Parse("A0000000-0000-0000-0000-000000000007"),
+        // Season Pass tier rewards — granted explicitly via ITitleUnlockPort, not by criteria.
+        ["the-marathoner"] = Guid.Parse("A0000000-0000-0000-0000-000000000001"),
+        ["streak-master"]  = Guid.Parse("A0000000-0000-0000-0000-000000000002"),
+        ["raid-veteran"]   = Guid.Parse("A0000000-0000-0000-0000-000000000003"),
+        ["the-champion"]   = Guid.Parse("A0000000-0000-0000-0000-000000000005"),
     };
 }

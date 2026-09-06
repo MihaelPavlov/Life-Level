@@ -1,0 +1,313 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    h1,h2,h3{margin:0}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+
+    .cap{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:15px 3px 6px}
+    .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}
+    .ring{position:relative;width:64px;height:64px;flex:none}
+    .ctr{position:absolute;inset:8px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0c1219;text-align:center}
+    .ctr .g{font-size:15px;line-height:1}
+    .ctr .n{font-size:8px;color:var(--dim);margin-top:1px}
+    .body{flex:1;min-width:0}
+    .pill{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px}
+    .ttl{font-size:12.5px;font-weight:800;margin-top:5px;line-height:1.15}
+    .sub{font-size:9px;color:var(--dim);margin-top:3px}
+    .mini{height:4px;border-radius:999px;background:#151d27;margin-top:6px;overflow:hidden}
+    .btn{flex:none;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+    .chev{width:13px;height:13px}
+    .chip{font-size:8px;font-weight:700;color:var(--dim);border:1px solid var(--line);border-radius:7px;padding:2px 6px}
+    @media (prefers-reduced-motion:no-preference){
+      .live{animation:lv 1.8s ease-in-out infinite}
+      @keyframes lv{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,0)}50%{box-shadow:0 0 0 4px rgba(248,81,73,.22)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:1548px;position:relative;padding:16px 14px 22px;background:var(--bg)">
+
+  <div style="font-size:12px;font-weight:800;letter-spacing:.02em">Home · map section — Chapter Progress Ring</div>
+  <div style="font-size:10.5px;color:var(--dim);line-height:1.55;margin:7px 3px 4px">
+    One component, every state the live Home portal can be in. The <b style="color:var(--green)">green ring</b>
+    always means the same thing — % of this chapter's zones cleared, i.e. how far you are through the story.
+    The <b style="color:var(--text)">centre glyph + colour</b> and the line under the title carry the
+    <i>current situation</i> (boss / chest / dungeon / encounter …). The centre disc border + soft glow take
+    the state colour. Ring is full + haloed on chapter clear; a dashed outline before you enter the world.
+  </div>
+
+  <!-- 1 · STANDARD / EXPLORING -->
+  <div class="cap">1 · Standard zone — exploring</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--blue);box-shadow:0 0 12px rgba(79,158,255,.25)"><span class="g">🌲</span><span class="n mono">2/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--blue);background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.3)">Exploring · Misty Pine</span>
+      <div class="ttl">Misty Pine</div>
+      <div class="sub">Node 2 of 8 · explore from here</div>
+      <div class="mini"><div style="width:58%;height:100%;background:var(--blue)"></div></div>
+    </div>
+    <button class="btn" style="background:linear-gradient(135deg,var(--blue),#7db6ff)"><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="2.6" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></button>
+  </div>
+
+  <!-- 2 · TRAVELING -->
+  <div class="cap">2 · Traveling (on an edge)</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--blue);box-shadow:0 0 12px rgba(79,158,255,.25)"><span class="g">🥾</span><span class="n mono">2/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--blue);background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.3)">En route · Dawn Camp</span>
+      <div class="ttl">Dawn Camp</div>
+      <div class="sub mono">Distance travelled · 1.0 / 3.0 km</div>
+      <div class="mini"><div style="width:33%;height:100%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div></div>
+    </div>
+    <button class="btn" style="background:linear-gradient(135deg,var(--blue),#7db6ff)"><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="2.6" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></button>
+  </div>
+
+  <!-- 3 · NEXT ZONE HINT -->
+  <div class="cap">3 · Next-zone hint (standing at a cleared node)</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="106" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--blue);box-shadow:0 0 12px rgba(79,158,255,.25)"><span class="g">📍</span><span class="n mono">2/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--blue);background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.3)">Next · Dawn Camp</span>
+      <div class="ttl">Dawn Camp</div>
+      <div style="display:flex;gap:5px;margin-top:6px">
+        <span class="chip" style="color:var(--blue);border-color:#23405f">→ 3.0 km</span>
+        <span class="chip" style="color:var(--orange);border-color:#4b3d1c">+320 XP</span>
+        <span class="chip">Standard</span>
+      </div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--blue),#7db6ff)">Travel</button>
+  </div>
+
+  <!-- 4 · CROSSROADS -->
+  <div class="cap">4 · Crossroads zone</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="90" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--blue);box-shadow:0 0 12px rgba(79,158,255,.25)"><span class="g">🔀</span><span class="n mono">4/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--blue);background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.3)">Crossroads · Twin Roads Fork</span>
+      <div class="ttl">Choose your path</div>
+      <div style="display:flex;gap:5px;margin-top:6px">
+        <span class="chip" style="color:var(--text);border-color:#23405f">Valley Road · 2d</span>
+        <span class="chip" style="color:var(--text);border-color:#23405f">Ruined Pass · 4d</span>
+      </div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--blue),#7db6ff)">Choose</button>
+  </div>
+
+  <!-- 5 · CHEST -->
+  <div class="cap">5 · Chest zone (unopened)</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="82" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--orange);box-shadow:0 0 12px rgba(245,166,35,.28)"><span class="g">💎</span><span class="n mono">4/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--orange);background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3)">Treasure · Ember Forge</span>
+      <div class="ttl">Ember Forge</div>
+      <div class="sub">Reward on open · <b style="color:var(--orange)">+180 XP</b></div>
+      <div class="mini"><div style="width:100%;height:100%;background:linear-gradient(90deg,var(--orange),var(--red))"></div></div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--orange),#ffcf7a)">Open</button>
+  </div>
+
+  <!-- 6 · DUNGEON -->
+  <div class="cap">6 · Dungeon zone</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="70" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--purple);box-shadow:0 0 12px rgba(163,113,247,.28)"><span class="g">🗿</span><span class="n mono">5/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--purple);background:rgba(163,113,247,.12);border:1px solid rgba(163,113,247,.3)">Dungeon · Sunken Ruins</span>
+      <div class="ttl">Sunken Ruins</div>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:6px">
+        <span style="width:8px;height:8px;border-radius:2px;background:var(--purple)"></span>
+        <span style="width:8px;height:8px;border-radius:2px;background:var(--purple)"></span>
+        <span style="width:8px;height:8px;border-radius:2px;background:#1e2632"></span>
+        <span style="width:8px;height:8px;border-radius:2px;background:#1e2632"></span>
+        <span class="sub" style="margin:0 0 0 4px">Floor 2 / 4</span>
+      </div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--purple),#c9a9ff)">Enter</button>
+  </div>
+
+  <!-- 7 · BOSS ZONE -->
+  <div class="cap">7 · Boss zone (arrived, raid not started)</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="24" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--red);box-shadow:0 0 12px rgba(248,81,73,.3)"><span class="g">👹</span><span class="n mono">7/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--red);background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.3)">Boss zone · Forest Warden</span>
+      <div class="ttl">Forest Warden</div>
+      <div class="sub">Ready for the raid · defeat reward <b style="color:var(--red)">+900 XP</b></div>
+      <div class="mini"><div style="width:0%;height:100%;background:var(--red)"></div></div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#fff;background:var(--red)">View</button>
+  </div>
+
+  <!-- 8 · BOSS RAID LIVE -->
+  <div class="cap">8 · Boss raid ACTIVE (highest priority)</div>
+  <div class="row live" style="border-color:#4a2420;background:linear-gradient(90deg,rgba(248,81,73,.12),var(--panel) 65%)">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="24" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--red);box-shadow:0 0 16px rgba(248,81,73,.5)"><span class="g">⚔️</span><span class="n mono">7/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--red);background:rgba(248,81,73,.16);border:1px solid rgba(248,81,73,.4)">◉ Raid live · 3d 04h</span>
+      <div class="ttl">Forest Warden</div>
+      <div class="sub mono">Boss HP · 62% · every workout deals damage</div>
+      <div class="mini"><div style="width:62%;height:100%;background:linear-gradient(90deg,var(--red),#c0392b)"></div></div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 11px;font-size:11px;font-weight:900;color:#fff;background:var(--red)">Fight</button>
+  </div>
+
+  <!-- 9 · ENCOUNTER · BLOCKER -->
+  <div class="cap">9 · Trail encounter — blocker</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="118" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--red);box-shadow:0 0 12px rgba(248,81,73,.3)"><span class="g">🚧</span><span class="n mono">2/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--red);background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.3)">Blocked · Fallen Log</span>
+      <div class="ttl">Clear it to pass</div>
+      <div class="sub mono">Distance reached · 1.2 / 2.0 km on this edge</div>
+      <div class="mini"><div style="width:60%;height:100%;background:linear-gradient(90deg,var(--red),var(--orange))"></div></div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#fff;background:var(--red)">Push</button>
+  </div>
+
+  <!-- 10 · ENCOUNTER · MERCHANT -->
+  <div class="cap">10 · Trail encounter — wandering merchant</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="96" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--orange);box-shadow:0 0 12px rgba(245,166,35,.28)"><span class="g">🛒</span><span class="n mono">3/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--orange);background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3)">Merchant · on the trail</span>
+      <div class="ttl">Wandering trader</div>
+      <div class="sub">Mystery wares · <b style="color:var(--orange)">leaves in 6h</b></div>
+      <div class="mini"><div style="width:44%;height:100%;background:linear-gradient(90deg,var(--orange),#ffcf7a)"></div></div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--orange),#ffcf7a)">Visit</button>
+  </div>
+
+  <!-- 11 · ENCOUNTER · STORY -->
+  <div class="cap">11 · Trail encounter — story beat</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="102" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--purple);box-shadow:0 0 12px rgba(163,113,247,.28)"><span class="g">📖</span><span class="n mono">3/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--purple);background:rgba(163,113,247,.12);border:1px solid rgba(163,113,247,.3)">Story · on the trail</span>
+      <div class="ttl">A whisper in the pines</div>
+      <div class="sub">A moment on the trail — tap to read</div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--purple),#c9a9ff)">Read</button>
+  </div>
+
+  <!-- 12 · REGION COMPLETE -->
+  <div class="cap">12 · Chapter cleared</div>
+  <div class="row" style="border-color:#1f3a28;background:linear-gradient(90deg,rgba(63,185,80,.10),var(--panel) 65%)">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="30" fill="none" stroke="var(--green)" stroke-width="1.5" opacity=".35"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#182028" stroke-width="6"/>
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="0" transform="rotate(-90 32 32)"/>
+      </svg>
+      <div class="ctr" style="border:1.5px solid var(--green);box-shadow:0 0 16px rgba(63,185,80,.4)"><span class="g">🏁</span><span class="n mono">8/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--green);background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.3)">Chapter clear · Forest of Endurance</span>
+      <div class="ttl">All 8 zones done · Warden defeated</div>
+      <div class="sub">The next chapter is open</div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--green),#7ee08f)">Next</button>
+  </div>
+
+  <!-- 13 · FIRST STEP -->
+  <div class="cap">13 · Not in the world yet (new player)</div>
+  <div class="row">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="var(--line)" stroke-width="6" stroke-dasharray="4 6"/>
+      </svg>
+      <div class="ctr" style="border:1.5px dashed var(--blue)"><span class="g">✦</span><span class="n mono">0/8</span></div>
+    </div>
+    <div class="body">
+      <span class="pill" style="color:var(--blue);background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.3)">Begin · Whispering Grove</span>
+      <div class="ttl">Pick your first step</div>
+      <div class="sub">Open the map to enter the world</div>
+    </div>
+    <button class="btn" style="width:auto;padding:0 10px;font-size:11px;font-weight:800;color:#05101f;background:linear-gradient(90deg,var(--blue),#7db6ff)">Map</button>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

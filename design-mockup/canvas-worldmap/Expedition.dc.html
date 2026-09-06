@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    h1{margin:0}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--dim)}
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:664px;position:relative;padding:0 0 84px;
+     background:
+       radial-gradient(700px 300px at 50% -8%,rgba(79,158,255,.10),transparent 62%),
+       radial-gradient(420px 260px at 50% 46%,rgba(63,185,80,.08),transparent 70%),var(--bg)">
+
+  <!-- HEADER -->
+  <div style="padding:16px 16px 12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:36px;height:36px;border:1px solid var(--line);border-radius:11px;background:var(--panel);display:flex;align-items:center;justify-content:center">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div style="flex:1">
+        <h1 class="num" style="font-size:16px;letter-spacing:.03em">WEEK 3 EXPEDITION</h1>
+        <div style="font-size:11px;color:var(--dim);margin-top:1px">Forest of Endurance · Trail of Embers</div>
+      </div>
+      <div style="text-align:right">
+        <div class="num mono" style="font-size:15px;color:var(--orange)">DAY 4<span style="color:var(--mute)">/7</span></div>
+        <div class="mono" style="font-size:9px;color:var(--mute)">ends Sun 23:59</div>
+      </div>
+    </div>
+
+    <!-- MODIFIERS -->
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px">
+      <span class="chip" style="color:var(--blue);border-color:#25405e"><img src="stat_endurance.png" width="13" height="13" alt="">×2 Endurance</span>
+      <span class="chip" style="color:var(--green);border-color:#234a2a"><img src="zone_iron_peaks.png" width="13" height="13" alt="">Hills · +dist</span>
+      <span class="chip">Night Owl · +eve</span>
+    </div>
+
+    <!-- GHOST RACE -->
+    <div class="panel" style="margin-top:12px;padding:11px 13px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span class="lab" style="color:var(--blue)">You</span>
+        <span class="lab" style="color:var(--mute)">Ghost · Week 2</span>
+      </div>
+      <div style="position:relative;height:8px;border-radius:999px;background:#12181f;margin:8px 0 4px;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:71%;background:#2a3340"></div>
+        <div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:linear-gradient(90deg,var(--blue),#82bcff)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span class="mono" style="font-size:10px;color:var(--text)">62%</span>
+        <span class="mono" style="font-size:10px;color:var(--dim)">9% behind · +2.4 km today catches up</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE RUN -->
+  <div class="lab" style="margin:2px 20px 0">The run · 5 nodes</div>
+  <div style="position:relative;height:176px;margin:2px 6px 0">
+    <svg viewBox="0 0 378 176" width="100%" height="176" style="position:absolute;inset:0">
+      <polyline points="34,64 112,112 190,64 268,112 344,58" fill="none" stroke="#2a3340" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="34,64 112,112 190,64 268,112" fill="none" stroke="#4f9eff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 8" opacity=".9"/>
+      <polyline points="268,112 344,58" fill="none" stroke="#3a4453" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 8"/>
+    </svg>
+    <!-- node 1 -->
+    <div style="position:absolute;left:34px;top:64px;transform:translate(-50%,-50%);text-align:center">
+      <img src="zone_thornwood_forest.png" width="40" height="40" alt="" style="object-fit:contain;opacity:.5">
+      <div class="mono" style="font-size:8px;color:var(--green);margin-top:1px">DONE</div>
+    </div>
+    <!-- node 2 -->
+    <div style="position:absolute;left:112px;top:112px;transform:translate(-50%,-50%);text-align:center">
+      <img src="zone_first_fork.png" width="40" height="40" alt="" style="object-fit:contain;opacity:.5">
+      <div class="mono" style="font-size:8px;color:var(--green);margin-top:1px">DONE</div>
+    </div>
+    <!-- node 3 -->
+    <div style="position:absolute;left:190px;top:64px;transform:translate(-50%,-50%);text-align:center">
+      <img src="zone_ashfield_plains.png" width="40" height="40" alt="" style="object-fit:contain;opacity:.5">
+      <div class="mono" style="font-size:8px;color:var(--green);margin-top:1px">DONE</div>
+    </div>
+    <!-- node 4 current -->
+    <div style="position:absolute;left:268px;top:112px;transform:translate(-50%,-50%);text-align:center">
+      <div style="position:absolute;left:50%;top:22px;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;border:2px solid var(--blue);box-shadow:0 0 18px rgba(79,158,255,.35)"></div>
+      <img src="zone_iron_peaks.png" width="46" height="46" alt="" style="object-fit:contain;position:relative">
+      <div class="mono" style="font-size:8px;color:var(--blue);font-weight:700;margin-top:1px">NODE 4</div>
+    </div>
+    <!-- node 5 boss -->
+    <div style="position:absolute;left:344px;top:58px;transform:translate(-50%,-50%);text-align:center">
+      <div style="position:absolute;left:50%;top:20px;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:radial-gradient(closest-side,rgba(248,81,73,.4),transparent)"></div>
+      <img src="boss_forest_warden.png" width="48" height="48" alt="" style="object-fit:contain;position:relative">
+      <div class="mono" style="font-size:8px;color:#ff9a94;margin-top:1px">WARDEN</div>
+    </div>
+  </div>
+
+  <!-- CURRENT NODE CARD -->
+  <div style="margin:6px 16px 0;border:1px solid #25405e;border-radius:15px;padding:14px;background:linear-gradient(180deg,rgba(79,158,255,.08),var(--panel) 60%)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <span class="lab" style="color:var(--blue)">Node 4 · Iron Climb</span>
+        <div style="font-weight:800;font-size:15px;margin-top:3px">Run 5.0 km</div>
+      </div>
+      <img src="zone_iron_peaks.png" width="40" height="40" alt="" style="object-fit:contain">
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:6px">Hills modifier active — elevation counts <b class="mono" style="color:var(--green)">×1.5</b> toward distance.</div>
+    <div style="height:7px;border-radius:999px;background:#12181f;margin:11px 0 5px;overflow:hidden"><div style="width:42%;height:100%;background:linear-gradient(90deg,var(--blue),#82bcff)"></div></div>
+    <div style="display:flex;justify-content:space-between">
+      <span class="mono" style="font-size:10.5px">2.1 <span style="color:var(--mute)">/ 5.0 km</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--orange)"><img src="reward_treasure_chest.png" width="14" height="14" alt="">+400 XP · Ember Cache</span>
+    </div>
+  </div>
+
+  <!-- GUILD CONTRIBUTION -->
+  <div style="margin:12px 16px 0;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:13px;border:1px solid var(--line);background:var(--panel)">
+    <img src="reward_daily_bonus.png" width="24" height="24" alt="" style="object-fit:contain">
+    <div style="flex:1">
+      <div style="font-size:11px;color:var(--dim)">Guild expedition <b class="mono" style="color:var(--text)">41%</b> · you rank <b class="mono" style="color:var(--text)">8</b> / 24</div>
+      <div style="height:3px;border-radius:999px;background:#12181f;margin-top:6px;overflow:hidden"><div style="width:41%;height:100%;background:var(--purple)"></div></div>
+    </div>
+  </div>
+
+  <div style="margin:12px 16px 0;font-size:10.5px;color:var(--mute);text-align:center">
+    Clear Node 5 by Sunday → <b style="color:var(--dim)">1,200 season XP + Warden's Mark</b>
+  </div>
+
+  <!-- CTA + NAV -->
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 12px;background:linear-gradient(180deg,transparent,var(--bg) 38%)">
+    <button style="width:100%;height:48px;border-radius:14px;font-weight:900;font-size:13.5px;letter-spacing:.03em;color:#05101f;background:linear-gradient(90deg,var(--blue),#82bcff);box-shadow:0 14px 34px -16px var(--blue)">LOG TOWARD IRON CLIMB &nbsp;→</button>
+    <nav style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Home</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Season</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="25" height="25" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--blue)">Map</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+    </nav>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

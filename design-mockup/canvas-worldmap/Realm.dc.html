@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .wk{font-weight:800;font-size:11px;text-shadow:0 2px 8px #000}
+    .poi-tag{font-family:"IBM Plex Mono",monospace;font-size:7.5px;background:rgba(11,17,25,.88);border-radius:999px;padding:2px 7px;white-space:nowrap}
+    .legend{position:absolute;background:rgba(9,13,20,.86);border:1px solid var(--line);border-radius:12px;padding:9px 10px;backdrop-filter:blur(4px)}
+    .legend .row{display:flex;align-items:center;gap:7px;padding:2.5px 0;font-size:7.5px;color:var(--dim)}
+    .legend .dot{width:8px;height:8px;border-radius:50%;flex:none}
+    @media (prefers-reduced-motion:no-preference){
+      .ring{animation:rg 2.8s ease-out infinite}
+      @keyframes rg{0%{transform:scale(.8);opacity:.75}75%{transform:scale(1.6);opacity:0}100%{opacity:0}}
+      .drift{animation:df 5s ease-in-out infinite}
+      @keyframes df{0%,100%{transform:translate(0,0)}50%{transform:translate(-6px,5px)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;height:1400px;position:relative;overflow:hidden;
+     background:
+       radial-gradient(420px 300px at 40% 96%,rgba(63,185,80,.16),transparent 70%),
+       radial-gradient(560px 420px at 60% 68%,rgba(79,158,255,.10),transparent 70%),
+       radial-gradient(520px 420px at 45% 30%,rgba(163,113,247,.10),transparent 70%),
+       linear-gradient(180deg,#05080f,#04070d 40%,#060b12 78%,#081119)">
+
+  <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.55));pointer-events:none"></div>
+
+  <!-- TRAIL -->
+  <svg viewBox="0 0 390 1400" width="390" height="1400" style="position:absolute;inset:0">
+    <polyline points="110,1310 260,1170 120,1010 270,850 130,690 260,530 130,370 210,180"
+      fill="none" stroke="#2a3340" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+    <polyline points="110,1310 260,1170 120,1010" fill="none" stroke="#4f9eff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 9"/>
+    <polyline points="120,1010 270,850 130,690 260,530 130,370 210,180" fill="none" stroke="#3a4453" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 9" opacity=".85"/>
+  </svg>
+
+  <!-- FOG over unrevealed weeks 4-8 -->
+  <div style="position:absolute;left:0;right:0;top:0;height:900px;pointer-events:none;
+       background:linear-gradient(180deg,#04070d 10%,rgba(4,7,13,.82) 34%,rgba(4,7,13,.32) 58%,transparent 78%)"></div>
+
+  <!-- Week 1: Forest of Endurance (done) -->
+  <div style="position:absolute;left:110px;top:1310px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_thornwood_forest.png" width="52" height="52" alt="" style="object-fit:contain;opacity:.55">
+    <div class="wk" style="color:var(--green)">WEEK 1 ✓</div>
+    <div class="mono" style="font-size:8.5px;color:var(--mute)">Forest of Endurance</div>
+    <div style="display:flex;justify-content:center;gap:1px;margin-top:2px">
+      <img src="avatar_star.png" width="11" height="11" alt="">
+      <img src="avatar_star.png" width="11" height="11" alt="">
+      <img src="avatar_star.png" width="11" height="11" alt="">
+    </div>
+  </div>
+
+  <!-- POI: Treasure chest (between Week 1 and Week 2) -->
+  <div style="position:absolute;left:222px;top:1280px;transform:translate(-50%,-50%);text-align:center">
+    <img src="reward_treasure_chest.png" width="28" height="28" alt="" style="object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))">
+    <div class="poi-tag" style="color:var(--orange);margin-top:2px;display:inline-block">2d left</div>
+  </div>
+
+  <!-- Week 2: Ashfield Plains (done) -->
+  <div style="position:absolute;left:260px;top:1170px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_ashfield_plains.png" width="52" height="52" alt="" style="object-fit:contain;opacity:.55">
+    <div class="wk" style="color:var(--green)">WEEK 2 ✓</div>
+    <div class="mono" style="font-size:8.5px;color:var(--mute)">Ashfield Plains</div>
+    <div style="display:flex;justify-content:center;gap:1px;margin-top:2px">
+      <img src="avatar_star.png" width="11" height="11" alt="">
+      <img src="avatar_star.png" width="11" height="11" alt="">
+      <img src="avatar_star.png" width="11" height="11" alt="" style="opacity:.25">
+    </div>
+  </div>
+
+  <!-- ASYNC RIVAL: a friend's ghost token on the same trail -->
+  <div style="position:absolute;left:284px;top:1050px;transform:translate(-50%,-50%);text-align:center">
+    <div style="width:34px;height:34px;border-radius:50%;border:2px solid #6b7787;margin:0 auto;overflow:hidden;background:#0d141e">
+      <img src="avatar_ninja.png" width="34" height="34" alt="" style="object-fit:cover">
+    </div>
+    <div class="poi-tag" style="color:#c7cdd6;margin-top:3px;display:inline-block">Jordan · 1.8 km behind</div>
+  </div>
+
+  <!-- Week 3: Iron Peaks (CURRENT) -->
+  <div class="ring" style="position:absolute;left:120px;top:1010px;transform:translate(-50%,-50%);width:88px;height:88px;border-radius:50%;border:2px solid var(--blue);pointer-events:none"></div>
+  <div style="position:absolute;left:120px;top:1010px;transform:translate(-50%,-50%);width:140px;height:140px;border-radius:50%;background:radial-gradient(closest-side,rgba(79,158,255,.4),transparent);pointer-events:none"></div>
+  <img src="zone_iron_peaks.png" width="86" height="86" alt="" style="position:absolute;left:120px;top:1010px;transform:translate(-50%,-50%);object-fit:contain;filter:drop-shadow(0 12px 18px rgba(0,0,0,.6))">
+  <img src="map_current_location.png" alt="" width="38" height="38" style="position:absolute;left:150px;top:966px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))">
+  <div style="position:absolute;left:120px;top:1062px;transform:translateX(-50%);text-align:center;white-space:nowrap">
+    <div class="wk" style="color:#9ecbff;font-size:12.5px">WEEK 3 · CURRENT</div>
+    <div style="font-weight:700;font-size:13px;margin-top:1px">Iron Peaks</div>
+    <div style="display:inline-flex;gap:4px;margin-top:4px">
+      <span class="mono" style="font-size:8.5px;color:var(--orange);background:rgba(245,166,35,.12);border:1px solid #4b3d1c;border-radius:4px;padding:1px 5px">Node 4/5</span>
+      <span class="mono" style="font-size:8.5px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 5px">Day 4/7</span>
+    </div>
+  </div>
+
+  <!-- LIVE STORM drifting toward the current region -->
+  <div class="drift" style="position:absolute;left:250px;top:900px;transform:translate(-50%,-50%);text-align:center">
+    <img src="reward_xp_storm.png" width="34" height="34" alt="" style="object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))">
+  </div>
+  <svg width="80" height="60" viewBox="0 0 80 60" style="position:absolute;left:150px;top:930px;opacity:.7">
+    <path d="M70 6 C 40 10 20 30 6 50" fill="none" stroke="#c9756f" stroke-width="1.6" stroke-dasharray="2 6" stroke-linecap="round"/>
+    <path d="M10 44 L6 50 L14 49" fill="none" stroke="#c9756f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div style="position:absolute;left:250px;top:936px;transform:translateX(-50%);text-align:center;white-space:nowrap">
+    <span class="mono" style="font-size:8.5px;color:#ff9a94;background:rgba(248,81,73,.12);border:1px solid #4a2420;border-radius:999px;padding:2px 7px">XP storm reaches Iron Peaks · 40m</span>
+  </div>
+
+  <!-- Week 4: Frostbound Peaks (locked, edge of fog) -->
+  <div style="position:absolute;left:270px;top:850px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_frostbound_peaks.png" width="44" height="44" alt="" style="object-fit:contain;opacity:.4;filter:grayscale(.3)">
+    <div class="wk" style="color:var(--mute)">WEEK 4</div>
+    <div class="mono" style="font-size:8.5px;color:var(--mute)">Frostbound Peaks</div>
+    <span class="poi-tag" style="color:#8fc2ff;margin-top:3px;display:inline-flex;align-items:center;gap:3px">
+      <img src="stat_strength.png" width="10" height="10" alt="">+1 STR gear</span>
+  </div>
+
+  <!-- POI: Wandering Merchant (between Week 4 and Week 5) -->
+  <div style="position:absolute;left:52px;top:775px;transform:translate(-50%,-50%);text-align:center">
+    <img src="reward_grant_item.png" width="30" height="30" alt="" style="object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))">
+    <div class="poi-tag" style="color:var(--purple);margin-top:2px;display:inline-block">Merchant · 5h left</div>
+  </div>
+
+  <!-- POI: Mini-boss (between Week 5 and Week 6) -->
+  <div style="position:absolute;left:322px;top:604px;transform:translate(-50%,-50%);text-align:center">
+    <div style="width:44px;height:44px;border-radius:50%;background:radial-gradient(closest-side,rgba(163,113,247,.35),transparent);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none"></div>
+    <img src="ring_boss.png" width="32" height="32" alt="" style="object-fit:contain;position:relative;filter:hue-rotate(150deg) saturate(1.3) drop-shadow(0 4px 8px rgba(0,0,0,.5))">
+    <div class="poi-tag" style="color:#c7b4ff;margin-top:2px;display:inline-block">Frost Sentinel · mini-boss · 3d</div>
+  </div>
+
+  <!-- Week 5: Coral Coast (locked) + GUILD FRONTIER marker -->
+  <div style="position:absolute;left:130px;top:690px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_coral_coast.png" width="42" height="42" alt="" style="object-fit:contain;opacity:.35;filter:grayscale(.4)">
+    <div class="wk" style="color:var(--mute)">WEEK 5</div>
+  </div>
+  <div style="position:absolute;left:196px;top:664px;display:flex;align-items:center;gap:6px;background:rgba(11,17,25,.88);border:1px solid #3a2a52;border-radius:999px;padding:4px 10px 4px 4px">
+    <img src="ring_guild.png" width="20" height="20" alt="" style="object-fit:contain">
+    <span class="mono" style="font-size:8px;color:#c7b4ff">Guild frontier · 3 scouted ahead</span>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend" style="top:404px;right:12px;width:140px">
+    <div class="row"><span class="dot" style="background:var(--blue)"></span>Current region</div>
+    <div class="row"><span class="dot" style="background:#3a4453"></span>Locked / fogged</div>
+    <div class="row"><img src="reward_xp_storm.png" width="13" height="13" alt="">Live world event</div>
+    <div class="row"><img src="ring_guild.png" width="13" height="13" alt="">Guild frontier</div>
+    <div class="row"><img src="avatar_ninja.png" width="13" height="13" alt="" style="border-radius:50%">Friend's ghost</div>
+    <div class="row"><img src="ring_boss.png" width="13" height="13" alt="" style="filter:hue-rotate(150deg)">Mini-boss</div>
+    <div class="row"><img src="reward_treasure_chest.png" width="13" height="13" alt="">Timed treasure</div>
+    <div class="row"><img src="reward_grant_item.png" width="13" height="13" alt="">Wandering merchant</div>
+  </div>
+
+  <!-- Week 6-8: deep fog, unknown -->
+  <div style="position:absolute;left:260px;top:530px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_desert_of_trials.png" width="38" height="38" alt="" style="object-fit:contain;opacity:.2;filter:grayscale(.7)">
+    <div class="wk" style="color:var(--mute)">WEEK 6 · ???</div>
+  </div>
+  <div style="position:absolute;left:130px;top:370px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_the_convergence.png" width="38" height="38" alt="" style="object-fit:contain;opacity:.16;filter:grayscale(.8)">
+    <div class="wk" style="color:var(--mute)">WEEK 7 · ???</div>
+  </div>
+  <div style="position:absolute;left:210px;top:180px;transform:translate(-50%,-50%);text-align:center">
+    <img src="zone_final_approach.png" width="42" height="42" alt="" style="object-fit:contain;opacity:.16;filter:grayscale(.8)">
+    <div class="wk" style="color:#7a1d18">WEEK 8 · FINALE</div>
+  </div>
+
+  <!-- HEADER -->
+  <div style="position:absolute;left:0;right:0;top:0;padding:14px 14px 22px;background:linear-gradient(180deg,rgba(4,7,13,.94),rgba(4,7,13,.5) 72%,transparent)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:38px;height:38px;border:1px solid var(--line);border-radius:11px;background:rgba(11,17,25,.8);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div style="flex:1;min-width:0">
+        <h1 class="num" style="font-size:20px;letter-spacing:.02em;margin:0">THE REALM</h1>
+        <div style="font-size:11px;color:var(--orange);font-weight:600;margin-top:1px">Trail of Embers · Season 1</div>
+      </div>
+      <div style="text-align:right">
+        <div class="lab">Progress</div>
+        <div class="mono num" style="font-size:14px">3<span style="color:var(--mute)">/8</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCK -->
+  <div style="position:absolute;left:12px;right:12px;bottom:92px;background:rgba(9,13,20,.92);backdrop-filter:blur(6px);border:1px solid #25405e;border-radius:16px;padding:11px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 26px 55px -26px #000">
+    <img src="zone_iron_peaks.png" alt="" width="40" height="40" style="flex:none;object-fit:contain">
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:700;font-size:13px">Iron Peaks · Week 3</div>
+      <div class="mono" style="font-size:9.5px;color:var(--mute)">3 / 8 regions revealed</div>
+    </div>
+    <button style="flex:none;height:38px;padding:0 13px;border-radius:11px;font-weight:800;font-size:11.5px;color:#05101f;background:linear-gradient(180deg,#66acff,var(--blue))">Expedition &nbsp;→</button>
+  </div>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 14px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Season</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="25" height="25" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--blue)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

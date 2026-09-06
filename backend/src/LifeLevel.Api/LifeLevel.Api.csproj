@@ -36,6 +36,7 @@
     <ProjectReference Include="..\modules\LifeLevel.Modules.Integrations\LifeLevel.Modules.Integrations.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Achievements\LifeLevel.Modules.Achievements.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Notifications\LifeLevel.Modules.Notifications.csproj" />
+    <ProjectReference Include="..\modules\LifeLevel.Modules.Seasons\LifeLevel.Modules.Seasons.csproj" />
   </ItemGroup>
 
 </Project>
