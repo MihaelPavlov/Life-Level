@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --text:#1c2b22; --dim:#3d5245; --mute:#6b8272;
+      --blue:#2f6fd1; --orange:#c97a12; --red:#c0392b; --green:#1f8a3c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .node{position:absolute;transform:translate(-50%,-50%);text-align:center}
+    .bubble{border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(20,40,25,.35)}
+    .tag{font-size:9px;font-weight:800;color:#1c2b22;text-shadow:0 1px 0 rgba(255,255,255,.5);white-space:nowrap}
+    @media (prefers-reduced-motion:no-preference){
+      .bob{animation:b 1.8s ease-in-out infinite}
+      @keyframes b{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-112%)}}
+      .drift{animation:d 30s linear infinite}
+      @keyframes d{from{transform:translateX(0)}to{transform:translateX(-40px)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:1100px;height:480px;position:relative;overflow:hidden;
+     background:linear-gradient(180deg,#ffd9a0 0%,#ffc9a8 22%,#bfe0e8 55%,#bfe0e8 100%)">
+
+  <!-- SUN -->
+  <div style="position:absolute;left:930px;top:70px;width:90px;height:90px;border-radius:50%;background:radial-gradient(closest-side,#fff3cf,#ffe08a 60%,transparent 100%)"></div>
+
+  <!-- CLOUDS (parallax) -->
+  <g class="drift" style="position:absolute;left:0;top:0;width:100%;height:100%">
+    <div style="position:absolute;left:120px;top:60px;width:86px;height:30px;border-radius:999px;background:#fff;opacity:.8"></div>
+    <div style="position:absolute;left:150px;top:46px;width:56px;height:26px;border-radius:999px;background:#fff;opacity:.8"></div>
+    <div style="position:absolute;left:520px;top:40px;width:70px;height:26px;border-radius:999px;background:#fff;opacity:.7"></div>
+    <div style="position:absolute;left:800px;top:100px;width:64px;height:24px;border-radius:999px;background:#fff;opacity:.65"></div>
+  </g>
+
+  <!-- BACKGROUND ROLLING HILLS (soft silhouette, no jagged peaks) -->
+  <svg viewBox="0 0 1100 480" width="1100" height="480" style="position:absolute;inset:0">
+    <path d="M0,300 C120,260 220,280 340,255 C460,232 560,270 680,250 C800,232 900,262 1020,240 C1070,232 1100,236 1100,236 L1100,480 L0,480 Z"
+      fill="#9fc9b8" opacity=".55"/>
+    <path d="M0,340 C140,310 260,330 380,308 C520,282 640,320 760,300 C880,282 980,308 1100,296 L1100,480 L0,480 Z"
+      fill="#7ab596" opacity=".7"/>
+    <!-- foreground ground -->
+    <path d="M0,392 C160,368 300,398 460,378 C620,358 760,392 920,374 C1010,364 1060,368 1100,372 L1100,480 L0,480 Z" fill="#5a9e6f"/>
+    <path d="M0,392 C160,368 300,398 460,378 C620,358 760,392 920,374 C1010,364 1060,368 1100,372"
+      fill="none" stroke="#3f7d54" stroke-width="3" opacity=".5"/>
+
+    <!-- ROAD -->
+    <path id="road" d="M90,425 C160,415 190,405 220,400 C260,393 310,410 350,430 C390,448 440,415 480,405 C520,396 570,420 610,425
+      C650,430 660,368 700,360 C740,352 740,398 780,400 C820,402 830,412 870,420 C910,428 950,392 1000,380"
+      fill="none" stroke="#a97a4a" stroke-width="16" stroke-linecap="round"/>
+    <path d="M90,425 C160,415 190,405 220,400 C260,393 310,410 350,430 C390,448 440,415 480,405 C520,396 570,420 610,425
+      C650,430 660,368 700,360 C740,352 740,398 780,400 C820,402 830,412 870,420 C910,428 950,392 1000,380"
+      fill="none" stroke="#e8c99a" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+  </svg>
+
+  <!-- Camp / start -->
+  <div class="node" style="left:90px;top:425px">
+    <div class="bubble" style="width:46px;height:46px;background:#eafaf0;border:3px solid var(--green)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f8a3c" stroke-width="2.2" stroke-linecap="round"><path d="M4 21V10l8-6 8 6v11H4z"/><path d="M10 21v-6h4v6"/></svg>
+    </div>
+    <div class="tag" style="margin-top:5px">CAMP</div>
+  </div>
+
+  <!-- Level 1 (cleared) -->
+  <div class="node" style="left:220px;top:400px">
+    <div class="bubble" style="width:40px;height:40px;background:#eafaf0;border:3px solid var(--green)">
+      <img src="quest_duration.png" width="24" height="24" alt="">
+    </div>
+    <div class="tag" style="margin-top:4px">1</div>
+  </div>
+
+  <!-- Level 2 (cleared) -->
+  <div class="node" style="left:350px;top:430px">
+    <div class="bubble" style="width:40px;height:40px;background:#eafaf0;border:3px solid var(--green)">
+      <img src="quest_calories.png" width="24" height="24" alt="">
+    </div>
+    <div class="tag" style="margin-top:4px">2</div>
+  </div>
+
+  <!-- Level 3 CURRENT -->
+  <div class="node bob" style="left:480px;top:405px;transform:translate(-50%,-100%)">
+    <div style="width:34px;height:34px;border-radius:50%;background:#fff;border:2.6px solid var(--blue);overflow:hidden;box-shadow:0 8px 14px rgba(20,40,60,.35);margin:0 auto">
+      <img src="mystic_icon.png" width="34" height="34" alt="" style="object-fit:cover">
+    </div>
+    <div style="width:22px;height:6px;border-radius:50%;background:rgba(20,40,25,.28);margin:2px auto 0"></div>
+  </div>
+  <div class="node" style="left:480px;top:405px">
+    <div class="bubble" style="width:52px;height:52px;background:#eaf2ff;border:3.4px solid var(--blue);box-shadow:0 0 0 6px rgba(47,111,209,.18)">
+      <img src="quest_distance.png" width="28" height="28" alt="">
+    </div>
+    <div class="tag" style="margin-top:5px;font-size:10px">3 · RIDGE RUN</div>
+  </div>
+
+  <!-- Bonus chest detour -->
+  <svg width="60" height="60" style="position:absolute;left:598px;top:365px;pointer-events:none"><path d="M0,58 Q30,20 58,4" fill="none" stroke="#c9a86a" stroke-width="2" stroke-dasharray="1 6"/></svg>
+  <div class="node" style="left:660px;top:355px;opacity:.95">
+    <div class="bubble" style="width:36px;height:36px;background:#fff4df;border:3px solid var(--orange)">
+      <img src="reward_treasure_chest.png" width="22" height="22" alt="">
+    </div>
+    <div class="tag" style="margin-top:4px;color:#8a5200">BONUS</div>
+  </div>
+
+  <!-- Level 4 (locked) -->
+  <div class="node" style="left:610px;top:425px;opacity:.55">
+    <div class="bubble" style="width:38px;height:38px;background:#e7ece8;border:2.6px dashed #9fb0a4">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c6b60" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    </div>
+    <div class="tag" style="margin-top:4px;color:var(--mute)">4</div>
+  </div>
+
+  <!-- Level 5 (locked) -->
+  <div class="node" style="left:740px;top:400px;opacity:.5">
+    <div class="bubble" style="width:38px;height:38px;background:#e7ece8;border:2.6px dashed #9fb0a4">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c6b60" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    </div>
+    <div class="tag" style="margin-top:4px;color:var(--mute)">5</div>
+  </div>
+
+  <!-- Level 6 (locked) -->
+  <div class="node" style="left:870px;top:420px;opacity:.45">
+    <div class="bubble" style="width:38px;height:38px;background:#e7ece8;border:2.6px dashed #9fb0a4">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c6b60" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    </div>
+    <div class="tag" style="margin-top:4px;color:var(--mute)">6</div>
+  </div>
+
+  <!-- Castle / boss keep -->
+  <div class="node" style="left:1005px;top:340px;opacity:.85">
+    <div style="width:60px;height:60px;border-radius:16px;background:radial-gradient(closest-side,rgba(192,57,43,.28),transparent);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)"></div>
+    <img src="boss_forest_warden.png" width="58" height="58" alt="" style="object-fit:contain;position:relative;filter:sepia(.15)">
+    <div class="tag" style="margin-top:2px;color:#7a1d18;font-size:10px">FOREST WARDEN</div>
+  </div>
+
+  <!-- HEADER -->
+  <div style="position:absolute;left:0;right:0;top:0;padding:12px 16px;display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.55),transparent)">
+    <button aria-label="Back" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.75);border:1px solid rgba(28,43,34,.15);display:flex;align-items:center;justify-content:center">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1c2b22" stroke-width="2.4" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+    </button>
+    <div style="font-weight:800;font-size:15px;letter-spacing:.02em;text-shadow:0 1px 0 rgba(255,255,255,.5)">FOREST OF ENDURANCE</div>
+    <span class="mono" style="margin-left:auto;font-size:11px;font-weight:700;background:rgba(255,255,255,.75);border-radius:999px;padding:4px 11px;border:1px solid rgba(28,43,34,.15)">LEVEL 3 / 6</span>
+  </div>
+
+  <!-- DOCK -->
+  <div style="position:absolute;left:16px;bottom:16px;width:250px;background:rgba(255,255,255,.92);border-radius:14px;padding:11px 12px;box-shadow:0 14px 28px rgba(20,40,25,.25)">
+    <div style="display:flex;align-items:center;gap:9px">
+      <img src="quest_distance.png" width="26" height="26" alt="">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:11.5px">Ridge Run</div>
+        <div class="mono" style="font-size:9.5px;color:var(--mute)">3.2 km to go</div>
+      </div>
+      <button style="height:30px;padding:0 12px;border-radius:9px;font-weight:800;font-size:10.5px;color:#fff;background:var(--blue)">Play →</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

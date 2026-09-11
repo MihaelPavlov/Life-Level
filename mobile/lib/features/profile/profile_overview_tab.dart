@@ -28,6 +28,10 @@ class ProfileOverviewTab extends StatelessWidget {
           stats: buildProfileStats(profile),
           availablePoints: profile.availableStatPoints,
         ),
+        if (profile.talents?.hasAny ?? false) ...[
+          const SizedBox(height: 20),
+          _TalentBonusSection(talents: profile.talents!),
+        ],
         const SizedBox(height: 20),
         ProfileActivitySummary(profile: profile),
       ],
@@ -492,6 +496,75 @@ class ProfileActivitySummary extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TalentBonusSection extends StatelessWidget {
+  final TalentSummary talents;
+  const _TalentBonusSection({required this.talents});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, size: 15, color: AppColors.purple),
+              const SizedBox(width: 6),
+              Text(
+                'TALENT BONUSES',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${talents.ownedCount}/${talents.catalogCount} owned · ${talents.totalLevels} lv',
+                style:
+                    const TextStyle(fontSize: 10, color: AppColors.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final line in talents.effectLines)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.purple.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                        color: AppColors.purple.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    line,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -37,6 +37,8 @@ import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/titles/titles_ranks_screen.dart';
+import '../../features/season/season_track_screen.dart';
+import '../../features/talents/talents_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
 import '../../features/guild/providers/guild_provider.dart';
 import '../../features/guild/models/guild_models.dart';
@@ -58,7 +60,6 @@ import '../../features/tutorial/widgets/tutorial_overlay.dart';
 import '../../features/tutorial/screens/tutorial_intro_screen.dart';
 import '../../features/tutorial/screens/tutorial_outro_screen.dart';
 
-
 // ── shell ─────────────────────────────────────────────────────────────────────
 class MainShell extends ConsumerStatefulWidget {
   final List<String>? initialRingIds;
@@ -77,6 +78,9 @@ class _MainShellState extends ConsumerState<MainShell>
   bool _titlesOpen = false;
   bool _bossOpen = false;
   bool _guildOpen = false;
+  bool _seasonOpen = false;
+  bool _talentsOpen = false;
+
   /// Carried alongside `_bossOpen` to deep-link the boss overlay straight
   /// into a specific boss's battle view (set when the home portal "Fight →"
   /// CTA fires, cleared when the overlay closes).
@@ -112,18 +116,17 @@ class _MainShellState extends ConsumerState<MainShell>
       .map((id) => kAllNavItems.firstWhere((e) => e.id == id))
       .toList();
 
-  double get _snapStep =>
-      _ringItems.isEmpty ? 60.0 : 360.0 / _ringItems.length;
+  double get _snapStep => _ringItems.isEmpty ? 60.0 : 360.0 / _ringItems.length;
 
   double _ringRotation = 0.0;
-  double _snapFrom     = 0.0;
-  double _snapTarget   = 0.0;
+  double _snapFrom = 0.0;
+  double _snapTarget = 0.0;
   double? _dragStartAngle;
-  double  _rotationAtDragStart = 0.0;
+  double _rotationAtDragStart = 0.0;
   late final AnimationController _snapCtrl;
 
   late final AnimationController _hintCtrl;
-  late final Animation<double>   _hintAnim;
+  late final Animation<double> _hintAnim;
   Timer? _hintTimer;
   Timer? _guildVictoryPollTimer;
   Timer? _guildExpiryPollTimer;
@@ -137,7 +140,8 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<BossOpenIntent> _bossOverlaySub;
   late final StreamSubscription<BossDefeatedInfo> _bossDefeatedSub;
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
-  late final StreamSubscription<NotificationBannerPayload> _notificationBannerSub;
+  late final StreamSubscription<NotificationBannerPayload>
+      _notificationBannerSub;
 
   final _fabKey = GlobalKey();
   final _mapNavKey = GlobalKey();
@@ -209,6 +213,8 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = false;
         });
         WorldZoneRefreshNotifier.notify();
       });
@@ -268,19 +274,23 @@ class _MainShellState extends ConsumerState<MainShell>
     });
     _levelUpSub = LevelUpNotifier.stream.listen((event) async {
       if (!mounted) return;
-      final oldIds = ref.read(inventoryProvider).valueOrNull?.items
-          .map((i) => i.id).toSet() ?? {};
+      final oldIds = ref
+              .read(inventoryProvider)
+              .valueOrNull
+              ?.items
+              .map((i) => i.id)
+              .toSet() ??
+          {};
       showLevelUpScreen(context, event.newLevel, unlocks: event.unlocks);
       ref.invalidate(inventoryProvider);
       try {
         final newInventory = await ref.read(inventoryProvider.future);
-        final newItems = newInventory.items
-            .where((i) => !oldIds.contains(i.id))
-            .toList();
+        final newItems =
+            newInventory.items.where((i) => !oldIds.contains(i.id)).toList();
         for (final item in newItems) {
           ItemObtainedNotifier.notify(item);
         }
-      } catch (_) { /* silent — item popup is non-critical */ }
+      } catch (_) {/* silent — item popup is non-critical */}
     });
     _itemObtainedSub = ItemObtainedNotifier.stream.listen((item) {
       if (mounted) showItemObtainedOverlay(context, item);
@@ -303,6 +313,8 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = false;
         });
         return;
       }
@@ -310,6 +322,8 @@ class _MainShellState extends ConsumerState<MainShell>
         setState(() {
           _tabIndex = navIndex;
           _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = false;
         });
       }
     });
@@ -325,6 +339,8 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
       });
     });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
@@ -362,11 +378,13 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = true;
         _guildOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
         _pendingBossId = intent.bossId;
       });
     });
     _ringIds = sanitizeRingIds(widget.initialRingIds);
-    _navIds  = sanitizeNavIds(widget.initialNavIds);
+    _navIds = sanitizeNavIds(widget.initialNavIds);
 
     // OAuth deep-link handling — runs for both cold starts and warm resumes.
     // Cold start: getInitialLink() delivers the URI that launched the app.
@@ -386,7 +404,9 @@ class _MainShellState extends ConsumerState<MainShell>
       if (!mounted) return;
       AppToast.info(
         context,
-        payload.body.isEmpty ? payload.title : '${payload.title}\n${payload.body}',
+        payload.body.isEmpty
+            ? payload.title
+            : '${payload.title}\n${payload.body}',
         icon: Icons.notifications_active_rounded,
         duration: const Duration(seconds: 4),
       );
@@ -428,8 +448,7 @@ class _MainShellState extends ConsumerState<MainShell>
         vsync: this, duration: const Duration(milliseconds: 420));
     _snapCtrl.addListener(() {
       final t = Curves.easeOutBack.transform(_snapCtrl.value);
-      setState(() =>
-          _ringRotation = _snapFrom + (_snapTarget - _snapFrom) * t);
+      setState(() => _ringRotation = _snapFrom + (_snapTarget - _snapFrom) * t);
     });
 
     _hintCtrl = AnimationController(
@@ -459,9 +478,7 @@ class _MainShellState extends ConsumerState<MainShell>
           tween: Tween(begin: -3.0, end: 0.0)
               .chain(CurveTween(curve: Curves.easeInOutSine)),
           weight: 8),
-      TweenSequenceItem(
-          tween: ConstantTween(0.0),
-          weight: 14),
+      TweenSequenceItem(tween: ConstantTween(0.0), weight: 14),
     ]).animate(_hintCtrl);
   }
 
@@ -492,6 +509,8 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _seasonOpen = false;
+            _talentsOpen = false;
           });
         }
 
@@ -504,6 +523,8 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _seasonOpen = false;
+            _talentsOpen = false;
           });
         }
 
@@ -514,6 +535,8 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = true;
           _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = false;
         });
 
       case 'guild':
@@ -524,7 +547,31 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = navIndex == -1;
+          _seasonOpen = false;
+          _talentsOpen = false;
           if (navIndex != -1) _tabIndex = navIndex;
+        });
+
+      case 'season':
+        setState(() {
+          _radialOpen = false;
+          _worldOpen = false;
+          _titlesOpen = false;
+          _bossOpen = false;
+          _guildOpen = false;
+          _seasonOpen = true;
+          _talentsOpen = false;
+        });
+
+      case 'talents':
+        setState(() {
+          _radialOpen = false;
+          _worldOpen = false;
+          _titlesOpen = false;
+          _bossOpen = false;
+          _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = true;
         });
 
       case 'map':
@@ -538,6 +585,8 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = false;
         });
 
       case 'profile':
@@ -549,6 +598,8 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _seasonOpen = false;
+            _talentsOpen = false;
           });
         }
     }
@@ -557,7 +608,10 @@ class _MainShellState extends ConsumerState<MainShell>
   void _handleStravaCallback(String code) {
     if (!mounted) return;
     AppToast.info(context, 'Connecting to Strava...', icon: Icons.sync_rounded);
-    ref.read(integrationSyncProvider.notifier).connectStrava(code).then((error) async {
+    ref
+        .read(integrationSyncProvider.notifier)
+        .connectStrava(code)
+        .then((error) async {
       _oauthCallbackHandled = false;
       await ref.read(integrationSyncProvider.notifier).refresh();
       if (!mounted) return;
@@ -566,7 +620,8 @@ class _MainShellState extends ConsumerState<MainShell>
           ? 'Strava connected!'
           : 'Failed: ${error ?? 'unknown error'}';
       if (connected) {
-        AppToast.success(context, message, duration: const Duration(seconds: 8));
+        AppToast.success(context, message,
+            duration: const Duration(seconds: 8));
       } else {
         AppToast.error(context, message, duration: const Duration(seconds: 8));
       }
@@ -668,7 +723,8 @@ class _MainShellState extends ConsumerState<MainShell>
     if (!mounted || _checkingPendingGuildVictories) return;
     _checkingPendingGuildVictories = true;
     try {
-      final pending = await ref.read(guildServiceProvider).pendingRaidVictories();
+      final pending =
+          await ref.read(guildServiceProvider).pendingRaidVictories();
       for (final info in pending) {
         if (!mounted) return;
         await _showAndAcknowledgeGuildRaidVictory(info);
@@ -700,7 +756,9 @@ class _MainShellState extends ConsumerState<MainShell>
       _guildVictoryShownThisSession.add(key);
       if (!mounted || info.guildRaidId.isEmpty) return;
       try {
-        await ref.read(guildServiceProvider).acknowledgeRaidVictory(info.guildRaidId);
+        await ref
+            .read(guildServiceProvider)
+            .acknowledgeRaidVictory(info.guildRaidId);
       } catch (_) {
         // If acknowledgement fails, the backend can offer the modal again on a
         // later sign-in. The session guard still prevents duplicate popups now.
@@ -714,7 +772,8 @@ class _MainShellState extends ConsumerState<MainShell>
     if (!mounted || _checkingPendingGuildExpiries) return;
     _checkingPendingGuildExpiries = true;
     try {
-      final pending = await ref.read(guildServiceProvider).pendingRaidExpiries();
+      final pending =
+          await ref.read(guildServiceProvider).pendingRaidExpiries();
       for (final info in pending) {
         if (!mounted) return;
         await _showAndAcknowledgeGuildRaidExpiry(info);
@@ -746,7 +805,9 @@ class _MainShellState extends ConsumerState<MainShell>
       _guildExpiryShownThisSession.add(key);
       if (!mounted || info.guildRaidId.isEmpty) return;
       try {
-        await ref.read(guildServiceProvider).acknowledgeRaidExpiry(info.guildRaidId);
+        await ref
+            .read(guildServiceProvider)
+            .acknowledgeRaidExpiry(info.guildRaidId);
       } catch (_) {
         // Keep the session guard; backend pending state can retry after restart.
       }
@@ -808,7 +869,7 @@ class _MainShellState extends ConsumerState<MainShell>
           final sanitizedNavIds = sanitizeNavIds(newNavIds);
           setState(() {
             _ringIds = sanitizedRingIds;
-            _navIds  = sanitizedNavIds;
+            _navIds = sanitizedNavIds;
             if (_tabIndex >= _navIds.length) _tabIndex = 0;
           });
           _authService.saveRingConfig(sanitizedRingIds);
@@ -822,21 +883,21 @@ class _MainShellState extends ConsumerState<MainShell>
     _hintCtrl.stop();
     _hintCtrl.reset();
     _snapCtrl.stop();
-    _dragStartAngle      = _angleFrom(globalPos, _fabGlobalCenter());
+    _dragStartAngle = _angleFrom(globalPos, _fabGlobalCenter());
     _rotationAtDragStart = _ringRotation;
   }
 
   void _onSpinUpdate(Offset globalPos) {
     if (_dragStartAngle == null) return;
     double delta = _angleFrom(globalPos, _fabGlobalCenter()) - _dragStartAngle!;
-    if (delta >  180) delta -= 360;
+    if (delta > 180) delta -= 360;
     if (delta < -180) delta += 360;
     setState(() => _ringRotation = _rotationAtDragStart + delta);
   }
 
   void _onSpinEnd() {
     _dragStartAngle = null;
-    _snapFrom   = _ringRotation;
+    _snapFrom = _ringRotation;
     _snapTarget = (_ringRotation / _snapStep).round() * _snapStep;
     if ((_snapTarget - _snapFrom).abs() < 0.5) return;
     _snapCtrl
@@ -846,19 +907,31 @@ class _MainShellState extends ConsumerState<MainShell>
 
   Widget _screenFor(String id) {
     switch (id) {
-      case 'home':    return const HomeScreen();
-      case 'quests':  return const QuestsScreen();
+      case 'home':
+        return const HomeScreen();
+      case 'quests':
+        return const QuestsScreen();
       // 'world' is never rendered inside the IndexedStack — tapping the nav
       // tab opens the shell overlay instead. This placeholder keeps index
       // alignment with _navIds.
-      case 'world':   return const SizedBox.shrink();
-      case 'profile': return const ProfileScreen();
-      case 'titles':  return const TitlesRanksScreen();
-      case 'boss':    return const BossScreen();
-      case 'guild':   return const GuildScreen();
-      default:        return Center(
-        child: Text(id, style: const TextStyle(color: Colors.white38)),
-      );
+      case 'world':
+        return const SizedBox.shrink();
+      case 'profile':
+        return const ProfileScreen();
+      case 'titles':
+        return const TitlesRanksScreen();
+      case 'season':
+        return const SeasonTrackScreen();
+      case 'talents':
+        return const TalentsScreen();
+      case 'boss':
+        return const BossScreen();
+      case 'guild':
+        return const GuildScreen();
+      default:
+        return Center(
+          child: Text(id, style: const TextStyle(color: Colors.white38)),
+        );
     }
   }
 
@@ -902,8 +975,8 @@ class _MainShellState extends ConsumerState<MainShell>
     return Scaffold(
       backgroundColor: AppColors.shellBackground,
       body: LayoutBuilder(builder: (_, constraints) {
-        final w     = constraints.maxWidth;
-        final h     = constraints.maxHeight;
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
         final fabCx = w / 2;
         final fabCy = h - kNavBarH;
 
@@ -972,6 +1045,24 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
+              // ── season overlay ─────────────────────────────────────────
+              if (_seasonOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: SeasonTrackScreen(
+                    onClose: () => setState(() => _seasonOpen = false),
+                  ),
+                ),
+
+              // ── talents overlay ────────────────────────────────────────
+              if (_talentsOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: TalentsScreen(
+                    onClose: () => setState(() => _talentsOpen = false),
+                  ),
+                ),
+
               // ── backdrop ────────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
@@ -982,8 +1073,8 @@ class _MainShellState extends ConsumerState<MainShell>
                     return GestureDetector(
                       onTap: _closeRadial,
                       child: Container(
-                        color: Color.lerp(Colors.transparent,
-                            kRadialScrim, _openCtrl.value),
+                        color: Color.lerp(
+                            Colors.transparent, kRadialScrim, _openCtrl.value),
                       ),
                     );
                   },
@@ -1009,7 +1100,9 @@ class _MainShellState extends ConsumerState<MainShell>
 
               // ── nav bar ──────────────────────────────────────────────────
               Positioned(
-                bottom: 0, left: 0, right: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
                 child: ShellNavBar(
                   currentIndex: _tabIndex.clamp(0, _navItems.length - 1),
                   navTabs: _navItems,
@@ -1030,6 +1123,8 @@ class _MainShellState extends ConsumerState<MainShell>
                         _titlesOpen = false;
                         _bossOpen = false;
                         _guildOpen = false;
+                        _seasonOpen = false;
+                        _talentsOpen = false;
                       });
                       return;
                     }
@@ -1039,6 +1134,8 @@ class _MainShellState extends ConsumerState<MainShell>
                       _titlesOpen = false;
                       _bossOpen = false;
                       _guildOpen = false;
+                      _seasonOpen = false;
+                      _talentsOpen = false;
                     });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
@@ -1087,12 +1184,36 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
       });
       return;
     }
     if (id == 'titles') {
       setState(() {
         _titlesOpen = true;
+        _guildOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
+      });
+      return;
+    }
+    if (id == 'season') {
+      setState(() {
+        _seasonOpen = true;
+        _talentsOpen = false;
+        _titlesOpen = false;
+        _bossOpen = false;
+        _guildOpen = false;
+      });
+      return;
+    }
+    if (id == 'talents') {
+      setState(() {
+        _talentsOpen = true;
+        _seasonOpen = false;
+        _titlesOpen = false;
+        _bossOpen = false;
         _guildOpen = false;
       });
       return;
@@ -1101,6 +1222,8 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _bossOpen = true;
         _guildOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
       });
       return;
     }
@@ -1110,6 +1233,8 @@ class _MainShellState extends ConsumerState<MainShell>
         if (navIndex != -1) {
           _tabIndex = navIndex;
           _guildOpen = false;
+          _seasonOpen = false;
+          _talentsOpen = false;
         } else {
           _worldOpen = false;
           _titlesOpen = false;
@@ -1125,6 +1250,8 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _tabIndex = navIndex;
         _guildOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
       });
       return;
     }
@@ -1138,22 +1265,22 @@ class _MainShellState extends ConsumerState<MainShell>
     final items = _ringItems;
     if (i >= items.length || i >= angles.length) return const SizedBox.shrink();
     final actualAngle = (angles[i] + _ringRotation + _hintAnim.value) % 360;
-    final rad  = actualAngle * pi / 180;
+    final rad = actualAngle * pi / 180;
     final left = fabCx + cos(rad) * kRadius - kItemSize / 2;
-    final top  = fabCy - sin(rad) * kRadius - kItemSize / 2;
+    final top = fabCy - sin(rad) * kRadius - kItemSize / 2;
 
     return Positioned(
       left: left,
-      top:  top,
+      top: top,
       child: Transform.scale(
         scale: _openAnim.value,
         child: Opacity(
           opacity: _openAnim.value.clamp(0.0, 1.0),
           child: GestureDetector(
-            onTap:       () => _onRingItemTap(items[i].id),
-            onPanStart:  (d) => _onSpinStart(d.globalPosition),
+            onTap: () => _onRingItemTap(items[i].id),
+            onPanStart: (d) => _onSpinStart(d.globalPosition),
             onPanUpdate: (d) => _onSpinUpdate(d.globalPosition),
-            onPanEnd:    (_) => _onSpinEnd(),
+            onPanEnd: (_) => _onSpinEnd(),
             onPanCancel: _onSpinEnd,
             child: RingItemTile(item: items[i]),
           ),

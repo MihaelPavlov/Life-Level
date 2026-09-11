@@ -1,0 +1,422 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950; --slate:#6b7d90;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:8px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .h2{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-top:18px}
+    .note{font-size:9px;line-height:1.5;color:var(--dim)}
+    .chip{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;border:1px solid var(--line);
+      border-radius:999px;padding:3px 8px;color:var(--dim)}
+
+    .card{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;margin-top:10px}
+    .stage{position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
+    .ch{position:relative;z-index:4;width:auto}
+    .floor{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:2;border-radius:50%;filter:blur(2px)}
+
+    .cap{padding:9px 12px 11px;border-top:1px solid var(--line)}
+    .cap .hd{display:flex;align-items:center;gap:8px}
+    .cap .rk{font-size:11px;font-weight:900}
+    .cap .tn{font-size:8px;font-weight:800;letter-spacing:.1em;color:var(--mute)}
+    .cap .st{margin-left:auto;font-size:11px;letter-spacing:2px}
+    .cap .l1{font-size:9px;color:var(--dim);line-height:1.45;margin-top:4px}
+    .cap .l2{font-size:8.5px;color:var(--mute);line-height:1.4;margin-top:3px}
+    .cap .l2 b{color:var(--slate);font-weight:800}
+    .keys{display:flex;flex-wrap:wrap;gap:5px 9px;margin-top:7px;padding-top:7px;border-top:1px dashed var(--line)}
+    .keys span{font-size:7.5px;color:var(--dim);line-height:1.3}
+    .keys b{color:var(--text);font-weight:800}
+
+    .cx{position:absolute;z-index:8;width:15px;height:15px;border-radius:50%;background:rgba(3,6,12,.9);
+      border:1px solid var(--text);font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;color:var(--text)}
+
+    .aura{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:1;border-radius:50%;filter:blur(4px)}
+    .ring2{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:5;border-radius:50%;
+      border:1.5px solid rgba(255,255,255,.15);pointer-events:none}
+    .pt{position:absolute;bottom:12px;width:4px;height:4px;border-radius:50%;z-index:3}
+    .wing{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);z-index:1}
+    .crown{position:absolute;left:50%;z-index:6;transform:translateX(-50%)}
+    .dais{position:absolute;left:50%;bottom:0;transform:translateX(-50%);z-index:1}
+
+    /* generic spec table: label col + N cols */
+    .tbl{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:9px}
+    .tbl>div{padding:6px 6px;font-size:7.5px;line-height:1.3;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .tbl .h{background:var(--panel-2);font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+    .tbl .rl{background:var(--panel-2);font-weight:800;color:var(--dim)}
+    .tbl .on{color:var(--text)} .tbl .off{color:var(--mute)}
+    .mx{grid-template-columns:70px repeat(5,1fr)}
+    .mx>div:nth-child(6n){border-right:0}
+    .am{grid-template-columns:1.3fr .7fr .6fr .8fr .8fr}
+    .am>div:nth-child(5n){border-right:0}
+    .mo{grid-template-columns:1fr .9fr .5fr .8fr .4fr}
+    .mo>div:nth-child(5n){border-right:0}
+
+    .code{font-family:"IBM Plex Mono",monospace;font-size:8px;line-height:1.55;color:var(--dim);
+      background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:10px 11px;margin-top:9px;white-space:pre;overflow-x:auto}
+    .code b{color:var(--blue);font-weight:600}
+    .code i{color:var(--orange);font-style:normal}
+
+    @media (prefers-reduced-motion:no-preference){
+      .spin{animation:spin 6s linear infinite}
+      @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+      .spin-r{animation:spinr 9s linear infinite}
+      @keyframes spinr{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+      .pt{animation:rise 2.6s ease-in infinite}
+      @keyframes rise{0%{transform:translateY(0);opacity:0}18%{opacity:1}100%{transform:translateY(-108px);opacity:0}}
+      .breathe{animation:br 4.4s ease-in-out infinite}
+      @keyframes br{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:.9;transform:translate(-50%,-50%) scale(1.06)}}
+      .frm{animation:frm 3s ease-in-out infinite}
+      @keyframes frm{0%,100%{box-shadow:inset 0 0 0 2px rgba(163,113,247,.35),0 0 18px rgba(163,113,247,.18)}
+        50%{box-shadow:inset 0 0 0 2px rgba(163,113,247,.75),0 0 30px rgba(163,113,247,.4)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:3460px;position:relative;padding:14px 13px 18px;
+     background-color:var(--bg);
+     background-image:
+       radial-gradient(680px 320px at 50% -12%,rgba(163,113,247,.10),transparent 64%),
+       linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+       linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+     background-size:auto,34px 34px,34px 34px">
+
+  <div class="lab" style="color:var(--purple)">Home v4 · hero render — ascension spec</div>
+  <p class="note" style="margin:6px 0 10px">
+    One base drawing per class — never rebuilt from gear. The <b style="color:var(--text)">same hero ascends with
+    rank</b> (Novice → Legend, the ladder that already exists). Each rank switches on more FX/prop <b style="color:var(--text)">layers</b>;
+    <b style="color:var(--text)">★ sub-steps</b> (XP within the rank) scale their intensity. Below: exploded tier cards,
+    the ★ ramp, the 8-layer matrix, the asset manifest, motion spec, and the data model.
+  </p>
+
+  <!-- rank track -->
+  <div style="display:flex;align-items:center;margin:2px 4px 0">
+    <span style="width:9px;height:9px;border-radius:50%;background:var(--slate)"></span>
+    <span style="flex:1;height:2px;background:linear-gradient(90deg,var(--slate),var(--blue))"></span>
+    <span style="width:9px;height:9px;border-radius:50%;background:var(--blue)"></span>
+    <span style="flex:1;height:2px;background:linear-gradient(90deg,var(--blue),var(--orange))"></span>
+    <span style="width:9px;height:9px;border-radius:50%;background:var(--orange)"></span>
+    <span style="flex:1;height:2px;background:linear-gradient(90deg,var(--orange),#ff8f6b)"></span>
+    <span style="width:9px;height:9px;border-radius:50%;background:#ff8f6b"></span>
+    <span style="flex:1;height:2px;background:linear-gradient(90deg,#ff8f6b,var(--purple))"></span>
+    <span style="width:11px;height:11px;border-radius:50%;background:var(--purple);box-shadow:0 0 8px var(--purple)"></span>
+  </div>
+
+  <!-- ============ NOVICE ============ -->
+  <div class="card">
+    <div class="stage" style="height:150px;background:radial-gradient(170px 110px at 50% 116%,rgba(107,125,144,.10),transparent 70%),#090f16">
+      <div class="floor" style="width:88px;height:12px;background:radial-gradient(closest-side,rgba(107,125,144,.38),transparent)"></div>
+      <span class="pt" style="left:44%;background:#7d8fa1;animation-delay:.4s"></span>
+      <img class="ch" src="hero_render.png" alt="Novice" style="height:104px;opacity:.8;filter:grayscale(.42) brightness(.8) contrast(.95)">
+    </div>
+    <div class="cap">
+      <div class="hd"><span class="rk" style="color:var(--slate)">Novice</span><span class="tn">Tier 1 · Lv 1–9</span><span class="st" style="color:var(--slate)">★★☆</span></div>
+      <div class="l1">Plain render, muted, small. Faint floor shadow, a stray dust mote.</div>
+      <div class="l2"><b>★ ramp:</b> shadow opacity 0→40%, 0→2 motes.</div>
+    </div>
+  </div>
+
+  <!-- ============ WARRIOR ============ -->
+  <div class="card">
+    <div class="stage" style="height:170px;background:radial-gradient(200px 150px at 50% 42%,rgba(79,158,255,.14),transparent 72%),radial-gradient(220px 110px at 50% 118%,rgba(79,158,255,.16),transparent 70%),#080e15">
+      <svg class="dais spin" width="150" height="46" viewBox="0 0 150 46" style="bottom:4px;opacity:.5">
+        <ellipse cx="75" cy="23" rx="62" ry="17" fill="none" stroke="#4f9eff" stroke-width="1.5" stroke-dasharray="4 6"/>
+        <ellipse cx="75" cy="23" rx="42" ry="11" fill="none" stroke="#4f9eff" stroke-width="1" stroke-dasharray="2 5"/>
+      </svg>
+      <div class="floor" style="width:108px;height:14px;background:radial-gradient(closest-side,rgba(79,158,255,.45),transparent)"></div>
+      <span class="pt" style="left:38%;background:var(--blue);animation-delay:0s"></span>
+      <span class="pt" style="left:58%;background:var(--blue);animation-delay:1.1s"></span>
+      <span class="pt" style="left:47%;background:#9dd0ff;animation-delay:1.9s"></span>
+      <img class="ch" src="hero_render.png" alt="Warrior" style="height:132px;filter:drop-shadow(0 0 7px rgba(79,158,255,.6)) drop-shadow(0 2px 6px rgba(0,0,0,.5))">
+    </div>
+    <div class="cap">
+      <div class="hd"><span class="rk" style="color:var(--blue)">Warrior</span><span class="tn">Tier 2 · Lv 10–24</span><span class="st" style="color:var(--blue)">★★☆</span></div>
+      <div class="l1">Blue rim light, rotating dashed floor sigil, 3 rising motes.</div>
+      <div class="l2"><b>★ ramp:</b> sigil spin 2×, motes 3→6, rim glow +30%.</div>
+    </div>
+  </div>
+
+  <!-- ============ VETERAN (exploded) ============ -->
+  <div class="card">
+    <div class="stage" style="height:196px;background:radial-gradient(210px 170px at 50% 44%,rgba(245,166,35,.16),transparent 72%),radial-gradient(240px 120px at 50% 118%,rgba(245,166,35,.18),transparent 70%),#0b0a07">
+      <div class="aura spin" style="width:130px;height:130px;background:conic-gradient(from 0deg,rgba(245,166,35,0),rgba(245,166,35,.55) 38%,rgba(255,220,150,.14) 60%,rgba(245,166,35,0) 82%)"></div>
+      <svg class="wing" width="320" height="150" viewBox="0 0 320 150" style="top:24%;opacity:.95">
+        <g fill="none" stroke="#ffcf7a" stroke-width="4.5" stroke-linecap="round">
+          <path d="M150 84 L92 40 M150 92 L74 68 M150 100 L88 110"/>
+          <path d="M170 84 L228 40 M170 92 L246 68 M170 100 L232 110"/>
+        </g>
+      </svg>
+      <div class="floor" style="width:120px;height:15px;background:radial-gradient(closest-side,rgba(245,166,35,.5),transparent)"></div>
+      <span class="pt" style="left:34%;background:var(--orange);animation-delay:0s"></span>
+      <span class="pt" style="left:50%;background:#ffd48a;animation-delay:.8s"></span>
+      <span class="pt" style="left:64%;background:var(--orange);animation-delay:1.5s"></span>
+      <span class="pt" style="left:44%;background:var(--orange);animation-delay:2.1s"></span>
+      <img class="ch" src="hero_render.png" alt="Veteran" style="height:150px;filter:drop-shadow(0 0 9px rgba(245,166,35,.65)) drop-shadow(0 3px 7px rgba(0,0,0,.5)) saturate(1.1)">
+      <div style="position:absolute;z-index:5;right:90px;bottom:12px;width:6px;height:98px;border-radius:5px;transform:rotate(7deg);
+        background:linear-gradient(180deg,#fff,#ffd27a 46%,rgba(245,166,35,.35));box-shadow:0 0 14px 3px rgba(245,166,35,.7)"></div>
+      <div style="position:absolute;z-index:5;right:79px;bottom:70px;width:28px;height:6px;border-radius:4px;transform:rotate(7deg);
+        background:linear-gradient(90deg,rgba(245,166,35,.4),#ffe6b0,rgba(245,166,35,.4));box-shadow:0 0 10px 2px rgba(245,166,35,.55)"></div>
+      <span class="cx" style="left:20%;top:16%">1</span>
+      <span class="cx" style="left:41%;top:40%">2</span>
+      <span class="cx" style="left:74%;top:52%">3</span>
+      <span class="cx" style="left:50%;bottom:12%">4</span>
+      <span class="cx" style="left:63%;top:56%">5</span>
+    </div>
+    <div class="cap">
+      <div class="hd"><span class="rk" style="color:var(--orange)">Veteran</span><span class="tn">Tier 3 · Lv 25–44</span><span class="st" style="color:var(--orange)">★★☆</span></div>
+      <div class="l1">Conic aura, energy wing-shards, a planted glowing blade, embers.</div>
+      <div class="l2"><b>★ ramp:</b> aura opacity + ember rate up, shards gain a 2nd row.</div>
+      <div class="keys">
+        <span><b>① back-prop</b> wing_shard.svg · stroke=tier</span>
+        <span><b>② aura</b> aura_conic.png · hue</span>
+        <span><b>③ hand</b> blade_glow.png · tint</span>
+        <span><b>④ ground</b> glow_disc.png · tint</span>
+        <span><b>⑤ particles</b> embers · CustomPainter</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHAMPION ============ -->
+  <div class="card">
+    <div class="stage" style="height:210px;background:radial-gradient(220px 180px at 50% 44%,rgba(255,143,107,.18),transparent 70%),radial-gradient(260px 130px at 50% 120%,rgba(163,113,247,.16),transparent 70%),#0b0810">
+      <svg class="wing" width="320" height="160" viewBox="0 0 320 160" style="top:30%;opacity:.85">
+        <defs><linearGradient id="wc" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffd0b0"/><stop offset="1" stop-color="#ff8f6b"/></linearGradient></defs>
+        <g fill="url(#wc)" opacity="0.9">
+          <path d="M160 92 C124 52 78 42 46 48 C70 60 72 78 58 90 C82 82 88 98 80 110 C104 100 132 98 160 96 Z"/>
+          <path d="M160 92 C196 52 242 42 274 48 C250 60 248 78 262 90 C238 82 232 98 240 110 C216 100 188 98 160 96 Z"/>
+        </g>
+      </svg>
+      <div class="ring2 spin" style="width:150px;height:52px;top:46%;border-color:rgba(255,143,107,.45)"></div>
+      <svg class="crown" width="42" height="27" viewBox="0 0 42 27" style="top:12px">
+        <path d="M4 23 L2 7 L13 14 L21 3 L29 14 L40 7 L38 23 Z" fill="#ffd9a0" stroke="#f5a623" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+      <svg class="dais" width="160" height="46" viewBox="0 0 160 46" style="bottom:3px;opacity:.6">
+        <ellipse cx="80" cy="26" rx="66" ry="17" fill="rgba(255,143,107,.10)" stroke="#ff8f6b" stroke-width="1.4"/>
+        <ellipse cx="80" cy="26" rx="46" ry="12" fill="none" stroke="#a371f7" stroke-width="1" stroke-dasharray="3 5"/>
+      </svg>
+      <div class="floor" style="width:132px;height:16px;background:radial-gradient(closest-side,rgba(255,143,107,.5),transparent)"></div>
+      <span class="pt" style="left:32%;background:#ff8f6b;animation-delay:0s"></span>
+      <span class="pt" style="left:48%;background:#ffd48a;animation-delay:.7s"></span>
+      <span class="pt" style="left:62%;background:#ff8f6b;animation-delay:1.4s"></span>
+      <span class="pt" style="left:44%;background:var(--purple);animation-delay:2s"></span>
+      <img class="ch" src="hero_render.png" alt="Champion" style="height:162px;filter:drop-shadow(0 0 10px rgba(255,143,107,.65)) drop-shadow(0 3px 8px rgba(0,0,0,.5)) saturate(1.12)">
+    </div>
+    <div class="cap">
+      <div class="hd"><span class="rk" style="color:#ff8f6b">Champion</span><span class="tn">Tier 4 · Lv 45–69</span><span class="st" style="color:#ff8f6b">★★☆</span></div>
+      <div class="l1">Full wings, floating crown, one orbit ring, a runic dais.</div>
+      <div class="l2"><b>★ ramp:</b> wing span + crown gems, 1→2 orbit rings, dais brighter.</div>
+    </div>
+  </div>
+
+  <!-- ============ LEGEND (exploded) ============ -->
+  <div class="card" style="border-color:#3a2f63">
+    <div class="stage frm" style="height:236px;background:
+        radial-gradient(240px 200px at 50% 44%,rgba(163,113,247,.24),transparent 70%),
+        radial-gradient(300px 150px at 50% 120%,rgba(79,158,255,.20),transparent 70%),
+        conic-gradient(from 0deg at 50% 46%,rgba(163,113,247,.14),rgba(79,158,255,.05),rgba(245,166,35,.12),rgba(163,113,247,.14)),
+        #0a0813">
+      <div class="aura spin-r breathe" style="width:250px;height:250px;top:44%;background:conic-gradient(from 0deg,rgba(255,255,255,.10) 0 3deg,transparent 3deg 30deg,rgba(255,255,255,.08) 30deg 33deg,transparent 33deg 60deg,rgba(255,255,255,.10) 60deg 63deg,transparent 63deg 90deg,rgba(255,255,255,.08) 90deg 93deg,transparent 93deg 120deg,rgba(255,255,255,.10) 120deg 123deg,transparent 123deg 180deg,rgba(255,255,255,.08) 180deg 183deg,transparent 183deg 240deg,rgba(255,255,255,.10) 240deg 243deg,transparent 243deg 300deg,rgba(255,255,255,.08) 300deg 303deg,transparent 303deg 360deg)"></div>
+      <svg class="wing" width="330" height="176" viewBox="0 0 330 176" style="top:32%;opacity:.92">
+        <defs><linearGradient id="wl" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c9b3ff"/><stop offset="0.5" stop-color="#a371f7"/><stop offset="1" stop-color="#5f8bff"/></linearGradient></defs>
+        <g fill="url(#wl)" opacity="0.92">
+          <path d="M165 94 C123 40 66 28 30 34 C58 46 60 70 44 82 C74 74 78 92 66 104 C92 96 100 110 96 122 C120 106 143 104 165 100 Z"/>
+          <path d="M165 94 C207 40 264 28 300 34 C272 46 270 70 286 82 C256 74 252 92 264 104 C238 96 230 110 234 122 C210 106 187 104 165 100 Z"/>
+        </g>
+        <g fill="none" stroke="#e6ddff" stroke-width="1" opacity="0.5">
+          <path d="M165 98 C123 52 76 40 38 44 M165 98 C207 52 254 40 292 44"/>
+        </g>
+      </svg>
+      <div class="ring2 spin" style="width:174px;height:60px;top:46%;border-color:rgba(163,113,247,.5)"></div>
+      <div class="ring2 spin-r" style="width:132px;height:154px;top:44%;border-color:rgba(79,158,255,.4)"></div>
+      <div style="position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:5;width:58px;height:22px;border-radius:50%;border:2px solid rgba(245,216,138,.7);box-shadow:0 0 14px rgba(245,216,138,.5)"></div>
+      <svg class="crown" width="48" height="31" viewBox="0 0 48 31" style="top:2px">
+        <path d="M5 27 L2 8 L15 16 L24 3 L33 16 L46 8 L43 27 Z" fill="#f5d98a" stroke="#f5a623" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="24" cy="3" r="2.6" fill="#fff"/>
+      </svg>
+      <svg class="dais" width="188" height="56" viewBox="0 0 188 56" style="bottom:2px">
+        <ellipse cx="94" cy="32" rx="82" ry="21" fill="rgba(163,113,247,.14)" stroke="#a371f7" stroke-width="1.6"/>
+        <ellipse cx="94" cy="32" rx="60" ry="15" fill="none" stroke="#5f8bff" stroke-width="1" stroke-dasharray="3 5"/>
+        <ellipse cx="94" cy="32" rx="40" ry="10" fill="none" stroke="#f5d98a" stroke-width="1" opacity="0.6"/>
+      </svg>
+      <div class="floor" style="width:152px;height:18px;background:radial-gradient(closest-side,rgba(163,113,247,.55),transparent)"></div>
+      <span class="pt" style="left:30%;background:var(--purple);animation-delay:0s"></span>
+      <span class="pt" style="left:42%;background:#9dd0ff;animation-delay:.6s"></span>
+      <span class="pt" style="left:54%;background:var(--purple);animation-delay:1.2s"></span>
+      <span class="pt" style="left:66%;background:#ffd48a;animation-delay:1.7s"></span>
+      <span class="pt" style="left:48%;background:#fff;animation-delay:2.3s"></span>
+      <img class="ch" src="hero_render.png" alt="Legend" style="height:178px;filter:drop-shadow(0 0 12px rgba(163,113,247,.75)) drop-shadow(0 0 22px rgba(79,158,255,.4)) drop-shadow(0 4px 8px rgba(0,0,0,.5)) saturate(1.15) contrast(1.04)">
+      <span class="cx" style="left:6%;top:6%">1</span>
+      <span class="cx" style="left:50%;top:2%">2</span>
+      <span class="cx" style="left:16%;top:34%">3</span>
+      <span class="cx" style="left:40%;top:44%">4</span>
+      <span class="cx" style="left:78%;top:40%">5</span>
+      <span class="cx" style="left:50%;bottom:10%">6</span>
+      <span class="cx" style="left:66%;top:60%">7</span>
+      <span class="cx" style="left:86%;top:12%">8</span>
+    </div>
+    <div class="cap">
+      <div class="hd"><span class="rk" style="color:var(--purple)">Legend</span><span class="tn">Tier 5 · Lv 70+</span><span class="st" style="color:var(--purple)">★★★</span></div>
+      <div class="l1">Full wings, crown + halo, twin orbit rings, tiered dais, ray burst, live card frame.</div>
+      <div class="l2"><b>★ ramp:</b> halo brightness, ray count, frame shimmer speed — maxes at ★★★.</div>
+      <div class="keys">
+        <span><b>① frame</b> frame_glow shader</span>
+        <span><b>② head</b> crown.svg + halo_ring.svg</span>
+        <span><b>③ back-prop</b> wings_large.png</span>
+        <span><b>④ aura</b> aura_conic + halo</span>
+        <span><b>⑤ aura</b> orbit_ring.svg ×2</span>
+        <span><b>⑥ ground</b> dais_tiered.svg</span>
+        <span><b>⑦ particles</b> starfield</span>
+        <span><b>⑧ bg</b> prism + ray_burst</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STAR SUB-STEP RAMP ============ -->
+  <div class="h2">★ sub-steps — one rank keeps evolving (Veteran shown)</div>
+  <p class="note" style="margin:5px 0 0">Stars = <span class="mono">ceil(xpIntoRank / rankSpan × 3)</span>. They scale the layers already on for that rank — no new props.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:9px">
+    <div class="card" style="margin:0">
+      <div class="stage" style="height:132px;background:radial-gradient(120px 100px at 50% 44%,rgba(245,166,35,.10),transparent 72%),#0b0a07">
+        <div class="aura spin" style="width:86px;height:86px;background:conic-gradient(from 0deg,rgba(245,166,35,0),rgba(245,166,35,.3) 40%,rgba(245,166,35,0) 82%)"></div>
+        <div class="floor" style="width:78px;height:10px;background:radial-gradient(closest-side,rgba(245,166,35,.32),transparent)"></div>
+        <span class="pt" style="left:44%;background:var(--orange);animation-delay:.3s"></span>
+        <span class="pt" style="left:56%;background:var(--orange);animation-delay:1.4s"></span>
+        <img class="ch" src="hero_render.png" alt="" style="height:104px;filter:drop-shadow(0 0 5px rgba(245,166,35,.4)) saturate(1.05)">
+      </div>
+      <div class="cap" style="padding:7px 9px 9px"><div class="hd"><span class="st" style="margin:0;color:var(--orange)">★☆☆</span></div><div class="l2" style="margin-top:4px">aura 40% · 2 motes · 1 shard row</div></div>
+    </div>
+    <div class="card" style="margin:0">
+      <div class="stage" style="height:132px;background:radial-gradient(140px 110px at 50% 44%,rgba(245,166,35,.15),transparent 72%),#0b0a07">
+        <div class="aura spin" style="width:100px;height:100px;background:conic-gradient(from 0deg,rgba(245,166,35,0),rgba(245,166,35,.5) 40%,rgba(245,166,35,0) 82%)"></div>
+        <div class="floor" style="width:90px;height:12px;background:radial-gradient(closest-side,rgba(245,166,35,.42),transparent)"></div>
+        <span class="pt" style="left:36%;background:var(--orange);animation-delay:0s"></span>
+        <span class="pt" style="left:50%;background:#ffd48a;animation-delay:.9s"></span>
+        <span class="pt" style="left:62%;background:var(--orange);animation-delay:1.6s"></span>
+        <span class="pt" style="left:46%;background:var(--orange);animation-delay:2.2s"></span>
+        <img class="ch" src="hero_render.png" alt="" style="height:104px;filter:drop-shadow(0 0 7px rgba(245,166,35,.55)) saturate(1.08)">
+      </div>
+      <div class="cap" style="padding:7px 9px 9px"><div class="hd"><span class="st" style="margin:0;color:var(--orange)">★★☆</span></div><div class="l2" style="margin-top:4px">aura 65% · 4 motes · 1 shard row</div></div>
+    </div>
+    <div class="card" style="margin:0">
+      <div class="stage" style="height:132px;background:radial-gradient(150px 120px at 50% 44%,rgba(245,166,35,.2),transparent 70%),#0b0a07">
+        <div class="aura spin" style="width:116px;height:116px;background:conic-gradient(from 0deg,rgba(245,166,35,0),rgba(245,166,35,.7) 38%,rgba(255,220,150,.18) 60%,rgba(245,166,35,0) 82%)"></div>
+        <div class="floor" style="width:102px;height:13px;background:radial-gradient(closest-side,rgba(245,166,35,.55),transparent)"></div>
+        <span class="pt" style="left:30%;background:var(--orange);animation-delay:0s"></span>
+        <span class="pt" style="left:40%;background:#ffd48a;animation-delay:.5s"></span>
+        <span class="pt" style="left:52%;background:var(--orange);animation-delay:1s"></span>
+        <span class="pt" style="left:62%;background:var(--orange);animation-delay:1.5s"></span>
+        <span class="pt" style="left:70%;background:#ffd48a;animation-delay:2s"></span>
+        <span class="pt" style="left:46%;background:var(--orange);animation-delay:2.4s"></span>
+        <img class="ch" src="hero_render.png" alt="" style="height:104px;filter:drop-shadow(0 0 10px rgba(245,166,35,.7)) saturate(1.12)">
+      </div>
+      <div class="cap" style="padding:7px 9px 9px"><div class="hd"><span class="st" style="margin:0;color:var(--orange)">★★★</span></div><div class="l2" style="margin-top:4px">aura 90% · 7 motes · 2 shard rows</div></div>
+    </div>
+  </div>
+  <div class="tbl mo" style="grid-template-columns:1fr .5fr .5fr .5fr">
+    <div class="h rl">Param</div><div class="h">★</div><div class="h">★★</div><div class="h">★★★</div>
+    <div class="rl">Motes / embers</div><div class="on">2</div><div class="on">4</div><div class="on">7</div>
+    <div class="rl">Aura opacity</div><div class="on">40%</div><div class="on">65%</div><div class="on">90%</div>
+    <div class="rl">Shard rows</div><div class="on">1</div><div class="on">1</div><div class="on">2</div>
+    <div class="rl">Sigil spin</div><div class="on">1×</div><div class="on">1.5×</div><div class="on">2×</div>
+    <div class="rl">Blade glow</div><div class="on">S</div><div class="on">M</div><div class="on" style="border-right:0">L</div>
+  </div>
+
+  <!-- ============ LAYER MATRIX ============ -->
+  <div class="h2">Layer stack — what each rank turns on</div>
+  <p class="note" style="margin:5px 0 0"><span class="mono">HeroStage</span> = a <span class="mono">Stack</span> of these 9 layers, keyed off <span class="mono">tier</span> + <span class="mono">stars</span> + <span class="mono">season</span>.</p>
+  <div class="tbl mx">
+    <div class="h">Layer</div><div class="h">Nov</div><div class="h">War</div><div class="h">Vet</div><div class="h">Cha</div><div class="h">Leg</div>
+    <div class="rl">Background</div><div class="off">flat</div><div class="on">radial</div><div class="on">radial</div><div class="on">2-radial</div><div class="on">prism+rays</div>
+    <div class="rl">Ground</div><div class="on">shadow</div><div class="on">spin sigil</div><div class="on">glow disc</div><div class="on">runic dais</div><div class="on">tiered dais</div>
+    <div class="rl">Back-prop</div><div class="off">—</div><div class="off">—</div><div class="on">wing-shards</div><div class="on">wings S</div><div class="on">wings L</div>
+    <div class="rl">Aura</div><div class="off">—</div><div class="on">rim light</div><div class="on">conic</div><div class="on">conic+ring</div><div class="on">full+halo</div>
+    <div class="rl">Head</div><div class="off">—</div><div class="off">—</div><div class="off">—</div><div class="on">crown</div><div class="on">crown+halo</div>
+    <div class="rl">Hand</div><div class="off">—</div><div class="off">—</div><div class="on">planted blade</div><div class="on">blade glow</div><div class="on">blade+trail</div>
+    <div class="rl">Particles</div><div class="on">0–2 dust</div><div class="on">3–6 motes</div><div class="on">embers</div><div class="on">embers+petals</div><div class="on">starfield</div>
+    <div class="rl">Frame</div><div class="off">—</div><div class="off">—</div><div class="off">—</div><div class="off">—</div><div class="on">live glow</div>
+    <div class="rl" style="border-bottom:0">Tint</div><div class="on" style="border-bottom:0">season</div><div class="on" style="border-bottom:0">season</div><div class="on" style="border-bottom:0">season</div><div class="on" style="border-bottom:0">season</div><div class="on" style="border-bottom:0;border-right:0">season</div>
+  </div>
+
+  <!-- ============ ASSET MANIFEST ============ -->
+  <div class="h2">Asset manifest — ~5 renders + ~15 shared props</div>
+  <div class="tbl am">
+    <div class="h">Asset</div><div class="h">Layer</div><div class="h">Type</div><div class="h">~px</div><div class="h">Recolor</div>
+    <div class="on">hero/&lt;class&gt;/base.png</div><div>render</div><div>PNG·α</div><div>380×420</div><div class="off">none ×5</div>
+    <div class="on">fx/floor_shadow.png</div><div>ground</div><div>PNG</div><div>160×48</div><div>opacity</div>
+    <div class="on">fx/sigil_ring.svg</div><div>ground</div><div>SVG</div><div>—</div><div>stroke</div>
+    <div class="on">fx/glow_disc.png</div><div>ground</div><div>PNG</div><div>200×64</div><div>tint</div>
+    <div class="on">fx/dais_runic.svg</div><div>ground</div><div>SVG</div><div>—</div><div>stroke</div>
+    <div class="on">fx/dais_tiered.svg</div><div>ground</div><div>SVG</div><div>—</div><div>stroke</div>
+    <div class="on">fx/aura_rim (shader)</div><div>aura</div><div>frag</div><div>—</div><div>color</div>
+    <div class="on">fx/aura_conic.png</div><div>aura</div><div>PNG</div><div>260×260</div><div>hue</div>
+    <div class="on">fx/halo_ring.svg</div><div>aura</div><div>SVG</div><div>—</div><div>stroke</div>
+    <div class="on">fx/orbit_ring.svg</div><div>aura</div><div>SVG</div><div>—</div><div>stroke</div>
+    <div class="on">fx/wing_shard.svg</div><div>back</div><div>SVG</div><div>—</div><div>stroke</div>
+    <div class="on">fx/wings_small.png</div><div>back</div><div>PNG</div><div>320×160</div><div>tint</div>
+    <div class="on">fx/wings_large.png</div><div>back</div><div>PNG</div><div>340×180</div><div>tint</div>
+    <div class="on">fx/crown.svg</div><div>head</div><div>SVG</div><div>—</div><div>fill</div>
+    <div class="on">fx/blade_glow.png</div><div>hand</div><div>PNG</div><div>24×120</div><div>tint</div>
+    <div class="on">particles (painter)</div><div>particles</div><div>code</div><div>—</div><div>palette</div>
+    <div class="on" style="border-bottom:0">fx/frame_glow (shader)</div><div style="border-bottom:0">frame</div><div style="border-bottom:0">frag</div><div style="border-bottom:0">—</div><div style="border-bottom:0;border-right:0">color</div>
+  </div>
+
+  <!-- ============ MOTION SPEC ============ -->
+  <div class="h2">Motion spec — GPU transform / opacity only</div>
+  <div class="tbl mo">
+    <div class="h">Element</div><div class="h">Motion</div><div class="h">Dur</div><div class="h">Easing</div><div class="h">Loop</div>
+    <div class="rl">Sigil / dais</div><div class="on">rotate 360°</div><div>6s</div><div>linear</div><div>∞</div>
+    <div class="rl">Conic aura</div><div class="on">rotate 360°</div><div>6s</div><div>linear</div><div>∞</div>
+    <div class="rl">Orbit ring A / B</div><div class="on">rotate ±360°</div><div>6 / 9s</div><div>linear</div><div>∞</div>
+    <div class="rl">Ray burst</div><div class="on">rotate + pulse</div><div>9 / 4.4s</div><div>lin / io</div><div>∞</div>
+    <div class="rl">Motes / embers</div><div class="on">rise + fade</div><div>2.4–2.8s</div><div>ease-in</div><div>∞*</div>
+    <div class="rl">Card frame</div><div class="on">glow pulse</div><div>3s</div><div>io</div><div>∞</div>
+    <div class="rl">Hero idle</div><div class="on">float ±5px</div><div>4.5s</div><div>io</div><div>∞</div>
+    <div class="rl" style="border-bottom:0">Rank-up</div><div class="on" style="border-bottom:0">burst + flash</div><div style="border-bottom:0">1.2s</div><div style="border-bottom:0">ease-out</div><div style="border-bottom:0;border-right:0">once</div>
+  </div>
+  <p class="note" style="margin-top:6px">* motes are staggered by delay. <span class="mono">prefers-reduced-motion</span> → freeze every loop at its mid-frame.</p>
+
+  <!-- ============ DATA MODEL ============ -->
+  <div class="h2">Data model — client-derived, no new backend</div>
+  <div class="code"><b>class</b> HeroTierConfig {
+  HeroTier  tier;    <i>// novice|warrior|veteran|champion|legend</i>
+  <b>int</b>       stars;   <i>// 1..3</i>
+  HeroClass classId; <i>// picks hero/&lt;class&gt;/base.png</i>
+  SeasonTheme season; <i>// re-tints every layer</i>
+}
+
+tier   = HeroTier.values[profile.rankIndex];         <i>// 1:1 with the rank ladder</i>
+stars  = (profile.xpIntoRank / profile.rankSpan * 3).ceil().clamp(1, 3);
+season = seasonProvider.theme;                        <i>// ember / teal / crimson …</i>
+
+<i>// HeroStage(config) = Stack([ bg, ground, backProp, aura, hero,
+//                             head, hand, particles, frame ])</i></div>
+
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+    <span class="chip" style="color:var(--blue);border-color:#24405f">● Baked: per-class base render (~5)</span>
+    <span class="chip" style="color:var(--purple);border-color:#3a2f63">✦ Layer: 9-layer stack · tier + ★ + season</span>
+  </div>
+  <p class="note" style="margin-top:11px">
+    Equipped gear stays in the Home gear-slot row; a per-item paper-doll rig is Phase 5+ / out of
+    scope. Not in this board (offered): a mount silhouette beside the hero from Champion+, and the
+    "where it renders" surface table (Home stage / profile card / leaderboard frame / share image).
+  </p>
+
+</div>
+</x-dc>
+</body>
+</html>

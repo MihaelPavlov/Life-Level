@@ -13,6 +13,7 @@ public static class ItemsModule
         services.AddScoped<IGearBonusReadPort>(sp => sp.GetRequiredService<ItemService>());
         services.AddScoped<ItemGrantService>();
         services.AddScoped<ILevelUpItemGrantPort, LevelUpItemGrantPortAdapter>();
+        services.AddScoped<IItemRewardGrantPort, ItemRewardGrantPortAdapter>();
         return services;
     }
 }

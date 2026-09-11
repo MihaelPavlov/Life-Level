@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    h1,h2,h3{margin:0}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:8px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:13px}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .ex{position:absolute;top:-7px;right:-8px;width:16px;height:16px;border-radius:50% 50% 50% 3px;
+        background:var(--red);border:1.5px solid var(--bg);display:flex;align-items:center;justify-content:center;
+        font-size:9px;font-weight:900;color:#fff;line-height:1}
+    .tk{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:8.5px;font-weight:700;
+        border:1px solid var(--line);border-radius:999px;padding:3px 8px;color:var(--dim)}
+    @media (prefers-reduced-motion:no-preference){
+      .pulse{animation:pl 1.9s ease-in-out infinite}
+      @keyframes pl{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,0)}50%{box-shadow:0 0 0 4px rgba(248,81,73,.22)}}
+      .liv{animation:lv 1.6s ease-in-out infinite}
+      @keyframes lv{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,0)}50%{box-shadow:0 0 0 3px rgba(248,81,73,.3)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:704px;position:relative;padding:12px 13px 84px;
+     background-color:var(--bg);
+     background-image:
+       radial-gradient(720px 300px at 50% -12%,rgba(79,158,255,.11),transparent 64%),
+       radial-gradient(520px 340px at 110% 34%,rgba(163,113,247,.07),transparent 60%),
+       linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+       linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+     background-size:auto,auto,34px 34px,34px 34px">
+
+  <!-- HEADER + XP-to-level -->
+  <section style="display:flex;gap:10px;align-items:flex-start">
+    <div style="position:relative;width:50px;height:50px;flex:none;margin-top:2px">
+      <div style="position:absolute;inset:0;border-radius:15px;background:conic-gradient(var(--blue) 0 34%,#1a2330 34% 100%)"></div>
+      <img src="mystic_icon.png" alt="" width="42" height="42" style="position:absolute;inset:4px;border-radius:12px;object-fit:cover;background:#111925">
+      <span class="mono" style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:var(--blue);color:#05101f;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:999px">LV 4</span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-size:16px;font-weight:800">test1</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--orange);border:1px solid #4b3d1c;border-radius:999px;padding:1px 6px 1px 4px">
+          <img src="reward_streak_fire.png" alt="" width="10" height="10" style="object-fit:contain">1&nbsp;day</span>
+      </div>
+      <!-- XP to next level (Archero-style) -->
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <div style="flex:1;height:7px;border-radius:999px;background:#141b24;overflow:hidden"><div style="width:64%;height:100%;background:linear-gradient(90deg,var(--blue),#7db6ff)"></div></div>
+        <span class="mono" style="font-size:8px;color:var(--dim);flex:none">1,240 / 1,800</span>
+      </div>
+    </div>
+    <!-- SEASON button (orange · ! when a tier is ready) -->
+    <button class="panel pulse" style="position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex:none;border-color:#4b3d1c;background:rgba(245,166,35,.10)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 0 2-2V5h12v1a2 2 0 0 0 2 2v3a2 2 0 0 0-2 2v1H6v-1a2 2 0 0 0-2-2z"/><path d="M12 5v14" stroke-dasharray="2 2"/></svg>
+      <span class="ex">!</span>
+    </button>
+    <!-- ALERTS bell (neutral · count) -->
+    <button class="panel" style="position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <span class="ex" style="border-radius:50%;font-size:8px">3</span>
+    </button>
+  </section>
+
+  <!-- HERO STRIP — 5 stat gems + Power + season tier chip -->
+  <div class="panel" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 11px;
+       border-color:#2c2350;background:linear-gradient(90deg,rgba(163,113,247,.10),var(--panel) 62%)">
+    <div style="flex:1;display:flex;justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:3px" class="mono"><img src="stat_strength.png" width="13" height="13" alt=""><span style="font-size:9px;color:var(--dim)">14</span></span>
+      <span style="display:flex;align-items:center;gap:3px" class="mono"><img src="stat_endurance.png" width="13" height="13" alt=""><span style="font-size:9px;color:var(--dim)">21</span></span>
+      <span style="display:flex;align-items:center;gap:3px" class="mono"><img src="stat_agility.png" width="13" height="13" alt=""><span style="font-size:9px;color:var(--dim)">17</span></span>
+      <span style="display:flex;align-items:center;gap:3px" class="mono"><img src="stat_flexibility.png" width="13" height="13" alt=""><span style="font-size:9px;color:var(--dim)">9</span></span>
+      <span style="display:flex;align-items:center;gap:3px" class="mono"><img src="stat_stamina.png" width="13" height="13" alt=""><span style="font-size:9px;color:var(--dim)">22</span></span>
+    </div>
+    <div style="width:1px;height:24px;background:var(--line);flex:none"></div>
+    <div style="text-align:right;flex:none">
+      <div class="lab" style="color:var(--purple);font-size:7px">Power</div>
+      <div style="display:flex;align-items:baseline;gap:4px"><span class="num mono" style="font-size:16px;line-height:1">1,240</span><span class="mono" style="font-size:8px;color:var(--green)">+18</span></div>
+    </div>
+    <span class="tk" style="color:var(--orange);border-color:#4b3d1c;background:rgba(245,166,35,.08)">🎫 T7</span>
+  </div>
+
+  <!-- TIMER TICKER — everything that's ending -->
+  <div style="display:flex;align-items:center;gap:6px;margin-top:9px;overflow:hidden">
+    <span class="tk liv" style="color:var(--red);border-color:#4a2420;background:rgba(248,81,73,.10)">⚡ Storm 1h42</span>
+    <span class="tk">👹 Warden 4d</span>
+    <span class="tk" style="color:var(--orange);border-color:#4b3d1c">🎫 Season 12d</span>
+    <span class="tk">↻ Daily 6h</span>
+  </div>
+
+  <!-- DAILY HAUL — chest slots that open as you log (Archero-style) -->
+  <div class="panel" style="margin-top:9px;padding:10px 11px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span class="lab">Today's haul</span>
+      <span class="mono" style="font-size:8px;color:var(--dim)">28 / 90 min logged</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border:1px solid #2c5238;border-radius:9px;background:rgba(63,185,80,.07)">
+        <img src="reward_treasure_chest.png" width="22" height="22" alt="" style="object-fit:contain">
+        <span style="font-size:8px;font-weight:800;color:var(--green)">OPENED</span>
+        <span class="lab" style="font-size:6.5px;color:var(--mute)">20 min · +60 XP</span>
+      </div>
+      <div class="pulse" style="flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border:1px solid #4b3d1c;border-radius:9px;background:linear-gradient(180deg,rgba(245,166,35,.10),transparent)">
+        <img src="reward_treasure_chest.png" width="22" height="22" alt="" style="object-fit:contain;opacity:.9">
+        <span style="font-size:8px;font-weight:800;color:var(--orange)">45 MIN</span>
+        <div style="width:80%;height:3px;border-radius:999px;background:#1e1608;overflow:hidden"><div style="width:62%;height:100%;background:var(--orange)"></div></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border:1px solid var(--line);border-radius:9px;opacity:.55">
+        <img src="reward_treasure_chest.png" width="22" height="22" alt="" style="object-fit:contain;filter:grayscale(.6)">
+        <span style="font-size:8px;font-weight:800;color:var(--dim)">🔒 90 MIN</span>
+        <span class="lab" style="font-size:6.5px;color:var(--mute)">Gold · gear roll</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MICRO SQUARES — Claim(!) · Banked · Today · Shields -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px">
+    <button class="panel pulse" style="position:relative;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;border-color:#4a2420;background:linear-gradient(180deg,rgba(248,81,73,.10),var(--panel) 70%)">
+      <img src="reward_daily_bonus.png" width="19" height="19" alt="" style="object-fit:contain">
+      <span style="font-size:8.5px;font-weight:800;color:var(--red)">CLAIM</span><span class="ex">!</span>
+    </button>
+    <div class="panel" style="padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="map_destination.png" width="19" height="19" alt="" style="object-fit:contain">
+      <span class="num mono" style="font-size:11.5px;color:var(--blue)">10.0</span><span class="lab" style="font-size:6.5px;color:var(--mute)">Banked km</span>
+    </div>
+    <div class="panel" style="padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="reward_xp_sparkle.png" width="19" height="19" alt="" style="object-fit:contain">
+      <span class="num mono" style="font-size:11.5px;color:var(--orange)">+208</span><span class="lab" style="font-size:6.5px;color:var(--mute)">Today XP</span>
+    </div>
+    <div class="panel" style="padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="reward_streak_shield.png" width="19" height="19" alt="" style="object-fit:contain">
+      <span class="num mono" style="font-size:11.5px;color:var(--purple)">0</span><span class="lab" style="font-size:6.5px;color:var(--mute)">Shields</span>
+    </div>
+  </div>
+
+  <!-- MAP SECTION — the CURRENT full _HeroShell card (Standard state) -->
+  <div class="panel" style="margin-top:10px;padding:14px 15px 12px;border-color:rgba(79,158,255,.4);box-shadow:0 0 22px rgba(79,158,255,.12)">
+    <span style="display:inline-block;font-size:10px;font-weight:600;letter-spacing:.3px;color:var(--blue);background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.3);border-radius:6px;padding:3px 8px">🌲 Forest of Endurance · Ch. 1</span>
+    <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:var(--blue);margin-top:9px">CURRENT ZONE · EXPLORE FROM HERE</div>
+    <div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:5px">Misty Pine</div>
+    <div style="font-size:12px;color:var(--dim);line-height:1.4;margin-top:4px">Cold mist clings to the trunks here. The path ahead is quiet — for now.</div>
+    <div style="display:flex;justify-content:space-between;margin-top:13px"><span style="font-size:11px;font-weight:600;color:var(--dim)">Zone progress</span><span style="font-size:11px;font-weight:700;color:var(--blue)">2 / 8 nodes</span></div>
+    <div style="height:10px;border-radius:999px;background:#0e151e;overflow:hidden;margin-top:8px"><div style="width:25%;height:100%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div></div>
+    <div style="display:flex;gap:8px;margin-top:13px">
+      <div style="flex:1;height:38px;border:1px solid var(--line);border-radius:11px;color:var(--dim);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px">⟳ Sync</div>
+      <div style="flex:1.6;height:38px;border-radius:11px;color:#05101f;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,var(--blue),#7db6ff)">Open map →</div>
+    </div>
+  </div>
+
+  <!-- PRIMARY CTA (the "BATTLE" button) -->
+  <button style="width:100%;height:54px;margin-top:12px;border-radius:16px;font-weight:900;font-size:15px;letter-spacing:.03em;color:#05101f;position:relative;overflow:hidden;
+       background:linear-gradient(90deg,var(--blue),var(--purple));box-shadow:0 16px 34px -18px var(--purple);display:flex;align-items:center;justify-content:center;gap:9px">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="2.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>LOG WORKOUT
+    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:8.5px;font-weight:800;color:#05101f;background:rgba(255,255,255,.35);border-radius:999px;padding:2px 7px">×2 storm</span>
+  </button>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:9px 22px 13px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="nav_home.png" width="23" height="23" alt=""><span style="font-size:9px;font-weight:700;color:var(--blue)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="position:relative"><img src="nav_quests.png" width="23" height="23" alt="" style="opacity:.6"><span class="ex pulse">!</span></div>
+      <span style="font-size:9px;color:var(--mute)">Quests</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="nav_map.png" width="23" height="23" alt="" style="opacity:.6"><span style="font-size:9px;color:var(--mute)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="nav_profile.png" width="23" height="23" alt="" style="opacity:.6"><span style="font-size:9px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

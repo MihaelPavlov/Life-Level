@@ -1,3 +1,5 @@
+using LifeLevel.Api.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LifeLevel.Api.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260712000000_AddMapTutorialProgress")]
     public partial class AddMapTutorialProgress : Migration
     {
         /// <inheritdoc />

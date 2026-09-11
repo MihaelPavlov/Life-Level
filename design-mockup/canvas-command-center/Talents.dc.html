@@ -1,0 +1,228 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+      --frame1:#a371f7; --frame2:#2a1f45; --tile1:#161b26; --tile2:#0a0f17;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .hex{clip-path:polygon(25% 2%,75% 2%,100% 50%,75% 98%,25% 98%,0% 50%)}
+    .outer{background:linear-gradient(160deg,var(--frame1),var(--frame2))}
+    .inner{background:linear-gradient(160deg,var(--tile1),var(--tile2))}
+    .stud{position:absolute;width:7px;height:7px;background:linear-gradient(160deg,#e7d6ff,var(--purple));transform:rotate(45deg);border-radius:1px;box-shadow:0 0 3px rgba(0,0,0,.5)}
+    .tile{position:relative;display:flex;flex-direction:column;align-items:center}
+    .tile .hexwrap{width:76px;height:76px;position:relative}
+    .tile .outer{position:absolute;inset:0}
+    .tile .inner{position:absolute;inset:4px;display:flex;align-items:center;justify-content:center}
+    .lv{position:absolute;left:50%;bottom:-3px;transform:translateX(-50%);background:var(--bg);border:1px solid #3a2a52;border-radius:999px;padding:1px 8px;font-size:8.5px;font-weight:800;color:#cbb2ff;white-space:nowrap;z-index:3}
+    .upbadge{position:absolute;right:-3px;top:-3px;width:18px;height:18px;border-radius:50%;background:var(--green);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;z-index:3}
+    .nm{font-size:8px;font-weight:700;color:var(--dim);text-align:center;margin-top:9px;line-height:1.15}
+    @media (prefers-reduced-motion:no-preference){
+      .rays{animation:sp 40s linear infinite}
+      @keyframes sp{to{transform:translate(-50%,-50%) rotate(360deg)}}
+      .featured .outer{animation:gp 2.2s ease-in-out infinite}
+      @keyframes gp{0%,100%{filter:drop-shadow(0 0 6px rgba(163,113,247,.45))}50%{filter:drop-shadow(0 0 16px rgba(163,113,247,.8))}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:940px;position:relative;overflow:hidden;
+     background:radial-gradient(700px 340px at 50% -6%,rgba(163,113,247,.12),transparent 62%),var(--bg)">
+
+  <!-- HEADER -->
+  <div style="display:flex;align-items:center;justify-content:center;padding:16px 16px 4px;position:relative">
+    <div style="display:flex;align-items:center;gap:9px;background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:8px 26px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)">
+      <span style="color:var(--purple);font-size:11px;transform:rotate(45deg);display:inline-block">◆</span>
+      <span style="font-weight:900;font-size:15px;letter-spacing:.06em">TALENTS</span>
+      <span style="color:var(--purple);font-size:11px;transform:rotate(45deg);display:inline-block">◆</span>
+    </div>
+    <button aria-label="Info" style="position:absolute;right:16px;top:16px;width:28px;height:28px;border-radius:9px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+      <span class="mono" style="font-size:12px;font-weight:800;color:var(--purple)">i</span>
+    </button>
+  </div>
+
+  <!-- CURRENCY BAR -->
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:12px">
+    <span style="display:flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 6px">
+      <img src="item_aura_stone.png" width="17" height="17" alt="">
+      <span class="mono" style="font-size:11px;font-weight:700;color:#cbb2ff">165</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 6px">
+      <img src="reward_daily_bonus.png" width="17" height="17" alt="">
+      <span class="mono" style="font-size:11px;font-weight:700;color:var(--orange)">109.9K</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 6px">
+      <img src="reward_grant_item.png" width="17" height="17" alt="">
+      <span class="mono" style="font-size:11px;font-weight:700;color:var(--blue)">3</span>
+    </span>
+  </div>
+
+  <!-- GRID -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);row-gap:26px;justify-items:center;padding:28px 14px 0">
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="stat_strength.png" width="34" height="34" alt=""></div>
+      <span class="upbadge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+      <span class="lv">Lv.1</span></div><div class="nm">First Rep</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="stat_endurance.png" width="34" height="34" alt=""></div>
+      <span class="upbadge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+      <span class="lv">Lv.1</span></div><div class="nm">Iron Lungs</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="stat_agility.png" width="34" height="34" alt=""></div>
+      <span class="upbadge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+      <span class="lv">Lv.1</span></div><div class="nm">Quick Start</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="quest_general.png" width="32" height="32" alt=""></div>
+      <span class="lv">Lv.2</span></div><div class="nm">Focus Mastery</div></div>
+
+    <!-- row 2 -->
+    <div class="tile" style="position:relative">
+      <button aria-label="Previous" style="position:absolute;left:-8px;top:26px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--dim)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_streak_fire.png" width="30" height="30" alt=""></div>
+      <span class="upbadge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+      <span class="lv">Lv.3</span></div><div class="nm">Second Wind</div></div>
+
+    <div class="tile" style="opacity:.35"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_streak_shield.png" width="30" height="30" alt=""></div>
+      <span class="lv">Lv.3</span></div><div class="nm">Steel Resolve</div></div>
+
+    <div class="tile" style="opacity:.35"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="quest_general.png" width="30" height="30" alt=""></div>
+      <span class="lv">Lv.2</span></div><div class="nm">Nimble Step</div></div>
+
+    <div class="tile" style="position:relative">
+      <button aria-label="Next" style="position:absolute;right:-8px;top:26px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--dim)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
+      <div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="avatar_ninja.png" width="32" height="32" alt=""></div>
+      <span class="lv">Lv.2</span></div><div class="nm">Dexterity</div></div>
+
+    <!-- row 3 -->
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="ring_boss.png" width="34" height="34" alt=""></div>
+      <span class="lv">Lv.4</span></div><div class="nm">Direct Hit</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_grant_item.png" width="32" height="32" alt=""></div>
+      <span class="lv">Lv.4</span></div><div class="nm">Fair Exchange</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_streak_shield.png" width="32" height="32" alt=""></div>
+      <span class="lv">Lv.3</span></div><div class="nm">Steel Resolve</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="stat_stamina.png" width="34" height="34" alt=""></div>
+      <span class="lv">Lv.10</span></div><div class="nm">Strength</div></div>
+
+    <!-- row 4 -->
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="stat_flexibility.png" width="32" height="32" alt=""></div>
+      <span class="lv">Lv.4</span></div><div class="nm">Sturdy</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_streak_fire.png" width="30" height="30" alt=""></div>
+      <span class="lv">Lv.10</span></div><div class="nm">Recovery</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_xp_sparkle.png" width="30" height="30" alt=""></div>
+      <span class="lv">Lv.10</span></div><div class="nm">1-Rep Mastery</div></div>
+
+    <div class="tile"><div class="hexwrap">
+      <div class="outer hex"></div>
+      <div class="inner hex"><img src="reward_xp_sparkle.png" width="30" height="30" alt=""></div>
+      <span class="lv">Lv.10</span></div><div class="nm">2-Rep Mastery</div></div>
+  </div>
+
+  <!-- FEATURED OVERLAY -->
+  <div style="position:absolute;left:50%;top:246px;transform:translateX(-50%);width:390px;height:280px;display:flex;align-items:center;justify-content:center;pointer-events:none">
+    <div class="rays" style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:420px;height:420px;
+      background:repeating-conic-gradient(from 0deg,rgba(79,158,255,.14) 0 5deg,transparent 5deg 15deg);
+      -webkit-mask:radial-gradient(closest-side,#000 35%,transparent 75%);mask:radial-gradient(closest-side,#000 35%,transparent 75%)"></div>
+    <div style="position:relative;text-align:center;pointer-events:auto">
+      <div class="featured" style="width:168px;height:168px;position:relative;margin:0 auto">
+        <div class="outer hex" style="position:absolute;inset:0;background:linear-gradient(160deg,#e7d6ff,var(--purple) 45%,#2a1f45)"></div>
+        <div class="hex" style="position:absolute;inset:6px;background:linear-gradient(160deg,#1c2536,var(--bg));display:flex;align-items:center;justify-content:center">
+          <img src="reward_streak_shield.png" width="82" height="82" alt="">
+        </div>
+        <div class="stud" style="left:calc(50% - 3.5px);top:-3px"></div>
+        <div class="stud" style="left:calc(50% - 3.5px);bottom:-3px"></div>
+        <div class="stud" style="left:-3px;top:calc(50% - 3.5px)"></div>
+        <div class="stud" style="right:-3px;top:calc(50% - 3.5px)"></div>
+        <span style="position:absolute;right:-6px;bottom:6px;width:34px;height:34px;border-radius:50%;background:var(--green);border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.4)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </span>
+      </div>
+      <div style="font-weight:800;font-size:16px;margin-top:10px;text-shadow:0 2px 6px rgba(0,0,0,.6)">Steel Resolve</div>
+      <div class="mono" style="font-weight:900;font-size:22px;color:#cbb2ff;text-shadow:0 2px 6px rgba(0,0,0,.6)">Lv.3</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:8px;padding:0 40px;position:relative;z-index:2">
+    <p style="font-size:12.5px;color:var(--text);font-weight:600;margin:0">At session start, gain a shield worth <span style="color:var(--orange)">+15% XP</span></p>
+  </div>
+
+  <!-- DRAW BUTTON -->
+  <div style="display:flex;justify-content:center;margin-top:14px">
+    <button style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 22px;border-radius:14px;
+         background:linear-gradient(90deg,var(--blue),var(--purple));box-shadow:0 12px 26px -12px rgba(163,113,247,.55)">
+      <span style="font-weight:900;font-size:13px;color:#05101f;letter-spacing:.02em">Draw Talent Card</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span style="display:flex;align-items:center;gap:4px"><img src="reward_daily_bonus.png" width="15" height="15" alt=""><span class="mono" style="font-size:11px;color:#05101f;font-weight:800">x6525</span></span>
+        <span style="display:flex;align-items:center;gap:4px"><img src="reward_grant_item.png" width="15" height="15" alt=""><span class="mono" style="font-size:11px;color:#05101f;font-weight:800">x9</span></span>
+      </span>
+    </button>
+  </div>
+
+  <!-- NAV -->
+  <nav style="margin-top:20px;padding:10px 16px 16px;display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="24" height="24" alt="" style="opacity:.5"><span style="font-size:9px;color:var(--mute)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="24" height="24" alt="" style="opacity:.5"><span style="font-size:9px;color:var(--mute)">Season</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="24" height="24" alt="" style="opacity:.5"><span style="font-size:9px;color:var(--mute)">Expedition</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center">
+        <img src="reward_streak_shield.png" width="16" height="16" alt="">
+      </div>
+      <span style="font-size:9px;font-weight:700;color:var(--purple)">Talents</span>
+    </div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

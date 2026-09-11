@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    h1,h2,h3{margin:0}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    .rail{position:absolute;display:flex;flex-direction:column;gap:11px;z-index:6}
+    .tile{width:48px;display:flex;flex-direction:column;align-items:center;gap:2px}
+    .tile .sq{width:42px;height:42px;border-radius:13px;background:rgba(10,16,23,.95);border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 6px 14px -8px rgba(0,0,0,.7)}
+    .tile .cv{font-size:9.5px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+    .tile .cl{font-size:6.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mute);line-height:1;text-align:center}
+    .bang{position:absolute;top:-5px;right:-5px;width:15px;height:15px;border-radius:50% 50% 50% 2px;background:var(--red);
+      border:1.5px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff}
+    @media (prefers-reduced-motion:no-preference){
+      .pulse{animation:pl 2s ease-in-out infinite}
+      @keyframes pl{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,0)}50%{box-shadow:0 0 0 4px rgba(248,81,73,.2)}}
+      .pb{animation:pb 2.4s ease-in-out infinite}
+      @keyframes pb{0%,100%{box-shadow:0 0 22px rgba(79,158,255,.45),0 0 0 5px rgba(79,158,255,.08)}50%{box-shadow:0 0 32px rgba(79,158,255,.7),0 0 0 9px rgba(79,158,255,.13)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:704px;position:relative;padding:0 0 82px;overflow:hidden;
+     background-image:
+       radial-gradient(560px 300px at 50% -6%,rgba(63,185,80,.12),transparent 62%),
+       radial-gradient(520px 360px at 108% 26%,rgba(79,158,255,.08),transparent 60%);
+     background-color:var(--bg)">
+
+  <!-- IDENTITY: hero hex · power · green XP · currencies -->
+  <div style="position:relative;display:flex;align-items:flex-start;gap:11px;padding:13px 12px 0">
+    <div style="position:relative;width:60px;flex:none">
+      <div style="position:relative;width:58px;height:62px;filter:drop-shadow(0 0 9px rgba(63,185,80,.45))">
+        <div style="position:absolute;inset:0;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:linear-gradient(150deg,var(--green),#1c3a25)"></div>
+        <div style="position:absolute;inset:2px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#0c1220;display:flex;align-items:center;justify-content:center;overflow:hidden">
+          <img src="avatar_ninja.png" width="52" height="52" style="object-fit:cover">
+        </div>
+        <span class="mono" style="position:absolute;left:-5px;bottom:-2px;min-width:18px;height:18px;padding:0 3px;display:flex;align-items:center;justify-content:center;
+             clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#05101f;border:1px solid #2c5238;color:var(--green);font-size:10px;font-weight:900">4</span>
+      </div>
+      <div class="mono" style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:6px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
+        <span style="font-size:12px;font-weight:900;color:var(--purple)">1,240</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0;padding-top:3px">
+      <div style="font-size:13px;font-weight:800">test1</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
+        <div style="flex:1;max-width:158px;height:9px;border-radius:999px;background:#10231a;border:1px solid #1f3a28;overflow:hidden">
+          <div style="width:46%;height:100%;background:linear-gradient(90deg,#2ea043,var(--green))"></div></div>
+        <span class="mono" style="font-size:8px;color:var(--dim)">46%</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;padding-top:2px">
+      <div style="display:flex;gap:8px">
+        <span class="mono" style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--purple)"><svg width="10" height="10" viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2 2 8l10 14L22 8z"/></svg>312</span>
+        <span class="mono" style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--orange)"><svg width="10" height="10" viewBox="0 0 24 24" fill="var(--orange)"><circle cx="12" cy="12" r="9"/></svg>1,981</span>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button style="position:relative;width:32px;height:32px;border-radius:10px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <img src="nav_quests.png" width="18" height="18" style="object-fit:contain">
+          <span class="bang" style="top:-6px;right:-6px">!</span></button>
+        <button style="position:relative;width:32px;height:32px;border-radius:10px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="bang" style="top:-6px;right:-6px">3</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAP SECTION (region status card — kept at the top) ===== -->
+  <div style="margin:16px 14px 0;padding:15px 16px 15px;border-radius:18px;position:relative;
+       border:1.5px solid rgba(63,185,80,.45);background:linear-gradient(180deg,rgba(8,12,19,.96),rgba(8,12,19,.9));
+       box-shadow:0 0 32px -16px rgba(63,185,80,.4)">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="font-size:24px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">🌲</div>
+      <div style="flex:1;min-width:0">
+        <div class="lab" style="color:var(--green)">Forest of Endurance · Chapter 1</div>
+        <div style="font-size:9px;color:var(--dim);margin-top:2px">Zone 2 of 8 · region 25% cleared</div>
+      </div>
+      <span style="display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:800;color:var(--red);background:rgba(248,81,73,.14);border:1px solid #4a2420;border-radius:999px;padding:2px 7px 2px 4px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2a7 7 0 0 0-7 7v4l-2 4h18l-2-4V9a7 7 0 0 0-7-7z"/><circle cx="9" cy="10" r="1.4" fill="#0a0f17"/><circle cx="15" cy="10" r="1.4" fill="#0a0f17"/></svg>Warden 4d</span>
+    </div>
+
+    <!-- current position (TOP) → next zone (below) -->
+    <div style="display:flex;gap:12px;margin-top:14px">
+      <div style="flex:none;width:52px;display:flex;flex-direction:column;align-items:center">
+        <div class="pb" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,rgba(79,158,255,.24),rgba(79,158,255,.08));border:3px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:22px">🌿</div>
+        <div style="width:3px;flex:1;min-height:46px;margin:4px 0;border-radius:999px;background:repeating-linear-gradient(180deg,var(--orange) 0 5px,transparent 5px 11px)"></div>
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(245,166,35,.16),rgba(245,166,35,.05));border:2px dashed var(--orange);display:flex;align-items:center;justify-content:center;font-size:19px">🏕️</div>
+      </div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;padding:1px 0">
+        <div>
+          <span style="display:inline-block;font-size:7.5px;font-weight:800;letter-spacing:.1em;color:#05101f;background:var(--blue);padding:2px 7px;border-radius:6px">YOU ARE HERE</span>
+          <div style="font-size:15px;font-weight:800;margin-top:5px">Misty Pine</div>
+          <div class="lab" style="color:var(--blue);margin-top:2px">Node 2 · current</div>
+        </div>
+        <div style="border-top:1px solid var(--line);padding-top:9px">
+          <div class="lab" style="color:var(--orange)">Next zone <span class="mono" style="color:var(--text)">· 3.0 km</span></div>
+          <div style="font-size:15px;font-weight:800;margin-top:4px">Dawn Camp</div>
+          <div style="height:6px;border-radius:999px;background:#101722;margin-top:7px;overflow:hidden"><div style="width:33%;height:100%;background:linear-gradient(90deg,var(--blue),var(--orange))"></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+            <span class="mono" style="font-size:8.5px;color:var(--dim)">1.0 / 3.0 km travelled</span>
+            <span class="mono" style="font-size:8.5px;color:var(--orange)">+320 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button style="width:100%;height:34px;margin-top:13px;border-radius:11px;font-size:11px;font-weight:800;color:var(--blue);
+         background:rgba(79,158,255,.1);border:1px solid rgba(79,158,255,.35);display:flex;align-items:center;justify-content:center;gap:6px">
+      Open full map
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <!-- ACTIVITY STRIP (was the side rail — now horizontal, under the map) -->
+  <div style="display:flex;gap:7px;margin:11px 14px 0">
+    <button style="flex:1;position:relative;background:rgba(10,16,23,.95);border:1px solid #2c5238;border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="reward_treasure_chest.png" width="20" height="20" style="object-fit:contain">
+      <span class="cv" style="color:var(--green);font-size:9px;font-weight:900">Claim</span>
+      <span class="cl" style="font-size:6px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mute)">Reward</span>
+      <span class="bang" style="top:-5px;right:-5px;background:var(--green)">!</span></button>
+    <button style="flex:1;background:rgba(10,16,23,.95);border:1px solid var(--line);border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="map_destination.png" width="18" height="18" style="object-fit:contain">
+      <span class="cv" style="color:var(--blue);font-size:10px;font-weight:900">10.0</span>
+      <span class="cl" style="font-size:6px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mute)">Banked km</span></button>
+    <button style="flex:1;background:rgba(10,16,23,.95);border:1px solid var(--line);border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="reward_xp_sparkle.png" width="18" height="18" style="object-fit:contain">
+      <span class="cv" style="color:var(--orange);font-size:10px;font-weight:900">+208</span>
+      <span class="cl" style="font-size:6px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mute)">Today XP</span></button>
+    <button style="flex:1;background:rgba(10,16,23,.95);border:1px solid var(--line);border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="reward_streak_shield.png" width="18" height="18" style="object-fit:contain">
+      <span class="cv" style="color:var(--purple);font-size:10px;font-weight:900">0</span>
+      <span class="cl" style="font-size:6px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mute)">Shields</span></button>
+    <button style="flex:1;background:rgba(10,16,23,.95);border:1px solid var(--line);border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <img src="reward_streak_fire.png" width="18" height="18" style="object-fit:contain">
+      <span class="cv" style="color:var(--orange);font-size:10px;font-weight:900">1</span>
+      <span class="cl" style="font-size:6px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mute)">Streak</span></button>
+  </div>
+
+  <!-- REST-AT-CAMP -->
+  <div style="text-align:center;margin-top:18px">
+    <div style="position:relative;width:150px;height:96px;margin:0 auto">
+      <div style="position:absolute;left:50%;bottom:2px;transform:translateX(-50%);width:110px;height:48px;border-radius:50%;background:radial-gradient(ellipse,rgba(245,166,35,.42),transparent 72%);filter:blur(4px)"></div>
+      <img src="avatar_ninja.png" width="78" height="78" style="position:absolute;left:50%;top:0;transform:translateX(-58%);object-fit:contain;filter:drop-shadow(0 12px 16px rgba(0,0,0,.6))">
+      <img src="reward_streak_fire.png" width="40" height="40" style="position:absolute;left:50%;bottom:0;transform:translateX(4px);object-fit:contain;filter:drop-shadow(0 0 12px rgba(245,166,35,.55))">
+    </div>
+    <div class="mono" style="font-size:9px;color:var(--dim);margin-top:2px">resting at camp · +5% recovery until you move</div>
+  </div>
+
+  <!-- PRIMARY CTA -->
+  <div style="position:relative;z-index:2;padding:18px 16px 0">
+    <div style="display:flex;gap:9px">
+      <button style="flex:1.5;height:52px;border-radius:15px;font-weight:900;font-size:14px;letter-spacing:.03em;color:#05101f;
+           background:linear-gradient(90deg,var(--blue),var(--purple));box-shadow:0 14px 30px -18px var(--purple);display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>Travel here</button>
+      <button style="flex:none;width:52px;height:52px;border-radius:15px;font-weight:800;font-size:10px;color:var(--dim);background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Log</button>
+      <button style="flex:none;width:52px;height:52px;border-radius:15px;font-weight:800;font-size:10px;color:var(--dim);background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Sync</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:10px 22px 14px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="nav_home.png" width="24" height="24" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--blue)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;position:relative">
+      <div style="position:relative"><img src="nav_quests.png" width="24" height="24" alt="" style="opacity:.6">
+        <span style="position:absolute;top:-6px;right:-9px;width:16px;height:16px;border-radius:50% 50% 50% 2px;background:var(--red);border:1.5px solid var(--bg);display:flex;align-items:center;justify-content:center">
+          <span style="font-size:9px;font-weight:900;color:#fff;line-height:1">!</span></span></div>
+      <span style="font-size:9.5px;color:var(--mute)">Quests</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="nav_map.png" width="24" height="24" alt="" style="opacity:.6"><span style="font-size:9.5px;color:var(--mute)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="nav_profile.png" width="24" height="24" alt="" style="opacity:.6"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+      --brand:#2bb8c4;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    h1{margin:0}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+
+    .row{display:grid;grid-template-columns:1fr 46px 1fr;align-items:stretch;column-gap:10px}
+    .slot{border:1.5px solid var(--line);border-radius:12px;background:var(--panel);padding:10px;display:flex;align-items:center;gap:9px;min-height:78px;position:relative;overflow:hidden}
+    .slot .nm{font-size:11px;font-weight:700;line-height:1.15}
+    .slot .sub{font-size:8.5px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+    .founder-tag{position:absolute;top:0;left:0;font-size:7px;font-weight:800;letter-spacing:.12em;color:#05101f;background:var(--brand);padding:2px 6px;border-radius:0 0 7px 0}
+
+    .s-received{opacity:.4}
+    .s-received::after{content:"";position:absolute;top:7px;right:7px;width:15px;height:15px;border-radius:50%;background:var(--green);
+      -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 13l4 4L19 7' stroke='black' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/12px no-repeat;
+      mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 13l4 4L19 7' stroke='black' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/12px no-repeat}
+
+    .s-locked{opacity:.5}
+    .s-locked .lockwrap{position:absolute;inset:0;background:rgba(3,6,12,.5);display:flex;align-items:center;justify-content:center}
+
+    .s-pending{border-color:var(--orange);box-shadow:0 0 0 1px rgba(245,166,35,.3),0 12px 26px -18px rgba(245,166,35,.55);
+      background:linear-gradient(180deg,rgba(245,166,35,.09),var(--panel) 65%)}
+
+    .s-ready{border-color:var(--green);box-shadow:0 0 0 1px rgba(63,185,80,.35),0 14px 30px -18px rgba(63,185,80,.6);
+      background:linear-gradient(180deg,rgba(63,185,80,.11),var(--panel) 60%);cursor:pointer}
+
+    .rail{display:flex;flex-direction:column;align-items:center;position:relative}
+    .rail::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:var(--line)}
+    .tier{position:relative;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;
+      background:var(--panel-2);border:1px solid var(--line);color:var(--dim);margin:auto 0}
+    .tier.g{background:#0f1c12;border-color:#234a2a;color:var(--green)}
+    .tier.o{background:#0a1c1e;border-color:var(--green);color:var(--green);box-shadow:0 0 14px rgba(63,185,80,.4)}
+    @media (prefers-reduced-motion:no-preference){
+      .s-ready{animation:rd 2.2s ease-in-out infinite}
+      @keyframes rd{0%,100%{box-shadow:0 0 0 1px rgba(63,185,80,.35),0 14px 30px -18px rgba(63,185,80,.6)}50%{box-shadow:0 0 0 1px rgba(63,185,80,.55),0 14px 30px -18px rgba(63,185,80,.85)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:900px;position:relative;padding:0 0 26px;
+     background:radial-gradient(760px 320px at 50% -6%,rgba(43,184,196,.14),transparent 62%),var(--bg)">
+
+  <!-- HEADER -->
+  <div style="padding:16px 16px 14px;background:linear-gradient(180deg,rgba(43,184,196,.09),transparent)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:36px;height:36px;border:1px solid var(--line);border-radius:11px;background:var(--panel);display:flex;align-items:center;justify-content:center">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div style="flex:1">
+        <h1 class="num" style="font-size:24px;letter-spacing:.02em">SEASON 2</h1>
+        <div style="font-size:12px;color:var(--brand);font-weight:600;margin-top:-1px">Tide Reckoning</div>
+      </div>
+      <div style="text-align:right">
+        <div class="lab">Ends in</div>
+        <div class="mono num" style="font-size:14px">26d 10h</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+      <span class="tier o" style="margin:0">3</span>
+      <div style="flex:1">
+        <div style="height:8px;border-radius:999px;background:#0a1e20;overflow:hidden"><div style="width:34%;height:100%;background:linear-gradient(90deg,var(--brand),#8fe8ef)"></div></div>
+        <div class="mono" style="font-size:9.5px;color:var(--mute);margin-top:5px">910 XP to Tier 4</div>
+      </div>
+      <span class="tier" style="margin:0">4</span>
+    </div>
+
+    <button style="display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;border:1px dashed #1c4a4e;background:rgba(43,184,196,.06);text-align:left">
+      <img src="reward_treasure_chest.png" alt="" width="30" height="30" style="object-fit:contain">
+      <div style="flex:1">
+        <div style="font-size:11.5px;font-weight:700;color:var(--brand)">Unlock the Founder lane</div>
+        <div style="font-size:10px;color:var(--dim)">Every Founder reward, retro-claimed · 900 gems</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+
+    <div style="display:flex;justify-content:space-between;margin-top:14px;padding:0 4px">
+      <span class="lab">Free</span>
+      <span class="lab" style="color:var(--brand)">Founder</span>
+    </div>
+  </div>
+
+  <!-- TRACK -->
+  <div style="display:flex;flex-direction:column;gap:12px;padding:2px 12px 0">
+
+    <!-- T1 — received -->
+    <div class="row">
+      <div class="slot s-received"><img src="reward_xp_sparkle.png" width="34" height="34" alt=""><div><div class="nm">+150 Season XP</div><div class="sub">Currency</div></div></div>
+      <div class="rail"><span class="tier g">1</span></div>
+      <div class="slot s-locked"><img src="reward_daily_bonus.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">XP Boost · 12h</div><div class="sub">Consumable</div></div><span class="founder-tag">Founder</span>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+    </div>
+
+    <!-- T2 — received -->
+    <div class="row">
+      <div class="slot s-received"><img src="reward_streak_shield.png" width="34" height="34" alt=""><div><div class="nm">Streak Freeze ×1</div><div class="sub">Utility</div></div></div>
+      <div class="rail"><span class="tier g">2</span></div>
+      <div class="slot s-locked"><img src="title_marathoner.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">"Tidewalker" title</div><div class="sub">Cosmetic</div></div><span class="founder-tag">Founder</span>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+    </div>
+
+    <!-- T3 CURRENT — ready to claim -->
+    <div class="row">
+      <button class="slot s-ready" style="text-align:left;cursor:pointer">
+        <img src="reward_treasure_chest.png" width="38" height="38" alt="">
+        <div style="flex:1"><div class="nm">Pearl Cache</div><div class="sub" style="color:var(--green)">Ready · tap to collect</div></div>
+        <span style="width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </span>
+      </button>
+      <div class="rail"><span class="tier o">3</span></div>
+      <div class="slot s-locked"><img src="title_champion.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">"Current's Chosen" title</div><div class="sub">Cosmetic</div></div><span class="founder-tag">Founder</span>
+        <div class="lockwrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+      </div>
+    </div>
+
+    <!-- T4 — pending (next up) -->
+    <div class="row">
+      <div class="slot s-pending"><img src="item_aura_stone.png" width="34" height="34" alt=""><div><div class="nm">Tidewalker Cloak</div><div class="sub" style="color:var(--orange)">In progress · 910 XP to go</div></div></div>
+      <div class="rail"><span class="tier">4</span></div>
+      <div class="slot s-locked"><img src="reward_xp_sparkle.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">+500 Season XP</div><div class="sub">Currency</div></div><span class="founder-tag">Founder</span>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+    </div>
+
+    <!-- T5 — locked -->
+    <div class="row">
+      <div class="slot s-locked"><img src="reward_daily_bonus.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">XP Boost · 24h</div><div class="sub">Consumable</div></div>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+      <div class="rail"><span class="tier">5</span></div>
+      <div class="slot s-locked"><img src="rank_veteran.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">Veteran frame</div><div class="sub">Cosmetic</div></div><span class="founder-tag">Founder</span>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+    </div>
+
+    <!-- T6 — locked -->
+    <div class="row">
+      <div class="slot s-locked"><img src="reward_xp_sparkle.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">+300 Season XP</div><div class="sub">Currency</div></div>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+      <div class="rail"><span class="tier">6</span></div>
+      <div class="slot s-locked"><img src="item_champion_gloves.png" width="34" height="34" alt=""><div><div class="nm" style="color:var(--dim)">Riptide Gloves</div><div class="sub" style="color:var(--purple)">Epic · gear</div></div><span class="founder-tag">Founder</span>
+        <div class="lockwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
+    </div>
+
+    <!-- LEGEND -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px 2px 0">
+      <span style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--mute)"><span style="width:9px;height:9px;border-radius:3px;background:var(--panel);border:1.5px solid var(--line);opacity:.6"></span>Received</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--mute)"><span style="width:9px;height:9px;border-radius:3px;background:var(--panel);border:1.5px solid var(--mute)"></span>Locked</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--orange)"><span style="width:9px;height:9px;border-radius:3px;background:var(--panel);border:1.5px solid var(--orange)"></span>Pending</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--green)"><span style="width:9px;height:9px;border-radius:3px;background:var(--panel);border:1.5px solid var(--green)"></span>Ready</span>
+    </div>
+
+    <!-- MILESTONE T25 -->
+    <div style="margin-top:6px;border:1px solid #1c4a4e;border-radius:16px;padding:14px;display:flex;align-items:center;gap:13px;
+         background:linear-gradient(120deg,rgba(43,184,196,.16),rgba(79,158,255,.06))">
+      <img src="zone_coral_coast.png" width="52" height="52" alt="" style="object-fit:contain;filter:drop-shadow(0 8px 14px rgba(43,184,196,.4))">
+      <div style="flex:1">
+        <div class="lab" style="color:var(--brand)">Tier 25 · Season finale</div>
+        <div style="font-size:14px;font-weight:800;margin-top:2px">Tide Sovereign's Blessing</div>
+        <div style="font-size:10.5px;color:var(--dim)">Founder-exclusive ocean trail effect · carries between seasons</div>
+      </div>
+      <span class="mono num" style="font-size:12px;color:var(--mute)">22 tiers</span>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav style="margin-top:16px;padding:10px 16px 14px;display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="reward_daily_bonus.png" width="25" height="25" alt=""><span style="font-size:9.5px;font-weight:700;color:var(--brand)">Season</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Expedition</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="25" height="25" alt="" style="opacity:.55"><span style="font-size:9.5px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#03060c; --bg-2:#080e14; --panel:#0a1017; --panel-2:#0e151e; --line:#1e2732;
+      --text:#e6edf3; --dim:#8b949e; --mute:#4a5866;
+      --blue:#4f9eff; --purple:#a371f7; --orange:#f5a623; --red:#f85149; --green:#3fb950;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,-apple-system,system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+    img{display:block;-webkit-user-drag:none}
+    h1,h2,h3{margin:0}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .lab{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .num{font-weight:900;font-variant-numeric:tabular-nums}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+    button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+    @media (prefers-reduced-motion:no-preference){
+      .glow{animation:gl 2.4s ease-in-out infinite}
+      @keyframes gl{0%,100%{box-shadow:0 0 0 1px rgba(245,166,35,.28),0 16px 34px -20px rgba(245,166,35,.5)}
+        50%{box-shadow:0 0 0 1px rgba(245,166,35,.44),0 16px 34px -18px rgba(245,166,35,.72)}}
+      .rdot{animation:rp 1.8s ease-in-out infinite}
+      @keyframes rp{0%,100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}50%{box-shadow:0 0 0 4px rgba(63,185,80,.22)}}
+    }
+  </style>
+</helmet>
+
+<div style="width:390px;min-height:726px;position:relative;padding:12px 0 84px;
+     background:
+       radial-gradient(680px 300px at 50% -12%,rgba(79,158,255,.10),transparent 62%),
+       radial-gradient(520px 300px at 112% 34%,rgba(245,166,35,.07),transparent 60%),
+       var(--bg-2);
+     background-image:
+       radial-gradient(680px 300px at 50% -12%,rgba(79,158,255,.10),transparent 62%),
+       linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px),
+       linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px);
+     background-size:auto,34px 34px,34px 34px">
+
+  <!-- HEADER -->
+  <div style="display:flex;align-items:center;gap:11px;padding:4px 16px 0">
+    <div style="position:relative;width:46px;height:46px;flex:none">
+      <div style="position:absolute;inset:0;border-radius:14px;background:conic-gradient(var(--blue) 0 44%,#182230 44% 100%)"></div>
+      <img src="mystic_icon.png" alt="" width="40" height="40" style="position:absolute;inset:3px;border-radius:11px;object-fit:cover;background:#111925">
+      <span class="mono" style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:var(--blue);color:#05101f;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:999px">LV 4</span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:11px;color:var(--dim)">Good afternoon</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-top:1px">
+        <span style="font-size:15px;font-weight:800">test1</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--orange);border:1px solid #4b3d1c;border-radius:999px;padding:2px 7px 2px 5px">
+          <img src="reward_streak_fire.png" alt="" width="11" height="11" style="object-fit:contain">1-day streak</span>
+      </div>
+    </div>
+    <button aria-label="Notifications" style="position:relative;width:34px;height:34px;border:1px solid var(--line);border-radius:11px;background:var(--panel);display:flex;align-items:center;justify-content:center">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <span style="position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--red)"></span>
+    </button>
+  </div>
+
+  <!-- STREAK STRIP -->
+  <div style="display:flex;align-items:center;gap:6px;margin:13px 16px 0">
+    <span class="lab" style="flex:none;margin-right:2px">Streak</span>
+    <div style="display:flex;gap:5px;flex:1">
+      <span style="flex:1;height:6px;border-radius:999px;background:var(--green)"></span>
+      <span style="flex:1;height:6px;border-radius:999px;background:#151d27"></span>
+      <span style="flex:1;height:6px;border-radius:999px;background:#151d27"></span>
+      <span style="flex:1;height:6px;border-radius:999px;background:#151d27"></span>
+      <span style="flex:1;height:6px;border-radius:999px;background:#151d27"></span>
+      <span style="flex:1;height:6px;border-radius:999px;background:#151d27"></span>
+      <span style="flex:1;height:6px;border-radius:999px;background:#151d27"></span>
+    </div>
+    <span class="mono" style="flex:none;font-size:9px;color:var(--mute)">1 / 7</span>
+  </div>
+
+  <!-- REGION CARD (unchanged context) -->
+  <div class="card" style="margin:12px 16px 0;padding:12px;display:flex;gap:11px;align-items:center">
+    <img src="boss_forest_warden.png" alt="" width="42" height="42" style="object-fit:contain;flex:none;filter:drop-shadow(0 5px 10px rgba(0,0,0,.5))">
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <span class="lab" style="color:var(--green)">Forest of Endurance</span>
+        <span class="mono" style="font-size:9px;color:var(--red)">Warden 4d</span>
+      </div>
+      <div style="font-size:12.5px;font-weight:700;margin-top:3px">Misty Pine <span style="color:var(--mute)">&rarr;</span> Dawn Camp</div>
+      <div style="height:5px;border-radius:999px;background:#151d27;margin:7px 0 4px;overflow:hidden"><div style="width:33%;height:100%;background:var(--blue)"></div></div>
+      <span class="mono" style="font-size:9px;color:var(--dim)">1.0 / 3.0 km to next zone</span>
+    </div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+  </div>
+
+  <!-- ★ SEASON 1 BANNER — the thing this artboard is about -->
+  <button class="glow" style="display:block;width:calc(100% - 32px);margin:12px 16px 0;text-align:left;padding:13px 13px 12px;border-radius:16px;
+       border:1px solid #4b3d1c;background:
+         radial-gradient(140px 90px at 88% 0%,rgba(245,166,35,.20),transparent 70%),
+         linear-gradient(180deg,rgba(245,166,35,.13),rgba(245,166,35,.03))">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="position:relative;width:48px;height:48px;flex:none">
+        <img src="reward_treasure_chest.png" alt="" width="48" height="48" style="object-fit:contain;filter:drop-shadow(0 6px 11px rgba(0,0,0,.55))">
+        <span class="mono" style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);background:#1a1305;border:1px solid #4b3d1c;color:var(--orange);font-size:8px;font-weight:800;padding:0 5px;border-radius:999px">T7</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+          <span class="lab" style="color:var(--orange)">Season 1 &middot; Trail of Embers</span>
+          <span class="mono" style="font-size:9.5px;color:var(--dim);flex:none">12d left</span>
+        </div>
+        <div style="height:7px;border-radius:999px;background:#1e1608;margin:8px 0 6px;overflow:hidden"><div style="width:68%;height:100%;background:linear-gradient(90deg,var(--orange),#ffcf7a)"></div></div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:10px;color:var(--dim)">Tier 8 in <b class="mono" style="color:var(--text)">640</b> XP &middot; next <b style="color:var(--text)">Ember Cloak</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ready chip + coming-up preview -->
+    <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+      <span class="rdot" style="display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:800;letter-spacing:.04em;color:#05101f;background:var(--green);border-radius:999px;padding:3px 9px 3px 7px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="3.4" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>2 ready
+      </span>
+      <div style="flex:1"></div>
+      <span class="lab" style="font-size:8px;color:var(--mute)">Coming up</span>
+      <span style="display:flex;gap:5px">
+        <img src="item_aura_stone.png" width="20" height="20" alt="" style="object-fit:contain;opacity:.9">
+        <img src="title_marathoner.png" width="20" height="20" alt="" style="object-fit:contain;opacity:.9">
+        <img src="reward_xp_sparkle.png" width="20" height="20" alt="" style="object-fit:contain;opacity:.9">
+      </span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.6" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+  </button>
+  <div style="display:flex;align-items:center;gap:6px;margin:6px 20px 0">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+    <span style="font-size:8.5px;color:var(--mute);letter-spacing:.04em">Tap the banner &rarr; Season Track</span>
+  </div>
+
+  <!-- STAT STRIP -->
+  <div style="display:flex;justify-content:space-between;gap:6px;margin:14px 16px 0">
+    <span style="display:flex;align-items:center;gap:4px" class="mono"><img src="stat_strength.png" width="16" height="16" alt="STR"><span style="font-size:10px;color:var(--dim)">14</span></span>
+    <span style="display:flex;align-items:center;gap:4px" class="mono"><img src="stat_endurance.png" width="16" height="16" alt="END"><span style="font-size:10px;color:var(--dim)">21</span></span>
+    <span style="display:flex;align-items:center;gap:4px" class="mono"><img src="stat_agility.png" width="16" height="16" alt="AGI"><span style="font-size:10px;color:var(--dim)">17</span></span>
+    <span style="display:flex;align-items:center;gap:4px" class="mono"><img src="stat_flexibility.png" width="16" height="16" alt="FLX"><span style="font-size:10px;color:var(--dim)">9</span></span>
+    <span style="display:flex;align-items:center;gap:4px" class="mono"><img src="stat_stamina.png" width="16" height="16" alt="STA"><span style="font-size:10px;color:var(--dim)">22</span></span>
+  </div>
+
+  <!-- DAILY QUESTS -->
+  <div class="card" style="margin:12px 16px 0;padding:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="quest_general.png" alt="" width="26" height="26" style="object-fit:contain">
+        <span style="font-size:12.5px;font-weight:700">Daily Quests</span>
+      </div>
+      <span class="mono num" style="font-size:14px">2<span style="color:var(--mute);font-weight:600">/5</span></span>
+    </div>
+    <div style="height:4px;border-radius:999px;background:#151d27;margin:9px 0 5px;overflow:hidden"><div style="width:40%;height:100%;background:var(--blue)"></div></div>
+    <span class="mono" style="font-size:9px;color:var(--orange)">+300 XP all-clear bonus</span>
+  </div>
+
+  <!-- LAST WORKOUT -->
+  <div class="card" style="margin:10px 16px 0;padding:10px 12px;display:flex;align-items:center;gap:10px">
+    <div style="width:30px;height:30px;border-radius:9px;background:#151d27;border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4v6l5 2"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:11.5px;font-weight:700">Morning Run &middot; 3.4 km</div>
+      <span class="mono" style="font-size:9px;color:var(--dim)">yesterday &middot; +148 XP &middot; +210 Season XP</span>
+    </div>
+    <span class="mono" style="font-size:9px;color:var(--mute)">28:10</span>
+  </div>
+
+  <!-- PINNED CTA -->
+  <div style="position:absolute;left:16px;right:16px;bottom:64px">
+    <button style="width:100%;height:50px;border-radius:14px;font-weight:900;font-size:14px;letter-spacing:.04em;color:#05101f;
+         background:linear-gradient(90deg,var(--blue),var(--purple));box-shadow:0 14px 30px -18px var(--purple);display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>LOG WORKOUT
+    </button>
+  </div>
+
+  <!-- NAV -->
+  <nav style="position:absolute;left:0;right:0;bottom:0;padding:8px 16px 12px;background:linear-gradient(180deg,transparent,var(--bg) 42%);display:grid;grid-template-columns:repeat(4,1fr);align-items:end">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_home.png" width="24" height="24" alt=""><span style="font-size:9px;font-weight:700;color:var(--blue)">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;position:relative">
+      <img src="reward_daily_bonus.png" width="24" height="24" alt="" style="opacity:.6">
+      <span style="position:absolute;top:-2px;right:24px;width:7px;height:7px;border-radius:50%;background:var(--green);border:1.5px solid var(--bg)"></span>
+      <span style="font-size:9px;color:var(--mute)">Season</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_map.png" width="24" height="24" alt="" style="opacity:.55"><span style="font-size:9px;color:var(--mute)">Map</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><img src="nav_profile.png" width="24" height="24" alt="" style="opacity:.55"><span style="font-size:9px;color:var(--mute)">Profile</span></div>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>
