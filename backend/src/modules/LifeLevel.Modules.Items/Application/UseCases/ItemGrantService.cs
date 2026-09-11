@@ -11,7 +11,7 @@ public record GrantItemResult(CharacterItem? Item, bool InventoryFull);
 public record BlockedItemInfo(Guid ItemId, string ItemName, string ItemIcon);
 public record LevelUpGrantSummary(List<ItemDto> Granted, List<BlockedItemInfo> Blocked);
 
-public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead, IInventorySlotReadPort inventorySlotRead)
+public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead, IInventorySlotReadPort inventorySlotRead, ITalentBonusReadPort? talentBonus = null)
 {
     public async Task<GrantItemResult> GrantItemAsync(Guid userId, Guid itemId, CancellationToken ct = default)
     {
@@ -54,6 +54,7 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
         var granted = new List<ItemDto>();
         var blocked = new List<BlockedItemInfo>();
         var rng = new Random();
+        var talentDropBonus = talentBonus is null ? 0 : (await talentBonus.GetBonusesAsync(userId, ct)).DropChancePct;
 
         foreach (var rule in rules)
         {
@@ -72,7 +73,8 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
             if (requiredLevel <= previousLevel || requiredLevel > newLevel)
                 continue;
 
-            if (rule.DropChancePct < 100 && rng.Next(100) >= rule.DropChancePct)
+            var lvlChance = rule.DropChancePct + talentDropBonus;
+            if (lvlChance < 100 && rng.Next(100) >= lvlChance)
                 continue;
 
             var result = await GrantItemAsync(userId, rule.ItemId, ct);
@@ -117,10 +119,12 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
 
         var granted = new List<CharacterItem>();
         var rng = new Random();
+        var talentDropBonus = talentBonus is null ? 0 : (await talentBonus.GetBonusesAsync(userId)).DropChancePct;
 
         foreach (var rule in rules)
         {
-            if (rule.DropChancePct < 100 && rng.Next(100) >= rule.DropChancePct)
+            var chance = rule.DropChancePct + talentDropBonus;
+            if (chance < 100 && rng.Next(100) >= chance)
                 continue;
 
             var result = await GrantItemAsync(userId, rule.ItemId);

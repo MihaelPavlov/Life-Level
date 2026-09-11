@@ -25,7 +25,8 @@ public class ActivityService(
     ILogger<ActivityService> logger,
     IWorldDungeonActivityPort? worldDungeonActivity = null,
     IActivityBossDamagePort? activityBossDamage = null,
-    IGuildRaidActivityPort? guildRaidActivity = null)
+    IGuildRaidActivityPort? guildRaidActivity = null,
+    ITalentBonusReadPort? talentBonus = null)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort, IActivityHistoryReadPort
 {
     // LL-035: the "log your first activity" tutorial step gate. We advance the character
@@ -60,6 +61,20 @@ public class ActivityService(
             var boostedXp = (int)(xp * (1.0 + gearBonuses.XpBonusPct / 100.0));
             xpBonusApplied = boostedXp - xp;
             xp = boostedXp;
+        }
+
+        // Apply talent XP bonuses (global + per-type + first-of-day + comeback)
+        if (talentBonus is not null)
+        {
+            var firstToday = !await db.Set<ActivityEntity>()
+                .AnyAsync(a => a.CharacterId == characterId && a.LoggedAt >= DateTime.UtcNow.Date);
+            var talentXpMult = await talentBonus.GetActivityXpMultiplierAsync(userId, request.Type, firstToday);
+            if (talentXpMult > 1.0)
+            {
+                var talentedXp = (int)(xp * talentXpMult);
+                xpBonusApplied += talentedXp - xp;
+                xp = talentedXp;
+            }
         }
 
         var activity = new ActivityEntity
@@ -228,6 +243,19 @@ public class ActivityService(
             HeartRateAvg = heartRateAvg,
         };
         var (xp, str, end, agi, flx, sta) = CalculateGains(req);
+
+        // Imported activities get the same gear + talent XP bonuses as manual ones.
+        var extGear = await gearBonus.GetEquippedBonusesAsync(userId, ct);
+        if (extGear.XpBonusPct > 0)
+            xp = (int)(xp * (1.0 + extGear.XpBonusPct / 100.0));
+        if (talentBonus is not null)
+        {
+            var extFirstToday = !await db.Set<ActivityEntity>()
+                .AnyAsync(a => a.CharacterId == characterId && a.LoggedAt >= DateTime.UtcNow.Date, ct);
+            var extTalentMult = await talentBonus.GetActivityXpMultiplierAsync(userId, type, extFirstToday, ct);
+            if (extTalentMult > 1.0)
+                xp = (int)(xp * extTalentMult);
+        }
 
         var activity = new ActivityEntity
         {

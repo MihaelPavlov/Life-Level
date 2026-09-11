@@ -16,7 +16,8 @@ public class GuildService(
     DbContext db,
     ICharacterXpPort characterXp,
     IGuildRaidRealtimePort realtime,
-    INotificationPort notifications)
+    INotificationPort notifications,
+    ITalentBonusReadPort? talentBonus = null)
     : IGuildRaidActivityPort, IGuildRaidMaintenancePort
 {
     private const int DefaultMaxMembers = 5;
@@ -563,6 +564,15 @@ public class GuildService(
 
         var damage = BossService.CalculateDamageFromActivity(activityType, durationMinutes, distanceKm, calories);
         if (damage <= 0) return [];
+
+        // Talent boss-damage bonuses (Direct Hit + Boss Instinct — a raid is active here by definition).
+        if (talentBonus is not null)
+        {
+            var talents = await talentBonus.GetBonusesAsync(userId, ct);
+            var talentBossPct = talents.BossDamagePct + talents.BossActiveDamagePct;
+            if (talentBossPct > 0)
+                damage = (int)Math.Round(damage * (1.0 + talentBossPct / 100.0));
+        }
 
         return await ApplyDamageAsync(userId, raid, damage, activityId, activityLoggedAt, ct);
     }

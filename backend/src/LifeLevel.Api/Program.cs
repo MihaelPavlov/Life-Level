@@ -22,6 +22,7 @@ using LifeLevel.Modules.Achievements.Infrastructure;
 using LifeLevel.Modules.Integrations.Infrastructure;
 using LifeLevel.Modules.Notifications;
 using LifeLevel.Modules.Seasons.Infrastructure;
+using LifeLevel.Modules.Talents.Infrastructure;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Events;
@@ -140,6 +141,9 @@ builder.Services.AddNotificationsModule();
 // Seasons module (Season Track / Founder Pass — depends on Character/Items/Streak ports)
 builder.Services.AddSeasonsModule();
 
+// Talents module (gacha talent cards — depends on Streak port; provides ITalentBonusReadPort)
+builder.Services.AddTalentsModule();
+
 // Integrations module
 builder.Services.AddIntegrationsModule();
 builder.Services.Configure<StravaOptions>(builder.Configuration.GetSection(StravaOptions.Section));
@@ -156,6 +160,7 @@ builder.Services.AddScoped<TitleSeeder>();
 builder.Services.AddScoped<AdminUserSeeder>();
 builder.Services.AddScoped<RankThresholdSeeder>();
 builder.Services.AddScoped<SeasonSeeder>();
+builder.Services.AddScoped<TalentSeeder>();
 
 // User context
 builder.Services.AddHttpContextAccessor();
@@ -263,6 +268,9 @@ using (var scope = app.Services.CreateScope())
 
     var seasonSeeder = scope.ServiceProvider.GetRequiredService<SeasonSeeder>();
     await seasonSeeder.SeedAsync();
+
+    var talentSeeder = scope.ServiceProvider.GetRequiredService<TalentSeeder>();
+    await talentSeeder.SeedAsync();
 }
 
 app.Run();

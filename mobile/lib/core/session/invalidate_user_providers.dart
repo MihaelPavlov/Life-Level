@@ -12,6 +12,7 @@ import '../../features/notifications/services/notifications_service.dart';
 import '../../features/quests/providers/quest_provider.dart';
 import '../../features/season/providers/season_provider.dart';
 import '../../features/streak/providers/streak_provider.dart';
+import '../../features/talents/providers/talents_provider.dart';
 
 // Call on logout, app resume, and offline→online transitions so we never
 // serve the previous session's values after the auth token changes.
@@ -27,6 +28,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(bossListProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
+  ref.invalidate(talentsProvider);
 }
 
 // Container-scoped variant for call sites where the calling widget may be
@@ -46,6 +48,7 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(bossListProvider);
   container.invalidate(guildProvider);
   container.invalidate(seasonProvider);
+  container.invalidate(talentsProvider);
 }
 
 /// Clears the JWT, routes to LoginScreen, and invalidates user-scoped providers.

@@ -30,6 +30,8 @@ using LifeLevel.Modules.Notifications;
 using LifeLevel.Modules.Notifications.Domain.Entities;
 using LifeLevel.Modules.Seasons.Domain.Entities;
 using LifeLevel.Modules.Seasons.Infrastructure;
+using LifeLevel.Modules.Talents.Domain.Entities;
+using LifeLevel.Modules.Talents.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -138,6 +140,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserSeasonClaim> UserSeasonClaims => Set<UserSeasonClaim>();
     public DbSet<UserFounderPass> UserFounderPasses => Set<UserFounderPass>();
 
+    // Talents
+    public DbSet<Talent> Talents => Set<Talent>();
+    public DbSet<UserTalent> UserTalents => Set<UserTalent>();
+    public DbSet<UserTalentWallet> UserTalentWallets => Set<UserTalentWallet>();
+    public DbSet<TalentDrawEntry> TalentDrawEntries => Set<TalentDrawEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ── Per-module EF configurations ──────────────────────────────────────────
@@ -157,6 +165,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AchievementsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SeasonsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TalentsModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 
@@ -206,6 +215,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<UserFounderPass>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Talents module cross-module: per-user rows → User
+        modelBuilder.Entity<UserTalent>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserTalentWallet>()
+            .HasOne<User>()
+            .WithOne()
+            .HasForeignKey<UserTalentWallet>(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TalentDrawEntry>()
             .HasOne<User>()
             .WithMany()
             .HasForeignKey(x => x.UserId)

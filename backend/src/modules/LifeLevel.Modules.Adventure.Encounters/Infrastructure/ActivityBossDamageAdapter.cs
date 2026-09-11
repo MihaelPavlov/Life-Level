@@ -17,7 +17,8 @@ namespace LifeLevel.Modules.Adventure.Encounters.Infrastructure;
 public class ActivityBossDamageAdapter(
     DbContext db,
     BossService bossService,
-    ILogger<ActivityBossDamageAdapter>? logger = null) : IActivityBossDamagePort
+    ILogger<ActivityBossDamageAdapter>? logger = null,
+    ITalentBonusReadPort? talentBonus = null) : IActivityBossDamagePort
 {
     public async Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
         Guid userId,
@@ -43,6 +44,15 @@ public class ActivityBossDamageAdapter(
         var damage = BossService.CalculateDamageFromActivity(
             activityType, durationMinutes, distanceKm, calories);
         if (damage <= 0) return Array.Empty<BossDefeatedInfo>();
+
+        // Talent boss-damage bonuses (Direct Hit + Boss Instinct — a boss is active here by definition).
+        if (talentBonus is not null)
+        {
+            var talents = await talentBonus.GetBonusesAsync(userId, ct);
+            var talentBossPct = talents.BossDamagePct + talents.BossActiveDamagePct;
+            if (talentBossPct > 0)
+                damage = (int)Math.Round(damage * (1.0 + talentBossPct / 100.0));
+        }
 
         // Single bulk lookup keyed by id — avoids N+1 when multiple bosses
         // are defeated in the same tick.

@@ -7,7 +7,7 @@ using StreakEntity = LifeLevel.Modules.Streak.Domain.Entities.Streak;
 
 namespace LifeLevel.Modules.Streak.Application.UseCases;
 
-public class StreakService(DbContext db, IEventPublisher events)
+public class StreakService(DbContext db, IEventPublisher events, ITalentStreakAssistPort? talentAssist = null)
     : IStreakReadPort, IStreakShieldPort, IStreakDailyReset
 {
     public async Task<StreakEntity> GetOrCreateAsync(Guid userId, CancellationToken ct = default)
@@ -48,6 +48,7 @@ public class StreakService(DbContext db, IEventPublisher events)
         }
 
         bool shieldUsed = false;
+        bool secondWindUsed = false;
         bool broke = false;
         bool shieldAwarded = false;
         int previousStreak = streak.Current;
@@ -69,6 +70,16 @@ public class StreakService(DbContext db, IEventPublisher events)
             streak.ShieldUsedToday = true;
             streak.Current += 1;
             shieldUsed = true;
+        }
+        else if (streak.LastActivityDate.Value.Date == today.AddDays(-2)
+                 && !streak.ShieldUsedToday
+                 && talentAssist is not null
+                 && await talentAssist.TryConsumeSecondWindAsync(userId, today, ct))
+        {
+            // "Second Wind" talent — a free auto-save when no shield is available.
+            streak.ShieldUsedToday = true;
+            streak.Current += 1;
+            secondWindUsed = true;
         }
         else
         {
@@ -96,7 +107,7 @@ public class StreakService(DbContext db, IEventPublisher events)
         return new StreakUpdateResult
         {
             Updated = true,
-            ShieldUsed = shieldUsed,
+            ShieldUsed = shieldUsed || secondWindUsed,
             StreakBroke = broke,
             Current = streak.Current,
             ShieldAwarded = shieldAwarded

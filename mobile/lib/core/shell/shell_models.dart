@@ -29,6 +29,7 @@ RingItem('titles',      '🏅', 'Titles',      Color(0xFFe8b86d), iconAsset: App
   RingItem('leaderboard', '🏆', 'Leaderboard', Color(0xFFf5a623), iconAsset: AppIcons.ringLeaderboard),
   RingItem('quests',      '📜', 'Quests',      Color(0xFF8b949e)),
   RingItem('season',      '🎫', 'Season',      Color(0xFFf5a623)),
+  RingItem('talents',     '🌟', 'Talents',     Color(0xFF38d9c8)),
 ];
 
 const kDefaultRingIds = ['world', 'guild', 'stats', 'titles', 'boss', 'season'];
@@ -66,6 +67,7 @@ const kAllNavItems = [
   NavTab('leaderboard', '🏆', 'Rankings'),
   NavTab('world',       '🗺️', 'Map',      iconAsset: AppIcons.navMap),
   NavTab('season',      '🎫', 'Season'),
+  NavTab('talents',     '🌟', 'Talents'),
 ];
 
 const kDefaultNavIds = ['home', 'quests', 'world', 'profile'];

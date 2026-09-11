@@ -14,9 +14,17 @@ public class QuestService(
     DbContext db,
     ICharacterXpPort characterXp,
     IEventPublisher events,
-    ILevelUpItemGrantPort levelUpItemGrant)
+    ILevelUpItemGrantPort levelUpItemGrant,
+    ITalentBonusReadPort? talentBonus = null)
     : IDailyQuestReadPort, IQuestProgressPort
 {
+    private async Task<long> ApplyQuestXpTalentAsync(Guid userId, long baseXp)
+    {
+        if (talentBonus is null) return baseXp;
+        var pct = (await talentBonus.GetBonusesAsync(userId)).QuestXpPct;
+        return pct <= 0 ? baseXp : (long)Math.Round(baseXp * (1.0 + pct / 100.0));
+    }
+
     // Far-future expiry used for special quests
     private static readonly DateTime SpecialQuestExpiry = new(2099, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
@@ -176,9 +184,10 @@ public class QuestService(
                 progress.RewardClaimed = true;
 
                 await db.SaveChangesAsync();
-                var xpResult = await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {quest.Title}", quest.RewardXp);
+                var questXp = await ApplyQuestXpTalentAsync(userId, quest.RewardXp);
+                var xpResult = await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {quest.Title}", questXp);
                 await GrantLevelItemsIfNeededAsync(userId, xpResult);
-                await events.PublishAsync(new QuestCompletedEvent(userId, quest.Id, quest.Title, quest.RewardXp), CancellationToken.None);
+                await events.PublishAsync(new QuestCompletedEvent(userId, quest.Id, quest.Title, questXp), CancellationToken.None);
 
                 updatedProgresses.Add(progress);
             }
@@ -212,7 +221,8 @@ public class QuestService(
             if (!bonusAlreadyAwarded)
             {
                 await db.SaveChangesAsync();
-                var xpResult = await characterXp.AwardXpAsync(userId, "DailyQuestBonus", "🎯", "All 5 daily quests completed!", 300);
+                var allFiveXp = await ApplyQuestXpTalentAsync(userId, 300);
+                var xpResult = await characterXp.AwardXpAsync(userId, "DailyQuestBonus", "🎯", "All 5 daily quests completed!", allFiveXp);
                 await GrantLevelItemsIfNeededAsync(userId, xpResult);
 
                 // Mark bonus on the first progress record for today
@@ -230,7 +240,7 @@ public class QuestService(
                 }
 
                 allDailyCompleted = true;
-                bonusXp = 300;
+                bonusXp = (int)allFiveXp;
             }
         }
 

@@ -2192,6 +2192,165 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Streaks");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.Talent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("DrawWeight")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EffectType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("IconKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("MaxLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<double>("PerLevelValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Rarity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("Talents");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.TalentDrawEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DrawnAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("ShardsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TalentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "DrawnAt");
+
+                    b.ToTable("TalentDrawEntries");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.UserTalent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Shards")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TalentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TalentId");
+
+                    b.HasIndex("UserId", "TalentId")
+                        .IsUnique();
+
+                    b.ToTable("UserTalents");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.UserTalentWallet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Coins")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("LastStreakBrokenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SecondWindUsedThisWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SecondWindWeekKey")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("Tokens")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserTalentWallets");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.Region", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3265,6 +3424,39 @@ namespace LifeLevel.Api.Migrations
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithOne()
                         .HasForeignKey("LifeLevel.Modules.Streak.Domain.Entities.Streak", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.TalentDrawEntry", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.UserTalent", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Talents.Domain.Entities.Talent", null)
+                        .WithMany()
+                        .HasForeignKey("TalentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Talents.Domain.Entities.UserTalentWallet", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithOne()
+                        .HasForeignKey("LifeLevel.Modules.Talents.Domain.Entities.UserTalentWallet", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

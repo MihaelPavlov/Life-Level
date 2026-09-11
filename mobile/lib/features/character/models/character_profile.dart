@@ -1,5 +1,52 @@
 import '../../items/models/item_models.dart';
 
+/// Always-active talent bonuses + wallet, enriched onto `GET /character/me`.
+class TalentSummary {
+  final int ownedCount;
+  final int catalogCount;
+  final int totalLevels;
+  final int coins;
+  final int tokens;
+  final int strBonus;
+  final int endBonus;
+  final int agiBonus;
+  final int flxBonus;
+  final int staBonus;
+  final List<String> effectLines;
+
+  const TalentSummary({
+    required this.ownedCount,
+    required this.catalogCount,
+    required this.totalLevels,
+    required this.coins,
+    required this.tokens,
+    required this.strBonus,
+    required this.endBonus,
+    required this.agiBonus,
+    required this.flxBonus,
+    required this.staBonus,
+    required this.effectLines,
+  });
+
+  factory TalentSummary.fromJson(Map<String, dynamic> j) => TalentSummary(
+        ownedCount: (j['ownedCount'] as num?)?.toInt() ?? 0,
+        catalogCount: (j['catalogCount'] as num?)?.toInt() ?? 0,
+        totalLevels: (j['totalLevels'] as num?)?.toInt() ?? 0,
+        coins: (j['coins'] as num?)?.toInt() ?? 0,
+        tokens: (j['tokens'] as num?)?.toInt() ?? 0,
+        strBonus: (j['strBonus'] as num?)?.toInt() ?? 0,
+        endBonus: (j['endBonus'] as num?)?.toInt() ?? 0,
+        agiBonus: (j['agiBonus'] as num?)?.toInt() ?? 0,
+        flxBonus: (j['flxBonus'] as num?)?.toInt() ?? 0,
+        staBonus: (j['staBonus'] as num?)?.toInt() ?? 0,
+        effectLines: ((j['effectLines'] as List<dynamic>?) ?? const [])
+            .map((e) => e.toString())
+            .toList(),
+      );
+
+  bool get hasAny => ownedCount > 0;
+}
+
 class CharacterProfile {
   final String username;
   final String? avatarEmoji;
@@ -22,6 +69,7 @@ class CharacterProfile {
   final int availableStatPoints;
   final bool loginRewardAvailable;
   final GearBonusesDto? gearBonuses;
+  final TalentSummary? talents;
   // ── Tutorial progress ──
   /// 0 = not started (intro modal pending), 1–6 = step bubbles,
   /// 7 = outro modal pending, -1 = skipped by user, 99 = fully completed.
@@ -57,6 +105,7 @@ class CharacterProfile {
     required this.availableStatPoints,
     this.loginRewardAvailable = false,
     this.gearBonuses,
+    this.talents,
     this.tutorialStep = 0,
     this.tutorialTopicsSeen = 0,
     this.mapTutorialStep = 0,
@@ -87,6 +136,9 @@ class CharacterProfile {
         gearBonuses: json['gearBonuses'] != null
             ? GearBonusesDto.fromJson(
                 json['gearBonuses'] as Map<String, dynamic>)
+            : null,
+        talents: json['talents'] != null
+            ? TalentSummary.fromJson(json['talents'] as Map<String, dynamic>)
             : null,
         tutorialStep: json['tutorialStep'] as int? ?? 0,
         tutorialTopicsSeen: json['tutorialTopicsSeen'] as int? ?? 0,
