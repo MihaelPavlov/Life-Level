@@ -18,6 +18,7 @@ public static class CharacterModule
         services.AddScoped<ICharacterIdReadPort>(sp => sp.GetRequiredService<CharacterService>());
         services.AddScoped<IInventorySlotReadPort>(sp => sp.GetRequiredService<CharacterService>());
         services.AddScoped<ICharacterTutorialPort>(sp => sp.GetRequiredService<CharacterService>());
+        services.AddScoped<ICharacterStatsSnapshotReadPort>(sp => sp.GetRequiredService<CharacterService>());
         services.AddScoped<IEventHandler<UserRegisteredEvent>, CharacterCreatedHandler>();
         services.AddScoped<TitleService>();
         services.AddScoped<TitleUnlockAdapter>();

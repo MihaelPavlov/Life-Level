@@ -11,6 +11,7 @@ class AppIcons {
   static const String navProfile = 'assets/icons/nav_profile.png';
   static const String navQuests  = 'assets/icons/nav_quests.png';
   static const String navStats   = 'assets/icons/nav_stats.png';
+  static const String navGear    = 'assets/icons/nav_gear.png';
   static const String menuIcon   = 'assets/menu_icon.png';
 
   // ── Ring Menu ───────────────────────────────────────────────────────────────
@@ -161,4 +162,10 @@ class AppIcons {
   static const String homeGemIcon    = 'assets/Home/gem_icon.png';
   static const String homeStepsIcon  = 'assets/Home/steps_icon.png';
   static const String homePowerIcon  = 'assets/Home/power_icon.png';
+  static const String homeJournalIcon = 'assets/Home/journal_icon.png';
+
+  // ── Gear page (decorative art) ───────────────────────────────────────────────
+  static const String gearBackground = 'assets/Gear/equipment_background.png';
+  static const String gearOutfitIcon = 'assets/Gear/outfit_icon.png';
+  static const String gearMountIcon  = 'assets/Gear/mount_icon.png';
 }

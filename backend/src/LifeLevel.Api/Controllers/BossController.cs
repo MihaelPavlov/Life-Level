@@ -1,5 +1,6 @@
 using LifeLevel.Api.Application;
 using LifeLevel.SharedKernel.Contracts;
+using LifeLevel.SharedKernel.Ports;
 using LifeLevel.Modules.Adventure.Encounters.Application.DTOs;
 using LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,10 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class BossController(BossService bossService, IUserContext userContext) : ControllerBase
+public class BossController(
+    BossService bossService,
+    IUserContext userContext,
+    ICharacterCombatStatsReadPort combatStatsReadPort) : ControllerBase
 {
     // ── List ───────────────────────────────────────────────────────────────────
 
@@ -76,15 +80,20 @@ public class BossController(BossService bossService, IUserContext userContext) :
         var userId = userContext.UserId;
         try
         {
-            var damage = BossService.CalculateDamageFromActivity(
+            var rawDamage = BossService.CalculateDamageFromActivity(
                 request.ActivityType,
                 request.DurationMinutes,
                 request.DistanceKm,
                 request.Calories);
 
+            var combatStats = await combatStatsReadPort.GetCombatStatsAsync(userId);
+            var damage = (int)Math.Round(rawDamage * combatStats.DamageMultiplier);
+
             var result = await bossService.DealDamageAsync(userId, bossId, damage);
             return Ok(new
             {
+                rawDamage,
+                damageMultiplier = combatStats.DamageMultiplier,
                 calculatedDamage = damage,
                 result.HpDealt,
                 result.MaxHp,

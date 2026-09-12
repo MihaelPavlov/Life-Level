@@ -17,7 +17,7 @@ public class CharacterService(
     DbContext db,
     IEventPublisher events,
     ITitleUnlockPort titleUnlock)
-    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort
+    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort, ICharacterStatsSnapshotReadPort
 {
     private const int StarterXpReward = 500;
 
@@ -106,6 +106,22 @@ public class CharacterService(
             TutorialTopicsSeen: character.TutorialTopicsSeen,
             MapTutorialStep: character.MapTutorialStep
         );
+    }
+
+    // ── ICharacterStatsSnapshotReadPort ──────────────────────────────────────
+    public async Task<CharacterStatsSnapshot?> GetStatsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var character = await db.Set<CharacterEntity>()
+            .FirstOrDefaultAsync(c => c.UserId == userId, ct);
+        if (character is null) return null;
+
+        return new CharacterStatsSnapshot(
+            character.Level,
+            character.Strength,
+            character.Endurance,
+            character.Agility,
+            character.Flexibility,
+            character.Stamina);
     }
 
     public async Task<IReadOnlyList<AvatarOptionResponse>> GetAvatarsAsync(

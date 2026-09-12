@@ -29,6 +29,7 @@ import '../../features/home/home_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/login_reward/login_reward_screen.dart';
 import '../../features/quests/quests_screen.dart';
+import '../../features/gear/gear_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
 import '../services/nav_tab_notifier.dart';
 import '../services/world_map_notifier.dart';
@@ -528,6 +529,20 @@ class _MainShellState extends ConsumerState<MainShell>
           });
         }
 
+      case 'gear':
+        final navIndex = _navIds.indexOf('gear');
+        if (navIndex != -1) {
+          setState(() {
+            _tabIndex = navIndex;
+            _worldOpen = false;
+            _titlesOpen = false;
+            _bossOpen = false;
+            _guildOpen = false;
+            _seasonOpen = false;
+            _talentsOpen = false;
+          });
+        }
+
       case 'boss':
         setState(() {
           _radialOpen = false;
@@ -911,6 +926,8 @@ class _MainShellState extends ConsumerState<MainShell>
         return const HomeScreen();
       case 'quests':
         return const QuestsScreen();
+      case 'gear':
+        return const GearScreen();
       // 'world' is never rendered inside the IndexedStack — tapping the nav
       // tab opens the shell overlay instead. This placeholder keeps index
       // alignment with _navIds.

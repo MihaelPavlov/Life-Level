@@ -16,7 +16,7 @@ const kPPurple   = AppColors.purple;
 const kPGold     = AppColors.orange;
 
 // ── tabs ──────────────────────────────────────────────────────────────────────
-const kProfileTabs = ['Overview', 'Equipment', 'Inventory', 'Achievements'];
+const kProfileTabs = ['Overview', 'Achievements'];
 
 // ── XP format helper ──────────────────────────────────────────────────────────
 String fmtXp(int n) => n >= 1000 ? '${(n / 1000).toStringAsFixed(1)}k' : '$n';

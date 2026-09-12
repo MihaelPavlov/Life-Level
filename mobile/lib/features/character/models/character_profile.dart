@@ -70,6 +70,11 @@ class CharacterProfile {
   final bool loginRewardAvailable;
   final GearBonusesDto? gearBonuses;
   final TalentSummary? talents;
+  // ── Combat stats (server-computed — see CombatStatsCalculator) ──
+  final int attack;
+  final int defense;
+  final int health;
+  final int power;
   // ── Tutorial progress ──
   /// 0 = not started (intro modal pending), 1–6 = step bubbles,
   /// 7 = outro modal pending, -1 = skipped by user, 99 = fully completed.
@@ -106,6 +111,10 @@ class CharacterProfile {
     this.loginRewardAvailable = false,
     this.gearBonuses,
     this.talents,
+    this.attack = 0,
+    this.defense = 0,
+    this.health = 0,
+    this.power = 0,
     this.tutorialStep = 0,
     this.tutorialTopicsSeen = 0,
     this.mapTutorialStep = 0,
@@ -140,6 +149,10 @@ class CharacterProfile {
         talents: json['talents'] != null
             ? TalentSummary.fromJson(json['talents'] as Map<String, dynamic>)
             : null,
+        attack: json['attack'] as int? ?? 0,
+        defense: json['defense'] as int? ?? 0,
+        health: json['health'] as int? ?? 0,
+        power: json['power'] as int? ?? 0,
         tutorialStep: json['tutorialStep'] as int? ?? 0,
         tutorialTopicsSeen: json['tutorialTopicsSeen'] as int? ?? 0,
         mapTutorialStep: json['mapTutorialStep'] as int? ?? 0,

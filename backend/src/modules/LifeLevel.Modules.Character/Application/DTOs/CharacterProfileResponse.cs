@@ -39,5 +39,9 @@ public record CharacterProfileResponse(
     int TutorialTopicsSeen,
     int MapTutorialStep,
     GearBonuses? GearBonuses = null,
-    TalentSummaryDto? Talents = null
+    TalentSummaryDto? Talents = null,
+    int Attack = 0,
+    int Defense = 0,
+    int Health = 0,
+    int Power = 0
 );

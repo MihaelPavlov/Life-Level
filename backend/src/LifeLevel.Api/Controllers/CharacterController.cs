@@ -1,4 +1,5 @@
 using LifeLevel.Api.Application;
+using LifeLevel.SharedKernel.Calculators;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Ports;
 using LifeLevel.Modules.Character.Application.DTOs;
@@ -21,7 +22,8 @@ public class CharacterController(
     IBossDefeatedCountReadPort bossDefeatedCountReadPort,
     IUserReadPort userReadPort,
     IGearBonusReadPort gearBonusReadPort,
-    ITalentProfileReadPort talentProfileReadPort) : ControllerBase
+    ITalentProfileReadPort talentProfileReadPort,
+    ITalentBonusReadPort talentBonusReadPort) : ControllerBase
 {
     [HttpPost("setup")]
     public async Task<IActionResult> Setup([FromBody] CharacterSetupRequest req)
@@ -55,7 +57,28 @@ public class CharacterController(
             var profile = await characterService.GetProfileAsync(userId, ctx);
             var gearBonuses = await gearBonusReadPort.GetEquippedBonusesAsync(userId);
             var talents = await talentProfileReadPort.GetSummaryAsync(userId);
-            var result = profile with { GearBonuses = gearBonuses, Talents = talents };
+            var talentBonuses = await talentBonusReadPort.GetBonusesAsync(userId);
+
+            var effStr = profile.Strength + gearBonuses.StrBonus + talentBonuses.StrBonus;
+            var effEnd = profile.Endurance + gearBonuses.EndBonus + talentBonuses.EndBonus;
+            var effAgi = profile.Agility + gearBonuses.AgiBonus + talentBonuses.AgiBonus;
+            var effFlx = profile.Flexibility + gearBonuses.FlxBonus + talentBonuses.FlxBonus;
+            var effSta = profile.Stamina + gearBonuses.StaBonus + talentBonuses.StaBonus;
+
+            var attack = CombatStatsCalculator.CalculateAttack(effStr, effAgi, talentBonuses.BossDamagePct);
+            var defense = CombatStatsCalculator.CalculateDefense(effAgi, effFlx);
+            var health = CombatStatsCalculator.CalculateHealth(effSta, effEnd);
+            var power = CombatStatsCalculator.CalculatePower(profile.Level, attack, defense, health, ctx.BossesDefeated);
+
+            var result = profile with
+            {
+                GearBonuses = gearBonuses,
+                Talents = talents,
+                Attack = attack,
+                Defense = defense,
+                Health = health,
+                Power = power
+            };
             return Ok(result);
         }
         catch (InvalidOperationException ex)

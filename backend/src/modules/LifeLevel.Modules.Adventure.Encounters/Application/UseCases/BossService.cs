@@ -21,7 +21,8 @@ public class BossService(
     IEventPublisher events,
     IServiceProvider services,
     IWorldZoneCompletionPort? worldZoneCompletion = null,
-    IWorldBlockerCompletionPort? worldBlockerCompletion = null)
+    IWorldBlockerCompletionPort? worldBlockerCompletion = null,
+    ICharacterCombatStatsReadPort? combatStats = null)
 {
     public async Task<List<BossListItemDto>> GetAllBossesForUserAsync(Guid userId)
     {
@@ -290,11 +291,20 @@ public class BossService(
             ? await activityHistoryRead.ListForUserBetweenAsync(userId, from, to, ct)
             : (IReadOnlyList<ActivityRecordDto>)Array.Empty<ActivityRecordDto>();
 
+        // Display only — HpDealt (already persisted at the time each hit
+        // landed) stays the source of truth for actual boss HP state. This
+        // just replays the current multiplier so the log reads consistently
+        // with today's Power, even though a leveled-up character's past
+        // hits landed at whatever their multiplier was at the time.
+        var multiplier = combatStats != null
+            ? (await combatStats.GetCombatStatsAsync(userId, ct)).DamageMultiplier
+            : 1.0;
+
         var items = new List<BossDamageHistoryItemDto>(activities.Count);
         foreach (var a in activities)
         {
-            var dmg = CalculateDamageFromActivity(
-                a.Type, a.DurationMinutes, a.DistanceKm, a.Calories);
+            var dmg = (int)Math.Round(CalculateDamageFromActivity(
+                a.Type, a.DurationMinutes, a.DistanceKm, a.Calories) * multiplier);
             if (dmg <= 0) continue;
             items.Add(new BossDamageHistoryItemDto
             {

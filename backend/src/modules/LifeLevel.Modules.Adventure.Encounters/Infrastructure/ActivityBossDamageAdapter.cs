@@ -18,7 +18,8 @@ public class ActivityBossDamageAdapter(
     DbContext db,
     BossService bossService,
     ILogger<ActivityBossDamageAdapter>? logger = null,
-    ITalentBonusReadPort? talentBonus = null) : IActivityBossDamagePort
+    ITalentBonusReadPort? talentBonus = null,
+    ICharacterCombatStatsReadPort? combatStats = null) : IActivityBossDamagePort
 {
     public async Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
         Guid userId,
@@ -45,13 +46,22 @@ public class ActivityBossDamageAdapter(
             activityType, durationMinutes, distanceKm, calories);
         if (damage <= 0) return Array.Empty<BossDefeatedInfo>();
 
-        // Talent boss-damage bonuses (Direct Hit + Boss Instinct — a boss is active here by definition).
+        // Power-based multiplier (Attack/Defense/Health, including the
+        // permanent talent BossDamagePct baked into Attack — see
+        // CombatStatsCalculator). Applied before the still-separate,
+        // contextual BossActiveDamagePct below, which only fires because a
+        // boss is active here by definition.
+        if (combatStats is not null)
+        {
+            var stats = await combatStats.GetCombatStatsAsync(userId, ct);
+            damage = (int)Math.Round(damage * stats.DamageMultiplier);
+        }
+
         if (talentBonus is not null)
         {
             var talents = await talentBonus.GetBonusesAsync(userId, ct);
-            var talentBossPct = talents.BossDamagePct + talents.BossActiveDamagePct;
-            if (talentBossPct > 0)
-                damage = (int)Math.Round(damage * (1.0 + talentBossPct / 100.0));
+            if (talents.BossActiveDamagePct > 0)
+                damage = (int)Math.Round(damage * (1.0 + talents.BossActiveDamagePct / 100.0));
         }
 
         // Single bulk lookup keyed by id — avoids N+1 when multiple bosses

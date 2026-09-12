@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../../features/activity/models/activity_models.dart';
-import '../../features/profile/widgets/equipment_slot_tile.dart' show rarityColor;
+import '../../features/items/models/item_models.dart' show rarityColor;
 import 'item_icon_image.dart';
 
 // ── constants matching home_screen palette ────────────────────────────────────

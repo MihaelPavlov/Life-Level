@@ -144,6 +144,12 @@ builder.Services.AddSeasonsModule();
 // Talents module (gacha talent cards — depends on Streak port; provides ITalentBonusReadPort)
 builder.Services.AddTalentsModule();
 
+// ICharacterCombatStatsReadPort — composition-root adapter over Character +
+// Items + Talents + Encounters ports (see CharacterCombatStatsAdapter for
+// why no single module can own this without a DI cycle). Registered after
+// all four dependency modules above.
+builder.Services.AddScoped<ICharacterCombatStatsReadPort, CharacterCombatStatsAdapter>();
+
 // Integrations module
 builder.Services.AddIntegrationsModule();
 builder.Services.Configure<StravaOptions>(builder.Configuration.GetSection(StravaOptions.Section));

@@ -1,3 +1,23 @@
+import 'package:flutter/material.dart';
+
+// Returns the border/accent color for a given rarity string. Shared across
+// every screen that renders item/equipment rarity (Gear page, level-up
+// overlay, ...).
+Color rarityColor(String rarity) {
+  switch (rarity.toLowerCase()) {
+    case 'legendary':
+      return const Color(0xFFf5a623);
+    case 'epic':
+      return const Color(0xFFa371f7);
+    case 'rare':
+      return const Color(0xFF4f9eff);
+    case 'uncommon':
+      return const Color(0xFF8b949e);
+    default:
+      return const Color(0xFF3fb950); // common
+  }
+}
+
 class ItemDto {
   final String id;
   final String name;

@@ -175,7 +175,9 @@ class HomeHeroStage extends ConsumerWidget {
                                 ),
                               ),
 
-                              // ── POWER (icon + score, static) ────────────
+                              // ── POWER (icon + score) ────────────────────
+                              // Server-computed (CombatStatsCalculator, from
+                              // core stats + equipped gear + talents).
                               Positioned(
                                 left: px(4),
                                 bottom: py(12),
@@ -187,10 +189,8 @@ class HomeHeroStage extends ConsumerWidget {
                                         height: px(32),
                                         fit: BoxFit.contain),
                                     SizedBox(width: px(6)),
-                                    // TODO: no Power-score formula yet —
-                                    // static placeholder.
                                     Text(
-                                      '1,240',
+                                      _fmtPower(p?.power ?? 0),
                                       style: TextStyle(
                                         fontSize: px(22),
                                         fontWeight: FontWeight.w900,
@@ -544,4 +544,15 @@ class _FloatingCharacterState extends State<_FloatingCharacter>
       ),
     );
   }
+}
+
+/// Thousand-separated integer, e.g. `1240` → `"1,240"`.
+String _fmtPower(int n) {
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  return buf.toString();
 }

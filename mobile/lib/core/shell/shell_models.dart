@@ -60,6 +60,7 @@ class NavTab {
 const kAllNavItems = [
   NavTab('home',        '🏠', 'Home',     iconAsset: AppIcons.navHome),
   NavTab('quests',      '📜', 'Quests',   iconAsset: AppIcons.navQuests),
+  NavTab('gear',        '🎒', 'Gear',     iconAsset: AppIcons.navGear),
   NavTab('profile',     '👤', 'Profile',  iconAsset: AppIcons.navProfile),
   NavTab('stats',       '📊', 'Stats',    iconAsset: AppIcons.navStats),
   NavTab('boss',        '⚔️', 'Bosses'),
@@ -70,7 +71,7 @@ const kAllNavItems = [
   NavTab('talents',     '🌟', 'Talents'),
 ];
 
-const kDefaultNavIds = ['home', 'quests', 'world', 'profile'];
+const kDefaultNavIds = ['home', 'gear', 'world', 'profile'];
 
 List<String> sanitizeNavIds(List<String>? ids) {
   final validIds = kAllNavItems.map((e) => e.id).toSet();

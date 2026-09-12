@@ -6,6 +6,7 @@ import '../../../core/widgets/app_icon_image.dart';
 import '../../character/providers/character_provider.dart';
 import '../../guild/screens/guild_screen.dart';
 import '../../login_reward/login_reward_screen.dart';
+import '../../quests/quests_screen.dart';
 import '../../streak/widgets/streak_detail_sheet.dart';
 import '../../titles/titles_ranks_screen.dart';
 import 'home_recent_activities_card.dart' show showActivityJournalSheet;
@@ -75,10 +76,15 @@ class HomeAdventureHub extends ConsumerWidget {
                 ),
                 const SizedBox(width: 10),
                 _HubTile(
-                  icon: const Icon(Icons.menu_book_rounded,
-                      size: 26, color: AppColors.textPrimary),
+                  icon: AppIconImage(AppIcons.homeJournalIcon, size: 30),
                   label: 'Journal',
                   onTap: () => showActivityJournalSheet(context),
+                ),
+                const SizedBox(width: 10),
+                _HubTile(
+                  icon: AppIconImage(AppIcons.navQuests, size: 30),
+                  label: 'Quests',
+                  onTap: () => _openQuests(context),
                 ),
                 const SizedBox(width: 10),
                 _HubTile(
@@ -108,6 +114,12 @@ class HomeAdventureHub extends ConsumerWidget {
       builder: (ctx) => LoginRewardScreen(
         onDismiss: () => Navigator.of(ctx).pop(),
       ),
+    );
+  }
+
+  void _openQuests(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const QuestsScreen()),
     );
   }
 

@@ -19,8 +19,6 @@ import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
 import 'tabs/achievements_tab.dart';
 import 'tabs/admin_tab.dart';
-import 'tabs/equipment_tab.dart';
-import 'tabs/inventory_tab.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -124,8 +122,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               controller: _tab,
               children: [
                 ProfileOverviewTab(profile: profile),
-                EquipmentTab(onOpenInventory: () => _tab?.animateTo(2)),
-                const InventoryTab(),
                 const AchievementsTab(),
                 if (_isAdmin) const AdminTab(),
               ],
