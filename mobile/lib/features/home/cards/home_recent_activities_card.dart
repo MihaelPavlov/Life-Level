@@ -5,89 +5,17 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../activity/models/activity_models.dart';
 import '../../activity/providers/activity_provider.dart';
-import '../widgets/home_card.dart';
-import '../widgets/home_section_title.dart';
 
-class HomeRecentActivitiesCard extends ConsumerWidget {
-  const HomeRecentActivitiesCard({super.key});
-
-  void _showAll(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: false,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _AllActivitiesSheet(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final historyAsync = ref.watch(activityHistoryProvider);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: HomeCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            HomeSectionTitle(
-              label: 'RECENT ACTIVITIES',
-              action: 'See all →',
-              onActionTap: () => _showAll(context),
-            ),
-            historyAsync.when(
-              loading: () => const _LoadingRows(),
-              error: (_, __) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Failed to load activities.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => ref.invalidate(activityHistoryProvider),
-                      child: const Text(
-                        'Retry',
-                        style: TextStyle(
-                          color: AppColors.blue,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              data: (history) {
-                if (history.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      'No activities yet. Log your first workout!',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  );
-                }
-                final preview = history.take(3).toList();
-                return Column(
-                  children: [
-                    for (var i = 0; i < preview.length; i++)
-                      _ActivityRow(
-                        activity: preview[i],
-                        isLast: i == preview.length - 1,
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+/// Shows the full activity-history sheet — the "workout journal". Used by
+/// the Adventure Hub's Journal tile.
+void showActivityJournalSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    useRootNavigator: false,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const _AllActivitiesSheet(),
+  );
 }
 
 class _ActivityRow extends StatelessWidget {
@@ -192,27 +120,6 @@ class _ActivityRow extends StatelessWidget {
     if (diff.inDays == 1) return 'yesterday';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return '${utc.day}/${utc.month}';
-  }
-}
-
-class _LoadingRows extends StatelessWidget {
-  const _LoadingRows();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        3,
-        (_) => Container(
-          height: 38,
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceElevated.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ),
-    );
   }
 }
 

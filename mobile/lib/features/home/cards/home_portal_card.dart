@@ -538,14 +538,12 @@ class _TravelingPortal extends StatelessWidget {
     final progress = total > 0 ? (travelled / total).clamp(0.0, 1.0) : 0.0;
     final remaining = (total - travelled).clamp(0.0, double.infinity);
     final typeBadge = _typeBadge(destination.type);
-    final label = total > 0
-        ? 'TRAVELING · ${remaining.toStringAsFixed(1)} KM TO GO'
-        : 'TRAVELING';
     return _HeroShell(
       accent: AppColors.blue,
-      label: label,
       labelColor: AppColors.blue,
       title: '$typeBadge${destination.name}',
+      titleTrailing:
+          total > 0 ? '${remaining.toStringAsFixed(1)} KM TO GO' : null,
       sub: destination.description ??
           'Keep logging workouts to close the distance.',
       regionChip: regionChip,
@@ -1540,9 +1538,10 @@ String _fmtNum(double v) {
 // ── Hero shell (visuals) ─────────────────────────────────────────────────────
 class _HeroShell extends StatelessWidget {
   final Color accent;
-  final String label;
+  final String? label;
   final Color labelColor;
   final String title;
+  final String? titleTrailing;
   final String sub;
   final String? regionChip;
   final Widget? leadingVisual;
@@ -1560,9 +1559,10 @@ class _HeroShell extends StatelessWidget {
 
   const _HeroShell({
     required this.accent,
-    required this.label,
+    this.label,
     required this.labelColor,
     required this.title,
+    this.titleTrailing,
     required this.sub,
     this.regionChip,
     this.leadingVisual,
@@ -1609,16 +1609,18 @@ class _HeroShell extends StatelessWidget {
             ),
             const SizedBox(height: 8),
           ],
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.4,
-              color: labelColor,
+          if (label != null && label!.isNotEmpty) ...[
+            Text(
+              label!,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.4,
+                color: labelColor,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
+            const SizedBox(height: 6),
+          ],
           if (leadingVisual != null)
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1657,16 +1659,35 @@ class _HeroShell extends StatelessWidget {
               ],
             )
           else ...[
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                height: 1.15,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+                if (titleTrailing != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    titleTrailing!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: accent,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: 4),
             Text(
@@ -1704,16 +1725,16 @@ class _HeroShell extends StatelessWidget {
           const SizedBox(height: 14),
           if (showProgressBar) ...[
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  barLabel,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                Expanded(
+                  child: HomeProgressBar(
+                    progress: barProgress,
+                    colors: barColors,
+                    height: 10,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   barValue,
                   style: TextStyle(
@@ -1723,12 +1744,6 @@ class _HeroShell extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            HomeProgressBar(
-              progress: barProgress,
-              colors: barColors,
-              height: 10,
             ),
           ] else
             Container(

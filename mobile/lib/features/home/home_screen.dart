@@ -8,15 +8,11 @@ import '../boss/providers/boss_provider.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
 import '../tutorial/providers/tutorial_provider.dart';
-import 'cards/home_header.dart';
+import 'cards/home_adventure_hub.dart';
+import 'cards/home_hero_stage.dart';
 import 'cards/home_portal_card.dart';
 import 'cards/home_log_workout_cta.dart';
-import 'cards/home_login_reward_chip.dart';
-import 'cards/home_recent_activities_card.dart';
 import 'cards/home_seasonal_event_row.dart';
-import 'cards/home_stat_strip.dart';
-import 'cards/home_streak_strip.dart';
-import 'cards/home_todays_quests.dart';
 import 'cards/home_xp_storm_banner.dart';
 import 'providers/world_progress_provider.dart';
 
@@ -37,18 +33,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // LL-035: GlobalKeys attached to the three Home coach-mark targets. The
   // tutorial controller reads their global rects to place floating bubbles.
   final _xpCardKey = GlobalKey();
-  final _statsRowKey = GlobalKey();
-  final _questsCardKey = GlobalKey();
-  final _streakStripKey = GlobalKey();
   bool _tutorialKeysRegistered = false;
 
   @override
   void dispose() {
     final c = ref.read(tutorialControllerProvider);
     c.unregisterKey('xpCard');
-    c.unregisterKey('statsRow');
-    c.unregisterKey('questsCard');
-    c.unregisterKey('streakStrip');
     super.dispose();
   }
 
@@ -62,9 +52,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         if (!mounted) return;
         final c = ref.read(tutorialControllerProvider);
         c.registerKey('xpCard', _xpCardKey);
-        c.registerKey('statsRow', _statsRowKey);
-        c.registerKey('questsCard', _questsCardKey);
-        c.registerKey('streakStrip', _streakStripKey);
       });
     }
 
@@ -85,12 +72,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                HomeHeader(profile: profile),
+                HomeHeroStage(profile: profile),
+                const HomeAdventureHub(),
                 const HomeXpStormBanner(state: xpStormState),
-                Container(
-                  key: _streakStripKey,
-                  child: const HomeStreakStrip(),
-                ),
                 Padding(
                   key: _xpCardKey,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -98,17 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onSync: () => _handleSync(context, ref),
                   ),
                 ),
-                Container(
-                  key: _statsRowKey,
-                  child: const HomeStatStrip(),
-                ),
                 const HomeSeasonalEventRow(state: seasonalState),
-                const HomeLoginRewardChip(),
-                Container(
-                  key: _questsCardKey,
-                  child: const HomeTodaysQuestsCard(),
-                ),
-                const HomeRecentActivitiesCard(),
                 const SizedBox(height: 16),
               ],
             ),

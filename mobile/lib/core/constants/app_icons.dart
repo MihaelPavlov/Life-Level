@@ -149,4 +149,16 @@ class AppIcons {
   static const String setupUnfinished = 'assets/Classes/icon_setup_unfinished.png';
   static const String classSelectBurst = 'assets/Classes/class_select_burst.png';
   static const String classSelectRuneRing = 'assets/Classes/class_select_rune_ring.png';
+
+  // ── Home hero stage (fixed decorative art — not per-user yet) ───────────────
+  static const String homeSceneBg    = 'assets/Home/scene_bg.jpg';
+  static const String homeBaseRender = 'assets/Home/base_render.png';
+  static const String homeMountRender = 'assets/Home/mount_render.png';
+  static const String homeSwordRender = 'assets/Home/sword_render.png';
+  static const String homeMountIcon  = 'assets/Home/mount_icon.png';
+  static const String homeSwordIcon  = 'assets/Home/sword_icon.png';
+  static const String homeCoinIcon   = 'assets/Home/coin_icon.png';
+  static const String homeGemIcon    = 'assets/Home/gem_icon.png';
+  static const String homeStepsIcon  = 'assets/Home/steps_icon.png';
+  static const String homePowerIcon  = 'assets/Home/power_icon.png';
 }

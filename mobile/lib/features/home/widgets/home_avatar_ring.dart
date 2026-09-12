@@ -34,6 +34,7 @@ class HomeAvatarRing extends StatelessWidget {
   final int level;
   final double xpProgress; // 0.0 – 1.0
   final double size;
+  final bool showLevelPill;
 
   const HomeAvatarRing({
     super.key,
@@ -41,13 +42,14 @@ class HomeAvatarRing extends StatelessWidget {
     required this.level,
     required this.xpProgress,
     this.size = 72,
+    this.showLevelPill = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
-      height: size + 6, // reserve room for overflowing LV pill
+      height: showLevelPill ? size + 6 : size, // reserve room for overflowing LV pill
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -86,40 +88,41 @@ class HomeAvatarRing extends StatelessWidget {
             ),
           ),
           // LV pill anchored to the bottom-centre, partially overflowing.
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.blue, AppColors.purple],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: kHBgBase, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.blue.withValues(alpha: 0.4),
-                      blurRadius: 12,
+          if (showLevelPill)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.blue, AppColors.purple],
                     ),
-                  ],
-                ),
-                child: Text(
-                  'LV $level',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.4,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: kHBgBase, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.blue.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'LV $level',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

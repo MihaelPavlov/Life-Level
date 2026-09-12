@@ -64,6 +64,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/Bosses/
+    - assets/Home/
     - assets/Items/
     - assets/Titles&Ranks/
     - assets/Classes/
