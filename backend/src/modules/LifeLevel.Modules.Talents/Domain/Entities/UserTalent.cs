@@ -13,9 +13,6 @@ public class UserTalent
     /// <summary>1..Talent.MaxLevel.</summary>
     public int Level { get; set; } = 1;
 
-    /// <summary>Unspent duplicate shards for this talent (from draws).</summary>
-    public int Shards { get; set; }
-
     public DateTime UnlockedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

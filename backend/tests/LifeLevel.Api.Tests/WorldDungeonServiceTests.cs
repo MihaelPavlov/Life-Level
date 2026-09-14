@@ -5,6 +5,7 @@ using LifeLevel.Modules.WorldZone.Application.UseCases;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
 using LifeLevel.SharedKernel.Enums;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -360,6 +361,7 @@ public class WorldDungeonServiceTests
             new DungeonDbCharacterLevelReadPort(db),
             new DungeonEmptyMapNodeCountPort(),
             new DungeonEmptyMapNodeCompletedCountPort(),
+            new DungeonNoOpEventPublisher(),
             dungeonService);
 
     [Fact]
@@ -435,6 +437,12 @@ file sealed class DungeonEmptyMapNodeCountPort : IMapNodeCountPort
 {
     public Task<Dictionary<Guid, int>> GetNodeCountsByZoneIdsAsync(IEnumerable<Guid> zoneIds, CancellationToken ct = default)
         => Task.FromResult(new Dictionary<Guid, int>());
+}
+
+file sealed class DungeonNoOpEventPublisher : IEventPublisher
+{
+    public Task PublishAsync<TEvent>(TEvent e, CancellationToken ct = default) where TEvent : IDomainEvent
+        => Task.CompletedTask;
 }
 
 file sealed class DungeonEmptyMapNodeCompletedCountPort : IMapNodeCompletedCountPort

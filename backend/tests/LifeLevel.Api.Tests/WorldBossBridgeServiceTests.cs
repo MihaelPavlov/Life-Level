@@ -89,6 +89,7 @@ public class WorldBossBridgeServiceTests
             new BridgeCharacterLevelReadPort(db),
             new BridgeMapNodeCountPort(),
             new BridgeMapNodeCompletedCountPort(),
+            new BridgeEventPublisher(),
             dungeonService: null,
             bossBridge: bridge,
             logger: null);

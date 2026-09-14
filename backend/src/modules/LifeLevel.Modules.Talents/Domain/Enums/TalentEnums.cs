@@ -49,5 +49,5 @@ public enum TalentEffectType
 public enum TalentDrawKind
 {
     NewTalent,
-    Shards,
+    Duplicate,
 }

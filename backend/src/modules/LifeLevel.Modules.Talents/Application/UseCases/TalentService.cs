@@ -8,8 +8,9 @@ using Microsoft.EntityFrameworkCore;
 namespace LifeLevel.Modules.Talents.Application.UseCases;
 
 /// <summary>
-/// Owns the talent economy: earning currency, drawing/upgrading talents, and exposing the
-/// aggregated always-active bonuses that other modules read.
+/// Owns the talent economy: earning currency, drawing talents (a duplicate draw levels the
+/// talent up directly — there's no separate manual upgrade action), and exposing the aggregated
+/// always-active bonuses that other modules read.
 /// </summary>
 /// <remarks>
 /// Deliberately depends on nothing but <see cref="DbContext"/> — it is itself the implementation
@@ -93,7 +94,7 @@ public class TalentService(DbContext db)
             CatalogCount: catalogCount,
             TotalLevels: owned.Sum(),
             Coins: wallet?.Coins ?? 0,
-            Tokens: wallet?.Tokens ?? 0,
+            Crystals: wallet?.Crystals ?? 0,
             StrBonus: bonuses.StrBonus,
             EndBonus: bonuses.EndBonus,
             AgiBonus: bonuses.AgiBonus,
@@ -155,11 +156,11 @@ public class TalentService(DbContext db)
         await db.SaveChangesAsync(ct);
     }
 
-    public async Task AddTokensAsync(Guid userId, int amount, CancellationToken ct = default)
+    public async Task AddCrystalsAsync(Guid userId, int amount, CancellationToken ct = default)
     {
         if (amount <= 0) return;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        wallet.Tokens += amount;
+        wallet.Crystals += amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
     }
@@ -182,14 +183,14 @@ public class TalentService(DbContext db)
             .ToDictionaryAsync(x => x.TalentId, ct);
         var wallet = await GetOrCreateWalletAsync(userId, ct);
 
-        var views = catalog.Select(t => ToView(t, owned.GetValueOrDefault(t.Id), wallet)).ToList();
-        var walletView = new TalentWalletView(wallet.Coins, wallet.Tokens, owned.Count, catalog.Count);
+        var views = catalog.Select(t => ToView(t, owned.GetValueOrDefault(t.Id))).ToList();
+        var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals, owned.Count, catalog.Count);
 
         return new TalentScreenResponse(
             Wallet: walletView,
-            DrawTokenCost: TalentEconomy.DrawTokenCost,
+            DrawCrystalCost: TalentEconomy.DrawCrystalCost,
             DrawCoinCost: TalentEconomy.DrawCoinCost,
-            CanDraw: wallet.Tokens >= TalentEconomy.DrawTokenCost && wallet.Coins >= TalentEconomy.DrawCoinCost,
+            CanDraw: wallet.Crystals >= TalentEconomy.DrawCrystalCost && wallet.Coins >= TalentEconomy.DrawCoinCost,
             Talents: views);
     }
 
@@ -199,10 +200,10 @@ public class TalentService(DbContext db)
     public async Task<TalentDrawResult> DrawAsync(Guid userId, CancellationToken ct = default)
     {
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        if (wallet.Tokens < TalentEconomy.DrawTokenCost || wallet.Coins < TalentEconomy.DrawCoinCost)
+        if (wallet.Crystals < TalentEconomy.DrawCrystalCost || wallet.Coins < TalentEconomy.DrawCoinCost)
             throw new InvalidOperationException("Not enough currency to draw a talent card.");
 
-        wallet.Tokens -= TalentEconomy.DrawTokenCost;
+        wallet.Crystals -= TalentEconomy.DrawCrystalCost;
         wallet.Coins -= TalentEconomy.DrawCoinCost;
         wallet.UpdatedAt = DateTime.UtcNow;
 
@@ -215,7 +216,7 @@ public class TalentService(DbContext db)
 
         TalentDrawKind kind;
         Talent talent;
-        int shardsAwarded = 0;
+        int crystalsAwarded = 0;
         UserTalent userTalent;
         var shieldsGranted = 0;
 
@@ -228,7 +229,6 @@ public class TalentService(DbContext db)
                 UserId = userId,
                 TalentId = talent.Id,
                 Level = 1,
-                Shards = 0,
                 UnlockedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
@@ -243,11 +243,25 @@ public class TalentService(DbContext db)
         {
             userTalent = owned[Rng.Next(owned.Count)];
             talent = catalog.First(t => t.Id == userTalent.TalentId);
-            var (min, max) = TalentEconomy.ShardPayout(talent.Rarity);
-            shardsAwarded = Rng.Next(min, max + 1);
-            userTalent.Shards += shardsAwarded;
+            kind = TalentDrawKind.Duplicate;
+
+            // A duplicate levels the talent up for free (the draw's own cost already paid for
+            // it) — no separate upgrade action. Only refund Coins/Crystals when there's nothing
+            // left to level (already maxed), so the draw isn't wasted.
+            if (userTalent.Level < talent.MaxLevel)
+            {
+                userTalent.Level++;
+                if (talent.EffectType == TalentEffectType.ShieldPerLevel)
+                    shieldsGranted = 1;
+            }
+            else
+            {
+                var (coinsRefund, crystalsRefund) = TalentEconomy.DuplicateRefund(talent.Rarity);
+                wallet.Coins += coinsRefund;
+                wallet.Crystals += crystalsRefund;
+                crystalsAwarded = crystalsRefund;
+            }
             userTalent.UpdatedAt = DateTime.UtcNow;
-            kind = TalentDrawKind.Shards;
         }
 
         db.Set<TalentDrawEntry>().Add(new TalentDrawEntry
@@ -257,65 +271,20 @@ public class TalentService(DbContext db)
             DrawnAt = DateTime.UtcNow,
             Kind = kind,
             TalentId = talent.Id,
-            ShardsAwarded = shardsAwarded,
+            CrystalsAwarded = crystalsAwarded,
         });
 
         await db.SaveChangesAsync(ct);
 
-        var walletView = new TalentWalletView(wallet.Coins, wallet.Tokens,
+        var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals,
             ownedIds.Count + (giveNew ? 1 : 0), catalog.Count);
-        var view = ToView(talent, userTalent, wallet);
+        var view = ToView(talent, userTalent);
 
         return new TalentDrawResult(
             Kind: char.ToLowerInvariant(kind.ToString()[0]) + kind.ToString()[1..],
             IsNew: giveNew,
             Talent: view,
-            ShardsAwarded: shardsAwarded,
-            ShieldsGranted: shieldsGranted,
-            Wallet: walletView);
-    }
-
-    // ── Upgrade ───────────────────────────────────────────────────────────
-
-    /// <exception cref="InvalidOperationException">Unknown/unowned talent, maxed, or not enough shards/coins.</exception>
-    public async Task<TalentUpgradeResult> UpgradeAsync(Guid userId, string key, CancellationToken ct = default)
-    {
-        var talent = await db.Set<Talent>().FirstOrDefaultAsync(t => t.Key == key && t.IsActive, ct)
-            ?? throw new InvalidOperationException("Unknown talent.");
-
-        var userTalent = await db.Set<UserTalent>()
-            .FirstOrDefaultAsync(x => x.UserId == userId && x.TalentId == talent.Id, ct)
-            ?? throw new InvalidOperationException("You do not own this talent.");
-
-        if (userTalent.Level >= talent.MaxLevel)
-            throw new InvalidOperationException("Talent is already at max level.");
-
-        var shardCost = TalentEconomy.UpgradeShardCost(talent.Rarity, userTalent.Level);
-        var coinCost = TalentEconomy.UpgradeCoinCost(talent.Rarity, userTalent.Level);
-
-        var wallet = await GetOrCreateWalletAsync(userId, ct);
-        if (userTalent.Shards < shardCost || wallet.Coins < coinCost)
-            throw new InvalidOperationException("Not enough shards or coins to upgrade.");
-
-        userTalent.Shards -= shardCost;
-        wallet.Coins -= coinCost;
-        userTalent.Level++;
-        userTalent.UpdatedAt = DateTime.UtcNow;
-        wallet.UpdatedAt = DateTime.UtcNow;
-
-        // Shield Craft grants a shield on each level reached — applied by the controller.
-        var shieldsGranted = talent.EffectType == TalentEffectType.ShieldPerLevel ? 1 : 0;
-
-        await db.SaveChangesAsync(ct);
-
-        var ownedCount = await db.Set<UserTalent>().CountAsync(x => x.UserId == userId, ct);
-        var catalogCount = await db.Set<Talent>().CountAsync(t => t.IsActive, ct);
-        var walletView = new TalentWalletView(wallet.Coins, wallet.Tokens, ownedCount, catalogCount);
-
-        return new TalentUpgradeResult(
-            Talent: ToView(talent, userTalent, wallet),
-            NewLevel: userTalent.Level,
-            EffectText: EffectText(talent, userTalent.Level),
+            CrystalsAwarded: crystalsAwarded,
             ShieldsGranted: shieldsGranted,
             Wallet: walletView);
     }
@@ -333,24 +302,11 @@ public class TalentService(DbContext db)
         return wallet;
     }
 
-    private static TalentView ToView(Talent t, UserTalent? ut, UserTalentWallet wallet)
+    private static TalentView ToView(Talent t, UserTalent? ut)
     {
         var owned = ut != null;
         var level = ut?.Level ?? 0;
-        var shards = ut?.Shards ?? 0;
-
-        int? upShard = null, upCoin = null;
-        var canUpgrade = false;
-        if (owned && level < t.MaxLevel)
-        {
-            upShard = TalentEconomy.UpgradeShardCost(t.Rarity, level);
-            upCoin = TalentEconomy.UpgradeCoinCost(t.Rarity, level);
-            canUpgrade = shards >= upShard && wallet.Coins >= upCoin;
-        }
-
-        var state = !owned ? TalentTileState.Locked
-            : canUpgrade ? TalentTileState.Upgradeable
-            : TalentTileState.Owned;
+        var state = owned ? TalentTileState.Owned : TalentTileState.Locked;
 
         return new TalentView(
             Key: t.Key,
@@ -361,12 +317,8 @@ public class TalentService(DbContext db)
             MaxLevel: t.MaxLevel,
             Owned: owned,
             Level: level,
-            Shards: shards,
             State: char.ToLowerInvariant(state.ToString()[0]) + state.ToString()[1..],
-            EffectText: EffectText(t, Math.Max(1, level)),
-            UpgradeShardCost: upShard,
-            UpgradeCoinCost: upCoin,
-            CanUpgrade: canUpgrade);
+            EffectText: EffectText(t, Math.Max(1, level)));
     }
 
     private static string EffectText(Talent t, int level)

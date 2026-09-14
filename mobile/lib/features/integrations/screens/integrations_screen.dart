@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -81,6 +84,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
   }
 
   void _showHealthSyncHelp(BuildContext context) {
+    final isIos = !kIsWeb && Platform.isIOS;
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF161b22),
@@ -102,17 +106,28 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'If you use a Mi Band, Huawei, or Honor wearable, you can bridge your data into Health Connect using the free "Health Sync" app:',
-              style: TextStyle(fontSize: 13, color: Color(0xFF8b949e)),
+            Text(
+              isIos
+                  ? 'Apple Fitness and Apple Watch workouts sync into Apple Health. Connect Apple Health here, then run Sync after a workout appears in Fitness.'
+                  : 'If you use a Mi Band, Huawei, or Honor wearable, you can bridge your data into Health Connect using the free "Health Sync" app:',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF8b949e)),
             ),
             const SizedBox(height: 12),
-            _helpStep('1', 'Install Health Sync from the Play Store'),
-            _helpStep('2',
-                'Open Health Sync and select your device app as source (e.g. Zepp Life or HUAWEI Health)'),
-            _helpStep('3', 'Set Health Connect as the destination'),
-            _helpStep('4',
-                'Run a sync — your workouts will appear here automatically'),
+            if (isIos) ...[
+              _helpStep(
+                  '1', 'Open Apple Fitness and confirm the workout is visible'),
+              _helpStep('2',
+                  'Tap Connect here and allow workout, step, distance, and calorie access'),
+              _helpStep('3',
+                  'Tap Sync — your Apple Fitness result becomes Life-Level progress'),
+            ] else ...[
+              _helpStep('1', 'Install Health Sync from the Play Store'),
+              _helpStep('2',
+                  'Open Health Sync and select your device app as source (e.g. Zepp Life or HUAWEI Health)'),
+              _helpStep('3', 'Set Health Connect as the destination'),
+              _helpStep('4',
+                  'Run a sync — your workouts will appear here automatically'),
+            ],
           ],
         ),
       ),
@@ -159,6 +174,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
     final state = ref.watch(integrationSyncProvider);
+    final isIos = !kIsWeb && Platform.isIOS;
 
     // Show banner when sync result arrives
     ref.listen<IntegrationSyncState>(integrationSyncProvider, (prev, next) {
@@ -186,8 +202,11 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
                 const _SectionLabel('DEVICE HEALTH'),
                 IntegrationTile(
                   emoji: '❤️',
-                  title: 'Health Connect / Apple Health',
-                  subtitle: 'Sync workouts from your phone\'s health store',
+                  title:
+                      isIos ? 'Apple Fitness / Apple Health' : 'Health Connect',
+                  subtitle: isIos
+                      ? 'Sync Apple Watch and Fitness workouts'
+                      : 'Sync workouts from your phone\'s health store',
                   isConnected: state.isHealthConnected,
                   isSyncing: state.isSyncing,
                   lastSyncAt: state.lastSyncAt,
@@ -217,20 +236,37 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
                 ),
                 const SizedBox(height: 12),
                 const _SectionLabel('COMPATIBLE DEVICES'),
-                const _InfoTile(
-                  emoji: '✅',
-                  title: 'Samsung, Amazfit & OPPO',
-                  subtitle:
-                      'Watches from these brands sync automatically via Health Connect — no extra setup needed.',
-                ),
-                _InfoTile(
-                  emoji: '🔄',
-                  title: 'Mi Band (Zepp Life) & Huawei',
-                  subtitle:
-                      'Install the free "Health Sync" app and configure it to bridge your data into Health Connect.',
-                  actionLabel: 'How it works',
-                  onAction: () => _showHealthSyncHelp(context),
-                ),
+                if (isIos) ...[
+                  const _InfoTile(
+                    emoji: '⌚',
+                    title: 'Apple Watch',
+                    subtitle:
+                        'Workouts recorded in the Workout app appear in Apple Fitness and sync through Apple Health.',
+                  ),
+                  _InfoTile(
+                    emoji: '❤️',
+                    title: 'Apple Fitness',
+                    subtitle:
+                        'After Apple Fitness shows your workout result, sync here to award XP and progress.',
+                    actionLabel: 'How it works',
+                    onAction: () => _showHealthSyncHelp(context),
+                  ),
+                ] else ...[
+                  const _InfoTile(
+                    emoji: '✅',
+                    title: 'Samsung, Amazfit & OPPO',
+                    subtitle:
+                        'Watches from these brands sync automatically via Health Connect — no extra setup needed.',
+                  ),
+                  _InfoTile(
+                    emoji: '🔄',
+                    title: 'Mi Band (Zepp Life) & Huawei',
+                    subtitle:
+                        'Install the free "Health Sync" app and configure it to bridge your data into Health Connect.',
+                    actionLabel: 'How it works',
+                    onAction: () => _showHealthSyncHelp(context),
+                  ),
+                ],
               ],
             ),
           ),

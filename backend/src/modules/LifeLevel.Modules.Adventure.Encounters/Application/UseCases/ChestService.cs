@@ -2,12 +2,13 @@ using LifeLevel.Modules.Adventure.Encounters.Application.DTOs;
 using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.Adventure.Encounters.Domain.Enums;
 using LifeLevel.Modules.Map.Domain.Entities;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 
-public class ChestService(DbContext db, ICharacterXpPort characterXp)
+public class ChestService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
 {
     public async Task<CollectChestResult> CollectAsync(Guid userId, Guid chestId)
     {
@@ -43,6 +44,8 @@ public class ChestService(DbContext db, ICharacterXpPort characterXp)
         existing.CollectedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
+
+        await events.PublishAsync(new RewardClaimedEvent(userId, "LocalChest"), CancellationToken.None);
 
         var emoji = chest.Rarity switch
         {

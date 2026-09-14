@@ -22,7 +22,8 @@ public static class TalentsModule
         services.AddScoped<IEventHandler<QuestCompletedEvent>, TalentCurrencyQuestHandler>();
         services.AddScoped<IEventHandler<BossDefeatedEvent>, TalentCurrencyBossHandler>();
         services.AddScoped<IEventHandler<CharacterLeveledUpEvent>, TalentCurrencyLevelUpHandler>();
-        services.AddScoped<IEventHandler<CharacterRankChangedEvent>, TalentCurrencyRankUpHandler>();
+        services.AddScoped<IEventHandler<ZoneCompletedEvent>, TalentCurrencyZoneHandler>();
+        services.AddScoped<IEventHandler<RewardClaimedEvent>, TalentCurrencyRewardHandler>();
         services.AddScoped<IEventHandler<StreakBrokenEvent>, TalentStreakBrokenHandler>();
 
         return services;

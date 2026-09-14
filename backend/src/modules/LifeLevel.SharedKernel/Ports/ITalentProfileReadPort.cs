@@ -15,7 +15,7 @@ public record TalentSummaryDto(
     int CatalogCount,
     int TotalLevels,
     long Coins,
-    int Tokens,
+    int Crystals,
     int StrBonus,
     int EndBonus,
     int AgiBonus,

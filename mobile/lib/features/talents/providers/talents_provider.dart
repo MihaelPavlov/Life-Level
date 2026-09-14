@@ -9,16 +9,14 @@ class TalentsNotifier extends AsyncNotifier<TalentScreen> {
   @override
   Future<TalentScreen> build() => ref.watch(talentsServiceProvider).getScreen();
 
+  // Deliberately does NOT invalidate/refresh here — the draw's on-screen
+  // reveal (border sweep landing, then the popped-card flip) needs the grid
+  // to keep showing pre-draw data until it actually lands, otherwise the
+  // unlocked/leveled talent would flash into view early and spoil the
+  // reveal. The caller (TalentsScreen) invalidates this provider itself,
+  // once the sweep has landed.
   Future<TalentDrawResult> draw() async {
-    final result = await ref.read(talentsServiceProvider).draw();
-    ref.invalidateSelf();
-    return result;
-  }
-
-  Future<TalentUpgradeResult> upgrade(String key) async {
-    final result = await ref.read(talentsServiceProvider).upgrade(key);
-    ref.invalidateSelf();
-    return result;
+    return ref.read(talentsServiceProvider).draw();
   }
 
   Future<void> refresh() async {

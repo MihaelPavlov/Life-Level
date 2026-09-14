@@ -20,48 +20,34 @@ public static class TalentEconomy
     public const int CoinsPerBossDefeat = 100;
     public const int CoinsPerLevelUp = 200;
 
-    public const int TokensPerLevelUp = 1;
-    public const int TokensPerRankUp = 3;
+    /// <summary>
+    /// Crystals are deliberately scarce — Coins already cover high-frequency rewards
+    /// (activities, quests), so Crystals only trickle in from occasional milestones.
+    /// </summary>
+    public const int CrystalsPerBossDefeat = 2;
+    public const int CrystalsPerZoneCompletion = 2;
+    public const int CrystalsPerRewardClaim = 1;
 
     // ── Draw ───────────────────────────────────────────────────────────────
 
-    public const int DrawTokenCost = 1;
+    public const int DrawCrystalCost = 1;
     public const int DrawCoinCost = 300;
 
     /// <summary>Chance (0..1) a draw yields a brand-new talent, while un-owned talents remain.</summary>
     public const double NewTalentChance = 0.60;
 
-    /// <summary>Shards granted when a draw yields a duplicate, by the drawn talent's rarity.</summary>
-    public static (int Min, int Max) ShardPayout(TalentRarity rarity) => rarity switch
+    /// <summary>
+    /// Coins + Crystals refunded when a draw yields a duplicate of an already-maxed talent
+    /// (nothing left to level up, by the drawn talent's rarity) — first-pass balancing guess.
+    /// A duplicate of a non-maxed talent just levels it up instead; see
+    /// <see cref="Application.UseCases.TalentService.DrawAsync"/>.
+    /// </summary>
+    public static (int Coins, int Crystals) DuplicateRefund(TalentRarity rarity) => rarity switch
     {
-        TalentRarity.Epic => (5, 8),
-        TalentRarity.Rare => (8, 12),
-        _ => (10, 15),
+        TalentRarity.Epic => (150, 1),
+        TalentRarity.Rare => (80, 0),
+        _ => (50, 0),
     };
-
-    // ── Upgrade cost: Lv k → k+1 ───────────────────────────────────────────
-
-    public static int UpgradeShardCost(TalentRarity rarity, int currentLevel)
-    {
-        var baseCost = 5 + 3 * currentLevel;
-        return rarity switch
-        {
-            TalentRarity.Epic => baseCost * 2,
-            TalentRarity.Rare => (int)(baseCost * 1.5),
-            _ => baseCost,
-        };
-    }
-
-    public static int UpgradeCoinCost(TalentRarity rarity, int currentLevel)
-    {
-        var baseCost = 100 * currentLevel;
-        return rarity switch
-        {
-            TalentRarity.Epic => baseCost * 2,
-            TalentRarity.Rare => (int)(baseCost * 1.5),
-            _ => baseCost,
-        };
-    }
 
     // ── Effect helpers ─────────────────────────────────────────────────────
 

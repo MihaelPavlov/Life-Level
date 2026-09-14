@@ -5,6 +5,7 @@ using LifeLevel.Modules.WorldZone.Application.UseCases;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Exceptions;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,6 +50,12 @@ file sealed class ChestEmptyBossDefeatReadPort : IBossDefeatReadPort
 {
     public Task<HashSet<Guid>> GetDefeatedWorldZoneIdsAsync(Guid userId, CancellationToken ct = default)
         => Task.FromResult(new HashSet<Guid>());
+}
+
+file sealed class ChestNoOpEventPublisher : IEventPublisher
+{
+    public Task PublishAsync<TEvent>(TEvent e, CancellationToken ct = default) where TEvent : IDomainEvent
+        => Task.CompletedTask;
 }
 
 public class WorldChestServiceTests
@@ -142,7 +149,7 @@ public class WorldChestServiceTests
         var setup = await SeedChestAsync(db, "chest_first", rewardXp: 250);
 
         var xp = new CapturingCharacterXpPort();
-        var service = new WorldChestService(db, xp);
+        var service = new WorldChestService(db, xp, new ChestNoOpEventPublisher());
 
         var result = await service.OpenAsync(setup.UserId, setup.ChestZone.Id);
 
@@ -180,7 +187,7 @@ public class WorldChestServiceTests
         await db.SaveChangesAsync();
 
         var xp = new CapturingCharacterXpPort();
-        var service = new WorldChestService(db, xp);
+        var service = new WorldChestService(db, xp, new ChestNoOpEventPublisher());
 
         await Assert.ThrowsAsync<ChestAlreadyOpenedException>(
             () => service.OpenAsync(setup.UserId, setup.ChestZone.Id));
@@ -200,7 +207,7 @@ public class WorldChestServiceTests
         await db.SaveChangesAsync();
 
         var xp = new CapturingCharacterXpPort();
-        var service = new WorldChestService(db, xp);
+        var service = new WorldChestService(db, xp, new ChestNoOpEventPublisher());
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.OpenAsync(setup.UserId, setup.ChestZone.Id));

@@ -4,6 +4,7 @@ using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Exceptions;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ public class WorldZoneService(
     ICharacterLevelReadPort characterLevel,
     IMapNodeCountPort mapNodeCount,
     IMapNodeCompletedCountPort mapNodeCompletedCount,
+    IEventPublisher events,
     WorldDungeonService? dungeonService = null,
     WorldBossBridgeService? bossBridge = null,
     ILogger<WorldZoneService>? logger = null)
@@ -686,6 +688,8 @@ public class WorldZoneService(
                 UserWorldProgressId = progress.Id,
                 UnlockedAt = DateTime.UtcNow
             });
+
+            await events.PublishAsync(new ZoneCompletedEvent(userId, zoneId), CancellationToken.None);
 
             if (zone.XpReward > 0)
             {

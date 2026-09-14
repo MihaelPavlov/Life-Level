@@ -1,7 +1,7 @@
-// Client models for the Talents screen (`GET /talents`, `POST /talents/draw`,
-// `POST /talents/{key}/upgrade`). Plain immutable classes, hand-written `fromJson`.
+// Client models for the Talents screen (`GET /talents`, `POST /talents/draw`).
+// Plain immutable classes, hand-written `fromJson`.
 
-enum TalentTileState { locked, owned, upgradeable, unknown }
+enum TalentTileState { locked, owned, unknown }
 
 TalentTileState _tileStateFrom(String? s) {
   switch (s) {
@@ -9,8 +9,6 @@ TalentTileState _tileStateFrom(String? s) {
       return TalentTileState.locked;
     case 'owned':
       return TalentTileState.owned;
-    case 'upgradeable':
-      return TalentTileState.upgradeable;
     default:
       return TalentTileState.unknown;
   }
@@ -18,20 +16,20 @@ TalentTileState _tileStateFrom(String? s) {
 
 class TalentWallet {
   final int coins;
-  final int tokens;
+  final int crystals;
   final int ownedCount;
   final int catalogCount;
 
   const TalentWallet({
     required this.coins,
-    required this.tokens,
+    required this.crystals,
     required this.ownedCount,
     required this.catalogCount,
   });
 
   factory TalentWallet.fromJson(Map<String, dynamic> j) => TalentWallet(
         coins: (j['coins'] as num?)?.toInt() ?? 0,
-        tokens: (j['tokens'] as num?)?.toInt() ?? 0,
+        crystals: (j['crystals'] as num?)?.toInt() ?? 0,
         ownedCount: (j['ownedCount'] as num?)?.toInt() ?? 0,
         catalogCount: (j['catalogCount'] as num?)?.toInt() ?? 0,
       );
@@ -46,12 +44,8 @@ class TalentView {
   final int maxLevel;
   final bool owned;
   final int level;
-  final int shards;
   final TalentTileState state;
   final String effectText;
-  final int? upgradeShardCost;
-  final int? upgradeCoinCost;
-  final bool canUpgrade;
 
   const TalentView({
     required this.key,
@@ -62,12 +56,8 @@ class TalentView {
     required this.maxLevel,
     required this.owned,
     required this.level,
-    required this.shards,
     required this.state,
     required this.effectText,
-    required this.upgradeShardCost,
-    required this.upgradeCoinCost,
-    required this.canUpgrade,
   });
 
   factory TalentView.fromJson(Map<String, dynamic> j) => TalentView(
@@ -79,12 +69,8 @@ class TalentView {
         maxLevel: (j['maxLevel'] as num?)?.toInt() ?? 10,
         owned: j['owned'] as bool? ?? false,
         level: (j['level'] as num?)?.toInt() ?? 0,
-        shards: (j['shards'] as num?)?.toInt() ?? 0,
         state: _tileStateFrom(j['state'] as String?),
         effectText: j['effectText'] as String? ?? '',
-        upgradeShardCost: (j['upgradeShardCost'] as num?)?.toInt(),
-        upgradeCoinCost: (j['upgradeCoinCost'] as num?)?.toInt(),
-        canUpgrade: j['canUpgrade'] as bool? ?? false,
       );
 
   bool get isMaxed => owned && level >= maxLevel;
@@ -92,14 +78,14 @@ class TalentView {
 
 class TalentScreen {
   final TalentWallet wallet;
-  final int drawTokenCost;
+  final int drawCrystalCost;
   final int drawCoinCost;
   final bool canDraw;
   final List<TalentView> talents;
 
   const TalentScreen({
     required this.wallet,
-    required this.drawTokenCost,
+    required this.drawCrystalCost,
     required this.drawCoinCost,
     required this.canDraw,
     required this.talents,
@@ -108,7 +94,7 @@ class TalentScreen {
   factory TalentScreen.fromJson(Map<String, dynamic> j) => TalentScreen(
         wallet: TalentWallet.fromJson(
             j['wallet'] as Map<String, dynamic>? ?? const {}),
-        drawTokenCost: (j['drawTokenCost'] as num?)?.toInt() ?? 1,
+        drawCrystalCost: (j['drawCrystalCost'] as num?)?.toInt() ?? 1,
         drawCoinCost: (j['drawCoinCost'] as num?)?.toInt() ?? 300,
         canDraw: j['canDraw'] as bool? ?? false,
         talents: ((j['talents'] as List<dynamic>?) ?? const [])
@@ -118,10 +104,10 @@ class TalentScreen {
 }
 
 class TalentDrawResult {
-  final String kind; // "newTalent" | "shards"
+  final String kind; // "newTalent" | "duplicate"
   final bool isNew;
   final TalentView talent;
-  final int shardsAwarded;
+  final int crystalsAwarded;
   final int shieldsGranted;
   final TalentWallet wallet;
 
@@ -129,42 +115,16 @@ class TalentDrawResult {
     required this.kind,
     required this.isNew,
     required this.talent,
-    required this.shardsAwarded,
+    required this.crystalsAwarded,
     required this.shieldsGranted,
     required this.wallet,
   });
 
   factory TalentDrawResult.fromJson(Map<String, dynamic> j) => TalentDrawResult(
-        kind: j['kind'] as String? ?? 'shards',
+        kind: j['kind'] as String? ?? 'duplicate',
         isNew: j['isNew'] as bool? ?? false,
         talent: TalentView.fromJson(j['talent'] as Map<String, dynamic>),
-        shardsAwarded: (j['shardsAwarded'] as num?)?.toInt() ?? 0,
-        shieldsGranted: (j['shieldsGranted'] as num?)?.toInt() ?? 0,
-        wallet: TalentWallet.fromJson(
-            j['wallet'] as Map<String, dynamic>? ?? const {}),
-      );
-}
-
-class TalentUpgradeResult {
-  final TalentView talent;
-  final int newLevel;
-  final String effectText;
-  final int shieldsGranted;
-  final TalentWallet wallet;
-
-  const TalentUpgradeResult({
-    required this.talent,
-    required this.newLevel,
-    required this.effectText,
-    required this.shieldsGranted,
-    required this.wallet,
-  });
-
-  factory TalentUpgradeResult.fromJson(Map<String, dynamic> j) =>
-      TalentUpgradeResult(
-        talent: TalentView.fromJson(j['talent'] as Map<String, dynamic>),
-        newLevel: (j['newLevel'] as num?)?.toInt() ?? 0,
-        effectText: j['effectText'] as String? ?? '',
+        crystalsAwarded: (j['crystalsAwarded'] as num?)?.toInt() ?? 0,
         shieldsGranted: (j['shieldsGranted'] as num?)?.toInt() ?? 0,
         wallet: TalentWallet.fromJson(
             j['wallet'] as Map<String, dynamic>? ?? const {}),

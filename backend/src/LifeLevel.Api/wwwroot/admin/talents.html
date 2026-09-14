@@ -125,9 +125,8 @@
     <div class="row">
       <input type="text" id="gUser" placeholder="user id, email, or username" style="width:280px">
       <input type="number" id="gCoins" placeholder="coins" style="width:100px">
-      <input type="number" id="gTokens" placeholder="tokens" style="width:100px">
+      <input type="number" id="gCrystals" placeholder="crystals" style="width:100px">
       <input type="text" id="gTalent" placeholder="talent key (optional)" style="width:180px">
-      <input type="number" id="gShards" placeholder="shards" style="width:90px">
       <button class="success sm" onclick="grantTalents()">Grant</button>
       <button class="danger sm" onclick="resetTalents()">Reset user</button>
     </div>
@@ -300,13 +299,12 @@ async function grantTalents() {
   const body = {
     userIdOrEmail: document.getElementById('gUser').value.trim(),
     coins: parseInt(document.getElementById('gCoins').value) || 0,
-    tokens: parseInt(document.getElementById('gTokens').value) || 0,
+    crystals: parseInt(document.getElementById('gCrystals').value) || 0,
     talentKey: document.getElementById('gTalent').value.trim() || null,
-    shards: parseInt(document.getElementById('gShards').value) || 0,
   };
   if (!body.userIdOrEmail) { toast('Enter a user.', 'err'); return; }
   try { const r = await apiFetch('/api/admin/talents/grant', { method: 'POST', body: JSON.stringify(body) });
-    toast(`Granted — now ${r.coins} coins / ${r.tokens} tokens.`, 'ok'); await loadTalents(); }
+    toast(`Granted — now ${r.coins} coins / ${r.crystals} crystals.`, 'ok'); await loadTalents(); }
   catch (e) { toast('Grant failed: ' + e.message, 'err'); }
 }
 

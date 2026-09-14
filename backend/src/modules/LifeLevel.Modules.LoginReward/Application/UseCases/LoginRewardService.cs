@@ -1,4 +1,5 @@
 using LifeLevel.Modules.LoginReward.Application.DTOs;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 using LoginRewardEntity = LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward;
@@ -8,7 +9,8 @@ namespace LifeLevel.Modules.LoginReward.Application.UseCases;
 public class LoginRewardService(
     DbContext db,
     ICharacterXpPort characterXp,
-    IStreakShieldPort streakShield) : ILoginRewardReadPort, ILoginRewardDailyReset
+    IStreakShieldPort streakShield,
+    IEventPublisher events) : ILoginRewardReadPort, ILoginRewardDailyReset
 {
     private static readonly (int Xp, bool IncludesShield, bool IsXpStorm)[] RewardTable =
     [
@@ -72,6 +74,8 @@ public class LoginRewardService(
         reward.TotalLoginDays++;
 
         await db.SaveChangesAsync();
+
+        await events.PublishAsync(new RewardClaimedEvent(userId, "LoginReward"), CancellationToken.None);
 
         await characterXp.AwardXpAsync(userId, "DailyLogin", "📅", $"Day {reward.DayInCycle} login reward", xp);
 

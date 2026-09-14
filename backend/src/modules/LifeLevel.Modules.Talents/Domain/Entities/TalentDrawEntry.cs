@@ -12,5 +12,5 @@ public class TalentDrawEntry
 
     public TalentDrawKind Kind { get; set; }
     public Guid TalentId { get; set; }
-    public int ShardsAwarded { get; set; }
+    public int CrystalsAwarded { get; set; }
 }

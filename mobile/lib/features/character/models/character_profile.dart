@@ -6,7 +6,7 @@ class TalentSummary {
   final int catalogCount;
   final int totalLevels;
   final int coins;
-  final int tokens;
+  final int crystals;
   final int strBonus;
   final int endBonus;
   final int agiBonus;
@@ -19,7 +19,7 @@ class TalentSummary {
     required this.catalogCount,
     required this.totalLevels,
     required this.coins,
-    required this.tokens,
+    required this.crystals,
     required this.strBonus,
     required this.endBonus,
     required this.agiBonus,
@@ -33,7 +33,7 @@ class TalentSummary {
         catalogCount: (j['catalogCount'] as num?)?.toInt() ?? 0,
         totalLevels: (j['totalLevels'] as num?)?.toInt() ?? 0,
         coins: (j['coins'] as num?)?.toInt() ?? 0,
-        tokens: (j['tokens'] as num?)?.toInt() ?? 0,
+        crystals: (j['crystals'] as num?)?.toInt() ?? 0,
         strBonus: (j['strBonus'] as num?)?.toInt() ?? 0,
         endBonus: (j['endBonus'] as num?)?.toInt() ?? 0,
         agiBonus: (j['agiBonus'] as num?)?.toInt() ?? 0,

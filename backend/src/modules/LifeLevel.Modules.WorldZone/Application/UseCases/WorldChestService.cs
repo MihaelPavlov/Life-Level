@@ -2,6 +2,7 @@ using LifeLevel.Modules.WorldZone.Application.DTOs;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Exceptions;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,7 @@ namespace LifeLevel.Modules.WorldZone.Application.UseCases;
 /// to 409 Conflict. Opening awards the zone's inline <c>ChestRewardXp</c>
 /// via the Character module's XP port.
 /// </summary>
-public class WorldChestService(DbContext db, ICharacterXpPort characterXp)
+public class WorldChestService(DbContext db, ICharacterXpPort characterXp, IEventPublisher events)
 {
     public async Task<OpenChestResult> OpenAsync(
         Guid userId,
@@ -55,6 +56,8 @@ public class WorldChestService(DbContext db, ICharacterXpPort characterXp)
         });
 
         await db.SaveChangesAsync(ct);
+
+        await events.PublishAsync(new RewardClaimedEvent(userId, "WorldChest"), CancellationToken.None);
 
         int xp = zone.ChestRewardXp ?? 0;
         if (xp > 0)

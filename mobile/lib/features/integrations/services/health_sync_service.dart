@@ -20,6 +20,9 @@ class HealthSyncService {
 
   final _health = Health();
 
+  String get _platformHealthStoreName =>
+      Platform.isIOS ? 'Apple Health' : 'Health Connect';
+
   // ── permissions ───────────────────────────────────────────────────────────
 
   Future<bool> isPermissionGranted() async {
@@ -41,7 +44,7 @@ class HealthSyncService {
       await prefs.setBool(_permissionKey, granted);
       return granted;
     } catch (e) {
-      debugPrint('Health Connect permission check error: $e');
+      debugPrint('$_platformHealthStoreName permission check error: $e');
       return prefs.getBool(_permissionKey) ?? false;
     }
   }
@@ -53,14 +56,14 @@ class HealthSyncService {
 
       await _health.configure();
       final available = await _health.isHealthConnectAvailable();
-      debugPrint('Health Connect available: $available');
+      debugPrint('$_platformHealthStoreName available: $available');
       if (!available) return false;
 
       final granted = await _health.requestAuthorization(
         _readTypes,
         permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
       );
-      debugPrint('Health Connect permissions granted: $granted');
+      debugPrint('$_platformHealthStoreName permissions granted: $granted');
 
       if (!granted && !kIsWeb && Platform.isAndroid) {
         // On MIUI the permission dialog is often blocked — open Health Connect
@@ -79,7 +82,7 @@ class HealthSyncService {
       await prefs.setBool(_permissionKey, granted);
       return granted;
     } catch (e) {
-      debugPrint('Health Connect error: $e');
+      debugPrint('$_platformHealthStoreName error: $e');
       return false;
     }
   }
@@ -103,16 +106,16 @@ class HealthSyncService {
   Future<SyncResult> syncRecentWorkouts() async {
     if (kIsWeb) return const SyncResult.empty();
 
-    // ── 1. Verify Health Connect is available & permissions are still valid ──
+    // ── 1. Verify the platform health store is available & permissions are still valid ──
     try {
       await _health.configure();
       final available = await _health.isHealthConnectAvailable();
-      debugPrint('[HealthSync] Health Connect available: $available');
+      debugPrint(
+          '[HealthSync] $_platformHealthStoreName available: $available');
       if (!available) {
-        return const SyncResult(
-            imported: 0,
-            skipped: 0,
-            errors: ['Health Connect is not available on this device.']);
+        return SyncResult(imported: 0, skipped: 0, errors: [
+          '$_platformHealthStoreName is not available on this device.'
+        ]);
       }
 
       final hasPerms = await _health.hasPermissions(
@@ -125,8 +128,8 @@ class HealthSyncService {
         // Clear cached flag so UI shows "Connect" again
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(_permissionKey, false);
-        return const SyncResult(imported: 0, skipped: 0, errors: [
-          'Health Connect permissions were revoked. Please reconnect.'
+        return SyncResult(imported: 0, skipped: 0, errors: [
+          '$_platformHealthStoreName permissions were revoked. Please reconnect.'
         ]);
       }
     } catch (e) {

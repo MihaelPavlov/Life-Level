@@ -5,13 +5,11 @@ public enum TalentTileState
 {
     /// <summary>Not owned yet.</summary>
     Locked,
-    /// <summary>Owned, at max level or without the shards/coins to upgrade.</summary>
+    /// <summary>Owned — levelling up happens automatically via future draws, not a manual action.</summary>
     Owned,
-    /// <summary>Owned and can be levelled up right now.</summary>
-    Upgradeable,
 }
 
-public record TalentWalletView(long Coins, int Tokens, int OwnedCount, int CatalogCount);
+public record TalentWalletView(long Coins, int Crystals, int OwnedCount, int CatalogCount);
 
 public record TalentView(
     string Key,
@@ -22,31 +20,26 @@ public record TalentView(
     int MaxLevel,
     bool Owned,
     int Level,
-    int Shards,
     string State,
-    string EffectText,
-    int? UpgradeShardCost,
-    int? UpgradeCoinCost,
-    bool CanUpgrade);
+    string EffectText);
 
 public record TalentScreenResponse(
     TalentWalletView Wallet,
-    int DrawTokenCost,
+    int DrawCrystalCost,
     int DrawCoinCost,
     bool CanDraw,
     IReadOnlyList<TalentView> Talents);
 
+/// <summary>
+/// <see cref="CrystalsAwarded"/> is only ever non-zero when a duplicate draw hit a talent already
+/// at max level (nothing left to level up, so it refunds Coins/Crystals instead) — otherwise a
+/// duplicate just levels the talent up (see <see cref="Talent"/>'s new <c>Level</c>) for free
+/// beyond the draw's own cost.
+/// </summary>
 public record TalentDrawResult(
-    string Kind,                 // "newTalent" | "shards"
+    string Kind,                 // "newTalent" | "duplicate"
     bool IsNew,
     TalentView Talent,
-    int ShardsAwarded,
-    int ShieldsGranted,
-    TalentWalletView Wallet);
-
-public record TalentUpgradeResult(
-    TalentView Talent,
-    int NewLevel,
-    string EffectText,
+    int CrystalsAwarded,
     int ShieldsGranted,
     TalentWalletView Wallet);

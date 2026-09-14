@@ -20,29 +20,38 @@ public class TalentCurrencyQuestHandler(TalentService talents) : IEventHandler<Q
         talents.AddCoinsAsync(e.UserId, TalentEconomy.CoinsPerQuestComplete, ct);
 }
 
-/// <summary>Credits Talent Coins for every boss defeat.</summary>
+/// <summary>Credits Talent Coins + Crystals for every boss defeat.</summary>
 public class TalentCurrencyBossHandler(TalentService talents) : IEventHandler<BossDefeatedEvent>
 {
-    public Task HandleAsync(BossDefeatedEvent e, CancellationToken ct = default) =>
-        talents.AddCoinsAsync(e.UserId, TalentEconomy.CoinsPerBossDefeat, ct);
+    public async Task HandleAsync(BossDefeatedEvent e, CancellationToken ct = default)
+    {
+        await talents.AddCoinsAsync(e.UserId, TalentEconomy.CoinsPerBossDefeat, ct);
+        await talents.AddCrystalsAsync(e.UserId, TalentEconomy.CrystalsPerBossDefeat, ct);
+    }
 }
 
-/// <summary>Every character level grants Talent Coins + a Talent Token.</summary>
+/// <summary>Every character level grants Talent Coins.</summary>
 public class TalentCurrencyLevelUpHandler(TalentService talents) : IEventHandler<CharacterLeveledUpEvent>
 {
     public async Task HandleAsync(CharacterLeveledUpEvent e, CancellationToken ct = default)
     {
         var levels = Math.Max(1, e.NewLevel - e.PreviousLevel);
         await talents.AddCoinsAsync(e.UserId, TalentEconomy.CoinsPerLevelUp * levels, ct);
-        await talents.AddTokensAsync(e.UserId, TalentEconomy.TokensPerLevelUp * levels, ct);
     }
 }
 
-/// <summary>Every rank-up grants Talent Tokens.</summary>
-public class TalentCurrencyRankUpHandler(TalentService talents) : IEventHandler<CharacterRankChangedEvent>
+/// <summary>Credits Talent Crystals for every completed zone/region.</summary>
+public class TalentCurrencyZoneHandler(TalentService talents) : IEventHandler<ZoneCompletedEvent>
 {
-    public Task HandleAsync(CharacterRankChangedEvent e, CancellationToken ct = default) =>
-        talents.AddTokensAsync(e.UserId, TalentEconomy.TokensPerRankUp, ct);
+    public Task HandleAsync(ZoneCompletedEvent e, CancellationToken ct = default) =>
+        talents.AddCrystalsAsync(e.UserId, TalentEconomy.CrystalsPerZoneCompletion, ct);
+}
+
+/// <summary>Credits Talent Crystals for every claimed reward (login reward, chest opens).</summary>
+public class TalentCurrencyRewardHandler(TalentService talents) : IEventHandler<RewardClaimedEvent>
+{
+    public Task HandleAsync(RewardClaimedEvent e, CancellationToken ct = default) =>
+        talents.AddCrystalsAsync(e.UserId, TalentEconomy.CrystalsPerRewardClaim, ct);
 }
 
 /// <summary>Records when a streak breaks, so "Steel Resolve" can grant comeback XP.</summary>

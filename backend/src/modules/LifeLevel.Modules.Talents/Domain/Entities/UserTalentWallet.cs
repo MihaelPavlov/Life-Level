@@ -12,8 +12,8 @@ public class UserTalentWallet
     /// <summary>Soft currency — earned from activities / quests / bosses. Spent on draws + upgrades.</summary>
     public long Coins { get; set; }
 
-    /// <summary>Hard currency — earned on level-up / rank-up. Spent on draws.</summary>
-    public int Tokens { get; set; }
+    /// <summary>Scarce hard currency — earned only from bosses, zone/region completions, and reward claims. Spent on draws + upgrades.</summary>
+    public int Crystals { get; set; }
 
     /// <summary>Rolling weekly count of Second Wind auto-recoveries used (reset by the streak day-key check).</summary>
     public int SecondWindUsedThisWeek { get; set; }

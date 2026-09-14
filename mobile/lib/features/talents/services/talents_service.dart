@@ -23,19 +23,6 @@ class TalentsService {
     }
   }
 
-  Future<TalentUpgradeResult> upgrade(String key) async {
-    try {
-      final res = await _dio.post('/talents/$key/upgrade');
-      return TalentUpgradeResult.fromJson(res.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      final message = _errorMessage(e);
-      if (e.response?.statusCode == 409) {
-        throw TalentInsufficientFundsException(message);
-      }
-      throw TalentException(message);
-    }
-  }
-
   String _errorMessage(DioException e) {
     final data = e.response?.data;
     if (data is Map && data['error'] is String) return data['error'] as String;
@@ -51,7 +38,7 @@ class TalentException implements Exception {
   String toString() => message;
 }
 
-/// 409 — not enough coins / tokens / shards, or already at max level.
+/// 409 — not enough coins / crystals, or already at max level.
 class TalentInsufficientFundsException extends TalentException {
   const TalentInsufficientFundsException(super.message);
 }

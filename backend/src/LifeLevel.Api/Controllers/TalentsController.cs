@@ -30,21 +30,6 @@ public class TalentsController(TalentService talents, IStreakShieldPort streakSh
         }
     }
 
-    [HttpPost("{key}/upgrade")]
-    public async Task<IActionResult> Upgrade(string key)
-    {
-        try
-        {
-            var result = await talents.UpgradeAsync(userContext.UserId, key);
-            await GrantShieldsAsync(result.ShieldsGranted);
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-    }
-
     private async Task GrantShieldsAsync(int count)
     {
         for (var i = 0; i < count; i++)

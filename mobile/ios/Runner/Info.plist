@@ -52,7 +52,7 @@
 
 	<!-- HealthKit usage descriptions (required for health package) -->
 	<key>NSHealthShareUsageDescription</key>
-	<string>Life-Level reads your workouts and activity data to award XP, stats, quests, and in-game progress.</string>
+	<string>Life-Level reads workouts from Apple Fitness and Apple Health activity data to award XP, stats, quests, and in-game progress.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Life-Level may write workout summaries to Apple Health when you choose to sync activity data.</string>
 

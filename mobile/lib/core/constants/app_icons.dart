@@ -247,4 +247,26 @@ class AppIcons {
   static const String gearBackground = 'assets/Gear/equipment_background.png';
   static const String gearOutfitIcon = 'assets/Gear/outfit_icon.png';
   static const String gearMountIcon = 'assets/Gear/mount_icon.png';
+
+  // ── Talents (currency + per-talent painted icons) ───────────────────────────
+  static const String talentCrystalIcon = 'assets/Talents/talent_crystal.png';
+  static const String talentIronGrip = 'assets/Talents/iron_grip.png';
+  static const String talentDeepLungs = 'assets/Talents/deep_lungs.png';
+  static const String talentFastTwitch = 'assets/Talents/fast_twitch.png';
+  static const String talentLooseJoints = 'assets/Talents/loose_joints.png';
+  static const String talentSecondEngine = 'assets/Talents/second_engine.png';
+  static const String talentFocusedTraining =
+      'assets/Talents/focused_training.png';
+  static const String talentMorningMomentum =
+      'assets/Talents/morning_momentum.png';
+  static const String talentRunnersHigh = 'assets/Talents/runners_high.png';
+  static const String talentIronDiscipline =
+      'assets/Talents/iron_discipline.png';
+  static const String talentQuestZeal = 'assets/Talents/quest_zeal.png';
+  static const String talentSecondWind = 'assets/Talents/second_wind.png';
+  static const String talentSteelResolve = 'assets/Talents/steel_resolve.png';
+  static const String talentShieldCraft = 'assets/Talents/shield_craft.png';
+  static const String talentDirectHit = 'assets/Talents/direct_hit.png';
+  static const String talentBossInstinct = 'assets/Talents/boss_instinct.png';
+  static const String talentFairExchange = 'assets/Talents/fair_exchange.png';
 }

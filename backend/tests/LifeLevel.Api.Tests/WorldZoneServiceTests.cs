@@ -6,6 +6,7 @@ using LifeLevel.Modules.WorldZone.Application.UseCases;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Exceptions;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +44,12 @@ file sealed class EmptyMapNodeCompletedCountPort : IMapNodeCompletedCountPort
         => Task.FromResult(new Dictionary<Guid, int>());
 }
 
+file sealed class NoOpEventPublisher : IEventPublisher
+{
+    public Task PublishAsync<TEvent>(TEvent e, CancellationToken ct = default) where TEvent : IDomainEvent
+        => Task.CompletedTask;
+}
+
 public class WorldZoneServiceTests
 {
     private static AppDbContext CreateDb(string dbName)
@@ -59,7 +66,8 @@ public class WorldZoneServiceTests
             new NoOpCharacterXpPort(),
             new DbCharacterLevelReadPort(db),
             new EmptyMapNodeCountPort(),
-            new EmptyMapNodeCompletedCountPort());
+            new EmptyMapNodeCompletedCountPort(),
+            new NoOpEventPublisher());
 
     // Helper: build a minimal (World, Region, Zone) triple. Region is required
     // on every zone so every test has to seed one at minimum.
