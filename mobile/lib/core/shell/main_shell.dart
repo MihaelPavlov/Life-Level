@@ -32,6 +32,7 @@ import '../../features/quests/quests_screen.dart';
 import '../../features/gear/gear_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
 import '../services/nav_tab_notifier.dart';
+import '../services/shell_overlay_notifier.dart';
 import '../services/world_map_notifier.dart';
 import '../services/world_zone_refresh_notifier.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
@@ -79,6 +80,7 @@ class _MainShellState extends ConsumerState<MainShell>
   bool _titlesOpen = false;
   bool _bossOpen = false;
   bool _guildOpen = false;
+  bool _questsOpen = false;
   bool _seasonOpen = false;
   bool _talentsOpen = false;
 
@@ -134,6 +136,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
+  late final StreamSubscription<String> _shellOverlaySub;
   late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
@@ -214,6 +217,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _questsOpen = false;
           _seasonOpen = false;
           _talentsOpen = false;
         });
@@ -323,10 +327,15 @@ class _MainShellState extends ConsumerState<MainShell>
         setState(() {
           _tabIndex = navIndex;
           _guildOpen = false;
+          _questsOpen = false;
           _seasonOpen = false;
           _talentsOpen = false;
         });
       }
+    });
+    _shellOverlaySub = ShellOverlayNotifier.stream.listen((id) {
+      if (!mounted) return;
+      _onRingItemTap(id);
     });
     _worldMapSub = WorldMapNotifier.stream.listen((event) {
       if (!mounted) return;
@@ -510,6 +519,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _questsOpen = false;
             _seasonOpen = false;
             _talentsOpen = false;
           });
@@ -524,6 +534,17 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _questsOpen = false;
+            _seasonOpen = false;
+            _talentsOpen = false;
+          });
+        } else {
+          setState(() {
+            _worldOpen = false;
+            _titlesOpen = false;
+            _bossOpen = false;
+            _guildOpen = false;
+            _questsOpen = true;
             _seasonOpen = false;
             _talentsOpen = false;
           });
@@ -538,6 +559,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _questsOpen = false;
             _seasonOpen = false;
             _talentsOpen = false;
           });
@@ -562,6 +584,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = navIndex == -1;
+          _questsOpen = false;
           _seasonOpen = false;
           _talentsOpen = false;
           if (navIndex != -1) _tabIndex = navIndex;
@@ -574,6 +597,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _questsOpen = false;
           _seasonOpen = true;
           _talentsOpen = false;
         });
@@ -585,6 +609,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _questsOpen = false;
           _seasonOpen = false;
           _talentsOpen = true;
         });
@@ -600,6 +625,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
+          _questsOpen = false;
           _seasonOpen = false;
           _talentsOpen = false;
         });
@@ -613,6 +639,7 @@ class _MainShellState extends ConsumerState<MainShell>
             _titlesOpen = false;
             _bossOpen = false;
             _guildOpen = false;
+            _questsOpen = false;
             _seasonOpen = false;
             _talentsOpen = false;
           });
@@ -653,6 +680,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _bossOverlaySub.cancel();
     _bossDefeatedSub.cancel();
     _navTabSub.cancel();
+    _shellOverlaySub.cancel();
     _worldMapSub.cancel();
     _inventoryFullSub.cancel();
     _connectivitySub.cancel();
@@ -1062,6 +1090,13 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
+              // ── quests overlay ─────────────────────────────────────────
+              if (_questsOpen)
+                const Positioned.fill(
+                  bottom: kNavBarH,
+                  child: QuestsScreen(),
+                ),
+
               // ── season overlay ─────────────────────────────────────────
               if (_seasonOpen)
                 Positioned.fill(
@@ -1140,6 +1175,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         _titlesOpen = false;
                         _bossOpen = false;
                         _guildOpen = false;
+                        _questsOpen = false;
                         _seasonOpen = false;
                         _talentsOpen = false;
                       });
@@ -1151,6 +1187,7 @@ class _MainShellState extends ConsumerState<MainShell>
                       _titlesOpen = false;
                       _bossOpen = false;
                       _guildOpen = false;
+                      _questsOpen = false;
                       _seasonOpen = false;
                       _talentsOpen = false;
                     });
@@ -1201,6 +1238,22 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _questsOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
+      });
+      return;
+    }
+    if (id == 'quests') {
+      final navIndex = _navIds.indexOf('quests');
+      setState(() {
+        if (navIndex != -1) _tabIndex = navIndex;
+        _questsOpen = navIndex == -1;
+        _worldOpen = false;
+        _worldAutoOpenActive = false;
+        _titlesOpen = false;
+        _bossOpen = false;
+        _guildOpen = false;
         _seasonOpen = false;
         _talentsOpen = false;
       });
@@ -1210,6 +1263,7 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _titlesOpen = true;
         _guildOpen = false;
+        _questsOpen = false;
         _seasonOpen = false;
         _talentsOpen = false;
       });
@@ -1222,6 +1276,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _questsOpen = false;
       });
       return;
     }
@@ -1232,6 +1287,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
+        _questsOpen = false;
       });
       return;
     }
@@ -1239,6 +1295,7 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _bossOpen = true;
         _guildOpen = false;
+        _questsOpen = false;
         _seasonOpen = false;
         _talentsOpen = false;
       });
@@ -1250,6 +1307,7 @@ class _MainShellState extends ConsumerState<MainShell>
         if (navIndex != -1) {
           _tabIndex = navIndex;
           _guildOpen = false;
+          _questsOpen = false;
           _seasonOpen = false;
           _talentsOpen = false;
         } else {
@@ -1257,6 +1315,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = true;
+          _questsOpen = false;
         }
       });
       return;
@@ -1267,6 +1326,7 @@ class _MainShellState extends ConsumerState<MainShell>
       setState(() {
         _tabIndex = navIndex;
         _guildOpen = false;
+        _questsOpen = false;
         _seasonOpen = false;
         _talentsOpen = false;
       });
