@@ -23,6 +23,8 @@ class ItemDto {
   final String name;
   final String description;
   final String icon;
+  final String? gearImageUrl;
+  final String? inventoryIconUrl;
   final String rarity;
   final String slotType;
   final int xpBonusPct;
@@ -40,6 +42,8 @@ class ItemDto {
     required this.name,
     required this.description,
     required this.icon,
+    this.gearImageUrl,
+    this.inventoryIconUrl,
     required this.rarity,
     required this.slotType,
     required this.xpBonusPct,
@@ -58,6 +62,8 @@ class ItemDto {
         name: json['name'] as String,
         description: json['description'] as String,
         icon: json['icon'] as String,
+        gearImageUrl: json['gearImageUrl'] as String?,
+        inventoryIconUrl: json['inventoryIconUrl'] as String?,
         rarity: json['rarity'] as String,
         slotType: json['slotType'] as String,
         xpBonusPct: json['xpBonusPct'] as int? ?? 0,

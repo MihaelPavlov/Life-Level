@@ -8,6 +8,8 @@ public class Item
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty; // emoji
+    public string? GearImageUrl { get; set; }
+    public string? InventoryIconUrl { get; set; }
     public ItemRarity Rarity { get; set; }
     public ItemCategory Category { get; set; }
     public EquipmentSlotType SlotType { get; set; }

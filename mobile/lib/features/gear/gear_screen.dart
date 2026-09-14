@@ -7,17 +7,17 @@ import '../items/providers/items_provider.dart';
 import 'widgets/gear_hex_slots.dart';
 import 'widgets/gear_inventory_grid.dart';
 import 'widgets/gear_outfit_mount_row.dart';
+import 'widgets/gear_paperdoll.dart';
 import 'widgets/gear_slot_detail_sheet.dart';
 import 'widgets/gear_stats_row.dart';
 
-/// Standalone "Gear" page — hex equipment slots + character posed on a
-/// cliff-edge background + Outfit/Mount previews + a hardcoded inventory
-/// preview grid (see `GearInventoryGrid`). Supersedes the old
-/// Equipment/Inventory tabs that used to live inside Profile. The hex slots
-/// still reuse the real equipment data layer (`equipmentProvider`,
-/// `ItemsService`) untouched — only the bottom inventory section is a
-/// hardcoded visual placeholder for now, so equipping from inventory isn't
-/// wired up here (only unequip, from a hex slot).
+/// Standalone "Gear" page — hex equipment slots + a paper-doll character
+/// (base render + any equipped Legs/Chest overlay art) posed on a
+/// cliff-edge background + Outfit/Mount previews + a real inventory grid
+/// (see `GearInventoryGrid`). Supersedes the old Equipment/Inventory tabs
+/// that used to live inside Profile. Tapping an inventory item or an
+/// equipped hex slot opens the same detail sheet, which equips or unequips
+/// depending on the item's current state.
 class GearScreen extends ConsumerWidget {
   const GearScreen({super.key});
 
@@ -33,6 +33,7 @@ class GearScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(characterProfileProvider).valueOrNull;
     final equipmentAsync = ref.watch(equipmentProvider);
+    final equipment = equipmentAsync.valueOrNull;
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
@@ -78,11 +79,13 @@ class GearScreen extends ConsumerWidget {
                         Positioned(
                           left: w * 0.10,
                           top: heroH * 0.20,
-                          child: Image.asset(
-                            AppIcons.homeBaseRender,
-                            height: heroH * 0.66,
-                            fit: BoxFit.contain,
-                          ),
+                          child: equipment == null
+                              ? Image.asset(
+                                  AppIcons.gearBaseRender,
+                                  height: heroH * 0.66,
+                                  fit: BoxFit.contain,
+                                )
+                              : GearPaperDoll(equipment: equipment, height: heroH * 0.66),
                         ),
                         Positioned(
                           right: 14,
@@ -92,10 +95,9 @@ class GearScreen extends ConsumerWidget {
                               equipment: equipment,
                               characterLevel: profile?.level ?? 1,
                               onSlotTap: (slotType, item) =>
-                                  showGearSlotDetailSheet(
+                                  showGearItemDetailSheet(
                                 context,
                                 ref: ref,
-                                slotType: slotType,
                                 item: item,
                               ),
                             ),

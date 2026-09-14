@@ -210,6 +210,14 @@
   .field { display: flex; flex-direction: column; gap: 4px; }
   .field label { font-size: 12px; color: var(--text2); font-weight: 600; }
   .field input, .field select, .field textarea { width: 100%; }
+  .image-upload { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: var(--bg2); }
+  .image-upload-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .image-upload-head label { margin: 0; color: var(--text); font-size: 12px; }
+  .image-upload-body { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .image-upload-body input[type="file"] { min-width: 0; color: var(--text2); font-size: 12px; }
+  .image-preview { display: none; width: 64px; height: 64px; object-fit: contain; flex: none; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+  .image-preview.gear { width: 54px; height: 80px; }
+  .image-upload-hint { color: var(--text2); font-size: 11px; margin-top: 8px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
   /* Drop rule panel */
@@ -556,6 +564,16 @@
         <label>Description</label>
         <textarea id="im_description" rows="2" placeholder="Item description…"></textarea>
       </div>
+      <div class="field full image-upload">
+        <div class="image-upload-head"><label for="im_gearImageFile">Main gear image</label><button class="sm secondary" type="button" onclick="clearItemImage('gear')">Clear</button></div>
+        <div class="image-upload-body"><img id="im_gearImagePreview" class="image-preview gear" alt="Gear image preview"><input id="im_gearImageFile" type="file" accept="image/png" onchange="previewItemImage('gear', this)"><input id="im_gearImageUrl" type="hidden"></div>
+        <div class="image-upload-hint">Transparent PNG layer, aligned to the 1024 × 1536 character canvas.</div>
+      </div>
+      <div class="field full image-upload">
+        <div class="image-upload-head"><label for="im_inventoryIconFile">Inventory icon image</label><button class="sm secondary" type="button" onclick="clearItemImage('inventory')">Clear</button></div>
+        <div class="image-upload-body"><img id="im_inventoryIconPreview" class="image-preview" alt="Inventory icon preview"><input id="im_inventoryIconFile" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewItemImage('inventory', this)"><input id="im_inventoryIconUrl" type="hidden"></div>
+        <div class="image-upload-hint">PNG, JPEG, or WebP. Shown in the inventory and item icon slots.</div>
+      </div>
       <div class="field">
         <label>Icon (emoji)</label>
         <input type="text" id="im_icon" placeholder="⌚">
@@ -588,7 +606,7 @@
           <option>Hands</option>
           <option>Feet</option>
           <option>Accessory1</option>
-          <option>Accessory2</option>
+          <option>Legs</option>
         </select>
       </div>
       <div class="field">
@@ -882,6 +900,10 @@ function itemIconAsset(item) {
 }
 
 function itemIconHtml(item) {
+  if (item?.inventoryIconUrl) {
+    const fallback = esc(item?.icon || '?');
+    return `<span class="item-icon"><img src="${esc(resolveItemImageUrl(item.inventoryIconUrl))}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'${fallback}'}))"></span>`;
+  }
   const asset = itemIconAsset(item);
   const fallback = esc(item?.icon || '?');
   if (!asset) return `<span class="item-icon"><span class="emoji">${fallback}</span></span>`;
@@ -950,6 +972,13 @@ function openItemModal(item) {
   document.getElementById('im_name').value     = item?.name ?? '';
   document.getElementById('im_description').value = item?.description ?? '';
   document.getElementById('im_icon').value     = item?.icon ?? '';
+  for (const kind of ['gear', 'inventory']) {
+    const suffix = kind === 'gear' ? 'gearImage' : 'inventoryIcon';
+    document.getElementById(`im_${suffix}File`).value = '';
+    const url = kind === 'gear' ? item?.gearImageUrl : item?.inventoryIconUrl;
+    document.getElementById(`im_${suffix}Url`).value = url ?? '';
+    setItemImagePreview(kind, url ?? '');
+  }
   setSelect('im_rarity', item?.rarity ?? 'Common');
   setSelect('im_category', item?.category ?? 'Tracker');
   setSelect('im_slotType', item?.slotType ?? 'Accessory1');
@@ -960,6 +989,43 @@ function openItemModal(item) {
   document.getElementById('im_flxBonus').value   = item?.flxBonus ?? 0;
   document.getElementById('im_staBonus').value   = item?.staBonus ?? 0;
   document.getElementById('itemModal').classList.add('open');
+}
+
+function resolveItemImageUrl(url) {
+  if (!url || /^(https?:|blob:|data:)/i.test(url)) return url || '';
+  const base = getBaseUrl().replace(/\/$/, '');
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+function setItemImagePreview(kind, url) {
+  const suffix = kind === 'gear' ? 'gearImage' : 'inventoryIcon';
+  const preview = document.getElementById(`im_${suffix}Preview`);
+  preview.src = url ? resolveItemImageUrl(url) : '';
+  preview.style.display = url ? 'block' : 'none';
+}
+
+function previewItemImage(kind, input) {
+  const file = input.files?.[0];
+  if (file) setItemImagePreview(kind, URL.createObjectURL(file));
+}
+
+function clearItemImage(kind) {
+  const suffix = kind === 'gear' ? 'gearImage' : 'inventoryIcon';
+  document.getElementById(`im_${suffix}File`).value = '';
+  document.getElementById(`im_${suffix}Url`).value = '';
+  setItemImagePreview(kind, '');
+}
+
+async function uploadItemImage(kind, file) {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${getBaseUrl()}/api/admin/items/images/${kind}`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + getToken() },
+    body: form,
+  });
+  if (!res.ok) throw new Error(await res.text() || res.statusText);
+  return (await res.json()).url;
 }
 
 function setSelect(id, value) {
@@ -983,6 +1049,8 @@ function getItemPayload() {
     agiBonus:    +document.getElementById('im_agiBonus').value,
     flxBonus:    +document.getElementById('im_flxBonus').value,
     staBonus:    +document.getElementById('im_staBonus').value,
+    gearImageUrl: document.getElementById('im_gearImageUrl').value || null,
+    inventoryIconUrl: document.getElementById('im_inventoryIconUrl').value || null,
   };
 }
 
@@ -990,6 +1058,10 @@ async function saveItem() {
   const id = document.getElementById('im_id').value;
   const payload = getItemPayload();
   try {
+    const gearFile = document.getElementById('im_gearImageFile').files?.[0];
+    const iconFile = document.getElementById('im_inventoryIconFile').files?.[0];
+    if (gearFile) payload.gearImageUrl = await uploadItemImage('gear', gearFile);
+    if (iconFile) payload.inventoryIconUrl = await uploadItemImage('inventory', iconFile);
     if (id) {
       await apiFetch('/api/admin/items/' + id, { method: 'PUT', body: JSON.stringify(payload) });
       toast('Item updated', 'ok');

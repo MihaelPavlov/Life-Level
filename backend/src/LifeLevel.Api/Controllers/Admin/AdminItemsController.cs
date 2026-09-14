@@ -11,8 +11,14 @@ namespace LifeLevel.Api.Controllers.Admin;
 [ApiController]
 [Route("api/admin/items")]
 [Authorize(Policy = "Admin")]
-public class AdminItemsController(AppDbContext db, ItemGrantService grantService) : ControllerBase
+public class AdminItemsController(
+    AppDbContext db,
+    ItemGrantService grantService,
+    IWebHostEnvironment environment,
+    IConfiguration configuration) : ControllerBase
 {
+    private const long MaxImageBytes = 5 * 1024 * 1024;
+
     // GET /api/admin/items
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -20,7 +26,7 @@ public class AdminItemsController(AppDbContext db, ItemGrantService grantService
         var items = await db.Items
             .Select(i => new
             {
-                i.Id, i.Name, i.Description, i.Icon,
+                i.Id, i.Name, i.Description, i.Icon, i.GearImageUrl, i.InventoryIconUrl,
                 Rarity = i.Rarity.ToString(),
                 Category = i.Category.ToString(),
                 SlotType = i.SlotType.ToString(),
@@ -38,6 +44,7 @@ public class AdminItemsController(AppDbContext db, ItemGrantService grantService
         {
             Id = Guid.NewGuid(),
             Name = req.Name, Description = req.Description, Icon = req.Icon,
+            GearImageUrl = req.GearImageUrl, InventoryIconUrl = req.InventoryIconUrl,
             Rarity = Enum.Parse<ItemRarity>(req.Rarity),
             Category = Enum.Parse<ItemCategory>(req.Category),
             SlotType = Enum.Parse<EquipmentSlotType>(req.SlotType),
@@ -56,6 +63,7 @@ public class AdminItemsController(AppDbContext db, ItemGrantService grantService
         var item = await db.Items.FindAsync(id);
         if (item == null) return NotFound();
         item.Name = req.Name; item.Description = req.Description; item.Icon = req.Icon;
+        item.GearImageUrl = req.GearImageUrl; item.InventoryIconUrl = req.InventoryIconUrl;
         item.Rarity = Enum.Parse<ItemRarity>(req.Rarity);
         item.Category = Enum.Parse<ItemCategory>(req.Category);
         item.SlotType = Enum.Parse<EquipmentSlotType>(req.SlotType);
@@ -64,6 +72,61 @@ public class AdminItemsController(AppDbContext db, ItemGrantService grantService
         await db.SaveChangesAsync();
         return Ok();
     }
+
+    [HttpPost("images/{kind}")]
+    [RequestSizeLimit(MaxImageBytes + 64 * 1024)]
+    public async Task<IActionResult> UploadImage(string kind, IFormFile file, CancellationToken ct)
+    {
+        var isGearImage = string.Equals(kind, "gear", StringComparison.OrdinalIgnoreCase);
+        var isInventoryIcon = string.Equals(kind, "inventory", StringComparison.OrdinalIgnoreCase);
+        if (!isGearImage && !isInventoryIcon)
+            return BadRequest("Image kind must be 'gear' or 'inventory'.");
+        if (file.Length is <= 0 or > MaxImageBytes)
+            return BadRequest("Image must be between 1 byte and 5 MB.");
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (isGearImage && extension != ".png")
+            return BadRequest("Gear layer images must be PNG files to preserve transparency.");
+        if (isInventoryIcon && extension is not (".png" or ".jpg" or ".jpeg" or ".webp"))
+            return BadRequest("Inventory icons must be PNG, JPEG, or WebP images.");
+
+        var signature = new byte[12];
+        await using (var input = file.OpenReadStream())
+        {
+            var read = 0;
+            while (read < signature.Length)
+            {
+                var chunk = await input.ReadAsync(signature.AsMemory(read), ct);
+                if (chunk == 0) break;
+                read += chunk;
+            }
+            if (!IsValidImageSignature(extension, signature.AsSpan(0, read)))
+                return BadRequest("The selected file is not a valid image of the chosen type.");
+        }
+
+        var webRoot = environment.WebRootPath
+            ?? Path.Combine(environment.ContentRootPath, "wwwroot");
+        var configuredPath = configuration["ItemImages:StoragePath"];
+        var uploadDirectory = string.IsNullOrWhiteSpace(configuredPath)
+            ? Path.Combine(webRoot, "uploads", "items")
+            : Path.GetFullPath(configuredPath);
+        Directory.CreateDirectory(uploadDirectory);
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadDirectory, fileName);
+        await using (var output = System.IO.File.Create(filePath))
+        await using (var input = file.OpenReadStream())
+            await input.CopyToAsync(output, ct);
+
+        return Ok(new { url = $"/uploads/items/{fileName}" });
+    }
+
+    private static bool IsValidImageSignature(string extension, ReadOnlySpan<byte> bytes) => extension switch
+    {
+        ".png" => bytes.Length >= 8 && bytes[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+        ".jpg" or ".jpeg" => bytes.Length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff,
+        ".webp" => bytes.Length >= 12 && bytes[..4].SequenceEqual("RIFF"u8) && bytes[8..12].SequenceEqual("WEBP"u8),
+        _ => false
+    };
 
     // DELETE /api/admin/items/{id}
     [HttpDelete("{id:guid}")]
@@ -143,7 +206,8 @@ public class AdminItemsController(AppDbContext db, ItemGrantService grantService
 
 public record UpsertItemRequest(string Name, string Description, string Icon,
     string Rarity, string Category, string SlotType,
-    int XpBonusPct, int StrBonus, int EndBonus, int AgiBonus, int FlxBonus, int StaBonus);
+    int XpBonusPct, int StrBonus, int EndBonus, int AgiBonus, int FlxBonus, int StaBonus,
+    string? GearImageUrl = null, string? InventoryIconUrl = null);
 
 public record UpsertDropRuleRequest(string TriggerType, string TriggerParameters, int DropChancePct, bool IsEnabled);
 

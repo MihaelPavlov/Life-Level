@@ -64,6 +64,25 @@ String? _itemIconAssetById(String id) {
       return AppIcons.itemZoneCompass;
     case '10000000000000000000000000000028':
       return AppIcons.itemBossScroll;
+    case '10000000000000000000000000000029':
+      return AppIcons.itemShadowJoggers;
+    case '10000000000000000000000000000030':
+      return AppIcons.itemCrimsonTrailShorts;
+    case '10000000000000000000000000000031':
+      return AppIcons.itemTacticalRaidHoodie;
+    case '10000000000000000000000000000032':
+      return AppIcons.itemAlpineCableSweater;
+    case '10000000000000000000000000000033':
+      return AppIcons.itemWanderersPoncho;
+    case '10000000000000000000000000000034':
+    case '119c1f6262714e15a1389b2e6b477b47':
+      return AppIcons.itemAscendersClimbingRig;
+    case '10000000000000000000000000000035':
+    case 'ceacca17492d4187a95e59dd8298e103':
+      return AppIcons.itemTimberFlannelShirt;
+    case '10000000000000000000000000000036':
+    case 'bcc2f9d8bacf49629bbeac097fbaf8a6':
+      return AppIcons.itemVanguardPufferJacket;
   }
 
   return null;
@@ -127,6 +146,22 @@ String? _itemIconAssetByName(String? name) {
       return AppIcons.itemZoneCompass;
     case 'boss scroll':
       return AppIcons.itemBossScroll;
+    case 'shadow joggers':
+      return AppIcons.itemShadowJoggers;
+    case 'crimson trail shorts':
+      return AppIcons.itemCrimsonTrailShorts;
+    case 'tactical raid hoodie':
+      return AppIcons.itemTacticalRaidHoodie;
+    case 'alpine cable sweater':
+      return AppIcons.itemAlpineCableSweater;
+    case 'wanderer s poncho':
+      return AppIcons.itemWanderersPoncho;
+    case 'ascender s climbing rig':
+      return AppIcons.itemAscendersClimbingRig;
+    case 'timber flannel shirt':
+      return AppIcons.itemTimberFlannelShirt;
+    case 'vanguard puffer jacket':
+      return AppIcons.itemVanguardPufferJacket;
   }
 
   return null;

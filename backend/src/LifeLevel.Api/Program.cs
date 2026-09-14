@@ -26,6 +26,7 @@ using LifeLevel.Modules.Talents.Infrastructure;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Events;
+using Microsoft.Extensions.FileProviders;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -219,6 +220,17 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseStaticFiles();
+var itemImageStoragePath = app.Configuration["ItemImages:StoragePath"];
+if (!string.IsNullOrWhiteSpace(itemImageStoragePath))
+{
+    var resolvedItemImageStoragePath = Path.GetFullPath(itemImageStoragePath);
+    Directory.CreateDirectory(resolvedItemImageStoragePath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(resolvedItemImageStoragePath),
+        RequestPath = "/uploads/items"
+    });
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

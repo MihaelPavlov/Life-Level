@@ -8,6 +8,8 @@ public class ItemDto
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty;
+    public string? GearImageUrl { get; set; }
+    public string? InventoryIconUrl { get; set; }
     public string Rarity { get; set; } = string.Empty;
     public string SlotType { get; set; } = string.Empty;
     public int XpBonusPct { get; set; }

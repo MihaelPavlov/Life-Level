@@ -1,45 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/item_icon_image.dart';
 import '../../items/models/item_models.dart';
-
-class _MockItem {
-  final String name;
-  final String rarity;
-  final String emoji;
-  const _MockItem(this.name, this.rarity, this.emoji);
-}
-
-// A handful of hardcoded example items (using the real seeded item catalog's
-// names/rarities so `ItemIconImage` resolves the real icon art) purely to
-// dress out the Gear page's inventory section visually, matching the
-// reference design's flat colored-tile grid. Not wired to any backend data
-// or equip flow — see the Gear plan for the real inventory/equip system
-// this superseded.
-const _kMockItems = [
-  _MockItem('Apex GPS Pro', 'Legendary', '⌚'),
-  _MockItem('Gravity Boots', 'Legendary', '🥾'),
-  _MockItem('Champion Gloves', 'Legendary', '🥊'),
-  _MockItem('Storm Jacket', 'Epic', '🧥'),
-  _MockItem('Trail Runner X5', 'Epic', '👟'),
-  _MockItem('Aura Stone', 'Epic', '💎'),
-  _MockItem('Cryo Jersey', 'Rare', '🎽'),
-  _MockItem('Grip Wraps', 'Rare', '🧤'),
-  _MockItem('Speed Spikes', 'Rare', '⚡'),
-  _MockItem('Iron Headband', 'Common', '🎽'),
-];
+import '../../items/providers/items_provider.dart';
+import 'gear_slot_detail_sheet.dart';
 
 const _kGridColumns = 4;
 const _kGridSpacing = 10.0;
 
-/// Decorative inventory grid at the bottom of the Gear page — a hardcoded
-/// preview of example gear, styled after the reference design's colored-tile
-/// grid.
-class GearInventoryGrid extends StatelessWidget {
+/// Inventory grid at the bottom of the Gear page. Backed by the real
+/// `/items/inventory` data — tapping a tile opens the shared item detail
+/// sheet, which equips or unequips depending on the item's current state.
+class GearInventoryGrid extends ConsumerWidget {
   const GearInventoryGrid({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inventoryAsync = ref.watch(inventoryProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,17 +36,44 @@ class GearInventoryGrid extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _kGridColumns,
-              crossAxisSpacing: _kGridSpacing,
-              mainAxisSpacing: _kGridSpacing,
-              childAspectRatio: 0.82,
+          child: inventoryAsync.when(
+            data: (inventory) => inventory.items.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        'No items yet',
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _kGridColumns,
+                      crossAxisSpacing: _kGridSpacing,
+                      mainAxisSpacing: _kGridSpacing,
+                      childAspectRatio: 0.82,
+                    ),
+                    itemCount: inventory.items.length,
+                    itemBuilder: (_, i) =>
+                        _InventoryTile(item: inventory.items[i]),
+                  ),
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AppColors.blue),
+                ),
+              ),
             ),
-            itemCount: _kMockItems.length,
-            itemBuilder: (_, i) => _InventoryTile(item: _kMockItems[i]),
+            error: (_, __) => const SizedBox.shrink(),
           ),
         ),
       ],
@@ -75,47 +81,68 @@ class GearInventoryGrid extends StatelessWidget {
   }
 }
 
-class _InventoryTile extends StatelessWidget {
-  final _MockItem item;
+class _InventoryTile extends ConsumerWidget {
+  final ItemDto item;
   const _InventoryTile({required this.item});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final rColor = rarityColor(item.rarity);
+    final equipped = item.isEquipped;
 
     return GestureDetector(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(item.name)),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: rColor.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: rColor.withValues(alpha: 0.45), width: 2),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ItemIconImage(
-                itemId: '',
-                itemName: item.name,
-                emojiFallback: item.emoji,
-                size: 30,
-                emojiSize: 24,
+      onTap: () => showGearItemDetailSheet(context, ref: ref, item: item),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: rColor.withValues(alpha: equipped ? 0.18 : 0.10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color:
+                    equipped ? AppColors.blue : rColor.withValues(alpha: 0.45),
+                width: equipped ? 2.4 : 2,
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Lv.1',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
-                ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ItemIconImage(
+                    itemId: item.id,
+                    itemName: item.name,
+                    emojiFallback: item.icon,
+                    imageUrl: item.inventoryIconUrl,
+                    size: 30,
+                    emojiSize: 24,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.rarity,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          if (equipped)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: AppColors.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check, size: 10, color: Colors.white),
+              ),
+            ),
+        ],
       ),
     );
   }

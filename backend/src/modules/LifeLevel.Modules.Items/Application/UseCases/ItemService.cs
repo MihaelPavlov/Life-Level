@@ -27,11 +27,11 @@ public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead, IIn
         var slotDtos = AllSlots.Select(slotType =>
         {
             var slot = slots.FirstOrDefault(s => s.SlotType == slotType);
-            var item = slot?.CharacterItem?.Item;
+            var characterItem = slot?.CharacterItem;
             return new EquipmentSlotDto
             {
                 SlotType = slotType.ToString(),
-                Item = item == null ? null : MapItemDto(item)
+                Item = characterItem == null ? null : MapInventoryItemDto(characterItem)
             };
         }).ToList();
 
@@ -148,29 +148,14 @@ public class ItemService(DbContext db, ICharacterIdReadPort characterIdRead, IIn
         );
     }
 
-    private static ItemDto MapItemDto(Item item) => new()
-    {
-        Id = item.Id,
-        Name = item.Name,
-        Description = item.Description,
-        Icon = item.Icon,
-        Rarity = item.Rarity.ToString(),
-        SlotType = item.SlotType.ToString(),
-        XpBonusPct = item.XpBonusPct,
-        StrBonus = item.StrBonus,
-        EndBonus = item.EndBonus,
-        AgiBonus = item.AgiBonus,
-        FlxBonus = item.FlxBonus,
-        StaBonus = item.StaBonus,
-        Category = item.Category.ToString(),
-    };
-
     private static ItemDto MapInventoryItemDto(CharacterItem ci) => new()
     {
         Id = ci.Item.Id,
         Name = ci.Item.Name,
         Description = ci.Item.Description,
         Icon = ci.Item.Icon,
+        GearImageUrl = ci.Item.GearImageUrl,
+        InventoryIconUrl = ci.Item.InventoryIconUrl,
         Rarity = ci.Item.Rarity.ToString(),
         SlotType = ci.Item.SlotType.ToString(),
         XpBonusPct = ci.Item.XpBonusPct,

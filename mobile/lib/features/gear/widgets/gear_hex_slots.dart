@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/item_icon_image.dart';
 import '../../items/models/item_models.dart';
+import '../gear_paperdoll_assets.dart';
 
 /// Hexagon re-skin of the equipment paperdoll, arranged in the reference
 /// design's 1-2-2-1 diamond layout. Same 6 slots as before (Head, Chest,
-/// Hands, Feet, Accessory1, Accessory2) — just a different shape.
+/// Hands, Feet, Accessory1, Legs) — just a different shape.
 class GearHexSlots extends StatelessWidget {
   final CharacterEquipmentResponse equipment;
   final int characterLevel;
@@ -38,7 +39,7 @@ class GearHexSlots extends StatelessWidget {
           children: [
             _hex('Hands'),
             const SizedBox(width: 8),
-            _hex('Accessory2'),
+            _hex('Legs'),
           ],
         ),
         const SizedBox(height: 8),
@@ -51,6 +52,7 @@ class GearHexSlots extends StatelessWidget {
     final item = equipment.slotFor(slotType)?.item;
     return HexSlotTile(
       item: item,
+      slotType: slotType,
       characterLevel: characterLevel,
       onTap: item == null || onSlotTap == null
           ? null
@@ -63,12 +65,14 @@ class GearHexSlots extends StatelessWidget {
 /// when equipped, "+" placeholder when empty.
 class HexSlotTile extends StatelessWidget {
   final ItemDto? item;
+  final String? slotType;
   final int characterLevel;
   final VoidCallback? onTap;
 
   const HexSlotTile({
     super.key,
     this.item,
+    this.slotType,
     required this.characterLevel,
     this.onTap,
   });
@@ -128,20 +132,51 @@ class HexSlotTile extends StatelessWidget {
                     strokeWidth: equipped ? 2.2 : 1.4,
                   ),
                 ),
-                equipped
-                    ? ItemIconImage(
-                        itemId: item!.id,
-                        itemName: item!.name,
-                        emojiFallback: item!.icon,
-                        size: 28,
-                        emojiSize: 20,
-                      )
-                    : const Icon(Icons.add, size: 20, color: Colors.white38),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 380),
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: CurvedAnimation(
+                        parent: animation, curve: Curves.elasticOut),
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey(item?.id ?? 'empty-$slotType'),
+                    child: equipped
+                        ? ItemIconImage(
+                            itemId: item!.id,
+                            itemName: item!.name,
+                            emojiFallback: item!.icon,
+                            imageUrl: item!.inventoryIconUrl,
+                            size: 28,
+                            emojiSize: 20,
+                          )
+                        : _EmptySlotIcon(slotType: slotType),
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Empty-slot placeholder: the confirmed default art for that slot type when
+/// one exists (Chest/Legs/Feet/Accessory1/Hands), else the plain "+" (Head).
+class _EmptySlotIcon extends StatelessWidget {
+  final String? slotType;
+  const _EmptySlotIcon({this.slotType});
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = slotType == null ? null : gearSlotDefaultIcon(slotType!);
+    if (asset == null) {
+      return const Icon(Icons.add, size: 20, color: Colors.white38);
+    }
+    return Opacity(
+      opacity: 0.55,
+      child: Image.asset(asset, width: 26, height: 26, fit: BoxFit.contain),
     );
   }
 }

@@ -15,7 +15,7 @@ public class ItemSeeder(AppDbContext db)
         new() { Id = new Guid("10000000-0000-0000-0000-000000000001"), Name = "Apex GPS Pro", Description = "Top-of-the-line GPS tracker with heart rate monitoring. Unlocked at 500 km lifetime.", Icon = "⌚", Rarity = ItemRarity.Legendary, Category = ItemCategory.Tracker, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 15, StaBonus = 8 },
         new() { Id = new Guid("10000000-0000-0000-0000-000000000009"), Name = "Pulse Wristband", Description = "Tracks heart rate and daily steps. Great for beginners.", Icon = "⌚", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Tracker, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 4, StaBonus = 2 },
         new() { Id = new Guid("10000000-0000-0000-0000-000000000010"), Name = "Basic Step Counter", Description = "A simple pedometer. Every step counts.", Icon = "📟", Rarity = ItemRarity.Common, Category = ItemCategory.Tracker, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 1, StaBonus = 1 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000011"), Name = "Strava Sync Badge", Description = "Awarded for connecting your Strava account. Syncs all your runs.", Icon = "🔗", Rarity = ItemRarity.Rare, Category = ItemCategory.Tracker, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 8, EndBonus = 3 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000011"), Name = "Strava Sync Badge", Description = "Awarded for connecting your Strava account. Syncs all your runs.", Icon = "🔗", Rarity = ItemRarity.Rare, Category = ItemCategory.Tracker, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 8, EndBonus = 3 },
 
         // === CLOTHING ===
         new() { Id = new Guid("10000000-0000-0000-0000-000000000003"), Name = "Cryo Jersey", Description = "Moisture-wicking performance jersey with cooling tech.", Icon = "🎽", Rarity = ItemRarity.Rare, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 5, AgiBonus = 3, StaBonus = 5 },
@@ -34,20 +34,34 @@ public class ItemSeeder(AppDbContext db)
 
         // === ACCESSORIES ===
         new() { Id = new Guid("10000000-0000-0000-0000-000000000004"), Name = "Grip Wraps", Description = "Lightweight wraps for improved grip and wrist support.", Icon = "🧤", Rarity = ItemRarity.Rare, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Hands, StrBonus = 8, FlxBonus = 5 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000006"), Name = "Sport Buds", Description = "Wireless earbuds with motivational beat detection.", Icon = "🎧", Rarity = ItemRarity.Rare, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 5, StaBonus = 3 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000006"), Name = "Sport Buds", Description = "Wireless earbuds with motivational beat detection.", Icon = "🎧", Rarity = ItemRarity.Rare, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 5, StaBonus = 3 },
         new() { Id = new Guid("10000000-0000-0000-0000-000000000018"), Name = "Climbing Chalk Bag", Description = "Keeps your hands dry for bouldering and weightlifting.", Icon = "🎒", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Hands, StrBonus = 4, FlxBonus = 2 },
         new() { Id = new Guid("10000000-0000-0000-0000-000000000019"), Name = "Resistance Band Set", Description = "Versatile bands for mobility and strength training.", Icon = "🔴", Rarity = ItemRarity.Common, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Hands, StrBonus = 2, FlxBonus = 3 },
         new() { Id = new Guid("10000000-0000-0000-0000-000000000020"), Name = "Champion Gloves", Description = "Worn by warriors who have conquered the highest peaks.", Icon = "🥊", Rarity = ItemRarity.Legendary, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Hands, XpBonusPct = 10, StrBonus = 12, FlxBonus = 6 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000021"), Name = "Aura Stone", Description = "A mystical stone that pulses with workout energy.", Icon = "💎", Rarity = ItemRarity.Epic, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 12, StaBonus = 8 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000021"), Name = "Aura Stone", Description = "A mystical stone that pulses with workout energy.", Icon = "💎", Rarity = ItemRarity.Epic, Category = ItemCategory.Accessory, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 12, StaBonus = 8 },
 
-        // === CONSUMABLES (stored in Accessory2 slot as "use" items) ===
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000022"), Name = "XP Booster", Description = "Grants ×2 XP for your next workout. Consumed on use.", Icon = "⚗️", Rarity = ItemRarity.Rare, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 100 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000023"), Name = "Energy Gel", Description = "A burst of energy. +5 to all stats for one session.", Icon = "💧", Rarity = ItemRarity.Common, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, StaBonus = 5, EndBonus = 2 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000024"), Name = "Streak Shield", Description = "Protects your streak for one missed day.", Icon = "🛡️", Rarity = ItemRarity.Epic, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 0 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000025"), Name = "KT Tape Roll", Description = "Supports injured muscles so you can keep training.", Icon = "🩹", Rarity = ItemRarity.Common, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, StaBonus = 3 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000026"), Name = "Phoenix Elixir", Description = "Legendary potion. Restore a broken streak instantly.", Icon = "🔥", Rarity = ItemRarity.Legendary, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 50 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000027"), Name = "Zone Compass", Description = "Instantly reveals the next locked zone on your map.", Icon = "🧭", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 5 },
-        new() { Id = new Guid("10000000-0000-0000-0000-000000000028"), Name = "Boss Scroll", Description = "Summons a mini-boss to your current zone.", Icon = "📜", Rarity = ItemRarity.Rare, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory2, XpBonusPct = 0 },
+        // === CONSUMABLES (stored in Accessory1 slot as "use" items) ===
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000022"), Name = "XP Booster", Description = "Grants ×2 XP for your next workout. Consumed on use.", Icon = "⚗️", Rarity = ItemRarity.Rare, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 100 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000023"), Name = "Energy Gel", Description = "A burst of energy. +5 to all stats for one session.", Icon = "💧", Rarity = ItemRarity.Common, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, StaBonus = 5, EndBonus = 2 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000024"), Name = "Streak Shield", Description = "Protects your streak for one missed day.", Icon = "🛡️", Rarity = ItemRarity.Epic, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 0 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000025"), Name = "KT Tape Roll", Description = "Supports injured muscles so you can keep training.", Icon = "🩹", Rarity = ItemRarity.Common, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, StaBonus = 3 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000026"), Name = "Phoenix Elixir", Description = "Legendary potion. Restore a broken streak instantly.", Icon = "🔥", Rarity = ItemRarity.Legendary, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 50 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000027"), Name = "Zone Compass", Description = "Instantly reveals the next locked zone on your map.", Icon = "🧭", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 5 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000028"), Name = "Boss Scroll", Description = "Summons a mini-boss to your current zone.", Icon = "📜", Rarity = ItemRarity.Rare, Category = ItemCategory.Consumable, SlotType = EquipmentSlotType.Accessory1, XpBonusPct = 0 },
+
+        // === LEGS (paper-doll test items) ===
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000029"), Name = "Shadow Joggers", Description = "Weathered training joggers, worn thin from a thousand miles.", Icon = "👖", Rarity = ItemRarity.Rare, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Legs, XpBonusPct = 6, EndBonus = 4, AgiBonus = 3 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000030"), Name = "Crimson Trail Shorts", Description = "Lightweight shorts for hot-weather trail runs.", Icon = "🩳", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Legs, XpBonusPct = 2, AgiBonus = 3, StaBonus = 1 },
+
+        // === CHEST (paper-doll test items) ===
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000031"), Name = "Tactical Raid Hoodie", Description = "Strapped and pocketed hoodie built for boss-zone raids.", Icon = "🧥", Rarity = ItemRarity.Epic, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 9, StrBonus = 5, StaBonus = 4 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000032"), Name = "Alpine Cable Sweater", Description = "A heavy knit sweater for cold-weather training.", Icon = "🧶", Rarity = ItemRarity.Rare, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 4, StaBonus = 6, FlxBonus = 2 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000033"), Name = "Wanderer's Poncho", Description = "A fringed poncho worn by travelers between zones.", Icon = "🧣", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 3, FlxBonus = 3, EndBonus = 2 },
+
+        // === CHEST (new drop) ===
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000034"), Name = "Ascender's Climbing Rig", Description = "A roped climbing harness rig for scaling the toughest peaks.", Icon = "🧗", Rarity = ItemRarity.Epic, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 9, StrBonus = 6, EndBonus = 4 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000035"), Name = "Timber Flannel Shirt", Description = "A cozy buffalo-plaid flannel for casual training days.", Icon = "👕", Rarity = ItemRarity.Uncommon, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 3, StaBonus = 3, FlxBonus = 1 },
+        new() { Id = new Guid("10000000-0000-0000-0000-000000000036"), Name = "Vanguard Puffer Jacket", Description = "An insulated tactical puffer jacket built for cold-weather expeditions.", Icon = "🧥", Rarity = ItemRarity.Rare, Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest, XpBonusPct = 6, EndBonus = 5, StaBonus = 3 },
     ];
 
     private static readonly ItemDropRule[] DropRules =
@@ -64,26 +78,113 @@ public class ItemSeeder(AppDbContext db)
         new() { Id = new Guid("20000000-0000-0000-0000-000000000005"), ItemId = new Guid("10000000-0000-0000-0000-000000000005"), TriggerType = AcquisitionTrigger.StatMilestone, TriggerParameters = """{"stat":"END","threshold":50}""", DropChancePct = 100, IsEnabled = true },
         // Iron Headband → manual grant (starter item)
         new() { Id = new Guid("20000000-0000-0000-0000-000000000006"), ItemId = new Guid("10000000-0000-0000-0000-000000000007"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        // Paper-doll test items → manual grant only
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000007"), ItemId = new Guid("10000000-0000-0000-0000-000000000029"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000008"), ItemId = new Guid("10000000-0000-0000-0000-000000000030"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000009"), ItemId = new Guid("10000000-0000-0000-0000-000000000031"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000010"), ItemId = new Guid("10000000-0000-0000-0000-000000000032"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000011"), ItemId = new Guid("10000000-0000-0000-0000-000000000033"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000012"), ItemId = new Guid("10000000-0000-0000-0000-000000000034"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000013"), ItemId = new Guid("10000000-0000-0000-0000-000000000035"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
+        new() { Id = new Guid("20000000-0000-0000-0000-000000000014"), ItemId = new Guid("10000000-0000-0000-0000-000000000036"), TriggerType = AcquisitionTrigger.Manual, TriggerParameters = "{}", DropChancePct = 100, IsEnabled = true },
     ];
 
     public async Task SeedCatalogAsync()
     {
-        if (await db.Items.AnyAsync()) return;
+        await EnsureLegacyAccessory2SlotMigratedAsync();
 
-        db.Items.AddRange(CatalogItems);
+        var existingById = await db.Items.ToDictionaryAsync(i => i.Id);
+
+        foreach (var catalogItem in CatalogItems)
+        {
+            if (existingById.TryGetValue(catalogItem.Id, out var existing))
+            {
+                CopyCatalogItem(catalogItem, existing);
+            }
+            else
+            {
+                db.Items.Add(CloneCatalogItem(catalogItem));
+            }
+        }
+
         await db.SaveChangesAsync();
     }
 
     public async Task SeedDropRulesAsync()
     {
-        if (await db.ItemDropRules.AnyAsync()) return;
-
         var existingItemIds = await db.Items.Select(i => i.Id).ToHashSetAsync();
-        var validRules = DropRules.Where(r => existingItemIds.Contains(r.ItemId)).ToList();
-        if (validRules.Count == 0) return;
+        var existingById = await db.ItemDropRules.ToDictionaryAsync(r => r.Id);
 
-        db.ItemDropRules.AddRange(validRules);
+        foreach (var dropRule in DropRules.Where(r => existingItemIds.Contains(r.ItemId)))
+        {
+            if (existingById.TryGetValue(dropRule.Id, out var existing))
+            {
+                existing.ItemId = dropRule.ItemId;
+                existing.TriggerType = dropRule.TriggerType;
+                existing.TriggerParameters = dropRule.TriggerParameters;
+                existing.DropChancePct = dropRule.DropChancePct;
+                existing.IsEnabled = dropRule.IsEnabled;
+            }
+            else
+            {
+                db.ItemDropRules.Add(CloneDropRule(dropRule));
+            }
+        }
+
         await db.SaveChangesAsync();
+    }
+
+    private static Item CloneCatalogItem(Item source)
+    {
+        var clone = new Item { Id = source.Id };
+        CopyCatalogItem(source, clone);
+        return clone;
+    }
+
+    private static void CopyCatalogItem(Item source, Item target)
+    {
+        target.Name = source.Name;
+        target.Description = source.Description;
+        target.Icon = source.Icon;
+        target.Rarity = source.Rarity;
+        target.Category = source.Category;
+        target.SlotType = source.SlotType;
+        target.XpBonusPct = source.XpBonusPct;
+        target.StrBonus = source.StrBonus;
+        target.EndBonus = source.EndBonus;
+        target.AgiBonus = source.AgiBonus;
+        target.FlxBonus = source.FlxBonus;
+        target.StaBonus = source.StaBonus;
+    }
+
+    private static ItemDropRule CloneDropRule(ItemDropRule source) => new()
+    {
+        Id = source.Id,
+        ItemId = source.ItemId,
+        TriggerType = source.TriggerType,
+        TriggerParameters = source.TriggerParameters,
+        DropChancePct = source.DropChancePct,
+        IsEnabled = source.IsEnabled,
+    };
+
+    private async Task EnsureLegacyAccessory2SlotMigratedAsync()
+    {
+        if (!db.Database.IsRelational()) return;
+
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            UPDATE "Items" SET "SlotType" = 'Accessory1' WHERE "SlotType" = 'Accessory2';
+
+            DELETE FROM "EquipmentSlots" es2
+            WHERE es2."SlotType" = 'Accessory2'
+              AND EXISTS (
+                  SELECT 1 FROM "EquipmentSlots" es1
+                  WHERE es1."CharacterId" = es2."CharacterId"
+                    AND es1."SlotType" = 'Accessory1'
+              );
+
+            UPDATE "EquipmentSlots" SET "SlotType" = 'Accessory1' WHERE "SlotType" = 'Accessory2';
+            """);
     }
 
     public async Task BackfillLevelReachedRewardsAsync(CancellationToken ct = default)

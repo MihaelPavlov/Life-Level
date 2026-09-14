@@ -67,6 +67,11 @@ class ApiClient {
 
   static String get realtimeBaseUrl => _webBase;
 
+  static String resolveMediaUrl(String path) {
+    final uri = Uri.parse(path);
+    return uri.hasScheme ? path : Uri.parse(_webBase).resolve(path).toString();
+  }
+
   static Future<String> get adminPanelUrl async {
     final token = await _storage.read(key: 'jwt_token');
     final base = '$_webBase/admin/index.html';

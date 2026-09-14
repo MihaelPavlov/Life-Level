@@ -15,5 +15,7 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
         entity.Property(i => i.Name).HasMaxLength(100);
         entity.Property(i => i.Description).HasMaxLength(500);
         entity.Property(i => i.Icon).HasMaxLength(10);
+        entity.Property(i => i.GearImageUrl).HasMaxLength(500);
+        entity.Property(i => i.InventoryIconUrl).HasMaxLength(500);
     }
 }

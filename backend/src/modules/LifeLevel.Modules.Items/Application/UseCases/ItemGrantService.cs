@@ -94,6 +94,8 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
                         Name = item.Name,
                         Description = item.Description,
                         Icon = item.Icon,
+                        GearImageUrl = item.GearImageUrl,
+                        InventoryIconUrl = item.InventoryIconUrl,
                         Rarity = item.Rarity.ToString(),
                         SlotType = item.SlotType.ToString(),
                         XpBonusPct = item.XpBonusPct,
