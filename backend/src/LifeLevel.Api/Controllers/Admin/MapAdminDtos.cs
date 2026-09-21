@@ -40,6 +40,8 @@ public record RegionDetailDto(
     int ChapterIndex,
     int LevelRequirement,
     string Lore,
+    string? BannerImageUrl,
+    string? TrailBackgroundImageUrl,
     string BossName,
     RegionBossStatus BossStatus,
     RegionStatus DefaultStatus,
@@ -57,7 +59,9 @@ public record CreateRegionRequest(
     string BossName,
     RegionBossStatus BossStatus,
     RegionStatus DefaultStatus,
-    IReadOnlyList<RegionPinDto>? Pins);
+    IReadOnlyList<RegionPinDto>? Pins,
+    string? BannerImageUrl = null,
+    string? TrailBackgroundImageUrl = null);
 
 public record UpdateRegionRequest(
     string Name,
@@ -69,7 +73,9 @@ public record UpdateRegionRequest(
     string BossName,
     RegionBossStatus BossStatus,
     RegionStatus DefaultStatus,
-    IReadOnlyList<RegionPinDto>? Pins);
+    IReadOnlyList<RegionPinDto>? Pins,
+    string? BannerImageUrl = null,
+    string? TrailBackgroundImageUrl = null);
 
 // --- Zones ------------------------------------------------------------------
 

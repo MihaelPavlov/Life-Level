@@ -55,6 +55,8 @@ public record RegionDetailDto(
     int? ZonesUntilBoss,
     string BossName,
     string BossStatus,
+    string? BannerImageUrl,
+    string? TrailBackgroundImageUrl,
     IReadOnlyList<RegionPinDto> Pins,
     IReadOnlyList<ZoneNodeDto> Nodes,
     IReadOnlyList<ZoneEdgeDto> Edges,

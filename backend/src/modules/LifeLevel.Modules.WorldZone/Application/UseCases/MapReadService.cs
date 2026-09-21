@@ -354,6 +354,8 @@ public class MapReadService(
             ZonesUntilBoss: summary.ZonesUntilBoss,
             BossName: summary.BossName,
             BossStatus: summary.BossStatus,
+            BannerImageUrl: region.BannerImageUrl,
+            TrailBackgroundImageUrl: region.TrailBackgroundImageUrl,
             Pins: summary.Pins,
             Nodes: nodes,
             Edges: edgeDtos,

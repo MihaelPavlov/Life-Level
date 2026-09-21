@@ -39,11 +39,29 @@
     return data;
   }
 
+  async function upload(path, file) {
+    const headers = {};
+    const tok = getToken();
+    if (tok) headers['Authorization'] = 'Bearer ' + tok;
+    const body = new FormData();
+    body.append('file', file);
+    const res = await fetch(getBaseUrl() + BASE + path, { method: 'POST', headers, body });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+    if (!res.ok) {
+      const msg = data?.error || data?.title || text || `${res.status} ${res.statusText}`;
+      throw new Error(msg);
+    }
+    return data;
+  }
+
   const api = {
     get:    (p)    => request('GET',    p),
     post:   (p, b) => request('POST',   p, b),
     put:    (p, b) => request('PUT',    p, b),
     delete: (p)    => request('DELETE', p),
+    upload,
   };
 
   let toastTimer = null;

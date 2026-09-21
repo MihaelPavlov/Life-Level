@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_icon_image.dart';
@@ -727,6 +728,8 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
 
   Widget _buildContent(RegionDetail region) {
     final theme = RegionThemeColors.of(region.theme);
+    final hasTrailBackground = region.trailBackgroundImageUrl != null ||
+        theme.trailBackgroundAsset != null;
     final avatar = ref.watch(characterProfileProvider).valueOrNull?.avatarEmoji;
     final tutorial = ref.watch(tutorialControllerProvider);
     final filteredRegion = _buildVisibleRegionForTutorial(region);
@@ -745,56 +748,106 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       });
     }
 
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: _Banner(
-            region: filteredRegion,
-            theme: theme,
-            onBack: widget.onBack ?? () => Navigator.pop(context),
-            backButtonKey: _backButtonKey,
+    return Stack(
+      children: [
+        if (hasTrailBackground)
+          Positioned.fill(
+            child: _RegionImage(
+              url: region.trailBackgroundImageUrl,
+              fallbackAsset: theme.trailBackgroundAsset,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
           ),
-        ),
-        SliverToBoxAdapter(child: _Summary(region: filteredRegion)),
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 20, 16, 10),
-            child: Text(
-              'YOUR PATH THROUGH THE REGION',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
+        CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _Banner(
+                region: filteredRegion,
+                theme: theme,
+                onBack: widget.onBack ?? () => Navigator.pop(context),
+                backButtonKey: _backButtonKey,
               ),
             ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: ZoneTrail(
-            key: _trailKey,
-            nodes: filteredRegion.nodes,
-            edges: filteredRegion.edges,
-            journey: _activeJourney,
-            nextRegionName: _nextRegionName,
-            regionTheme: region.theme,
-            regionName: region.name,
-            avatarEmoji: avatar,
-            onTap: _showNodeSheet,
-            activeNodeKey: _activeNodeKey,
-            keysByNodeId: _tutorialZoneKeys,
-            encounters: region.encounters,
-            onEncounterTap: _showEncounterSheet,
-          ),
-        ),
-        if (_activeJourney != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-              child: _JourneyFooter(journey: _activeJourney!),
+            SliverToBoxAdapter(
+              child: Container(
+                color: !hasTrailBackground
+                    ? AppColors.shellBackground
+                    : Colors.transparent,
+                child: Stack(
+                  children: [
+                    if (hasTrailBackground)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 72,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  AppColors.shellBackground
+                                      .withValues(alpha: 0.82),
+                                  AppColors.shellBackground
+                                      .withValues(alpha: 0.42),
+                                  Colors.transparent,
+                                ],
+                                stops: const [0, 0.42, 1],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Column(
+                      children: [
+                        _Summary(region: filteredRegion),
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 20, 16, 10),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'YOUR PATH THROUGH THE REGION',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                        ZoneTrail(
+                          key: _trailKey,
+                          nodes: filteredRegion.nodes,
+                          edges: filteredRegion.edges,
+                          journey: _activeJourney,
+                          nextRegionName: _nextRegionName,
+                          regionTheme: region.theme,
+                          regionName: region.name,
+                          avatarEmoji: avatar,
+                          onTap: _showNodeSheet,
+                          activeNodeKey: _activeNodeKey,
+                          keysByNodeId: _tutorialZoneKeys,
+                          encounters: region.encounters,
+                          onEncounterTap: _showEncounterSheet,
+                        ),
+                        if (_activeJourney != null)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                            child: _JourneyFooter(journey: _activeJourney!),
+                          ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          ],
+        ),
       ],
     );
   }
@@ -955,93 +1008,139 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasBanner =
+        region.bannerImageUrl != null || theme.bannerAsset != null;
     return Container(
-      padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + 12, 16, 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            theme.accent.withOpacity(0.32),
-            theme.accent.withOpacity(0.06),
+            theme.accent.withValues(alpha: 0.32),
+            theme.accent.withValues(alpha: 0.06),
             AppColors.shellBackground,
           ],
           stops: const [0, 0.65, 1],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
-          GestureDetector(
-            key: backButtonKey,
-            onTap: onBack,
-            child: Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.35),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.12)),
+          if (hasBanner)
+            Positioned(
+              top: -28,
+              left: 0,
+              right: 0,
+              bottom: -28,
+              child: _RegionImage(
+                url: region.bannerImageUrl,
+                fallbackAsset: theme.bannerAsset,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
-              child: const Text('‹',
-                  style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600)),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              MapIconOrEmoji(
-                asset: regionIconAsset(region),
-                emoji: region.emoji,
-                size: 56,
-                emojiSize: 52,
-                visualScale: 1.35,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CHAPTER ${region.chapterIndex} · ${_statusLabel(region.status).toUpperCase()}',
-                      style: TextStyle(
-                        color: theme.accent,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.4,
-                      ),
+          if (hasBanner)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 64,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        AppColors.shellBackground.withValues(alpha: 0.38),
+                        AppColors.shellBackground.withValues(alpha: 0.78),
+                      ],
+                      stops: const [0, 0.5, 1],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      region.name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+                16, MediaQuery.of(context).padding.top + 12, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  key: backButtonKey,
+                  onTap: onBack,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12)),
+                    ),
+                    child: const Text('‹',
+                        style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    MapIconOrEmoji(
+                      asset: regionIconAsset(region),
+                      emoji: region.emoji,
+                      size: 56,
+                      emojiSize: 52,
+                      visualScale: 1.35,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CHAPTER ${region.chapterIndex} · ${_statusLabel(region.status).toUpperCase()}',
+                            style: TextStyle(
+                              color: theme.accent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            region.name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (region.lore.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              region.lore,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-                height: 1.5,
-              ),
+                if (region.lore.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    region.lore,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -1056,6 +1155,35 @@ class _Banner extends StatelessWidget {
       case RegionStatus.locked:
         return 'Locked';
     }
+  }
+}
+
+class _RegionImage extends StatelessWidget {
+  final String? url;
+  final String? fallbackAsset;
+  final BoxFit fit;
+  final Alignment alignment;
+
+  const _RegionImage({
+    required this.url,
+    required this.fallbackAsset,
+    required this.fit,
+    required this.alignment,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fallback() => fallbackAsset == null
+        ? const SizedBox.expand()
+        : Image.asset(fallbackAsset!, fit: fit, alignment: alignment);
+
+    if (url == null) return fallback();
+    return Image.network(
+      ApiClient.resolveMediaUrl(url!),
+      fit: fit,
+      alignment: alignment,
+      errorBuilder: (_, __, ___) => fallback(),
+    );
   }
 }
 

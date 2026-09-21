@@ -13,6 +13,8 @@ public class Region
     public int ChapterIndex { get; set; }
     public int LevelRequirement { get; set; } = 1;
     public string Lore { get; set; } = "";
+    public string? BannerImageUrl { get; set; }
+    public string? TrailBackgroundImageUrl { get; set; }
 
     public string BossName { get; set; } = "";
     public RegionBossStatus BossStatus { get; set; } = RegionBossStatus.Locked;

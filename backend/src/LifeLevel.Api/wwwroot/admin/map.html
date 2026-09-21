@@ -207,6 +207,13 @@
   .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
   .form-check { display: flex; align-items: center; gap: 8px; }
   .form-check input { width: auto; }
+  .field-help { color: var(--text2); font-size: 11px; line-height: 1.45; margin-top: 5px; }
+  .image-field { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: rgba(79,158,255,.035); }
+  .image-field input[type="file"] { width: 100%; color: var(--text2); font-size: 12px; margin-top: 8px; }
+  .image-preview { display: none; width: 100%; margin-top: 10px; border: 1px solid var(--border); border-radius: 6px; object-fit: cover; background: var(--bg2); }
+  .image-preview.visible { display: block; }
+  #regionBannerPreview { aspect-ratio: 15 / 7; }
+  #regionBackgroundPreview { aspect-ratio: 1 / 2; max-height: 300px; object-position: top center; }
 
   .type-panel { display: none; border: 1px dashed var(--border); border-radius: var(--radius); padding: 14px; margin-top: 12px; background: rgba(79,158,255,0.04); }
   .type-panel.active { display: block; }
@@ -401,6 +408,22 @@
     <div class="form-row">
       <label>Lore</label>
       <textarea id="regionLoreInput" rows="3"></textarea>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-row image-field">
+        <label>Banner image</label>
+        <input type="text" id="regionBannerUrlInput" placeholder="/uploads/regions/banner.png or https://…">
+        <div class="field-help">Recommended: <b>1200 × 560 px</b> (~2.14:1). Use edge-to-edge artwork with no padding or rounded corners.</div>
+        <input type="file" id="regionBannerFileInput" accept="image/png,image/jpeg,image/webp">
+        <img id="regionBannerPreview" class="image-preview" alt="Banner preview">
+      </div>
+      <div class="form-row image-field">
+        <label>Trail background image</label>
+        <input type="text" id="regionBackgroundUrlInput" placeholder="/uploads/regions/background.png or https://…">
+        <div class="field-help">Recommended: <b>1200 × 2400 px</b> (1:2). Keep the top and bottom dark so it blends on different screen heights.</div>
+        <input type="file" id="regionBackgroundFileInput" accept="image/png,image/jpeg,image/webp">
+        <img id="regionBackgroundPreview" class="image-preview" alt="Trail background preview">
+      </div>
     </div>
     <div class="form-grid-3">
       <div class="form-row">

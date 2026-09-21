@@ -13,6 +13,8 @@ public class RegionConfiguration : IEntityTypeConfiguration<Region>
         builder.Property(r => r.Name).IsRequired().HasMaxLength(128);
         builder.Property(r => r.Emoji).IsRequired().HasMaxLength(16);
         builder.Property(r => r.Lore).IsRequired().HasMaxLength(512);
+        builder.Property(r => r.BannerImageUrl).HasMaxLength(2048);
+        builder.Property(r => r.TrailBackgroundImageUrl).HasMaxLength(2048);
         builder.Property(r => r.BossName).IsRequired().HasMaxLength(128);
         builder.Property(r => r.PinsJson).IsRequired();
 

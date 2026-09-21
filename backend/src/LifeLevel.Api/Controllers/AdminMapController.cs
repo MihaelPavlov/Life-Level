@@ -15,8 +15,9 @@ namespace LifeLevel.Api.Controllers;
 [ApiController]
 [Route("api/admin/map")]
 [Authorize(Roles = "Admin")]
-public class AdminMapController(AppDbContext db) : ControllerBase
+public class AdminMapController(AppDbContext db, IWebHostEnvironment? environment = null) : ControllerBase
 {
+    private const long MaxRegionImageBytes = 10 * 1024 * 1024;
     // ─────────────────────────────────────────────────────────────────────────
     // Health (anon)
     // ─────────────────────────────────────────────────────────────────────────
@@ -175,6 +176,7 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         return Ok(new RegionDetailDto(
             region.Id, region.WorldId, region.Name, region.Emoji, region.Theme,
             region.ChapterIndex, region.LevelRequirement, region.Lore,
+            region.BannerImageUrl, region.TrailBackgroundImageUrl,
             region.BossName, region.BossStatus, region.DefaultStatus,
             pins, zones, edges));
     }
@@ -196,6 +198,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
             ChapterIndex = req.ChapterIndex,
             LevelRequirement = Math.Max(1, req.LevelRequirement),
             Lore = req.Lore ?? "",
+            BannerImageUrl = NormalizeOptionalUrl(req.BannerImageUrl),
+            TrailBackgroundImageUrl = NormalizeOptionalUrl(req.TrailBackgroundImageUrl),
             BossName = req.BossName ?? "",
             BossStatus = req.BossStatus,
             DefaultStatus = req.DefaultStatus,
@@ -222,6 +226,8 @@ public class AdminMapController(AppDbContext db) : ControllerBase
         region.ChapterIndex = req.ChapterIndex;
         region.LevelRequirement = Math.Max(1, req.LevelRequirement);
         region.Lore = req.Lore ?? "";
+        region.BannerImageUrl = NormalizeOptionalUrl(req.BannerImageUrl);
+        region.TrailBackgroundImageUrl = NormalizeOptionalUrl(req.TrailBackgroundImageUrl);
         region.BossName = req.BossName ?? "";
         region.BossStatus = req.BossStatus;
         region.DefaultStatus = req.DefaultStatus;
@@ -229,6 +235,47 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
         await db.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpPost("region-images/{kind}")]
+    [RequestSizeLimit(MaxRegionImageBytes + 64 * 1024)]
+    public async Task<IActionResult> UploadRegionImage(string kind, IFormFile file, CancellationToken ct)
+    {
+        var normalizedKind = kind.ToLowerInvariant();
+        if (normalizedKind is not ("banner" or "background"))
+            return BadRequest(new { error = "Image kind must be 'banner' or 'background'." });
+        if (file.Length is <= 0 or > MaxRegionImageBytes)
+            return BadRequest(new { error = "Image must be between 1 byte and 10 MB." });
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (extension is not (".png" or ".jpg" or ".jpeg" or ".webp"))
+            return BadRequest(new { error = "Region images must be PNG, JPEG, or WebP files." });
+
+        var signature = new byte[12];
+        await using (var input = file.OpenReadStream())
+        {
+            var read = 0;
+            while (read < signature.Length)
+            {
+                var chunk = await input.ReadAsync(signature.AsMemory(read), ct);
+                if (chunk == 0) break;
+                read += chunk;
+            }
+            if (!IsValidImageSignature(extension, signature.AsSpan(0, read)))
+                return BadRequest(new { error = "The selected file is not a valid image." });
+        }
+
+        var contentRoot = environment?.ContentRootPath ?? Directory.GetCurrentDirectory();
+        var webRoot = environment?.WebRootPath ?? Path.Combine(contentRoot, "wwwroot");
+        var uploadDirectory = Path.Combine(webRoot, "uploads", "regions");
+        Directory.CreateDirectory(uploadDirectory);
+        var fileName = $"{normalizedKind}-{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadDirectory, fileName);
+        await using (var output = System.IO.File.Create(filePath))
+        await using (var input = file.OpenReadStream())
+            await input.CopyToAsync(output, ct);
+
+        return Ok(new { url = $"/uploads/regions/{fileName}" });
     }
 
     [HttpDelete("regions/{id:guid}")]
@@ -621,4 +668,15 @@ public class AdminMapController(AppDbContext db) : ControllerBase
 
     private static string SerializePins(IReadOnlyList<RegionPinDto>? pins) =>
         JsonSerializer.Serialize(pins ?? new List<RegionPinDto>());
+
+    private static string? NormalizeOptionalUrl(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static bool IsValidImageSignature(string extension, ReadOnlySpan<byte> bytes) => extension switch
+    {
+        ".png" => bytes.Length >= 8 && bytes[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+        ".jpg" or ".jpeg" => bytes.Length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff,
+        ".webp" => bytes.Length >= 12 && bytes[..4].SequenceEqual("RIFF"u8) && bytes[8..12].SequenceEqual("WEBP"u8),
+        _ => false
+    };
 }

@@ -7,10 +7,14 @@ import '../models/world_map_models.dart';
 class RegionThemeColors {
   final Color accent;
   final List<Color> bannerGradient;
+  final String? bannerAsset;
+  final String? trailBackgroundAsset;
 
   const RegionThemeColors({
     required this.accent,
     required this.bannerGradient,
+    this.bannerAsset,
+    this.trailBackgroundAsset,
   });
 
   static RegionThemeColors of(RegionTheme theme) {
@@ -19,6 +23,9 @@ class RegionThemeColors {
         return const RegionThemeColors(
           accent: AppColors.green,
           bannerGradient: [Color(0x473fb950), Color(0x1a4f9eff)],
+          bannerAsset: 'assets/images/forest_region_banner.png',
+          trailBackgroundAsset:
+              'assets/images/forest_region_trail_background.png',
         );
       case RegionTheme.ocean:
         return const RegionThemeColors(

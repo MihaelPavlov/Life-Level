@@ -11,45 +11,66 @@ import 'encounter_models.dart';
 // ── Enums ────────────────────────────────────────────────────────────────────
 
 enum ZoneNodeStatus { completed, active, next, available, locked }
+
 enum RegionStatus { active, completed, locked }
+
 enum RegionBossStatus { locked, available, defeated }
+
 enum RegionTheme { forest, ocean, mountain, volcano, frost, desert }
 
 ZoneNodeStatus zoneNodeStatusFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'completed': return ZoneNodeStatus.completed;
-    case 'active':    return ZoneNodeStatus.active;
-    case 'next':      return ZoneNodeStatus.next;
-    case 'available': return ZoneNodeStatus.available;
-    default:          return ZoneNodeStatus.locked;
+    case 'completed':
+      return ZoneNodeStatus.completed;
+    case 'active':
+      return ZoneNodeStatus.active;
+    case 'next':
+      return ZoneNodeStatus.next;
+    case 'available':
+      return ZoneNodeStatus.available;
+    default:
+      return ZoneNodeStatus.locked;
   }
 }
 
 RegionStatus regionStatusFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'active':    return RegionStatus.active;
-    case 'completed': return RegionStatus.completed;
-    default:          return RegionStatus.locked;
+    case 'active':
+      return RegionStatus.active;
+    case 'completed':
+      return RegionStatus.completed;
+    default:
+      return RegionStatus.locked;
   }
 }
 
 RegionBossStatus regionBossStatusFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'available': return RegionBossStatus.available;
-    case 'defeated':  return RegionBossStatus.defeated;
-    default:          return RegionBossStatus.locked;
+    case 'available':
+      return RegionBossStatus.available;
+    case 'defeated':
+      return RegionBossStatus.defeated;
+    default:
+      return RegionBossStatus.locked;
   }
 }
 
 RegionTheme regionThemeFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'forest':   return RegionTheme.forest;
-    case 'ocean':    return RegionTheme.ocean;
-    case 'mountain': return RegionTheme.mountain;
-    case 'volcano':  return RegionTheme.volcano;
-    case 'frost':    return RegionTheme.frost;
-    case 'desert':   return RegionTheme.desert;
-    default:         return RegionTheme.forest;
+    case 'forest':
+      return RegionTheme.forest;
+    case 'ocean':
+      return RegionTheme.ocean;
+    case 'mountain':
+      return RegionTheme.mountain;
+    case 'volcano':
+      return RegionTheme.volcano;
+    case 'frost':
+      return RegionTheme.frost;
+    case 'desert':
+      return RegionTheme.desert;
+    default:
+      return RegionTheme.forest;
   }
 }
 
@@ -96,8 +117,7 @@ class ActiveJourney {
         regionName: json['regionName'] as String? ?? '',
         distanceTravelledKm:
             (json['distanceTravelledKm'] as num?)?.toDouble() ?? 0.0,
-        distanceTotalKm:
-            (json['distanceTotalKm'] as num?)?.toDouble() ?? 0.0,
+        distanceTotalKm: (json['distanceTotalKm'] as num?)?.toDouble() ?? 0.0,
         arrivalXpReward: (json['arrivalXpReward'] as num?)?.toInt() ?? 0,
         arrivalBonusLabel: json['arrivalBonusLabel'] as String?,
       );
@@ -183,6 +203,8 @@ class RegionCard {
 // ── Region detail (single region + nodes + edges) ────────────────────────────
 
 class RegionDetail extends RegionCard {
+  final String? bannerImageUrl;
+  final String? trailBackgroundImageUrl;
   final List<ZoneNode> nodes;
   final List<ZoneEdge> edges;
 
@@ -211,6 +233,8 @@ class RegionDetail extends RegionCard {
     required super.status,
     required super.bossStatus,
     required super.pins,
+    this.bannerImageUrl,
+    this.trailBackgroundImageUrl,
     required this.nodes,
     required this.edges,
     required this.pathChoices,
@@ -241,6 +265,8 @@ class RegionDetail extends RegionCard {
       status: base.status,
       bossStatus: base.bossStatus,
       pins: base.pins,
+      bannerImageUrl: _optionalString(json['bannerImageUrl']),
+      trailBackgroundImageUrl: _optionalString(json['trailBackgroundImageUrl']),
       nodes: (json['nodes'] as List?)
               ?.map((e) => ZoneNode.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -251,8 +277,8 @@ class RegionDetail extends RegionCard {
           const [],
       pathChoices: choices,
       encounters: (json['encounters'] as List<dynamic>?)
-              ?.map((e) =>
-                  TrailEncounterNode.fromJson(e as Map<String, dynamic>))
+              ?.map(
+                  (e) => TrailEncounterNode.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
     );
@@ -274,6 +300,8 @@ class RegionDetail extends RegionCard {
     RegionStatus? status,
     RegionBossStatus? bossStatus,
     List<RegionPin>? pins,
+    String? bannerImageUrl,
+    String? trailBackgroundImageUrl,
     List<ZoneNode>? nodes,
     List<ZoneEdge>? edges,
     Map<String, String>? pathChoices,
@@ -295,6 +323,9 @@ class RegionDetail extends RegionCard {
       status: status ?? this.status,
       bossStatus: bossStatus ?? this.bossStatus,
       pins: pins ?? this.pins,
+      bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
+      trailBackgroundImageUrl:
+          trailBackgroundImageUrl ?? this.trailBackgroundImageUrl,
       nodes: nodes ?? this.nodes,
       edges: edges ?? this.edges,
       pathChoices: pathChoices ?? this.pathChoices,
@@ -303,17 +334,27 @@ class RegionDetail extends RegionCard {
   }
 }
 
+String? _optionalString(dynamic value) {
+  final text = value is String ? value.trim() : '';
+  return text.isEmpty ? null : text;
+}
+
 // ── Zone node (single point on the region trail) ─────────────────────────────
 
 enum DungeonRunStatus { notEntered, inProgress, completed, abandoned }
 
 DungeonRunStatus? dungeonRunStatusFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'notentered':  return DungeonRunStatus.notEntered;
-    case 'inprogress':  return DungeonRunStatus.inProgress;
-    case 'completed':   return DungeonRunStatus.completed;
-    case 'abandoned':   return DungeonRunStatus.abandoned;
-    default:            return null;
+    case 'notentered':
+      return DungeonRunStatus.notEntered;
+    case 'inprogress':
+      return DungeonRunStatus.inProgress;
+    case 'completed':
+      return DungeonRunStatus.completed;
+    case 'abandoned':
+      return DungeonRunStatus.abandoned;
+    default:
+      return null;
   }
 }
 
@@ -396,9 +437,12 @@ class ZoneNode {
         chestRewardXp: (json['chestRewardXp'] as num?)?.toInt(),
         chestIsOpened: json['chestIsOpened'] as bool?,
         dungeonFloorsTotal: (json['dungeonFloorsTotal'] as num?)?.toInt(),
-        dungeonFloorsCompleted: (json['dungeonFloorsCompleted'] as num?)?.toInt(),
-        dungeonFloorsForfeited: (json['dungeonFloorsForfeited'] as num?)?.toInt(),
-        dungeonStatus: dungeonRunStatusFromString(json['dungeonStatus'] as String?),
+        dungeonFloorsCompleted:
+            (json['dungeonFloorsCompleted'] as num?)?.toInt(),
+        dungeonFloorsForfeited:
+            (json['dungeonFloorsForfeited'] as num?)?.toInt(),
+        dungeonStatus:
+            dungeonRunStatusFromString(json['dungeonStatus'] as String?),
         nodesCompleted: (json['nodesCompleted'] as num?)?.toInt(),
         nodesTotal: (json['nodesTotal'] as num?)?.toInt(),
         loreCollected: (json['loreCollected'] as num?)?.toInt(),
@@ -409,21 +453,28 @@ class ZoneNode {
 // ── Dungeon state (fetched via /api/world/dungeon/{zoneId}/state) ────────────
 
 enum DungeonFloorStatus { locked, active, completed, forfeited }
+
 enum DungeonFloorTargetKind { distanceKm, durationMinutes }
 
 DungeonFloorStatus dungeonFloorStatusFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'active':     return DungeonFloorStatus.active;
-    case 'completed':  return DungeonFloorStatus.completed;
-    case 'forfeited':  return DungeonFloorStatus.forfeited;
-    default:           return DungeonFloorStatus.locked;
+    case 'active':
+      return DungeonFloorStatus.active;
+    case 'completed':
+      return DungeonFloorStatus.completed;
+    case 'forfeited':
+      return DungeonFloorStatus.forfeited;
+    default:
+      return DungeonFloorStatus.locked;
   }
 }
 
 DungeonFloorTargetKind dungeonFloorTargetKindFromString(String? s) {
   switch ((s ?? '').toLowerCase()) {
-    case 'durationminutes': return DungeonFloorTargetKind.durationMinutes;
-    default:                return DungeonFloorTargetKind.distanceKm;
+    case 'durationminutes':
+      return DungeonFloorTargetKind.durationMinutes;
+    default:
+      return DungeonFloorTargetKind.distanceKm;
   }
 }
 

@@ -71,6 +71,7 @@
       name: '', emoji: '',
       theme: enumFirstValue('regionThemes'),
       chapterIndex: 1, levelRequirement: 1, lore: '', bossName: '',
+      bannerImageUrl: '', trailBackgroundImageUrl: '',
       bossStatus: enumFirstValue('regionBossStatuses'),
       defaultStatus: enumFirstValue('regionStatuses'),
       pins: [],
@@ -99,6 +100,12 @@
     document.getElementById('regionChapterInput').value = r.chapterIndex ?? 1;
     document.getElementById('regionLevelInput').value = r.levelRequirement ?? 1;
     document.getElementById('regionLoreInput').value = r.lore || '';
+    document.getElementById('regionBannerUrlInput').value = r.bannerImageUrl || '';
+    document.getElementById('regionBackgroundUrlInput').value = r.trailBackgroundImageUrl || '';
+    document.getElementById('regionBannerFileInput').value = '';
+    document.getElementById('regionBackgroundFileInput').value = '';
+    updatePreview('regionBannerPreview', r.bannerImageUrl || '');
+    updatePreview('regionBackgroundPreview', r.trailBackgroundImageUrl || '');
     document.getElementById('regionBossNameInput').value = r.bossName || '';
     document.getElementById('regionPinsInput').value = JSON.stringify(r.pins || [], null, 2);
   }
@@ -117,6 +124,8 @@
       chapterIndex: parseInt(document.getElementById('regionChapterInput').value || '1', 10),
       levelRequirement: parseInt(document.getElementById('regionLevelInput').value || '1', 10),
       lore: document.getElementById('regionLoreInput').value,
+      bannerImageUrl: document.getElementById('regionBannerUrlInput').value.trim() || null,
+      trailBackgroundImageUrl: document.getElementById('regionBackgroundUrlInput').value.trim() || null,
       bossName: document.getElementById('regionBossNameInput').value,
       bossStatus: readEnumValue('regionBossStatusInput'),
       defaultStatus: readEnumValue('regionDefaultStatusInput'),
@@ -129,6 +138,16 @@
     try { body = readForm(); } catch (e) { M.toast(e.message, 'err'); return; }
     if (!body.name) { M.toast('Name is required', 'err'); return; }
     try {
+      const bannerFile = document.getElementById('regionBannerFileInput').files[0];
+      const backgroundFile = document.getElementById('regionBackgroundFileInput').files[0];
+      if (bannerFile) {
+        const uploaded = await M.api.upload('/region-images/banner', bannerFile);
+        body.bannerImageUrl = uploaded.url;
+      }
+      if (backgroundFile) {
+        const uploaded = await M.api.upload('/region-images/background', backgroundFile);
+        body.trailBackgroundImageUrl = uploaded.url;
+      }
       if (editingId) {
         await M.api.put('/regions/' + editingId, body);
         M.toast('Region updated', 'ok');
@@ -182,6 +201,27 @@
   function enumFirstValue(key) {
     return (M.state.enums?.[key]?.[0]?.value) ?? 0;
   }
+  function resolvePreviewUrl(url) {
+    if (!url) return '';
+    if (/^(https?:|blob:|data:)/i.test(url)) return url;
+    return M.getBaseUrl() + (url.startsWith('/') ? url : '/' + url);
+  }
+  function updatePreview(previewId, url) {
+    const preview = document.getElementById(previewId);
+    const resolved = resolvePreviewUrl(url);
+    preview.src = resolved;
+    preview.classList.toggle('visible', !!resolved);
+  }
+  function bindImageField(urlId, fileId, previewId) {
+    document.getElementById(urlId).addEventListener('input', ev => updatePreview(previewId, ev.target.value.trim()));
+    document.getElementById(fileId).addEventListener('change', ev => {
+      const file = ev.target.files[0];
+      if (file) updatePreview(previewId, URL.createObjectURL(file));
+      else updatePreview(previewId, document.getElementById(urlId).value.trim());
+    });
+  }
+  bindImageField('regionBannerUrlInput', 'regionBannerFileInput', 'regionBannerPreview');
+  bindImageField('regionBackgroundUrlInput', 'regionBackgroundFileInput', 'regionBackgroundPreview');
   function escapeHtml(s) { return (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   window.MapAdminRegions = { load, clear, openNew, save };
