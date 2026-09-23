@@ -13,4 +13,7 @@ public class UserQuestProgress
     public DateTime ExpiresAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public bool BonusAwarded { get; set; }
+    public int RewardCoins { get; set; }
+    public int RewardCrystals { get; set; }
+    public int RewardPoints { get; set; }
 }

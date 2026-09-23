@@ -64,7 +64,8 @@ class SeasonTier {
         tier: (j['tier'] as num).toInt(),
         isMilestone: j['isMilestone'] as bool? ?? false,
         free: SeasonRewardView.fromJson(j['free'] as Map<String, dynamic>),
-        founder: SeasonRewardView.fromJson(j['founder'] as Map<String, dynamic>),
+        founder:
+            SeasonRewardView.fromJson(j['founder'] as Map<String, dynamic>),
       );
 }
 
@@ -90,7 +91,8 @@ class SeasonHeader {
         number: (j['number'] as num).toInt(),
         name: j['name'] as String? ?? 'Season',
         theme: j['theme'] as String? ?? 'ember',
-        endsAt: DateTime.tryParse(j['endsAt'] as String? ?? '') ?? DateTime.now(),
+        endsAt:
+            DateTime.tryParse(j['endsAt'] as String? ?? '') ?? DateTime.now(),
         daysLeft: (j['daysLeft'] as num?)?.toInt() ?? 0,
       );
 }
@@ -99,7 +101,8 @@ class NextReward {
   final int tier;
   final String label;
   final String track;
-  const NextReward({required this.tier, required this.label, required this.track});
+  const NextReward(
+      {required this.tier, required this.label, required this.track});
 
   factory NextReward.fromJson(Map<String, dynamic> j) => NextReward(
         tier: (j['tier'] as num).toInt(),
@@ -183,7 +186,8 @@ class SeasonClaimResult {
     required this.grantedTitleKey,
   });
 
-  factory SeasonClaimResult.fromJson(Map<String, dynamic> j) => SeasonClaimResult(
+  factory SeasonClaimResult.fromJson(Map<String, dynamic> j) =>
+      SeasonClaimResult(
         tier: (j['tier'] as num).toInt(),
         track: j['track'] as String? ?? 'Free',
         label: j['label'] as String? ?? 'Reward',
@@ -193,4 +197,23 @@ class SeasonClaimResult {
         grantedItemName: j['grantedItemName'] as String?,
         grantedTitleKey: j['grantedTitleKey'] as String?,
       );
+
+  factory SeasonClaimResult.combined(List<SeasonClaimResult> rewards) {
+    final lastLevel = rewards
+        .where((r) => r.newLevel != null)
+        .map((r) => r.newLevel!)
+        .fold<int?>(null, (_, level) => level);
+    return SeasonClaimResult(
+      tier: rewards.map((r) => r.tier).reduce((a, b) => a > b ? a : b),
+      track: 'Season',
+      label: '${rewards.length} rewards collected',
+      xpAwarded: rewards.fold(0, (sum, r) => sum + r.xpAwarded),
+      leveledUp: rewards.any((r) => r.leveledUp),
+      newLevel: lastLevel,
+      grantedItemName:
+          rewards.length == 1 ? rewards.first.grantedItemName : null,
+      grantedTitleKey:
+          rewards.length == 1 ? rewards.first.grantedTitleKey : null,
+    );
+  }
 }

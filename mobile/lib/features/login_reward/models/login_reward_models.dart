@@ -5,6 +5,7 @@ class LoginRewardStatus {
   final bool nextRewardIncludesShield;
   final bool nextRewardIsXpStorm;
   final int totalLoginDays;
+  final List<LoginRewardDay> days;
 
   const LoginRewardStatus({
     required this.dayInCycle,
@@ -13,6 +14,7 @@ class LoginRewardStatus {
     required this.nextRewardIncludesShield,
     required this.nextRewardIsXpStorm,
     required this.totalLoginDays,
+    this.days = const [],
   });
 
   factory LoginRewardStatus.fromJson(Map<String, dynamic> json) =>
@@ -23,6 +25,29 @@ class LoginRewardStatus {
         nextRewardIncludesShield: json['nextRewardIncludesShield'] as bool,
         nextRewardIsXpStorm: json['nextRewardIsXpStorm'] as bool,
         totalLoginDays: json['totalLoginDays'] as int,
+        days: ((json['days'] as List<dynamic>?) ?? const [])
+            .map((e) => LoginRewardDay.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+class LoginRewardDay {
+  final int day;
+  final int xp;
+  final bool includesShield;
+  final bool isXpStorm;
+
+  const LoginRewardDay(
+      {required this.day,
+      required this.xp,
+      required this.includesShield,
+      required this.isXpStorm});
+
+  factory LoginRewardDay.fromJson(Map<String, dynamic> json) => LoginRewardDay(
+        day: (json['day'] as num).toInt(),
+        xp: (json['xp'] as num).toInt(),
+        includesShield: json['includesShield'] as bool? ?? false,
+        isXpStorm: json['isXpStorm'] as bool? ?? false,
       );
 }
 

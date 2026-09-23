@@ -42,15 +42,54 @@ class SeasonTrackScreen extends ConsumerWidget {
   }
 }
 
-class _Body extends ConsumerWidget {
+class _Body extends ConsumerStatefulWidget {
   final SeasonTrack track;
   final VoidCallback? onClose;
   const _Body({required this.track, this.onClose});
 
-  Future<void> _claim(BuildContext context, WidgetRef ref, int tier, String lane) async {
+  @override
+  ConsumerState<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends ConsumerState<_Body> {
+  static const _tierRowExtent = 86.0;
+  late final ScrollController _trackController;
+
+  SeasonTrack get track => widget.track;
+  VoidCallback? get onClose => widget.onClose;
+
+  @override
+  void initState() {
+    super.initState();
+    _trackController = ScrollController(
+      initialScrollOffset: _initialTierIndex(track) * _tierRowExtent,
+    );
+  }
+
+  @override
+  void dispose() {
+    _trackController.dispose();
+    super.dispose();
+  }
+
+  int _initialTierIndex(SeasonTrack value) {
+    final ready = value.tiers.indexWhere((tier) =>
+        tier.free.state == SeasonRewardState.ready ||
+        tier.founder.state == SeasonRewardState.ready);
+    if (ready >= 0) return ready;
+
+    final pending = value.tiers.indexWhere((tier) =>
+        tier.free.state == SeasonRewardState.pending ||
+        tier.founder.state == SeasonRewardState.pending);
+    if (pending >= 0) return pending;
+
+    return value.tiers.isEmpty ? 0 : value.tiers.length - 1;
+  }
+
+  Future<void> _claim(BuildContext context) async {
     try {
-      final result =
-          await ref.read(seasonProvider.notifier).claim(tier, lane);
+      final rewards = await ref.read(seasonProvider.notifier).claimAvailable();
+      final result = SeasonClaimResult.combined(rewards);
       ref.invalidate(characterProfileProvider);
       if (!context.mounted) return;
       // Non-blocking bottom pop-up that auto-dismisses — collect several
@@ -67,7 +106,7 @@ class _Body extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     if (!track.hasActiveSeason || track.season == null) {
       return _NoSeason(onClose: onClose);
     }
@@ -134,7 +173,10 @@ class _Body extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Row(
             children: [
-              _TierChip(label: '${track.currentTier}', accent: accent.accent, filled: true),
+              _TierChip(
+                  label: '${track.currentTier}',
+                  accent: accent.accent,
+                  filled: true),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -184,7 +226,8 @@ class _Body extends ConsumerWidget {
                 ),
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: accent.accentSoft,
                   border: Border.all(
@@ -194,7 +237,8 @@ class _Body extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.lock_open_rounded, size: 16, color: accent.accent),
+                    Icon(Icons.lock_open_rounded,
+                        size: 16, color: accent.accent),
                     const SizedBox(width: 9),
                     Expanded(
                       child: Column(
@@ -207,7 +251,8 @@ class _Body extends ConsumerWidget {
                                   color: accent.accent)),
                           const Text('Every Founder reward, this season',
                               style: TextStyle(
-                                  fontSize: 10, color: AppColors.textSecondary)),
+                                  fontSize: 10,
+                                  color: AppColors.textSecondary)),
                         ],
                       ),
                     ),
@@ -245,12 +290,13 @@ class _Body extends ConsumerWidget {
         // ── Track ──
         Expanded(
           child: ListView(
+            controller: _trackController,
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 32),
             children: [
               for (final tier in track.tiers)
                 SeasonTierRow(
                   tier: tier,
-                  onClaim: (t, lane) => _claim(context, ref, t, lane),
+                  onClaim: (_, __) => _claim(context),
                 ),
               const SeasonLegend(),
               if (milestone != null) SeasonMilestoneCard(tier: milestone),
@@ -266,7 +312,8 @@ class _TierChip extends StatelessWidget {
   final String label;
   final Color accent;
   final bool filled;
-  const _TierChip({required this.label, required this.accent, required this.filled});
+  const _TierChip(
+      {required this.label, required this.accent, required this.filled});
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +322,8 @@ class _TierChip extends StatelessWidget {
       height: 34,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: filled ? accent.withValues(alpha: 0.15) : AppColors.surfaceElevated,
+        color:
+            filled ? accent.withValues(alpha: 0.15) : AppColors.surfaceElevated,
         border: Border.all(color: filled ? accent : AppColors.border),
         borderRadius: BorderRadius.circular(10),
       ),

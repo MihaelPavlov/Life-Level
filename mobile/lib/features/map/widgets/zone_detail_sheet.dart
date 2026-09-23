@@ -37,6 +37,10 @@ class ZoneDetailSheet extends StatelessWidget {
   /// opens so the user can log workouts to damage the boss.
   final VoidCallback? onFightBoss;
 
+  /// Resolves an expired region boss and advances without victory rewards.
+  final VoidCallback? onContinueAfterExpiredBoss;
+  final RegionBossStatus? bossStatus;
+
   /// Name of the next region (Ocean of Balance, …) — used in the
   /// "Victory unlocks" reward card and the disabled `✓ Defeated · Unlocks X`
   /// label for already-cleared bosses.
@@ -64,6 +68,8 @@ class ZoneDetailSheet extends StatelessWidget {
     this.onOpenChest,
     this.onEnterDungeon,
     this.onFightBoss,
+    this.onContinueAfterExpiredBoss,
+    this.bossStatus,
     this.nextRegionName,
     this.parentCrossroadsName,
     this.userAtParentCrossroads = false,
@@ -144,6 +150,8 @@ class ZoneDetailSheet extends StatelessWidget {
                 onOpenChest: onOpenChest,
                 onEnterDungeon: onEnterDungeon,
                 onFightBoss: onFightBoss,
+                onContinueAfterExpiredBoss: onContinueAfterExpiredBoss,
+                bossStatus: bossStatus,
                 nextRegionName: nextRegionName,
                 parentCrossroadsName: parentCrossroadsName,
                 userAtParentCrossroads: userAtParentCrossroads,
@@ -503,6 +511,8 @@ class _Cta extends StatelessWidget {
   final VoidCallback? onOpenChest;
   final VoidCallback? onEnterDungeon;
   final VoidCallback? onFightBoss;
+  final VoidCallback? onContinueAfterExpiredBoss;
+  final RegionBossStatus? bossStatus;
   final String? nextRegionName;
   final String? parentCrossroadsName;
   final bool userAtParentCrossroads;
@@ -515,6 +525,8 @@ class _Cta extends StatelessWidget {
     required this.onOpenChest,
     required this.onEnterDungeon,
     required this.onFightBoss,
+    required this.onContinueAfterExpiredBoss,
+    required this.bossStatus,
     required this.nextRegionName,
     required this.parentCrossroadsName,
     required this.userAtParentCrossroads,
@@ -613,6 +625,14 @@ class _Cta extends StatelessWidget {
 
     // Boss-specific CTAs — fight on arrival, "defeated" after victory.
     if (node.isBoss) {
+      if (bossStatus == RegionBossStatus.expired) {
+        return _CtaButton(
+          label: '⌛ Boss expired · Continue onward',
+          color: AppColors.orange,
+          onTap: onContinueAfterExpiredBoss,
+          disabled: onContinueAfterExpiredBoss == null,
+        );
+      }
       if (node.status == ZoneNodeStatus.completed) {
         final lbl = nextRegionName != null
             ? '✓ Defeated · Unlocks $nextRegionName'

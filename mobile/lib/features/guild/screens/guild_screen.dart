@@ -92,7 +92,9 @@ class _GuildScreenState extends ConsumerState<GuildScreen> {
   }
 
   Future<void> _setRole(String guildId, String userId, String role) async {
-    await ref.read(guildProvider.notifier).updateMemberRole(guildId, userId, role);
+    await ref
+        .read(guildProvider.notifier)
+        .updateMemberRole(guildId, userId, role);
     final state = ref.read(guildProvider);
     state.whenOrNull(error: (e, _) => _showError(e));
   }
@@ -197,9 +199,12 @@ class _GuildScreenState extends ConsumerState<GuildScreen> {
     return _GuildHomeView(
       key: ValueKey(guild.activeRaid?.id ?? guild.id),
       guild: guild,
-      onStartRaid: guild.canManageRaid ? () => setState(() => _mode = 'startRaid') : null,
+      onStartRaid: guild.canManageRaid
+          ? () => setState(() => _mode = 'startRaid')
+          : null,
       onHistory: () => setState(() => _mode = 'history'),
-      onKick: (userId) => ref.read(guildProvider.notifier).kick(guild.id, userId),
+      onKick: (userId) =>
+          ref.read(guildProvider.notifier).kick(guild.id, userId),
       onRoleChanged: (userId, role) => _setRole(guild.id, userId, role),
     );
   }
@@ -226,104 +231,116 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentGuild = guild;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 14, 8),
-      child: Row(
-        children: [
-          if (onClose != null)
-            IconButton(
-              onPressed: onClose,
-              icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
-            ),
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.purple.withValues(alpha: .14),
-              border: Border.all(color: AppColors.purple.withValues(alpha: .45)),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.shield_rounded, color: AppColors.purple),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                  ),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: SizedBox(
+        height: 52,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                onPressed: onClose ?? () => Navigator.of(context).pop(),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 18,
+                  color: AppColors.textPrimary,
                 ),
-                const Text(
-                  'Guild raids',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+            ),
+            Positioned.fill(
+              left: 56,
+              right: 56,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Text(
+                    'Guild raids',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (currentGuild != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: PopupMenuButton<_GuildMenuAction>(
+                  tooltip: 'Guild actions',
+                  color: AppColors.surfaceElevated,
+                  icon: const Icon(Icons.more_vert_rounded,
+                      color: AppColors.textSecondary),
+                  onSelected: (action) {
+                    switch (action) {
+                      case _GuildMenuAction.edit:
+                        onEdit?.call();
+                      case _GuildMenuAction.leave:
+                        _confirmGuildAction(
+                          context,
+                          title: 'Leave guild?',
+                          message:
+                              'You will stop contributing to this guild raid.',
+                          actionLabel: 'Leave',
+                          onConfirm: onLeave,
+                        );
+                      case _GuildMenuAction.delete:
+                        _confirmGuildAction(
+                          context,
+                          title: 'Delete guild?',
+                          message:
+                              'This removes the guild, members, active raids, and contribution history.',
+                          actionLabel: 'Delete',
+                          onConfirm: onDelete,
+                        );
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    if (currentGuild.isLeader)
+                      const PopupMenuItem(
+                        value: _GuildMenuAction.edit,
+                        child: _GuildMenuItem(
+                          icon: Icons.edit_rounded,
+                          label: 'Edit Guild',
+                          color: AppColors.purple,
+                        ),
+                      ),
+                    if (currentGuild.isLeader)
+                      const PopupMenuItem(
+                        value: _GuildMenuAction.delete,
+                        child: _GuildMenuItem(
+                          icon: Icons.delete_forever_rounded,
+                          label: 'Delete Guild',
+                          color: AppColors.red,
+                        ),
+                      )
+                    else
+                      const PopupMenuItem(
+                        value: _GuildMenuAction.leave,
+                        child: _GuildMenuItem(
+                          icon: Icons.logout_rounded,
+                          label: 'Leave Guild',
+                          color: AppColors.red,
+                        ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          if (currentGuild != null)
-            PopupMenuButton<_GuildMenuAction>(
-              tooltip: 'Guild actions',
-              color: AppColors.surfaceElevated,
-              icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
-              onSelected: (action) {
-                switch (action) {
-                  case _GuildMenuAction.edit:
-                    onEdit?.call();
-                  case _GuildMenuAction.leave:
-                    _confirmGuildAction(
-                      context,
-                      title: 'Leave guild?',
-                      message: 'You will stop contributing to this guild raid.',
-                      actionLabel: 'Leave',
-                      onConfirm: onLeave,
-                    );
-                  case _GuildMenuAction.delete:
-                    _confirmGuildAction(
-                      context,
-                      title: 'Delete guild?',
-                      message: 'This removes the guild, members, active raids, and contribution history.',
-                      actionLabel: 'Delete',
-                      onConfirm: onDelete,
-                    );
-                }
-              },
-              itemBuilder: (_) => [
-                if (currentGuild.isLeader)
-                  const PopupMenuItem(
-                    value: _GuildMenuAction.edit,
-                    child: _GuildMenuItem(
-                      icon: Icons.edit_rounded,
-                      label: 'Edit Guild',
-                      color: AppColors.purple,
-                    ),
-                  ),
-                if (currentGuild.isLeader)
-                  const PopupMenuItem(
-                    value: _GuildMenuAction.delete,
-                    child: _GuildMenuItem(
-                      icon: Icons.delete_forever_rounded,
-                      label: 'Delete Guild',
-                      color: AppColors.red,
-                    ),
-                  )
-                else
-                  const PopupMenuItem(
-                    value: _GuildMenuAction.leave,
-                    child: _GuildMenuItem(
-                      icon: Icons.logout_rounded,
-                      label: 'Leave Guild',
-                      color: AppColors.red,
-                    ),
-                  ),
-              ],
-            ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -369,7 +386,8 @@ void _confirmGuildAction(
     builder: (ctx) => AlertDialog(
       backgroundColor: AppColors.surface,
       title: Text(title, style: const TextStyle(color: AppColors.textPrimary)),
-      content: Text(message, style: const TextStyle(color: AppColors.textSecondary)),
+      content:
+          Text(message, style: const TextStyle(color: AppColors.textSecondary)),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
@@ -380,7 +398,8 @@ void _confirmGuildAction(
             Navigator.of(ctx).pop();
             onConfirm();
           },
-          child: Text(actionLabel, style: const TextStyle(color: AppColors.red)),
+          child:
+              Text(actionLabel, style: const TextStyle(color: AppColors.red)),
         ),
       ],
     ),
@@ -405,7 +424,8 @@ class _NoGuildView extends StatelessWidget {
         const _HeroPanel(
           icon: Icons.shield_rounded,
           title: 'No Guild',
-          subtitle: 'Create a crew or join one to turn logged workouts into shared raid damage.',
+          subtitle:
+              'Create a crew or join one to turn logged workouts into shared raid damage.',
         ),
         const SizedBox(height: 14),
         _ActionButton(
@@ -465,7 +485,11 @@ class _CreateGuildView extends StatelessWidget {
         const SizedBox(height: 12),
         _Field(controller: nameCtrl, label: 'Name', hint: 'Iron Wolves'),
         const SizedBox(height: 12),
-        _Field(controller: descCtrl, label: 'Description', hint: 'Morning runs. Weekend raids.', maxLines: 3),
+        _Field(
+            controller: descCtrl,
+            label: 'Description',
+            hint: 'Morning runs. Weekend raids.',
+            maxLines: 3),
         const SizedBox(height: 14),
         const _SectionLabel('Banner'),
         Row(
@@ -527,7 +551,8 @@ class _SearchGuildViewState extends ConsumerState<_SearchGuildView> {
           onChanged: (v) => setState(() => _query = v),
           style: const TextStyle(color: AppColors.textPrimary),
           decoration: _inputDecoration('Search guilds').copyWith(
-            prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
+            prefixIcon: const Icon(Icons.search_rounded,
+                color: AppColors.textSecondary),
           ),
         ),
         const SizedBox(height: 14),
@@ -546,7 +571,8 @@ class _SearchGuildViewState extends ConsumerState<_SearchGuildView> {
           data: (guilds) => Column(
             children: [
               for (final guild in guilds)
-                _GuildSearchCard(guild: guild, onJoin: () => widget.onJoin(guild.id)),
+                _GuildSearchCard(
+                    guild: guild, onJoin: () => widget.onJoin(guild.id)),
               if (guilds.isEmpty)
                 const _InfoStrip(
                   icon: Icons.search_off_rounded,
@@ -616,7 +642,8 @@ class _GuildHomeView extends StatelessWidget {
               onKick: () => _confirmGuildAction(
                 context,
                 title: 'Remove ${member.username}?',
-                message: 'This member will be removed from the guild and will stop contributing to active raids.',
+                message:
+                    'This member will be removed from the guild and will stop contributing to active raids.',
                 actionLabel: 'Remove',
                 onConfirm: () => onKick(member.userId),
               ),
@@ -751,14 +778,19 @@ class _GuildBanner extends StatelessWidget {
                   guild.description.isEmpty ? 'Open guild' : guild.description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35),
+                  style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      height: 1.35),
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    _Pill('${guild.memberCount}/${guild.maxMembers}', AppColors.purple),
+                    _Pill('${guild.memberCount}/${guild.maxMembers}',
+                        AppColors.purple),
                     const SizedBox(width: 8),
-                    _Pill(_roleLabel(guild.viewerRole), _roleColor(guild.viewerRole)),
+                    _Pill(_roleLabel(guild.viewerRole),
+                        _roleColor(guild.viewerRole)),
                   ],
                 ),
               ],
@@ -783,18 +815,23 @@ class _NoRaidPanel extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.local_fire_department_rounded, color: AppColors.orange),
+              Icon(Icons.local_fire_department_rounded,
+                  color: AppColors.orange),
               SizedBox(width: 8),
               Text(
                 'No Active Raid',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800),
               ),
             ],
           ),
           const SizedBox(height: 8),
           const Text(
             'Start a shared HP boss fight and every member workout will damage it.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.45),
+            style: TextStyle(
+                color: AppColors.textSecondary, fontSize: 12, height: 1.45),
           ),
           if (onStartRaid != null) ...[
             const SizedBox(height: 14),
@@ -833,7 +870,9 @@ class _RaidHistoryCard extends StatelessWidget {
     final statusLabel = raid.isDefeated ? 'Defeated' : 'Expired';
     final endedAt = raid.isDefeated ? raid.defeatedAt : raid.expiresAt;
     final rewardLabel = raid.isDefeated
-        ? (raid.rewardClaimed ? '+${raid.rewardXp} XP claimed' : '+${raid.rewardXp} XP pending')
+        ? (raid.rewardClaimed
+            ? '+${raid.rewardXp} XP claimed'
+            : '+${raid.rewardXp} XP pending')
         : 'No reward';
     final rewardColor = raid.isDefeated
         ? (raid.rewardClaimed ? AppColors.green : AppColors.orange)
@@ -938,12 +977,14 @@ class _RaidHistoryCard extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.purple.withValues(alpha: .09),
-                  border: Border.all(color: AppColors.purple.withValues(alpha: .24)),
+                  border: Border.all(
+                      color: AppColors.purple.withValues(alpha: .24)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.emoji_events_rounded, color: AppColors.orange, size: 18),
+                    const Icon(Icons.emoji_events_rounded,
+                        color: AppColors.orange, size: 18),
                     const SizedBox(width: 9),
                     Expanded(
                       child: Text(
@@ -1060,17 +1101,24 @@ class _ActiveRaidPanel extends StatelessWidget {
                   children: [
                     const Text(
                       'Active Raid',
-                      style: TextStyle(color: AppColors.red, fontSize: 11, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                          color: AppColors.red,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800),
                     ),
                     Text(
                       raid.bossName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900),
                     ),
                     Text(
                       '${remaining.inDays}d ${remaining.inHours % 24}h left',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
                 ),
@@ -1084,12 +1132,16 @@ class _ActiveRaidPanel extends StatelessWidget {
             children: [
               Text(
                 '${raid.totalDamage}/${raid.maxHp} DMG',
-                style: const TextStyle(color: AppColors.red, fontSize: 12, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                    color: AppColors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800),
               ),
               const Spacer(),
               Text(
                 '${raid.remainingHp} HP left',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 12),
               ),
             ],
           ),
@@ -1108,7 +1160,9 @@ class _ActiveRaidPanel extends StatelessWidget {
             const SizedBox(height: 16),
             const _SectionLabel('Damage'),
             for (final c in raid.contributions.take(5))
-              _ContributionRow(contribution: c, maxDamage: raid.contributions.first.damageDealt),
+              _ContributionRow(
+                  contribution: c,
+                  maxDamage: raid.contributions.first.damageDealt),
           ],
         ],
       ),
@@ -1139,16 +1193,23 @@ class _GuildSearchCard extends StatelessWidget {
                     guild.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800),
                   ),
                   Text(
-                    guild.description.isEmpty ? 'Open guild' : guild.description,
+                    guild.description.isEmpty
+                        ? 'Open guild'
+                        : guild.description,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 8),
-                  _Pill('${guild.memberCount}/${guild.maxMembers}', AppColors.purple),
+                  _Pill('${guild.memberCount}/${guild.maxMembers}',
+                      AppColors.purple),
                 ],
               ),
             ),
@@ -1187,7 +1248,10 @@ class _RaidBossCard extends StatelessWidget {
                     boss.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 6),
                   Wrap(
@@ -1240,7 +1304,8 @@ class _MemberRow extends StatelessWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.surfaceElevated,
-              child: Text(member.avatarEmoji.isEmpty ? '?' : member.avatarEmoji),
+              child:
+                  Text(member.avatarEmoji.isEmpty ? '?' : member.avatarEmoji),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1251,7 +1316,9 @@ class _MemberRow extends StatelessWidget {
                     member.username,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800),
                   ),
                   Wrap(
                     spacing: 7,
@@ -1334,7 +1401,8 @@ class _ContributionRow extends StatelessWidget {
             child: Text(
               '#${contribution.rank}',
               style: TextStyle(
-                color: contribution.isMvp ? AppColors.orange : AppColors.textMuted,
+                color:
+                    contribution.isMvp ? AppColors.orange : AppColors.textMuted,
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
               ),
@@ -1345,7 +1413,8 @@ class _ContributionRow extends StatelessWidget {
             child: Row(
               children: [
                 if (contribution.isMvp) ...[
-                  const Icon(Icons.emoji_events_rounded, color: AppColors.orange, size: 13),
+                  const Icon(Icons.emoji_events_rounded,
+                      color: AppColors.orange, size: 13),
                   const SizedBox(width: 3),
                 ],
                 Expanded(
@@ -1367,7 +1436,10 @@ class _ContributionRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${contribution.damageDealt}',
-            style: const TextStyle(color: AppColors.red, fontSize: 12, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+                color: AppColors.red,
+                fontSize: 12,
+                fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -1401,13 +1473,17 @@ class _HeroPanel extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             title,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 21, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 21,
+                fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.45),
+            style: const TextStyle(
+                color: AppColors.textSecondary, fontSize: 13, height: 1.45),
           ),
         ],
       ),
@@ -1517,9 +1593,16 @@ class _InfoStrip extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800)),
+                Text(label,
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800)),
                 const SizedBox(height: 3),
-                Text(value, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
+                Text(value,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.35)),
               ],
             ),
           ),
@@ -1537,17 +1620,33 @@ class _BackTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textSecondary),
-        ),
-        Text(
-          title,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 21, fontWeight: FontWeight.w900),
-        ),
-      ],
+    return SizedBox(
+      height: 48,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              onPressed: onBack,
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 21,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1611,8 +1710,11 @@ class _IconChoice extends StatelessWidget {
       child: Container(
         height: 58,
         decoration: BoxDecoration(
-          color: selected ? AppColors.purple.withValues(alpha: .18) : AppColors.surface,
-          border: Border.all(color: selected ? AppColors.purple : AppColors.border),
+          color: selected
+              ? AppColors.purple.withValues(alpha: .18)
+              : AppColors.surface,
+          border:
+              Border.all(color: selected ? AppColors.purple : AppColors.border),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Center(child: _GuildIcon(icon: id, size: 34)),
@@ -1690,7 +1792,8 @@ class _HpBar extends StatelessWidget {
           widthFactor: percent.clamp(0.0, 1.0).toDouble(),
           child: Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [AppColors.red, AppColors.redDark]),
+              gradient:
+                  LinearGradient(colors: [AppColors.red, AppColors.redDark]),
             ),
           ),
         ),
@@ -1737,7 +1840,8 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800),
+        style:
+            TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -1760,7 +1864,8 @@ class _TinyPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900),
+        style:
+            TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900),
       ),
     );
   }
@@ -1815,17 +1920,22 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.red, size: 42),
+            const Icon(Icons.error_outline_rounded,
+                color: AppColors.red, size: 42),
             const SizedBox(height: 12),
             const Text(
               'Guild unavailable',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 12, height: 1.4),
             ),
             const SizedBox(height: 18),
             _ActionButton(

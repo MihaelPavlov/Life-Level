@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Daily Rewards Modal</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; gap:48px; flex-wrap:wrap; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#f5a623; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:200; pointer-events:none; }
+.st { font-size:13px; font-weight:600; color:#e6edf3; } .si { font-size:11px; color:#8b949e; }
+
+/* ═══════════ FRAME 1 — entry point (unchanged) ═══════════ */
+.home-bg { position:absolute; inset:0; background:linear-gradient(180deg,#0a0f1a 0%,#080e14 40%); }
+.hub-wrap { position:absolute; top:120px; left:0; right:0; padding:0 16px; }
+.hub-title-row { display:flex; justify-content:space-between; align-items:center; }
+.hub-title { font-size:11px; font-weight:800; letter-spacing:.1em; color:#8b949e; }
+.hub-row { display:flex; gap:10px; margin-top:10px; }
+.hub-tile { width:68px; text-align:center; }
+.hub-tile-box { width:56px; height:56px; margin:0 auto; border-radius:14px; background:#1e2632; border:1px solid #30363d; display:flex; align-items:center; justify-content:center; font-size:26px; position:relative; }
+.hub-tile-label { margin-top:6px; font-size:10.5px; font-weight:600; color:#8b949e; }
+.hub-badge { position:absolute; top:-3px; right:-3px; width:12px; height:12px; border-radius:50%; background:#f85149; border:2px solid #080e14; }
+.hub-tile.hi .hub-tile-box { border-color:#f5a623; box-shadow:0 0 0 1px rgba(245,166,35,.35),0 0 18px rgba(245,166,35,.35); }
+.hub-tile.hi .hub-tile-label { color:#f5a623; font-weight:800; }
+.tap-hint { position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-size:9px; font-weight:800; color:#f5a623; letter-spacing:.05em; white-space:nowrap; }
+.tap-ring { position:absolute; inset:-6px; border-radius:20px; border:2px dashed rgba(245,166,35,.55); animation:pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:.35;transform:scale(1)} 50%{opacity:.9;transform:scale(1.06)} }
+
+/* ═══════════ FRAME 2 — the modal ═══════════ */
+.scrim { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 28%, rgba(79,158,255,.14) 0%, rgba(4,8,16,0) 45%), rgba(3,6,11,0.90); display:flex; align-items:center; justify-content:center; padding:10px 16px; }
+.modal { width:100%; max-height:100%; overflow-y:auto; scrollbar-width:none; position:relative; padding-bottom:26px; }
+.modal::-webkit-scrollbar{ display:none; }
+
+.mcard { position:relative; background:linear-gradient(180deg,#141b28 0%,#0e1420 60%,#0a0f18 100%);
+  border:1px solid rgba(245,166,35,.30); border-radius:6px; box-shadow:0 24px 60px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05); overflow:hidden; }
+
+/* banner header */
+.mhead { position:relative; padding:14px 20px 12px; text-align:center;
+  background:linear-gradient(180deg,#1c2b45 0%,#101a2c 100%); border-bottom:1px solid rgba(245,166,35,.28);
+  clip-path:polygon(0 0,100% 0,100% 100%,92% calc(100% - 6px),8% calc(100% - 6px),0 100%); }
+.mhead-icon { font-size:26px; filter:drop-shadow(0 0 10px rgba(245,166,35,.5)); }
+.mhead-title { margin-top:2px; font-size:19px; font-weight:800; color:#fff; letter-spacing:.2px; }
+.mhead-sub { margin-top:3px; font-size:10px; font-weight:700; color:#9db4d4; }
+.mhead-sub b { color:#f5a623; }
+
+/* refresh timer */
+.reset-row { margin:10px 16px 0; display:flex; align-items:center; justify-content:center; gap:6px;
+  background:#0d1420; border:1px solid #202a3a; border-radius:8px; padding:7px 10px; }
+.reset-row .ic { font-size:12px; }
+.reset-row .txt { font-size:11px; font-weight:700; color:#9db4d4; }
+.reset-row .cd { font-size:11px; font-weight:800; color:#e6edf3; }
+
+/* streak strip */
+.streak-strip { margin:10px 14px 0; background:linear-gradient(180deg,#171122 0%,#120c1c 100%);
+  border:1px solid rgba(163,113,247,.30); border-radius:8px; padding:9px 8px 8px; }
+.streak-strip-head { display:flex; justify-content:space-between; align-items:center; padding:0 6px 10px; }
+.streak-strip-t { font-size:9.5px; font-weight:800; letter-spacing:.1em; color:#c9a3ff; }
+.streak-strip-n { font-size:9.5px; font-weight:700; color:#8b949e; }
+.streak-track { display:flex; align-items:flex-start; justify-content:space-between; padding:0 4px; position:relative; }
+.streak-track::before { content:''; position:absolute; left:22px; right:22px; top:19px; height:2px; background:#26304a; z-index:0; }
+.snode { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; width:38px; }
+.sdot { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; position:relative; }
+.sdot.done { background:linear-gradient(180deg,#3fb950,#237a34); box-shadow:0 0 10px rgba(63,185,80,.5); color:#fff; }
+.sdot.today { background:radial-gradient(circle at 35% 30%,#ffe7a8,#f5a623 55%,#c8781a); box-shadow:0 0 0 3px rgba(245,166,35,.25),0 0 16px rgba(245,166,35,.7); color:#3a2205; }
+.sdot.locked { background:#1a2130; border:1px solid #262f42; color:#4d5b6b; }
+.sday { margin-top:4px; font-size:7.5px; font-weight:800; color:#8b949e; letter-spacing:.04em; }
+.sday.today { color:#f5a623; }
+
+/* section label */
+.slabel { margin:11px 16px 6px; font-size:10px; font-weight:800; letter-spacing:.12em; color:#8b949e; display:flex; align-items:center; gap:6px; }
+.slabel::after { content:''; flex:1; height:1px; background:#212b3c; }
+
+/* reward rows */
+.rlist { padding:0 12px; display:flex; flex-direction:column; gap:6px; }
+.rrow { display:flex; align-items:center; gap:9px; border-radius:9px; padding:7px 9px; border:1px solid #212b3c; background:#101724; }
+.rrow.today { border-color:rgba(245,166,35,.55); background:linear-gradient(180deg,rgba(245,166,35,.10),#101724 65%); box-shadow:0 0 0 1px rgba(245,166,35,.12),0 0 18px rgba(245,166,35,.12); }
+.rrow.done { opacity:.68; }
+.ricon { width:36px; height:36px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:19px; position:relative; }
+.ricon.gem { background:linear-gradient(180deg,#1c3a63,#132846); border:1px solid #2c5588; }
+.ricon.bonus { background:linear-gradient(180deg,#3a2a55,#251a3c); border:1px solid #6d4fae; }
+.ribadge { position:absolute; bottom:-3px; right:-3px; width:16px; height:16px; border-radius:50%; background:#0d1420; border:1px solid #212b3c; display:flex; align-items:center; justify-content:center; font-size:9px; }
+.rbody { flex:1; min-width:0; }
+.rday { font-size:12px; font-weight:800; color:#e6edf3; }
+.rday .today-tag { font-size:8px; font-weight:800; color:#f5a623; letter-spacing:.06em; margin-left:5px; }
+.rdesc { font-size:10.5px; color:#8b949e; margin-top:1px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.rdesc b { color:#f5a623; font-weight:800; }
+.rtag { font-size:8.5px; font-weight:800; padding:1px 6px; border-radius:5px; }
+.rtag.shield { background:rgba(79,158,255,.15); color:#4f9eff; }
+.rtag.storm { background:rgba(163,113,247,.18); color:#a371f7; }
+.raction { flex-shrink:0; }
+.rbtn { padding:8px 16px; border-radius:8px; font-size:11.5px; font-weight:800; color:#fff;
+  background:linear-gradient(180deg,#ffb03e,#e8891f); box-shadow:0 4px 12px rgba(232,137,31,.45),inset 0 1px 0 rgba(255,255,255,.35); }
+.rcheck { width:26px; height:26px; border-radius:50%; background:rgba(63,185,80,.15); border:1px solid rgba(63,185,80,.4); display:flex; align-items:center; justify-content:center; color:#3fb950; font-size:13px; font-weight:900; }
+.rlock { font-size:14px; color:#4d5b6b; }
+
+/* footer note + close */
+.mfoot-note { margin:10px 18px 22px; text-align:center; font-size:9.5px; color:#5c6675; line-height:1.5; }
+.close-wrap { display:flex; justify-content:center; margin-top:-17px; position:relative; z-index:3; }
+.close-btn { width:40px; height:40px; border-radius:50%; background:linear-gradient(180deg,#243044,#141b28); border:1px solid #34435c; display:flex; align-items:center; justify-content:center; color:#c7d3e4; font-size:17px; font-weight:700; box-shadow:0 8px 18px rgba(0,0,0,.5); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ FRAME 1 — entry point (existing Adventure Hub, unchanged) ══════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">DAILY REWARDS · 1</div>
+    <div class="step-title">Entry point — unchanged</div>
+    <div class="step-desc">Same "Rewards" tile in the Adventure Hub row on Home. Tapping it opens the redesigned popup below instead of the current plain card.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="home-bg"></div>
+    <div class="hub-wrap">
+      <div class="hub-title-row">
+        <span class="hub-title">ADVENTURE HUB</span>
+      </div>
+      <div class="hub-row">
+        <div class="hub-tile hi" style="position:relative">
+          <div class="tap-hint">TAP</div>
+          <div class="hub-tile-box"><div class="tap-ring"></div>🎁<div class="hub-badge"></div></div>
+          <div class="hub-tile-label">Rewards</div>
+        </div>
+        <div class="hub-tile">
+          <div class="hub-tile-box">🔥</div>
+          <div class="hub-tile-label">Streak</div>
+        </div>
+        <div class="hub-tile">
+          <div class="hub-tile-box">📖</div>
+          <div class="hub-tile-label">Journal</div>
+        </div>
+        <div class="hub-tile">
+          <div class="hub-tile-box">🛡️</div>
+          <div class="hub-tile-label">Guild</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ FRAME 2 — redesigned popup modal (real reward table) ══════════════════ -->
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">DAILY REWARDS · 2</div>
+    <div class="step-title">Redesigned popup</div>
+    <div class="step-desc">Real data: RewardTable from LoginRewardService.cs (50/75/100+🛡️/125/150/200/300+⚡), live UTC-midnight reset countdown, dayInCycle=3 shown as today.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="home-bg"></div>
+    <div class="hub-wrap" style="opacity:.35;filter:blur(1px)">
+      <div class="hub-title-row"><span class="hub-title">ADVENTURE HUB</span></div>
+      <div class="hub-row">
+        <div class="hub-tile"><div class="hub-tile-box">🎁</div><div class="hub-tile-label">Rewards</div></div>
+        <div class="hub-tile"><div class="hub-tile-box">🔥</div><div class="hub-tile-label">Streak</div></div>
+        <div class="hub-tile"><div class="hub-tile-box">📖</div><div class="hub-tile-label">Journal</div></div>
+      </div>
+    </div>
+
+    <div class="scrim">
+      <div class="modal">
+        <div class="mcard">
+
+          <div class="mhead">
+            <div class="mhead-icon">🎁</div>
+            <div class="mhead-title">Daily Rewards</div>
+            <div class="mhead-sub">🔥 <b>17</b> total logins · Day <b>3</b> of 7</div>
+          </div>
+
+          <div class="reset-row">
+            <span class="ic">⏱️</span>
+            <span class="txt">Resets in</span>
+            <span class="cd">6h 42m</span>
+          </div>
+
+          <!-- 7-day streak track -->
+          <div class="streak-strip">
+            <div class="streak-strip-head">
+              <span class="streak-strip-t">7-DAY CYCLE</span>
+              <span class="streak-strip-n">2 claimed</span>
+            </div>
+            <div class="streak-track">
+              <div class="snode"><div class="sdot done">✓</div><div class="sday">D1</div></div>
+              <div class="snode"><div class="sdot done">✓</div><div class="sday">D2</div></div>
+              <div class="snode"><div class="sdot today">🛡️</div><div class="sday today">D3</div></div>
+              <div class="snode"><div class="sdot locked">4</div><div class="sday">D4</div></div>
+              <div class="snode"><div class="sdot locked">5</div><div class="sday">D5</div></div>
+              <div class="snode"><div class="sdot locked">6</div><div class="sday">D6</div></div>
+              <div class="snode"><div class="sdot locked">⚡</div><div class="sday">D7</div></div>
+            </div>
+          </div>
+
+          <div class="slabel">REWARD LADDER</div>
+          <div class="rlist">
+
+            <!-- Day 1 — claimed -->
+            <div class="rrow done">
+              <div class="ricon gem">✨</div>
+              <div class="rbody">
+                <div class="rday">Day 1</div>
+                <div class="rdesc"><b>+50 XP</b></div>
+              </div>
+              <div class="raction"><div class="rcheck">✓</div></div>
+            </div>
+
+            <!-- Day 2 — claimed -->
+            <div class="rrow done">
+              <div class="ricon gem">✨</div>
+              <div class="rbody">
+                <div class="rday">Day 2</div>
+                <div class="rdesc"><b>+75 XP</b></div>
+              </div>
+              <div class="raction"><div class="rcheck">✓</div></div>
+            </div>
+
+            <!-- Day 3 — TODAY, claimable -->
+            <div class="rrow today">
+              <div class="ricon gem">✨<span class="ribadge">🛡️</span></div>
+              <div class="rbody">
+                <div class="rday">Day 3<span class="today-tag">TODAY</span></div>
+                <div class="rdesc"><b>+100 XP</b><span class="rtag shield">🛡️ Streak Shield</span></div>
+              </div>
+              <div class="raction"><div class="rbtn">Claim</div></div>
+            </div>
+
+            <!-- Day 4 -->
+            <div class="rrow">
+              <div class="ricon gem" style="opacity:.5">✨</div>
+              <div class="rbody">
+                <div class="rday" style="color:#8b949e">Day 4</div>
+                <div class="rdesc" style="color:#5c6675"><b style="color:#8b949e">+125 XP</b></div>
+              </div>
+              <div class="raction"><span class="rlock">🔒</span></div>
+            </div>
+
+            <!-- Day 5 -->
+            <div class="rrow">
+              <div class="ricon gem" style="opacity:.5">✨</div>
+              <div class="rbody">
+                <div class="rday" style="color:#8b949e">Day 5</div>
+                <div class="rdesc" style="color:#5c6675"><b style="color:#8b949e">+150 XP</b></div>
+              </div>
+              <div class="raction"><span class="rlock">🔒</span></div>
+            </div>
+
+            <!-- Day 6 -->
+            <div class="rrow">
+              <div class="ricon gem" style="opacity:.5">✨</div>
+              <div class="rbody">
+                <div class="rday" style="color:#8b949e">Day 6</div>
+                <div class="rdesc" style="color:#5c6675"><b style="color:#8b949e">+200 XP</b></div>
+              </div>
+              <div class="raction"><span class="rlock">🔒</span></div>
+            </div>
+
+            <!-- Day 7 -->
+            <div class="rrow">
+              <div class="ricon bonus" style="opacity:.55">⚡<span class="ribadge">⚡</span></div>
+              <div class="rbody">
+                <div class="rday" style="color:#8b949e">Day 7</div>
+                <div class="rdesc" style="color:#5c6675"><b style="color:#8b949e">+300 XP</b><span class="rtag storm">⚡ XP Storm +300</span></div>
+              </div>
+              <div class="raction"><span class="rlock">🔒</span></div>
+            </div>
+
+          </div>
+
+          <div class="mfoot-note">Miss a day and the cycle resets — unless a Streak Shield covers you.</div>
+        </div>
+
+        <div class="close-wrap"><div class="close-btn">✕</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

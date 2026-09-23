@@ -14,7 +14,7 @@ enum ZoneNodeStatus { completed, active, next, available, locked }
 
 enum RegionStatus { active, completed, locked }
 
-enum RegionBossStatus { locked, available, defeated }
+enum RegionBossStatus { locked, available, defeated, expired }
 
 enum RegionTheme { forest, ocean, mountain, volcano, frost, desert }
 
@@ -50,6 +50,8 @@ RegionBossStatus regionBossStatusFromString(String? s) {
       return RegionBossStatus.available;
     case 'defeated':
       return RegionBossStatus.defeated;
+    case 'expired':
+      return RegionBossStatus.expired;
     default:
       return RegionBossStatus.locked;
   }
@@ -144,6 +146,7 @@ class RegionCard {
   final String emoji;
   final String lore;
   final String bossName;
+  final String? bannerImageUrl;
   final RegionTheme theme;
   final int chapterIndex;
   final int levelRequirement;
@@ -161,6 +164,7 @@ class RegionCard {
     required this.emoji,
     required this.lore,
     required this.bossName,
+    this.bannerImageUrl,
     required this.theme,
     required this.chapterIndex,
     required this.levelRequirement,
@@ -184,6 +188,7 @@ class RegionCard {
         emoji: json['emoji'] as String? ?? '',
         lore: json['lore'] as String? ?? '',
         bossName: json['bossName'] as String? ?? '',
+        bannerImageUrl: _optionalString(json['bannerImageUrl']),
         theme: regionThemeFromString(json['theme'] as String?),
         chapterIndex: (json['chapterIndex'] as num?)?.toInt() ?? 0,
         levelRequirement: (json['levelRequirement'] as num?)?.toInt() ?? 1,
@@ -203,7 +208,6 @@ class RegionCard {
 // ── Region detail (single region + nodes + edges) ────────────────────────────
 
 class RegionDetail extends RegionCard {
-  final String? bannerImageUrl;
   final String? trailBackgroundImageUrl;
   final List<ZoneNode> nodes;
   final List<ZoneEdge> edges;
@@ -233,7 +237,7 @@ class RegionDetail extends RegionCard {
     required super.status,
     required super.bossStatus,
     required super.pins,
-    this.bannerImageUrl,
+    super.bannerImageUrl,
     this.trailBackgroundImageUrl,
     required this.nodes,
     required this.edges,
@@ -265,7 +269,8 @@ class RegionDetail extends RegionCard {
       status: base.status,
       bossStatus: base.bossStatus,
       pins: base.pins,
-      bannerImageUrl: _optionalString(json['bannerImageUrl']),
+      bannerImageUrl:
+          _optionalString(json['bannerImageUrl']) ?? base.bannerImageUrl,
       trailBackgroundImageUrl: _optionalString(json['trailBackgroundImageUrl']),
       nodes: (json['nodes'] as List?)
               ?.map((e) => ZoneNode.fromJson(e as Map<String, dynamic>))

@@ -36,13 +36,20 @@ String questCategoryEmoji(String category) {
 
 String questCategoryIcon(String category) {
   switch (category.toLowerCase()) {
-    case QuestCategory.duration: return AppIcons.questDuration;
-    case QuestCategory.calories: return AppIcons.questCalories;
-    case QuestCategory.distance: return AppIcons.questDistance;
-    case QuestCategory.workouts: return AppIcons.questWorkoutCount;
-    case QuestCategory.streak:   return AppIcons.questWorkoutCount;
-    case QuestCategory.login:    return AppIcons.questDailyLogin;
-    default:                     return AppIcons.questGeneral;
+    case QuestCategory.duration:
+      return AppIcons.questDuration;
+    case QuestCategory.calories:
+      return AppIcons.questCalories;
+    case QuestCategory.distance:
+      return AppIcons.questDistance;
+    case QuestCategory.workouts:
+      return AppIcons.questWorkoutCount;
+    case QuestCategory.streak:
+      return AppIcons.questWorkoutCount;
+    case QuestCategory.login:
+      return AppIcons.questDailyLogin;
+    default:
+      return AppIcons.questGeneral;
   }
 }
 
@@ -76,6 +83,9 @@ class UserQuestProgress {
   final double currentValue;
   final String targetUnit;
   final int rewardXp;
+  final int rewardCoins;
+  final int rewardCrystals;
+  final int rewardPoints;
   final bool isCompleted;
   final bool rewardClaimed;
   final DateTime expiresAt;
@@ -92,6 +102,9 @@ class UserQuestProgress {
     required this.currentValue,
     required this.targetUnit,
     required this.rewardXp,
+    this.rewardCoins = 0,
+    this.rewardCrystals = 0,
+    this.rewardPoints = 0,
     required this.isCompleted,
     required this.rewardClaimed,
     required this.expiresAt,
@@ -117,6 +130,9 @@ class UserQuestProgress {
         currentValue: (json['currentValue'] as num).toDouble(),
         targetUnit: json['targetUnit'] as String,
         rewardXp: json['rewardXp'] as int,
+        rewardCoins: (json['rewardCoins'] as num?)?.toInt() ?? 0,
+        rewardCrystals: (json['rewardCrystals'] as num?)?.toInt() ?? 0,
+        rewardPoints: (json['rewardPoints'] as num?)?.toInt() ?? 0,
         isCompleted: json['isCompleted'] as bool,
         rewardClaimed: json['rewardClaimed'] as bool,
         expiresAt: DateTime.parse(json['expiresAt'] as String),

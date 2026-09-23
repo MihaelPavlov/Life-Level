@@ -19,7 +19,7 @@ namespace LifeLevel.Modules.Talents.Application.UseCases;
 /// back to <c>TalentsController</c> to apply via <c>IStreakShieldPort</c>.
 /// </remarks>
 public class TalentService(DbContext db)
-    : ITalentBonusReadPort, ITalentProfileReadPort, ITalentStreakAssistPort
+    : ITalentBonusReadPort, ITalentProfileReadPort, ITalentStreakAssistPort, IRewardCurrencyPort, IShopWalletPort
 {
     private static readonly Random Rng = Random.Shared;
 
@@ -163,6 +163,48 @@ public class TalentService(DbContext db)
         wallet.Crystals += amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<ShopWalletBalance> GetBalanceAsync(Guid userId, CancellationToken ct = default)
+    {
+        var wallet = await GetOrCreateWalletAsync(userId, ct);
+        return new ShopWalletBalance(wallet.Coins, wallet.Crystals);
+    }
+
+    public async Task<bool> TrySpendAsync(
+        Guid userId, ShopCurrency currency, int amount, CancellationToken ct = default)
+    {
+        if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
+        var wallet = await GetOrCreateWalletAsync(userId, ct);
+        if (db.Database.IsRelational())
+        {
+            var updated = currency == ShopCurrency.Coins
+                ? await db.Set<UserTalentWallet>()
+                    .Where(x => x.UserId == userId && x.Coins >= amount)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(x => x.Coins, x => x.Coins - amount)
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct)
+                : await db.Set<UserTalentWallet>()
+                    .Where(x => x.UserId == userId && x.Crystals >= amount)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(x => x.Crystals, x => x.Crystals - amount)
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+            if (updated == 1) await db.Entry(wallet).ReloadAsync(ct);
+            return updated == 1;
+        }
+        if (currency == ShopCurrency.Coins)
+        {
+            if (wallet.Coins < amount) return false;
+            wallet.Coins -= amount;
+        }
+        else
+        {
+            if (wallet.Crystals < amount) return false;
+            wallet.Crystals -= amount;
+        }
+        wallet.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+        return true;
     }
 
     public async Task MarkStreakBrokenAsync(Guid userId, CancellationToken ct = default)

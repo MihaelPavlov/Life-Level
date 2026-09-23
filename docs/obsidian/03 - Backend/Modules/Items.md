@@ -92,6 +92,15 @@ Called after boss defeats, chest opens, dungeon completes, and first-time extern
 - `DELETE /api/items/equipment/{slotType}`
 - `GET /api/items/inventory`
 - Admin: `/api/admin/items` — CRUD for Items + ItemDropRules
+- Shop: `GET /api/shop`, `POST /api/shop/refresh`, item and chest purchase endpoints.
+
+## Shop economy
+
+- Six deterministic offers rotate at midnight UTC: three Coin offers and three Gem offers.
+- Each user can buy one 500-Coin reroll per day. Rerolls exclude owned and currently offered gear.
+- Gear purchases are server-authoritative, idempotent, inventory-cap checked, and never grant duplicates.
+- Wayfarer, Adept, and Champion chests grant one random unowned Common, Rare, or Legendary item.
+- Gem and Coin real-money packs are visible in mobile as disabled “Coming soon” sections.
 
 ## Files
 - `backend/src/modules/LifeLevel.Modules.Items/`

@@ -36,6 +36,19 @@ public class SeasonController(SeasonService seasons, IUserContext userContext) :
         }
     }
 
+    [HttpPost("claim-available")]
+    public async Task<IActionResult> ClaimAvailable()
+    {
+        try
+        {
+            return Ok(await seasons.ClaimAvailableAsync(userContext.UserId));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+    }
+
     [HttpPost("pass/purchase")]
     public async Task<IActionResult> PurchaseFounderPass()
     {

@@ -96,7 +96,7 @@ class NotificationItem {
       case 'quest':
       case 'quest-completed':
       case 'quest_completed':
-        return 'lifelevel://quests';
+        return 'lifelevel://rewards';
       case 'rank-changed':
       case 'rank_changed':
         return 'lifelevel://profile';

@@ -40,11 +40,13 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
   final GlobalKey _regionsKey = GlobalKey();
+  final Map<String, GlobalKey> _regionKeys = {};
 
   WorldMapData? _data;
   bool _loading = true;
   String? _error;
   TutorialStep? _lastTutorialStep;
+  bool _hasScrolledToCurrentRegion = false;
 
   // Inline region navigation so the shell's bottom nav bar stays visible.
   // Always starts at the hub list — tapping a region card opens RegionDetailScreen.
@@ -86,8 +88,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
         _data = data;
         _loading = false;
         final tutorial = ref.read(tutorialControllerProvider);
-        if (widget.autoOpenActiveRegion ||
-            (tutorial.isMapTutorial && tutorial.mapTutorialStep == 1)) {
+        if (tutorial.isMapTutorial && tutorial.mapTutorialStep == 1) {
           _openRegionId = null;
           for (final r in data.regions) {
             if (r.status == RegionStatus.active) {
@@ -97,6 +98,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
           }
         }
       });
+      _scrollToCurrentRegion(data);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -104,6 +106,44 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
         _loading = false;
       });
     }
+  }
+
+  void _scrollToCurrentRegion(WorldMapData data) {
+    if (_hasScrolledToCurrentRegion) return;
+
+    RegionCard? target;
+    for (final region in data.regions) {
+      if (region.status == RegionStatus.active) {
+        target = region;
+        break;
+      }
+    }
+    if (target == null) {
+      for (final region in data.regions) {
+        if (region.status == RegionStatus.locked) {
+          target = region;
+          break;
+        }
+      }
+    }
+    if (target == null) return;
+
+    _hasScrolledToCurrentRegion = true;
+    final targetId = target.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final targetContext = _regionKeys[targetId]?.currentContext;
+      if (targetContext == null) {
+        _hasScrolledToCurrentRegion = false;
+        return;
+      }
+      Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0.16,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   void _openRegion(RegionCard region) {
@@ -227,10 +267,13 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
           ),
           const SizedBox(height: 10),
           for (final region in visibleRegions)
-            RegionHeroCard(
-              region: region,
-              userLevel: data.user.level,
-              onTap: () => _openRegion(region),
+            KeyedSubtree(
+              key: _regionKeys.putIfAbsent(region.id, GlobalKey.new),
+              child: RegionHeroCard(
+                region: region,
+                userLevel: data.user.level,
+                onTap: () => _openRegion(region),
+              ),
             ),
           if (hiddenRegionCount > 0)
             _UnknownRealmsCard(hiddenCount: hiddenRegionCount),

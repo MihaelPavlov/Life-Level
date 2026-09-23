@@ -4,6 +4,7 @@ import 'home_palette.dart';
 
 enum HomeHeroButtonStyle {
   ghost,
+  locked,
   solidBlue,
   solidGreen,
   solidRed,
@@ -39,6 +40,17 @@ class HomeHeroButton extends StatelessWidget {
         borderColor = AppColors.border;
         textColor = AppColors.textSecondary;
         shadows = null;
+      case HomeHeroButtonStyle.locked:
+        bgStart = AppColors.red.withValues(alpha: 0.1);
+        bgEnd = AppColors.red.withValues(alpha: 0.1);
+        borderColor = AppColors.red.withValues(alpha: 0.55);
+        textColor = AppColors.red;
+        shadows = [
+          BoxShadow(
+            color: AppColors.red.withValues(alpha: 0.12),
+            blurRadius: 12,
+          ),
+        ];
       case HomeHeroButtonStyle.solidBlue:
         bgStart = AppColors.blue;
         bgEnd = const Color(0xFF3a88e6);

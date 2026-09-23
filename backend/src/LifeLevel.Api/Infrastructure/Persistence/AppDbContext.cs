@@ -62,6 +62,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Quest
     public DbSet<Quest> Quests => Set<Quest>();
     public DbSet<UserQuestProgress> UserQuestProgress => Set<UserQuestProgress>();
+    public DbSet<TaskRewardMilestoneClaim> TaskRewardMilestoneClaims => Set<TaskRewardMilestoneClaim>();
 
     // Streak
     public DbSet<Streak> Streaks => Set<Streak>();
@@ -110,6 +111,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CharacterItem> CharacterItems => Set<CharacterItem>();
     public DbSet<EquipmentSlot> EquipmentSlots => Set<EquipmentSlot>();
     public DbSet<ItemDropRule> ItemDropRules => Set<ItemDropRule>();
+    public DbSet<UserShopDailyState> UserShopDailyStates => Set<UserShopDailyState>();
+    public DbSet<ShopPurchase> ShopPurchases => Set<ShopPurchase>();
 
     // Guild
     public DbSet<Guild> Guilds => Set<Guild>();
@@ -246,6 +249,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<TaskRewardMilestoneClaim>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // WorldZone module cross-module: UserWorldProgress/UserZoneUnlock → User
         modelBuilder.Entity<UserWorldProgress>()
             .HasOne<User>()
@@ -362,6 +371,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(s => s.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserShopDailyState>()
+            .HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ShopPurchase>()
+            .HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ShopPurchase>()
+            .HasOne<Item>().WithMany().HasForeignKey(x => x.GrantedItemId).OnDelete(DeleteBehavior.Restrict);
 
         // Guild cross-module: membership/ownership/contributions -> User, raid -> Boss
         modelBuilder.Entity<Guild>()

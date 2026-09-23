@@ -114,6 +114,46 @@ public class SeasonService(
         return await ClaimTierInternalAsync(userId, season, tier, track, auto, ct);
     }
 
+    public async Task<IReadOnlyList<SeasonClaimResult>> ClaimAvailableAsync(
+        Guid userId, CancellationToken ct = default)
+    {
+        var season = await GetActiveSeasonAsync(ct)
+                     ?? throw new InvalidOperationException("No active season.");
+        var progress = await GetOrCreateProgressAsync(userId, season.Id, ct);
+        var hasPass = await db.Set<UserFounderPass>()
+            .AnyAsync(p => p.UserId == userId && p.SeasonId == season.Id, ct);
+        var rewards = await db.Set<SeasonRewardTier>()
+            .Where(r => r.SeasonId == season.Id)
+            .OrderBy(r => r.Tier)
+            .ThenBy(r => r.Track)
+            .ToListAsync(ct);
+        var claimed = (await db.Set<UserSeasonClaim>()
+                .Where(c => c.UserId == userId && c.SeasonId == season.Id)
+                .Select(c => new { c.Tier, c.Track })
+                .ToListAsync(ct))
+            .Select(c => (c.Tier, c.Track))
+            .ToHashSet();
+
+        var results = new List<SeasonClaimResult>();
+        while (true)
+        {
+            var reward = rewards.FirstOrDefault(r =>
+                r.Tier <= progress.CurrentTier &&
+                !claimed.Contains((r.Tier, r.Track)) &&
+                (r.Track != SeasonTrack.Founder || hasPass));
+            if (reward == null) break;
+
+            results.Add(await ClaimTierInternalAsync(
+                userId, season, reward.Tier, reward.Track, auto: false, ct));
+            claimed.Add((reward.Tier, reward.Track));
+        }
+
+        if (results.Count == 0)
+            throw new InvalidOperationException("No season rewards are ready to claim.");
+
+        return results;
+    }
+
     private async Task<SeasonClaimResult> ClaimTierInternalAsync(
         Guid userId, Season season, int tier, SeasonTrack track, bool auto, CancellationToken ct)
     {

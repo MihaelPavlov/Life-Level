@@ -1,4 +1,5 @@
 using LifeLevel.Modules.Quest.Application.DTOs;
+using LifeLevel.Modules.Quest.Domain.Entities;
 using LifeLevel.Modules.Quest.Domain.Enums;
 using LifeLevel.Modules.Quest.Domain.Events;
 using LifeLevel.SharedKernel.Enums;
@@ -15,155 +16,206 @@ public class QuestService(
     ICharacterXpPort characterXp,
     IEventPublisher events,
     ILevelUpItemGrantPort levelUpItemGrant,
-    ITalentBonusReadPort? talentBonus = null)
+    ITalentBonusReadPort? talentBonus = null,
+    IRewardCurrencyPort? rewardCurrency = null,
+    IStreakShieldPort? streakShield = null)
     : IDailyQuestReadPort, IQuestProgressPort
 {
-    private async Task<long> ApplyQuestXpTalentAsync(Guid userId, long baseXp)
-    {
-        if (talentBonus is null) return baseXp;
-        var pct = (await talentBonus.GetBonusesAsync(userId)).QuestXpPct;
-        return pct <= 0 ? baseXp : (long)Math.Round(baseXp * (1.0 + pct / 100.0));
-    }
-
-    // Far-future expiry used for special quests
+    private const int TasksPerPeriod = 10;
     private static readonly DateTime SpecialQuestExpiry = new(2099, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+
+    private static readonly IReadOnlyDictionary<int, TaskMilestoneRewardDto> DailyMilestones =
+        new Dictionary<int, TaskMilestoneRewardDto>
+        {
+            [20] = new(25, 0, 0, 0), [40] = new(0, 0, 50, 0),
+            [60] = new(0, 1, 0, 0), [80] = new(75, 0, 0, 0),
+            [100] = new(0, 0, 150, 1),
+        };
+
+    private static readonly IReadOnlyDictionary<int, TaskMilestoneRewardDto> WeeklyMilestones =
+        new Dictionary<int, TaskMilestoneRewardDto>
+        {
+            [40] = new(100, 0, 0, 0), [80] = new(0, 0, 150, 0),
+            [120] = new(0, 2, 0, 0), [160] = new(200, 0, 0, 0),
+            [200] = new(0, 0, 500, 1),
+        };
 
     public async Task<List<UserQuestProgressDto>> GetActiveQuestsAsync(Guid userId, QuestType type)
     {
         var now = DateTime.UtcNow;
-
-        var query = db.Set<UserQuestProgressEntity>()
-            .Include(p => p.Quest)
+        var query = db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
             .Where(p => p.UserId == userId && p.Quest.Type == type);
-
-        // Special quests use a far-future expiry so we treat them as never expiring
-        if (type == QuestType.Special)
-            query = query.Where(p => p.ExpiresAt > now || p.ExpiresAt == SpecialQuestExpiry);
-        else
-            query = query.Where(p => p.ExpiresAt > now);
-
-        var progresses = await query
-            .OrderBy(p => p.IsCompleted)
-            .ThenBy(p => p.Quest.SortOrder)
-            .ToListAsync();
-
-        return progresses.Select(MapToDto).ToList();
+        query = type == QuestType.Special
+            ? query.Where(p => p.ExpiresAt > now || p.ExpiresAt == SpecialQuestExpiry)
+            : query.Where(p => p.ExpiresAt > now);
+        return (await query.OrderBy(p => p.IsCompleted).ThenBy(p => p.Quest.SortOrder).ToListAsync())
+            .Select(MapToDto).ToList();
     }
 
-    public async Task GenerateDailyQuestsAsync(Guid userId)
+    public Task GenerateDailyQuestsAsync(Guid userId) => GeneratePeriodTasksAsync(userId, QuestType.Daily);
+    public Task GenerateWeeklyQuestsAsync(Guid userId) => GeneratePeriodTasksAsync(userId, QuestType.Weekly);
+
+    private async Task GeneratePeriodTasksAsync(Guid userId, QuestType type)
     {
         var now = DateTime.UtcNow;
-        var existingCount = await db.Set<UserQuestProgressEntity>()
-            .CountAsync(p => p.UserId == userId && p.Quest.Type == QuestType.Daily && p.ExpiresAt > now);
-
-        if (existingCount >= 5) return;
-
-        var templates = await db.Set<QuestEntity>()
-            .Where(q => q.IsActive && q.Type == QuestType.Daily)
-            .OrderBy(q => q.SortOrder)
-            .ToListAsync();
-
-        if (templates.Count == 0) return;
-
-        // Already-assigned quest IDs for today
-        var assignedIds = await db.Set<UserQuestProgressEntity>()
-            .Where(p => p.UserId == userId && p.Quest.Type == QuestType.Daily && p.ExpiresAt > now)
-            .Select(p => p.QuestId)
-            .ToListAsync();
-
-        var available = templates.Where(t => !assignedIds.Contains(t.Id)).ToList();
-        if (available.Count == 0) return;
-
-        var selected = SelectDailyQuests(available, 5 - existingCount);
-        var expiresAt = now.Date.AddDays(1); // tomorrow midnight UTC
-
-        foreach (var quest in selected)
+        var active = await db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
+            .Where(p => p.UserId == userId && p.Quest.Type == type && p.ExpiresAt > now).ToListAsync();
+        if (active.Count < TasksPerPeriod)
         {
-            db.Set<UserQuestProgressEntity>().Add(new UserQuestProgressEntity
+            var assignedIds = active.Select(p => p.QuestId).ToHashSet();
+            var available = await db.Set<QuestEntity>()
+                .Where(q => q.IsActive && q.Type == type && !assignedIds.Contains(q.Id)).ToListAsync();
+            var selected = SelectBalancedTasks(available, TasksPerPeriod - active.Count);
+            var (_, resetAt) = PeriodBounds(type, now);
+            foreach (var task in selected)
             {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                QuestId = quest.Id,
-                CurrentValue = 0,
-                IsCompleted = false,
-                RewardClaimed = false,
-                AssignedAt = now,
-                ExpiresAt = expiresAt,
-                BonusAwarded = false,
-            });
+                var progress = new UserQuestProgressEntity
+                {
+                    UserId = userId, QuestId = task.Id, Quest = task,
+                    AssignedAt = now, ExpiresAt = resetAt,
+                };
+                active.Add(progress);
+                db.Set<UserQuestProgressEntity>().Add(progress);
+            }
         }
-
+        var (_, canonicalResetAt) = PeriodBounds(type, now);
+        foreach (var progress in active) progress.ExpiresAt = canonicalResetAt;
+        ApplyRewardSnapshots(active, type);
         await db.SaveChangesAsync();
     }
 
-    public async Task GenerateWeeklyQuestsAsync(Guid userId)
+    private static List<QuestEntity> SelectBalancedTasks(List<QuestEntity> available, int count)
     {
-        var now = DateTime.UtcNow;
-        var hasWeekly = await db.Set<UserQuestProgressEntity>()
-            .AnyAsync(p => p.UserId == userId && p.Quest.Type == QuestType.Weekly && p.ExpiresAt > now);
-
-        if (hasWeekly) return;
-
-        var templates = await db.Set<QuestEntity>()
-            .Where(q => q.IsActive && q.Type == QuestType.Weekly)
-            .OrderBy(q => q.SortOrder)
-            .Take(3)
-            .ToListAsync();
-
-        // Next Sunday midnight UTC
-        var daysUntilSunday = ((int)DayOfWeek.Sunday - (int)now.DayOfWeek + 7) % 7;
-        if (daysUntilSunday == 0) daysUntilSunday = 7;
-        var expiresAt = now.Date.AddDays(daysUntilSunday);
-
-        foreach (var quest in templates)
+        if (count <= 0) return [];
+        var general = available.Where(q => q.RequiredActivity == null).OrderBy(_ => Random.Shared.Next()).ToList();
+        var specific = available.Where(q => q.RequiredActivity != null).OrderBy(_ => Random.Shared.Next()).ToList();
+        var specificTarget = Math.Min(3, Math.Min(specific.Count, count));
+        var selected = general.Take(count - specificTarget).Concat(specific.Take(specificTarget)).ToList();
+        if (selected.Count < count)
         {
-            db.Set<UserQuestProgressEntity>().Add(new UserQuestProgressEntity
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                QuestId = quest.Id,
-                CurrentValue = 0,
-                IsCompleted = false,
-                RewardClaimed = false,
-                AssignedAt = now,
-                ExpiresAt = expiresAt,
-                BonusAwarded = false,
-            });
+            var ids = selected.Select(q => q.Id).ToHashSet();
+            selected.AddRange(available.Where(q => !ids.Contains(q.Id)).OrderBy(_ => Random.Shared.Next())
+                .Take(count - selected.Count));
+        }
+        return selected.OrderBy(q => q.SortOrder).ToList();
+    }
+
+    private static void ApplyRewardSnapshots(List<UserQuestProgressEntity> tasks, QuestType type)
+    {
+        var ordered = tasks.OrderBy(p => p.Quest.SortOrder).ThenBy(p => p.Id).Take(TasksPerPeriod).ToList();
+        var crystalCount = type == QuestType.Daily ? 1 : 2;
+        var points = type == QuestType.Daily ? 10 : 20;
+        var coins = type == QuestType.Daily ? 15 : 30;
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].RewardPoints = points;
+            var crystalReward = i >= ordered.Count - crystalCount;
+            ordered[i].RewardCoins = crystalReward ? 0 : coins;
+            ordered[i].RewardCrystals = crystalReward ? 1 : 0;
+        }
+    }
+
+    public async Task<TaskRewardPeriodDto> GetRewardPeriodAsync(Guid userId, QuestType type)
+    {
+        if (type is not (QuestType.Daily or QuestType.Weekly)) throw new ArgumentOutOfRangeException(nameof(type));
+        await GeneratePeriodTasksAsync(userId, type);
+        var now = DateTime.UtcNow;
+        var (periodStart, resetAt) = PeriodBounds(type, now);
+        var tasks = await db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
+            .Where(p => p.UserId == userId && p.Quest.Type == type && p.ExpiresAt > now)
+            .OrderBy(p => p.Quest.SortOrder).ToListAsync();
+        var maximum = type == QuestType.Daily ? 100 : 200;
+        var points = Math.Min(tasks.Where(p => p.IsCompleted).Sum(p => p.RewardPoints), maximum);
+        var claimed = await db.Set<TaskRewardMilestoneClaim>()
+            .Where(c => c.UserId == userId && c.PeriodType == type && c.PeriodStartUtc == periodStart)
+            .Select(c => c.Threshold).ToListAsync();
+        var rewards = type == QuestType.Daily ? DailyMilestones : WeeklyMilestones;
+        var milestones = rewards.Select(m => new TaskMilestoneDto(
+            m.Key, m.Value, points >= m.Key, claimed.Contains(m.Key))).ToList();
+        return new(type.ToString(), periodStart, resetAt, points, maximum, milestones,
+            tasks.Select(MapToDto).ToList());
+    }
+
+    public async Task<TaskMilestoneClaimResult> ClaimMilestoneAsync(Guid userId, QuestType type, int threshold)
+    {
+        var rewards = type == QuestType.Daily ? DailyMilestones : type == QuestType.Weekly ? WeeklyMilestones : null;
+        if (rewards is null || !rewards.TryGetValue(threshold, out var reward))
+            throw new InvalidOperationException("Invalid reward milestone.");
+        return await ClaimMilestoneInternalAsync(userId, type, threshold, reward);
+    }
+
+    /// <summary>
+    /// Claims every milestone the player has reached but not yet claimed for
+    /// the period, in threshold order — one tap collects everything owed
+    /// instead of requiring a tap per tier. Mirrors
+    /// <see cref="LifeLevel.Modules.Seasons.Application.UseCases.SeasonService.ClaimAvailableAsync"/>.
+    /// </summary>
+    public async Task<IReadOnlyList<TaskMilestoneClaimResult>> ClaimAvailableMilestonesAsync(
+        Guid userId, QuestType type)
+    {
+        var rewards = type == QuestType.Daily ? DailyMilestones : type == QuestType.Weekly ? WeeklyMilestones : null;
+        if (rewards is null) throw new InvalidOperationException("Period must be daily or weekly.");
+
+        var results = new List<TaskMilestoneClaimResult>();
+        foreach (var threshold in rewards.Keys.OrderBy(t => t))
+        {
+            var period = await GetRewardPeriodAsync(userId, type);
+            var milestone = period.Milestones.FirstOrDefault(m => m.Threshold == threshold);
+            if (milestone is null || !milestone.IsUnlocked || milestone.IsClaimed) continue;
+            results.Add(await ClaimMilestoneInternalAsync(userId, type, threshold, rewards[threshold]));
         }
 
-        // Assign special quests that the user hasn't started yet
-        await AssignSpecialQuestsAsync(userId, now);
+        if (results.Count == 0)
+            throw new InvalidOperationException(
+                $"No {type.ToString().ToLowerInvariant()} reward milestones are ready to claim.");
 
+        return results;
+    }
+
+    private async Task<TaskMilestoneClaimResult> ClaimMilestoneInternalAsync(
+        Guid userId, QuestType type, int threshold, TaskMilestoneRewardDto reward)
+    {
+        var period = await GetRewardPeriodAsync(userId, type);
+        if (period.PointsEarned < threshold) throw new InvalidOperationException("This reward milestone is still locked.");
+        if (await db.Set<TaskRewardMilestoneClaim>().AnyAsync(c => c.UserId == userId &&
+            c.PeriodType == type && c.PeriodStartUtc == period.PeriodStartUtc && c.Threshold == threshold))
+            throw new InvalidOperationException("This reward milestone was already claimed.");
+
+        db.Set<TaskRewardMilestoneClaim>().Add(new()
+        {
+            UserId = userId, PeriodType = type, PeriodStartUtc = period.PeriodStartUtc,
+            Threshold = threshold, ClaimedAtUtc = DateTime.UtcNow,
+        });
         await db.SaveChangesAsync();
+        if (rewardCurrency != null)
+        {
+            await rewardCurrency.AddCoinsAsync(userId, reward.Coins);
+            await rewardCurrency.AddCrystalsAsync(userId, reward.Crystals);
+        }
+        if (reward.Xp > 0)
+        {
+            var result = await characterXp.AwardXpAsync(userId, "TaskMilestone", "🏅",
+                $"{type} task milestone: {threshold} points", reward.Xp);
+            await GrantLevelItemsIfNeededAsync(userId, result);
+        }
+        if (reward.Shields > 0 && streakShield != null)
+            for (var i = 0; i < reward.Shields; i++) await streakShield.AddShieldAsync(userId);
+        return new(type.ToString(), threshold, reward, await GetRewardPeriodAsync(userId, type));
     }
 
     public async Task<QuestProgressUpdateResult> UpdateProgressFromActivityAsync(
-        Guid userId,
-        ActivityType activityType,
-        int durationMinutes,
-        double? distanceKm,
-        int? calories)
+        Guid userId, ActivityType activityType, int durationMinutes, double? distanceKm, int? calories)
     {
         var now = DateTime.UtcNow;
-
-        var activeProgresses = await db.Set<UserQuestProgressEntity>()
-            .Include(p => p.Quest)
-            .Where(p => p.UserId == userId
-                        && !p.IsCompleted
-                        && (p.ExpiresAt > now || p.ExpiresAt == SpecialQuestExpiry))
-            .ToListAsync();
-
-        var updatedProgresses = new List<UserQuestProgressEntity>();
-
-        foreach (var progress in activeProgresses)
+        var active = await db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
+            .Where(p => p.UserId == userId && !p.IsCompleted &&
+                        (p.ExpiresAt > now || p.ExpiresAt == SpecialQuestExpiry)).ToListAsync();
+        var completed = new List<UserQuestProgressEntity>();
+        foreach (var progress in active)
         {
-            var quest = progress.Quest;
-
-            // Filter by required activity type
-            if (quest.RequiredActivity.HasValue && quest.RequiredActivity.Value != activityType)
-                continue;
-
-            double delta = quest.Category switch
+            var task = progress.Quest;
+            if (task.RequiredActivity.HasValue && task.RequiredActivity.Value != activityType) continue;
+            var delta = task.Category switch
             {
                 QuestCategory.Duration => durationMinutes,
                 QuestCategory.Calories => calories ?? 0,
@@ -171,229 +223,87 @@ public class QuestService(
                 QuestCategory.Workouts => 1,
                 _ => 0,
             };
-
-            if (delta == 0) continue;
-
+            if (delta <= 0) continue;
             progress.CurrentValue += delta;
+            if (progress.CurrentValue < (task.TargetValue ?? 0)) continue;
+            progress.IsCompleted = true;
+            progress.CompletedAt = now;
+            progress.RewardClaimed = true;
+            await db.SaveChangesAsync();
 
-            var targetValue = quest.TargetValue ?? 0;
-            if (progress.CurrentValue >= targetValue)
+            long awardedXp = 0;
+            if (task.Type == QuestType.Special && task.RewardXp > 0)
             {
-                progress.IsCompleted = true;
-                progress.CompletedAt = now;
-                progress.RewardClaimed = true;
-
-                await db.SaveChangesAsync();
-                var questXp = await ApplyQuestXpTalentAsync(userId, quest.RewardXp);
-                var xpResult = await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {quest.Title}", questXp);
-                await GrantLevelItemsIfNeededAsync(userId, xpResult);
-                await events.PublishAsync(new QuestCompletedEvent(userId, quest.Id, quest.Title, questXp), CancellationToken.None);
-
-                updatedProgresses.Add(progress);
+                awardedXp = await ApplyQuestXpTalentAsync(userId, task.RewardXp);
+                var xp = await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {task.Title}", awardedXp);
+                await GrantLevelItemsIfNeededAsync(userId, xp);
             }
+            else if (rewardCurrency != null)
+            {
+                await rewardCurrency.AddCoinsAsync(userId, progress.RewardCoins);
+                await rewardCurrency.AddCrystalsAsync(userId, progress.RewardCrystals);
+            }
+            await events.PublishAsync(new QuestCompletedEvent(userId, task.Id, task.Title, awardedXp));
+            completed.Add(progress);
         }
-
         await db.SaveChangesAsync();
-
-        // Check all-5-daily bonus
-        bool allDailyCompleted = false;
-        int bonusXp = 0;
-
-        var dailyCompleted = await db.Set<UserQuestProgressEntity>()
-            .CountAsync(p => p.UserId == userId
-                             && p.Quest.Type == QuestType.Daily
-                             && p.IsCompleted
-                             && p.ExpiresAt > now);
-
-        var totalDailyAssigned = await db.Set<UserQuestProgressEntity>()
-            .CountAsync(p => p.UserId == userId
-                             && p.Quest.Type == QuestType.Daily
-                             && p.ExpiresAt > now);
-
-        if (dailyCompleted == 5 && totalDailyAssigned == 5)
-        {
-            var bonusAlreadyAwarded = await db.Set<UserQuestProgressEntity>()
-                .AnyAsync(p => p.UserId == userId
-                               && p.Quest.Type == QuestType.Daily
-                               && p.ExpiresAt > now
-                               && p.BonusAwarded);
-
-            if (!bonusAlreadyAwarded)
-            {
-                await db.SaveChangesAsync();
-                var allFiveXp = await ApplyQuestXpTalentAsync(userId, 300);
-                var xpResult = await characterXp.AwardXpAsync(userId, "DailyQuestBonus", "🎯", "All 5 daily quests completed!", allFiveXp);
-                await GrantLevelItemsIfNeededAsync(userId, xpResult);
-
-                // Mark bonus on the first progress record for today
-                var firstDailyProgress = await db.Set<UserQuestProgressEntity>()
-                    .Include(p => p.Quest)
-                    .FirstOrDefaultAsync(p => p.UserId == userId
-                                              && p.Quest.Type == QuestType.Daily
-                                              && p.IsCompleted
-                                              && p.ExpiresAt > now);
-
-                if (firstDailyProgress != null)
-                {
-                    firstDailyProgress.BonusAwarded = true;
-                    await db.SaveChangesAsync();
-                }
-
-                allDailyCompleted = true;
-                bonusXp = (int)allFiveXp;
-            }
-        }
-
-        return new QuestProgressUpdateResult
-        {
-            UpdatedQuests = updatedProgresses.Select(MapToDto).ToList(),
-            AllDailyCompleted = allDailyCompleted,
-            BonusXpAwarded = bonusXp,
-        };
+        return new() { UpdatedQuests = completed.Select(MapToDto).ToList() };
     }
 
-    public Task ExpireStaleQuestsAsync()
-    {
-        // Quests auto-expire via ExpiresAt checks in queries — nothing to delete
-        return Task.CompletedTask;
-    }
+    public Task ExpireStaleQuestsAsync() => Task.CompletedTask;
 
-    // IDailyQuestReadPort
-    public async Task<int> CountCompletedDailyQuestsAsync(Guid userId, CancellationToken ct = default)
-    {
-        var now = DateTime.UtcNow;
-        return await db.Set<UserQuestProgressEntity>()
-            .CountAsync(p => p.UserId == userId
-                             && p.Quest.Type == QuestType.Daily
-                             && p.IsCompleted
-                             && p.ExpiresAt > now, ct);
-    }
+    public Task<int> CountCompletedDailyQuestsAsync(Guid userId, CancellationToken ct = default) =>
+        db.Set<UserQuestProgressEntity>().CountAsync(p => p.UserId == userId && p.Quest.Type == QuestType.Daily &&
+            p.IsCompleted && p.ExpiresAt > DateTime.UtcNow, ct);
 
-    // IQuestProgressPort
     async Task<QuestActivityResult> IQuestProgressPort.UpdateProgressFromActivityAsync(
-        Guid userId, ActivityType activityType, int durationMinutes,
-        double? distanceKm, int? calories, CancellationToken ct)
+        Guid userId, ActivityType activityType, int durationMinutes, double? distanceKm, int? calories, CancellationToken ct)
     {
-        var r = await UpdateProgressFromActivityAsync(userId, activityType, durationMinutes, distanceKm, calories);
-        return new QuestActivityResult(
-            r.UpdatedQuests
-             .Select(q => new CompletedQuestInfo(
-                 q.QuestId,
-                 q.Title,
-                 (int)q.RewardXp,
-                 q.Description,
-                 q.Category,
-                 q.TargetValue,
-                 q.TargetUnit,
-                 q.Type))
-             .ToList(),
-            r.AllDailyCompleted,
-            r.BonusXpAwarded);
+        var result = await UpdateProgressFromActivityAsync(userId, activityType, durationMinutes, distanceKm, calories);
+        return new(result.UpdatedQuests.Select(q => new CompletedQuestInfo(q.QuestId, q.Title,
+            (int)q.RewardXp, q.Description, q.Category, q.TargetValue, q.TargetUnit, q.Type)).ToList(), false, 0);
     }
 
     public async Task EnsureSpecialQuestsAsync(Guid userId)
     {
-        var now = DateTime.UtcNow;
-        var hasAny = await db.Set<UserQuestProgressEntity>()
-            .AnyAsync(p => p.UserId == userId && p.Quest.Type == QuestType.Special);
-        if (hasAny) return;
-
-        await AssignSpecialQuestsAsync(userId, now);
+        if (await db.Set<UserQuestProgressEntity>().AnyAsync(p => p.UserId == userId && p.Quest.Type == QuestType.Special)) return;
+        var tasks = await db.Set<QuestEntity>().Where(q => q.IsActive && q.Type == QuestType.Special).ToListAsync();
+        foreach (var task in tasks) db.Set<UserQuestProgressEntity>().Add(new()
+        {
+            UserId = userId, QuestId = task.Id, AssignedAt = DateTime.UtcNow, ExpiresAt = SpecialQuestExpiry,
+        });
         await db.SaveChangesAsync();
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
-
-    private async Task AssignSpecialQuestsAsync(Guid userId, DateTime now)
+    private async Task<long> ApplyQuestXpTalentAsync(Guid userId, long baseXp)
     {
-        var specialTemplates = await db.Set<QuestEntity>()
-            .Where(q => q.IsActive && q.Type == QuestType.Special)
-            .ToListAsync();
-
-        var alreadyAssignedSpecialIds = await db.Set<UserQuestProgressEntity>()
-            .Where(p => p.UserId == userId && p.Quest.Type == QuestType.Special)
-            .Select(p => p.QuestId)
-            .ToListAsync();
-
-        foreach (var quest in specialTemplates)
-        {
-            if (alreadyAssignedSpecialIds.Contains(quest.Id)) continue;
-
-            db.Set<UserQuestProgressEntity>().Add(new UserQuestProgressEntity
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                QuestId = quest.Id,
-                CurrentValue = 0,
-                IsCompleted = false,
-                RewardClaimed = false,
-                AssignedAt = now,
-                ExpiresAt = SpecialQuestExpiry,
-                BonusAwarded = false,
-            });
-        }
+        if (talentBonus is null) return baseXp;
+        var pct = (await talentBonus.GetBonusesAsync(userId)).QuestXpPct;
+        return pct <= 0 ? baseXp : (long)Math.Round(baseXp * (1 + pct / 100.0));
     }
 
-    private static List<QuestEntity> SelectDailyQuests(List<QuestEntity> available, int count)
+    private static (DateTime Start, DateTime Reset) PeriodBounds(QuestType type, DateTime utcNow)
     {
-        if (available.Count <= count)
-            return available;
-
-        var selected = new List<QuestEntity>();
-
-        // Pick 1 Duration quest
-        var durationQuest = available
-            .FirstOrDefault(q => q.Category == QuestCategory.Duration);
-        if (durationQuest != null)
-        {
-            selected.Add(durationQuest);
-            available = available.Where(q => q.Id != durationQuest.Id).ToList();
-        }
-
-        if (selected.Count < count)
-        {
-            // Pick 1 Calories or Distance quest
-            var caloriesOrDistance = available
-                .FirstOrDefault(q => q.Category == QuestCategory.Calories || q.Category == QuestCategory.Distance);
-            if (caloriesOrDistance != null)
-            {
-                selected.Add(caloriesOrDistance);
-                available = available.Where(q => q.Id != caloriesOrDistance.Id).ToList();
-            }
-        }
-
-        // Fill remaining slots from the rest of the pool
-        var rng = new Random();
-        var remaining = available.OrderBy(_ => rng.Next()).Take(count - selected.Count);
-        selected.AddRange(remaining);
-
-        return selected;
+        if (type == QuestType.Daily) return (utcNow.Date, utcNow.Date.AddDays(1));
+        var daysSinceMonday = ((int)utcNow.DayOfWeek + 6) % 7;
+        var start = utcNow.Date.AddDays(-daysSinceMonday);
+        return (start, start.AddDays(7));
     }
 
-    private async Task GrantLevelItemsIfNeededAsync(Guid userId, XpAwardResult xpResult)
+    private async Task GrantLevelItemsIfNeededAsync(Guid userId, XpAwardResult result)
     {
-        if (!xpResult.LeveledUp) return;
-
-        await levelUpItemGrant.EvaluateAndGrantAsync(
-            userId, xpResult.PreviousLevel, xpResult.NewLevel);
+        if (result.LeveledUp)
+            await levelUpItemGrant.EvaluateAndGrantAsync(userId, result.PreviousLevel, result.NewLevel);
     }
 
     private static UserQuestProgressDto MapToDto(UserQuestProgressEntity p) => new()
     {
-        Id = p.Id,
-        QuestId = p.QuestId,
-        Title = p.Quest.Title,
-        Description = p.Quest.Description,
-        Type = p.Quest.Type.ToString(),
-        Category = p.Quest.Category.ToString(),
-        RequiredActivity = p.Quest.RequiredActivity?.ToString(),
-        TargetValue = p.Quest.TargetValue ?? 0,
-        CurrentValue = p.CurrentValue,
-        TargetUnit = p.Quest.TargetUnit,
-        RewardXp = p.Quest.RewardXp,
-        IsCompleted = p.IsCompleted,
-        RewardClaimed = p.RewardClaimed,
-        ExpiresAt = p.ExpiresAt,
-        CompletedAt = p.CompletedAt,
+        Id = p.Id, QuestId = p.QuestId, Title = p.Quest.Title, Description = p.Quest.Description,
+        Type = p.Quest.Type.ToString(), Category = p.Quest.Category.ToString(),
+        RequiredActivity = p.Quest.RequiredActivity?.ToString(), TargetValue = p.Quest.TargetValue ?? 0,
+        CurrentValue = p.CurrentValue, TargetUnit = p.Quest.TargetUnit, RewardXp = p.Quest.RewardXp,
+        RewardCoins = p.RewardCoins, RewardCrystals = p.RewardCrystals, RewardPoints = p.RewardPoints,
+        IsCompleted = p.IsCompleted, RewardClaimed = p.RewardClaimed,
+        ExpiresAt = p.ExpiresAt, CompletedAt = p.CompletedAt,
     };
 }

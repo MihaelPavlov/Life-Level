@@ -82,13 +82,15 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
       await WorldZoneService().setDestination(branch.id);
       WorldZoneRefreshNotifier.notify();
       if (!mounted) return;
-      AppToast.info(context, 'Heading to ${branch.name}', icon: Icons.alt_route_rounded);
+      AppToast.info(context, 'Heading to ${branch.name}',
+          icon: Icons.alt_route_rounded);
     } on PathAlreadyChosenException {
       if (!mounted) return;
       AppToast.warning(context, 'You already chose a different path here.');
     } on BranchRequiresCrossroadsArrivalException {
       if (!mounted) return;
-      AppToast.warning(context, 'Travel to the crossroads first, then pick a branch.');
+      AppToast.warning(
+          context, 'Travel to the crossroads first, then pick a branch.');
     } catch (e) {
       if (!mounted) return;
       AppToast.error(context, 'Could not choose path: $e');
@@ -166,9 +168,8 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     // type-specific portal — those have a meaningful CTA on the current zone.
     final standingNode =
         region?.nodes.where((n) => n.id == zone.id).firstOrNull;
-    final hasNoDestination =
-        world.userProgress.destinationZoneId == null ||
-            world.userProgress.destinationZoneId!.isEmpty;
+    final hasNoDestination = world.userProgress.destinationZoneId == null ||
+        world.userProgress.destinationZoneId!.isEmpty;
     final chestExplicitlyUnopened = standingNode?.chestIsOpened == false;
 
     // Pre-load dungeon state so both the slide-forward check and the
@@ -176,15 +177,15 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     final dungeonState = (zone.type == 'dungeon')
         ? ref.watch(dungeonStateProvider(zone.id)).valueOrNull
         : null;
-    final dungeonCompleted = (dungeonState?.status ==
-            DungeonRunStatus.completed) ||
-        (dungeonState != null &&
-            dungeonState.floors.isNotEmpty &&
-            dungeonState.floors
-                .every((f) => f.status == DungeonFloorStatus.completed)) ||
-        // Fallback when the dungeon state hasn't loaded yet — region detail
-        // already reports the run status per zone.
-        (standingNode?.dungeonStatus == DungeonRunStatus.completed);
+    final dungeonCompleted =
+        (dungeonState?.status == DungeonRunStatus.completed) ||
+            (dungeonState != null &&
+                dungeonState.floors.isNotEmpty &&
+                dungeonState.floors
+                    .every((f) => f.status == DungeonFloorStatus.completed)) ||
+            // Fallback when the dungeon state hasn't loaded yet — region detail
+            // already reports the run status per zone.
+            (standingNode?.dungeonStatus == DungeonRunStatus.completed);
 
     final isNonActionableHere = hasNoDestination &&
         switch (zone.type) {
@@ -197,8 +198,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
           _ => false, // boss / crossroads keep their own portal
         };
     final regionChip = _buildRegionChip(region);
-    final regionId =
-        world.userProgress.currentRegionId ?? region?.id;
+    final regionId = world.userProgress.currentRegionId ?? region?.id;
     if (isNonActionableHere) {
       final next = _pickNextZoneAfter(world, zone);
       if (next != null) {
@@ -285,15 +285,15 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     }
   }
 }
+
 // ── Zone picker ──────────────────────────────────────────────────────────────
 WorldZoneModel? _pickPortalZone(WorldFullData world) {
   final destId = world.userProgress.destinationZoneId;
   if (destId != null && destId.isNotEmpty) {
-    final d =
-        world.zones.cast<WorldZoneModel?>().firstWhere(
-              (z) => z!.id == destId,
-              orElse: () => null,
-            );
+    final d = world.zones.cast<WorldZoneModel?>().firstWhere(
+          (z) => z!.id == destId,
+          orElse: () => null,
+        );
     if (d != null) return d;
   }
   final curId = world.userProgress.currentZoneId;
@@ -326,14 +326,15 @@ WorldZoneModel? _pickPortalZone(WorldFullData world) {
 WorldZoneModel? _pickNextZoneAfter(WorldFullData world, WorldZoneModel from) {
   final adjacentIds = <String>{
     for (final e in world.edges)
-      if (e.fromZoneId == from.id) e.toZoneId
-      else if (e.isBidirectional && e.toZoneId == from.id) e.fromZoneId,
+      if (e.fromZoneId == from.id)
+        e.toZoneId
+      else if (e.isBidirectional && e.toZoneId == from.id)
+        e.fromZoneId,
   };
   if (adjacentIds.isEmpty) return null;
 
   final neighbors = <WorldZoneModel>[
-    for (final id in adjacentIds)
-      ...world.zones.where((z) => z.id == id),
+    for (final id in adjacentIds) ...world.zones.where((z) => z.id == id),
   ]..sort((a, b) {
       final t = a.tier.compareTo(b.tier);
       return t != 0 ? t : a.name.compareTo(b.name);
@@ -391,7 +392,8 @@ TrailEncounterNode? _currentEdgeEncounter(
 
   final matches = region.encounters
       .where((enc) =>
-          (enc.fromZoneId == edge.fromZoneId && enc.toZoneId == edge.toZoneId) ||
+          (enc.fromZoneId == edge.fromZoneId &&
+              enc.toZoneId == edge.toZoneId) ||
           (edge.isBidirectional &&
               enc.fromZoneId == edge.toZoneId &&
               enc.toZoneId == edge.fromZoneId))
@@ -436,8 +438,7 @@ class _BossRaidPortal extends StatelessWidget {
       sub: 'Raid active. Every workout you log deals damage to ${boss.name}.',
       leadingVisual: _BossPortalIcon(boss: boss),
       barLabel: 'Boss HP',
-      barValue:
-          '${_fmtNumber(hpRemaining)} / ${_fmtNumber(boss.maxHp)}',
+      barValue: '${_fmtNumber(hpRemaining)} / ${_fmtNumber(boss.maxHp)}',
       barValueColor: AppColors.red,
       barProgress: hpProgress,
       barColors: const [AppColors.red, AppColors.redDark],
@@ -528,11 +529,10 @@ class _TravelingPortal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final edgeId = world.userProgress.currentEdgeId;
-    final edge =
-        world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
-              (e) => e!.id == edgeId,
-              orElse: () => null,
-            );
+    final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
+          (e) => e!.id == edgeId,
+          orElse: () => null,
+        );
     final travelled = world.userProgress.distanceTraveledOnEdge;
     final total = edge?.distanceKm ?? 0;
     final progress = total > 0 ? (travelled / total).clamp(0.0, 1.0) : 0.0;
@@ -773,9 +773,7 @@ class _DungeonPortal extends StatelessWidget {
         : null;
 
     final statusText = _dungeonStatusLabel(node?.dungeonStatus);
-    final floorLabel = total > 0
-        ? 'FLOOR $current / $total'
-        : 'DUNGEON';
+    final floorLabel = total > 0 ? 'FLOOR $current / $total' : 'DUNGEON';
     return _HeroShell(
       accent: AppColors.purple,
       label: '🏰 DUNGEON · $floorLabel',
@@ -805,8 +803,10 @@ class _CrossroadsPortal extends StatelessWidget {
   final RegionDetail? region;
   final String? regionChip;
   final String? regionId;
+
   /// Tap handler installed by the orchestrator. Null in tests/static use.
   final Future<void> Function(WorldZoneModel branch)? onPickBranch;
+
   /// Currently in-flight branch id (drawn dimmed with a spinner).
   final String? busyBranchId;
   final VoidCallback? onSync;
@@ -865,7 +865,8 @@ class _CrossroadsPortal extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: AppColors.blue.withValues(alpha: 0.12),
-                border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -1232,16 +1233,13 @@ class _NextZoneHintPortal extends StatelessWidget {
       if (zone.totalXp > 0)
         _Pill(label: '+${zone.totalXp} XP', color: AppColors.orange),
       _Pill(label: _typeLabel(zone.type), color: _typeColor(zone.type)),
-      if (levelGated)
-        _Pill(
-          label: '⚷ Lv ${zone.levelRequirement}+',
-          color: AppColors.red,
-        ),
     ];
 
     return HomeCard(
-      borderColor: AppColors.blue.withValues(alpha: 0.4),
-      glowColor: AppColors.blue.withValues(alpha: 0.12),
+      borderColor: (levelGated ? AppColors.red : AppColors.blue)
+          .withValues(alpha: levelGated ? 0.65 : 0.4),
+      glowColor: (levelGated ? AppColors.red : AppColors.blue)
+          .withValues(alpha: levelGated ? 0.16 : 0.12),
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
@@ -1252,7 +1250,8 @@ class _NextZoneHintPortal extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: AppColors.blue.withValues(alpha: 0.12),
-                border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -1267,14 +1266,41 @@ class _NextZoneHintPortal extends StatelessWidget {
             ),
             const SizedBox(height: 8),
           ],
-          const Text(
-            '✨ NEXT UP',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.4,
-              color: AppColors.blue,
-            ),
+          Row(
+            children: [
+              const Text(
+                '✨ NEXT UP',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                  color: AppColors.blue,
+                ),
+              ),
+              if (levelGated) ...[
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.red.withValues(alpha: 0.2),
+                    border: Border.all(
+                      color: AppColors.red.withValues(alpha: 0.75),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    '🔒 LOCKED',
+                    style: TextStyle(
+                      color: AppColors.red,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 6),
           Text(
@@ -1290,8 +1316,7 @@ class _NextZoneHintPortal extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            zone.description ??
-                'Travel to ${zone.name} for the next reward.',
+            zone.description ?? 'Travel to ${zone.name} for the next reward.',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -1312,9 +1337,14 @@ class _NextZoneHintPortal extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               HomeHeroButton(
-                label: 'Travel here →',
-                style: HomeHeroButtonStyle.solidBlue,
-                onTap: () => _openWorldDestination(regionId),
+                label: levelGated
+                    ? '🔒 Level ${zone.levelRequirement} required'
+                    : 'Travel here →',
+                style: levelGated
+                    ? HomeHeroButtonStyle.locked
+                    : HomeHeroButtonStyle.solidBlue,
+                onTap:
+                    levelGated ? null : () => _openWorldDestination(regionId),
               ),
             ],
           ),
@@ -1422,7 +1452,9 @@ String _encounterEmoji(TrailEncounterNode enc) {
     case TrailEncounterType.merchant:
       return '🪙';
     case TrailEncounterType.story:
-      return enc.story?.portrait.isNotEmpty == true ? enc.story!.portrait : '🧙';
+      return enc.story?.portrait.isNotEmpty == true
+          ? enc.story!.portrait
+          : '🧙';
   }
 }
 
@@ -1492,12 +1524,18 @@ Color _encounterAccent(TrailEncounterType type) {
 
 String _typeBadge(String type) {
   switch (type) {
-    case 'boss':       return '👹 ';
-    case 'chest':      return '🗝 ';
-    case 'dungeon':    return '🏰 ';
-    case 'crossroads': return '🗺 ';
-    case 'entry':      return '🚪 ';
-    default:           return '';
+    case 'boss':
+      return '👹 ';
+    case 'chest':
+      return '🗝 ';
+    case 'dungeon':
+      return '🏰 ';
+    case 'crossroads':
+      return '🗺 ';
+    case 'entry':
+      return '🚪 ';
+    default:
+      return '';
   }
 }
 

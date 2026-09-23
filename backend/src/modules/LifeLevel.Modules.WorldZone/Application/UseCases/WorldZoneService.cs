@@ -780,6 +780,37 @@ public class WorldZoneService(
     }
 
     /// <summary>
+    /// Resolves an expired region-boss encounter without granting victory
+    /// rewards. The boss must belong to the requested world zone and have an
+    /// expired, non-defeated state for this user. The normal zone completion
+    /// path then advances the player to the next region; boss zones are
+    /// already unlocked on arrival, so no completion XP is awarded.
+    /// </summary>
+    public async Task<CompleteZoneResult> ContinueAfterExpiredBossAsync(
+        Guid userId, Guid zoneId, CancellationToken ct = default)
+    {
+        var zone = await db.Set<WorldZoneEntity>().FindAsync([zoneId], ct)
+            ?? throw new InvalidOperationException("Zone not found.");
+
+        if (zone.Type != WorldZoneType.Boss && !zone.IsBoss)
+            throw new InvalidOperationException("This zone is not a region boss.");
+
+        var hasExpiredFight = await db.Set<Boss>()
+            .Join(
+                db.Set<UserBossState>().Where(s =>
+                    s.UserId == userId && s.IsExpired && !s.IsDefeated),
+                boss => boss.Id,
+                state => state.BossId,
+                (boss, state) => boss)
+            .AnyAsync(boss => boss.WorldZoneId == zoneId, ct);
+
+        if (!hasExpiredFight)
+            throw new InvalidOperationException("This boss fight has not expired.");
+
+        return await CompleteZoneAsync(userId, zoneId);
+    }
+
+    /// <summary>
     /// Teleport the user into a region's entry zone (the zone with
     /// <see cref="WorldZoneType.Entry"/>, falling back to IsStartZone or lowest
     /// Tier). Cross-region switch requires <paramref name="force"/>=true.

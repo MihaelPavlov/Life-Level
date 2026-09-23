@@ -21,7 +21,7 @@ public class QuestLevelItemGrantTests
             Id = Guid.NewGuid(),
             Title = "Run once",
             Description = "Complete one run",
-            Type = QuestType.Daily,
+            Type = QuestType.Special,
             Category = QuestCategory.Workouts,
             RequiredActivity = ActivityType.Running,
             TargetValue = 1,

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using LifeLevel.Modules.Quest.Domain.Entities;
 using QuestEntity = LifeLevel.Modules.Quest.Domain.Entities.Quest;
 using UserQuestProgressEntity = LifeLevel.Modules.Quest.Domain.Entities.UserQuestProgress;
 
@@ -14,5 +15,16 @@ public class UserQuestProgressConfiguration : IEntityTypeConfiguration<UserQuest
             .WithMany(q => q.UserProgress)
             .HasForeignKey(x => x.QuestId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class TaskRewardMilestoneClaimConfiguration : IEntityTypeConfiguration<TaskRewardMilestoneClaim>
+{
+    public void Configure(EntityTypeBuilder<TaskRewardMilestoneClaim> entity)
+    {
+        entity.HasKey(x => x.Id);
+        entity.Property(x => x.PeriodType).HasConversion<string>();
+        entity.HasIndex(x => new { x.UserId, x.PeriodType, x.PeriodStartUtc, x.Threshold })
+            .IsUnique();
     }
 }

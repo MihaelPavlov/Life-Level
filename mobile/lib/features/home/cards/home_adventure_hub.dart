@@ -6,16 +6,17 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/shell_overlay_notifier.dart';
+import '../../achievements/providers/achievements_provider.dart';
 import '../../character/providers/character_provider.dart';
 import '../../login_reward/login_reward_screen.dart';
-import '../../quests/providers/quest_provider.dart';
+import '../../map/screens/region_chests_screen.dart';
 import '../../streak/widgets/streak_detail_sheet.dart';
 import '../../titles/providers/titles_provider.dart';
 import '../providers/adventure_hub_status_provider.dart';
 import 'home_recent_activities_card.dart' show showActivityJournalSheet;
 
 /// Horizontally-scrollable row of quick entry points into the game's
-/// systems — daily rewards, streak, workout journal, guild challenges,
+/// systems — daily rewards, streak, workout journal, guild,
 /// titles/ranks, and talents — matching the "Adventure Hub" reference
 /// layout. Sits right under the hero-stage card.
 class HomeAdventureHub extends ConsumerWidget {
@@ -111,15 +112,15 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: () => showActivityJournalSheet(context),
       ),
       _HubTileModel(
-        iconAsset: AppIcons.navQuests,
-        label: 'Quests',
-        hasUpdate: signals.quests,
+        iconAsset: AppIcons.rankChampion,
+        label: 'Achievements',
+        hasUpdate: signals.achievements,
         priority: 3,
-        onTap: () => _openQuests(ref),
+        onTap: () => _openAchievements(ref),
       ),
       _HubTileModel(
         iconAsset: AppIcons.ringGuild,
-        label: 'Challenges',
+        label: 'Guild',
         hasUpdate: false,
         priority: 7,
         onTap: _openGuild,
@@ -128,7 +129,7 @@ class HomeAdventureHub extends ConsumerWidget {
         iconAsset: AppIcons.ringTitles,
         label: 'Milestones',
         hasUpdate: signals.titles,
-        priority: 4,
+        priority: 5,
         onTap: () => _openTitles(ref),
       ),
       _HubTileModel(
@@ -144,6 +145,13 @@ class HomeAdventureHub extends ConsumerWidget {
         hasUpdate: signals.season,
         priority: 2,
         onTap: _openSeason,
+      ),
+      _HubTileModel(
+        iconAsset: AppIcons.itemDefaultChest,
+        label: 'Chests',
+        hasUpdate: false,
+        priority: 8,
+        onTap: () => _openRegionChests(context),
       ),
     ];
 
@@ -165,19 +173,12 @@ class HomeAdventureHub extends ConsumerWidget {
   }
 
   void _openRewards(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.transparent,
-      builder: (ctx) => LoginRewardScreen(
-        onDismiss: () => Navigator.of(ctx).pop(),
-      ),
-    );
+    showRewardsSheet(context);
   }
 
-  void _openQuests(WidgetRef ref) {
-    _markQuestsSeen(ref);
-    ShellOverlayNotifier.open('quests');
+  void _openAchievements(WidgetRef ref) {
+    _markAchievementsSeen(ref);
+    ShellOverlayNotifier.open('achievements');
   }
 
   void _openGuild() => ShellOverlayNotifier.open('guild');
@@ -188,6 +189,11 @@ class HomeAdventureHub extends ConsumerWidget {
   }
 
   void _openSeason() => ShellOverlayNotifier.open('season');
+
+  void _openRegionChests(BuildContext context) => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const RegionChestsScreen()),
+      );
 
   void _openTalents() => ShellOverlayNotifier.open('talents');
 
@@ -204,18 +210,21 @@ class HomeAdventureHub extends ConsumerWidget {
     );
   }
 
-  void _markQuestsSeen(WidgetRef ref) {
+  void _markAchievementsSeen(WidgetRef ref) {
     final username = ref.read(characterProfileProvider).valueOrNull?.username;
-    if (username == null) return;
-    final ids = completedHubQuestIds(
-      dailyQuests: ref.read(dailyQuestsProvider).valueOrNull,
-      weeklyQuests: ref.read(weeklyQuestsProvider).valueOrNull,
-      specialQuests: ref.read(specialQuestsProvider).valueOrNull,
-    ).toList();
+    final achievements = ref.read(achievementsProvider).valueOrNull;
+    if (username == null || achievements == null) return;
+    final ids = achievements
+        .where((achievement) => achievement.isUnlocked)
+        .map((achievement) => achievement.id)
+        .toList();
     unawaited(
       ref
           .read(adventureHubSeenStoreProvider)
-          .markQuestsSeen(username: username, completedQuestIds: ids)
+          .markAchievementsSeen(
+            username: username,
+            unlockedAchievementIds: ids,
+          )
           .then((_) => ref.invalidate(adventureHubSignalsProvider)),
     );
   }

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../achievements/providers/achievements_provider.dart';
 import '../../character/providers/character_provider.dart';
-import '../../quests/models/quest_models.dart';
-import '../../quests/providers/quest_provider.dart';
+import '../../login_reward/providers/login_reward_provider.dart';
 import '../../season/providers/season_provider.dart';
 import '../../talents/providers/talents_provider.dart';
 import '../../titles/providers/titles_provider.dart';
@@ -13,14 +13,14 @@ class AdventureHubSignals {
   final bool talents;
   final bool season;
   final bool titles;
-  final bool quests;
+  final bool achievements;
 
   const AdventureHubSignals({
     required this.rewards,
     required this.talents,
     required this.season,
     required this.titles,
-    required this.quests,
+    required this.achievements,
   });
 
   static const empty = AdventureHubSignals(
@@ -28,7 +28,7 @@ class AdventureHubSignals {
     talents: false,
     season: false,
     titles: false,
-    quests: false,
+    achievements: false,
   );
 }
 
@@ -42,18 +42,17 @@ final adventureHubSignalsProvider =
   final talents = ref.watch(talentsProvider).valueOrNull;
   final season = ref.watch(seasonProvider).valueOrNull;
   final titles = ref.watch(titlesProvider).valueOrNull;
-  final dailyQuests = ref.watch(dailyQuestsProvider).valueOrNull;
-  final weeklyQuests = ref.watch(weeklyQuestsProvider).valueOrNull;
-  final specialQuests = ref.watch(specialQuestsProvider).valueOrNull;
+  final achievements = ref.watch(achievementsProvider).valueOrNull;
+  final rewards = ref.watch(rewardCenterProvider).valueOrNull;
 
   final store = ref.watch(adventureHubSeenStoreProvider);
   final earnedTitleIds =
       titles?.earnedTitles.map((title) => title.id).toSet() ?? const <String>{};
-  final completedQuestIds = completedHubQuestIds(
-    dailyQuests: dailyQuests,
-    weeklyQuests: weeklyQuests,
-    specialQuests: specialQuests,
-  );
+  final unlockedAchievementIds = achievements
+          ?.where((achievement) => achievement.isUnlocked)
+          .map((achievement) => achievement.id)
+          .toSet() ??
+      const <String>{};
 
   final titlesUpdated = username == null
       ? false
@@ -61,42 +60,28 @@ final adventureHubSignalsProvider =
           username: username,
           earnedTitleIds: earnedTitleIds,
         );
-  final questsUpdated = username == null
+  final achievementsUpdated = username == null
       ? false
-      : await store.hasUnseenCompletedQuests(
+      : await store.hasUnseenAchievements(
           username: username,
-          completedQuestIds: completedQuestIds,
+          unlockedAchievementIds: unlockedAchievementIds,
         );
 
   return AdventureHubSignals(
-    rewards: profile?.loginRewardAvailable ?? false,
+    rewards: (profile?.loginRewardAvailable ?? false) ||
+        (rewards?.daily.milestones.any((m) => m.isUnlocked && !m.isClaimed) ??
+            false) ||
+        (rewards?.weekly.milestones.any((m) => m.isUnlocked && !m.isClaimed) ??
+            false),
     talents: talents?.canDraw ?? false,
     season: season?.tiers.any(
           (tier) => tier.free.isClaimable || tier.founder.isClaimable,
         ) ??
         false,
     titles: titlesUpdated,
-    quests: questsUpdated,
+    achievements: achievementsUpdated,
   );
 });
-
-Set<String> completedHubQuestIds({
-  List<UserQuestProgress>? dailyQuests,
-  List<UserQuestProgress>? weeklyQuests,
-  List<UserQuestProgress>? specialQuests,
-}) {
-  return {
-    ...?dailyQuests
-        ?.where((quest) => quest.isCompleted)
-        .map((quest) => quest.id),
-    ...?weeklyQuests
-        ?.where((quest) => quest.isCompleted)
-        .map((quest) => quest.id),
-    ...?specialQuests
-        ?.where((quest) => quest.isCompleted)
-        .map((quest) => quest.id),
-  };
-}
 
 class AdventureHubSeenStore {
   static const _prefix = 'home_adventure_hub';
@@ -112,18 +97,6 @@ class AdventureHubSeenStore {
     return earnedTitleIds.length > seen.length;
   }
 
-  Future<bool> hasUnseenCompletedQuests({
-    required String username,
-    required Set<String> completedQuestIds,
-  }) async {
-    if (completedQuestIds.isEmpty) return false;
-    final prefs = await SharedPreferences.getInstance();
-    final seen = prefs.getStringList(_questsKey(username));
-    if (seen == null) return false;
-    final seenSet = seen.toSet();
-    return completedQuestIds.any((id) => !seenSet.contains(id));
-  }
-
   Future<void> markTitlesSeen({
     required String username,
     required Iterable<String> earnedTitleIds,
@@ -132,15 +105,31 @@ class AdventureHubSeenStore {
     await prefs.setStringList(_titlesKey(username), earnedTitleIds.toList());
   }
 
-  Future<void> markQuestsSeen({
+  Future<bool> hasUnseenAchievements({
     required String username,
-    required Iterable<String> completedQuestIds,
+    required Set<String> unlockedAchievementIds,
+  }) async {
+    if (unlockedAchievementIds.isEmpty) return false;
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getStringList(_achievementsKey(username));
+    if (seen == null) return true;
+    final seenSet = seen.toSet();
+    return unlockedAchievementIds.any((id) => !seenSet.contains(id));
+  }
+
+  Future<void> markAchievementsSeen({
+    required String username,
+    required Iterable<String> unlockedAchievementIds,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_questsKey(username), completedQuestIds.toList());
+    await prefs.setStringList(
+      _achievementsKey(username),
+      unlockedAchievementIds.toList(),
+    );
   }
 
   String _titlesKey(String username) => '$_prefix.$username.seen_title_ids';
 
-  String _questsKey(String username) => '$_prefix.$username.seen_quest_ids';
+  String _achievementsKey(String username) =>
+      '$_prefix.$username.seen_achievement_ids';
 }

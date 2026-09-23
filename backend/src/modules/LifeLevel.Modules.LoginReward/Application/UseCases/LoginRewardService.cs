@@ -55,6 +55,8 @@ public class LoginRewardService(
             NextRewardIncludesShield = nextShield,
             NextRewardIsXpStorm = nextXpStorm,
             TotalLoginDays = reward.TotalLoginDays,
+            Days = RewardTable.Select((r, i) =>
+                new LoginRewardDayDto(i + 1, r.Xp, r.IncludesShield, r.IsXpStorm)).ToList(),
         };
     }
 

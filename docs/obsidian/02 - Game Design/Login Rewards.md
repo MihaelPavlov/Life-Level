@@ -62,7 +62,7 @@ The [[DailyResetJob]] calls `ResetDailyClaimFlagsAsync` at midnight UTC, setting
 
 ## Mobile trigger
 
-`MainShell` shows `LoginRewardScreen` as a dialog on app resume **if `loginRewardAvailable == true`** in the character profile response. Flag `_loginRewardShown` prevents duplicate dialogs within the same session.
+`MainShell` shows the unified Rewards dialog on app resume **if `loginRewardAvailable == true`** in the character profile response. The fixed 7-day strip remains visible above Daily and Weekly task tabs. The same modal is opened from the Home Adventure Hub; there is no separate Quests destination.
 
 ## Related
 - [[Streak System]] (Day 3 shield grant)

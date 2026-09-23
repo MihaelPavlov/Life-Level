@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/services/nav_tab_notifier.dart';
+import '../../../core/widgets/currency_chip.dart';
 import '../../character/models/character_profile.dart';
+import '../../shop/shop_screen.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../providers/world_progress_provider.dart';
 import '../widgets/home_avatar_ring.dart';
@@ -310,72 +312,31 @@ class _HeaderRow extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         // TODO: no Steps concept yet — static placeholder.
-        const _CurrencyChip(
+        const CurrencyChip(
           iconAsset: AppIcons.homeStepsIcon,
           value: '8,421',
           showAdd: false,
         ),
         const SizedBox(width: 6),
-        _CurrencyChip(iconAsset: AppIcons.homeCoinIcon, value: '$coins'),
+        CurrencyChip(
+          iconAsset: AppIcons.homeCoinIcon,
+          value: '$coins',
+          onTapAdd: () => _openShop(context),
+        ),
         const SizedBox(width: 6),
         // TODO: no Gems concept yet — static placeholder.
-        const _CurrencyChip(iconAsset: AppIcons.homeGemIcon, value: '17'),
+        CurrencyChip(
+          iconAsset: AppIcons.homeGemIcon,
+          value: '17',
+          onTapAdd: () => _openShop(context),
+        ),
       ],
     );
   }
 }
 
-/// Currency/stat chip (icon + value + an optional decorative "add"
-/// affordance). The "+" has no action yet — there's no currency-purchase
-/// flow in the app.
-class _CurrencyChip extends StatelessWidget {
-  final String iconAsset;
-  final String value;
-  final bool showAdd;
-  const _CurrencyChip({
-    required this.iconAsset,
-    required this.value,
-    this.showAdd = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(iconAsset, width: 14, height: 14, fit: BoxFit.contain),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          if (showAdd) ...[
-            const SizedBox(width: 4),
-            Container(
-              width: 13,
-              height: 13,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.16),
-              ),
-              child: const Icon(Icons.add, size: 9, color: Colors.white),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+void _openShop(BuildContext context) {
+  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShopScreen()));
 }
 
 class _MiniCard extends StatelessWidget {

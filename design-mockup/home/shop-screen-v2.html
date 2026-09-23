@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Level — Shop v2</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#040810; font-family:'Inter',-apple-system,sans-serif; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:48px 40px; }
+.phone { width:390px; height:844px; background:#080e14; border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 32px 80px rgba(0,0,0,0.9); flex-shrink:0; }
+.step-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.step-label { text-align:center; max-width:390px; }
+.step-num { display:inline-block; background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.4); border-radius:12px; padding:3px 14px; font-size:10px; color:#f5a623; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+.step-title { font-size:14px; color:#e6edf3; font-weight:700; margin-bottom:3px; }
+.step-desc { font-size:11px; color:#8b949e; line-height:1.5; }
+.status-bar { position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:14px 22px 0; z-index:200; pointer-events:none; }
+.st { font-size:13px; font-weight:600; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6); } .si { font-size:11px; color:#fff; opacity:.9; }
+.scroll { position:absolute; inset:0; overflow-y:auto; scrollbar-width:none; background:#080d16; }
+.scroll::-webkit-scrollbar{ display:none; }
+
+/* ── Header: real moonlit-region art ─────────────────────── */
+.hdr { position:relative; height:190px; background:url('shop-assets/bg_moonlit_mountains.png') center 22%/cover; overflow:hidden; }
+.hdr::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(4,8,16,.15) 0%,rgba(4,8,16,.35) 55%,#080d16 100%); }
+.hdr-content { position:relative; z-index:2; height:100%; padding:52px 16px 0; }
+.hdr-top { display:flex; align-items:flex-start; }
+.back-btn { width:34px; height:34px; border-radius:50%; background:rgba(8,14,20,.55); border:1px solid rgba(255,255,255,.22); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; }
+.hdr-tagline-r { margin-left:auto; text-align:right; font-size:8px; font-weight:800; letter-spacing:.18em; line-height:1.7; color:rgba(255,255,255,.7); text-shadow:0 1px 4px rgba(0,0,0,.7); }
+.hdr-title { margin-top:8px; font-size:30px; font-weight:800; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.7); letter-spacing:.2px; }
+.hdr-sub { margin-top:2px; font-size:9px; font-weight:800; letter-spacing:.18em; color:rgba(255,255,255,.75); text-shadow:0 1px 4px rgba(0,0,0,.6); }
+
+/* currency chips — overlap the hero image bottom edge */
+.chips-row { position:relative; z-index:3; display:flex; gap:8px; margin:-19px 16px 0; }
+.chip { display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:11px; background:rgba(10,15,24,.88); border:1px solid rgba(255,255,255,.14); box-shadow:0 6px 14px rgba(0,0,0,.4); }
+.chip img { width:18px; height:18px; }
+.chip .val { font-size:12.5px; font-weight:800; color:#fff; }
+.chip .plus { width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; font-weight:800; margin-left:1px; }
+
+/* ── sections ─────────────────────────────────────────────── */
+.s-section { margin:16px 14px 0; }
+.s-title-row { display:flex; align-items:baseline; gap:8px; }
+.s-icon { font-size:15px; }
+.s-title { font-size:15px; font-weight:800; color:#fff; letter-spacing:.2px; }
+.s-title-line { flex:1; height:1px; background:linear-gradient(90deg,#232d3f,transparent); margin-left:2px; }
+.s-tag { font-size:8.5px; font-weight:800; letter-spacing:.1em; color:#5c6675; white-space:nowrap; }
+.s-tag.link { color:#8b949e; }
+
+/* draw banner */
+.draw-banner { position:relative; display:flex; align-items:center; gap:12px; padding:14px; border-radius:14px; overflow:hidden;
+  background:radial-gradient(ellipse at 15% 30%, rgba(163,113,247,.20) 0%, transparent 55%), linear-gradient(135deg,#1a1030 0%,#140f28 55%,#0d1a2c 100%);
+  border:1px solid rgba(163,113,247,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); }
+.draw-art-wrap { position:relative; width:58px; height:58px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.draw-art-glow { position:absolute; inset:-10px; background:radial-gradient(circle, rgba(163,113,247,.55) 0%, transparent 70%); }
+.draw-art-wrap img { position:relative; width:42px; height:42px; filter:drop-shadow(0 0 10px rgba(163,113,247,.7)); }
+.draw-body { flex:1; min-width:0; }
+.draw-t { font-size:14px; font-weight:800; color:#fff; }
+.draw-d { font-size:10px; color:#a9b3c9; margin-top:3px; line-height:1.4; }
+.draw-d b { color:#c9a3ff; }
+.draw-cost { display:flex; align-items:center; gap:5px; margin-top:7px; }
+.draw-cost img { width:14px; height:14px; }
+.draw-cost span { font-size:10.5px; font-weight:800; color:#e6edf3; display:flex; align-items:center; gap:3px; }
+.draw-cost .plus { color:#5c6675; font-weight:700; }
+.draw-btn-wrap { display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; }
+.draw-btn { padding:10px 20px; border-radius:10px; font-size:12.5px; font-weight:800; color:#fff;
+  background:linear-gradient(180deg,#c79bff,#8a4fd6); box-shadow:0 4px 14px rgba(138,79,214,.55),inset 0 1px 0 rgba(255,255,255,.35); }
+.draw-foot { font-size:6.5px; font-weight:800; letter-spacing:.1em; color:rgba(201,163,255,.55); text-align:center; }
+
+/* reset row */
+.reset-row { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:10px; background:#0d1420; border:1px solid #202a3a; margin-top:10px; }
+.reset-row .txt { font-size:10.5px; font-weight:700; color:#7fa8dd; }
+.reset-row .cd { font-size:10.5px; font-weight:800; color:#e6edf3; }
+.reset-row .sep { width:1px; align-self:stretch; background:#212b3c; margin:0 2px; }
+.reset-row .rbtn { margin-left:auto; display:flex; align-items:center; gap:5px; padding:6px 11px; border-radius:8px; font-size:10.5px; font-weight:800; color:#08130c;
+  background:linear-gradient(180deg,#5fe57d,#2fa74a); }
+.reset-row .rbtn img { width:13px; height:13px; }
+
+/* item grid */
+.igrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.icard { position:relative; border-radius:12px; overflow:hidden; border:1px solid #212b3c; background:radial-gradient(circle at 50% 38%, #17202e, #0b0f17 75%); display:flex; flex-direction:column; }
+.icard.sold .iart img { filter:grayscale(1) brightness(.55); opacity:.7; }
+.icard.sold .iname, .icard.sold .itag { color:#5c6675 !important; }
+.iart { position:relative; height:76px; display:flex; align-items:center; justify-content:center; }
+.iart img { max-width:82%; max-height:82%; object-fit:contain; filter:drop-shadow(0 6px 10px rgba(0,0,0,.55)); }
+.iribbon { position:absolute; top:7px; right:-24px; transform:rotate(38deg); font-size:8px; font-weight:800; padding:2px 26px; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,.5); color:#fff; }
+.iribbon.off { background:#f85149; }
+.iribbon.new { background:#a371f7; }
+.sold-pill { position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:3; background:rgba(10,14,20,.85); border:1px solid rgba(255,255,255,.25); padding:3px 9px; border-radius:6px; font-size:8px; font-weight:800; letter-spacing:.05em; color:#c7d3e4; white-space:nowrap; }
+.itext { padding:0 7px; min-height:26px; }
+.iname { font-size:10px; font-weight:800; color:#fff; line-height:1.15; }
+.itag { font-size:6.5px; font-weight:800; letter-spacing:.06em; color:#7fa8dd; margin-top:2px; }
+.iprice { display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 4px; font-size:11px; font-weight:800; color:#fff; }
+.iprice img { width:13px; height:13px; }
+.iprice .strike { font-size:8.5px; font-weight:700; color:rgba(255,255,255,.45); text-decoration:line-through; margin-left:2px; }
+.price-coin { background:linear-gradient(180deg,#2c5a38,#1c3a24); }
+.price-gem { background:linear-gradient(180deg,#3a2a55,#251a3c); }
+.price-sold { background:#1a212c; color:#5c6675; }
+
+/* chest vault */
+.chest-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.ccard { position:relative; border-radius:14px; overflow:hidden; border:1px solid; padding:10px 6px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+.ccard.common { border-color:rgba(139,148,158,.35); background:radial-gradient(circle at 50% 30%, rgba(139,148,158,.14), #0d1119 70%); }
+.ccard.rare { border-color:rgba(79,158,255,.5); background:radial-gradient(circle at 50% 30%, rgba(79,158,255,.22), #0a121f 70%); }
+.ccard.legendary { border-color:rgba(245,166,35,.6); background:radial-gradient(circle at 50% 30%, rgba(245,166,35,.28), #170f06 70%); box-shadow:0 0 22px rgba(245,166,35,.18); }
+.cpill { font-size:7.5px; font-weight:800; letter-spacing:.08em; padding:2px 8px; border-radius:999px; margin-bottom:4px; }
+.cpill.common { background:rgba(139,148,158,.2); color:#c7cdd4; }
+.cpill.rare { background:rgba(79,158,255,.22); color:#8fc0ff; }
+.cpill.legendary { background:rgba(245,166,35,.28); color:#ffd27a; }
+.cimg { width:78%; filter:drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+.ccard.rare .cimg { filter:drop-shadow(0 0 14px rgba(79,158,255,.55)); }
+.ccard.legendary .cimg { filter:drop-shadow(0 0 16px rgba(245,166,35,.6)); }
+.cname { font-size:10.5px; font-weight:800; color:#fff; margin-top:2px; }
+.ctag { font-size:7px; font-weight:800; letter-spacing:.06em; color:#8b949e; margin-top:1px; }
+.ccard.rare .ctag { color:#7fb4f0; }
+.ccard.legendary .ctag { color:#e0b567; }
+.cprice { margin-top:7px; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 4px; border-radius:8px; font-size:10.5px; font-weight:800; color:#fff; width:100%; }
+.cprice img { width:13px; height:13px; }
+.cprice.coin { background:#232b39; }
+.cprice.gem { background:linear-gradient(180deg,#3a2a55,#251a3c); }
+.cprice.leg { background:linear-gradient(180deg,#6b4e15,#3a2a08); }
+
+/* gems / gold packs (simplified, real icons) */
+.pack-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.pcard { position:relative; border-radius:12px; overflow:hidden; border:1px solid #3a3014; background:linear-gradient(180deg,#241d0c 0%,#171206 100%); display:flex; flex-direction:column; align-items:center; padding:12px 4px 0; }
+.pbonus { position:absolute; top:6px; right:-22px; transform:rotate(38deg); background:#f85149; color:#fff; font-size:7px; font-weight:800; padding:2px 24px; z-index:2; }
+.pstack { position:relative; height:44px; display:flex; align-items:center; justify-content:center; }
+.pstack img { height:38px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.5)); }
+.pstack img:nth-child(2) { position:absolute; left:calc(50% - 20px); transform:rotate(-14deg) scale(.82); opacity:.9; }
+.pstack img:nth-child(3) { position:absolute; left:calc(50% + 6px); transform:rotate(12deg) scale(.82); opacity:.9; }
+.pqty { font-size:10.5px; font-weight:800; color:#fff; text-align:center; padding:6px 0; }
+.pprice { margin-top:auto; width:100%; padding:7px 4px; text-align:center; font-size:10.5px; font-weight:800; color:#3a2205; background:linear-gradient(180deg,#ffcf6b,#f0a020); }
+.pprice.locked { background:linear-gradient(180deg,#8fb4e0,#5a86c0); color:#0a1830; display:flex; align-items:center; justify-content:center; gap:3px; }
+
+.note { margin:14px 14px 4px; font-size:9px; color:#4d5b6b; line-height:1.5; text-align:center; }
+
+/* bottom nav (matches shell: Home / Gear / FAB / Map / Profile) */
+.nav { position:sticky; bottom:0; height:78px; background:linear-gradient(180deg,#0b1018 0%,#0a0f16 100%); border-top:1px solid rgba(79,158,255,.14); display:flex; align-items:center; padding:0 6px; margin-top:14px; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.nav-icon { font-size:19px; opacity:.55; } .nav-label { font-size:9.5px; font-weight:700; color:#8b949e; }
+.nav-fab { width:52px; height:52px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #1e3a5f, #10182a); border:2px solid #4f9eff; display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 0 18px rgba(79,158,255,.55); margin-top:-24px; }
+</style>
+</head>
+<body>
+
+<div class="step-wrap">
+  <div class="step-label">
+    <div class="step-num">SHOP · V2 — REAL ART</div>
+    <div class="step-title">Shop, restyled with the game's real assets</div>
+    <div class="step-desc">Same structure as v1 (Talent Draw → Daily Shop → Chest Vault → Gems/Gold), now built from art already shipped in the app instead of emoji: the actual region background (moonlit mountains), real gear renders from ItemSeeder's icon set, the real coin/gem/crystal icons, and the real treasure-chest icon.</div>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span class="st">9:41</span><span class="si">●●● 🔋</span></div>
+    <div class="scroll">
+
+      <div class="hdr">
+        <div class="hdr-content">
+          <div class="hdr-top">
+            <div class="back-btn">‹</div>
+            <div class="hdr-tagline-r">A HEALTHIER YOU.<br>A BRIGHTER TOMORROW.</div>
+          </div>
+          <div class="hdr-title">Shop</div>
+          <div class="hdr-sub">GEAR · PROGRESS · A STRONGER YOU</div>
+        </div>
+      </div>
+
+      <div class="chips-row">
+        <div class="chip"><img src="shop-assets/coin_icon.png"><span class="val">9,000</span></div>
+        <div class="chip"><img src="shop-assets/gem_icon.png"><span class="val">45</span><span class="plus">+</span></div>
+      </div>
+
+      <!-- Talent Draw (real mechanic + real crystal icon) -->
+      <div class="s-section" style="margin-top:14px">
+        <div class="draw-banner">
+          <div class="draw-art-wrap"><div class="draw-art-glow"></div><img src="shop-assets/talent_crystal.png"></div>
+          <div class="draw-body">
+            <div class="draw-t">Talent Draw</div>
+            <div class="draw-d">Unlock or level up a talent. You have <b>45</b> crystals.</div>
+            <div class="draw-cost">
+              <span><img src="shop-assets/gem_icon.png">1</span><span class="plus">+</span><span><img src="shop-assets/coin_icon.png">300</span>
+            </div>
+          </div>
+          <div class="draw-btn-wrap">
+            <div class="draw-btn">Draw</div>
+            <div class="draw-foot">FIND YOUR<br>NEXT UPGRADE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Shop -->
+      <div class="s-section">
+        <div class="s-title-row">
+          <span class="s-icon">🏪</span><span class="s-title">Daily Shop</span><span class="s-title-line"></span>
+          <span class="s-tag">REAL GEAR. REAL PROGRESS.</span>
+        </div>
+        <div class="reset-row">
+          <span>⏱️</span><span class="txt">Resets in</span><span class="cd">6h 42m</span>
+          <div class="sep"></div>
+          <div class="rbtn"><img src="shop-assets/coin_icon.png">500</div>
+        </div>
+        <div class="igrid">
+
+          <div class="icard sold">
+            <div class="sold-pill">SOLD OUT</div>
+            <div class="iart"><img src="shop-assets/item_resistance_band_set.png"></div>
+            <div class="itext"><div class="iname">Resistance Bands</div><div class="itag">BUILD STRENGTH</div></div>
+            <div class="iprice price-sold">150</div>
+          </div>
+
+          <div class="icard">
+            <div class="iribbon off">20% OFF</div>
+            <div class="iart"><img src="shop-assets/item_climbing_chalk_bag.png"></div>
+            <div class="itext"><div class="iname">Chalk Bag</div><div class="itag">GRIP HIGHER</div></div>
+            <div class="iprice price-coin"><img src="shop-assets/coin_icon.png">320<span class="strike">400</span></div>
+          </div>
+
+          <div class="icard">
+            <div class="iart"><img src="shop-assets/item_sport_buds.png"></div>
+            <div class="itext"><div class="iname">Sport Buds</div><div class="itag">TRAIN FOCUSED</div></div>
+            <div class="iprice price-coin"><img src="shop-assets/coin_icon.png">900</div>
+          </div>
+
+          <div class="icard">
+            <div class="iart"><img src="shop-assets/item_speed_spikes.png"></div>
+            <div class="itext"><div class="iname">Speed Spikes</div><div class="itag">MOVE FASTER</div></div>
+            <div class="iprice price-gem"><img src="shop-assets/gem_icon.png">45</div>
+          </div>
+
+          <div class="icard">
+            <div class="iart"><img src="shop-assets/item_storm_jacket.png"></div>
+            <div class="itext"><div class="iname">Storm Jacket</div><div class="itag">ALL CONDITIONS</div></div>
+            <div class="iprice price-gem"><img src="shop-assets/gem_icon.png">80</div>
+          </div>
+
+          <div class="icard">
+            <div class="iribbon new">NEW</div>
+            <div class="iart"><img src="shop-assets/item_gravity_boots.png"></div>
+            <div class="itext"><div class="iname">Gravity Boots</div><div class="itag">HIGHER POTENTIAL</div></div>
+            <div class="iprice price-gem"><img src="shop-assets/gem_icon.png">220</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Chest Vault -->
+      <div class="s-section">
+        <div class="s-title-row">
+          <span class="s-icon">🎁</span><span class="s-title">Chest Vault</span><span class="s-title-line"></span>
+          <span class="s-tag link">5 RARITIES ›</span>
+        </div>
+        <div class="chest-row">
+          <div class="ccard common">
+            <div class="cpill common">COMMON</div>
+            <img class="cimg" src="shop-assets/reward_treasure_chest.png">
+            <div class="cname">Wayfarer Chest</div>
+            <div class="ctag">GOOD THINGS AHEAD</div>
+            <div class="cprice coin"><img src="shop-assets/coin_icon.png">500</div>
+          </div>
+          <div class="ccard rare">
+            <div class="cpill rare">RARE</div>
+            <img class="cimg" src="shop-assets/reward_treasure_chest.png">
+            <div class="cname">Adept's Chest</div>
+            <div class="ctag">GREATER REWARDS</div>
+            <div class="cprice gem"><img src="shop-assets/gem_icon.png">120</div>
+          </div>
+          <div class="ccard legendary">
+            <div class="cpill legendary">LEGENDARY</div>
+            <img class="cimg" src="shop-assets/reward_treasure_chest.png">
+            <div class="cname">Champion's Vault</div>
+            <div class="ctag">FOR THE DEDICATED</div>
+            <div class="cprice leg"><img src="shop-assets/gem_icon.png">450</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gems (IAP) -->
+      <div class="s-section">
+        <div class="s-title-row"><span class="s-icon">💎</span><span class="s-title">Gems</span><span class="s-title-line"></span></div>
+        <div class="pack-grid">
+          <div class="pcard">
+            <div class="pbonus">+60</div>
+            <div class="pstack"><img src="shop-assets/gem_icon.png"></div>
+            <div class="pqty">x60</div>
+            <div class="pprice">€0.99</div>
+          </div>
+          <div class="pcard">
+            <div class="pbonus">+300</div>
+            <div class="pstack"><img src="shop-assets/gem_icon.png"><img src="shop-assets/gem_icon.png"></div>
+            <div class="pqty">x320</div>
+            <div class="pprice">€5.99</div>
+          </div>
+          <div class="pcard">
+            <div class="pbonus">+680</div>
+            <div class="pstack"><img src="shop-assets/gem_icon.png"><img src="shop-assets/gem_icon.png"><img src="shop-assets/gem_icon.png"></div>
+            <div class="pqty">x700</div>
+            <div class="pprice">€9.99</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gold -->
+      <div class="s-section" style="margin-bottom:6px">
+        <div class="s-title-row"><span class="s-icon">🪙</span><span class="s-title">Gold</span><span class="s-title-line"></span></div>
+        <div class="pack-grid">
+          <div class="pcard" style="background:linear-gradient(180deg,#241f0e 0%,#161206 100%)">
+            <div class="pstack"><img src="shop-assets/coin_icon.png"></div>
+            <div class="pqty">x1,000</div>
+            <div class="pprice locked">👑 Season Pass</div>
+          </div>
+          <div class="pcard" style="background:linear-gradient(180deg,#241f0e 0%,#161206 100%)">
+            <div class="pbonus" style="background:#3fb950">10% OFF</div>
+            <div class="pstack"><img src="shop-assets/coin_icon.png"><img src="shop-assets/coin_icon.png"></div>
+            <div class="pqty">x10,000</div>
+            <div class="pprice"><img src="shop-assets/gem_icon.png" style="width:11px;height:11px;vertical-align:-1px">450</div>
+          </div>
+          <div class="pcard" style="background:linear-gradient(180deg,#241f0e 0%,#161206 100%)">
+            <div class="pbonus" style="background:#3fb950">20% OFF</div>
+            <div class="pstack"><img src="shop-assets/coin_icon.png"><img src="shop-assets/coin_icon.png"><img src="shop-assets/coin_icon.png"></div>
+            <div class="pqty">x30,000</div>
+            <div class="pprice"><img src="shop-assets/gem_icon.png" style="width:11px;height:11px;vertical-align:-1px">1,200</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">Gem &amp; Gold pack pricing is illustrative — Life Level has no premium-currency backend yet.</div>
+
+      <div class="nav">
+        <div class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
+        <div class="nav-item"><span class="nav-icon">🎒</span><span class="nav-label">Gear</span></div>
+        <div class="nav-item"><div class="nav-fab">✦</div></div>
+        <div class="nav-item"><span class="nav-icon">🗺️</span><span class="nav-label">Map</span></div>
+        <div class="nav-item"><span class="nav-icon">🧝</span><span class="nav-label">Profile</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

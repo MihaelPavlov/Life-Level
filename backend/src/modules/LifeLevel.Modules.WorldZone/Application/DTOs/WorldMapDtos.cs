@@ -36,6 +36,7 @@ public record RegionSummaryDto(
     int? ZonesUntilBoss,
     string BossName,
     string BossStatus,
+    string? BannerImageUrl,
     IReadOnlyList<RegionPinDto> Pins);
 
 public record RegionPinDto(string Label, string Value);

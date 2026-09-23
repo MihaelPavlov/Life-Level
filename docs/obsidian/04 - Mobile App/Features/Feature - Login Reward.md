@@ -4,7 +4,7 @@ aliases: [Login Reward Feature]
 ---
 # Feature — Login Reward
 
-> Shown as a dialog on app resume when a daily reward is available. Claim → XP + (sometimes) shield + (Day 7) XP Storm flag.
+> Unified Rewards modal containing Daily and Weekly task tracks. Login rewards remain backend data but are not rendered in this task modal.
 
 ## Files
 
@@ -13,6 +13,7 @@ lib/features/login_reward/
 ├── login_reward_screen.dart
 ├── models/
 │   └── login_reward_models.dart
+│   └── reward_center_models.dart
 ├── services/
 │   └── login_reward_service.dart
 └── providers/
@@ -41,8 +42,10 @@ class LoginRewardClaimResult {
 ## LoginRewardService
 
 ```dart
-Future<LoginRewardStatus> getStatus();        // GET /api/login-reward
-Future<LoginRewardClaimResult> claim();       // POST /api/login-reward/claim
+Future<LoginRewardStatus> getStatus();
+Future<LoginRewardClaimResult> claimReward();
+Future<RewardCenterData> getRewardCenter();
+Future<TaskRewardPeriod> claimMilestone(String period, int threshold);
 ```
 
 ## Providers
@@ -55,17 +58,15 @@ final loginRewardProvider = FutureProvider<LoginRewardClaimResult>(...);  // fir
 ## LoginRewardScreen
 
 Dialog showing:
-- Day indicator (e.g., "Day 5 of 7")
-- XP reward amount (big)
-- Shield icon if `includesShield`
-- ⚡ XP Storm icon if `isXpStorm` (Day 7)
-- Claim button
+- Wallet balances and reset countdown
+- Daily/Weekly tabs with their own points, five milestone rewards, and ten compact task rows
+- Two left-aligned reward tiles per task, automatic task reward status, and tap-to-claim milestone states
 
 On claim:
 1. Call `LoginRewardService().claim()`
 2. If `leveledUp`: `LevelUpNotifier.instance.notify(newLevel)`
 3. Invalidate `characterProfileProvider`
-4. Auto-close dialog after animation
+4. Refresh the combined Rewards state in place
 
 ## Trigger
 

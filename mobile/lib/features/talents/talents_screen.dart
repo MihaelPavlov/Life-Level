@@ -293,10 +293,17 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
       child: Row(
         children: [
-          const SizedBox(width: 32),
+          IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              size: 18,
+              color: AppColors.textPrimary,
+            ),
+            onPressed: onClose ?? () => Navigator.of(context).pop(),
+          ),
           const Spacer(),
           const Text(
             'TALENTS',
@@ -308,7 +315,12 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          _InfoButton(onTap: () => showTalentInfoSheet(context)),
+          SizedBox(
+            width: 48,
+            child: Center(
+              child: _InfoButton(onTap: () => showTalentInfoSheet(context)),
+            ),
+          ),
         ],
       ),
     );

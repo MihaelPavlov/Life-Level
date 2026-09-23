@@ -134,6 +134,26 @@ public class WorldZoneController(
     }
 
     /// <summary>
+    /// Acknowledge an expired region-boss encounter and continue to the next
+    /// region without granting boss victory rewards.
+    /// </summary>
+    [HttpPost("zone/{zoneId:guid}/boss/continue")]
+    public async Task<ActionResult<CompleteZoneResult>> ContinueAfterExpiredBoss(
+        Guid zoneId, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await worldZoneService.ContinueAfterExpiredBossAsync(
+                userContext.UserId, zoneId, ct);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Teleport the authenticated user into the entry zone of the target region.
     /// Returns 204 on success, 409 with <c>error=REGION_LOCKED</c> when the
     /// character level is below the region's requirement, and 409 with

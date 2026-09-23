@@ -69,15 +69,15 @@ class BranchRequiresCrossroadsArrivalException implements Exception {
     required this.crossroadsZoneId,
   });
   @override
-  String toString() =>
-      'BranchRequiresCrossroadsArrivalException($message)';
+  String toString() => 'BranchRequiresCrossroadsArrivalException($message)';
 }
 
 class OpenChestResult {
   final String zoneName;
   final int xp;
   const OpenChestResult({required this.zoneName, required this.xp});
-  factory OpenChestResult.fromJson(Map<String, dynamic> json) => OpenChestResult(
+  factory OpenChestResult.fromJson(Map<String, dynamic> json) =>
+      OpenChestResult(
         zoneName: json['zoneName'] as String? ?? '',
         xp: (json['xp'] as num?)?.toInt() ?? 0,
       );
@@ -118,7 +118,8 @@ class ActiveEncounterResult {
 class SetDestinationResult {
   final int forfeitedFloors;
   final ActiveEncounterResult? activeEncounter;
-  const SetDestinationResult({required this.forfeitedFloors, this.activeEncounter});
+  const SetDestinationResult(
+      {required this.forfeitedFloors, this.activeEncounter});
   factory SetDestinationResult.fromJson(Map<String, dynamic> json) =>
       SetDestinationResult(
         forfeitedFloors: (json['forfeitedFloors'] as num?)?.toInt() ?? 0,
@@ -176,7 +177,8 @@ class WorldZoneService {
           throw BranchRequiresCrossroadsArrivalException(
             message: map['message'] as String? ??
                 'Reach the crossroads before picking a branch.',
-            crossroadsName: map['crossroadsName'] as String? ?? 'the crossroads',
+            crossroadsName:
+                map['crossroadsName'] as String? ?? 'the crossroads',
             crossroadsZoneId: map['crossroadsZoneId'] as String? ?? '',
           );
         }
@@ -213,12 +215,14 @@ class WorldZoneService {
 
   /// Fetch per-floor state for the dungeon overlay.
   Future<DungeonState> getDungeonState(String zoneId) async {
-    final response = await ApiClient.instance.get('/world/dungeon/$zoneId/state');
+    final response =
+        await ApiClient.instance.get('/world/dungeon/$zoneId/state');
     return DungeonState.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<Map<String, dynamic>> completeZone(String zoneId) async {
-    final response = await ApiClient.instance.post('/world/zone/$zoneId/complete');
+    final response =
+        await ApiClient.instance.post('/world/zone/$zoneId/complete');
     return response.data as Map<String, dynamic>;
   }
 
@@ -231,6 +235,14 @@ class WorldZoneService {
     final data = response.data;
     if (data is Map<String, dynamic>) return data['bossId'] as String?;
     return null;
+  }
+
+  /// Acknowledge an expired region boss and advance to the next region.
+  /// This does not grant boss victory rewards.
+  Future<Map<String, dynamic>> continueAfterExpiredBoss(String zoneId) async {
+    final response =
+        await ApiClient.instance.post('/world/zone/$zoneId/boss/continue');
+    return response.data as Map<String, dynamic>;
   }
 
   /// Adds debug distance km and returns an encounter if movement was stopped by one.

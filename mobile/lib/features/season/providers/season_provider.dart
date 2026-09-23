@@ -15,6 +15,12 @@ class SeasonNotifier extends AsyncNotifier<SeasonTrack> {
     return result;
   }
 
+  Future<List<SeasonClaimResult>> claimAvailable() async {
+    final results = await ref.read(seasonServiceProvider).claimAvailable();
+    ref.invalidateSelf();
+    return results;
+  }
+
   Future<void> purchaseFounderPass() async {
     final fresh = await ref.read(seasonServiceProvider).purchaseFounderPass();
     state = AsyncValue.data(fresh);

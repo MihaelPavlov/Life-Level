@@ -526,6 +526,26 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     BossOverlayNotifier.notify();
   }
 
+  Future<void> _handleContinueAfterExpiredBoss(ZoneNode node) async {
+    try {
+      final result = await _service.continueAfterExpiredBoss(node.id);
+      if (!mounted) return;
+      Navigator.of(context).pop(); // close zone sheet
+      WorldZoneRefreshNotifier.notify();
+      final nextRegion = result['nextRegionName'] as String?;
+      AppToast.success(
+        context,
+        nextRegion == null
+            ? 'Expired encounter cleared.'
+            : 'Boss expired. $nextRegion is now open.',
+      );
+      widget.onBack?.call();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, 'Could not continue: $e');
+    }
+  }
+
   Future<void> _handleEnterDungeon(ZoneNode node) async {
     // Ensure there's a run to return to. Safe to call even if already in
     // progress — backend is idempotent.
@@ -657,8 +677,17 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                     node.dungeonStatus != DungeonRunStatus.abandoned)
             ? () => _handleEnterDungeon(node)
             : null,
-        onFightBoss:
-            node.isBoss && atZone ? () => _handleFightBoss(node) : null,
+        onFightBoss: node.isBoss &&
+                atZone &&
+                _region?.bossStatus != RegionBossStatus.expired
+            ? () => _handleFightBoss(node)
+            : null,
+        onContinueAfterExpiredBoss: node.isBoss &&
+                atZone &&
+                _region?.bossStatus == RegionBossStatus.expired
+            ? () => _handleContinueAfterExpiredBoss(node)
+            : null,
+        bossStatus: _region?.bossStatus,
         nextRegionName: node.isBoss ? _nextRegionName : null,
         parentCrossroadsName: parentCrossroads?.name,
         userAtParentCrossroads: userAtParentCrossroads,
@@ -752,11 +781,17 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       children: [
         if (hasTrailBackground)
           Positioned.fill(
-            child: _RegionImage(
-              url: region.trailBackgroundImageUrl,
-              fallbackAsset: theme.trailBackgroundAsset,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+            child: ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                Colors.white.withValues(alpha: 0.10),
+                BlendMode.screen,
+              ),
+              child: _RegionImage(
+                url: region.trailBackgroundImageUrl,
+                fallbackAsset: theme.trailBackgroundAsset,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
             ),
           ),
         CustomScrollView(
@@ -1229,6 +1264,7 @@ class _Summary extends StatelessWidget {
 
   String _bossLabel(RegionDetail r) {
     if (r.bossStatus == RegionBossStatus.defeated) return '✓ Defeated';
+    if (r.bossStatus == RegionBossStatus.expired) return '⌛ Expired';
     if (r.bossStatus == RegionBossStatus.available) return 'Available';
     if (r.zonesUntilBoss != null && r.zonesUntilBoss! > 0) {
       return '${r.zonesUntilBoss} zones';
@@ -1241,6 +1277,8 @@ class _Summary extends StatelessWidget {
       case RegionBossStatus.defeated:
         return AppColors.green;
       case RegionBossStatus.available:
+        return AppColors.orange;
+      case RegionBossStatus.expired:
         return AppColors.orange;
       case RegionBossStatus.locked:
         return AppColors.red;

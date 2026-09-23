@@ -79,9 +79,11 @@ public class MapReadService(
         // boss zone marks it unlocked, but only defeating the boss completes
         // the region.
         var defeatedBossZoneIds = await bossDefeatRead.GetDefeatedWorldZoneIdsAsync(userId, ct);
+        var expiredBossZoneIds = await GetExpiredWorldZoneIdsAsync(userId, ct);
 
         var summaries = regions
-            .Select(r => BuildRegionSummary(r, zones, unlocked, defeatedBossZoneIds, currentRegionId, level))
+            .Select(r => BuildRegionSummary(r, zones, unlocked, defeatedBossZoneIds,
+                expiredBossZoneIds, currentRegionId, level))
             .ToList();
 
         ActiveJourneyDto? journey = BuildActiveJourney(progress);
@@ -265,7 +267,9 @@ public class MapReadService(
             .ToList();
 
         var defeatedBossZoneIds = await bossDefeatRead.GetDefeatedWorldZoneIdsAsync(userId, ct);
-        var summary = BuildRegionSummary(region, zones, unlocked, defeatedBossZoneIds, progress?.CurrentRegionId, level);
+        var expiredBossZoneIds = await GetExpiredWorldZoneIdsAsync(userId, ct);
+        var summary = BuildRegionSummary(region, zones, unlocked, defeatedBossZoneIds,
+            expiredBossZoneIds, progress?.CurrentRegionId, level);
 
         var templates = await db.Set<TrailEncounterTemplate>()
             .Where(t => t.RegionId == region.Id && t.IsActive)
@@ -372,6 +376,7 @@ public class MapReadService(
         IReadOnlyList<WorldZoneEntity> allZones,
         HashSet<Guid> unlocked,
         HashSet<Guid> defeatedBossZoneIds,
+        HashSet<Guid> expiredBossZoneIds,
         Guid? currentRegionId,
         int userLevel)
     {
@@ -384,11 +389,13 @@ public class MapReadService(
         // "Defeated" requires a defeated UserBossState — unlocked alone only
         // means the user arrived at the zone, not that they won the fight.
         var bossDefeated = bossZone != null && defeatedBossZoneIds.Contains(bossZone.Id);
+        var bossExpired = bossZone != null && expiredBossZoneIds.Contains(bossZone.Id);
+        var bossResolved = bossDefeated || bossExpired;
 
         // Zones until boss: tier delta from highest-unlocked non-boss zone to boss.
         // Null when no boss, already defeated, or user hasn't started the region.
         int? zonesUntilBoss = null;
-        if (bossZone != null && !bossDefeated)
+        if (bossZone != null && !bossResolved)
         {
             var unlockedTiersInRegion = regionZones
                 .Where(z => unlocked.Contains(z.Id) && !z.IsBoss)
@@ -401,7 +408,7 @@ public class MapReadService(
         string status;
         if (userLevel < region.LevelRequirement)
             status = "locked";
-        else if (bossDefeated)
+        else if (bossResolved)
             // Beating the region's boss completes the region regardless of
             // how many branch zones the user left unvisited. Branches are
             // mutually exclusive so `completedZones.Count == total` would
@@ -416,6 +423,8 @@ public class MapReadService(
 
         string bossStatus = bossDefeated
             ? "defeated"
+            : bossExpired
+                ? "expired"
             : (userLevel >= region.LevelRequirement ? "available" : "locked");
 
         var pins = DeserializePins(region.PinsJson);
@@ -435,7 +444,24 @@ public class MapReadService(
             ZonesUntilBoss: zonesUntilBoss,
             BossName: region.BossName,
             BossStatus: bossStatus,
+            BannerImageUrl: region.BannerImageUrl,
             Pins: pins);
+    }
+
+    private async Task<HashSet<Guid>> GetExpiredWorldZoneIdsAsync(
+        Guid userId, CancellationToken ct)
+    {
+        return (await db.Set<Boss>()
+                .Join(
+                    db.Set<UserBossState>().Where(s =>
+                        s.UserId == userId && s.IsExpired && !s.IsDefeated),
+                    boss => boss.Id,
+                    state => state.BossId,
+                    (boss, state) => boss.WorldZoneId)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToListAsync(ct))
+            .ToHashSet();
     }
 
     private static ZoneNodeDto BuildZoneNode(

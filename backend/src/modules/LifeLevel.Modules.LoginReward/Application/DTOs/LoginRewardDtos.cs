@@ -8,7 +8,10 @@ public class LoginRewardStatusDto
     public bool NextRewardIncludesShield { get; set; }
     public bool NextRewardIsXpStorm { get; set; }
     public int TotalLoginDays { get; set; }
+    public IReadOnlyList<LoginRewardDayDto> Days { get; set; } = [];
 }
+
+public record LoginRewardDayDto(int Day, int Xp, bool IncludesShield, bool IsXpStorm);
 
 public class LoginRewardClaimResult
 {

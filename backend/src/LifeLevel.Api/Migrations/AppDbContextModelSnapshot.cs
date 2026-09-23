@@ -1269,9 +1269,10 @@ namespace LifeLevel.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
-
                     b.HasIndex("ItemId");
+
+                    b.HasIndex("CharacterId", "ItemId")
+                        .IsUnique();
 
                     b.ToTable("CharacterItems");
                 });
@@ -1406,6 +1407,75 @@ namespace LifeLevel.Api.Migrations
                     b.HasIndex("ItemId");
 
                     b.ToTable("ItemDropRules");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.ShopPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientPurchaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("GrantedItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OfferKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("PurchasedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GrantedItemId");
+
+                    b.HasIndex("UserId", "ClientPurchaseId")
+                        .IsUnique();
+
+                    b.ToTable("ShopPurchases");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.UserShopDailyState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ItemIdsJson")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTime>("RefreshedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RotationDateUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "RotationDateUtc")
+                        .IsUnique();
+
+                    b.ToTable("UserShopDailyStates");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
@@ -1769,7 +1839,7 @@ namespace LifeLevel.Api.Migrations
                             Category = "Duration",
                             Description = "Complete any workout lasting at least 30 minutes.",
                             IsActive = true,
-                            RewardXp = 150L,
+                            RewardXp = 0L,
                             SortOrder = 1,
                             TargetUnit = "minutes",
                             TargetValue = 30.0,
@@ -1782,7 +1852,7 @@ namespace LifeLevel.Api.Migrations
                             Category = "Calories",
                             Description = "Burn at least 300 calories in a single session.",
                             IsActive = true,
-                            RewardXp = 200L,
+                            RewardXp = 0L,
                             SortOrder = 2,
                             TargetUnit = "calories",
                             TargetValue = 300.0,
@@ -1796,7 +1866,7 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run at least 5 km.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 250L,
+                            RewardXp = 0L,
                             SortOrder = 3,
                             TargetUnit = "km",
                             TargetValue = 5.0,
@@ -1810,7 +1880,7 @@ namespace LifeLevel.Api.Migrations
                             Description = "Hit the gym for at least 45 minutes.",
                             IsActive = true,
                             RequiredActivity = "Gym",
-                            RewardXp = 200L,
+                            RewardXp = 0L,
                             SortOrder = 4,
                             TargetUnit = "minutes",
                             TargetValue = 45.0,
@@ -1824,7 +1894,7 @@ namespace LifeLevel.Api.Migrations
                             Description = "Practice yoga for at least 30 minutes.",
                             IsActive = true,
                             RequiredActivity = "Yoga",
-                            RewardXp = 150L,
+                            RewardXp = 0L,
                             SortOrder = 5,
                             TargetUnit = "minutes",
                             TargetValue = 30.0,
@@ -1838,7 +1908,7 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run for at least 30 minutes.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 175L,
+                            RewardXp = 0L,
                             SortOrder = 6,
                             TargetUnit = "minutes",
                             TargetValue = 30.0,
@@ -1847,11 +1917,130 @@ namespace LifeLevel.Api.Migrations
                         },
                         new
                         {
+                            Id = new Guid("bbbbbbbb-0101-0000-0000-000000000000"),
+                            Category = "Workouts",
+                            Description = "Complete one workout.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 7,
+                            TargetUnit = "workout",
+                            TargetValue = 1.0,
+                            Title = "First Move",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0102-0000-0000-000000000000"),
+                            Category = "Workouts",
+                            Description = "Complete two workouts.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 8,
+                            TargetUnit = "workouts",
+                            TargetValue = 2.0,
+                            Title = "Double Move",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0103-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Stay active for 10 minutes.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 9,
+                            TargetUnit = "minutes",
+                            TargetValue = 10.0,
+                            Title = "Quick Start",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0104-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Stay active for 60 minutes.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 10,
+                            TargetUnit = "minutes",
+                            TargetValue = 60.0,
+                            Title = "Power Hour",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0105-0000-0000-000000000000"),
+                            Category = "Calories",
+                            Description = "Burn 100 calories.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 11,
+                            TargetUnit = "calories",
+                            TargetValue = 100.0,
+                            Title = "First Burn",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0106-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cover 1 km.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 12,
+                            TargetUnit = "km",
+                            TargetValue = 1.0,
+                            Title = "First Kilometer",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0107-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cover 3 km.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 13,
+                            TargetUnit = "km",
+                            TargetValue = 3.0,
+                            Title = "Distance Day",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0108-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cycle 5 km.",
+                            IsActive = true,
+                            RequiredActivity = "Cycling",
+                            RewardXp = 0L,
+                            SortOrder = 14,
+                            TargetUnit = "km",
+                            TargetValue = 5.0,
+                            Title = "Cycle Circuit",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0109-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Swim for 20 minutes.",
+                            IsActive = true,
+                            RequiredActivity = "Swimming",
+                            RewardXp = 0L,
+                            SortOrder = 15,
+                            TargetUnit = "minutes",
+                            TargetValue = 20.0,
+                            Title = "Pool Time",
+                            Type = "Daily"
+                        },
+                        new
+                        {
                             Id = new Guid("bbbbbbbb-0007-0000-0000-000000000000"),
                             Category = "Workouts",
                             Description = "Complete 3 workouts this week.",
                             IsActive = true,
-                            RewardXp = 500L,
+                            RewardXp = 0L,
                             SortOrder = 1,
                             TargetUnit = "workouts",
                             TargetValue = 3.0,
@@ -1865,7 +2054,7 @@ namespace LifeLevel.Api.Migrations
                             Description = "Run a total of 10 km this week.",
                             IsActive = true,
                             RequiredActivity = "Running",
-                            RewardXp = 600L,
+                            RewardXp = 0L,
                             SortOrder = 2,
                             TargetUnit = "km",
                             TargetValue = 10.0,
@@ -1879,11 +2068,238 @@ namespace LifeLevel.Api.Migrations
                             Description = "Spend at least 90 minutes at the gym this week.",
                             IsActive = true,
                             RequiredActivity = "Gym",
-                            RewardXp = 550L,
+                            RewardXp = 0L,
                             SortOrder = 3,
                             TargetUnit = "minutes",
                             TargetValue = 90.0,
                             Title = "Iron Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0201-0000-0000-000000000000"),
+                            Category = "Workouts",
+                            Description = "Complete 5 workouts this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 4,
+                            TargetUnit = "workouts",
+                            TargetValue = 5.0,
+                            Title = "Five Strong",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0202-0000-0000-000000000000"),
+                            Category = "Workouts",
+                            Description = "Complete 7 workouts this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 5,
+                            TargetUnit = "workouts",
+                            TargetValue = 7.0,
+                            Title = "Perfect Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0203-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Log 90 active minutes this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 6,
+                            TargetUnit = "minutes",
+                            TargetValue = 90.0,
+                            Title = "Active Ninety",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0204-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Log 180 active minutes this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 7,
+                            TargetUnit = "minutes",
+                            TargetValue = 180.0,
+                            Title = "Three Hour Hero",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0205-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Log 300 active minutes this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 8,
+                            TargetUnit = "minutes",
+                            TargetValue = 300.0,
+                            Title = "Five Hour Force",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0206-0000-0000-000000000000"),
+                            Category = "Calories",
+                            Description = "Burn 500 calories this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 9,
+                            TargetUnit = "calories",
+                            TargetValue = 500.0,
+                            Title = "Kindle the Flame",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0207-0000-0000-000000000000"),
+                            Category = "Calories",
+                            Description = "Burn 1,000 calories this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 10,
+                            TargetUnit = "calories",
+                            TargetValue = 1000.0,
+                            Title = "Blazing Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0208-0000-0000-000000000000"),
+                            Category = "Calories",
+                            Description = "Burn 2,000 calories this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 11,
+                            TargetUnit = "calories",
+                            TargetValue = 2000.0,
+                            Title = "Inferno Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0209-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cover 5 km this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 12,
+                            TargetUnit = "km",
+                            TargetValue = 5.0,
+                            Title = "First Five",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0210-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cover 15 km this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 13,
+                            TargetUnit = "km",
+                            TargetValue = 15.0,
+                            Title = "Distance Fifteen",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0211-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cover 30 km this week.",
+                            IsActive = true,
+                            RewardXp = 0L,
+                            SortOrder = 14,
+                            TargetUnit = "km",
+                            TargetValue = 30.0,
+                            Title = "Long Haul",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0212-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Practice yoga for 60 minutes this week.",
+                            IsActive = true,
+                            RequiredActivity = "Yoga",
+                            RewardXp = 0L,
+                            SortOrder = 15,
+                            TargetUnit = "minutes",
+                            TargetValue = 60.0,
+                            Title = "Yoga Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0213-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Cycle 25 km this week.",
+                            IsActive = true,
+                            RequiredActivity = "Cycling",
+                            RewardXp = 0L,
+                            SortOrder = 16,
+                            TargetUnit = "km",
+                            TargetValue = 25.0,
+                            Title = "Cycle Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0214-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Swim for 60 minutes this week.",
+                            IsActive = true,
+                            RequiredActivity = "Swimming",
+                            RewardXp = 0L,
+                            SortOrder = 17,
+                            TargetUnit = "minutes",
+                            TargetValue = 60.0,
+                            Title = "Swim Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0215-0000-0000-000000000000"),
+                            Category = "Duration",
+                            Description = "Climb for 60 minutes this week.",
+                            IsActive = true,
+                            RequiredActivity = "Climbing",
+                            RewardXp = 0L,
+                            SortOrder = 18,
+                            TargetUnit = "minutes",
+                            TargetValue = 60.0,
+                            Title = "Climb Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0216-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Hike 10 km this week.",
+                            IsActive = true,
+                            RequiredActivity = "Hiking",
+                            RewardXp = 0L,
+                            SortOrder = 19,
+                            TargetUnit = "km",
+                            TargetValue = 10.0,
+                            Title = "Hike Week",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0217-0000-0000-000000000000"),
+                            Category = "Distance",
+                            Description = "Walk 20 km this week.",
+                            IsActive = true,
+                            RequiredActivity = "Walking",
+                            RewardXp = 0L,
+                            SortOrder = 20,
+                            TargetUnit = "km",
+                            TargetValue = 20.0,
+                            Title = "Walk Week",
                             Type = "Weekly"
                         },
                         new
@@ -1929,6 +2345,36 @@ namespace LifeLevel.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.TaskRewardMilestoneClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ClaimedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("PeriodStartUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PeriodType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Threshold")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "PeriodType", "PeriodStartUtc", "Threshold")
+                        .IsUnique();
+
+                    b.ToTable("TaskRewardMilestoneClaims");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.UserQuestProgress", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1958,6 +2404,15 @@ namespace LifeLevel.Api.Migrations
 
                     b.Property<bool>("RewardClaimed")
                         .HasColumnType("boolean");
+
+                    b.Property<int>("RewardCoins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RewardCrystals")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RewardPoints")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -3258,6 +3713,30 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("Item");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.ShopPurchase", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Items.Domain.Entities.Item", null)
+                        .WithMany()
+                        .HasForeignKey("GrantedItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Items.Domain.Entities.UserShopDailyState", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
@@ -3369,6 +3848,15 @@ namespace LifeLevel.Api.Migrations
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Notifications.Domain.Entities.NotificationPreference", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Quest.Domain.Entities.TaskRewardMilestoneClaim", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()

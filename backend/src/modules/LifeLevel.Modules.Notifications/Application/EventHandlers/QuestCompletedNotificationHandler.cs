@@ -16,11 +16,11 @@ public class QuestCompletedNotificationHandler(INotificationPort notifications)
         await notifications.SendToUserAsync(
             userId: e.UserId,
             category: "quest-completed",
-            title: "🎯 Quest Complete!",
-            body: $"'{e.QuestTitle}' done. +{e.RewardXp} XP earned.",
+            title: "🎯 Task Complete!",
+            body: $"'{e.QuestTitle}' is complete. Open Rewards to see your progress.",
             data: new Dictionary<string, string>
             {
-                ["deeplink"] = "lifelevel://quests"
+                ["deeplink"] = "lifelevel://rewards"
             },
             isCritical: false,
             ct: ct);

@@ -102,6 +102,7 @@ class AppIcons {
 
   // ── Rewards & Progression ───────────────────────────────────────────────────
   static const String rewardDailyBonus = 'assets/icons/reward_daily_bonus.png';
+  static const String dailyPointsBadge = 'assets/icons/daily_points_badge.png';
   static const String questFirst = 'assets/icons/icon_first_quest.png';
   static const String rewardGrantItem = 'assets/icons/reward_grant_item.png';
   static const String rewardStreakFire = 'assets/icons/reward_streak_fire.png';
@@ -242,6 +243,69 @@ class AppIcons {
   static const String homeStepsIcon = 'assets/Home/steps_icon.png';
   static const String homePowerIcon = 'assets/Home/power_icon.png';
   static const String homeJournalIcon = 'assets/Home/journal_icon.png';
+
+  // ── Shop page (decorative art) ───────────────────────────────────────────────
+  static const String shopHeaderBg = 'assets/Shop/bg_moonlit_mountains.png';
+
+  // ── Region Chests — painted banner art (rod + frame + scene baked in;
+  // overlay only the chapter number and zone count on top) ────────────────────
+  static const String regionBannerForestOfEndurance =
+      'assets/Regions/forest_of_endurance.png';
+  static const String regionBannerOceanOfBalance =
+      'assets/Regions/ocean_of_balance.png';
+  static const String regionBannerMountainsOfStrength =
+      'assets/Regions/mountains_of_strength.png';
+  static const String regionBannerAshenCaldera =
+      'assets/Regions/ashen_caldera.png';
+  static const String regionBannerFrostspireTundra =
+      'assets/Regions/frostspire_tundra.png';
+  static const String regionBannerSunscorchDunes =
+      'assets/Regions/sunscorch_dunes.png';
+  static const String regionBannerShadewoodDeep =
+      'assets/Regions/shadewood_deep.png';
+  static const String regionBannerMoonlitReef =
+      'assets/Regions/moonlit_reef.png';
+  static const String regionBannerThunderpeakRange =
+      'assets/Regions/thunderpeak_range.png';
+  static const String regionBannerEmberfallCrater =
+      'assets/Regions/emberfall_crater.png';
+  static const String regionBannerGlacierAbyss =
+      'assets/Regions/glacier_abyss.png';
+  static const String regionBannerMirageWastes =
+      'assets/Regions/mirage_wastes.png';
+  static const String regionBannerVerdantSpine =
+      'assets/Regions/verdant_spine.png';
+  static const String regionBannerAbyssalTrench =
+      'assets/Regions/abyssal_trench.png';
+  static const String regionBannerApexCaldera =
+      'assets/Regions/apex_caldera.png';
+
+  // Region Chests screen chrome — the empty gold ribbon "Region Chests"
+  // title sits on, and the full-bleed night-mountain scene behind it.
+  static const String regionChestsTitleBanner =
+      'assets/Regions/region_chests_title_banner.png';
+  static const String regionChestsBackground =
+      'assets/Regions/region_chests_background.png';
+
+  /// Region display name → its painted banner asset. All 15 chapters have
+  /// real art (see `docs` art-direction sheet for the generation prompts).
+  static const Map<String, String> regionBanners = {
+    'Forest of Endurance': regionBannerForestOfEndurance,
+    'Ocean of Balance': regionBannerOceanOfBalance,
+    'Mountains of Strength': regionBannerMountainsOfStrength,
+    'Ashen Caldera': regionBannerAshenCaldera,
+    'Frostspire Tundra': regionBannerFrostspireTundra,
+    'Sunscorch Dunes': regionBannerSunscorchDunes,
+    'Shadewood Deep': regionBannerShadewoodDeep,
+    'Moonlit Reef': regionBannerMoonlitReef,
+    'Thunderpeak Range': regionBannerThunderpeakRange,
+    'Emberfall Crater': regionBannerEmberfallCrater,
+    'Glacier Abyss': regionBannerGlacierAbyss,
+    'Mirage Wastes': regionBannerMirageWastes,
+    'Verdant Spine': regionBannerVerdantSpine,
+    'Abyssal Trench': regionBannerAbyssalTrench,
+    'Apex Caldera': regionBannerApexCaldera,
+  };
 
   // ── Gear page (decorative art) ───────────────────────────────────────────────
   static const String gearBackground = 'assets/Gear/equipment_background.png';

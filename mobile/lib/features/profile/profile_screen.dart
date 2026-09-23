@@ -17,7 +17,6 @@ import 'notification_preferences_screen.dart';
 import 'profile_overview_tab.dart';
 import 'profile_stat_metadata.dart';
 import 'profile_widgets.dart';
-import 'tabs/achievements_tab.dart';
 import 'tabs/admin_tab.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -122,7 +121,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               controller: _tab,
               children: [
                 ProfileOverviewTab(profile: profile),
-                const AchievementsTab(),
                 if (_isAdmin) const AdminTab(),
               ],
             ),
@@ -247,7 +245,8 @@ class ProfileHeader extends StatelessWidget {
                             if (classAsset != null) ...[
                               AppIconImage(classAsset, size: 16),
                               const SizedBox(width: 8),
-                            ] else if ((profile.classEmoji ?? '').isNotEmpty) ...[
+                            ] else if ((profile.classEmoji ?? '')
+                                .isNotEmpty) ...[
                               Text(
                                 profile.classEmoji!,
                                 style: const TextStyle(fontSize: 12),
@@ -350,131 +349,132 @@ class _SettingsSheet extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            Container(
-              width: 36,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: kPBorder2,
-                borderRadius: BorderRadius.circular(2),
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: kPBorder2,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Settings',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: kPTextPri,
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Settings',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: kPTextPri,
+                    ),
                   ),
                 ),
               ),
-            ),
-            _SettingsTile(
-              icon: Icons.face_retouching_natural_outlined,
-              label: 'Change Avatar',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  parentContext,
-                  MaterialPageRoute(builder: (_) => const EditAvatarScreen()),
-                );
-              },
-            ),
-            const Divider(
-              height: 1,
-              indent: 20,
-              endIndent: 20,
-              color: kPBorder,
-            ),
-            _SettingsTile(
-              icon: Icons.lock_outline,
-              label: 'Email & Password',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  parentContext,
-                  MaterialPageRoute(
-                    builder: (_) => const AccountSettingsScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(
-              height: 1,
-              indent: 20,
-              endIndent: 20,
-              color: kPBorder,
-            ),
-            _SettingsTile(
-              icon: Icons.notifications_outlined,
-              label: 'Notifications',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  parentContext,
-                  MaterialPageRoute(
-                    builder: (_) => const NotificationPreferencesScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(
-              height: 1,
-              indent: 20,
-              endIndent: 20,
-              color: kPBorder,
-            ),
-            _SettingsTile(
-              icon: Icons.cable_outlined,
-              label: 'Integrations',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  parentContext,
-                  MaterialPageRoute(
-                    builder: (_) => const IntegrationsScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(
-              height: 1,
-              indent: 20,
-              endIndent: 20,
-              color: kPBorder,
-            ),
-            _SettingsTile(
-              icon: Icons.auto_stories_outlined,
-              label: 'Tutorials',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  parentContext,
-                  MaterialPageRoute(builder: (_) => const TutorialsHubScreen()),
-                );
-              },
-            ),
-            const Divider(
-              height: 1,
-              indent: 20,
-              endIndent: 20,
-              color: kPBorder,
-            ),
-            _SettingsTile(
-              icon: Icons.logout,
-              label: 'Logout',
-              labelColor: AppColors.red,
-              iconColor: AppColors.red,
-              onTap: () async {
-                Navigator.pop(context);
-                if (!parentContext.mounted) return;
-                await performLogout(parentContext);
-              },
-            ),
+              _SettingsTile(
+                icon: Icons.face_retouching_natural_outlined,
+                label: 'Change Avatar',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    parentContext,
+                    MaterialPageRoute(builder: (_) => const EditAvatarScreen()),
+                  );
+                },
+              ),
+              const Divider(
+                height: 1,
+                indent: 20,
+                endIndent: 20,
+                color: kPBorder,
+              ),
+              _SettingsTile(
+                icon: Icons.lock_outline,
+                label: 'Email & Password',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    parentContext,
+                    MaterialPageRoute(
+                      builder: (_) => const AccountSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(
+                height: 1,
+                indent: 20,
+                endIndent: 20,
+                color: kPBorder,
+              ),
+              _SettingsTile(
+                icon: Icons.notifications_outlined,
+                label: 'Notifications',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    parentContext,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationPreferencesScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(
+                height: 1,
+                indent: 20,
+                endIndent: 20,
+                color: kPBorder,
+              ),
+              _SettingsTile(
+                icon: Icons.cable_outlined,
+                label: 'Integrations',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    parentContext,
+                    MaterialPageRoute(
+                      builder: (_) => const IntegrationsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(
+                height: 1,
+                indent: 20,
+                endIndent: 20,
+                color: kPBorder,
+              ),
+              _SettingsTile(
+                icon: Icons.auto_stories_outlined,
+                label: 'Tutorials',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    parentContext,
+                    MaterialPageRoute(
+                        builder: (_) => const TutorialsHubScreen()),
+                  );
+                },
+              ),
+              const Divider(
+                height: 1,
+                indent: 20,
+                endIndent: 20,
+                color: kPBorder,
+              ),
+              _SettingsTile(
+                icon: Icons.logout,
+                label: 'Logout',
+                labelColor: AppColors.red,
+                iconColor: AppColors.red,
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (!parentContext.mounted) return;
+                  await performLogout(parentContext);
+                },
+              ),
             ],
           ),
         ),

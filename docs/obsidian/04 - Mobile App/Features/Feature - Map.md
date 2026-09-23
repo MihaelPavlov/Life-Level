@@ -48,6 +48,8 @@ Overworld canvas. Opened as a full-screen modal from the radial FAB's "World" it
 - Tap region → zoom into its internal `MapScreen`
 - Shows zones completed / current / locked
 
+The current implementation uses `WorldHubScreen`, a vertical list of region hero cards. On initial open it scrolls the active region near the top of the viewport. If there is no active region, it scrolls to the first upcoming locked region so the player's next unlock remains visible.
+
 ## Models
 
 ```dart

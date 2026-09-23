@@ -26,6 +26,17 @@ class SeasonService {
     }
   }
 
+  Future<List<SeasonClaimResult>> claimAvailable() async {
+    try {
+      final res = await _dio.post('/season/claim-available');
+      return (res.data as List)
+          .map((e) => SeasonClaimResult.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw SeasonTileUnavailableException(_errorMessage(e));
+    }
+  }
+
   Future<SeasonTrack> purchaseFounderPass() async {
     try {
       final res = await _dio.post('/season/pass/purchase');

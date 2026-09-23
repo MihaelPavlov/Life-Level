@@ -26,9 +26,9 @@ import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
 import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/login_reward/login_reward_screen.dart';
-import '../../features/quests/quests_screen.dart';
 import '../../features/gear/gear_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
 import '../services/nav_tab_notifier.dart';
@@ -83,6 +83,7 @@ class _MainShellState extends ConsumerState<MainShell>
   bool _questsOpen = false;
   bool _seasonOpen = false;
   bool _talentsOpen = false;
+  bool _achievementsOpen = false;
 
   /// Carried alongside `_bossOpen` to deep-link the boss overlay straight
   /// into a specific boss's battle view (set when the home portal "Fight →"
@@ -167,15 +168,13 @@ class _MainShellState extends ConsumerState<MainShell>
     _loginRewardShown = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        barrierColor: Colors.transparent,
-        builder: (ctx) => LoginRewardScreen(
-          onDismiss: () => Navigator.of(ctx).pop(),
-        ),
-      );
+      showRewardsSheet(context);
     });
+  }
+
+  void _openRewardsDialog() {
+    if (!mounted) return;
+    showRewardsSheet(context);
   }
 
   void _syncTutorialWithProfile([CharacterProfile? profile]) {
@@ -526,29 +525,8 @@ class _MainShellState extends ConsumerState<MainShell>
         }
 
       case 'quests':
-        final navIndex = _navIds.indexOf('quests');
-        if (navIndex != -1) {
-          setState(() {
-            _tabIndex = navIndex;
-            _worldOpen = false;
-            _titlesOpen = false;
-            _bossOpen = false;
-            _guildOpen = false;
-            _questsOpen = false;
-            _seasonOpen = false;
-            _talentsOpen = false;
-          });
-        } else {
-          setState(() {
-            _worldOpen = false;
-            _titlesOpen = false;
-            _bossOpen = false;
-            _guildOpen = false;
-            _questsOpen = true;
-            _seasonOpen = false;
-            _talentsOpen = false;
-          });
-        }
+      case 'rewards':
+        _openRewardsDialog();
 
       case 'gear':
         final navIndex = _navIds.indexOf('gear');
@@ -953,7 +931,7 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'home':
         return const HomeScreen();
       case 'quests':
-        return const QuestsScreen();
+        return const HomeScreen();
       case 'gear':
         return const GearScreen();
       // 'world' is never rendered inside the IndexedStack — tapping the nav
@@ -1090,13 +1068,6 @@ class _MainShellState extends ConsumerState<MainShell>
                   ),
                 ),
 
-              // ── quests overlay ─────────────────────────────────────────
-              if (_questsOpen)
-                const Positioned.fill(
-                  bottom: kNavBarH,
-                  child: QuestsScreen(),
-                ),
-
               // ── season overlay ─────────────────────────────────────────
               if (_seasonOpen)
                 Positioned.fill(
@@ -1112,6 +1083,15 @@ class _MainShellState extends ConsumerState<MainShell>
                   bottom: kNavBarH,
                   child: TalentsScreen(
                     onClose: () => setState(() => _talentsOpen = false),
+                  ),
+                ),
+
+              // ── achievements overlay ───────────────────────────────────
+              if (_achievementsOpen)
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: AchievementsScreen(
+                    onClose: () => setState(() => _achievementsOpen = false),
                   ),
                 ),
 
@@ -1178,6 +1158,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         _questsOpen = false;
                         _seasonOpen = false;
                         _talentsOpen = false;
+                        _achievementsOpen = false;
                       });
                       return;
                     }
@@ -1190,6 +1171,7 @@ class _MainShellState extends ConsumerState<MainShell>
                       _questsOpen = false;
                       _seasonOpen = false;
                       _talentsOpen = false;
+                      _achievementsOpen = false;
                     });
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
@@ -1227,6 +1209,27 @@ class _MainShellState extends ConsumerState<MainShell>
 
   void _onRingItemTap(String id) {
     _closeRadial();
+    if (id == 'quests' || id == 'rewards') {
+      _openRewardsDialog();
+      return;
+    }
+    if (id != 'achievements' && _achievementsOpen) {
+      setState(() => _achievementsOpen = false);
+    }
+    if (id == 'achievements') {
+      setState(() {
+        _achievementsOpen = true;
+        _worldOpen = false;
+        _worldAutoOpenActive = false;
+        _titlesOpen = false;
+        _bossOpen = false;
+        _guildOpen = false;
+        _questsOpen = false;
+        _seasonOpen = false;
+        _talentsOpen = false;
+      });
+      return;
+    }
     if (id == 'world') {
       WorldZoneRefreshNotifier.notify();
       final navIndex = _navIds.indexOf('world');
@@ -1239,21 +1242,6 @@ class _MainShellState extends ConsumerState<MainShell>
         _bossOpen = false;
         _guildOpen = false;
         _questsOpen = false;
-        _seasonOpen = false;
-        _talentsOpen = false;
-      });
-      return;
-    }
-    if (id == 'quests') {
-      final navIndex = _navIds.indexOf('quests');
-      setState(() {
-        if (navIndex != -1) _tabIndex = navIndex;
-        _questsOpen = navIndex == -1;
-        _worldOpen = false;
-        _worldAutoOpenActive = false;
-        _titlesOpen = false;
-        _bossOpen = false;
-        _guildOpen = false;
         _seasonOpen = false;
         _talentsOpen = false;
       });

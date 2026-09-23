@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../character/providers/character_provider.dart';
 import '../models/achievement_models.dart';
 import '../services/achievements_service.dart';
 
@@ -12,13 +13,16 @@ final achievementsProvider =
 
 class AchievementsNotifier extends AsyncNotifier<List<AchievementDto>> {
   @override
-  Future<List<AchievementDto>> build() =>
-      _achievementsService.getAchievements();
+  Future<List<AchievementDto>> build() async {
+    ref.watch(characterProfileProvider);
+    await _achievementsService.checkUnlocks();
+    return _achievementsService.getAchievements();
+  }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-        () => _achievementsService.getAchievements());
+    state =
+        await AsyncValue.guard(() => _achievementsService.getAchievements());
   }
 }
 
@@ -31,9 +35,8 @@ final achievementsByCategoryProvider = AsyncNotifierProviderFamily<
 class AchievementsByCategoryNotifier
     extends FamilyAsyncNotifier<List<AchievementDto>, String> {
   @override
-  Future<List<AchievementDto>> build(String category) =>
-      _achievementsService.getAchievements(
-          category: category == 'All' ? null : category);
+  Future<List<AchievementDto>> build(String category) => _achievementsService
+      .getAchievements(category: category == 'All' ? null : category);
 
   Future<void> refresh() async {
     state = const AsyncLoading();

@@ -19,37 +19,47 @@ class RegionStatusChip extends StatelessWidget {
 
   const RegionStatusChip.active({super.key})
       : label = 'Active',
-        background = const Color(0x7F3fb950),
-        borderColor = const Color(0x993fb950),
+        background = const Color(0xE61E7138),
+        borderColor = const Color(0xFF4DCC69),
         textColor = Colors.white;
 
   const RegionStatusChip.completed({super.key})
       : label = 'Completed ✓',
-        background = const Color(0x4C3fb950),
-        borderColor = const Color(0x7F3fb950),
+        background = const Color(0xE6185B30),
+        borderColor = const Color(0xFF43B95D),
         textColor = Colors.white;
 
   RegionStatusChip.locked({super.key, required this.label})
-      : background = AppColors.textSecondary.withOpacity(0.3),
-        borderColor = Colors.white.withOpacity(0.18),
+      : background = AppColors.textSecondary.withValues(alpha: 0.3),
+        borderColor = Colors.white.withValues(alpha: 0.18),
         textColor = AppColors.textSecondary;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: borderColor, width: 1.25),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x99000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         label,
         style: TextStyle(
           color: textColor,
-          fontSize: 9,
+          fontSize: 10,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.7,
+          shadows: const [
+            Shadow(color: Color(0xCC000000), offset: Offset(0, 1)),
+          ],
         ),
       ),
     );

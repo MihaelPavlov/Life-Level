@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
 import 'map_icon_resolver.dart';
@@ -30,7 +31,7 @@ class RegionHeroCard extends StatelessWidget {
         : AppColors.border;
 
     return Opacity(
-      opacity: _locked ? 0.55 : 1.0,
+      opacity: _locked ? 0.72 : 1.0,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
@@ -79,9 +80,10 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasBanner =
+        region.bannerImageUrl != null || theme.bannerAsset != null;
     return Container(
-      height: 82,
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      height: 124,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -91,27 +93,78 @@ class _Banner extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Row(
-            children: [
-              MapIconOrEmoji(
-                asset: regionIconAsset(region),
-                emoji: region.emoji,
-                size: 44,
-                emojiSize: 40,
-                visualScale: 1.35,
+          if (hasBanner)
+            Positioned.fill(
+              child: _RegionBannerImage(
+                url: region.bannerImageUrl,
+                fallbackAsset: theme.bannerAsset,
               ),
-              const Spacer(),
-              _StatusBadge(region: region, userLevel: userLevel),
-            ],
+            ),
+          if (hasBanner)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 52,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Color(0x66000000)],
+                      stops: [0, 1],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MapIconOrEmoji(
+                  asset: regionIconAsset(region),
+                  emoji: region.emoji,
+                  size: 44,
+                  emojiSize: 40,
+                  visualScale: 1.35,
+                ),
+                const Spacer(),
+                _StatusBadge(region: region, userLevel: userLevel),
+              ],
+            ),
           ),
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+            left: 16,
+            right: 16,
+            bottom: 12,
             child: _Pins(region: region, userLevel: userLevel),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RegionBannerImage extends StatelessWidget {
+  final String? url;
+  final String? fallbackAsset;
+
+  const _RegionBannerImage({this.url, this.fallbackAsset});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fallback() => fallbackAsset == null
+        ? const SizedBox.shrink()
+        : Image.asset(fallbackAsset!, fit: BoxFit.cover);
+
+    if (url == null) return fallback();
+    return Image.network(
+      ApiClient.resolveMediaUrl(url!),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback(),
     );
   }
 }
@@ -371,7 +424,9 @@ class _CtaRow extends StatelessWidget {
                 ? '${region.zonesUntilBoss} zones to boss'
                 : region.bossStatus == RegionBossStatus.defeated
                     ? '${region.bossName} defeated'
-                    : '${region.bossName} awaits';
+                    : region.bossStatus == RegionBossStatus.expired
+                        ? '${region.bossName} expired'
+                        : '${region.bossName} awaits';
         return '$xpBit · $bossBit';
       case RegionStatus.completed:
         return 'Rewards cleared · revisit anytime';

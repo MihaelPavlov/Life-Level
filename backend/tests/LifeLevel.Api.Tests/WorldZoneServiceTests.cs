@@ -1,4 +1,5 @@
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.Character.Domain.Entities;
 using LifeLevel.Modules.Identity.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Application.DTOs;
@@ -89,6 +90,80 @@ public class WorldZoneServiceTests
         };
         db.Regions.Add(region);
         return (world, region);
+    }
+
+    [Fact]
+    public async Task ContinueAfterExpiredBoss_AdvancesWithoutVictoryRewards()
+    {
+        var db = CreateDb(nameof(ContinueAfterExpiredBoss_AdvancesWithoutVictoryRewards));
+        var (world, forest) = SeedWorld(db, "Expired boss world");
+        var ocean = new Region
+        {
+            Id = Guid.NewGuid(), WorldId = world.Id, Name = "Ocean", Emoji = "🌊",
+            Theme = RegionTheme.Ocean, ChapterIndex = 2, LevelRequirement = 1,
+            Lore = "Next region", BossName = "Tide Sovereign",
+        };
+        db.Regions.Add(ocean);
+
+        var bossZone = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(), RegionId = forest.Id, Name = "Forest Warden",
+            Type = WorldZoneType.Boss, IsBoss = true, XpReward = 1200,
+        };
+        var oceanEntry = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(), RegionId = ocean.Id, Name = "Tidepool Landing",
+            Type = WorldZoneType.Entry,
+        };
+        db.WorldZones.AddRange(bossZone, oceanEntry);
+        db.WorldZoneEdges.Add(new WorldZoneEdge
+        {
+            Id = Guid.NewGuid(), FromZoneId = bossZone.Id, ToZoneId = oceanEntry.Id,
+            IsBidirectional = false,
+        });
+
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            Id = userId, Username = "expired", Email = "expired@test.com", PasswordHash = "x",
+        });
+        db.Characters.Add(new Character { Id = Guid.NewGuid(), UserId = userId, Level = 5 });
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(), UserId = userId, WorldId = world.Id,
+            CurrentZoneId = bossZone.Id, CurrentRegionId = forest.Id,
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId, WorldZoneId = bossZone.Id, UserWorldProgressId = progress.Id,
+        });
+
+        var boss = new Boss
+        {
+            Id = Guid.NewGuid(), Name = "Forest Warden", Icon = "🐺",
+            MaxHp = 3000, RewardXp = 500, WorldZoneId = bossZone.Id,
+        };
+        db.Bosses.Add(boss);
+        db.UserBossStates.Add(new UserBossState
+        {
+            Id = Guid.NewGuid(), UserId = userId, BossId = boss.Id,
+            UserMapProgressId = Guid.NewGuid(), HpDealt = 904,
+            IsExpired = true, StartedAt = DateTime.UtcNow.AddDays(-3),
+        });
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).ContinueAfterExpiredBossAsync(userId, bossZone.Id);
+
+        Assert.Equal(0, result.XpAwarded);
+        Assert.Equal(ocean.Id, result.NextRegionId);
+        Assert.Equal(oceanEntry.Id, (await db.UserWorldProgresses.SingleAsync()).CurrentZoneId);
+        Assert.False((await db.UserBossStates.SingleAsync()).IsDefeated);
+
+        var map = await CreateMapReadService(db).GetWorldMapAsync(userId);
+        var forestSummary = map.Regions.Single(r => r.Id == forest.Id);
+        Assert.Equal("expired", forestSummary.BossStatus);
+        Assert.Equal("completed", forestSummary.Status);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
