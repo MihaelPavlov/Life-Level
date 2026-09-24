@@ -211,8 +211,11 @@ public class WorldBossBridgeServiceTests
         Assert.Equal(fx.ForestBoss.Name, boss.Name);
         Assert.Equal("assets/Bosses/boss_forest_warden.svg", boss.Icon);
         Assert.Equal(fx.ForestBoss.XpReward, boss.RewardXp);
-        // HP formula: 500 * max(chapter=1,1) + 250 * max(tier=6,1) = 500 + 1500 = 2000
-        Assert.Equal(500 * 1 + 250 * 6, boss.MaxHp);
+        var balance = LifeLevel.SharedKernel.Calculators.BossBalanceCalculator.ForChapter(1, 1);
+        Assert.Equal(balance.MaxHp, boss.MaxHp);
+        Assert.Equal(balance.Armor, boss.Armor);
+        Assert.Equal(balance.CounterattackDamage, boss.CounterattackDamage);
+        Assert.Equal(0, boss.TimerDays);
 
         // UserBossState initialized.
         var state = await db.UserBossStates.FirstOrDefaultAsync(s => s.UserId == fx.UserId && s.BossId == bossId);

@@ -562,7 +562,21 @@
     <!-- Boss type panel -->
     <div class="type-panel" id="typeBossPanel">
       <h4>Boss zone</h4>
-      <p class="type-hint"><b>Name + Emoji</b> above = boss display. <b>XP reward</b> above = victory bounty. HP is auto-computed from region chapter + zone tier.</p>
+      <p class="type-hint"><b>Name + Emoji</b> above = boss display. Leave combat fields blank to use the chapter balance model.</p>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label>Max HP (blank = generated)</label>
+          <input type="number" id="zoneBossMaxHpInput" min="1">
+        </div>
+        <div class="form-row">
+          <label>Armor (blank = generated)</label>
+          <input type="number" id="zoneBossArmorInput" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Counterattack damage (blank = generated)</label>
+        <input type="number" id="zoneBossCounterattackInput" min="1">
+      </div>
       <div class="form-grid-2">
         <div class="form-row">
           <label>Timer days (0 = none)</label>
@@ -574,7 +588,7 @@
         </div>
       </div>
       <div class="form-row" style="margin-top:4px;">
-        <label>Computed preview</label>
+        <label>Combat preview</label>
         <div id="bossPreview" class="type-hint" style="color: var(--text);"></div>
       </div>
     </div>

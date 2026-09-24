@@ -49,6 +49,7 @@ public class LogActivityResult
     /// a "you defeated &lt;boss&gt;" celebratory popup right after logging.
     /// </summary>
     public IReadOnlyList<BossDefeatedInfo> BossDefeats { get; init; } = [];
+    public BossCombatTurnInfo? BossCombatTurn { get; init; }
 
     /// <summary>
     /// Guild raids defeated by this activity's guild damage tick.

@@ -135,6 +135,8 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                       _buildHero(),
                       const SizedBox(height: 16),
                       _buildHpSection(),
+                      const SizedBox(height: 12),
+                      _buildPlayerSection(),
                       const SizedBox(height: 16),
                       const BossDamageHint(),
                       const SizedBox(height: 12),
@@ -342,6 +344,80 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
     );
   }
 
+  Widget _buildPlayerSection() {
+    final maxHp = boss.playerMaxHp <= 0 ? 1 : boss.playerMaxHp;
+    final hp = boss.currentPlayerHp.clamp(0, maxHp);
+    final recovery = boss.recoveryEndsAt?.difference(DateTime.now().toUtc());
+    final recovering = recovery != null && !recovery.isNegative;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: (recovering ? AppColors.orange : AppColors.blue)
+            .withValues(alpha: 0.07),
+        border: Border.all(
+          color: (recovering ? AppColors.orange : AppColors.blue)
+              .withValues(alpha: 0.28),
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                recovering ? '❤️ RECOVERING' : '❤️ YOUR HP',
+                style: TextStyle(
+                  color: recovering ? AppColors.orange : AppColors.blue,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .6,
+                ),
+              ),
+              const Spacer(),
+              Text('$hp / $maxHp',
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: hp / maxHp,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(5),
+            backgroundColor: AppColors.border,
+            valueColor: AlwaysStoppedAnimation<Color>(
+                recovering ? AppColors.orange : AppColors.blue),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                  'DEF ${boss.playerDefense} · ${(boss.playerMitigation * 100).toStringAsFixed(0)}% mitigation',
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 10)),
+              const Spacer(),
+              Text('Boss armor ${boss.armor} · ATK ${boss.counterattackDamage}',
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 10)),
+            ],
+          ),
+          if (recovering) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Workout attacks resume in ${_fmtDuration(recovery)}. Normal workout rewards still apply.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: AppColors.orange, fontSize: 11, height: 1.35),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildRecentHits(WidgetRef ref) {
     final historyAsync = ref.watch(bossDamageHistoryProvider(boss.id));
     return Container(
@@ -525,8 +601,9 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
   }
 
   static String _fmtNumber(int n) {
-    if (n >= 1000)
+    if (n >= 1000) {
       return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    }
     return n.toString();
   }
 

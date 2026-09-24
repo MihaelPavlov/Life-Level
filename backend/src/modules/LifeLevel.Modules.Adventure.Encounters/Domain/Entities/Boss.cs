@@ -13,6 +13,9 @@ public class Boss
     public string Name { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty;
     public int MaxHp { get; set; }
+    public int Armor { get; set; }
+    public int CounterattackDamage { get; set; }
+    public int CombatVersion { get; set; } = 1;
     public int RewardXp { get; set; }
     public int TimerDays { get; set; } = 7;
     public bool IsMini { get; set; } = false;

@@ -5,6 +5,7 @@ using LifeLevel.Modules.Guild.Application.DTOs;
 using LifeLevel.Modules.Guild.Domain.Entities;
 using LifeLevel.Modules.Guild.Domain.Enums;
 using LifeLevel.Modules.Identity.Domain.Entities;
+using LifeLevel.SharedKernel.Calculators;
 using LifeLevel.SharedKernel.Ports;
 using LifeLevel.SharedKernel.Events;
 using Microsoft.EntityFrameworkCore;
@@ -354,6 +355,7 @@ public class GuildService(
             StartedAt = now,
             ExpiresAt = now.AddDays(durationDays),
             MaxHp = maxHp,
+            Armor = boss.Armor,
             RewardXp = rewardXp,
             GuildSizeAtStart = guildSize,
             TotalDamage = 0,
@@ -585,6 +587,8 @@ public class GuildService(
             if (talents.BossActiveDamagePct > 0)
                 damage = (int)Math.Round(damage * (1.0 + talents.BossActiveDamagePct / 100.0));
         }
+
+        damage = BossCombatCalculator.ApplyMitigation(damage, raid.Armor);
 
         return await ApplyDamageAsync(userId, raid, damage, activityId, activityLoggedAt, ct);
     }

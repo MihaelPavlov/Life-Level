@@ -96,6 +96,9 @@ public record ZoneSummaryDto(
     int? DungeonBonusXp,
     int? BossTimerDays,
     bool? BossSuppressExpiry,
+    int? BossMaxHp,
+    int? BossArmor,
+    int? BossCounterattackDamage,
     int FloorCount);
 
 public record ZoneDetailDto(
@@ -121,6 +124,9 @@ public record ZoneDetailDto(
     int? DungeonBonusXp,
     int? BossTimerDays,
     bool? BossSuppressExpiry,
+    int? BossMaxHp,
+    int? BossArmor,
+    int? BossCounterattackDamage,
     IReadOnlyList<FloorDto> Floors);
 
 public record CreateZoneRequest(
@@ -140,7 +146,10 @@ public record CreateZoneRequest(
     string? ChestRewardDescription,
     int? DungeonBonusXp,
     int? BossTimerDays,
-    bool? BossSuppressExpiry);
+    bool? BossSuppressExpiry,
+    int? BossMaxHp = null,
+    int? BossArmor = null,
+    int? BossCounterattackDamage = null);
 
 public record UpdateZoneRequest(
     string Name,
@@ -159,7 +168,10 @@ public record UpdateZoneRequest(
     string? ChestRewardDescription,
     int? DungeonBonusXp,
     int? BossTimerDays,
-    bool? BossSuppressExpiry);
+    bool? BossSuppressExpiry,
+    int? BossMaxHp = null,
+    int? BossArmor = null,
+    int? BossCounterattackDamage = null);
 
 // --- Edges ------------------------------------------------------------------
 

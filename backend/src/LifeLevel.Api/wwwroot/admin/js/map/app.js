@@ -38,7 +38,8 @@
       MapAdminZones.updateTypeVisibility();
     });
     // Live-update the Boss HP/XP/timer preview as related inputs change.
-    ['zoneTierInput','zoneXpInput','zoneBossTimerInput','zoneBossSuppressInput'].forEach(id => {
+    ['zoneTierInput','zoneXpInput','zoneBossTimerInput','zoneBossSuppressInput',
+      'zoneBossMaxHpInput','zoneBossArmorInput','zoneBossCounterattackInput'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => MapAdminZones.updateTypeVisibility());
       document.getElementById(id).addEventListener('change', () => MapAdminZones.updateTypeVisibility());
     });

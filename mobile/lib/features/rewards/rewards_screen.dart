@@ -109,6 +109,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
   Widget _buildBody(RewardCenterData data) {
     final period = _weekly ? data.weekly : data.daily;
+    // Keep actionable/in-progress tasks first. Dart's List.sort is not
+    // stable, so preserve the API order inside each group explicitly.
+    final orderedTasks = <UserQuestProgress>[
+      ...period.tasks.where((task) => !task.isCompleted),
+      ...period.tasks.where((task) => task.isCompleted),
+    ];
     final dailyHasClaimable =
         data.daily.milestones.any((m) => m.isUnlocked && !m.isClaimed) ||
             data.daily.tasks.any((t) => t.isCompleted && !t.rewardClaimed);
@@ -157,10 +163,10 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
               .toDouble(),
           child: ListView.separated(
             padding: EdgeInsets.zero,
-            itemCount: period.tasks.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 6),
+            itemCount: orderedTasks.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (_, i) => _TaskRow(
-              task: period.tasks[i],
+              task: orderedTasks[i],
               claiming: _claimingTasks,
               onClaim: _claimAvailableTasks,
             ),
@@ -404,8 +410,6 @@ class _PointsTrack extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
         ),
-        // Icon + point total sit on the same line as the bar, instead of a
-        // header row above it — the value lives right under the icon.
         child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -422,6 +426,9 @@ class _PointsTrack extends StatelessWidget {
           const SizedBox(width: 9),
           Expanded(
             child: Stack(alignment: Alignment.center, children: [
+              // The points track intentionally runs through the milestone
+              // rewards. It is painted first so reward icons/checks stay on
+              // top and remain readable.
               Positioned(
                 left: 15,
                 right: 15,
@@ -429,11 +436,13 @@ class _PointsTrack extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(3),
                   child: LinearProgressIndicator(
-                    value: period.pointsEarned / period.pointsMaximum,
-                    minHeight: 6,
-                    backgroundColor: const Color(0xFF0D141F),
-                    valueColor: const AlwaysStoppedAnimation(AppColors.blue),
-                  ),
+                      value: period.pointsMaximum <= 0
+                          ? 0
+                          : (period.pointsEarned / period.pointsMaximum)
+                              .clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: const Color(0xFF0D141F),
+                      valueColor: const AlwaysStoppedAnimation(AppColors.blue)),
                 ),
               ),
               Row(children: [
@@ -480,13 +489,19 @@ class _MilestoneNode extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 4),
           child: Column(children: [
             Container(
-              width: 33,
-              height: 33,
+              width: 39,
+              height: 39,
               decoration: BoxDecoration(
                   color: milestone.isClaimed
-                      ? AppColors.green.withValues(alpha: .14)
+                      ? Color.alphaBlend(
+                          AppColors.green.withValues(alpha: .14),
+                          AppColors.surfaceElevated,
+                        )
                       : claimable
-                          ? AppColors.blue.withValues(alpha: .14)
+                          ? Color.alphaBlend(
+                              AppColors.blue.withValues(alpha: .14),
+                              AppColors.surfaceElevated,
+                            )
                           : AppColors.backgroundAlt,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
@@ -496,37 +511,67 @@ class _MilestoneNode extends StatelessWidget {
                               ? AppColors.blue
                               : AppColors.border,
                       width: 1.5)),
-              child: Center(
-                  child: claiming
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.blue))
-                      : milestone.isClaimed
-                          ? const Icon(Icons.check_rounded,
-                              color: AppColors.green, size: 18)
-                          : Opacity(
-                              opacity: claimable ? 1 : .45,
-                              child: Image.asset(_rewardIcon(reward),
-                                  width: 19, height: 19),
-                            )),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (claiming)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.blue),
+                    )
+                  else
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _showRewardInfo(
+                        context,
+                        _milestoneRewardInfo(reward),
+                      ),
+                      child: Opacity(
+                        opacity: milestone.isClaimed || claimable ? 1 : .45,
+                        child: AppIconImage(
+                          _rewardIcon(reward),
+                          size: 24,
+                          visualScale:
+                              _rewardIcon(reward) == AppIcons.rewardXpCrystals
+                                  ? 2.65
+                                  : 1.25,
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    left: 2,
+                    right: 2,
+                    bottom: 1,
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 7,
+                            height: 1,
+                            fontWeight: FontWeight.w900,
+                            shadows: [
+                              Shadow(color: Colors.black, blurRadius: 3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 3),
-            Text(
-                milestone.isClaimed
-                    ? label
-                    : claimable
-                        ? 'CLAIM'
-                        : '${milestone.threshold}',
+            Text('${milestone.threshold}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    color: milestone.isClaimed
-                        ? AppColors.green
-                        : claimable
-                            ? AppColors.blue
-                            : AppColors.textMuted,
+                style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 8,
                     fontWeight: FontWeight.w800)),
           ]),
@@ -542,7 +587,7 @@ class _MilestoneNode extends StatelessWidget {
     if (reward.shields > 0) return AppIcons.rewardStreakShield;
     if (reward.crystals > 0) return AppIcons.homeGemIcon;
     if (reward.coins > 0) return AppIcons.homeCoinIcon;
-    return AppIcons.itemXpBooster;
+    return AppIcons.rewardXpCrystals;
   }
 
   // Composite label — a milestone can grant more than one reward type
@@ -569,110 +614,160 @@ class _TaskRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(7),
-        decoration: BoxDecoration(
-            color: task.isCompleted
-                ? AppColors.green.withValues(alpha: .07)
-                : AppColors.backgroundAlt,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-                color: task.isCompleted
-                    ? AppColors.green.withValues(alpha: .35)
-                    : AppColors.border)),
-        child: Row(children: [
-          _RewardTile(
-              icon: task.rewardCrystals > 0
-                  ? AppIcons.homeGemIcon
-                  : AppIcons.homeCoinIcon,
-              label:
-                  'x${task.rewardCrystals > 0 ? task.rewardCrystals : task.rewardCoins}'),
-          const SizedBox(width: 5),
-          _PointsTile(label: '+${task.rewardPoints}'),
-          const SizedBox(width: 8),
-          Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+  Widget build(BuildContext context) {
+    final claimed = task.rewardClaimed;
+
+    final content = Row(children: [
+      _RewardTile(
+          icon: task.rewardCrystals > 0
+              ? AppIcons.homeGemIcon
+              : AppIcons.homeCoinIcon,
+          label:
+              'x${task.rewardCrystals > 0 ? task.rewardCrystals : task.rewardCoins}',
+          onTap: () => _showRewardInfo(
+                context,
+                task.rewardCrystals > 0 ? _crystalRewardInfo : _coinRewardInfo,
+              )),
+      const SizedBox(width: 5),
+      _PointsTile(
+        label: '+${task.rewardPoints}',
+        onTap: () => _showRewardInfo(context, _dailyPointsRewardInfo),
+      ),
+      const SizedBox(width: 11),
+      Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+            Text(task.description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: task.isCompleted
+                        ? const Color(0xFFBDF0CC)
+                        : AppColors.textPrimary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: SizedBox(
+                height: 17,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                Text(task.description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        color: task.isCompleted
-                            ? const Color(0xFFBDF0CC)
-                            : AppColors.textPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: LinearProgressIndicator(
-                        value: task.progress,
-                        minHeight: 5,
-                        backgroundColor: AppColors.surfaceElevated,
-                        valueColor: AlwaysStoppedAnimation(task.isCompleted
-                            ? AppColors.green
-                            : AppColors.blue))),
-                const SizedBox(height: 3),
-                Text(
-                    '${_value(task.currentValue, task.targetUnit)} / ${_value(task.targetValue, task.targetUnit)} ${task.targetUnit}',
-                    style: TextStyle(
-                        color: task.isCompleted
-                            ? const Color(0xFF8FD6A4)
-                            : AppColors.textMuted,
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w700)),
-              ])),
-          if (task.isCompleted && !task.rewardClaimed) ...[
-            const SizedBox(width: 6),
-            SizedBox(
-              height: 32,
-              child: FilledButton(
-                onPressed: claiming ? null : onClaim,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  backgroundColor: AppColors.blue,
-                  disabledBackgroundColor:
-                      AppColors.blue.withValues(alpha: .35),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: claiming
-                    ? const SizedBox(
-                        width: 13,
-                        height: 13,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                    LinearProgressIndicator(
+                      value: task.progress,
+                      minHeight: 17,
+                      backgroundColor: AppColors.surfaceElevated,
+                      valueColor: AlwaysStoppedAnimation(
+                          task.isCompleted ? AppColors.green : AppColors.blue),
+                    ),
+                    Center(
+                      child: Text(
+                        '${_value(task.currentValue, task.targetUnit)} / ${_value(task.targetValue, task.targetUnit)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
                           color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'CLAIM',
-                        style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 8.5,
+                          height: 1,
                           fontWeight: FontWeight.w900,
+                          shadows: [
+                            Shadow(color: Colors.black, blurRadius: 3),
+                          ],
                         ),
                       ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ] else if (task.rewardClaimed) ...[
-            const SizedBox(width: 6),
-            Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.green.withValues(alpha: .18),
-                border: Border.all(color: AppColors.green),
+          ])),
+      if (task.isCompleted && !claimed) ...[
+        const SizedBox(width: 9),
+        SizedBox(
+          height: 32,
+          child: FilledButton(
+            onPressed: claiming ? null : onClaim,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              backgroundColor: AppColors.blue,
+              disabledBackgroundColor: AppColors.blue.withValues(alpha: .35),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.check_rounded,
-                  color: AppColors.green, size: 12),
             ),
+            child: claiming
+                ? const SizedBox(
+                    width: 13,
+                    height: 13,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'CLAIM',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+          ),
+        ),
+      ] else if (claimed)
+        // Reserve room for the completion check painted above the dim layer.
+        const SizedBox(width: 30),
+    ]);
+
+    return Container(
+      decoration: BoxDecoration(
+          color: task.isCompleted && !claimed
+              ? AppColors.green.withValues(alpha: .07)
+              : AppColors.backgroundAlt,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: task.isCompleted && !claimed
+                  ? AppColors.green.withValues(alpha: .35)
+                  : AppColors.border)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: Stack(
+          alignment: Alignment.centerRight,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              child: content,
+            ),
+            if (claimed)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: ColoredBox(
+                    color: const Color(0xFF8C949E).withValues(alpha: .28),
+                  ),
+                ),
+              ),
+            if (claimed)
+              Positioned(
+                right: 14,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.green.withValues(alpha: .24),
+                    border: Border.all(color: AppColors.green, width: 1.5),
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: AppColors.green, size: 14),
+                ),
+              ),
           ],
-        ]),
-      );
+        ),
+      ),
+    );
+  }
 
   static String _value(double value, String unit) =>
       unit == 'km' ? value.toStringAsFixed(1) : value.toInt().toString();
@@ -681,27 +776,48 @@ class _TaskRow extends StatelessWidget {
 class _RewardTile extends StatelessWidget {
   final String icon;
   final String label;
-  const _RewardTile({required this.icon, required this.label});
+  final VoidCallback onTap;
+  const _RewardTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: 31,
-        height: 35,
-        decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: AppColors.border)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(icon, width: 14, height: 14),
-            const SizedBox(height: 1),
-            Text(label,
-                style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 7,
-                    fontWeight: FontWeight.w800)),
-          ],
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Reward information',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            width: 38,
+            height: 40,
+            decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(color: AppColors.border)),
+            child: Stack(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: AppIconImage(icon, size: 22),
+                  ),
+                ),
+                Positioned(
+                  right: 3,
+                  bottom: 2,
+                  child: Text(label,
+                      style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 8,
+                          height: 1,
+                          fontWeight: FontWeight.w900)),
+                ),
+              ],
+            ),
+          ),
         ),
       );
 }
@@ -711,29 +827,261 @@ class _RewardTile extends StatelessWidget {
 // track, not just a bare number.
 class _PointsTile extends StatelessWidget {
   final String label;
-  const _PointsTile({required this.label});
+  final VoidCallback onTap;
+  const _PointsTile({required this.label, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: 31,
-        height: 35,
-        decoration: BoxDecoration(
-            color: AppColors.blue.withValues(alpha: .10),
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: AppColors.blue.withValues(alpha: .3))),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const AppIconImage(AppIcons.dailyPointsBadge, size: 14),
-            const SizedBox(height: 1),
-            Text(label,
-                style: const TextStyle(
-                    color: AppColors.blue,
-                    fontSize: 7,
-                    fontWeight: FontWeight.w800)),
-          ],
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Daily Points information',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            width: 38,
+            height: 40,
+            decoration: BoxDecoration(
+                color: AppColors.blue.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(7),
+                border:
+                    Border.all(color: AppColors.blue.withValues(alpha: .3))),
+            child: Stack(
+              children: [
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 5),
+                    child: AppIconImage(AppIcons.dailyPointsBadge, size: 22),
+                  ),
+                ),
+                Positioned(
+                  right: 3,
+                  bottom: 2,
+                  child: Text(label,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          height: 1,
+                          fontWeight: FontWeight.w900)),
+                ),
+              ],
+            ),
+          ),
         ),
       );
+}
+
+class _RewardInfo {
+  final String name;
+  final String icon;
+  final String description;
+  final String destination;
+
+  const _RewardInfo({
+    required this.name,
+    required this.icon,
+    required this.description,
+    required this.destination,
+  });
+}
+
+const _coinRewardInfo = _RewardInfo(
+  name: 'Coins',
+  icon: AppIcons.homeCoinIcon,
+  description: 'Universal currency used to buy items and useful upgrades.',
+  destination: 'Shop',
+);
+
+const _crystalRewardInfo = _RewardInfo(
+  name: 'Crystals',
+  icon: AppIcons.homeGemIcon,
+  description: 'A rare currency used to unlock and improve powerful talents.',
+  destination: 'Talents',
+);
+
+const _dailyPointsRewardInfo = _RewardInfo(
+  name: 'Daily Points',
+  icon: AppIcons.dailyPointsBadge,
+  description:
+      'Earned from daily tasks. Reach the marked totals to unlock milestone rewards.',
+  destination: 'Daily reward track',
+);
+
+const _xpRewardInfo = _RewardInfo(
+  name: 'Experience',
+  icon: AppIcons.rewardXpCrystals,
+  description: 'Raises your character level and unlocks new progression.',
+  destination: 'Character progression',
+);
+
+const _shieldRewardInfo = _RewardInfo(
+  name: 'Streak Shield',
+  icon: AppIcons.rewardStreakShield,
+  description: 'Protects an active streak when you miss an eligible day.',
+  destination: 'Streak protection',
+);
+
+_RewardInfo _milestoneRewardInfo(MilestoneReward reward) {
+  if (reward.shields > 0) return _shieldRewardInfo;
+  if (reward.crystals > 0) return _crystalRewardInfo;
+  if (reward.coins > 0) return _coinRewardInfo;
+  return _xpRewardInfo;
+}
+
+Future<void> _showRewardInfo(BuildContext context, _RewardInfo info) {
+  return showAppDialog<void>(
+    context: context,
+    barrierLabel: 'Dismiss ${info.name} information',
+    builder: (_) => Center(
+      child: Material(
+        color: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 390),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.blue, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.blue.withValues(alpha: .22),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.blue.withValues(alpha: .38),
+                        AppColors.surfaceElevated,
+                      ],
+                    ),
+                    border: const Border(
+                      bottom: BorderSide(color: AppColors.blue, width: 1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundAlt,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: AppColors.blue.withValues(alpha: .7),
+                              width: 2),
+                        ),
+                        child: AppIconImage(
+                          info.icon,
+                          size: 50,
+                          visualScale: info.icon == AppIcons.rewardXpCrystals
+                              ? 2.25
+                              : 1.12,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              info.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.blue.withValues(alpha: .25),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: const Text(
+                                'REWARD',
+                                style: TextStyle(
+                                  color: Color(0xFFAED6FF),
+                                  fontSize: 9,
+                                  letterSpacing: 1,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
+                  child: Text(
+                    info.description,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(22, 0, 22, 22),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 17, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundAlt,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'USED IN',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 9,
+                          letterSpacing: 1.6,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            info.destination,
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                              color: AppColors.blue,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _ErrorState extends StatelessWidget {

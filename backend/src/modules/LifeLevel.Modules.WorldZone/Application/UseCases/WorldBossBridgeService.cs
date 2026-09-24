@@ -2,6 +2,7 @@ using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
 using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Calculators;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
@@ -45,16 +46,42 @@ public class WorldBossBridgeService(DbContext db, IBossSpawnPort bossSpawn)
             .FirstOrDefaultAsync(b => b.WorldZoneId == worldZoneId, ct);
         if (existingBoss != null)
         {
+            var balance = GetBalance(zone);
             var zoneSuppress = zone.BossSuppressExpiry ?? true;
             var zoneTimerDays = zone.BossTimerDays ?? 0;
             var zoneIcon = GetBossIcon(zone);
             if (existingBoss.SuppressExpiry != zoneSuppress
                 || existingBoss.TimerDays != zoneTimerDays
-                || existingBoss.Icon != zoneIcon)
+                || existingBoss.Icon != zoneIcon
+                || existingBoss.MaxHp != balance.MaxHp
+                || existingBoss.Armor != balance.Armor
+                || existingBoss.CounterattackDamage != balance.CounterattackDamage
+                || existingBoss.CombatVersion != BossCombatCalculator.CombatVersion)
             {
+                var oldMaxHp = Math.Max(1, existingBoss.MaxHp);
                 existingBoss.SuppressExpiry = zoneSuppress;
                 existingBoss.TimerDays = zoneTimerDays;
                 existingBoss.Icon = zoneIcon;
+                existingBoss.MaxHp = balance.MaxHp;
+                existingBoss.Armor = balance.Armor;
+                existingBoss.CounterattackDamage = balance.CounterattackDamage;
+                existingBoss.CombatVersion = BossCombatCalculator.CombatVersion;
+
+                // Preserve each unfinished fight's progress percentage while
+                // moving its immutable combat snapshot to the new balance.
+                var states = await db.Set<UserBossState>()
+                    .Where(s => s.BossId == existingBoss.Id && !s.IsDefeated)
+                    .ToListAsync(ct);
+                foreach (var state in states)
+                {
+                    var priorSnapshot = state.MaxHpSnapshot > 0 ? state.MaxHpSnapshot : oldMaxHp;
+                    var progress = Math.Clamp(state.HpDealt / (double)Math.Max(1, priorSnapshot), 0, 1);
+                    state.MaxHpSnapshot = balance.MaxHp;
+                    state.HpDealt = (int)Math.Round(balance.MaxHp * progress);
+                    state.ArmorSnapshot = balance.Armor;
+                    state.CounterattackDamageSnapshot = balance.CounterattackDamage;
+                    state.CombatVersion = BossCombatCalculator.CombatVersion;
+                }
                 await db.SaveChangesAsync(ct);
             }
             await bossSpawn.EnsureUserStateAsync(userId, existingBoss.Id, ct);
@@ -63,7 +90,7 @@ public class WorldBossBridgeService(DbContext db, IBossSpawnPort bossSpawn)
 
         // First-time spawn for this world-zone boss. HP scales with region
         // chapter index and zone tier; reward XP inherits the zone's reward.
-        var hp = ComputeBossHp(zone.Region.ChapterIndex, zone.Tier);
+        var balanceForZone = GetBalance(zone);
 
         // Per-zone timer: defaults to "no timeout" (SuppressExpiry=true, TimerDays=0)
         // when either field is null on the zone. Set both on a Boss-type zone to
@@ -78,7 +105,10 @@ public class WorldBossBridgeService(DbContext db, IBossSpawnPort bossSpawn)
             NodeId = null,
             Name = zone.Name,
             Icon = GetBossIcon(zone),
-            MaxHp = hp,
+            MaxHp = balanceForZone.MaxHp,
+            Armor = balanceForZone.Armor,
+            CounterattackDamage = balanceForZone.CounterattackDamage,
+            CombatVersion = BossCombatCalculator.CombatVersion,
             RewardXp = zone.XpReward,
             TimerDays = timerDays,
             IsMini = false,
@@ -92,11 +122,18 @@ public class WorldBossBridgeService(DbContext db, IBossSpawnPort bossSpawn)
         return boss.Id;
     }
 
-    /// <summary>
-    /// World-zone boss HP formula. Tuned in one place so it's easy to adjust.
-    /// </summary>
-    private static int ComputeBossHp(int chapterIndex, int tier)
-        => 500 * Math.Max(chapterIndex, 1) + 250 * Math.Max(tier, 1);
+    private static BossBalanceCalculator.Profile GetBalance(WorldZoneEntity zone)
+    {
+        var generated = BossBalanceCalculator.ForChapter(
+            zone.Region.ChapterIndex,
+            zone.LevelRequirement);
+        return generated with
+        {
+            MaxHp = zone.BossMaxHp ?? generated.MaxHp,
+            Armor = zone.BossArmor ?? generated.Armor,
+            CounterattackDamage = zone.BossCounterattackDamage ?? generated.CounterattackDamage,
+        };
+    }
 
     private static string GetBossIcon(WorldZoneEntity zone)
         => string.Equals(zone.Name, "Forest Warden", StringComparison.OrdinalIgnoreCase)

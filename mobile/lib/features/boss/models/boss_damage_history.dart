@@ -1,8 +1,6 @@
 /// A single damage event rendered on the boss battle page's RECENT HITS
-/// list. The backend computes this on read from the user's Activities that
-/// fall inside the boss's fight window, so there's no persisted event row —
-/// each item reflects the activity as it was logged and the damage it
-/// would deal under the current formula.
+/// list. Values are persisted by the backend at turn time, so old hits stay
+/// stable when equipment, talents, or character stats change later.
 class BossDamageHistoryItem {
   final String activityId;
   final String activityType; // "Running", "Gym", ...
@@ -10,6 +8,13 @@ class BossDamageHistoryItem {
   final double distanceKm;
   final int calories;
   final int damage;
+  final int rawDamage;
+  final double damageMultiplier;
+  final double bossMitigation;
+  final int damageTaken;
+  final int playerHpAfter;
+  final bool playerDefeated;
+  final String? skipReason;
   final DateTime loggedAt;
 
   const BossDamageHistoryItem({
@@ -19,6 +24,13 @@ class BossDamageHistoryItem {
     required this.distanceKm,
     required this.calories,
     required this.damage,
+    this.rawDamage = 0,
+    this.damageMultiplier = 1,
+    this.bossMitigation = 0,
+    this.damageTaken = 0,
+    this.playerHpAfter = 0,
+    this.playerDefeated = false,
+    this.skipReason,
     required this.loggedAt,
   });
 
@@ -30,6 +42,13 @@ class BossDamageHistoryItem {
         distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
         calories: (json['calories'] as num?)?.toInt() ?? 0,
         damage: (json['damage'] as num?)?.toInt() ?? 0,
+        rawDamage: (json['rawDamage'] as num?)?.toInt() ?? 0,
+        damageMultiplier: (json['damageMultiplier'] as num?)?.toDouble() ?? 1,
+        bossMitigation: (json['bossMitigation'] as num?)?.toDouble() ?? 0,
+        damageTaken: (json['damageTaken'] as num?)?.toInt() ?? 0,
+        playerHpAfter: (json['playerHpAfter'] as num?)?.toInt() ?? 0,
+        playerDefeated: json['playerDefeated'] as bool? ?? false,
+        skipReason: json['skipReason'] as String?,
         loggedAt: DateTime.parse(json['loggedAt'] as String).toLocal(),
       );
 

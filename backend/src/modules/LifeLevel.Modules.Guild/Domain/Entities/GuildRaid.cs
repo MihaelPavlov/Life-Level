@@ -9,6 +9,7 @@ public class GuildRaid
     public DateTime StartedAt { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt { get; set; }
     public int MaxHp { get; set; }
+    public int Armor { get; set; }
     public int RewardXp { get; set; }
     public int GuildSizeAtStart { get; set; }
     public int TotalDamage { get; set; }

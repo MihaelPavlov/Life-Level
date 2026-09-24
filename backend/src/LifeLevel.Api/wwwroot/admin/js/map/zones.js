@@ -86,6 +86,7 @@
       chestRewardXp: null, chestRewardDescription: null,
       dungeonBonusXp: null,
       bossTimerDays: 0, bossSuppressExpiry: true,
+      bossMaxHp: null, bossArmor: null, bossCounterattackDamage: null,
       floors: [],
     });
     updateTypeVisibility();
@@ -129,6 +130,9 @@
     document.getElementById('zoneDungeonBonusInput').value = z.dungeonBonusXp ?? '';
     document.getElementById('zoneBossTimerInput').value = z.bossTimerDays ?? 0;
     document.getElementById('zoneBossSuppressInput').checked = z.bossSuppressExpiry !== false;
+    document.getElementById('zoneBossMaxHpInput').value = z.bossMaxHp ?? '';
+    document.getElementById('zoneBossArmorInput').value = z.bossArmor ?? '';
+    document.getElementById('zoneBossCounterattackInput').value = z.bossCounterattackDamage ?? '';
   }
 
   function fillBranchSelect(currentZoneId, currentBranchOfId) {
@@ -163,15 +167,16 @@
   }
 
   function updateBossPreview() {
-    const tier = parseInt(document.getElementById('zoneTierInput').value || '1', 10);
     const chapter = currentRegionChapter();
-    const hp = 500 * Math.max(chapter, 1) + 250 * Math.max(tier, 1);
+    const hp = document.getElementById('zoneBossMaxHpInput').value || 'generated';
+    const armor = document.getElementById('zoneBossArmorInput').value || 'generated';
+    const counterattack = document.getElementById('zoneBossCounterattackInput').value || 'generated';
     const xp = parseInt(document.getElementById('zoneXpInput').value || '0', 10);
     const timer = parseInt(document.getElementById('zoneBossTimerInput').value || '0', 10);
     const suppress = document.getElementById('zoneBossSuppressInput').checked;
     const timerTxt = suppress ? 'no timeout' : (timer > 0 ? timer + '-day timer' : 'no timeout (0 days)');
     const el = document.getElementById('bossPreview');
-    if (el) el.innerHTML = `HP <b>${hp}</b> (chapter ${chapter} × 500 + tier ${tier} × 250) · <b>${xp}</b> XP on defeat · ${timerTxt}`;
+    if (el) el.innerHTML = `Chapter ${chapter} · HP <b>${hp}</b> · Armor <b>${armor}</b> · Counterattack <b>${counterattack}</b> · <b>${xp}</b> XP · ${timerTxt}`;
   }
 
   function currentRegionChapter() {
@@ -186,6 +191,9 @@
     const chestXpRaw = document.getElementById('zoneChestXpInput').value;
     const dungeonBonusRaw = document.getElementById('zoneDungeonBonusInput').value;
     const bossTimerRaw = document.getElementById('zoneBossTimerInput').value;
+    const bossMaxHpRaw = document.getElementById('zoneBossMaxHpInput').value;
+    const bossArmorRaw = document.getElementById('zoneBossArmorInput').value;
+    const bossCounterattackRaw = document.getElementById('zoneBossCounterattackInput').value;
     return {
       name: document.getElementById('zoneNameInput').value.trim(),
       description: document.getElementById('zoneDescInput').value || null,
@@ -204,6 +212,9 @@
       dungeonBonusXp: dungeonBonusRaw === '' ? null : parseInt(dungeonBonusRaw, 10),
       bossTimerDays: bossTimerRaw === '' ? 0 : parseInt(bossTimerRaw, 10),
       bossSuppressExpiry: document.getElementById('zoneBossSuppressInput').checked,
+      bossMaxHp: bossMaxHpRaw === '' ? null : parseInt(bossMaxHpRaw, 10),
+      bossArmor: bossArmorRaw === '' ? null : parseInt(bossArmorRaw, 10),
+      bossCounterattackDamage: bossCounterattackRaw === '' ? null : parseInt(bossCounterattackRaw, 10),
     };
   }
 

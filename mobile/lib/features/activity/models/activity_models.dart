@@ -222,6 +222,57 @@ class BossDefeatedInfo {
       );
 }
 
+class BossCombatTurnInfo {
+  final String bossId;
+  final String bossName;
+  final int rawDamage;
+  final int damageDealt;
+  final int bossHpAfter;
+  final int bossMaxHp;
+  final int damageTaken;
+  final int playerHpAfter;
+  final int playerMaxHp;
+  final bool bossDefeated;
+  final bool playerDefeated;
+  final String? skipReason;
+  final DateTime? recoveryEndsAt;
+
+  const BossCombatTurnInfo({
+    required this.bossId,
+    required this.bossName,
+    required this.rawDamage,
+    required this.damageDealt,
+    required this.bossHpAfter,
+    required this.bossMaxHp,
+    required this.damageTaken,
+    required this.playerHpAfter,
+    required this.playerMaxHp,
+    required this.bossDefeated,
+    required this.playerDefeated,
+    this.skipReason,
+    this.recoveryEndsAt,
+  });
+
+  factory BossCombatTurnInfo.fromJson(Map<String, dynamic> json) =>
+      BossCombatTurnInfo(
+        bossId: json['bossId'] as String? ?? '',
+        bossName: json['bossName'] as String? ?? '',
+        rawDamage: (json['rawDamage'] as num?)?.toInt() ?? 0,
+        damageDealt: (json['damageDealt'] as num?)?.toInt() ?? 0,
+        bossHpAfter: (json['bossHpAfter'] as num?)?.toInt() ?? 0,
+        bossMaxHp: (json['bossMaxHp'] as num?)?.toInt() ?? 0,
+        damageTaken: (json['damageTaken'] as num?)?.toInt() ?? 0,
+        playerHpAfter: (json['playerHpAfter'] as num?)?.toInt() ?? 0,
+        playerMaxHp: (json['playerMaxHp'] as num?)?.toInt() ?? 0,
+        bossDefeated: json['bossDefeated'] as bool? ?? false,
+        playerDefeated: json['playerDefeated'] as bool? ?? false,
+        skipReason: json['skipReason'] as String?,
+        recoveryEndsAt: json['recoveryEndsAt'] == null
+            ? null
+            : DateTime.parse(json['recoveryEndsAt'] as String),
+      );
+}
+
 class GuildRaidVictoryInfo {
   final String guildId;
   final String guildRaidId;
@@ -328,6 +379,7 @@ class LogActivityResult {
   /// finished the whole run). Drives the floor-cleared toast + dungeon
   /// overlay refresh.
   final DungeonFloorCreditInfo? floorCreditResult;
+  final BossCombatTurnInfo? bossCombatTurn;
 
   /// Bosses whose HP hit 0 from this single activity. Drives the boss-slain
   /// celebration overlay. Empty in the common case.
@@ -358,6 +410,7 @@ class LogActivityResult {
     this.blockedItems = const [],
     this.levelUpUnlocks,
     this.floorCreditResult,
+    this.bossCombatTurn,
     this.bossDefeats = const [],
     this.guildRaidDefeats = const [],
     this.activeEncounter,
@@ -396,6 +449,10 @@ class LogActivityResult {
             ? null
             : DungeonFloorCreditInfo.fromJson(
                 json['floorCreditResult'] as Map<String, dynamic>),
+        bossCombatTurn: json['bossCombatTurn'] == null
+            ? null
+            : BossCombatTurnInfo.fromJson(
+                json['bossCombatTurn'] as Map<String, dynamic>),
         bossDefeats: (json['bossDefeats'] as List<dynamic>? ?? [])
             .map((e) => BossDefeatedInfo.fromJson(e as Map<String, dynamic>))
             .toList(),

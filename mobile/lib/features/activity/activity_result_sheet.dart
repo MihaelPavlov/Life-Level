@@ -179,6 +179,11 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
                 const SizedBox(height: 16),
               ],
 
+              if (r.bossCombatTurn != null) ...[
+                _BossTurnCard(turn: r.bossCombatTurn!),
+                const SizedBox(height: 12),
+              ],
+
               // Streak update
               if (r.streakUpdated) ...[
                 _ResultBanner(
@@ -272,6 +277,59 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BossTurnCard extends StatelessWidget {
+  final BossCombatTurnInfo turn;
+
+  const _BossTurnCard({required this.turn});
+
+  @override
+  Widget build(BuildContext context) {
+    final skipped = turn.skipReason != null;
+    final color = skipped ? AppColors.orange : AppColors.red;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .08),
+        border: Border.all(color: color.withValues(alpha: .35)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('BOSS TURN · ${turn.bossName.toUpperCase()}',
+              style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .7)),
+          const SizedBox(height: 7),
+          Text(
+            skipped
+                ? 'Recovering — this workout earned normal rewards but did not attack.'
+                : 'You dealt ${turn.damageDealt} damage · Boss ${turn.bossHpAfter}/${turn.bossMaxHp} HP',
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600),
+          ),
+          if (!skipped && !turn.bossDefeated) ...[
+            const SizedBox(height: 5),
+            Text(
+              'Boss hit back for ${turn.damageTaken} · You ${turn.playerHpAfter}/${turn.playerMaxHp} HP',
+              style: TextStyle(
+                  color: turn.playerDefeated
+                      ? AppColors.orange
+                      : AppColors.textSecondary,
+                  fontSize: 11),
+            ),
+          ],
+        ],
       ),
     );
   }

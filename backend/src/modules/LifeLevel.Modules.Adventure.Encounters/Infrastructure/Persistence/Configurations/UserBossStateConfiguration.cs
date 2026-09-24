@@ -12,6 +12,9 @@ public class UserBossStateConfiguration : IEntityTypeConfiguration<UserBossState
         builder.HasOne(s => s.Boss)
                .WithMany(b => b.UserStates)
                .HasForeignKey(s => s.BossId);
+        builder.HasIndex(s => s.UserId)
+               .IsUnique()
+               .HasFilter("\"IsTargeted\" = TRUE");
         // UserId → User and UserMapProgressId → UserMapProgress are cross-module — configured in AppDbContext
     }
 }

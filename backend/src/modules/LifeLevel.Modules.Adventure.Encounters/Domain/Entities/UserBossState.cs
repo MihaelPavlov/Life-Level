@@ -20,4 +20,12 @@ public class UserBossState
     public DateTime? DefeatedAt { get; set; }
     public DateTime? StartedAt { get; set; }
     public bool IsExpired { get; set; } = false;
+    public bool IsTargeted { get; set; }
+    public int CurrentPlayerHp { get; set; }
+    public DateTime? RecoveryEndsAt { get; set; }
+    public int MaxHpSnapshot { get; set; }
+    public int ArmorSnapshot { get; set; }
+    public int CounterattackDamageSnapshot { get; set; }
+    public int CombatVersion { get; set; } = 1;
+    public ICollection<BossCombatTurn> CombatTurns { get; set; } = [];
 }

@@ -1,19 +1,19 @@
 using LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
-using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Calculators;
 using LifeLevel.SharedKernel.Events;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LifeLevel.Modules.Adventure.Encounters.Infrastructure;
 
 /// <summary>
-/// Adapter for <see cref="IActivityBossDamagePort"/>. Finds every non-defeated
-/// <see cref="UserBossState"/> the user has and applies workout-derived damage
-/// to each. Uses the existing <c>BossService.CalculateDamageFromActivity</c>
-/// formula + <c>BossService.DealDamageAsync</c> so boss death triggers the
-/// same defeat pipeline (including the world-zone completion hook).
+/// Resolves one workout into one turn against the user's targeted personal boss.
+/// The complete input/output snapshot is persisted so history never changes when
+/// the player's equipment, talents, or stats change later.
 /// </summary>
 public class ActivityBossDamageAdapter(
     DbContext db,
@@ -21,10 +21,12 @@ public class ActivityBossDamageAdapter(
     ILogger<ActivityBossDamageAdapter>? logger = null,
     ITalentBonusReadPort? talentBonus = null,
     ICharacterCombatStatsReadPort? combatStats = null,
-    IEventPublisher? events = null) : IActivityBossDamagePort
+    IEventPublisher? events = null,
+    IConfiguration? configuration = null) : IActivityBossDamagePort
 {
-    public async Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
+    public async Task<ActivityBossDamageResult> ApplyAsync(
         Guid userId,
+        Guid activityId,
         string activityType,
         int durationMinutes,
         double distanceKm,
@@ -33,77 +35,190 @@ public class ActivityBossDamageAdapter(
         CancellationToken ct = default)
     {
         var log = logger ?? NullLogger<ActivityBossDamageAdapter>.Instance;
+        var v2Enabled = !bool.TryParse(
+            configuration?["BossCombat:V2Enabled"], out var configuredEnabled)
+            || configuredEnabled;
 
-        var activeStates = await db.Set<UserBossState>()
+        var stateQuery = db.Set<UserBossState>()
+            .Include(s => s.Boss)
             .Where(s => s.UserId == userId
                         && !s.IsDefeated
                         && !s.IsExpired
-                        && (!s.StartedAt.HasValue || s.StartedAt.Value <= activityLoggedAt))
-            .ToListAsync(ct);
+                        && s.StartedAt.HasValue
+                        && s.StartedAt.Value <= activityLoggedAt);
 
-        var activeBossIds = activeStates.Select(s => s.BossId).ToList();
-        if (activeBossIds.Count == 0) return Array.Empty<BossDefeatedInfo>();
+        var state = v2Enabled
+            ? await stateQuery.Where(s => s.IsTargeted)
+                .OrderByDescending(s => s.StartedAt).FirstOrDefaultAsync(ct)
+            : await stateQuery.OrderByDescending(s => s.StartedAt).FirstOrDefaultAsync(ct);
 
-        var damage = BossService.CalculateDamageFromActivity(
-            activityType, durationMinutes, distanceKm, calories);
-        if (damage <= 0) return Array.Empty<BossDefeatedInfo>();
-
-        // Power-based multiplier (Attack/Defense/Health, including the
-        // permanent talent BossDamagePct baked into Attack — see
-        // CombatStatsCalculator). Applied before the still-separate,
-        // contextual BossActiveDamagePct below, which only fires because a
-        // boss is active here by definition.
-        if (combatStats is not null)
+        // Upgrade legacy active fights lazily. This gives existing users one
+        // deterministic target without requiring a separate maintenance job.
+        if (state is null && v2Enabled)
         {
-            var stats = await combatStats.GetCombatStatsAsync(userId, ct);
-            damage = (int)Math.Round(damage * stats.DamageMultiplier);
-        }
-
-        if (talentBonus is not null)
-        {
-            var talents = await talentBonus.GetBonusesAsync(userId, ct);
-            if (talents.BossActiveDamagePct > 0)
-                damage = (int)Math.Round(damage * (1.0 + talents.BossActiveDamagePct / 100.0));
-        }
-
-        // Single bulk lookup keyed by id — avoids N+1 when multiple bosses
-        // are defeated in the same tick.
-        var bossesById = await db.Set<Boss>()
-            .Where(b => activeBossIds.Contains(b.Id))
-            .ToDictionaryAsync(b => b.Id, ct);
-
-        var defeated = new List<BossDefeatedInfo>();
-
-        if (events != null)
-            await events.PublishAsync(new BossContributionEvent(userId, Guid.NewGuid()), ct);
-
-        foreach (var bossId in activeBossIds)
-        {
-            try
+            state = await stateQuery.OrderByDescending(s => s.StartedAt)
+                .FirstOrDefaultAsync(ct);
+            if (state is not null)
             {
-                var result = await bossService.DealDamageAsync(userId, bossId, damage);
-                if (result.JustDefeated && bossesById.TryGetValue(bossId, out var boss))
+                state.IsTargeted = true;
+                state.MaxHpSnapshot = state.MaxHpSnapshot > 0
+                    ? state.MaxHpSnapshot : state.Boss.MaxHp;
+                state.ArmorSnapshot = state.Boss.Armor;
+                state.CounterattackDamageSnapshot = state.Boss.CounterattackDamage;
+                state.CombatVersion = BossCombatCalculator.CombatVersion;
+            }
+        }
+
+        if (state is null) return ActivityBossDamageResult.Empty;
+
+        var duplicate = await db.Set<BossCombatTurn>()
+            .AnyAsync(t => t.UserBossStateId == state.Id && t.ActivityId == activityId, ct);
+        if (duplicate) return ActivityBossDamageResult.Empty;
+
+        try
+        {
+            var stats = combatStats is null
+                ? new CombatStatsSnapshot(10, 5, 50, CombatStatsCalculator.PowerFloor, 1.0)
+                : await combatStats.GetCombatStatsAsync(userId, ct);
+            var talents = talentBonus is null
+                ? TalentBonuses.Empty
+                : await talentBonus.GetBonusesAsync(userId, ct);
+
+            var maxBossHp = state.MaxHpSnapshot > 0 ? state.MaxHpSnapshot : state.Boss.MaxHp;
+            var bossArmor = state.CombatVersion >= BossCombatCalculator.CombatVersion
+                ? state.ArmorSnapshot : state.Boss.Armor;
+            var bossCounterattack = state.CombatVersion >= BossCombatCalculator.CombatVersion
+                ? state.CounterattackDamageSnapshot : state.Boss.CounterattackDamage;
+
+            var turn = new BossCombatTurn
+            {
+                Id = Guid.NewGuid(),
+                UserBossStateId = state.Id,
+                ActivityId = activityId,
+                ActivityType = activityType,
+                DurationMinutes = durationMinutes,
+                DistanceKm = distanceKm,
+                Calories = calories,
+                Attack = stats.Attack,
+                Defense = stats.Defense,
+                Health = stats.Health,
+                Power = stats.Power,
+                DamageMultiplier = stats.DamageMultiplier,
+                BossActiveDamagePct = talents.BossActiveDamagePct,
+                BossArmor = bossArmor,
+                BossMitigation = BossCombatCalculator.Mitigation(bossArmor),
+                BossCounterattackRaw = bossCounterattack,
+                PlayerMitigation = BossCombatCalculator.Mitigation(stats.Defense),
+                OccurredAt = activityLoggedAt,
+            };
+
+            if (state.RecoveryEndsAt.HasValue && state.RecoveryEndsAt.Value > activityLoggedAt)
+            {
+                turn.SkipReason = "PlayerRecovering";
+                turn.BossHpAfter = Math.Max(0, maxBossHp - state.HpDealt);
+                turn.PlayerHpAfter = Math.Max(0, state.CurrentPlayerHp);
+                db.Set<BossCombatTurn>().Add(turn);
+                await db.SaveChangesAsync(ct);
+                return ToResult(state, turn, maxBossHp, stats.Health, []);
+            }
+
+            if (state.RecoveryEndsAt.HasValue)
+            {
+                state.RecoveryEndsAt = null;
+                state.CurrentPlayerHp = stats.Health;
+            }
+            else if (state.CurrentPlayerHp <= 0)
+            {
+                state.CurrentPlayerHp = stats.Health;
+            }
+            else
+            {
+                state.CurrentPlayerHp = Math.Min(state.CurrentPlayerHp, stats.Health);
+            }
+
+            turn.RawWorkoutDamage = BossService.CalculateDamageFromActivity(
+                activityType, durationMinutes, distanceKm, calories);
+            var modifiedDamage = BossCombatCalculator.ApplyPlayerModifiers(
+                turn.RawWorkoutDamage, stats.DamageMultiplier, talents.BossActiveDamagePct);
+            turn.DamageDealt = turn.RawWorkoutDamage > 0
+                ? BossCombatCalculator.ApplyMitigation(modifiedDamage, bossArmor)
+                : 0;
+
+            var damageResult = await bossService.DealDamageAsync(userId, state.BossId, turn.DamageDealt);
+            turn.BossHpAfter = Math.Max(0, maxBossHp - damageResult.HpDealt);
+            turn.BossDefeated = damageResult.IsDefeated;
+
+            if (!turn.BossDefeated)
+            {
+                turn.DamageTaken = BossCombatCalculator.ApplyMitigation(bossCounterattack, stats.Defense);
+                state.CurrentPlayerHp = Math.Max(0, state.CurrentPlayerHp - turn.DamageTaken);
+                if (state.CurrentPlayerHp == 0)
                 {
-                    defeated.Add(new BossDefeatedInfo(
-                        BossId: boss.Id,
-                        Name: boss.Name,
-                        Icon: boss.Icon,
-                        RewardXp: result.RewardXpAwarded > 0 ? result.RewardXpAwarded : boss.RewardXp,
-                        IsMini: boss.IsMini));
+                    turn.PlayerDefeated = true;
+                    state.RecoveryEndsAt = activityLoggedAt.AddHours(BossCombatCalculator.RecoveryHours);
                 }
             }
-            catch (Exception ex)
-            {
-                // Swallow — a stale legacy boss state shouldn't break the
-                // activity-log flow for the user. Log and continue so other
-                // active bosses still get the damage. Do NOT add to the
-                // defeated list since we don't know whether it died.
-                log.LogWarning(ex,
-                    "ActivityBossDamage SKIP user={UserId} boss={BossId} damage={Damage}",
-                    userId, bossId, damage);
-            }
-        }
 
-        return defeated;
+            turn.PlayerHpAfter = state.CurrentPlayerHp;
+            db.Set<BossCombatTurn>().Add(turn);
+            await db.SaveChangesAsync(ct);
+
+            if (events is not null)
+                await events.PublishAsync(new BossContributionEvent(userId, activityId), ct);
+
+            IReadOnlyList<BossDefeatedInfo> defeats = damageResult.JustDefeated
+                ? [new BossDefeatedInfo(
+                    state.Boss.Id,
+                    state.Boss.Name,
+                    state.Boss.Icon,
+                    damageResult.RewardXpAwarded > 0 ? damageResult.RewardXpAwarded : state.Boss.RewardXp,
+                    state.Boss.IsMini)]
+                : [];
+
+            return ToResult(state, turn, maxBossHp, stats.Health, defeats);
+        }
+        catch (Exception ex)
+        {
+            log.LogWarning(ex,
+                "ActivityBossDamage SKIP user={UserId} boss={BossId} activity={ActivityId}",
+                userId, state.BossId, activityId);
+            return ActivityBossDamageResult.Empty;
+        }
     }
+
+    /// <summary>Compatibility overload for callers created before activity ids were propagated.</summary>
+    public async Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
+        Guid userId,
+        string activityType,
+        int durationMinutes,
+        double distanceKm,
+        int calories,
+        DateTime activityLoggedAt,
+        CancellationToken ct = default) =>
+        (await ApplyAsync(
+            userId, Guid.NewGuid(), activityType, durationMinutes, distanceKm,
+            calories, activityLoggedAt, ct)).BossDefeats;
+
+    private static ActivityBossDamageResult ToResult(
+        UserBossState state,
+        BossCombatTurn turn,
+        int maxBossHp,
+        int maxPlayerHp,
+        IReadOnlyList<BossDefeatedInfo> defeats) =>
+        new(
+            new BossCombatTurnInfo(
+                state.BossId,
+                state.Boss.Name,
+                turn.RawWorkoutDamage,
+                turn.DamageDealt,
+                turn.BossHpAfter,
+                maxBossHp,
+                turn.DamageTaken,
+                turn.PlayerHpAfter,
+                maxPlayerHp,
+                turn.BossDefeated,
+                turn.PlayerDefeated,
+                turn.SkipReason,
+                state.RecoveryEndsAt),
+            defeats);
 }

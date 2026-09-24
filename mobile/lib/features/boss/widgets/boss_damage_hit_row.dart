@@ -52,7 +52,9 @@ class BossDamageHitRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _relativeTime(hit.loggedAt),
+                  hit.skipReason != null
+                      ? 'Recovering · workout attack skipped'
+                      : '${_relativeTime(hit.loggedAt)} · Took ${hit.damageTaken} HP',
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 10.5,
@@ -71,7 +73,9 @@ class BossDamageHitRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              '−${_fmtDamage(hit.damage)} HP',
+              hit.skipReason != null
+                  ? 'SKIPPED'
+                  : '−${_fmtDamage(hit.damage)} HP',
               style: const TextStyle(
                 color: AppColors.red,
                 fontSize: 13,

@@ -3,6 +3,8 @@ class BossListItem {
   final String name;
   final String icon;
   final int maxHp;
+  final int armor;
+  final int counterattackDamage;
   final int rewardXp;
   final int timerDays;
   final bool isMini;
@@ -26,12 +28,20 @@ class BossListItem {
   final DateTime? startedAt;
   final DateTime? timerExpiresAt;
   final DateTime? defeatedAt;
+  final bool isTargeted;
+  final int currentPlayerHp;
+  final int playerMaxHp;
+  final int playerDefense;
+  final double playerMitigation;
+  final DateTime? recoveryEndsAt;
 
   const BossListItem({
     required this.id,
     required this.name,
     required this.icon,
     required this.maxHp,
+    this.armor = 0,
+    this.counterattackDamage = 0,
     required this.rewardXp,
     required this.timerDays,
     required this.isMini,
@@ -48,6 +58,12 @@ class BossListItem {
     this.startedAt,
     this.timerExpiresAt,
     this.defeatedAt,
+    this.isTargeted = false,
+    this.currentPlayerHp = 0,
+    this.playerMaxHp = 0,
+    this.playerDefense = 0,
+    this.playerMitigation = 0,
+    this.recoveryEndsAt,
   });
 
   bool get isActive => activated && !isDefeated && !isExpired;
@@ -75,6 +91,9 @@ class BossListItem {
         name: json['name'],
         icon: json['icon'],
         maxHp: json['maxHp'],
+        armor: (json['armor'] as num?)?.toInt() ?? 0,
+        counterattackDamage:
+            (json['counterattackDamage'] as num?)?.toInt() ?? 0,
         rewardXp: json['rewardXp'],
         timerDays: json['timerDays'],
         isMini: json['isMini'] ?? false,
@@ -96,6 +115,14 @@ class BossListItem {
             : null,
         defeatedAt: json['defeatedAt'] != null
             ? DateTime.parse(json['defeatedAt'])
+            : null,
+        isTargeted: json['isTargeted'] as bool? ?? false,
+        currentPlayerHp: (json['currentPlayerHp'] as num?)?.toInt() ?? 0,
+        playerMaxHp: (json['playerMaxHp'] as num?)?.toInt() ?? 0,
+        playerDefense: (json['playerDefense'] as num?)?.toInt() ?? 0,
+        playerMitigation: (json['playerMitigation'] as num?)?.toDouble() ?? 0,
+        recoveryEndsAt: json['recoveryEndsAt'] != null
+            ? DateTime.parse(json['recoveryEndsAt'])
             : null,
       );
 }

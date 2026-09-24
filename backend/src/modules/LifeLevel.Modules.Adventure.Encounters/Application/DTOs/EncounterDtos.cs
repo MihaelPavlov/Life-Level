@@ -15,6 +15,8 @@ public class BossListItemDto
     public string Name { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty;
     public int MaxHp { get; set; }
+    public int Armor { get; set; }
+    public int CounterattackDamage { get; set; }
     public int RewardXp { get; set; }
     public int TimerDays { get; set; }
     public bool IsMini { get; set; }
@@ -35,6 +37,12 @@ public class BossListItemDto
     public DateTime? StartedAt { get; set; }
     public DateTime? TimerExpiresAt { get; set; }
     public DateTime? DefeatedAt { get; set; }
+    public bool IsTargeted { get; set; }
+    public int CurrentPlayerHp { get; set; }
+    public int PlayerMaxHp { get; set; }
+    public int PlayerDefense { get; set; }
+    public double PlayerMitigation { get; set; }
+    public DateTime? RecoveryEndsAt { get; set; }
 }
 
 public class CollectChestResult
@@ -57,5 +65,12 @@ public class BossDamageHistoryItemDto
     public double DistanceKm { get; set; }
     public int Calories { get; set; }
     public int Damage { get; set; }
+    public int RawDamage { get; set; }
+    public double DamageMultiplier { get; set; }
+    public double BossMitigation { get; set; }
+    public int DamageTaken { get; set; }
+    public int PlayerHpAfter { get; set; }
+    public bool PlayerDefeated { get; set; }
+    public string? SkipReason { get; set; }
     public DateTime LoggedAt { get; set; }
 }

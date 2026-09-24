@@ -39,6 +39,9 @@ public class WorldZone
     // non-boss zones.
     public int? BossTimerDays { get; set; }
     public bool? BossSuppressExpiry { get; set; }
+    public int? BossMaxHp { get; set; }
+    public int? BossArmor { get; set; }
+    public int? BossCounterattackDamage { get; set; }
 
     public Guid RegionId { get; set; }
     public Region Region { get; set; } = null!;

@@ -372,7 +372,8 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
             NodesTotal = req.NodesTotal,
         };
         ApplyTypeSpecificFields(zone, req.Type, req.ChestRewardXp, req.ChestRewardDescription,
-            req.DungeonBonusXp, req.BossTimerDays, req.BossSuppressExpiry);
+            req.DungeonBonusXp, req.BossTimerDays, req.BossSuppressExpiry,
+            req.BossMaxHp, req.BossArmor, req.BossCounterattackDamage);
 
         db.WorldZones.Add(zone);
         await db.SaveChangesAsync();
@@ -414,7 +415,8 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
         zone.LoreTotal = req.LoreTotal;
         zone.NodesTotal = req.NodesTotal;
         ApplyTypeSpecificFields(zone, req.Type, req.ChestRewardXp, req.ChestRewardDescription,
-            req.DungeonBonusXp, req.BossTimerDays, req.BossSuppressExpiry);
+            req.DungeonBonusXp, req.BossTimerDays, req.BossSuppressExpiry,
+            req.BossMaxHp, req.BossArmor, req.BossCounterattackDamage);
 
         await db.SaveChangesAsync();
         return NoContent();
@@ -615,14 +617,16 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
     private static ZoneSummaryDto MapZoneSummary(WorldZoneEntity z, int floorCount) => new(
         z.Id, z.RegionId, z.Name, z.Emoji, z.Type, z.Tier, z.LevelRequirement,
         z.XpReward, z.DistanceKm, z.IsStartZone, z.IsBoss, z.BranchOfId,
-        z.ChestRewardXp, z.DungeonBonusXp, z.BossTimerDays, z.BossSuppressExpiry, floorCount);
+        z.ChestRewardXp, z.DungeonBonusXp, z.BossTimerDays, z.BossSuppressExpiry,
+        z.BossMaxHp, z.BossArmor, z.BossCounterattackDamage, floorCount);
 
     private static ZoneDetailDto MapZoneDetail(WorldZoneEntity z, IReadOnlyList<FloorDto> floors) => new(
         z.Id, z.RegionId, z.Name, z.Description, z.Emoji, z.Type, z.Tier, z.LevelRequirement,
         z.XpReward, z.DistanceKm, z.IsStartZone, z.IsBoss, z.BranchOfId,
         z.LoreTotal, z.LoreCollected, z.NodesTotal, z.NodesCompleted,
         z.ChestRewardXp, z.ChestRewardDescription, z.DungeonBonusXp,
-        z.BossTimerDays, z.BossSuppressExpiry, floors);
+        z.BossTimerDays, z.BossSuppressExpiry, z.BossMaxHp, z.BossArmor,
+        z.BossCounterattackDamage, floors);
 
     private static void ApplyTypeSpecificFields(
         WorldZoneEntity zone,
@@ -631,7 +635,10 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
         string? chestRewardDescription,
         int? dungeonBonusXp,
         int? bossTimerDays,
-        bool? bossSuppressExpiry)
+        bool? bossSuppressExpiry,
+        int? bossMaxHp,
+        int? bossArmor,
+        int? bossCounterattackDamage)
     {
         // Chest fields only persist for Chest zones; other types reset to null.
         zone.ChestRewardXp           = type == WorldZoneType.Chest   ? chestRewardXp           : null;
@@ -639,6 +646,12 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
         zone.DungeonBonusXp          = type == WorldZoneType.Dungeon ? dungeonBonusXp          : null;
         zone.BossTimerDays           = type == WorldZoneType.Boss    ? bossTimerDays           : null;
         zone.BossSuppressExpiry      = type == WorldZoneType.Boss    ? bossSuppressExpiry      : null;
+        zone.BossMaxHp               = type == WorldZoneType.Boss && bossMaxHp.HasValue
+            ? Math.Max(1, bossMaxHp.Value) : null;
+        zone.BossArmor               = type == WorldZoneType.Boss && bossArmor.HasValue
+            ? Math.Max(0, bossArmor.Value) : null;
+        zone.BossCounterattackDamage = type == WorldZoneType.Boss && bossCounterattackDamage.HasValue
+            ? Math.Max(1, bossCounterattackDamage.Value) : null;
     }
 
     private async Task DeactivateOtherWorldsAsync(Guid keepId)

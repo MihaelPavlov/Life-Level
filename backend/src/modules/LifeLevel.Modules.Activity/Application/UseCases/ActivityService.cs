@@ -129,17 +129,16 @@ public class ActivityService(
             }
         }
 
-        // Boss auto-damage — every active boss the user has takes a hit
-        // proportional to the workout's shape. Wires the "damage is dealt
-        // automatically when you log workouts" promise that the BossBattleView
-        // has been making. Failures here never block the activity log.
-        IReadOnlyList<BossDefeatedInfo> bossDefeats = Array.Empty<BossDefeatedInfo>();
+        // One workout resolves one complete turn against the targeted personal
+        // boss. Failures remain non-fatal to activity logging.
+        var personalCombat = ActivityBossDamageResult.Empty;
         if (activityBossDamage != null)
         {
             try
             {
-                bossDefeats = await activityBossDamage.ApplyAsync(
+                personalCombat = await activityBossDamage.ApplyAsync(
                     userId,
+                    activity.Id,
                     request.Type.ToString(),
                     request.DurationMinutes,
                     request.DistanceKm ?? 0,
@@ -149,7 +148,7 @@ public class ActivityService(
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Boss activity damage failed for user {UserId}", userId);
-                bossDefeats = Array.Empty<BossDefeatedInfo>();
+                personalCombat = ActivityBossDamageResult.Empty;
             }
         }
 
@@ -220,7 +219,8 @@ public class ActivityService(
             XpBonusApplied = xpBonusApplied,
             LevelUpUnlocks = levelUpUnlocks,
             FloorCreditResult = floorCreditResult,
-            BossDefeats = bossDefeats,
+            BossCombatTurn = personalCombat.CombatTurn,
+            BossDefeats = personalCombat.BossDefeats,
             GuildRaidDefeats = guildRaidDefeats,
             ActiveEncounter = activeEncounter,
         };
@@ -293,6 +293,28 @@ public class ActivityService(
             logger.LogInformation("ActivityService.LogExternalActivity user={UserId} type={Type} incomingDistanceKm={Km} externalId={ExternalId}",
                 userId, type, distanceKm, externalId);
             await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+        }
+
+        // Synced workouts use the same personal-boss turn pipeline and the
+        // activity id makes retries idempotent.
+        if (activityBossDamage != null)
+        {
+            try
+            {
+                await activityBossDamage.ApplyAsync(
+                    userId,
+                    activity.Id,
+                    type.ToString(),
+                    durationMinutes,
+                    distanceKm ?? 0,
+                    calories ?? 0,
+                    activity.LoggedAt,
+                    ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Boss external activity damage failed for user {UserId}", userId);
+            }
         }
 
         if (guildRaidActivity != null)

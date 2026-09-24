@@ -41,7 +41,12 @@ public class BossSpawnAdapter(DbContext db) : IBossSpawnPort
             HpDealt = 0,
             IsDefeated = false,
             IsExpired = false,
-            StartedAt = DateTime.UtcNow,
+            StartedAt = null,
+            IsTargeted = false,
+            MaxHpSnapshot = boss.MaxHp,
+            ArmorSnapshot = boss.Armor,
+            CounterattackDamageSnapshot = boss.CounterattackDamage,
+            CombatVersion = LifeLevel.SharedKernel.Calculators.BossCombatCalculator.CombatVersion,
         });
         await db.SaveChangesAsync(ct);
     }

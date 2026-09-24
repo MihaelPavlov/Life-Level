@@ -8,6 +8,28 @@ namespace LifeLevel.SharedKernel.Ports;
 /// </summary>
 public record BossDefeatedInfo(Guid BossId, string Name, string Icon, int RewardXp, bool IsMini);
 
+public record BossCombatTurnInfo(
+    Guid BossId,
+    string BossName,
+    int RawDamage,
+    int DamageDealt,
+    int BossHpAfter,
+    int BossMaxHp,
+    int DamageTaken,
+    int PlayerHpAfter,
+    int PlayerMaxHp,
+    bool BossDefeated,
+    bool PlayerDefeated,
+    string? SkipReason,
+    DateTime? RecoveryEndsAt);
+
+public record ActivityBossDamageResult(
+    BossCombatTurnInfo? CombatTurn,
+    IReadOnlyList<BossDefeatedInfo> BossDefeats)
+{
+    public static readonly ActivityBossDamageResult Empty = new(null, []);
+}
+
 /// <summary>
 /// Cross-module hook: when an activity is logged in the Activity module,
 /// this port distributes "automatic" damage to every active boss the user
@@ -25,8 +47,9 @@ public record BossDefeatedInfo(Guid BossId, string Name, string Icon, int Reward
 /// </summary>
 public interface IActivityBossDamagePort
 {
-    Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
+    Task<ActivityBossDamageResult> ApplyAsync(
         Guid userId,
+        Guid activityId,
         string activityType,
         int durationMinutes,
         double distanceKm,

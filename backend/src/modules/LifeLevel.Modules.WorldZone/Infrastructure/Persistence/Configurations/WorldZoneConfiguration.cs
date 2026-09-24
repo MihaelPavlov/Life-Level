@@ -44,5 +44,8 @@ public class WorldZoneConfiguration : IEntityTypeConfiguration<WorldZoneEntity>
         // "no timeout" behavior when they're null.
         builder.Property(z => z.BossTimerDays);
         builder.Property(z => z.BossSuppressExpiry);
+        builder.Property(z => z.BossMaxHp);
+        builder.Property(z => z.BossArmor);
+        builder.Property(z => z.BossCounterattackDamage);
     }
 }

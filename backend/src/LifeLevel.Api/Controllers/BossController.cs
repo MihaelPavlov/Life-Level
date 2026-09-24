@@ -55,6 +55,7 @@ public class BossController(
     /// Deal explicit damage to the boss. Player must be at the boss node.
     /// </summary>
     [HttpPost("{bossId:guid}/damage")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DealDamage(Guid bossId, [FromBody] DealDamageRequest request)
     {
         var userId = userContext.UserId;
@@ -75,6 +76,7 @@ public class BossController(
     /// Player must be at the boss node.
     /// </summary>
     [HttpPost("{bossId:guid}/damage/activity")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DealActivityDamage(Guid bossId, [FromBody] ActivityDamageRequest request)
     {
         var userId = userContext.UserId;
@@ -122,11 +124,18 @@ public class BossController(
         {
             activated = true,
             hpDealt = state.HpDealt,
-            maxHp = state.Boss.MaxHp,
+            maxHp = state.MaxHpSnapshot > 0 ? state.MaxHpSnapshot : state.Boss.MaxHp,
+            armor = state.ArmorSnapshot,
+            counterattackDamage = state.CounterattackDamageSnapshot,
+            isTargeted = state.IsTargeted,
+            currentPlayerHp = state.CurrentPlayerHp,
+            recoveryEndsAt = state.RecoveryEndsAt,
             isDefeated = state.IsDefeated,
             isExpired = state.IsExpired,
             startedAt = state.StartedAt,
-            timerExpiresAt = state.StartedAt?.AddDays(state.Boss.TimerDays),
+            timerExpiresAt = state.Boss.SuppressExpiry
+                ? null
+                : state.StartedAt?.AddDays(state.Boss.TimerDays),
             defeatedAt = state.DefeatedAt
         });
     }

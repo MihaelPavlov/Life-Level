@@ -3,6 +3,7 @@ using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.Modules.Map.Domain.Enums;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Enums;
+using LifeLevel.SharedKernel.Calculators;
 using LifeLevel.SharedKernel.Enums;
 
 using WorldZoneEntity = LifeLevel.Modules.WorldZone.Domain.Entities.WorldZone;
@@ -342,6 +343,9 @@ public static class WorldSeedData
             for (int slot = 0; slot < region.Zones.Count; slot++)
             {
                 var z = region.Zones[slot];
+                var bossBalance = z.Type == WorldZoneType.Boss
+                    ? BossBalanceCalculator.ForChapter(region.ChapterIndex, region.LevelReq)
+                    : null;
                 Guid? branchOf = null;
                 if (!string.IsNullOrEmpty(z.BranchOfName)
                     && byName.TryGetValue(z.BranchOfName!, out var crossroadsId))
@@ -367,8 +371,11 @@ public static class WorldSeedData
                     ChestRewardXp          = z.Type == WorldZoneType.Chest ? z.ChestRewardXp : null,
                     ChestRewardDescription = z.Type == WorldZoneType.Chest ? z.ChestRewardDescription : null,
                     DungeonBonusXp         = z.Type == WorldZoneType.Dungeon ? z.DungeonBonusXp : null,
-                    BossTimerDays          = z.Type == WorldZoneType.Boss ? z.BossTimerDays : null,
-                    BossSuppressExpiry     = z.Type == WorldZoneType.Boss ? z.BossSuppressExpiry : null,
+                    BossTimerDays          = z.Type == WorldZoneType.Boss ? 0 : null,
+                    BossSuppressExpiry     = z.Type == WorldZoneType.Boss ? true : null,
+                    BossMaxHp              = bossBalance?.MaxHp,
+                    BossArmor              = bossBalance?.Armor,
+                    BossCounterattackDamage = bossBalance?.CounterattackDamage,
                 });
             }
         }

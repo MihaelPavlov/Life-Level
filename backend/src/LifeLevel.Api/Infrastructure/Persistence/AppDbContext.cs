@@ -91,6 +91,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Boss> Bosses => Set<Boss>();
     public DbSet<Chest> Chests => Set<Chest>();
     public DbSet<UserBossState> UserBossStates => Set<UserBossState>();
+    public DbSet<BossCombatTurn> BossCombatTurns => Set<BossCombatTurn>();
     public DbSet<UserChestState> UserChestStates => Set<UserChestState>();
 
     // Adventure.Dungeons

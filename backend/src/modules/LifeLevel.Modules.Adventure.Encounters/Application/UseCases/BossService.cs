@@ -3,6 +3,7 @@ using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Calculators;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -62,6 +63,9 @@ public class BossService(
         var progress = await db.Set<UserMapProgress>()
             .FirstOrDefaultAsync(p => p.UserId == userId);
         var currentNodeId = progress?.CurrentNodeId;
+        var currentCombat = combatStats != null
+            ? await combatStats.GetCombatStatsAsync(userId)
+            : new CombatStatsSnapshot(0, 0, 50, 0, 1.0);
 
         return bosses.Select(boss =>
         {
@@ -82,7 +86,9 @@ public class BossService(
                 Id = boss.Id,
                 Name = boss.Name,
                 Icon = boss.Icon,
-                MaxHp = boss.MaxHp,
+                MaxHp = state?.MaxHpSnapshot > 0 ? state.MaxHpSnapshot : boss.MaxHp,
+                Armor = state?.CombatVersion >= BossCombatCalculator.CombatVersion ? state.ArmorSnapshot : boss.Armor,
+                CounterattackDamage = state?.CombatVersion >= BossCombatCalculator.CombatVersion ? state.CounterattackDamageSnapshot : boss.CounterattackDamage,
                 RewardXp = boss.RewardXp,
                 TimerDays = boss.TimerDays,
                 IsMini = boss.IsMini,
@@ -92,7 +98,7 @@ public class BossService(
                 WorldZoneId = boss.WorldZoneId,
                 TrailEncounterTemplateId = boss.TrailEncounterTemplateId,
                 CanFight = canFight,
-                Activated = state != null,
+                Activated = state?.StartedAt != null,
                 HpDealt = state?.HpDealt ?? 0,
                 IsDefeated = state?.IsDefeated ?? false,
                 IsExpired = state?.IsExpired ?? false,
@@ -100,7 +106,13 @@ public class BossService(
                 TimerExpiresAt = boss.SuppressExpiry
                     ? null
                     : state?.StartedAt?.AddDays(boss.TimerDays),
-                DefeatedAt = state?.DefeatedAt
+                DefeatedAt = state?.DefeatedAt,
+                IsTargeted = state?.IsTargeted ?? false,
+                CurrentPlayerHp = state?.CurrentPlayerHp ?? currentCombat.Health,
+                PlayerMaxHp = currentCombat.Health,
+                PlayerDefense = currentCombat.Defense,
+                PlayerMitigation = BossCombatCalculator.Mitigation(currentCombat.Defense),
+                RecoveryEndsAt = state?.RecoveryEndsAt
             };
         })
         .OrderByDescending(b => b.Activated && !b.IsDefeated && !b.IsExpired) // active first
@@ -138,6 +150,8 @@ public class BossService(
                 throw new InvalidOperationException("Boss is already defeated.");
             if (existing.IsExpired)
                 throw new InvalidOperationException("Fight has expired. Use debug reset to try again.");
+            await TargetAndInitializeAsync(userId, existing, boss);
+            await db.SaveChangesAsync();
             return existing;
         }
 
@@ -150,8 +164,20 @@ public class BossService(
             HpDealt = 0,
             IsDefeated = false,
             IsExpired = false,
-            StartedAt = DateTime.UtcNow
+            StartedAt = DateTime.UtcNow,
+            IsTargeted = true,
+            MaxHpSnapshot = boss.MaxHp,
+            ArmorSnapshot = boss.Armor,
+            CounterattackDamageSnapshot = boss.CounterattackDamage,
+            CombatVersion = BossCombatCalculator.CombatVersion,
+            CurrentPlayerHp = combatStats != null
+                ? (await combatStats.GetCombatStatsAsync(userId)).Health
+                : 50
         };
+
+        await db.Set<UserBossState>()
+            .Where(s => s.UserId == userId && s.IsTargeted)
+            .ExecuteUpdateAsync(x => x.SetProperty(s => s.IsTargeted, false));
 
         db.Set<UserBossState>().Add(state);
         await db.SaveChangesAsync();
@@ -199,10 +225,11 @@ public class BossService(
             throw new InvalidOperationException($"Fight timer has expired ({boss.TimerDays} days elapsed).");
         }
 
-        state.HpDealt = Math.Min(state.HpDealt + damage, boss.MaxHp);
+        var fightMaxHp = state.MaxHpSnapshot > 0 ? state.MaxHpSnapshot : boss.MaxHp;
+        state.HpDealt = Math.Min(state.HpDealt + damage, fightMaxHp);
 
         bool justDefeated = false;
-        if (state.HpDealt >= boss.MaxHp)
+        if (state.HpDealt >= fightMaxHp)
         {
             state.IsDefeated = true;
             state.DefeatedAt = DateTime.UtcNow;
@@ -234,7 +261,7 @@ public class BossService(
         return new BossDamageResult
         {
             HpDealt = state.HpDealt,
-            MaxHp = boss.MaxHp,
+            MaxHp = fightMaxHp,
             IsDefeated = state.IsDefeated,
             JustDefeated = justDefeated,
             RewardXpAwarded = justDefeated ? boss.RewardXp : 0
@@ -281,43 +308,55 @@ public class BossService(
             .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId, ct)
             ?? throw new InvalidOperationException("You haven't engaged this boss.");
 
-        // Missing StartedAt is a legacy/corrupt case — treat as "from epoch" so
-        // we still return something rather than blowing up on nullable access.
-        var from = state.StartedAt ?? DateTime.MinValue;
-        var to = state.DefeatedAt ?? DateTime.UtcNow;
-
-        var activityHistoryRead = services.GetService<IActivityHistoryReadPort>();
-        var activities = activityHistoryRead != null
-            ? await activityHistoryRead.ListForUserBetweenAsync(userId, from, to, ct)
-            : (IReadOnlyList<ActivityRecordDto>)Array.Empty<ActivityRecordDto>();
-
-        // Display only — HpDealt (already persisted at the time each hit
-        // landed) stays the source of truth for actual boss HP state. This
-        // just replays the current multiplier so the log reads consistently
-        // with today's Power, even though a leveled-up character's past
-        // hits landed at whatever their multiplier was at the time.
-        var multiplier = combatStats != null
-            ? (await combatStats.GetCombatStatsAsync(userId, ct)).DamageMultiplier
-            : 1.0;
-
-        var items = new List<BossDamageHistoryItemDto>(activities.Count);
-        foreach (var a in activities)
-        {
-            var dmg = (int)Math.Round(CalculateDamageFromActivity(
-                a.Type, a.DurationMinutes, a.DistanceKm, a.Calories) * multiplier);
-            if (dmg <= 0) continue;
-            items.Add(new BossDamageHistoryItemDto
+        var persisted = await db.Set<BossCombatTurn>()
+            .Where(x => x.UserBossStateId == state.Id)
+            .OrderByDescending(x => x.OccurredAt)
+            .Select(x => new BossDamageHistoryItemDto
             {
-                ActivityId = a.Id,
-                ActivityType = a.Type,
-                DurationMinutes = a.DurationMinutes,
-                DistanceKm = a.DistanceKm,
-                Calories = a.Calories,
-                Damage = dmg,
-                LoggedAt = a.LoggedAt,
-            });
-        }
-        return items;
+                ActivityId = x.ActivityId,
+                ActivityType = x.ActivityType,
+                DurationMinutes = x.DurationMinutes,
+                DistanceKm = x.DistanceKm,
+                Calories = x.Calories,
+                Damage = x.DamageDealt,
+                RawDamage = x.RawWorkoutDamage,
+                DamageMultiplier = x.DamageMultiplier,
+                BossMitigation = x.BossMitigation,
+                DamageTaken = x.DamageTaken,
+                PlayerHpAfter = x.PlayerHpAfter,
+                PlayerDefeated = x.PlayerDefeated,
+                SkipReason = x.SkipReason,
+                LoggedAt = x.OccurredAt,
+            })
+            .ToListAsync(ct);
+
+        if (persisted.Count > 0) return persisted;
+
+        // Pre-V2 fights have no immutable turn rows. Keep their old history
+        // visible until the first V2 turn is recorded; from that point onward
+        // only persisted snapshots are returned.
+        if (!state.StartedAt.HasValue) return persisted;
+        var activityHistory = services.GetService<IActivityHistoryReadPort>();
+        if (activityHistory is null) return persisted;
+        var legacyActivities = await activityHistory.ListForUserBetweenAsync(
+            userId,
+            state.StartedAt.Value,
+            state.DefeatedAt ?? DateTime.UtcNow,
+            ct);
+        return legacyActivities.Select(a => new BossDamageHistoryItemDto
+        {
+            ActivityId = a.Id,
+            ActivityType = a.Type,
+            DurationMinutes = a.DurationMinutes,
+            DistanceKm = a.DistanceKm,
+            Calories = a.Calories,
+            Damage = CalculateDamageFromActivity(
+                a.Type, a.DurationMinutes, a.DistanceKm, a.Calories),
+            RawDamage = CalculateDamageFromActivity(
+                a.Type, a.DurationMinutes, a.DistanceKm, a.Calories),
+            DamageMultiplier = 1,
+            LoggedAt = a.LoggedAt,
+        }).ToList();
     }
 
     public async Task DebugSetHpAsync(Guid userId, Guid bossId, int hp)
@@ -444,5 +483,28 @@ public class BossService(
 
         db.Set<UserBossState>().Add(state);
         return state;
+    }
+
+    private async Task TargetAndInitializeAsync(Guid userId, UserBossState state, Boss boss)
+    {
+        await db.Set<UserBossState>()
+            .Where(s => s.UserId == userId && s.Id != state.Id && s.IsTargeted)
+            .ExecuteUpdateAsync(x => x.SetProperty(s => s.IsTargeted, false));
+
+        state.IsTargeted = true;
+        state.StartedAt ??= DateTime.UtcNow;
+        if (state.CombatVersion < BossCombatCalculator.CombatVersion)
+        {
+            state.MaxHpSnapshot = boss.MaxHp;
+            state.ArmorSnapshot = boss.Armor;
+            state.CounterattackDamageSnapshot = boss.CounterattackDamage;
+            state.CombatVersion = BossCombatCalculator.CombatVersion;
+        }
+        if (state.CurrentPlayerHp <= 0 && !state.RecoveryEndsAt.HasValue)
+        {
+            state.CurrentPlayerHp = combatStats != null
+                ? (await combatStats.GetCombatStatsAsync(userId)).Health
+                : 50;
+        }
     }
 }

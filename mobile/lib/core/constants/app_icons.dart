@@ -113,6 +113,7 @@ class AppIcons {
   static const String seasonAdventureHub =
       'assets/icons/season_adventure_hub.png';
   static const String rewardXpSparkle = 'assets/icons/reward_xp_sparkle.png';
+  static const String rewardXpCrystals = 'assets/icons/reward_xp_crystals.png';
   static const String rewardXpStorm = 'assets/icons/reward_xp_storm.png';
   static const String uiNewItem = 'assets/icons/ui_new_item.png';
 
