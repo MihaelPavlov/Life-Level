@@ -86,9 +86,8 @@ class _TutorialsHubScreenState extends ConsumerState<TutorialsHubScreen> {
           children: [
             _HubHeader(
               title: selected?.title ?? 'Tutorials',
-              subtitle: selected == null
-                  ? 'REPLAY ANYTIME'
-                  : 'STEPS AND REWARD',
+              subtitle:
+                  selected == null ? 'REPLAY ANYTIME' : 'STEPS AND REWARD',
               onBack: () {
                 if (selected != null) {
                   setState(() => _selected = null);
@@ -471,7 +470,8 @@ class _TutorialHero extends StatelessWidget {
                 height: 52,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceElevated,
-                  border: Border.all(color: item.accent.withValues(alpha: 0.36)),
+                  border:
+                      Border.all(color: item.accent.withValues(alpha: 0.36)),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(

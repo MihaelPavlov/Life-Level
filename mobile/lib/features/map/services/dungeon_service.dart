@@ -5,7 +5,8 @@ class DungeonService {
     await ApiClient.instance.post('/dungeon/$dungeonId/enter');
   }
 
-  Future<Map<String, dynamic>> completeFloor(String dungeonId, int floorNumber) async {
+  Future<Map<String, dynamic>> completeFloor(
+      String dungeonId, int floorNumber) async {
     final response = await ApiClient.instance.post(
       '/dungeon/$dungeonId/complete-floor',
       data: {'floorNumber': floorNumber},
@@ -14,7 +15,8 @@ class DungeonService {
   }
 
   Future<void> debugSetFloor(String dungeonId, int floor) async {
-    await ApiClient.instance.post('/dungeon/$dungeonId/debug/set-floor', data: {'floor': floor});
+    await ApiClient.instance
+        .post('/dungeon/$dungeonId/debug/set-floor', data: {'floor': floor});
   }
 
   Future<void> debugReset(String dungeonId) async {

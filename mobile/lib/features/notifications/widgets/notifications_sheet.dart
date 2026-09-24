@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/services/deep_link_notifier.dart';
 import '../models/notification_list_models.dart';
 import '../providers/notification_list_provider.dart';
@@ -19,7 +20,7 @@ Future<void> showNotificationsSheet(BuildContext context) {
     container.read(notificationListProvider.notifier).refresh(),
   );
 
-  return showModalBottomSheet<void>(
+  return showAppBottomSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     barrierColor: const Color(0xA6040810), // matches .home3-backdrop rgba
@@ -124,9 +125,8 @@ class _NotificationsSheet extends ConsumerWidget {
                     ),
                   ),
                   error: (_, __) => _ErrorView(
-                    onRetry: () => ref
-                        .read(notificationListProvider.notifier)
-                        .refresh(),
+                    onRetry: () =>
+                        ref.read(notificationListProvider.notifier).refresh(),
                   ),
                   data: (items) {
                     if (items.isEmpty) return const _EmptyView();

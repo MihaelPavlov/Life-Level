@@ -35,7 +35,8 @@ class BossService {
   // ── Debug ──────────────────────────────────────────────────────────────────
 
   Future<void> debugSetHp(String bossId, int hp) async {
-    await ApiClient.instance.post('/boss/$bossId/debug/set-hp', data: {'hp': hp});
+    await ApiClient.instance
+        .post('/boss/$bossId/debug/set-hp', data: {'hp': hp});
   }
 
   Future<void> debugForceDefeat(String bossId) async {

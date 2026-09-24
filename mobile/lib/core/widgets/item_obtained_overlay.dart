@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 import 'app_toast.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../../features/items/models/item_models.dart';
@@ -9,45 +10,37 @@ import '../../features/items/providers/items_provider.dart';
 import 'item_icon_image.dart';
 
 // ── constants ──────────────────────────────────────────────────────────────────
-const _kCardWidth    = 360.0;
-const _kIconSize     = 80.0;
+const _kCardWidth = 360.0;
+const _kIconSize = 80.0;
 const _kBorderRadius = 20.0;
-const _kCardBg       = Color(0xFF1e2632);
-const _kBorder       = Color(0xFF30363d);
+const _kCardBg = Color(0xFF1e2632);
+const _kBorder = Color(0xFF30363d);
 
 Color _rarityColor(String rarity) {
   switch (rarity.toLowerCase()) {
-    case 'common':    return AppColors.green;
-    case 'uncommon':  return AppColors.blue;
-    case 'rare':      return AppColors.purple;
-    case 'epic':      return AppColors.orange;
-    case 'legendary': return AppColors.red;
-    default:          return AppColors.blue;
+    case 'common':
+      return AppColors.green;
+    case 'uncommon':
+      return AppColors.blue;
+    case 'rare':
+      return AppColors.purple;
+    case 'epic':
+      return AppColors.orange;
+    case 'legendary':
+      return AppColors.red;
+    default:
+      return AppColors.blue;
   }
 }
 
 /// Shows the "Item Obtained" popup card dialog with a slide-up + fade animation.
 void showItemObtainedOverlay(BuildContext context, ItemDto item) {
-  showGeneralDialog(
+  showAppCelebration(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss item popup',
     barrierColor: Colors.black.withValues(alpha: 0.65),
-    transitionDuration: const Duration(milliseconds: 350),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.15),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) => _ItemObtainedDialog(item: item),
+    builder: (_) => _ItemObtainedDialog(item: item),
   );
 }
 
@@ -96,7 +89,8 @@ class _ItemObtainedDialog extends ConsumerWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: rarityColor.withValues(alpha: 0.12),
-                  border: Border.all(color: rarityColor.withValues(alpha: 0.6), width: 2),
+                  border: Border.all(
+                      color: rarityColor.withValues(alpha: 0.6), width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: rarityColor.withValues(alpha: 0.30),
@@ -133,10 +127,12 @@ class _ItemObtainedDialog extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: rarityColor.withValues(alpha: 0.12),
-                      border: Border.all(color: rarityColor.withValues(alpha: 0.30)),
+                      border: Border.all(
+                          color: rarityColor.withValues(alpha: 0.30)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -255,12 +251,18 @@ class _StatChipsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chips = <_StatChipData>[];
-    if (item.xpBonusPct > 0) chips.add(_StatChipData('+${item.xpBonusPct}% XP', AppColors.orange));
-    if (item.strBonus > 0)   chips.add(_StatChipData('+${item.strBonus} STR',    AppColors.red));
-    if (item.endBonus > 0)   chips.add(_StatChipData('+${item.endBonus} END',    AppColors.green));
-    if (item.agiBonus > 0)   chips.add(_StatChipData('+${item.agiBonus} AGI',    AppColors.blue));
-    if (item.flxBonus > 0)   chips.add(_StatChipData('+${item.flxBonus} FLX',    AppColors.purple));
-    if (item.staBonus > 0)   chips.add(_StatChipData('+${item.staBonus} STA',    AppColors.orange));
+    if (item.xpBonusPct > 0)
+      chips.add(_StatChipData('+${item.xpBonusPct}% XP', AppColors.orange));
+    if (item.strBonus > 0)
+      chips.add(_StatChipData('+${item.strBonus} STR', AppColors.red));
+    if (item.endBonus > 0)
+      chips.add(_StatChipData('+${item.endBonus} END', AppColors.green));
+    if (item.agiBonus > 0)
+      chips.add(_StatChipData('+${item.agiBonus} AGI', AppColors.blue));
+    if (item.flxBonus > 0)
+      chips.add(_StatChipData('+${item.flxBonus} FLX', AppColors.purple));
+    if (item.staBonus > 0)
+      chips.add(_StatChipData('+${item.staBonus} STA', AppColors.orange));
 
     if (chips.isEmpty) return const SizedBox.shrink();
 

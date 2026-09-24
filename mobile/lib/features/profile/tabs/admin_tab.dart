@@ -21,7 +21,8 @@ class AdminTab extends StatelessWidget {
         children: [
           const Text(
             'Admin Panel',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kTextPri),
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700, color: _kTextPri),
           ),
           const SizedBox(height: 4),
           const Text(
@@ -55,7 +56,8 @@ class AdminTab extends StatelessWidget {
           const SizedBox(height: 20),
           const Text(
             'Map',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _kTextSec),
+            style: TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w700, color: _kTextSec),
           ),
           const SizedBox(height: 10),
           _AdminMenuCard(
@@ -68,7 +70,8 @@ class AdminTab extends StatelessWidget {
           const SizedBox(height: 20),
           const Text(
             'Encounters',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _kTextSec),
+            style: TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w700, color: _kTextSec),
           ),
           const SizedBox(height: 10),
           _AdminMenuCard(
@@ -128,7 +131,8 @@ class _AdminMenuCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: accentColor.withOpacity(0.30)),
               ),
-              child: Center(child: Text(icon, style: const TextStyle(fontSize: 18))),
+              child: Center(
+                  child: Text(icon, style: const TextStyle(fontSize: 18))),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -137,7 +141,9 @@ class _AdminMenuCard extends StatelessWidget {
                 children: [
                   Text(title,
                       style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w700, color: _kTextPri)),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _kTextPri)),
                   const SizedBox(height: 2),
                   Text(subtitle,
                       style: const TextStyle(fontSize: 11, color: _kTextSec)),

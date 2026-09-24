@@ -154,10 +154,8 @@ Widget _harness({
   return ProviderScope(
     overrides: [
       bossListProvider.overrideWith(() => _FakeBossListNotifier(bosses)),
-      worldProgressProvider
-          .overrideWith((ref) async => world),
-      currentRegionDetailProvider
-          .overrideWith((ref) async => region),
+      worldProgressProvider.overrideWith((ref) async => world),
+      currentRegionDetailProvider.overrideWith((ref) async => region),
     ],
     child: const MaterialApp(
       home: Scaffold(body: HomePortalCard()),
@@ -345,11 +343,9 @@ void main() {
     expect(find.textContaining('Ch. 2'), findsOneWidget);
   });
 
-  testWidgets(
-      'next-zone hint fires when dungeon run is fully completed',
+  testWidgets('next-zone hint fires when dungeon run is fully completed',
       (tester) async {
-    final dungeonZone =
-        _zone(id: 'd', type: 'dungeon', name: 'Pale Hollow');
+    final dungeonZone = _zone(id: 'd', type: 'dungeon', name: 'Pale Hollow');
     final next =
         _zone(id: 'next', type: 'standard', name: 'Crown Path', totalXp: 100);
     final region = _region(

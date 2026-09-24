@@ -16,8 +16,7 @@ class WorldMapOpenRequest {
 class WorldMapNotifier {
   WorldMapNotifier._();
 
-  static final _controller =
-      StreamController<WorldMapOpenRequest>.broadcast();
+  static final _controller = StreamController<WorldMapOpenRequest>.broadcast();
 
   static Stream<WorldMapOpenRequest> get stream => _controller.stream;
 

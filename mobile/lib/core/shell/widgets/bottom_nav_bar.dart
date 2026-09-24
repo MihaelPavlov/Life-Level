@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../shell_constants.dart';
 import '../shell_models.dart';
 import '../../widgets/app_icon_image.dart';
+import '../../motion/app_motion.dart';
 
 class ShellNavBar extends StatelessWidget {
   final int currentIndex;
@@ -19,8 +20,8 @@ class ShellNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Split tabs around the FAB gap (left half, right half).
-    final half  = navTabs.length ~/ 2;
-    final left  = navTabs.sublist(0, half);
+    final half = navTabs.length ~/ 2;
+    final left = navTabs.sublist(0, half);
     final right = navTabs.sublist(half);
 
     return Container(
@@ -65,11 +66,11 @@ class ShellNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const activeColor   = Color(0xFF4f9eff);
+    const activeColor = Color(0xFF4f9eff);
     const inactiveColor = Color(0xFF6e84b0);
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: AppPressable(
+        haptic: AppHaptic.selection,
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.only(top: 10),

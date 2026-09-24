@@ -90,9 +90,7 @@ class HomeSeasonalEventRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(bottom: 10),
-      child: onTap == null
-          ? row
-          : GestureDetector(onTap: onTap, child: row),
+      child: onTap == null ? row : GestureDetector(onTap: onTap, child: row),
     );
   }
 }

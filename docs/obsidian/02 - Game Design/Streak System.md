@@ -37,6 +37,18 @@ Every successful increment: `Longest = max(Longest, Current)`, `TotalDaysActive+
 
 Every **7 `TotalDaysActive`**, `ShieldsAvailable++` (awarded automatically inside `RecordActivityDayAsync`).
 
+## Daily streak coin reward
+
+The first qualifying activity on each new streak day creates a manually
+claimable coin reward:
+
+`reward coins = current streak day × 10`
+
+Day 1 awards 10 coins, day 2 awards 20, day 3 awards 30, and so on. Unclaimed
+rewards stack until collected from Adventure Hub → Streak. Breaking the streak
+resets the next completed-day reward to 10 coins. A ready reward activates the
+Streak exclamation badge in the Adventure Hub.
+
 Shields can be used implicitly (via the 2-day gap rule) or explicitly via `POST /api/streak/use-shield`.
 
 ## Daily midnight reset
@@ -56,17 +68,17 @@ The CLAUDE.md spec says active streaks grant a **×1.5 XP multiplier** (stackabl
 
 - `GET /api/streak` — `StreakDto`
 - `POST /api/streak/use-shield` — consume shield manually; returns `{ success, message, shieldsRemaining }`
+- `POST /api/streak/claim-reward` — claim all pending daily streak coins
 
 ## Design intent (from CLAUDE.md)
 
-- Daily login required to maintain streak — but in current implementation the streak updates from activities, not logins.
+- A qualifying activity, rather than opening the app, maintains the streak.
 - 7-day reward cycle (Day 7 = ×1.5 XP bonus).
 - 30-day milestone unlocks legendary cosmetic.
 - Broken-streak recovery screen with motivational messaging.
 
 ## Related
 - [[Activity System]]
-- [[Login Rewards]]
 - [[Streak]] (backend module)
 - [[Feature - Streak]] (mobile)
 - [[DailyResetJob]]

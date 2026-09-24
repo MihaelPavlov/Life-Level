@@ -40,14 +40,16 @@ class BossDamageHint extends StatelessWidget {
                 if (i > 0) const SizedBox(width: 8),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0d1117),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       children: [
-                        Text(_items[i].$1, style: const TextStyle(fontSize: 18)),
+                        Text(_items[i].$1,
+                            style: const TextStyle(fontSize: 18)),
                         const SizedBox(height: 4),
                         Text(
                           _items[i].$2,

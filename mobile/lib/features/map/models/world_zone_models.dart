@@ -149,8 +149,7 @@ class WorldUserProgress {
         currentEdgeId: json['currentEdgeId'] as String?,
         distanceTraveledOnEdge:
             (json['distanceTraveledOnEdge'] as num?)?.toDouble() ?? 0,
-        pendingDistanceKm:
-            (json['pendingDistanceKm'] as num?)?.toDouble() ?? 0,
+        pendingDistanceKm: (json['pendingDistanceKm'] as num?)?.toDouble() ?? 0,
         destinationZoneId: json['destinationZoneId'] as String?,
         unlockedZoneIds: (json['unlockedZoneIds'] as List?)
                 ?.map((e) => e.toString())

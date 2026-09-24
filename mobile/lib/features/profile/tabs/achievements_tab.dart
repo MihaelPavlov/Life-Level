@@ -7,25 +7,25 @@ import '../../achievements/services/achievements_service.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const _kSurface = Color(0xFF161b22);
-const _kBorder  = Color(0xFF21262d);
+const _kBorder = Color(0xFF21262d);
 const _kTextPri = Color(0xFFe6edf3);
 const _kTextSec = Color(0xFF8b949e);
 
 const _kCategories = ['All', 'Running', 'Strength', 'Social', 'Raids'];
 const _kCategoryEmojis = {
-  'All':      '🏅',
-  'Running':  '🏃',
+  'All': '🏅',
+  'Running': '🏃',
   'Strength': '🏋',
-  'Social':   '👥',
-  'Raids':    '⚔️',
+  'Social': '👥',
+  'Raids': '⚔️',
 };
 
 const _kTierOrder = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
 const _kTierColors = {
-  'Common':    Color(0xFF8b949e),
-  'Uncommon':  Color(0xFF3fb950),
-  'Rare':      Color(0xFF4f9eff),
-  'Epic':      Color(0xFFa371f7),
+  'Common': Color(0xFF8b949e),
+  'Uncommon': Color(0xFF3fb950),
+  'Rare': Color(0xFF4f9eff),
+  'Epic': Color(0xFFa371f7),
   'Legendary': Color(0xFFf5a623),
 };
 
@@ -82,8 +82,7 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
   @override
   Widget build(BuildContext context) {
     final allAsync = ref.watch(achievementsProvider);
-    final catAsync =
-        ref.watch(achievementsByCategoryProvider(_activeCategory));
+    final catAsync = ref.watch(achievementsByCategoryProvider(_activeCategory));
 
     return RefreshIndicator(
       color: AppColors.blue,
@@ -105,16 +104,15 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
   Widget _buildContent(
       List<AchievementDto> all, List<AchievementDto> filtered) {
     final unlocked = filtered.where((a) => a.isUnlocked).toList()
-      ..sort((a, b) => (b.unlockedAt ?? DateTime(0))
-          .compareTo(a.unlockedAt ?? DateTime(0)));
+      ..sort((a, b) =>
+          (b.unlockedAt ?? DateTime(0)).compareTo(a.unlockedAt ?? DateTime(0)));
     final inProgress = filtered.where((a) => a.isInProgress).toList()
       ..sort((a, b) => b.progressPercent.compareTo(a.progressPercent));
     final locked = filtered
         .where((a) => !a.isUnlocked && !a.isInProgress)
         .toList()
       ..sort((a, b) {
-        final ti =
-            _kTierOrder.indexOf(b.tier) - _kTierOrder.indexOf(a.tier);
+        final ti = _kTierOrder.indexOf(b.tier) - _kTierOrder.indexOf(a.tier);
         return ti != 0 ? ti : a.title.compareTo(b.title);
       });
 
@@ -212,8 +210,7 @@ class _OverallProgressHeader extends StatelessWidget {
               value: pct,
               minHeight: 6,
               backgroundColor: _kBorder,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.blue),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue),
             ),
           ),
           const SizedBox(height: 6),
@@ -249,8 +246,7 @@ class _TierCountRow extends StatelessWidget {
           final count = counts[tier] ?? 0;
           return Container(
             margin: const EdgeInsets.only(right: 8),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: color.withOpacity(0.10),
               border: Border.all(color: color.withOpacity(0.40)),
@@ -305,12 +301,9 @@ class _CategoryFilterRow extends StatelessWidget {
             onTap: () => onSelect(cat),
             child: Container(
               margin: const EdgeInsets.only(right: 8),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.blue.withOpacity(0.15)
-                    : _kSurface,
+                color: isActive ? AppColors.blue.withOpacity(0.15) : _kSurface,
                 border: Border.all(
                   color: isActive ? AppColors.blue : _kBorder,
                 ),
@@ -355,8 +348,7 @@ class _SectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: _kBorder,
               borderRadius: BorderRadius.circular(4),
@@ -437,8 +429,7 @@ class _AchievementCard extends StatelessWidget {
                       value: a.progressPercent,
                       minHeight: 4,
                       backgroundColor: _kBorder,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(a.tierColor),
+                      valueColor: AlwaysStoppedAnimation<Color>(a.tierColor),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -495,12 +486,10 @@ class _IconBox extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: achievement.tierColor
-                .withOpacity(dimmed ? 0.06 : 0.14),
+            color: achievement.tierColor.withOpacity(dimmed ? 0.06 : 0.14),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: achievement.tierColor
-                  .withOpacity(dimmed ? 0.2 : 0.45),
+              color: achievement.tierColor.withOpacity(dimmed ? 0.2 : 0.45),
             ),
           ),
           child: Center(
@@ -543,8 +532,7 @@ class _XpBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: orange.withOpacity(unlocked ? 0.15 : 0.07),
-        border: Border.all(
-            color: orange.withOpacity(unlocked ? 0.5 : 0.25)),
+        border: Border.all(color: orange.withOpacity(unlocked ? 0.5 : 0.25)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -579,8 +567,8 @@ class _ErrorView extends StatelessWidget {
             onPressed: onRetry,
             child: const Text(
               'Retry',
-              style: TextStyle(
-                  color: AppColors.blue, fontWeight: FontWeight.w700),
+              style:
+                  TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700),
             ),
           ),
         ],

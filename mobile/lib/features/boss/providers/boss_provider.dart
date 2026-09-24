@@ -28,8 +28,7 @@ final bossListProvider =
 /// boss id. Use `ref.invalidate(bossDamageHistoryProvider(bossId))` to
 /// force a refetch (e.g. after the user logs a workout and returns to the
 /// battle screen).
-final bossDamageHistoryProvider = FutureProvider.family<
-    List<BossDamageHistoryItem>, String>(
-  (ref, bossId) =>
-      ref.watch(bossPageServiceProvider).getDamageHistory(bossId),
+final bossDamageHistoryProvider =
+    FutureProvider.family<List<BossDamageHistoryItem>, String>(
+  (ref, bossId) => ref.watch(bossPageServiceProvider).getDamageHistory(bossId),
 );

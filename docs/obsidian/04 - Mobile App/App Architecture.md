@@ -44,7 +44,7 @@ The big central widget. `ConsumerStatefulWidget` that owns:
 - **Level-up listener** (`_levelUpSub`) — StreamSubscription to `LevelUpNotifier`
 - **Item-obtained listener** — fires `ItemObtainedOverlay`
 - **Inventory-full listener** — fires `InventoryFullOverlay`
-- **Login reward** — shows `LoginRewardScreen` dialog on app resume if available
+- **Rewards center** — manually opens the Daily/Weekly task tracks from explicit navigation
 - **Deep link handler** (`AppLinks`) — catches `lifelevel://oauth/strava?code=...` and `lifelevel://oauth/garmin?code=...`
 - **Connectivity listener** (`connectivity_plus`) — invalidates key providers on reconnect
 - **App lifecycle** — triggers foreground Health Connect sync on resume
@@ -71,7 +71,7 @@ Shown above any tab, not pushed as routes:
 - `LevelUpOverlay` — full-screen, fades in/out
 - `ItemObtainedOverlay` — slide-up card
 - `InventoryFullOverlay` — slide-up warning
-- `LoginRewardScreen` — dialog
+- `RewardsScreen` — task reward bottom sheet
 
 ## Key files
 

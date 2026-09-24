@@ -24,7 +24,10 @@ class BlockerSheet extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 32, offset: Offset(0, -8))],
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x40000000), blurRadius: 32, offset: Offset(0, -8))
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -43,7 +46,9 @@ class BlockerSheet extends StatelessWidget {
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: _data.isInCombat ? _buildInCombat(context) : _buildInitial(context),
+                child: _data.isInCombat
+                    ? _buildInCombat(context)
+                    : _buildInitial(context),
               ),
             ),
           ],
@@ -80,11 +85,13 @@ class BlockerSheet extends StatelessWidget {
           rows: [
             _InfoRow(
               icon: '🏋',
-              text: 'Log any workout → damage scales with duration & calories burned',
+              text:
+                  'Log any workout → damage scales with duration & calories burned',
             ),
             _InfoRow(
               icon: '🏃',
-              text: 'Running & cycling deal bonus damage to this type of blocker',
+              text:
+                  'Running & cycling deal bonus damage to this type of blocker',
             ),
           ],
         ),
@@ -100,7 +107,8 @@ class BlockerSheet extends StatelessWidget {
             backgroundColor: AppColors.red,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: const Text(
             '⚔️ Start Fighting',
@@ -114,10 +122,13 @@ class BlockerSheet extends StatelessWidget {
             foregroundColor: AppColors.textSecondary,
             side: const BorderSide(color: AppColors.border),
             padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            textStyle:
+                const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
           ),
-          child: Text('Wait for it to retreat (${_formatDuration(_data.retreatsIn)})'),
+          child: Text(
+              'Wait for it to retreat (${_formatDuration(_data.retreatsIn)})'),
         ),
       ],
     );
@@ -156,7 +167,8 @@ class BlockerSheet extends StatelessWidget {
             backgroundColor: AppColors.red,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: const Text(
             '🏋 Log Workout · Deal More Damage',
@@ -208,7 +220,8 @@ class BlockerSheet extends StatelessWidget {
                 isInCombat && _data.lastHitDescription != null
                     ? 'Your last hit: ${_data.lastHitDescription}'
                     : 'Mini-boss · Blocking ${_data.blockedZoneName}',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 12),
               ),
             ],
           ),

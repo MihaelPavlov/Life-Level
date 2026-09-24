@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/widgets/app_toast.dart';
+import '../../../core/motion/app_motion.dart';
 import '../models/integration_models.dart';
 import '../providers/integrations_provider.dart';
 import '../services/garmin_service.dart';
@@ -85,7 +86,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
 
   void _showHealthSyncHelp(BuildContext context) {
     final isIos = !kIsWeb && Platform.isIOS;
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF161b22),
       shape: const RoundedRectangleBorder(

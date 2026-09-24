@@ -34,9 +34,6 @@ public class DailyResetJob(IServiceScopeFactory scopeFactory, ILogger<DailyReset
                 await streakReset.CheckAndBreakExpiredStreaksAsync(stoppingToken);
                 await streakReset.ResetShieldUsedTodayFlagsAsync(stoppingToken);
 
-                var loginReset = sp.GetRequiredService<ILoginRewardDailyReset>();
-                await loginReset.ResetDailyClaimFlagsAsync(stoppingToken);
-
                 logger.LogInformation("DailyResetJob completed successfully.");
             }
             catch (Exception ex)

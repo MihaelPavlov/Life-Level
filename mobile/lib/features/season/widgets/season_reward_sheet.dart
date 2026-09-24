@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../models/season_models.dart';
 import 'season_theme.dart';
 
@@ -14,11 +15,12 @@ const _sheetRouteName = '_season_reward_sheet';
 /// tiers in a row without tapping through a blocking modal each time. Tapping the
 /// scrim or dragging it down dismisses it immediately. Claiming another tile
 /// while one is still up replaces it rather than stacking.
-Future<void> showSeasonRewardSheet(BuildContext context, SeasonClaimResult result) {
+Future<void> showSeasonRewardSheet(
+    BuildContext context, SeasonClaimResult result) {
   final nav = Navigator.of(context);
   // Drop a previous reward sheet that hasn't auto-closed yet.
   nav.popUntil((r) => r.settings.name != _sheetRouteName);
-  return showModalBottomSheet<void>(
+  return showAppBottomSheet<void>(
     context: context,
     isDismissible: true,
     enableDrag: true,
@@ -94,9 +96,12 @@ class _SeasonRewardSheetState extends State<_SeasonRewardSheet>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: accent.withValues(alpha: 0.12),
-                    border: Border.all(color: accent.withValues(alpha: 0.5), width: 2),
+                    border: Border.all(
+                        color: accent.withValues(alpha: 0.5), width: 2),
                     boxShadow: [
-                      BoxShadow(color: accent.withValues(alpha: 0.28), blurRadius: 22),
+                      BoxShadow(
+                          color: accent.withValues(alpha: 0.28),
+                          blurRadius: 22),
                     ],
                   ),
                   child: Image.asset(
@@ -164,7 +169,8 @@ class _SeasonRewardSheetState extends State<_SeasonRewardSheet>
                   value: 1 - _bar.value,
                   minHeight: 3,
                   backgroundColor: AppColors.surface,
-                  valueColor: AlwaysStoppedAnimation(accent.withValues(alpha: 0.55)),
+                  valueColor:
+                      AlwaysStoppedAnimation(accent.withValues(alpha: 0.55)),
                 ),
               ),
             ),

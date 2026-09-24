@@ -29,7 +29,9 @@ class BossDefeatedCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.green.withValues(alpha: 0.08),
-                  border: Border.all(color: AppColors.green.withValues(alpha: 0.4), width: 1.5),
+                  border: Border.all(
+                      color: AppColors.green.withValues(alpha: 0.4),
+                      width: 1.5),
                 ),
                 alignment: Alignment.center,
                 child: BossIcon(

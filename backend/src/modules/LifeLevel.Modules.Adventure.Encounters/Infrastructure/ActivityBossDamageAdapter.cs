@@ -1,6 +1,7 @@
 using LifeLevel.Modules.Adventure.Encounters.Application.UseCases;
 using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,7 +20,8 @@ public class ActivityBossDamageAdapter(
     BossService bossService,
     ILogger<ActivityBossDamageAdapter>? logger = null,
     ITalentBonusReadPort? talentBonus = null,
-    ICharacterCombatStatsReadPort? combatStats = null) : IActivityBossDamagePort
+    ICharacterCombatStatsReadPort? combatStats = null,
+    IEventPublisher? events = null) : IActivityBossDamagePort
 {
     public async Task<IReadOnlyList<BossDefeatedInfo>> ApplyAsync(
         Guid userId,
@@ -71,6 +73,9 @@ public class ActivityBossDamageAdapter(
             .ToDictionaryAsync(b => b.Id, ct);
 
         var defeated = new List<BossDefeatedInfo>();
+
+        if (events != null)
+            await events.PublishAsync(new BossContributionEvent(userId, Guid.NewGuid()), ct);
 
         foreach (var bossId in activeBossIds)
         {

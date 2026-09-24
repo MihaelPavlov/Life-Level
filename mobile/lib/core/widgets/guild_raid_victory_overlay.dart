@@ -2,34 +2,18 @@ import 'package:flutter/material.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/boss/widgets/boss_icon.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 
 Future<void> showGuildRaidVictoryOverlay(
   BuildContext context,
   GuildRaidVictoryInfo info,
 ) {
-  return showGeneralDialog(
+  return showAppCelebration(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss guild raid victory popup',
     barrierColor: Colors.black.withValues(alpha: 0.78),
-    transitionDuration: const Duration(milliseconds: 420),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.16),
-            end: Offset.zero,
-          ).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.86, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) => _GuildRaidVictoryDialog(info: info),
+    builder: (_) => _GuildRaidVictoryDialog(info: info),
   );
 }
 
@@ -38,7 +22,8 @@ class _GuildRaidVictoryDialog extends StatefulWidget {
   const _GuildRaidVictoryDialog({required this.info});
 
   @override
-  State<_GuildRaidVictoryDialog> createState() => _GuildRaidVictoryDialogState();
+  State<_GuildRaidVictoryDialog> createState() =>
+      _GuildRaidVictoryDialogState();
 }
 
 class _GuildRaidVictoryDialogState extends State<_GuildRaidVictoryDialog>
@@ -129,7 +114,8 @@ class _GuildRaidVictoryDialogState extends State<_GuildRaidVictoryDialog>
                       icon: info.bossIcon.isEmpty ? '?' : info.bossIcon,
                       size: 94,
                       emojiSize: 54,
-                      visualScale: info.bossIcon.startsWith('assets/') ? 1.28 : 1,
+                      visualScale:
+                          info.bossIcon.startsWith('assets/') ? 1.28 : 1,
                     ),
                   );
                 },
@@ -157,7 +143,8 @@ class _GuildRaidVictoryDialogState extends State<_GuildRaidVictoryDialog>
               const SizedBox(height: 18),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [

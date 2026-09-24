@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import 'talent_theme.dart';
 
 /// Small bottom-sheet explaining rarities, draw odds, and how Crystals differ
 /// from Coins. Opened from the info button in the Talents header.
 void showTalentInfoSheet(BuildContext context) {
-  showModalBottomSheet(
+  showAppBottomSheet(
     context: context,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(

@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_toast.dart';
-import '../activity/providers/activity_provider.dart';
-import '../boss/providers/boss_provider.dart';
+import '../../core/session/invalidate_user_providers.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
 import '../tutorial/providers/tutorial_provider.dart';
@@ -14,7 +13,6 @@ import 'cards/home_log_workout_cta.dart';
 import 'cards/home_portal_card.dart';
 import 'cards/home_seasonal_event_row.dart';
 import 'cards/home_xp_storm_banner.dart';
-import 'providers/world_progress_provider.dart';
 
 /// Home tab scaffold. Owns layout + the sync handler only; every card lives
 /// in its own file under `cards/`.
@@ -124,11 +122,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     } catch (_) {/* swallow */}
 
-    ref.invalidate(worldProgressProvider);
-    ref.invalidate(currentRegionDetailProvider);
-    ref.invalidate(characterProfileProvider);
-    ref.invalidate(activityHistoryProvider);
-    ref.invalidate(bossListProvider);
+    // Server integrations can import progress even when Health Connect did
+    // not, so always refresh all progress-backed Adventure Hub state here.
+    invalidateUserScopedProviders(ref);
 
     if (!context.mounted) return;
     final msg = imported > 0

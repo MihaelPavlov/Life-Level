@@ -6,7 +6,6 @@ public record CharacterProfileContext(
     string Username,
     WeeklyActivityStatsDto WeeklyStats,
     StreakReadDto? Streak,
-    bool HasClaimedLoginRewardToday,
     int DailyQuestsCompleted,
     int BossesDefeated = 0
 );
@@ -34,7 +33,6 @@ public record CharacterProfileResponse(
     int LongestStreak,
     int ShieldsAvailable,
     int DailyQuestsCompleted,
-    bool LoginRewardAvailable,
     int TutorialStep,
     int TutorialTopicsSeen,
     int MapTutorialStep,

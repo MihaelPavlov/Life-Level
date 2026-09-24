@@ -226,7 +226,9 @@ String _profileSheetNormalize(String value) =>
     value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9+]+'), ' ').trim();
 
 String _profileSheetItemLabel(String value) {
-  return value.replaceFirst(RegExp(r'^[^\p{L}\p{N}+]+', unicode: true), '').trim();
+  return value
+      .replaceFirst(RegExp(r'^[^\p{L}\p{N}+]+', unicode: true), '')
+      .trim();
 }
 
 String? _profileSheetItemIconAsset(String value) {

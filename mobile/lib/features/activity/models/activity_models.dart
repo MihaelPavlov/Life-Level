@@ -1,7 +1,16 @@
 import '../../../core/constants/app_icons.dart';
 import '../../map/services/world_zone_service.dart';
 
-enum ActivityType { running, cycling, gym, yoga, swimming, hiking, climbing, walking }
+enum ActivityType {
+  running,
+  cycling,
+  gym,
+  yoga,
+  swimming,
+  hiking,
+  climbing,
+  walking
+}
 
 extension ActivityTypeExt on ActivityType {
   String get displayName => name[0].toUpperCase() + name.substring(1);
@@ -29,14 +38,22 @@ extension ActivityTypeExt on ActivityType {
 
   String get iconAsset {
     switch (this) {
-      case ActivityType.running:  return AppIcons.activityRunning;
-      case ActivityType.cycling:  return AppIcons.activityCycling;
-      case ActivityType.gym:      return AppIcons.activityGym;
-      case ActivityType.yoga:     return AppIcons.activityYoga;
-      case ActivityType.swimming: return AppIcons.activitySwimming;
-      case ActivityType.hiking:   return AppIcons.activityHiking;
-      case ActivityType.climbing: return AppIcons.activityClimbing;
-      case ActivityType.walking:  return AppIcons.activityRunning;
+      case ActivityType.running:
+        return AppIcons.activityRunning;
+      case ActivityType.cycling:
+        return AppIcons.activityCycling;
+      case ActivityType.gym:
+        return AppIcons.activityGym;
+      case ActivityType.yoga:
+        return AppIcons.activityYoga;
+      case ActivityType.swimming:
+        return AppIcons.activitySwimming;
+      case ActivityType.hiking:
+        return AppIcons.activityHiking;
+      case ActivityType.climbing:
+        return AppIcons.activityClimbing;
+      case ActivityType.walking:
+        return AppIcons.activityRunning;
     }
   }
 
@@ -97,7 +114,8 @@ class BlockedItemInfo {
     required this.itemIcon,
   });
 
-  factory BlockedItemInfo.fromJson(Map<String, dynamic> json) => BlockedItemInfo(
+  factory BlockedItemInfo.fromJson(Map<String, dynamic> json) =>
+      BlockedItemInfo(
         itemId: json['itemId'] as String?,
         itemName: json['itemName'] as String,
         itemIcon: json['itemIcon'] as String,
@@ -119,7 +137,8 @@ class GrantedItemInfo {
     required this.slot,
   });
 
-  factory GrantedItemInfo.fromJson(Map<String, dynamic> json) => GrantedItemInfo(
+  factory GrantedItemInfo.fromJson(Map<String, dynamic> json) =>
+      GrantedItemInfo(
         itemId: json['itemId'] as String,
         name: json['name'] as String,
         icon: json['icon'] as String? ?? '',
@@ -143,7 +162,8 @@ class UnlockedZoneInfo {
     required this.levelRequirement,
   });
 
-  factory UnlockedZoneInfo.fromJson(Map<String, dynamic> json) => UnlockedZoneInfo(
+  factory UnlockedZoneInfo.fromJson(Map<String, dynamic> json) =>
+      UnlockedZoneInfo(
         zoneId: json['zoneId'] as String,
         name: json['name'] as String,
         icon: json['icon'] as String? ?? '',
@@ -254,7 +274,8 @@ int _intValue(Map<String, dynamic> json, String key) =>
 
 dynamic _value(Map<String, dynamic> json, String key) {
   if (json.containsKey(key)) return json[key];
-  final pascal = key.isEmpty ? key : '${key[0].toUpperCase()}${key.substring(1)}';
+  final pascal =
+      key.isEmpty ? key : '${key[0].toUpperCase()}${key.substring(1)}';
   return json[pascal];
 }
 
@@ -354,8 +375,8 @@ class LogActivityResult {
         leveledUp: json['leveledUp'] as bool? ?? false,
         newLevel: json['newLevel'] as int?,
         completedQuests: (json['completedQuests'] as List<dynamic>?)
-                ?.map((j) => CompletedQuestSummary.fromJson(
-                    j as Map<String, dynamic>))
+                ?.map((j) =>
+                    CompletedQuestSummary.fromJson(j as Map<String, dynamic>))
                 .toList() ??
             [],
         streakUpdated: json['streakUpdated'] as bool? ?? false,
@@ -379,8 +400,8 @@ class LogActivityResult {
             .map((e) => BossDefeatedInfo.fromJson(e as Map<String, dynamic>))
             .toList(),
         guildRaidDefeats: (json['guildRaidDefeats'] as List<dynamic>? ?? [])
-            .map((e) =>
-                GuildRaidVictoryInfo.fromJson(e as Map<String, dynamic>))
+            .map(
+                (e) => GuildRaidVictoryInfo.fromJson(e as Map<String, dynamic>))
             .toList(),
         activeEncounter: json['activeEncounter'] != null
             ? ActiveEncounterResult.fromJson(
@@ -424,20 +445,20 @@ class ActivityHistoryDto {
 
   factory ActivityHistoryDto.fromJson(Map<String, dynamic> json) =>
       ActivityHistoryDto(
-        id:              json['id'] as String,
-        type:            json['type'] as String,
+        id: json['id'] as String,
+        type: json['type'] as String,
         durationMinutes: json['durationMinutes'] as int,
-        distanceKm:      (json['distanceKm'] as num).toDouble(),
-        calories:        (json['calories'] as int?) ?? 0,
-        heartRateAvg:    json['heartRateAvg'] as int?,
-        xpGained:        (json['xpGained'] as num).toInt(),
-        strGained:       (json['strGained'] as int?) ?? 0,
-        endGained:       (json['endGained'] as int?) ?? 0,
-        agiGained:       (json['agiGained'] as int?) ?? 0,
-        flxGained:       (json['flxGained'] as int?) ?? 0,
-        staGained:       (json['staGained'] as int?) ?? 0,
-        steps:           (json['steps'] as int?) ?? 0,
-        loggedAt:        DateTime.parse(json['loggedAt'] as String),
+        distanceKm: (json['distanceKm'] as num).toDouble(),
+        calories: (json['calories'] as int?) ?? 0,
+        heartRateAvg: json['heartRateAvg'] as int?,
+        xpGained: (json['xpGained'] as num).toInt(),
+        strGained: (json['strGained'] as int?) ?? 0,
+        endGained: (json['endGained'] as int?) ?? 0,
+        agiGained: (json['agiGained'] as int?) ?? 0,
+        flxGained: (json['flxGained'] as int?) ?? 0,
+        staGained: (json['staGained'] as int?) ?? 0,
+        steps: (json['steps'] as int?) ?? 0,
+        loggedAt: DateTime.parse(json['loggedAt'] as String),
       );
 
   ActivityType? get activityType {

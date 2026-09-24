@@ -84,5 +84,4 @@ When XP crosses a threshold, `CharacterService.CheckAndApplyLevelUpsAsync`:
 - [[Character System]]
 - [[Character]] (backend — `XpAtLevelStart` implementation)
 - [[Items and Equipment]]
-- [[Login Rewards]]
 - [[Random Events]]

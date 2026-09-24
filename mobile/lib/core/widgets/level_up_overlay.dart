@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/items/models/item_models.dart' show rarityColor;
 import 'item_icon_image.dart';
@@ -11,20 +12,14 @@ const _surface1 = Color(0xFF161b22);
 /// [level] is the new level the player reached. [unlocks] carries real
 /// per-level rewards (items, zones, stat points); when null or empty,
 /// the overlay renders a neutral fallback message.
-void showLevelUpScreen(BuildContext context, int level, {LevelUpUnlocks? unlocks}) {
-  showGeneralDialog(
+void showLevelUpScreen(BuildContext context, int level,
+    {LevelUpUnlocks? unlocks}) {
+  showAppCelebration(
     context: context,
     barrierDismissible: false,
-    barrierLabel: '',
+    barrierLabel: 'Level up',
     barrierColor: Colors.transparent,
-    transitionDuration: const Duration(milliseconds: 300),
-    transitionBuilder: (ctx, anim, _, child) {
-      return FadeTransition(
-        opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
-        child: child,
-      );
-    },
-    pageBuilder: (ctx, _, __) => LevelUpOverlay(level: level, unlocks: unlocks),
+    builder: (_) => LevelUpOverlay(level: level, unlocks: unlocks),
   );
 }
 
@@ -114,9 +109,24 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          _PulsingRing(ctrl: _ringCtrl, size: 160, phaseOffset: 0.0,   borderColor: AppColors.blue.withValues(alpha: 0.12)),
-                          _PulsingRing(ctrl: _ringCtrl, size: 132, phaseOffset: 0.125, borderColor: AppColors.blue.withValues(alpha: 0.22)),
-                          _PulsingRing(ctrl: _ringCtrl, size: 104, phaseOffset: 0.25,  borderColor: AppColors.blue.withValues(alpha: 0.38)),
+                          _PulsingRing(
+                              ctrl: _ringCtrl,
+                              size: 160,
+                              phaseOffset: 0.0,
+                              borderColor:
+                                  AppColors.blue.withValues(alpha: 0.12)),
+                          _PulsingRing(
+                              ctrl: _ringCtrl,
+                              size: 132,
+                              phaseOffset: 0.125,
+                              borderColor:
+                                  AppColors.blue.withValues(alpha: 0.22)),
+                          _PulsingRing(
+                              ctrl: _ringCtrl,
+                              size: 104,
+                              phaseOffset: 0.25,
+                              borderColor:
+                                  AppColors.blue.withValues(alpha: 0.38)),
                           // level badge
                           Container(
                             width: 90,
@@ -128,10 +138,17 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                                 end: Alignment.bottomRight,
                                 colors: [Color(0xFF1e3a5f), Color(0xFF2d1b4e)],
                               ),
-                              border: Border.all(color: AppColors.blue, width: 3),
+                              border:
+                                  Border.all(color: AppColors.blue, width: 3),
                               boxShadow: [
-                                BoxShadow(color: AppColors.blue.withValues(alpha: 0.50), blurRadius: 40),
-                                BoxShadow(color: AppColors.blue.withValues(alpha: 0.18), blurRadius: 80),
+                                BoxShadow(
+                                    color:
+                                        AppColors.blue.withValues(alpha: 0.50),
+                                    blurRadius: 40),
+                                BoxShadow(
+                                    color:
+                                        AppColors.blue.withValues(alpha: 0.18),
+                                    blurRadius: 80),
                               ],
                             ),
                             child: Column(
@@ -174,7 +191,8 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                     const SizedBox(height: 4),
                     Text(
                       'You reached Level ${widget.level}',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 20),
 
@@ -302,7 +320,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
     if (items.isEmpty) return items;
     final out = <Widget>[items.first];
     for (var i = 1; i < items.length; i++) {
-      out..add(gap)..add(items[i]);
+      out
+        ..add(gap)
+        ..add(items[i]);
     }
     return out;
   }
@@ -406,7 +426,9 @@ class _LuUnlock extends StatelessWidget {
                       color: AppColors.textPrimary,
                     )),
                 const SizedBox(height: 1),
-                Text(desc, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                Text(desc,
+                    style: const TextStyle(
+                        fontSize: 10, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -420,7 +442,8 @@ class _LuUnlock extends StatelessWidget {
             ),
             child: Text(
               badgeLabel,
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: badgeColor),
+              style: TextStyle(
+                  fontSize: 9, fontWeight: FontWeight.w700, color: badgeColor),
             ),
           ),
         ],

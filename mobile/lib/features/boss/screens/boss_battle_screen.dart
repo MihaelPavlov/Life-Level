@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../activity/log_activity_screen.dart';
 import '../models/boss_list_item.dart';
 import '../providers/boss_provider.dart';
@@ -92,7 +93,8 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                       GestureDetector(
                         onTap: onBack,
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                           child: Text(
                             '\u2190 Bosses',
                             style: TextStyle(
@@ -184,28 +186,38 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: 132, height: 132,
+                  width: 132,
+                  height: 132,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.red.withValues(alpha: 0.2), width: 2),
+                    border: Border.all(
+                        color: AppColors.red.withValues(alpha: 0.2), width: 2),
                   ),
                 ),
                 Container(
-                  width: 106, height: 106,
+                  width: 106,
+                  height: 106,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.red.withValues(alpha: 0.3), width: 1.5),
+                    border: Border.all(
+                        color: AppColors.red.withValues(alpha: 0.3),
+                        width: 1.5),
                   ),
                 ),
                 Container(
-                  width: 104, height: 104,
+                  width: 104,
+                  height: 104,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFF230808),
                     border: Border.all(color: AppColors.red, width: 2),
                     boxShadow: [
-                      BoxShadow(color: AppColors.red.withValues(alpha: 0.5), blurRadius: 30),
-                      BoxShadow(color: AppColors.red.withValues(alpha: 0.15), blurRadius: 60),
+                      BoxShadow(
+                          color: AppColors.red.withValues(alpha: 0.5),
+                          blurRadius: 30),
+                      BoxShadow(
+                          color: AppColors.red.withValues(alpha: 0.15),
+                          blurRadius: 60),
                     ],
                   ),
                   alignment: Alignment.center,
@@ -251,20 +263,28 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
               const Text(
                 'BOSS HP',
                 style: TextStyle(
-                  color: AppColors.red, fontSize: 11,
-                  fontWeight: FontWeight.w700, letterSpacing: 0.5,
+                  color: AppColors.red,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
               Text(
                 '${_fmtNumber(boss.maxHp - boss.hpDealt)} / ${_fmtNumber(boss.maxHp)}',
                 style: const TextStyle(
-                  color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 7),
-          BossHpBar(hpDealt: boss.hpDealt, maxHp: boss.maxHp, showLabel: false, height: 14),
+          BossHpBar(
+              hpDealt: boss.hpDealt,
+              maxHp: boss.maxHp,
+              showLabel: false,
+              height: 14),
           const SizedBox(height: 5),
           Align(
             alignment: Alignment.centerRight,
@@ -296,8 +316,10 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
               Text(
                 'MY TOTAL DAMAGE',
                 style: TextStyle(
-                  color: AppColors.green, fontSize: 10,
-                  fontWeight: FontWeight.w700, letterSpacing: 0.5,
+                  color: AppColors.green,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
               SizedBox(height: 4),
@@ -310,7 +332,9 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
           Text(
             _fmtNumber(boss.hpDealt),
             style: const TextStyle(
-              color: AppColors.red, fontSize: 26, fontWeight: FontWeight.w700,
+              color: AppColors.red,
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -333,8 +357,10 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
           const Text(
             'RECENT HITS',
             style: TextStyle(
-              color: AppColors.textSecondary, fontSize: 10,
-              fontWeight: FontWeight.w600, letterSpacing: 0.7,
+              color: AppColors.textSecondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.7,
             ),
           ),
           const SizedBox(height: 12),
@@ -439,7 +465,8 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: 13, fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -477,7 +504,8 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14, fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -497,13 +525,14 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
   }
 
   static String _fmtNumber(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    if (n >= 1000)
+      return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
     return n.toString();
   }
 
   Future<void> _openLogWorkout(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      AppRoute<void>(
         builder: (_) => const LogActivityScreen(),
       ),
     );
@@ -513,7 +542,7 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
 
   void _showHistorySheet(BuildContext context) {
     _refreshBattleData();
-    showModalBottomSheet<void>(
+    showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

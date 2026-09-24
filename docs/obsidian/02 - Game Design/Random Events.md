@@ -6,7 +6,7 @@ aliases: [Random Events, XP Storm, Treasure Chest, Wandering Merchant]
 
 > Spontaneous events that break the daily routine — treasure chests hiding on the map, XP storms doubling your gains, merchants selling mystery rewards.
 
-> [!info] Implementation status: **partial**. Chests are live (persistent map nodes). XP Storm flag exists on the login reward (Day 7). Full random-event spawner / merchant system is Phase 7 target.
+> [!info] Implementation status: **partial**. Chests are live (persistent map nodes). XP Storm and the full random-event spawner / merchant system are Phase 7 targets.
 
 ## Treasure Chests ✅
 
@@ -24,11 +24,11 @@ State: `UserChestState(IsOpened, OpenedAt)` — one-time open per chest per user
 Design intent:
 - 2-hour window during which all activity XP is **×2**.
 - Announced via push notification (FCM).
-- Triggered by: cron, manual admin trigger, or Day 7 login reward flag.
+- Planned triggers: scheduled job or manual admin trigger.
 
 Current reality:
-- Login reward table flags Day 7 with `IsXpStorm = true` in the response, but the XP formula does not yet apply the ×2 multiplier.
-- No standalone storm spawner job.
+- The XP formula does not yet apply the ×2 multiplier.
+- No standalone storm spawner job exists.
 
 **Stacking rule (design):** XP Storm (×2) + active streak (×1.5) = **×3** cumulative.
 
@@ -45,6 +45,5 @@ No entities, services, or UI exist yet. This is Phase 7 work.
 ## Related
 - [[Adventure Map and World]]
 - [[XP and Leveling]] (XP storm multiplier)
-- [[Login Rewards]] (Day 7 XP storm flag)
 - [[Seasonal Events]] (cousins of random events)
 - [[Adventure.Encounters]] (backend — Chest entity)

@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/avatar_icons.dart';
 import '../../core/constants/class_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../character/models/character_profile.dart';
@@ -144,7 +145,7 @@ class ProfileHeader extends StatelessWidget {
   });
 
   void _showSettings(BuildContext context) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF161b22),
       shape: const RoundedRectangleBorder(
@@ -379,7 +380,7 @@ class _SettingsSheet extends ConsumerWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     parentContext,
-                    MaterialPageRoute(builder: (_) => const EditAvatarScreen()),
+                    AppRoute(builder: (_) => const EditAvatarScreen()),
                   );
                 },
               ),
@@ -396,7 +397,7 @@ class _SettingsSheet extends ConsumerWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     parentContext,
-                    MaterialPageRoute(
+                    AppRoute(
                       builder: (_) => const AccountSettingsScreen(),
                     ),
                   );
@@ -415,7 +416,7 @@ class _SettingsSheet extends ConsumerWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     parentContext,
-                    MaterialPageRoute(
+                    AppRoute(
                       builder: (_) => const NotificationPreferencesScreen(),
                     ),
                   );
@@ -434,7 +435,7 @@ class _SettingsSheet extends ConsumerWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     parentContext,
-                    MaterialPageRoute(
+                    AppRoute(
                       builder: (_) => const IntegrationsScreen(),
                     ),
                   );
@@ -453,9 +454,33 @@ class _SettingsSheet extends ConsumerWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     parentContext,
-                    MaterialPageRoute(
-                        builder: (_) => const TutorialsHubScreen()),
+                    AppRoute(builder: (_) => const TutorialsHubScreen()),
                   );
+                },
+              ),
+              const Divider(
+                height: 1,
+                indent: 20,
+                endIndent: 20,
+                color: kPBorder,
+              ),
+              _SettingsTile(
+                icon: Icons.animation_rounded,
+                label: 'Motion & Feedback',
+                onTap: () {
+                  Navigator.pop(context);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!parentContext.mounted) return;
+                    showAppBottomSheet<void>(
+                      context: parentContext,
+                      backgroundColor: const Color(0xFF161b22),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (_) => const _MotionSettingsSheet(),
+                    );
+                  });
                 },
               ),
               const Divider(
@@ -477,6 +502,85 @@ class _SettingsSheet extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MotionSettingsSheet extends ConsumerWidget {
+  const _MotionSettingsSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appMotionSettingsProvider);
+    const descriptions = {
+      AppMotionPreference.system: 'Follow your device accessibility setting',
+      AppMotionPreference.full: 'Balanced transitions and celebration effects',
+      AppMotionPreference.reduced: 'Short fades without sliding or scaling',
+      AppMotionPreference.off: 'Show interface changes immediately',
+    };
+    const labels = {
+      AppMotionPreference.system: 'System',
+      AppMotionPreference.full: 'Full',
+      AppMotionPreference.reduced: 'Reduced',
+      AppMotionPreference.off: 'Off',
+    };
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: kPBorder2,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                'Motion & Feedback',
+                style: TextStyle(
+                  color: kPTextPri,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final preference in AppMotionPreference.values)
+              RadioListTile<AppMotionPreference>(
+                value: preference,
+                groupValue: settings.preference,
+                activeColor: AppColors.blue,
+                title: Text(
+                  labels[preference]!,
+                  style: const TextStyle(
+                    color: kPTextPri,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  descriptions[preference]!,
+                  style: const TextStyle(color: kPTextSec, fontSize: 12),
+                ),
+                onChanged: (value) {
+                  if (value == null) return;
+                  AppMotion.haptic(AppHaptic.selection);
+                  ref.read(appMotionSettingsProvider).setPreference(value);
+                },
+              ),
+          ],
         ),
       ),
     );

@@ -51,7 +51,10 @@ class SyncResult {
     required this.errors,
   });
 
-  const SyncResult.empty() : imported = 0, skipped = 0, errors = const [];
+  const SyncResult.empty()
+      : imported = 0,
+        skipped = 0,
+        errors = const [];
 
   factory SyncResult.fromJson(Map<String, dynamic> json) => SyncResult(
         imported: (json['imported'] as int?) ?? 0,
@@ -67,7 +70,8 @@ class SyncResult {
 
   String get summary {
     if (imported == 0 && skipped == 0) return 'No new activities';
-    if (imported > 0 && skipped == 0) return 'Synced $imported ${imported == 1 ? 'activity' : 'activities'}';
+    if (imported > 0 && skipped == 0)
+      return 'Synced $imported ${imported == 1 ? 'activity' : 'activities'}';
     if (imported > 0) return 'Synced $imported new, $skipped already synced';
     return '$skipped already synced';
   }
@@ -136,7 +140,8 @@ class StravaStatusDto {
     this.connectedAt,
   });
 
-  factory StravaStatusDto.fromJson(Map<String, dynamic> json) => StravaStatusDto(
+  factory StravaStatusDto.fromJson(Map<String, dynamic> json) =>
+      StravaStatusDto(
         isConnected: json['isConnected'] as bool? ?? false,
         athleteName: json['athleteName'] as String?,
         athleteId: json['athleteId'] as int?,
@@ -160,7 +165,8 @@ class GarminStatusDto {
     this.connectedAt,
   });
 
-  factory GarminStatusDto.fromJson(Map<String, dynamic> json) => GarminStatusDto(
+  factory GarminStatusDto.fromJson(Map<String, dynamic> json) =>
+      GarminStatusDto(
         isConnected: json['isConnected'] as bool? ?? false,
         displayName: json['displayName'] as String?,
         garminUserId: json['garminUserId'] as String?,

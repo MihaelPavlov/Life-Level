@@ -11,7 +11,8 @@ class BuyFounderPassScreen extends ConsumerStatefulWidget {
   const BuyFounderPassScreen({super.key, this.theme = 'ember'});
 
   @override
-  ConsumerState<BuyFounderPassScreen> createState() => _BuyFounderPassScreenState();
+  ConsumerState<BuyFounderPassScreen> createState() =>
+      _BuyFounderPassScreenState();
 }
 
 class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
@@ -22,7 +23,8 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
     try {
       await ref.read(seasonProvider.notifier).purchaseFounderPass();
       if (!mounted) return;
-      AppToast.success(context, 'Founder Pass unlocked!', icon: Icons.lock_open_rounded);
+      AppToast.success(context, 'Founder Pass unlocked!',
+          icon: Icons.lock_open_rounded);
       Navigator.of(context).pop();
     } catch (e) {
       if (mounted) AppToast.error(context, e.toString());
@@ -105,8 +107,8 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                           width: 58,
                           height: 58,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Text('🔥',
-                              style: TextStyle(fontSize: 44)),
+                          errorBuilder: (_, __, ___) =>
+                              const Text('🔥', style: TextStyle(fontSize: 44)),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -166,7 +168,9 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                     'Unlocks the Founder lane for every tier, all season. '
                     'One unlock — keeps delivering as you climb.',
                     style: TextStyle(
-                        fontSize: 11, color: AppColors.textSecondary, height: 1.4),
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        height: 1.4),
                   ),
                   const SizedBox(height: 14),
 
@@ -242,8 +246,7 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                    'TIER ${milestone.tier} · SEASON FINALE',
+                                Text('TIER ${milestone.tier} · SEASON FINALE',
                                     style: const TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w800,
@@ -271,7 +274,8 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                   const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.check_rounded, size: 14, color: AppColors.green),
+                      Icon(Icons.check_rounded,
+                          size: 14, color: AppColors.green),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text.rich(
@@ -333,7 +337,8 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text('No payment required in this build',
-                      style: TextStyle(fontSize: 8.5, color: AppColors.textMuted)),
+                      style:
+                          TextStyle(fontSize: 8.5, color: AppColors.textMuted)),
                 ],
               ),
             ),
@@ -414,8 +419,10 @@ class _GiveRow extends StatelessWidget {
             width: 30,
             height: 30,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(Icons.card_giftcard_rounded,
-                size: 24, color: AppColors.textMuted),
+            errorBuilder: (_, __, ___) => const Icon(
+                Icons.card_giftcard_rounded,
+                size: 24,
+                color: AppColors.textMuted),
           ),
           const SizedBox(width: 11),
           Expanded(

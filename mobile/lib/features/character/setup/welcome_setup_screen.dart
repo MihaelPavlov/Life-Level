@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import 'class_selection_screen.dart';
 import 'setup_resume_service.dart';
@@ -158,7 +159,7 @@ class _WelcomeSetupScreenState extends State<WelcomeSetupScreen> {
                     child: FilledButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        AppRoute(
                           builder: (_) => ClassSelectionScreen(
                             ringItems: ringItems,
                           ),
@@ -205,7 +206,7 @@ class _WelcomeSetupScreenState extends State<WelcomeSetupScreen> {
   void _showSkipDialog(BuildContext context) {
     final ringItems = widget.ringItems;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -308,13 +309,15 @@ class _WelcomeSetupScreenState extends State<WelcomeSetupScreen> {
                     _SetupStepRow(
                       number: '2',
                       title: 'Choose your avatar',
-                      subtitle: 'Set how you appear on the map and leaderboards.',
+                      subtitle:
+                          'Set how you appear on the map and leaderboards.',
                     ),
                     SizedBox(height: 10),
                     _SetupStepRow(
                       number: '3',
                       title: 'Enter the world',
-                      subtitle: 'Start progression with a complete hero profile.',
+                      subtitle:
+                          'Start progression with a complete hero profile.',
                     ),
                   ],
                 ),
@@ -327,7 +330,7 @@ class _WelcomeSetupScreenState extends State<WelcomeSetupScreen> {
                     Navigator.pop(ctx);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      AppRoute(
                         builder: (_) => ClassSelectionScreen(
                           ringItems: ringItems,
                         ),

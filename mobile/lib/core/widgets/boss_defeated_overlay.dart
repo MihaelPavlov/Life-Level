@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/boss/widgets/boss_icon.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 
 /// Celebration dialog fired whenever `BossDefeatedNotifier` emits an event —
 /// i.e. an activity log finished a boss off. Mirrors the chest-opened /
@@ -11,29 +12,12 @@ void showBossDefeatedOverlay(
   BuildContext context,
   BossDefeatedInfo info,
 ) {
-  showGeneralDialog(
+  showAppCelebration(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss boss reward popup',
     barrierColor: Colors.black.withValues(alpha: 0.78),
-    transitionDuration: const Duration(milliseconds: 420),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.18),
-            end: Offset.zero,
-          ).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.85, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) => _BossDefeatedDialog(info: info),
+    builder: (_) => _BossDefeatedDialog(info: info),
   );
 }
 

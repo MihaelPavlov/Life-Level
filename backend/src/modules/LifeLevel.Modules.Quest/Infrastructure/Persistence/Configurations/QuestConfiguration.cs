@@ -12,6 +12,9 @@ public class QuestConfiguration : IEntityTypeConfiguration<QuestEntity>
         entity.HasKey(x => x.Id);
         entity.Property(x => x.Type).HasConversion<string>();
         entity.Property(x => x.Category).HasConversion<string>();
+        entity.Property(x => x.ProgressMode).HasConversion<string>();
+        entity.Property(x => x.DifficultyTier).HasConversion<string>();
+        entity.Property(x => x.GroupKey).HasMaxLength(80);
         entity.Property(x => x.RequiredActivity).HasConversion<string?>();
         entity.HasData(QuestSeedData.All);
     }

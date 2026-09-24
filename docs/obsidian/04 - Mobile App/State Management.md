@@ -55,9 +55,8 @@ aliases: [Riverpod, Providers]
 ### Achievements
 - `achievementsProvider` — `FutureProvider<List<AchievementDto>>`
 
-### Login Reward
-- `loginRewardStatusProvider` — `FutureProvider<LoginRewardStatus>`
-- `loginRewardProvider` — `FutureProvider<LoginRewardClaimResult>`
+### Rewards
+- `rewardCenterProvider` — `AsyncNotifierProvider<RewardCenterNotifier, RewardCenterData>`
 
 ## Invalidation patterns
 

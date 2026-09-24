@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../activity/models/activity_models.dart';
 import '../../activity/providers/activity_provider.dart';
@@ -9,7 +10,7 @@ import '../../activity/providers/activity_provider.dart';
 /// Shows the full activity-history sheet — the "workout journal". Used by
 /// the Adventure Hub's Journal tile.
 void showActivityJournalSheet(BuildContext context) {
-  showModalBottomSheet(
+  showAppBottomSheet(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,
@@ -41,7 +42,8 @@ class _ActivityRow extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.green.withValues(alpha: 0.08),
-                  border: Border.all(color: AppColors.green.withValues(alpha: 0.2)),
+                  border:
+                      Border.all(color: AppColors.green.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(child: AppIconImage(iconAsset, size: 34)),
@@ -62,7 +64,8 @@ class _ActivityRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       _subLine(),
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -71,7 +74,8 @@ class _ActivityRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -88,7 +92,8 @@ class _ActivityRow extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     _timeAgo(activity.loggedAt),
-                    style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 10, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -106,7 +111,8 @@ class _ActivityRow extends StatelessWidget {
 
   String _subLine() {
     final parts = ['${activity.durationMinutes} min'];
-    if (activity.distanceKm > 0) parts.add('${activity.distanceKm.toStringAsFixed(1)} km');
+    if (activity.distanceKm > 0)
+      parts.add('${activity.distanceKm.toStringAsFixed(1)} km');
     if (activity.calories > 0) parts.add('${activity.calories} kcal');
     return parts.join(' · ');
   }

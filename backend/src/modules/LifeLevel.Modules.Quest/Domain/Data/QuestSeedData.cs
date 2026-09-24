@@ -15,6 +15,9 @@ public static class QuestSeedData
         Description = "Complete any workout lasting at least 30 minutes.",
         Type = QuestType.Daily,
         Category = QuestCategory.Duration,
+        ProgressMode = QuestProgressMode.SingleActivity,
+        DifficultyTier = QuestDifficultyTier.Standard,
+        GroupKey = "daily:any-duration-single",
         RequiredActivity = null,
         TargetValue = 30,
         TargetUnit = "minutes",
@@ -30,6 +33,9 @@ public static class QuestSeedData
         Description = "Burn at least 300 calories in a single session.",
         Type = QuestType.Daily,
         Category = QuestCategory.Calories,
+        ProgressMode = QuestProgressMode.SingleActivity,
+        DifficultyTier = QuestDifficultyTier.Standard,
+        GroupKey = "daily:any-calories-single",
         RequiredActivity = null,
         TargetValue = 300,
         TargetUnit = "calories",
@@ -45,6 +51,8 @@ public static class QuestSeedData
         Description = "Run at least 5 km.",
         Type = QuestType.Daily,
         Category = QuestCategory.Distance,
+        DifficultyTier = QuestDifficultyTier.Standard,
+        GroupKey = "daily:running-distance",
         RequiredActivity = ActivityType.Running,
         TargetValue = 5,
         TargetUnit = "km",
@@ -60,6 +68,9 @@ public static class QuestSeedData
         Description = "Hit the gym for at least 45 minutes.",
         Type = QuestType.Daily,
         Category = QuestCategory.Duration,
+        ProgressMode = QuestProgressMode.SingleActivity,
+        DifficultyTier = QuestDifficultyTier.Standard,
+        GroupKey = "daily:gym-duration-single",
         RequiredActivity = ActivityType.Gym,
         TargetValue = 45,
         TargetUnit = "minutes",
@@ -75,6 +86,9 @@ public static class QuestSeedData
         Description = "Practice yoga for at least 30 minutes.",
         Type = QuestType.Daily,
         Category = QuestCategory.Duration,
+        ProgressMode = QuestProgressMode.SingleActivity,
+        DifficultyTier = QuestDifficultyTier.Standard,
+        GroupKey = "daily:yoga-duration-single",
         RequiredActivity = ActivityType.Yoga,
         TargetValue = 30,
         TargetUnit = "minutes",
@@ -90,6 +104,9 @@ public static class QuestSeedData
         Description = "Run for at least 30 minutes.",
         Type = QuestType.Daily,
         Category = QuestCategory.Duration,
+        ProgressMode = QuestProgressMode.SingleActivity,
+        DifficultyTier = QuestDifficultyTier.Standard,
+        GroupKey = "daily:running-duration-single",
         RequiredActivity = ActivityType.Running,
         TargetValue = 30,
         TargetUnit = "minutes",
@@ -107,6 +124,11 @@ public static class QuestSeedData
     public static readonly QuestEntity DistanceDay = Task("bbbbbbbb-0107-0000-0000-000000000000", "Distance Day", "Cover 3 km.", QuestType.Daily, QuestCategory.Distance, null, 3, "km", 13);
     public static readonly QuestEntity CycleCircuit = Task("bbbbbbbb-0108-0000-0000-000000000000", "Cycle Circuit", "Cycle 5 km.", QuestType.Daily, QuestCategory.Distance, ActivityType.Cycling, 5, "km", 14);
     public static readonly QuestEntity PoolTime = Task("bbbbbbbb-0109-0000-0000-000000000000", "Pool Time", "Swim for 20 minutes.", QuestType.Daily, QuestCategory.Duration, ActivityType.Swimming, 20, "minutes", 15);
+
+    public static readonly QuestEntity DailyZone = Task("bbbbbbbb-0110-0000-0000-000000000000", "Pathfinder", "Complete 1 zone today.", QuestType.Daily, QuestCategory.ZonesCompleted, null, 1, "zone", 101, groupKey: "daily:zone");
+    public static readonly QuestEntity DailyChest = Task("bbbbbbbb-0111-0000-0000-000000000000", "Treasure Hunter", "Open 1 available chest today.", QuestType.Daily, QuestCategory.ChestsOpened, null, 1, "chest", 102, groupKey: "daily:chest");
+    public static readonly QuestEntity DailyBossContribution = Task("bbbbbbbb-0112-0000-0000-000000000000", "Challenge the Boss", "Complete 1 workout while a boss is active.", QuestType.Daily, QuestCategory.BossContributions, null, 1, "workout", 103, groupKey: "daily:boss-contribution");
+    public static readonly QuestEntity DailyGuildContribution = Task("bbbbbbbb-0113-0000-0000-000000000000", "Answer the Call", "Complete 1 workout while your guild raid is active.", QuestType.Daily, QuestCategory.GuildRaidContributions, null, 1, "contribution", 104, groupKey: "daily:guild-contribution");
 
     // ── Weekly Quests ─────────────────────────────────────────────────────────
 
@@ -172,6 +194,16 @@ public static class QuestSeedData
     public static readonly QuestEntity ClimbWeek = Task("bbbbbbbb-0215-0000-0000-000000000000", "Climb Week", "Climb for 60 minutes this week.", QuestType.Weekly, QuestCategory.Duration, ActivityType.Climbing, 60, "minutes", 18);
     public static readonly QuestEntity HikeWeek = Task("bbbbbbbb-0216-0000-0000-000000000000", "Hike Week", "Hike 10 km this week.", QuestType.Weekly, QuestCategory.Distance, ActivityType.Hiking, 10, "km", 19);
     public static readonly QuestEntity WalkWeek = Task("bbbbbbbb-0217-0000-0000-000000000000", "Walk Week", "Walk 20 km this week.", QuestType.Weekly, QuestCategory.Distance, ActivityType.Walking, 20, "km", 20);
+    public static readonly QuestEntity WeeklyZoneOne = Task("bbbbbbbb-0218-0000-0000-000000000000", "Trailblazer", "Complete 1 zone this week.", QuestType.Weekly, QuestCategory.ZonesCompleted, null, 1, "zone", 101, QuestDifficultyTier.Easy, groupKey: "weekly:zones");
+    public static readonly QuestEntity WeeklyZoneTwo = Task("bbbbbbbb-0219-0000-0000-000000000000", "Wayfinder", "Complete 2 zones this week.", QuestType.Weekly, QuestCategory.ZonesCompleted, null, 2, "zones", 102, QuestDifficultyTier.Standard, groupKey: "weekly:zones");
+    public static readonly QuestEntity WeeklyZoneThree = Task("bbbbbbbb-0220-0000-0000-000000000000", "Realm Walker", "Complete 3 zones this week.", QuestType.Weekly, QuestCategory.ZonesCompleted, null, 3, "zones", 103, QuestDifficultyTier.Stretch, groupKey: "weekly:zones");
+    public static readonly QuestEntity WeeklyChestOne = Task("bbbbbbbb-0221-0000-0000-000000000000", "Treasure Trail", "Open 1 reachable chest this week.", QuestType.Weekly, QuestCategory.ChestsOpened, null, 1, "chest", 104, QuestDifficultyTier.Easy, groupKey: "weekly:chests");
+    public static readonly QuestEntity WeeklyChestTwo = Task("bbbbbbbb-0222-0000-0000-000000000000", "Vault Seeker", "Open 2 reachable chests this week.", QuestType.Weekly, QuestCategory.ChestsOpened, null, 2, "chests", 105, QuestDifficultyTier.Stretch, groupKey: "weekly:chests");
+    public static readonly QuestEntity WeeklyBossContribution = Task("bbbbbbbb-0223-0000-0000-000000000000", "Press the Attack", "Complete 2 workouts while a boss is active.", QuestType.Weekly, QuestCategory.BossContributions, null, 2, "workouts", 106, groupKey: "weekly:boss-contribution");
+    public static readonly QuestEntity WeeklyBossDefeat = Task("bbbbbbbb-0224-0000-0000-000000000000", "Boss Breaker", "Defeat 1 active boss this week.", QuestType.Weekly, QuestCategory.BossesDefeated, null, 1, "boss", 107, groupKey: "weekly:boss-defeat");
+    public static readonly QuestEntity WeeklyGuildContribution = Task("bbbbbbbb-0225-0000-0000-000000000000", "Guild Vanguard", "Contribute 2 workouts to the active guild raid.", QuestType.Weekly, QuestCategory.GuildRaidContributions, null, 2, "contributions", 108, groupKey: "weekly:guild-contribution");
+    public static readonly QuestEntity WeeklyGuildVictory = Task("bbbbbbbb-0226-0000-0000-000000000000", "Victory Together", "Contribute and help defeat 1 guild raid this week.", QuestType.Weekly, QuestCategory.GuildRaidsWon, null, 1, "victory", 109, groupKey: "weekly:guild-victory");
+    public static readonly QuestEntity WeeklyRegion = Task("bbbbbbbb-0227-0000-0000-000000000000", "Conquer the Region", "Defeat your current region boss this week.", QuestType.Weekly, QuestCategory.RegionsCompleted, null, 1, "region", 110, groupKey: "weekly:region");
 
     // ── Special Quests ────────────────────────────────────────────────────────
 
@@ -230,6 +262,7 @@ public static class QuestSeedData
         EndurancePush,
         FirstMove, DoubleMove, QuickStart, PowerHour, FirstBurn,
         FirstKilometer, DistanceDay, CycleCircuit, PoolTime,
+        DailyZone, DailyChest, DailyBossContribution, DailyGuildContribution,
         TripleThreat,
         RoadRunner,
         IronWeek,
@@ -237,6 +270,9 @@ public static class QuestSeedData
         WeeklyBurn500, WeeklyBurn1000, WeeklyBurn2000,
         WeeklyDistance5, WeeklyDistance15, WeeklyDistance30,
         YogaWeek, CycleWeek, SwimWeek, ClimbWeek, HikeWeek, WalkWeek,
+        WeeklyZoneOne, WeeklyZoneTwo, WeeklyZoneThree, WeeklyChestOne, WeeklyChestTwo,
+        WeeklyBossContribution, WeeklyBossDefeat, WeeklyGuildContribution,
+        WeeklyGuildVictory, WeeklyRegion,
         FirstSteps,
         SummitSeeker,
         EnduranceInitiate,
@@ -245,13 +281,19 @@ public static class QuestSeedData
     private static QuestEntity Task(
         string id, string title, string description, QuestType type,
         QuestCategory category, ActivityType? activity, double target,
-        string unit, int sortOrder) => new()
+        string unit, int sortOrder,
+        QuestDifficultyTier difficulty = QuestDifficultyTier.Standard,
+        QuestProgressMode progressMode = QuestProgressMode.Cumulative,
+        string? groupKey = null) => new()
     {
         Id = Guid.Parse(id),
         Title = title,
         Description = description,
         Type = type,
         Category = category,
+        DifficultyTier = difficulty,
+        ProgressMode = progressMode,
+        GroupKey = groupKey ?? $"{type}:{category}:{activity}:{progressMode}",
         RequiredActivity = activity,
         TargetValue = target,
         TargetUnit = unit,

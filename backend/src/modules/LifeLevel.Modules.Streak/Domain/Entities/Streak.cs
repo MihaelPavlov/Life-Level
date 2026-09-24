@@ -11,4 +11,6 @@ public class Streak
     public int ShieldsUsed { get; set; }
     public bool ShieldUsedToday { get; set; }
     public int TotalDaysActive { get; set; }
+    public DateTime? LastRewardedStreakDate { get; set; }
+    public int PendingRewardCoins { get; set; }
 }

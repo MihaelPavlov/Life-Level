@@ -39,7 +39,7 @@ Variant: `HomeCard` adds an optional gradient header strip.
 
 Used for:
 - 7-day streak grid (each day a small square, filled if active)
-- 7-day login reward ladder (Day 7 is the climax)
+- Daily and Weekly task milestone tracks
 - Quest progress cells
 
 ## Stat gems
@@ -58,7 +58,6 @@ Rendered above any screen by `MainShell`:
 | `LevelUpOverlay` | Full-screen modal, fade-in | `LevelUpNotifier` event |
 | `ItemObtainedOverlay` | Slide-up card, rarity-coloured | `ItemObtainedNotifier` event |
 | `InventoryFullOverlay` | Slide-up warning with level hint | `InventoryFullNotifier` event |
-| `LoginRewardScreen` | Dialog with claim button | App resume + `loginRewardAvailable` |
 
 ## Bottom sheets
 

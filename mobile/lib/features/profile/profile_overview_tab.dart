@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
@@ -45,7 +46,7 @@ class ProfileXpSection extends StatelessWidget {
   const ProfileXpSection({super.key, required this.profile});
 
   static void _showXPHistory(BuildContext context) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -260,7 +261,7 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
   bool _spending = false;
 
   void _showDetail(BuildContext context) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

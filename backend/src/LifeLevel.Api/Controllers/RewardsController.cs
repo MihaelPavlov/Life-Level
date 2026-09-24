@@ -1,4 +1,3 @@
-using LifeLevel.Modules.LoginReward.Application.UseCases;
 using LifeLevel.Modules.Quest.Application.UseCases;
 using LifeLevel.Modules.Quest.Domain.Enums;
 using LifeLevel.SharedKernel.Contracts;
@@ -13,7 +12,6 @@ namespace LifeLevel.Api.Controllers;
 [Authorize]
 public class RewardsController(
     QuestService tasks,
-    LoginRewardService loginRewards,
     ITalentProfileReadPort talentProfile,
     IUserContext userContext) : ControllerBase
 {
@@ -21,14 +19,12 @@ public class RewardsController(
     public async Task<IActionResult> Get()
     {
         var userId = userContext.UserId;
-        var login = await loginRewards.GetStatusAsync(userId);
         var daily = await tasks.GetRewardPeriodAsync(userId, QuestType.Daily);
         var weekly = await tasks.GetRewardPeriodAsync(userId, QuestType.Weekly);
         var wallet = await talentProfile.GetSummaryAsync(userId);
         return Ok(new
         {
             wallet = new { wallet.Coins, wallet.Crystals },
-            login,
             daily,
             weekly,
         });
@@ -43,6 +39,23 @@ public class RewardsController(
         try
         {
             return Ok(await tasks.ClaimMilestoneAsync(userContext.UserId, type, threshold));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("tasks/{period}/claim-available")]
+    public async Task<IActionResult> ClaimAvailableTaskRewards(string period, CancellationToken ct)
+    {
+        if (!Enum.TryParse<QuestType>(period, true, out var type) ||
+            type is not (QuestType.Daily or QuestType.Weekly))
+            return BadRequest(new { error = "Period must be daily or weekly." });
+        try
+        {
+            return Ok(await tasks.ClaimAvailableTaskRewardsAsync(
+                userContext.UserId, type, ct));
         }
         catch (InvalidOperationException ex)
         {

@@ -6,6 +6,7 @@ using LifeLevel.Modules.Guild.Domain.Entities;
 using LifeLevel.Modules.Guild.Domain.Enums;
 using LifeLevel.Modules.Identity.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Events;
 using Microsoft.EntityFrameworkCore;
 using CharacterEntity = LifeLevel.Modules.Character.Domain.Entities.Character;
 using XpHistoryEntryEntity = LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry;
@@ -18,7 +19,8 @@ public class GuildService(
     IGuildRaidRealtimePort realtime,
     INotificationPort notifications,
     ITalentBonusReadPort? talentBonus = null,
-    ICharacterCombatStatsReadPort? combatStats = null)
+    ICharacterCombatStatsReadPort? combatStats = null,
+    IEventPublisher? events = null)
     : IGuildRaidActivityPort, IGuildRaidMaintenancePort
 {
     private const int DefaultMaxMembers = 5;
@@ -670,6 +672,9 @@ public class GuildService(
 
         await db.SaveChangesAsync(ct);
 
+        if (events != null && activityId.HasValue)
+            await events.PublishAsync(new GuildRaidContributionEvent(userId, raid.Id, activityId.Value), ct);
+
         await realtime.RaidHpUpdatedAsync(new GuildRaidHpUpdatedInfo(
             raid.GuildId,
             raid.Id,
@@ -683,6 +688,15 @@ public class GuildService(
             contribution.DamageDealt), ct);
 
         if (!defeated) return [];
+
+        if (events != null)
+        {
+            var contributorIds = await db.Set<GuildRaidContribution>().AsNoTracking()
+                .Where(c => c.GuildRaidId == raid.Id && c.DamageDealt > 0)
+                .Select(c => c.UserId).ToListAsync(ct);
+            foreach (var contributorId in contributorIds)
+                await events.PublishAsync(new GuildRaidWonEvent(contributorId, raid.Id), ct);
+        }
 
         await GrantScaledRaidRewardsAsync(raid, boss, ct);
         var victory = await BuildVictoryInfoAsync(raid.Id, userId, ct)

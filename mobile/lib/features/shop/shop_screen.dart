@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/item_icon_image.dart';
 import '../../core/widgets/item_obtained_overlay.dart';
@@ -56,10 +57,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               Padding(
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
                   child: _TalentBanner(
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const TalentsScreen())))),
+                      onTap: () => Navigator.push(context,
+                          AppRoute(builder: (_) => const TalentsScreen())))),
               _Daily(
                   shop: shop,
                   busy: busy,
@@ -93,7 +92,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   Future<void> _offer(ShopData shop, ShopOffer offer) async {
     if (!offer.canPurchase || busy) return;
-    final yes = await showModalBottomSheet<bool>(
+    final yes = await showAppBottomSheet<bool>(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
@@ -111,7 +110,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   Future<void> _chest(ShopData shop, ShopChest chest) async {
     if (!chest.canPurchase || busy) return;
-    final yes = await showModalBottomSheet<bool>(
+    final yes = await showAppBottomSheet<bool>(
         context: context,
         backgroundColor: Colors.transparent,
         builder: (_) => _BuySheet(

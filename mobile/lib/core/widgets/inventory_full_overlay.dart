@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 import '../services/nav_tab_notifier.dart';
 import '../../features/activity/models/activity_models.dart';
 import 'item_icon_image.dart';
 
 // ── constants ──────────────────────────────────────────────────────────────────
-const _kCardWidth    = 360.0;
-const _kIconSize     = 72.0;
+const _kCardWidth = 360.0;
+const _kIconSize = 72.0;
 const _kBorderRadius = 20.0;
-const _kCardBg       = Color(0xFF1e2632);
-const _kOrange       = AppColors.orange;
+const _kCardBg = Color(0xFF1e2632);
+const _kOrange = AppColors.orange;
 
 /// Returns a human-readable hint for the next inventory slot tier.
 String _nextUnlockHint(int level) {
-  if (level < 5)  return 'Level 5 \u2192 30 slots';
+  if (level < 5) return 'Level 5 \u2192 30 slots';
   if (level < 10) return 'Level 10 \u2192 40 slots';
   if (level < 15) return 'Level 15 \u2192 50 slots';
   if (level < 25) return 'Level 25 \u2192 60 slots';
@@ -25,27 +26,12 @@ String _nextUnlockHint(int level) {
 /// Shows the inventory-full warning card as a dialog with slide-up + fade.
 void showInventoryFullOverlay(
     BuildContext context, BlockedItemInfo item, int currentLevel) {
-  showGeneralDialog(
+  showAppDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss inventory full popup',
     barrierColor: Colors.black.withValues(alpha: 0.65),
-    transitionDuration: const Duration(milliseconds: 320),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved =
-          CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.15),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) =>
+    builder: (_) =>
         _InventoryFullDialog(item: item, currentLevel: currentLevel),
   );
 }

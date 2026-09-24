@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 
 /// "Chest Opened!" celebration dialog. Slides + fades in, shows the zone
 /// emoji inside a pulsing orange glow, the reward amount in a big centered
@@ -11,29 +12,12 @@ void showChestOpenedOverlay(
   required int xp,
   String emoji = '🎁',
 }) {
-  showGeneralDialog(
+  showAppCelebration(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss chest reward',
     barrierColor: Colors.black.withValues(alpha: 0.65),
-    transitionDuration: const Duration(milliseconds: 350),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.15),
-            end: Offset.zero,
-          ).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.88, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) => _ChestOpenedDialog(
+    builder: (_) => _ChestOpenedDialog(
       zoneName: zoneName,
       xp: xp,
       emoji: emoji,

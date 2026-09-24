@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../../core/widgets/currency_chip.dart';
 import '../../character/models/character_profile.dart';
@@ -19,7 +20,7 @@ import '../widgets/home_avatar_ring.dart';
 /// The scene/character/mount/sword art is fixed decorative art for every
 /// user — there is no per-user character render and no "Mount"/"Weapon"
 /// concept anywhere in the domain yet, so those two mini-cards' icons are
-/// static. The Run/Shields chips and the header's XP/coins ARE wired to real
+/// static. The Run/Shields chips and the header's XP/currencies ARE wired to real
 /// data (same providers as the old standalone `HomeStatStrip`/`HomeHeader`,
 /// now folded into this one panel).
 class HomeHeroStage extends ConsumerWidget {
@@ -91,8 +92,7 @@ class HomeHeroStage extends ConsumerWidget {
                       ],
                       stops: [0.0, 0.72, 1.0],
                     ).createShader(rect),
-                    child:
-                        Image.asset(AppIcons.homeSceneBg, fit: BoxFit.cover),
+                    child: Image.asset(AppIcons.homeSceneBg, fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -172,8 +172,7 @@ class HomeHeroStage extends ConsumerWidget {
                                 bottom: py(20),
                                 child: Align(
                                   alignment: Alignment.center,
-                                  child:
-                                      _FloatingCharacter(height: py(258)),
+                                  child: _FloatingCharacter(height: py(258)),
                                 ),
                               ),
 
@@ -222,8 +221,7 @@ class HomeHeroStage extends ConsumerWidget {
                                     ),
                                     SizedBox(width: px(7)),
                                     _StatChip(
-                                      iconAsset:
-                                          AppIcons.rewardStreakShield,
+                                      iconAsset: AppIcons.rewardStreakShield,
                                       label: 'SHIELDS',
                                       value: '$shields',
                                     ),
@@ -324,10 +322,9 @@ class _HeaderRow extends StatelessWidget {
           onTapAdd: () => _openShop(context),
         ),
         const SizedBox(width: 6),
-        // TODO: no Gems concept yet — static placeholder.
         CurrencyChip(
           iconAsset: AppIcons.homeGemIcon,
-          value: '17',
+          value: '${p?.talents?.crystals ?? 0}',
           onTapAdd: () => _openShop(context),
         ),
       ],
@@ -336,7 +333,7 @@ class _HeaderRow extends StatelessWidget {
 }
 
 void _openShop(BuildContext context) {
-  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShopScreen()));
+  Navigator.of(context).push(AppRoute(builder: (_) => const ShopScreen()));
 }
 
 class _MiniCard extends StatelessWidget {
@@ -377,8 +374,8 @@ class _MiniCard extends StatelessWidget {
               color: const Color(0xFF0c1420),
               border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
             ),
-            child: Icon(Icons.autorenew,
-                size: size * 0.18, color: Colors.white70),
+            child:
+                Icon(Icons.autorenew, size: size * 0.18, color: Colors.white70),
           ),
         ),
       ],

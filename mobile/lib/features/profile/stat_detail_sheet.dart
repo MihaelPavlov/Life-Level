@@ -25,7 +25,9 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
   Future<void> _spendPoint() async {
     setState(() => _spending = true);
     try {
-      await ref.read(characterProfileProvider.notifier).spendStatPoint(widget.stat.key);
+      await ref
+          .read(characterProfileProvider.notifier)
+          .spendStatPoint(widget.stat.key);
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (mounted) setState(() => _spending = false);
@@ -70,7 +72,8 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
                   decoration: BoxDecoration(
                     color: widget.stat.color.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: widget.stat.color.withOpacity(0.4)),
+                    border:
+                        Border.all(color: widget.stat.color.withOpacity(0.4)),
                   ),
                   child: Center(
                     child: AppIconImage(widget.stat.iconAsset, size: 45),
@@ -104,11 +107,13 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
                 ),
                 // value badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: widget.stat.color.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: widget.stat.color.withOpacity(0.4)),
+                    border:
+                        Border.all(color: widget.stat.color.withOpacity(0.4)),
                   ),
                   child: Text(
                     '${widget.stat.value}',
@@ -130,7 +135,8 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
                       decoration: BoxDecoration(
                         color: widget.stat.color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: widget.stat.color.withOpacity(0.6)),
+                        border: Border.all(
+                            color: widget.stat.color.withOpacity(0.6)),
                         boxShadow: [
                           BoxShadow(
                             color: widget.stat.color.withOpacity(0.3),
@@ -201,7 +207,8 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
             // description
             Text(
               widget.stat.description,
-              style: const TextStyle(fontSize: 13, color: kPTextPri, height: 1.55),
+              style:
+                  const TextStyle(fontSize: 13, color: kPTextPri, height: 1.55),
             ),
 
             const SizedBox(height: 20),

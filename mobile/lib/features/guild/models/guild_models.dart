@@ -41,9 +41,12 @@ class GuildDetail {
         isOpen: json['isOpen'] as bool? ?? true,
         isLeader: json['isLeader'] as bool? ?? false,
         viewerRole: json['viewerRole'] as String? ?? 'Member',
-        canManageRaid: json['canManageRaid'] as bool? ?? (json['isLeader'] as bool? ?? false),
-        canManageMembers: json['canManageMembers'] as bool? ?? (json['isLeader'] as bool? ?? false),
-        canEditGuild: json['canEditGuild'] as bool? ?? (json['isLeader'] as bool? ?? false),
+        canManageRaid: json['canManageRaid'] as bool? ??
+            (json['isLeader'] as bool? ?? false),
+        canManageMembers: json['canManageMembers'] as bool? ??
+            (json['isLeader'] as bool? ?? false),
+        canEditGuild: json['canEditGuild'] as bool? ??
+            (json['isLeader'] as bool? ?? false),
         members: ((json['members'] as List?) ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(GuildMember.fromJson)
@@ -396,6 +399,7 @@ int _intValueWithFallback(
 
 dynamic _value(Map<String, dynamic> json, String key) {
   if (json.containsKey(key)) return json[key];
-  final pascal = key.isEmpty ? key : '${key[0].toUpperCase()}${key.substring(1)}';
+  final pascal =
+      key.isEmpty ? key : '${key[0].toUpperCase()}${key.substring(1)}';
   return json[pascal];
 }

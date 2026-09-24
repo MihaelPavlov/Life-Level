@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 
 class AppTheme {
   AppTheme._();
@@ -35,5 +36,15 @@ class AppTheme {
         ),
         fontFamily: 'Inter',
         useMaterial3: true,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: AppPageTransitionsBuilder(),
+            TargetPlatform.iOS: AppPageTransitionsBuilder(),
+            TargetPlatform.macOS: AppPageTransitionsBuilder(),
+            TargetPlatform.windows: AppPageTransitionsBuilder(),
+            TargetPlatform.linux: AppPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: AppPageTransitionsBuilder(),
+          },
+        ),
       );
 }

@@ -30,7 +30,10 @@ class _StorySheetState extends State<StorySheet> {
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 32, offset: Offset(0, -8))],
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x40000000), blurRadius: 32, offset: Offset(0, -8))
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -189,14 +192,14 @@ class _StorySheetState extends State<StorySheet> {
       onTap: _continuing
           ? null
           : () async {
-        AppToast.info(
-          context,
-          'You chose: ${choice.rewardLabel}',
-          icon: Icons.auto_stories_rounded,
-          duration: const Duration(seconds: 2),
-        );
-        await _continue(context);
-      },
+              AppToast.info(
+                context,
+                'You chose: ${choice.rewardLabel}',
+                icon: Icons.auto_stories_rounded,
+                duration: const Duration(seconds: 2),
+              );
+              await _continue(context);
+            },
       child: Container(
         margin: const EdgeInsets.only(bottom: 7),
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
@@ -215,8 +218,8 @@ class _StorySheetState extends State<StorySheet> {
                 borderRadius: BorderRadius.circular(9),
               ),
               alignment: Alignment.center,
-              child: Text(choice.iconEmoji,
-                  style: const TextStyle(fontSize: 16)),
+              child:
+                  Text(choice.iconEmoji, style: const TextStyle(fontSize: 16)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -278,8 +281,8 @@ class _Chip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-            color: color, fontSize: 11, fontWeight: FontWeight.w700),
+        style:
+            TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700),
       ),
     );
   }

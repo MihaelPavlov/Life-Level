@@ -231,7 +231,8 @@ class _AvatarTile extends StatelessWidget {
                 const Positioned(
                   top: 0,
                   left: 0,
-                  child: Icon(Icons.check_circle, size: 17, color: AppColors.orange),
+                  child: Icon(Icons.check_circle,
+                      size: 17, color: AppColors.orange),
                 ),
             ],
           ),

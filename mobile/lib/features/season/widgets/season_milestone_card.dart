@@ -33,8 +33,8 @@ class SeasonMilestoneCard extends StatelessWidget {
             width: 48,
             height: 48,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.emoji_events_rounded, size: 40, color: AppColors.purple),
+            errorBuilder: (_, __, ___) => const Icon(Icons.emoji_events_rounded,
+                size: 40, color: AppColors.purple),
           ),
           const SizedBox(width: 13),
           Expanded(
@@ -63,7 +63,8 @@ class SeasonMilestoneCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 const Text(
                   'Carries between seasons',
-                  style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 10, color: AppColors.textSecondary),
                 ),
               ],
             ),

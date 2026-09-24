@@ -7,23 +7,40 @@ import 'home_palette.dart';
 
 String? _avatarEmojiToAsset(String emoji) {
   switch (emoji) {
-    case '🧙': return AppIcons.avatarWizard;
-    case '⚔️': return AppIcons.avatarWarrior;
-    case '🏹': return AppIcons.avatarArcher;
-    case '🛡️': return AppIcons.avatarPaladin;
-    case '🧘': return AppIcons.avatarMonk;
-    case '🐺': return AppIcons.avatarWolf;
-    case '🦊': return AppIcons.avatarFox;
-    case '🥷': return AppIcons.avatarNinja;
-    case '🦸': return AppIcons.avatarSuperhero;
-    case '🧝': return AppIcons.avatarElf;
-    case '👑': return AppIcons.avatarCrown;
-    case '🌟': return AppIcons.avatarStar;
-    case '💎': return AppIcons.avatarDiamond;
-    case '🔮': return AppIcons.avatarMystic;
-    case '⚡': return AppIcons.avatarLightning;
-    case '🌙': return AppIcons.avatarMoon;
-    default:   return null;
+    case '🧙':
+      return AppIcons.avatarWizard;
+    case '⚔️':
+      return AppIcons.avatarWarrior;
+    case '🏹':
+      return AppIcons.avatarArcher;
+    case '🛡️':
+      return AppIcons.avatarPaladin;
+    case '🧘':
+      return AppIcons.avatarMonk;
+    case '🐺':
+      return AppIcons.avatarWolf;
+    case '🦊':
+      return AppIcons.avatarFox;
+    case '🥷':
+      return AppIcons.avatarNinja;
+    case '🦸':
+      return AppIcons.avatarSuperhero;
+    case '🧝':
+      return AppIcons.avatarElf;
+    case '👑':
+      return AppIcons.avatarCrown;
+    case '🌟':
+      return AppIcons.avatarStar;
+    case '💎':
+      return AppIcons.avatarDiamond;
+    case '🔮':
+      return AppIcons.avatarMystic;
+    case '⚡':
+      return AppIcons.avatarLightning;
+    case '🌙':
+      return AppIcons.avatarMoon;
+    default:
+      return null;
   }
 }
 
@@ -49,7 +66,9 @@ class HomeAvatarRing extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
-      height: showLevelPill ? size + 6 : size, // reserve room for overflowing LV pill
+      height: showLevelPill
+          ? size + 6
+          : size, // reserve room for overflowing LV pill
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -95,7 +114,8 @@ class HomeAvatarRing extends StatelessWidget {
               bottom: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,

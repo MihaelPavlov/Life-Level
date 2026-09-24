@@ -1478,35 +1478,6 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserShopDailyStates");
                 });
 
-            modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("ClaimedToday")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("DayInCycle")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("LastClaimedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("TotalLoginDays")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("LoginRewards");
-                });
-
             modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapEdge", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1801,8 +1772,21 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DifficultyTier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GroupKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ProgressMode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("RequiredActivity")
                         .HasColumnType("text");
@@ -1838,7 +1822,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0001-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Complete any workout lasting at least 30 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:any-duration-single",
                             IsActive = true,
+                            ProgressMode = "SingleActivity",
                             RewardXp = 0L,
                             SortOrder = 1,
                             TargetUnit = "minutes",
@@ -1851,7 +1838,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0002-0000-0000-000000000000"),
                             Category = "Calories",
                             Description = "Burn at least 300 calories in a single session.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:any-calories-single",
                             IsActive = true,
+                            ProgressMode = "SingleActivity",
                             RewardXp = 0L,
                             SortOrder = 2,
                             TargetUnit = "calories",
@@ -1864,7 +1854,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0003-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Run at least 5 km.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:running-distance",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Running",
                             RewardXp = 0L,
                             SortOrder = 3,
@@ -1878,7 +1871,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0004-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Hit the gym for at least 45 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:gym-duration-single",
                             IsActive = true,
+                            ProgressMode = "SingleActivity",
                             RequiredActivity = "Gym",
                             RewardXp = 0L,
                             SortOrder = 4,
@@ -1892,7 +1888,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0005-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Practice yoga for at least 30 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:yoga-duration-single",
                             IsActive = true,
+                            ProgressMode = "SingleActivity",
                             RequiredActivity = "Yoga",
                             RewardXp = 0L,
                             SortOrder = 5,
@@ -1906,7 +1905,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0006-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Run for at least 30 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:running-duration-single",
                             IsActive = true,
+                            ProgressMode = "SingleActivity",
                             RequiredActivity = "Running",
                             RewardXp = 0L,
                             SortOrder = 6,
@@ -1920,7 +1922,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0101-0000-0000-000000000000"),
                             Category = "Workouts",
                             Description = "Complete one workout.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Workouts::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 7,
                             TargetUnit = "workout",
@@ -1933,7 +1938,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0102-0000-0000-000000000000"),
                             Category = "Workouts",
                             Description = "Complete two workouts.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Workouts::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 8,
                             TargetUnit = "workouts",
@@ -1946,7 +1954,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0103-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Stay active for 10 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Duration::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 9,
                             TargetUnit = "minutes",
@@ -1959,7 +1970,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0104-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Stay active for 60 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Duration::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 10,
                             TargetUnit = "minutes",
@@ -1972,7 +1986,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0105-0000-0000-000000000000"),
                             Category = "Calories",
                             Description = "Burn 100 calories.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Calories::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 11,
                             TargetUnit = "calories",
@@ -1985,7 +2002,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0106-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cover 1 km.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Distance::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 12,
                             TargetUnit = "km",
@@ -1998,7 +2018,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0107-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cover 3 km.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Distance::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 13,
                             TargetUnit = "km",
@@ -2011,7 +2034,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0108-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cycle 5 km.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Distance:Cycling:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Cycling",
                             RewardXp = 0L,
                             SortOrder = 14,
@@ -2025,7 +2051,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0109-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Swim for 20 minutes.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Daily:Duration:Swimming:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Swimming",
                             RewardXp = 0L,
                             SortOrder = 15,
@@ -2036,10 +2065,77 @@ namespace LifeLevel.Api.Migrations
                         },
                         new
                         {
+                            Id = new Guid("bbbbbbbb-0110-0000-0000-000000000000"),
+                            Category = "ZonesCompleted",
+                            Description = "Complete 1 zone today.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:zone",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 101,
+                            TargetUnit = "zone",
+                            TargetValue = 1.0,
+                            Title = "Pathfinder",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0111-0000-0000-000000000000"),
+                            Category = "ChestsOpened",
+                            Description = "Open 1 available chest today.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:chest",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 102,
+                            TargetUnit = "chest",
+                            TargetValue = 1.0,
+                            Title = "Treasure Hunter",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0112-0000-0000-000000000000"),
+                            Category = "BossContributions",
+                            Description = "Complete 1 workout while a boss is active.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:boss-contribution",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 103,
+                            TargetUnit = "workout",
+                            TargetValue = 1.0,
+                            Title = "Challenge the Boss",
+                            Type = "Daily"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0113-0000-0000-000000000000"),
+                            Category = "GuildRaidContributions",
+                            Description = "Complete 1 workout while your guild raid is active.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "daily:guild-contribution",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 104,
+                            TargetUnit = "contribution",
+                            TargetValue = 1.0,
+                            Title = "Answer the Call",
+                            Type = "Daily"
+                        },
+                        new
+                        {
                             Id = new Guid("bbbbbbbb-0007-0000-0000-000000000000"),
                             Category = "Workouts",
                             Description = "Complete 3 workouts this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 1,
                             TargetUnit = "workouts",
@@ -2052,7 +2148,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0008-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Run a total of 10 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Running",
                             RewardXp = 0L,
                             SortOrder = 2,
@@ -2066,7 +2165,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0009-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Spend at least 90 minutes at the gym this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Gym",
                             RewardXp = 0L,
                             SortOrder = 3,
@@ -2080,7 +2182,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0201-0000-0000-000000000000"),
                             Category = "Workouts",
                             Description = "Complete 5 workouts this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Workouts::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 4,
                             TargetUnit = "workouts",
@@ -2093,7 +2198,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0202-0000-0000-000000000000"),
                             Category = "Workouts",
                             Description = "Complete 7 workouts this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Workouts::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 5,
                             TargetUnit = "workouts",
@@ -2106,7 +2214,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0203-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Log 90 active minutes this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Duration::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 6,
                             TargetUnit = "minutes",
@@ -2119,7 +2230,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0204-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Log 180 active minutes this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Duration::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 7,
                             TargetUnit = "minutes",
@@ -2132,7 +2246,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0205-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Log 300 active minutes this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Duration::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 8,
                             TargetUnit = "minutes",
@@ -2145,7 +2262,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0206-0000-0000-000000000000"),
                             Category = "Calories",
                             Description = "Burn 500 calories this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Calories::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 9,
                             TargetUnit = "calories",
@@ -2158,7 +2278,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0207-0000-0000-000000000000"),
                             Category = "Calories",
                             Description = "Burn 1,000 calories this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Calories::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 10,
                             TargetUnit = "calories",
@@ -2171,7 +2294,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0208-0000-0000-000000000000"),
                             Category = "Calories",
                             Description = "Burn 2,000 calories this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Calories::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 11,
                             TargetUnit = "calories",
@@ -2184,7 +2310,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0209-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cover 5 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Distance::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 12,
                             TargetUnit = "km",
@@ -2197,7 +2326,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0210-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cover 15 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Distance::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 13,
                             TargetUnit = "km",
@@ -2210,7 +2342,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0211-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cover 30 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Distance::Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 0L,
                             SortOrder = 14,
                             TargetUnit = "km",
@@ -2223,7 +2358,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0212-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Practice yoga for 60 minutes this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Duration:Yoga:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Yoga",
                             RewardXp = 0L,
                             SortOrder = 15,
@@ -2237,7 +2375,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0213-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Cycle 25 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Distance:Cycling:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Cycling",
                             RewardXp = 0L,
                             SortOrder = 16,
@@ -2251,7 +2392,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0214-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Swim for 60 minutes this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Duration:Swimming:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Swimming",
                             RewardXp = 0L,
                             SortOrder = 17,
@@ -2265,7 +2409,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0215-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Climb for 60 minutes this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Duration:Climbing:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Climbing",
                             RewardXp = 0L,
                             SortOrder = 18,
@@ -2279,7 +2426,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0216-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Hike 10 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Distance:Hiking:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Hiking",
                             RewardXp = 0L,
                             SortOrder = 19,
@@ -2293,7 +2443,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0217-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Walk 20 km this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "Weekly:Distance:Walking:Cumulative",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Walking",
                             RewardXp = 0L,
                             SortOrder = 20,
@@ -2304,10 +2457,173 @@ namespace LifeLevel.Api.Migrations
                         },
                         new
                         {
+                            Id = new Guid("bbbbbbbb-0218-0000-0000-000000000000"),
+                            Category = "ZonesCompleted",
+                            Description = "Complete 1 zone this week.",
+                            DifficultyTier = "Easy",
+                            GroupKey = "weekly:zones",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 101,
+                            TargetUnit = "zone",
+                            TargetValue = 1.0,
+                            Title = "Trailblazer",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0219-0000-0000-000000000000"),
+                            Category = "ZonesCompleted",
+                            Description = "Complete 2 zones this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "weekly:zones",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 102,
+                            TargetUnit = "zones",
+                            TargetValue = 2.0,
+                            Title = "Wayfinder",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0220-0000-0000-000000000000"),
+                            Category = "ZonesCompleted",
+                            Description = "Complete 3 zones this week.",
+                            DifficultyTier = "Stretch",
+                            GroupKey = "weekly:zones",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 103,
+                            TargetUnit = "zones",
+                            TargetValue = 3.0,
+                            Title = "Realm Walker",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0221-0000-0000-000000000000"),
+                            Category = "ChestsOpened",
+                            Description = "Open 1 reachable chest this week.",
+                            DifficultyTier = "Easy",
+                            GroupKey = "weekly:chests",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 104,
+                            TargetUnit = "chest",
+                            TargetValue = 1.0,
+                            Title = "Treasure Trail",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0222-0000-0000-000000000000"),
+                            Category = "ChestsOpened",
+                            Description = "Open 2 reachable chests this week.",
+                            DifficultyTier = "Stretch",
+                            GroupKey = "weekly:chests",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 105,
+                            TargetUnit = "chests",
+                            TargetValue = 2.0,
+                            Title = "Vault Seeker",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0223-0000-0000-000000000000"),
+                            Category = "BossContributions",
+                            Description = "Complete 2 workouts while a boss is active.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "weekly:boss-contribution",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 106,
+                            TargetUnit = "workouts",
+                            TargetValue = 2.0,
+                            Title = "Press the Attack",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0224-0000-0000-000000000000"),
+                            Category = "BossesDefeated",
+                            Description = "Defeat 1 active boss this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "weekly:boss-defeat",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 107,
+                            TargetUnit = "boss",
+                            TargetValue = 1.0,
+                            Title = "Boss Breaker",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0225-0000-0000-000000000000"),
+                            Category = "GuildRaidContributions",
+                            Description = "Contribute 2 workouts to the active guild raid.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "weekly:guild-contribution",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 108,
+                            TargetUnit = "contributions",
+                            TargetValue = 2.0,
+                            Title = "Guild Vanguard",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0226-0000-0000-000000000000"),
+                            Category = "GuildRaidsWon",
+                            Description = "Contribute and help defeat 1 guild raid this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "weekly:guild-victory",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 109,
+                            TargetUnit = "victory",
+                            TargetValue = 1.0,
+                            Title = "Victory Together",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbbbbbb-0227-0000-0000-000000000000"),
+                            Category = "RegionsCompleted",
+                            Description = "Defeat your current region boss this week.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "weekly:region",
+                            IsActive = true,
+                            ProgressMode = "Cumulative",
+                            RewardXp = 0L,
+                            SortOrder = 110,
+                            TargetUnit = "region",
+                            TargetValue = 1.0,
+                            Title = "Conquer the Region",
+                            Type = "Weekly"
+                        },
+                        new
+                        {
                             Id = new Guid("bbbbbbbb-0010-0000-0000-000000000000"),
                             Category = "Distance",
                             Description = "Run a total of 10 km across all activities.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Running",
                             RewardXp = 1000L,
                             SortOrder = 1,
@@ -2321,7 +2637,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0011-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Spend 60 minutes climbing.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RequiredActivity = "Climbing",
                             RewardXp = 1200L,
                             SortOrder = 2,
@@ -2335,7 +2654,10 @@ namespace LifeLevel.Api.Migrations
                             Id = new Guid("bbbbbbbb-0012-0000-0000-000000000000"),
                             Category = "Duration",
                             Description = "Log a total of 500 minutes of any activity.",
+                            DifficultyTier = "Standard",
+                            GroupKey = "",
                             IsActive = true,
+                            ProgressMode = "Cumulative",
                             RewardXp = 2000L,
                             SortOrder = 3,
                             TargetUnit = "minutes",
@@ -2629,7 +2951,13 @@ namespace LifeLevel.Api.Migrations
                     b.Property<DateTime?>("LastActivityDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("LastRewardedStreakDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Longest")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PendingRewardCoins")
                         .HasColumnType("integer");
 
                     b.Property<bool>("ShieldUsedToday")
@@ -3733,15 +4061,6 @@ namespace LifeLevel.Api.Migrations
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", b =>
-                {
-                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
-                        .WithOne()
-                        .HasForeignKey("LifeLevel.Modules.LoginReward.Domain.Entities.LoginReward", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

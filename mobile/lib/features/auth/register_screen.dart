@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/api/api_client.dart';
 import '../character/setup/setup_resume_service.dart';
 import '../character/setup/welcome_setup_screen.dart';
@@ -44,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
+          AppRoute(
               builder: (_) => WelcomeSetupScreen(ringItems: result.ringItems)),
           (_) => false,
         );

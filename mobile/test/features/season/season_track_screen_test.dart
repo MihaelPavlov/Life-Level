@@ -15,7 +15,8 @@ class _FakeSeasonNotifier extends SeasonNotifier {
   Future<SeasonTrack> build() async => _data;
 }
 
-SeasonRewardView _rv(String state, {String type = 'Xp', String label = '+250 XP'}) =>
+SeasonRewardView _rv(String state,
+        {String type = 'Xp', String label = '+250 XP'}) =>
     SeasonRewardView(
       type: type,
       label: label,
@@ -32,7 +33,8 @@ SeasonRewardState _stateOf(String s) => {
       'ready': SeasonRewardState.ready,
     }[s]!;
 
-SeasonTrack _track({required List<SeasonTier> tiers, int currentTier = 0}) => SeasonTrack(
+SeasonTrack _track({required List<SeasonTier> tiers, int currentTier = 0}) =>
+    SeasonTrack(
       hasActiveSeason: true,
       season: SeasonHeader(
         id: 's1',
@@ -50,7 +52,8 @@ SeasonTrack _track({required List<SeasonTier> tiers, int currentTier = 0}) => Se
       xpIntoTier: 0,
       xpToNextTier: 600,
       hasFounderPass: false,
-      nextReward: const NextReward(tier: 1, label: '+150 Season XP', track: 'Free'),
+      nextReward:
+          const NextReward(tier: 1, label: '+150 Season XP', track: 'Free'),
       tiers: tiers,
     );
 

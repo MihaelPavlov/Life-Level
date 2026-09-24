@@ -35,10 +35,12 @@ class TrailEncounterNode {
       sideOffset: (json['sideOffset'] as num? ?? 0).toDouble(),
       type: type,
       merchant: json['merchant'] != null
-          ? MerchantEncounterData.fromJson(json['merchant'] as Map<String, dynamic>)
+          ? MerchantEncounterData.fromJson(
+              json['merchant'] as Map<String, dynamic>)
           : null,
       blocker: json['blocker'] != null
-          ? BlockerEncounterData.fromJson(json['blocker'] as Map<String, dynamic>)
+          ? BlockerEncounterData.fromJson(
+              json['blocker'] as Map<String, dynamic>)
           : null,
       story: json['story'] != null
           ? StoryEncounterData.fromJson(json['story'] as Map<String, dynamic>)
@@ -175,7 +177,8 @@ class BlockerEncounterData {
         'maxHp': maxHp,
         'currentHp': currentHp,
         'playerDamageDone': playerDamageDone,
-        if (lastHitDescription != null) 'lastHitDescription': lastHitDescription,
+        if (lastHitDescription != null)
+          'lastHitDescription': lastHitDescription,
         'retreatsInSeconds': retreatsIn.inSeconds,
         'rewards': rewards,
         if (bossId != null) 'bossId': bossId,

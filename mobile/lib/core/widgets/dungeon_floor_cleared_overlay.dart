@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 import '../services/dungeon_floor_cleared_notifier.dart';
 
 /// Celebration dialog fired whenever `DungeonFloorClearedNotifier` emits a
@@ -15,29 +16,12 @@ void showDungeonFloorClearedOverlay(
   BuildContext context,
   DungeonFloorClearedEvent event,
 ) {
-  showGeneralDialog(
+  showAppCelebration(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss reward popup',
     barrierColor: Colors.black.withValues(alpha: 0.7),
-    transitionDuration: const Duration(milliseconds: 380),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.18),
-            end: Offset.zero,
-          ).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.88, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) => _FloorClearedDialog(event: event),
+    builder: (_) => _FloorClearedDialog(event: event),
   );
 }
 

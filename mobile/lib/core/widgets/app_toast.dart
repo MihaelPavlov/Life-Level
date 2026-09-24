@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 
 enum AppToastType { info, success, error, warning }
 
@@ -18,7 +19,8 @@ class AppToast {
     IconData icon = Icons.info_outline_rounded,
     Duration duration = const Duration(seconds: 3),
   }) =>
-      show(context, message, type: AppToastType.info, icon: icon, duration: duration);
+      show(context, message,
+          type: AppToastType.info, icon: icon, duration: duration);
 
   static void success(
     BuildContext context,
@@ -26,7 +28,8 @@ class AppToast {
     IconData icon = Icons.check_rounded,
     Duration duration = const Duration(seconds: 3),
   }) =>
-      show(context, message, type: AppToastType.success, icon: icon, duration: duration);
+      show(context, message,
+          type: AppToastType.success, icon: icon, duration: duration);
 
   static void error(
     BuildContext context,
@@ -34,7 +37,8 @@ class AppToast {
     IconData icon = Icons.priority_high_rounded,
     Duration duration = const Duration(seconds: 4),
   }) =>
-      show(context, message, type: AppToastType.error, icon: icon, duration: duration);
+      show(context, message,
+          type: AppToastType.error, icon: icon, duration: duration);
 
   static void warning(
     BuildContext context,
@@ -42,7 +46,8 @@ class AppToast {
     IconData icon = Icons.warning_amber_rounded,
     Duration duration = const Duration(seconds: 3),
   }) =>
-      show(context, message, type: AppToastType.warning, icon: icon, duration: duration);
+      show(context, message,
+          type: AppToastType.warning, icon: icon, duration: duration);
 
   static void show(
     BuildContext context,
@@ -106,15 +111,24 @@ class _AppToastOverlay extends StatelessWidget {
       bottom: bottom,
       child: IgnorePointer(
         child: TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 220),
+          duration: AppMotion.duration(
+            context,
+            const Duration(milliseconds: 220),
+          ),
           curve: Curves.easeOutCubic,
-          tween: Tween(begin: 18, end: 0),
+          tween: Tween(
+            begin: AppMotion.isFull(context) ? 18 : 0,
+            end: 0,
+          ),
           builder: (context, offset, child) {
             return Transform.translate(
               offset: Offset(0, offset),
               child: AnimatedOpacity(
                 opacity: offset == 0 ? 1 : 0.96,
-                duration: const Duration(milliseconds: 160),
+                duration: AppMotion.duration(
+                  context,
+                  const Duration(milliseconds: 160),
+                ),
                 child: child,
               ),
             );
@@ -149,7 +163,8 @@ class _AppToastOverlay extends StatelessWidget {
                         height: 30,
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: .14),
-                          border: Border.all(color: color.withValues(alpha: .36)),
+                          border:
+                              Border.all(color: color.withValues(alpha: .36)),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(icon, color: color, size: 17),

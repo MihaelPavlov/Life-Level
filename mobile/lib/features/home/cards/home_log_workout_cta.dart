@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../activity/log_activity_screen.dart';
 
 /// Pinned primary CTA that sits just above the bottom nav.
@@ -16,7 +17,7 @@ class HomeLogWorkoutCta extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: GestureDetector(
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
+          AppRoute<void>(
             builder: (_) => const LogActivityScreen(),
           ),
         ),

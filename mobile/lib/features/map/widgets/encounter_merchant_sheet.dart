@@ -59,7 +59,10 @@ class _MerchantSheetState extends State<MerchantSheet>
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 32, offset: Offset(0, -8))],
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x40000000), blurRadius: 32, offset: Offset(0, -8))
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -169,7 +172,8 @@ class _MerchantSheetState extends State<MerchantSheet>
                   height: 6,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.orange.withOpacity(0.4 + 0.6 * _blink.value),
+                    color:
+                        AppColors.orange.withOpacity(0.4 + 0.6 * _blink.value),
                   ),
                 ),
               ),
@@ -335,7 +339,8 @@ class _MerchantSheetState extends State<MerchantSheet>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
       ),
-      child: Text(_dismissing ? 'Continuing...' : 'Not interested · Let merchant pass'),
+      child: Text(
+          _dismissing ? 'Continuing...' : 'Not interested · Let merchant pass'),
     );
   }
 
@@ -357,10 +362,14 @@ class _MerchantSheetState extends State<MerchantSheet>
 
   Color _rarityColor(String rarity) {
     switch (rarity) {
-      case 'rare':     return AppColors.blue;
-      case 'uncommon': return AppColors.green;
-      case 'mystery':  return AppColors.purple;
-      default:         return AppColors.textSecondary;
+      case 'rare':
+        return AppColors.blue;
+      case 'uncommon':
+        return AppColors.green;
+      case 'mystery':
+        return AppColors.purple;
+      default:
+        return AppColors.textSecondary;
     }
   }
 }

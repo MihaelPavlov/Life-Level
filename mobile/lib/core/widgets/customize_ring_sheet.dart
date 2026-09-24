@@ -10,13 +10,13 @@ import 'main_shell.dart'
         sanitizeRingIds,
         sanitizeNavIds;
 
-const _kSheetBg   = Color(0xFF0f1828);
-const _kCardBg    = Color(0xFF1a2848);
+const _kSheetBg = Color(0xFF0f1828);
+const _kCardBg = Color(0xFF1a2848);
 const _kSurfaceBg = Color(0xFF111830);
-const _kBorder    = Color(0xFF1e2d4a);
-const _kTextPri   = Color(0xFFdde8ff);
-const _kTextSec   = Color(0xFF6e84b0);
-const _kTeal      = Color(0xFF38d9c8);
+const _kBorder = Color(0xFF1e2d4a);
+const _kTextPri = Color(0xFFdde8ff);
+const _kTextSec = Color(0xFF6e84b0);
+const _kTeal = Color(0xFF38d9c8);
 
 const _kMaxRing = 6;
 const _kMinRing = 1;
@@ -45,7 +45,7 @@ class _CustomizeRingSheetState extends State<CustomizeRingSheet> {
   @override
   void initState() {
     super.initState();
-    _ids    = sanitizeRingIds(widget.currentIds);
+    _ids = sanitizeRingIds(widget.currentIds);
     _navIds = sanitizeNavIds(widget.currentNavIds);
   }
 
@@ -101,7 +101,8 @@ class _CustomizeRingSheetState extends State<CustomizeRingSheet> {
         children: [
           // ── handle ──────────────────────────────────────────────────────
           Container(
-            width: 36, height: 4,
+            width: 36,
+            height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFF2a3a5a),
@@ -125,17 +126,20 @@ class _CustomizeRingSheetState extends State<CustomizeRingSheet> {
                               color: _kTextPri)),
                       const SizedBox(height: 2),
                       Text('Ring 1–6 slots · Nav bar 4 tabs',
-                          style: const TextStyle(fontSize: 11, color: _kTextSec)),
+                          style:
+                              const TextStyle(fontSize: 11, color: _kTextSec)),
                     ],
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    widget.onSave(sanitizeRingIds(_ids), sanitizeNavIds(_navIds));
+                    widget.onSave(
+                        sanitizeRingIds(_ids), sanitizeNavIds(_navIds));
                     Navigator.pop(context);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: _kTeal,
                       borderRadius: BorderRadius.circular(10),
@@ -182,8 +186,8 @@ class _CustomizeRingSheetState extends State<CustomizeRingSheet> {
                               : 'Ring full — remove one first',
                       statusDim: !_inRing(item.id) && _ids.length >= _kMaxRing,
                       canInteract: _inRing(item.id)
-                          ? _ids.length > _kMinRing   // can remove if > 1
-                          : _ids.length < _kMaxRing,  // can add if < 6
+                          ? _ids.length > _kMinRing // can remove if > 1
+                          : _ids.length < _kMaxRing, // can add if < 6
                       actionLabel: _inRing(item.id) ? '✓' : '+',
                       onTap: () => _toggleRing(item.id),
                     ),
@@ -269,7 +273,8 @@ class _RingPreview extends StatelessWidget {
         children: [
           // label
           const Positioned(
-            top: 0, left: 0,
+            top: 0,
+            left: 0,
             child: Text('PREVIEW',
                 style: TextStyle(
                     fontSize: 9,
@@ -279,7 +284,8 @@ class _RingPreview extends StatelessWidget {
           ),
           // slot count
           Positioned(
-            bottom: 0, right: 0,
+            bottom: 0,
+            right: 0,
             child: Text('${ids.length} / $_kMaxRing slots',
                 style: const TextStyle(fontSize: 9, color: _kTextSec)),
           ),
@@ -293,9 +299,10 @@ class _RingPreview extends StatelessWidget {
                   // centre boss button
                   Positioned(
                     left: boxSize / 2 - 16,
-                    top:  boxSize / 2 - 16,
+                    top: boxSize / 2 - 16,
                     child: Container(
-                      width: 32, height: 32,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFFff4040), Color(0xFFff8040)],
@@ -319,14 +326,15 @@ class _RingPreview extends StatelessWidget {
                       final item = items[i];
                       return Positioned(
                         left: cx - itemSize / 2,
-                        top:  cy - itemSize / 2,
+                        top: cy - itemSize / 2,
                         child: Container(
-                          width: itemSize, height: itemSize,
+                          width: itemSize,
+                          height: itemSize,
                           decoration: BoxDecoration(
                             color: _kCardBg,
                             borderRadius: BorderRadius.circular(7),
-                            border: Border.all(
-                                color: item.color.withOpacity(0.5)),
+                            border:
+                                Border.all(color: item.color.withOpacity(0.5)),
                           ),
                           child: Center(
                             child: Text(item.emoji,
@@ -346,9 +354,10 @@ class _RingPreview extends StatelessWidget {
                       final cy = boxSize / 2 - sin(rad) * previewRadius;
                       return Positioned(
                         left: cx - itemSize / 2,
-                        top:  cy - itemSize / 2,
+                        top: cy - itemSize / 2,
                         child: Container(
-                          width: itemSize, height: itemSize,
+                          width: itemSize,
+                          height: itemSize,
                           decoration: BoxDecoration(
                             color: Colors.transparent,
                             borderRadius: BorderRadius.circular(7),
@@ -359,8 +368,8 @@ class _RingPreview extends StatelessWidget {
                           ),
                           child: const Center(
                             child: Text('+',
-                                style: TextStyle(
-                                    fontSize: 12, color: _kTextSec)),
+                                style:
+                                    TextStyle(fontSize: 12, color: _kTextSec)),
                           ),
                         ),
                       );
@@ -422,7 +431,8 @@ class _NavPreview extends StatelessWidget {
                   width: 52,
                   alignment: Alignment.center,
                   child: Container(
-                    width: 28, height: 28,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
                       gradient: const LinearGradient(
@@ -454,7 +464,7 @@ class _MiniNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const activeColor   = Color(0xFF4f9eff);
+    const activeColor = Color(0xFF4f9eff);
     const inactiveColor = Color(0xFF6e84b0);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -475,11 +485,11 @@ class _MiniNavItem extends StatelessWidget {
 class _DestRow extends StatelessWidget {
   final String emoji;
   final String label;
-  final Color  color;
-  final bool   active;
+  final Color color;
+  final bool active;
   final String statusText;
-  final bool   statusDim;
-  final bool   canInteract;
+  final bool statusDim;
+  final bool canInteract;
   final String actionLabel;
   final VoidCallback onTap;
 
@@ -512,11 +522,11 @@ class _DestRow extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: active
-                    ? color.withOpacity(0.12)
-                    : const Color(0xFF162040),
+                color:
+                    active ? color.withOpacity(0.12) : const Color(0xFF162040),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -537,23 +547,21 @@ class _DestRow extends StatelessWidget {
                   Text(statusText,
                       style: TextStyle(
                           fontSize: 10,
-                          color: statusDim
-                              ? const Color(0xFF4a5a70)
-                              : _kTextSec)),
+                          color:
+                              statusDim ? const Color(0xFF4a5a70) : _kTextSec)),
                 ],
               ),
             ),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 22, height: 22,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
-                color: active
-                    ? color.withOpacity(0.2)
-                    : const Color(0xFF162040),
+                color:
+                    active ? color.withOpacity(0.2) : const Color(0xFF162040),
                 border: Border.all(
-                  color: active
-                      ? color.withOpacity(0.7)
-                      : const Color(0xFF2a3a5a),
+                  color:
+                      active ? color.withOpacity(0.7) : const Color(0xFF2a3a5a),
                 ),
                 shape: BoxShape.circle,
               ),

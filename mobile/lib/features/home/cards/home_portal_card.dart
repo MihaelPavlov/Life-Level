@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../../core/services/world_map_notifier.dart';
@@ -51,7 +52,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
 
   Future<void> _pickCrossroadsBranch(WorldZoneModel branch) async {
     if (_pickingBranchId != null) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
         backgroundColor: AppColors.surface,

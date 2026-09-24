@@ -26,7 +26,6 @@
     <ProjectReference Include="..\modules\LifeLevel.Modules.Activity\LifeLevel.Modules.Activity.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Quest\LifeLevel.Modules.Quest.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Streak\LifeLevel.Modules.Streak.csproj" />
-    <ProjectReference Include="..\modules\LifeLevel.Modules.LoginReward\LifeLevel.Modules.LoginReward.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Map\LifeLevel.Modules.Map.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.WorldZone\LifeLevel.Modules.WorldZone.csproj" />
     <ProjectReference Include="..\modules\LifeLevel.Modules.Adventure.Encounters\LifeLevel.Modules.Adventure.Encounters.csproj" />

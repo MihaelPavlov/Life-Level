@@ -8,8 +8,7 @@ final streakServiceProvider = Provider<StreakService>((ref) => StreakService());
 // ── Streak notifier ────────────────────────────────────────────────────────────
 class StreakNotifier extends AsyncNotifier<StreakData> {
   @override
-  Future<StreakData> build() =>
-      ref.watch(streakServiceProvider).getStreak();
+  Future<StreakData> build() => ref.watch(streakServiceProvider).getStreak();
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
@@ -21,6 +20,12 @@ class StreakNotifier extends AsyncNotifier<StreakData> {
   Future<UseShieldResult> useShield() async {
     final result = await ref.read(streakServiceProvider).useShield();
     if (result.success) await refresh();
+    return result;
+  }
+
+  Future<ClaimStreakRewardResult> claimReward() async {
+    final result = await ref.read(streakServiceProvider).claimReward();
+    await refresh();
     return result;
   }
 }

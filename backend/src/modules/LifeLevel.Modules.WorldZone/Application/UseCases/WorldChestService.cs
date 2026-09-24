@@ -58,6 +58,7 @@ public class WorldChestService(DbContext db, ICharacterXpPort characterXp, IEven
         await db.SaveChangesAsync(ct);
 
         await events.PublishAsync(new RewardClaimedEvent(userId, "WorldChest"), CancellationToken.None);
+        await events.PublishAsync(new ChestOpenedEvent(userId, zoneId), ct);
 
         int xp = zone.ChestRewardXp ?? 0;
         if (xp > 0)

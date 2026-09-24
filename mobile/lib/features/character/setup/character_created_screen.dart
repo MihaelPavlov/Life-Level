@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/class_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
@@ -78,7 +79,7 @@ class _CharacterCreatedScreenState
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => MainShell(initialRingIds: widget.ringItems),
       ),
       (_) => false,

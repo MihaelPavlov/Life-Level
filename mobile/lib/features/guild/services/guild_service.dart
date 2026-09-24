@@ -110,7 +110,8 @@ class GuildService {
   }
 
   Future<List<GuildRaidVictoryInfo>> pendingRaidVictories() async {
-    final response = await ApiClient.instance.get('/guild/raid/victories/pending');
+    final response =
+        await ApiClient.instance.get('/guild/raid/victories/pending');
     final list = (_decode(response.data) as List?) ?? const [];
     return list
         .whereType<Map<String, dynamic>>()
@@ -126,7 +127,8 @@ class GuildService {
   }
 
   Future<List<GuildRaidExpiredInfo>> pendingRaidExpiries() async {
-    final response = await ApiClient.instance.get('/guild/raid/expiries/pending');
+    final response =
+        await ApiClient.instance.get('/guild/raid/expiries/pending');
     final list = (_decode(response.data) as List?) ?? const [];
     return list
         .whereType<Map<String, dynamic>>()

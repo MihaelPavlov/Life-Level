@@ -17,7 +17,6 @@ public class CharacterController(
     IUserContext userContext,
     IActivityStatsReadPort activityStatsPort,
     IStreakReadPort streakReadPort,
-    ILoginRewardReadPort loginRewardReadPort,
     IDailyQuestReadPort dailyQuestReadPort,
     IBossDefeatedCountReadPort bossDefeatedCountReadPort,
     IUserReadPort userReadPort,
@@ -50,7 +49,6 @@ public class CharacterController(
                 Username: await userReadPort.GetUsernameAsync(userId) ?? string.Empty,
                 WeeklyStats: await activityStatsPort.GetWeeklyStatsAsync(userId),
                 Streak: await streakReadPort.GetCurrentStreakAsync(userId),
-                HasClaimedLoginRewardToday: await loginRewardReadPort.HasClaimedTodayAsync(userId),
                 DailyQuestsCompleted: await dailyQuestReadPort.CountCompletedDailyQuestsAsync(userId),
                 BossesDefeated: await bossDefeatedCountReadPort.GetDefeatedCountAsync(userId)
             );
@@ -146,7 +144,6 @@ public class CharacterController(
             Username: await userReadPort.GetUsernameAsync(userId) ?? string.Empty,
             WeeklyStats: await activityStatsPort.GetWeeklyStatsAsync(userId, ct),
             Streak: await streakReadPort.GetCurrentStreakAsync(userId, ct),
-            HasClaimedLoginRewardToday: await loginRewardReadPort.HasClaimedTodayAsync(userId, ct),
             DailyQuestsCompleted: await dailyQuestReadPort.CountCompletedDailyQuestsAsync(userId, ct),
             BossesDefeated: await bossDefeatedCountReadPort.GetDefeatedCountAsync(userId, ct)
         );

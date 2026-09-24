@@ -117,7 +117,8 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
     }
 
     // Kick the toast if a reward is pending.
-    if (c.pendingXpReward != null && !_toastCtrl.isAnimating &&
+    if (c.pendingXpReward != null &&
+        !_toastCtrl.isAnimating &&
         _toastCtrl.value == 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -489,8 +490,8 @@ class _XpRewardToast extends StatelessWidget {
               child: Transform.translate(
                 offset: Offset(0, -20 + 20 * animation.value),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,

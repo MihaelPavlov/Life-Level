@@ -110,6 +110,8 @@ class AppIcons {
       'assets/icons/reward_streak_shield.png';
   static const String rewardTreasureChest =
       'assets/icons/reward_treasure_chest.png';
+  static const String seasonAdventureHub =
+      'assets/icons/season_adventure_hub.png';
   static const String rewardXpSparkle = 'assets/icons/reward_xp_sparkle.png';
   static const String rewardXpStorm = 'assets/icons/reward_xp_storm.png';
   static const String uiNewItem = 'assets/icons/ui_new_item.png';
@@ -282,10 +284,15 @@ class AppIcons {
 
   // Region Chests screen chrome — the empty gold ribbon "Region Chests"
   // title sits on, and the full-bleed night-mountain scene behind it.
+  // Guild screens — castle hero art for the Guild Hall and the guild finder.
+  static const String guildHallHero = 'assets/Guild/guild_hall_hero.jpg';
+  static const String guildFindHero = 'assets/Guild/guild_find_hero.jpg';
+
   static const String regionChestsTitleBanner =
       'assets/Regions/region_chests_title_banner.png';
   static const String regionChestsBackground =
       'assets/Regions/region_chests_background.png';
+  static const String regionChestsHubIcon = 'assets/icons/region_chests.png';
 
   /// Region display name → its painted banner asset. All 15 chapters have
   /// real art (see `docs` art-direction sheet for the generation prompts).

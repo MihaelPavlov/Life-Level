@@ -55,7 +55,8 @@ class _ShimmerCardState extends State<ShimmerCard>
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border.withValues(alpha: opacity)),
+            border:
+                Border.all(color: AppColors.border.withValues(alpha: opacity)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +67,8 @@ class _ShimmerCardState extends State<ShimmerCard>
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated.withValues(alpha: opacity),
+                      color:
+                          AppColors.surfaceElevated.withValues(alpha: opacity),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -75,7 +77,8 @@ class _ShimmerCardState extends State<ShimmerCard>
                     child: Container(
                       height: 14,
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated.withValues(alpha: opacity),
+                        color: AppColors.surfaceElevated
+                            .withValues(alpha: opacity),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -85,7 +88,8 @@ class _ShimmerCardState extends State<ShimmerCard>
                     width: 56,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated.withValues(alpha: opacity),
+                      color:
+                          AppColors.surfaceElevated.withValues(alpha: opacity),
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),

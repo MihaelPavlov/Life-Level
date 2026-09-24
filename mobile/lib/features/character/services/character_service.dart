@@ -34,7 +34,9 @@ class CharacterService {
   Future<List<XpHistoryEntry>> getXpHistory() async {
     final response = await _dio.get('/character/xp-history');
     final list = response.data as List<dynamic>;
-    return list.map((e) => XpHistoryEntry.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => XpHistoryEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> spendStatPoint(String stat) async {

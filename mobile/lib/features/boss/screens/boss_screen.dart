@@ -11,6 +11,7 @@ import 'boss_battle_screen.dart';
 
 class BossScreen extends ConsumerStatefulWidget {
   final VoidCallback? onClose;
+
   /// When provided, auto-open the battle view for this boss as soon as the
   /// list resolves. Set by the home portal "Fight →" CTAs via
   /// `BossOverlayNotifier.notifyForBoss`.
@@ -286,7 +287,8 @@ class BossScreenState extends ConsumerState<BossScreen> {
     final expired = bosses.where((b) => b.isExpired && !b.isDefeated).toList();
 
     // Only regular (non-mini) bosses count for "zone reachable" — mini-bosses are fightable from anywhere
-    final hasZoneBoss = bosses.any((b) => !b.isMini && b.canFight && !b.isDefeated && !b.isExpired);
+    final hasZoneBoss = bosses
+        .any((b) => !b.isMini && b.canFight && !b.isDefeated && !b.isExpired);
     final hasHistory = expired.isNotEmpty || defeated.isNotEmpty;
 
     return RefreshIndicator(
@@ -296,8 +298,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
         padding: const EdgeInsets.only(bottom: 100),
         children: [
           // ── No reachable bosses → zone banner ──
-          if (!hasZoneBoss)
-            _buildNoActiveBanner(hasHistory),
+          if (!hasZoneBoss) _buildNoActiveBanner(hasHistory),
 
           if (active.isNotEmpty) ...[
             _sectionLabel('ACTIVE'),

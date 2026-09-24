@@ -30,25 +30,28 @@ class GearStatsRow extends StatelessWidget {
               width: 18,
               height: 18,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.bolt_rounded, size: 18, color: AppColors.orange),
+              errorBuilder: (_, __, ___) => const Icon(Icons.bolt_rounded,
+                  size: 18, color: AppColors.orange),
             ),
             value: profile.power,
             valueColor: AppColors.orange,
           ),
           _divider(),
           _CombatStat(
-            icon: Image.asset(AppIcons.homeSwordIcon, width: 18, height: 18, fit: BoxFit.contain),
+            icon: Image.asset(AppIcons.homeSwordIcon,
+                width: 18, height: 18, fit: BoxFit.contain),
             value: profile.attack,
           ),
           _divider(),
           _CombatStat(
-            icon: const Icon(Icons.favorite_rounded, size: 18, color: AppColors.red),
+            icon: const Icon(Icons.favorite_rounded,
+                size: 18, color: AppColors.red),
             value: profile.health,
           ),
           _divider(),
           _CombatStat(
-            icon: const Icon(Icons.shield_rounded, size: 18, color: AppColors.blue),
+            icon: const Icon(Icons.shield_rounded,
+                size: 18, color: AppColors.blue),
             value: profile.defense,
           ),
         ],
@@ -56,7 +59,8 @@ class GearStatsRow extends StatelessWidget {
     );
   }
 
-  Widget _divider() => Container(width: 1, height: 26, color: Colors.white.withValues(alpha: 0.12));
+  Widget _divider() => Container(
+      width: 1, height: 26, color: Colors.white.withValues(alpha: 0.12));
 }
 
 class _CombatStat extends StatelessWidget {

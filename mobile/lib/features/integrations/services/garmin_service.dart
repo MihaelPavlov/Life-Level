@@ -50,7 +50,8 @@ class GarminService {
   }
 
   Future<GarminStatusDto> getStatus() async {
-    final response = await ApiClient.instance.get('/integrations/garmin/status');
+    final response =
+        await ApiClient.instance.get('/integrations/garmin/status');
     return GarminStatusDto.fromJson(response.data as Map<String, dynamic>);
   }
 

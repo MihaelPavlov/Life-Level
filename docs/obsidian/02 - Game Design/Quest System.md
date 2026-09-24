@@ -10,7 +10,7 @@ aliases: [Quests, Daily Quests, Weekly Quests]
 
 | Type | Count | Refresh | Expires | Bonus |
 |------|-------|---------|---------|-------|
-| Daily | 10 | Midnight UTC | Tomorrow midnight | 10 Daily Points each |
+| Daily | 5 | Midnight UTC | Tomorrow midnight | 20 Daily Points each |
 | Weekly | 10 | Monday 00:00 UTC | Next Monday | 20 Weekly Points each |
 | Special | Unlimited | Assigned lazily on first request | `2099-12-31` (effectively never) | – |
 
@@ -22,16 +22,18 @@ aliases: [Quests, Daily Quests, Weekly Quests]
 - `calories` — 🔥 total calories burned
 - `distance` — 📍 kilometers
 - `workouts` — 🏋️ number of activities
-- `streak` — 🔥 consecutive days (weekly/special)
-- `login` — 📅 daily login (weekly/special)
+- `zonesCompleted`, `chestsOpened` — eligible adventure progress
+- `bossContributions`, `bossesDefeated` — active boss workouts and victories
+- `guildRaidContributions`, `guildRaidsWon` — contributor-only guild progress
+- `regionsCompleted` — conditional weekly region-boss victory
 
 ## Task selection and rewards
 
-Each period receives a rotating set of 10 active templates, with up to three activity-specific tasks and the remainder general tasks. Reward values are snapshotted onto `UserQuestProgress` when assigned.
+Each period receives an eligibility-filtered set: 5 daily tasks with at most one game task, and 10 weekly tasks with at most two game tasks. Near-duplicate task groups cannot appear together. Fitness variants are selected from the player's previous 28 days; unavailable chest, boss, region, and guild objectives are not assigned. Reward values are snapshotted onto `UserQuestProgress` when assigned.
 
-- Daily: nine tasks award 15 coins and one awards 1 crystal; every task awards 10 Daily Points.
+- Daily: four tasks award 35 coins and one awards 1 crystal; every task awards 20 Daily Points.
 - Weekly: eight tasks award 30 coins and two award 1 crystal; every task awards 20 Weekly Points.
-- Task currency rewards are granted automatically when the task completes.
+- Completed tasks become claimable. Tapping any task Claim button collects every completed, unclaimed task in that Daily or Weekly period.
 
 Milestone rewards require a tap in the Rewards modal:
 
@@ -46,10 +48,13 @@ When an activity is logged:
 
 1. `ActivityService.LogActivityAsync` calls `IQuestProgressPort.UpdateProgressFromActivityAsync(userId, type, duration, distance, calories)`.
 2. `QuestService` loads all active `UserQuestProgress` rows (not yet expired, not yet completed).
-3. For each matching quest category, increments `CurrentValue`.
-4. If `CurrentValue >= TargetValue`: set `IsCompleted=true`, `CompletedAt=now`, and auto-grant the snapshotted coins or crystal.
-5. Special quests retain direct XP rewards; daily and weekly XP comes from claimable milestones.
-6. Completed task points unlock the period's milestone claims.
+3. Cumulative tasks add progress; `SingleActivity` tasks retain the best qualifying workout.
+4. If `CurrentValue >= TargetValue`: set `IsCompleted=true` and `CompletedAt=now`; the snapshotted reward remains unclaimed.
+5. `POST /api/rewards/tasks/{daily|weekly}/claim-available` claims every ready task, grants their combined currency, and activates their task points.
+6. Special quests retain direct XP rewards; daily and weekly XP comes from claimable milestones.
+7. Claimed task points unlock the period's milestone claims.
+
+Adventure and guild events advance the matching categories. Guild victories count only for contributors, and region completion only fires after defeating the current region boss.
 
 ## Completion events
 
@@ -62,8 +67,9 @@ When a task completes, `QuestCompletedEvent` is published for downstream systems
 - `GET /api/quests/special` — returns special quests (auto-assigns templates)
 - `POST /api/quests/generate/daily` — force regenerate (debug/testing)
 - `POST /api/quests/generate/weekly` — force regenerate (debug/testing)
-- `GET /api/rewards` — combined wallet, 7-day login cycle, daily track, and weekly track
-- `POST /api/rewards/milestones/{daily|weekly}/{threshold}/claim` — claim one unlocked milestone once
+- `GET /api/rewards` — combined wallet, daily track, and weekly track
+- `POST /api/rewards/tasks/{daily|weekly}/claim-available` — collect every completed unclaimed task in the period
+- `POST /api/rewards/milestones/{daily|weekly}/claim-available` — claim every unlocked milestone
 
 ## Related
 - [[Activity System]]

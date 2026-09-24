@@ -7,7 +7,11 @@ using StreakEntity = LifeLevel.Modules.Streak.Domain.Entities.Streak;
 
 namespace LifeLevel.Modules.Streak.Application.UseCases;
 
-public class StreakService(DbContext db, IEventPublisher events, ITalentStreakAssistPort? talentAssist = null)
+public class StreakService(
+    DbContext db,
+    IEventPublisher events,
+    IRewardCurrencyPort rewardCurrency,
+    ITalentStreakAssistPort? talentAssist = null)
     : IStreakReadPort, IStreakShieldPort, IStreakDailyReset
 {
     public async Task<StreakEntity> GetOrCreateAsync(Guid userId, CancellationToken ct = default)
@@ -99,6 +103,15 @@ public class StreakService(DbContext db, IEventPublisher events, ITalentStreakAs
             shieldAwarded = true;
         }
 
+        // Every newly completed streak day creates a manually claimable coin
+        // reward. The amount grows with the active streak and resets naturally
+        // to 10 when a broken streak starts again at day 1.
+        if (streak.LastRewardedStreakDate?.Date != today)
+        {
+            streak.PendingRewardCoins += streak.Current * 10;
+            streak.LastRewardedStreakDate = today;
+        }
+
         await db.SaveChangesAsync(ct);
 
         if (broke)
@@ -138,6 +151,32 @@ public class StreakService(DbContext db, IEventPublisher events, ITalentStreakAs
             Success = true,
             Message = "Shield activated. Your streak is protected for today.",
             ShieldsRemaining = streak.ShieldsAvailable
+        };
+    }
+
+    public async Task<ClaimStreakRewardResult> ClaimDailyRewardAsync(
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        var streak = await GetOrCreateAsync(userId, ct);
+        if (streak.PendingRewardCoins <= 0)
+        {
+            return new ClaimStreakRewardResult
+            {
+                Success = false,
+                Message = "No streak reward is ready to claim."
+            };
+        }
+
+        var coins = streak.PendingRewardCoins;
+        streak.PendingRewardCoins = 0;
+        await rewardCurrency.AddCoinsAsync(userId, coins, ct);
+
+        return new ClaimStreakRewardResult
+        {
+            Success = true,
+            Message = $"Streak reward claimed: {coins} coins.",
+            CoinsClaimed = coins
         };
     }
 
@@ -200,5 +239,8 @@ public class StreakService(DbContext db, IEventPublisher events, ITalentStreakAs
         ShieldUsedToday = streak.ShieldUsedToday,
         LastActivityDate = streak.LastActivityDate,
         TotalDaysActive = streak.TotalDaysActive,
+        PendingRewardCoins = streak.PendingRewardCoins,
+        CanClaimDailyReward = streak.PendingRewardCoins > 0,
+        NextRewardCoins = (streak.Current + 1) * 10,
     };
 }

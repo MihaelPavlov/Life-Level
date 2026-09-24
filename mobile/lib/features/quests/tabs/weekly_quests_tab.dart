@@ -24,7 +24,8 @@ class WeeklyQuestsTab extends ConsumerWidget {
           : RefreshIndicator(
               color: AppColors.blue,
               backgroundColor: AppColors.surface,
-              onRefresh: () => ref.read(weeklyQuestsProvider.notifier).refresh(),
+              onRefresh: () =>
+                  ref.read(weeklyQuestsProvider.notifier).refresh(),
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: quests.length,

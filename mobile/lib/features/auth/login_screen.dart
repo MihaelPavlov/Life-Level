@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/widgets/main_shell.dart';
 import '../character/setup/setup_resume_service.dart';
 import '../character/setup/welcome_setup_screen.dart';
@@ -47,13 +48,13 @@ class _LoginScreenState extends State<LoginScreen> {
         if (result.isSetupComplete) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
+            AppRoute(
                 builder: (_) => MainShell(initialRingIds: result.ringItems)),
           );
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
+            AppRoute(
                 builder: (_) =>
                     WelcomeSetupScreen(ringItems: result.ringItems)),
           );
@@ -107,9 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _identifierCtrl,
                     label: 'Email or Username',
                     keyboardType: TextInputType.text,
-                    validator: (v) => v != null && (v.contains('@') || v.length >= 3)
-                        ? null
-                        : 'Enter your email or username',
+                    validator: (v) =>
+                        v != null && (v.contains('@') || v.length >= 3)
+                            ? null
+                            : 'Enter your email or username',
                   ),
                   const SizedBox(height: 16),
 
@@ -162,10 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("Don't have an account? ",
                           style: TextStyle(color: AppColors.textSecondary)),
                       GestureDetector(
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const RegisterScreen())),
+                        onTap: () => Navigator.push(context,
+                            AppRoute(builder: (_) => const RegisterScreen())),
                         child: const Text('Sign up',
                             style: TextStyle(
                                 color: AppColors.blue,

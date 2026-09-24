@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
@@ -291,7 +292,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   ///   • blocker → snackbar explains they must defeat the NPC first
   Future<void> _showEncounterIntercept(
       ActiveEncounterResult encounter, String destinationZoneName) async {
-    final action = await showModalBottomSheet<String>(
+    final action = await showAppBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -345,7 +346,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     required int remaining,
   }) {
     final floorWord = remaining == 1 ? 'floor' : 'floors';
-    return showDialog<bool>(
+    return showAppDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: AppColors.surface,
@@ -560,7 +561,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     Navigator.of(context).pop(); // close the zone sheet first
     // Open the floors as a bottom sheet stacked over the region screen —
     // stays on the same page, no navigation push.
-    await showModalBottomSheet<void>(
+    await showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -573,7 +574,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
 
   void _showEncounterSheet(TrailEncounterNode enc) {
     ActiveEncounterResult? nextEncounter;
-    showModalBottomSheet<void>(
+    showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -656,7 +657,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     }
     final userAtParentCrossroads =
         parentCrossroads?.status == ZoneNodeStatus.active;
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -717,7 +718,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       );
       return;
     }
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

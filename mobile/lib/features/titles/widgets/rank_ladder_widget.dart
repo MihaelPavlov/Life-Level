@@ -167,8 +167,9 @@ class _RankConnector extends StatelessWidget {
         height: 2,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color:
-                isUnlocked ? AppColors.orange.withOpacity(0.4) : AppColors.border,
+            color: isUnlocked
+                ? AppColors.orange.withOpacity(0.4)
+                : AppColors.border,
             borderRadius: BorderRadius.circular(1),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/item_icon_image.dart';
 import '../../character/providers/character_provider.dart';
 import '../../items/models/item_models.dart';
@@ -16,24 +17,12 @@ Future<void> showGearItemDetailSheet(
   required WidgetRef ref,
   required ItemDto item,
 }) {
-  return showGeneralDialog(
+  return showAppDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Item details',
     barrierColor: Colors.black.withValues(alpha: 0.6),
-    transitionDuration: const Duration(milliseconds: 180),
-    pageBuilder: (context, _, __) =>
-        _GearItemDetailDialog(item: item, ref: ref),
-    transitionBuilder: (context, animation, _, child) => FadeTransition(
-      opacity: animation,
-      child: ScaleTransition(
-        scale:
-            CurvedAnimation(parent: animation, curve: Curves.easeOutBack).drive(
-          Tween(begin: 0.92, end: 1.0),
-        ),
-        child: child,
-      ),
-    ),
+    builder: (context) => _GearItemDetailDialog(item: item, ref: ref),
   );
 }
 

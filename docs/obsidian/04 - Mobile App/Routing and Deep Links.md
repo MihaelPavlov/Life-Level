@@ -34,7 +34,7 @@ LifeLevelApp
         ├── [Ring] TitlesRanksScreen
         ├── [Ring] BossScreen → BossBattleScreen
         ├── [Global Overlay] LevelUpOverlay / ItemObtainedOverlay / InventoryFullOverlay
-        └── [Dialog] LoginRewardScreen (on app resume)
+        └── [Bottom sheet] RewardsScreen (manual navigation)
 ```
 
 ## Deep link scheme: `lifelevel://`

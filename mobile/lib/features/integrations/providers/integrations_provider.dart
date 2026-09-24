@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/session/invalidate_user_providers.dart';
 import '../models/integration_models.dart';
 import '../services/health_sync_service.dart';
 import '../services/strava_service.dart';
@@ -82,6 +83,9 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
       lastResult: result,
       isHealthConnected: stillConnected,
     );
+    if (result.imported > 0) {
+      invalidateProgressProviders(ref);
+    }
   }
 
   /// Returns null on success, or an error message on failure.

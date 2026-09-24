@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../../core/widgets/currency_chip.dart';
@@ -108,9 +109,11 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _currencyChip(context, iconAsset: AppIcons.homeGemIcon, value: '17'),
+                      _currencyChip(context,
+                          iconAsset: AppIcons.homeGemIcon, value: '17'),
                       const SizedBox(width: 10),
-                      _currencyChip(context, iconAsset: AppIcons.homeCoinIcon, value: _fmt(coins)),
+                      _currencyChip(context,
+                          iconAsset: AppIcons.homeCoinIcon, value: _fmt(coins)),
                     ],
                   ),
                 ],
@@ -191,7 +194,8 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                 children: [
                   const SizedBox(height: headerSpacer),
                   const Padding(
-                    padding: EdgeInsets.fromLTRB(28, titleTopPad, 28, titleBottomPad),
+                    padding: EdgeInsets.fromLTRB(
+                        28, titleTopPad, 28, titleBottomPad),
                     child: _TitleRibbon(),
                   ),
                   SizedBox(
@@ -313,10 +317,11 @@ const _tierColors = [
 ];
 
 void _openShop(BuildContext context) {
-  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShopScreen()));
+  Navigator.of(context).push(AppRoute(builder: (_) => const ShopScreen()));
 }
 
-Widget _currencyChip(BuildContext context, {required String iconAsset, required String value}) {
+Widget _currencyChip(BuildContext context,
+    {required String iconAsset, required String value}) {
   return CurrencyChip(
     iconAsset: iconAsset,
     value: value,

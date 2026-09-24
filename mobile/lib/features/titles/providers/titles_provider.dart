@@ -3,8 +3,7 @@ import '../services/titles_service.dart';
 import '../models/title_models.dart';
 
 // ── Service provider ───────────────────────────────────────────────────────────
-final titlesServiceProvider =
-    Provider<TitlesService>((ref) => TitlesService());
+final titlesServiceProvider = Provider<TitlesService>((ref) => TitlesService());
 
 // ── TitlesNotifier ─────────────────────────────────────────────────────────────
 class TitlesNotifier extends AsyncNotifier<TitlesAndRanksResponse> {

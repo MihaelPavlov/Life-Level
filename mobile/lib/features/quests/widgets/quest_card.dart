@@ -33,11 +33,13 @@ class QuestCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _QuestCardHeader(quest: quest, isCompleted: isCompleted, isExpired: isExpired),
+          _QuestCardHeader(
+              quest: quest, isCompleted: isCompleted, isExpired: isExpired),
           const SizedBox(height: 6),
           Text(
             quest.description,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
           if (!isCompleted && !isExpired) ...[
             const SizedBox(height: 10),
@@ -82,7 +84,8 @@ class _QuestCardHeader extends StatelessWidget {
           child: Text(
             quest.title,
             style: TextStyle(
-              color: isExpired ? AppColors.textSecondary : AppColors.textPrimary,
+              color:
+                  isExpired ? AppColors.textSecondary : AppColors.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -179,7 +182,8 @@ class _QuestProgressRow extends StatelessWidget {
 
   String _formatTimeRemaining(Duration d) {
     if (d.isNegative) return 'Expired';
-    if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes.remainder(60)}m left';
+    if (d.inHours > 0)
+      return '${d.inHours}h ${d.inMinutes.remainder(60)}m left';
     if (d.inMinutes > 0) return '${d.inMinutes}m left';
     return 'Expiring soon';
   }

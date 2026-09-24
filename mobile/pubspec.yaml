@@ -68,6 +68,7 @@ flutter:
     - assets/Home/
     - assets/Shop/
     - assets/Regions/
+    - assets/Guild/
     - assets/Gear/
     - assets/Talents/
     - assets/Items/

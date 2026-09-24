@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/widgets/app_toast.dart';
 import '../character/providers/character_provider.dart';
@@ -221,7 +222,7 @@ class _BodyState extends ConsumerState<_Body> {
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
+                AppRoute(
                   builder: (_) => BuyFounderPassScreen(theme: s.theme),
                 ),
               ),

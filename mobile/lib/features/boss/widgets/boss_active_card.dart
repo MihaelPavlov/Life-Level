@@ -30,7 +30,8 @@ class BossActiveCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.red.withValues(alpha: 0.5), width: 1.5),
+          border: Border.all(
+              color: AppColors.red.withValues(alpha: 0.5), width: 1.5),
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -82,7 +83,9 @@ class BossActiveCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          boss.isMini ? '\u26A1 MINI BOSS' : '\u26A0\uFE0F ELITE BOSS',
+                          boss.isMini
+                              ? '\u26A1 MINI BOSS'
+                              : '\u26A0\uFE0F ELITE BOSS',
                           style: TextStyle(
                             color: AppColors.red,
                             fontSize: 9,
@@ -112,10 +115,12 @@ class BossActiveCard extends StatelessWidget {
                   ),
                   // Timer
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.red.withValues(alpha: 0.1),
-                      border: Border.all(color: AppColors.red.withValues(alpha: 0.35)),
+                      border: Border.all(
+                          color: AppColors.red.withValues(alpha: 0.35)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -150,10 +155,12 @@ class BossActiveCard extends StatelessWidget {
                   const SizedBox(height: 14),
                   // My damage
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: AppColors.green.withValues(alpha: 0.07),
-                      border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+                      border: Border.all(
+                          color: AppColors.green.withValues(alpha: 0.25)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -181,10 +188,7 @@ class BossActiveCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   // CTA or zone warning
-                  if (_canFight)
-                    _buildCta()
-                  else
-                    _buildZoneWarning(),
+                  if (_canFight) _buildCta() else _buildZoneWarning(),
                 ],
               ),
             ),
@@ -272,7 +276,8 @@ class BossActiveCard extends StatelessWidget {
   }
 
   static String _fmtNumber(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    if (n >= 1000)
+      return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
     return n.toString();
   }
 }

@@ -10,7 +10,7 @@ class RingItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width:  kItemSize,
+      width: kItemSize,
       height: kItemSize,
       decoration: BoxDecoration(
         color: kCardBg,

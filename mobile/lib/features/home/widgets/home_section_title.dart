@@ -90,9 +90,7 @@ class HomeDoneChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: dim
-            ? AppColors.surfaceElevated
-            : c.withValues(alpha: 0.08),
+        color: dim ? AppColors.surfaceElevated : c.withValues(alpha: 0.08),
         border: Border.all(
           color: dim ? AppColors.border : c.withValues(alpha: 0.35),
         ),

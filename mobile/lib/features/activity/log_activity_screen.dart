@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/services/boss_defeated_notifier.dart';
 import '../../core/services/dungeon_floor_cleared_notifier.dart';
@@ -8,16 +9,11 @@ import '../../core/services/guild_raid_victory_notifier.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
+import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/app_icon_image.dart';
-import '../boss/providers/boss_provider.dart';
-import '../guild/providers/guild_provider.dart';
-import '../character/providers/character_provider.dart';
-import '../quests/providers/quest_provider.dart';
-import '../streak/providers/streak_provider.dart';
 import 'activity_result_sheet.dart';
 import 'models/activity_models.dart';
 import 'providers/activity_provider.dart';
-import '../home/providers/world_progress_provider.dart';
 import '../map/widgets/encounter_intercept_sheet.dart';
 
 class LogActivityScreen extends ConsumerStatefulWidget {
@@ -127,7 +123,8 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.blue,
-                  disabledBackgroundColor: AppColors.blue.withValues(alpha: 0.5),
+                  disabledBackgroundColor:
+                      AppColors.blue.withValues(alpha: 0.5),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -171,20 +168,14 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
       final result =
           await ref.read(activityServiceProvider).logActivity(request);
 
-      // Invalidate stale providers
-      ref.invalidate(characterProfileProvider);
-      ref.invalidate(dailyQuestsProvider);
-      ref.invalidate(weeklyQuestsProvider);
-      ref.invalidate(streakProvider);
-      ref.invalidate(worldProgressProvider);
-      ref.invalidate(bossListProvider);
-      ref.invalidate(guildProvider);
+      invalidateUserScopedProviders(ref);
 
       WorldZoneRefreshNotifier.notify();
 
       // Fire level-up overlay if applicable
       if (result.leveledUp && result.newLevel != null) {
-        LevelUpNotifier.notify(result.newLevel!, unlocks: result.levelUpUnlocks);
+        LevelUpNotifier.notify(result.newLevel!,
+            unlocks: result.levelUpUnlocks);
       }
 
       // Fire inventory-full warning for each item that was blocked
@@ -219,7 +210,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
         // so checking `mounted` after any await is unreliable.
         final encounter = result.activeEncounter;
         Navigator.pop(context);
-        showModalBottomSheet(
+        showAppBottomSheet(
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
@@ -228,7 +219,7 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
         if (encounter != null) {
           // Show encounter sheet on top of the result sheet synchronously so
           // the context is still valid (before the pop animation disposes this widget).
-          showModalBottomSheet(
+          showAppBottomSheet(
             context: context,
             backgroundColor: Colors.transparent,
             isScrollControlled: true,
@@ -297,9 +288,7 @@ class _ActivityTypeGrid extends StatelessWidget {
                   ? AppColors.blue.withValues(alpha: 0.15)
                   : AppColors.surface,
               border: Border.all(
-                color: isSelected
-                    ? AppColors.blue
-                    : AppColors.border,
+                color: isSelected ? AppColors.blue : AppColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
               borderRadius: BorderRadius.circular(12),
@@ -320,9 +309,8 @@ class _ActivityTypeGrid extends StatelessWidget {
                   type.displayName,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isSelected
-                        ? AppColors.blue
-                        : AppColors.textSecondary,
+                    color:
+                        isSelected ? AppColors.blue : AppColors.textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -403,9 +391,11 @@ class _DurationPicker extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('5 min',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 10)),
               Text('3 hours',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 10)),
             ],
           ),
         ],
@@ -463,7 +453,8 @@ class _NumberField extends StatelessWidget {
         hintText: hint,
         hintStyle: const TextStyle(color: AppColors.textSecondary),
         suffixText: label,
-        suffixStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        suffixStyle:
+            const TextStyle(color: AppColors.textSecondary, fontSize: 13),
         filled: true,
         fillColor: AppColors.surface,
         contentPadding:

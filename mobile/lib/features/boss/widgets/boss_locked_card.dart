@@ -40,7 +40,8 @@ class BossLockedCard extends StatelessWidget {
                     ),
                     child: Opacity(
                       opacity: 0.6,
-                      child: Text(boss.icon, style: const TextStyle(fontSize: 26)),
+                      child:
+                          Text(boss.icon, style: const TextStyle(fontSize: 26)),
                     ),
                   ),
                 ),
@@ -100,7 +101,8 @@ class BossLockedCard extends StatelessWidget {
                     ),
                     Text(
                       'Reach level ${boss.levelRequirement}',
-                      style: const TextStyle(color: Color(0xFF586070), fontSize: 10),
+                      style: const TextStyle(
+                          color: Color(0xFF586070), fontSize: 10),
                     ),
                   ],
                 ),

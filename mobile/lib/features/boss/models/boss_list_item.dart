@@ -9,6 +9,7 @@ class BossListItem {
   final String region;
   final String nodeName;
   final int levelRequirement;
+
   /// World-zone Guid this boss is bound to (null for legacy local-map bosses).
   /// Used by the home portal to map the current boss zone → its boss row.
   final String? worldZoneId;

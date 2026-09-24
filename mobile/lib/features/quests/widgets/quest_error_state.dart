@@ -38,16 +38,19 @@ class QuestErrorState extends StatelessWidget {
                   onPressed: onRetry,
                   child: const Text(
                     'Try Again',
-                    style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: AppColors.blue, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () => performLogout(context),
-                  icon: const Icon(Icons.logout, size: 16, color: AppColors.red),
+                  icon:
+                      const Icon(Icons.logout, size: 16, color: AppColors.red),
                   label: const Text(
                     'Logout',
-                    style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: AppColors.red, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],

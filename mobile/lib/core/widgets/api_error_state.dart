@@ -71,7 +71,8 @@ class ApiErrorState extends StatelessWidget {
                 const SizedBox(width: 12),
                 TextButton.icon(
                   onPressed: () => performLogout(context),
-                  icon: const Icon(Icons.logout, size: 16, color: AppColors.red),
+                  icon:
+                      const Icon(Icons.logout, size: 16, color: AppColors.red),
                   label: const Text(
                     'Logout',
                     style: TextStyle(

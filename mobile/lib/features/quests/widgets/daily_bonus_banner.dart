@@ -11,10 +11,8 @@ class DailyBonusBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dailyAsync = ref.watch(dailyQuestsProvider);
-    final completed = dailyAsync.valueOrNull
-            ?.where((q) => q.isCompleted)
-            .length ??
-        0;
+    final completed =
+        dailyAsync.valueOrNull?.where((q) => q.isCompleted).length ?? 0;
     final total = dailyAsync.valueOrNull?.length ?? 5;
     final allDone = total > 0 && completed >= total;
 

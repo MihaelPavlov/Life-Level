@@ -8,8 +8,6 @@ using LifeLevel.Modules.Character.Domain.Entities;
 using LifeLevel.Modules.Character.Infrastructure;
 using LifeLevel.Modules.Identity.Domain.Entities;
 using LifeLevel.Modules.Identity.Infrastructure;
-using LifeLevel.Modules.LoginReward.Domain.Entities;
-using LifeLevel.Modules.LoginReward.Infrastructure;
 using LifeLevel.Modules.Map.Domain.Entities;
 using LifeLevel.Modules.Map.Infrastructure;
 using LifeLevel.Modules.Quest.Domain.Entities;
@@ -66,9 +64,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     // Streak
     public DbSet<Streak> Streaks => Set<Streak>();
-
-    // LoginReward
-    public DbSet<LoginReward> LoginRewards => Set<LoginReward>();
 
     // WorldZone (overworld)
     public DbSet<World> Worlds => Set<World>();
@@ -157,7 +152,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StreakModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(QuestModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ActivityModule).Assembly);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LoginRewardModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WorldZoneModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MapModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EncountersModule).Assembly);
@@ -195,13 +189,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<User>()
             .WithOne()
             .HasForeignKey<Streak>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // LoginReward → User
-        modelBuilder.Entity<LoginReward>()
-            .HasOne<User>()
-            .WithOne()
-            .HasForeignKey<LoginReward>(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Seasons module cross-module: per-user rows → User

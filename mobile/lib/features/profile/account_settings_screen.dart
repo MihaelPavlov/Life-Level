@@ -252,7 +252,8 @@ class _ActionButton extends StatelessWidget {
           backgroundColor: AppColors.orange,
           disabledBackgroundColor: AppColors.surfaceElevated,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         child: Text(label),
       ),

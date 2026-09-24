@@ -319,21 +319,26 @@ Offset? _walkerPlacement(
 
 String _encounterEmoji(TrailEncounterNode enc) {
   switch (enc.type) {
-    case TrailEncounterType.story:    return '🧙';
-    case TrailEncounterType.merchant: return '🪙';
-    case TrailEncounterType.blocker:  return '💀';
+    case TrailEncounterType.story:
+      return '🧙';
+    case TrailEncounterType.merchant:
+      return '🪙';
+    case TrailEncounterType.blocker:
+      return '💀';
   }
 }
 
 String _encounterLabel(TrailEncounterNode enc) {
   switch (enc.type) {
-    case TrailEncounterType.story:    return 'Story';
+    case TrailEncounterType.story:
+      return 'Story';
     case TrailEncounterType.merchant:
       final d = enc.merchant?.timeLeft;
       if (d == null) return 'Merchant';
       final h = d.inHours;
       return 'Merchant · ${h}h';
-    case TrailEncounterType.blocker:  return 'BLOCKED';
+    case TrailEncounterType.blocker:
+      return 'BLOCKED';
   }
 }
 
@@ -398,7 +403,8 @@ class _TrailPainter extends CustomPainter {
   // Fraction of the active edge already covered (0..1). Null when no active
   // journey or the journey edge has no known total distance.
   final double? journeyProgress;
-  final List<({Offset anchor, Offset node, TrailEncounterType type})> connectors;
+  final List<({Offset anchor, Offset node, TrailEncounterType type})>
+      connectors;
 
   _TrailPainter({
     required this.layouts,
@@ -516,15 +522,19 @@ class _TrailPainter extends CustomPainter {
         ..color = typeColor.withOpacity(0.5);
       _drawDashed(canvas, connPath, connPaint, 4, 3);
       // Anchor dot
-      canvas.drawCircle(c.anchor, 5, Paint()..color = typeColor.withOpacity(0.85));
+      canvas.drawCircle(
+          c.anchor, 5, Paint()..color = typeColor.withOpacity(0.85));
     }
   }
 
   static Color _encounterColor(TrailEncounterType t) {
     switch (t) {
-      case TrailEncounterType.story:    return const Color(0xFFa371f7);
-      case TrailEncounterType.merchant: return const Color(0xFFf5a623);
-      case TrailEncounterType.blocker:  return const Color(0xFFf85149);
+      case TrailEncounterType.story:
+        return const Color(0xFFa371f7);
+      case TrailEncounterType.merchant:
+        return const Color(0xFFf5a623);
+      case TrailEncounterType.blocker:
+        return const Color(0xFFf85149);
     }
   }
 
@@ -803,7 +813,8 @@ class _EncounterNodeWidgetState extends State<_EncounterNodeWidget>
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(widget.emoji, style: const TextStyle(fontSize: 18)),
+                  child:
+                      Text(widget.emoji, style: const TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -826,9 +837,12 @@ class _EncounterNodeWidgetState extends State<_EncounterNodeWidget>
 
 Color _encounterNodeColor(TrailEncounterType t) {
   switch (t) {
-    case TrailEncounterType.story:    return const Color(0xFFa371f7);
-    case TrailEncounterType.merchant: return const Color(0xFFf5a623);
-    case TrailEncounterType.blocker:  return const Color(0xFFf85149);
+    case TrailEncounterType.story:
+      return const Color(0xFFa371f7);
+    case TrailEncounterType.merchant:
+      return const Color(0xFFf5a623);
+    case TrailEncounterType.blocker:
+      return const Color(0xFFf85149);
   }
 }
 
@@ -889,7 +903,8 @@ class _DashedLinePainter extends CustomPainter {
       ..strokeWidth = 2;
     double x = 0;
     while (x < size.width) {
-      canvas.drawLine(Offset(x, 0), Offset((x + 6).clamp(0, size.width), 0), paint);
+      canvas.drawLine(
+          Offset(x, 0), Offset((x + 6).clamp(0, size.width), 0), paint);
       x += 12;
     }
   }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/constants/app_colors.dart';
+import '../motion/app_motion.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../session/invalidate_user_providers.dart';
@@ -28,7 +29,7 @@ import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
-import '../../features/login_reward/login_reward_screen.dart';
+import '../../features/rewards/rewards_screen.dart';
 import '../../features/gear/gear_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
 import '../services/nav_tab_notifier.dart';
@@ -89,7 +90,6 @@ class _MainShellState extends ConsumerState<MainShell>
   /// into a specific boss's battle view (set when the home portal "Fight →"
   /// CTA fires, cleared when the overlay closes).
   String? _pendingBossId;
-  bool _loginRewardShown = false;
   bool _worldAutoOpenActive = false;
   bool _checkingPendingGuildVictories = false;
   bool _checkingPendingGuildExpiries = false;
@@ -160,18 +160,6 @@ class _MainShellState extends ConsumerState<MainShell>
   int? _lastTutorialTopicsSeen;
   int? _lastMapTutorialStep;
 
-  void _checkLoginReward(CharacterProfile? profile) {
-    if (!mounted) return;
-    if (_loginRewardShown) return;
-    if (profile == null) return;
-    if (!profile.loginRewardAvailable) return;
-    _loginRewardShown = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showRewardsSheet(context);
-    });
-  }
-
   void _openRewardsDialog() {
     if (!mounted) return;
     showRewardsSheet(context);
@@ -229,7 +217,7 @@ class _MainShellState extends ConsumerState<MainShell>
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         await Navigator.of(context).push(
-          MaterialPageRoute(
+          AppRoute(
             builder: (_) => const TutorialIntroScreen(),
             fullscreenDialog: true,
           ),
@@ -249,7 +237,7 @@ class _MainShellState extends ConsumerState<MainShell>
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         await Navigator.of(context).push(
-          MaterialPageRoute(
+          AppRoute(
             builder: (_) => const TutorialOutroScreen(),
             fullscreenDialog: true,
           ),
@@ -878,7 +866,7 @@ class _MainShellState extends ConsumerState<MainShell>
   }
 
   void _openCustomize() {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -958,14 +946,68 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
+  Widget? _activeShellOverlay() {
+    if (_worldOpen) {
+      return WorldHubScreen(
+        key: ValueKey('world_$_worldAutoOpenActive'),
+        autoOpenActiveRegion: _worldAutoOpenActive,
+        onClose: () => setState(() {
+          _worldOpen = false;
+          _worldAutoOpenActive = false;
+          _pendingOnZoneSelected = null;
+        }),
+      );
+    }
+    if (_titlesOpen) {
+      return TitlesRanksScreen(
+        key: const ValueKey('titles'),
+        onClose: () => setState(() => _titlesOpen = false),
+      );
+    }
+    if (_bossOpen) {
+      return BossScreen(
+        key: const ValueKey('boss'),
+        initialBossId: _pendingBossId,
+        onClose: () => setState(() {
+          _bossOpen = false;
+          _pendingBossId = null;
+        }),
+      );
+    }
+    if (_guildOpen) {
+      return GuildScreen(
+        key: const ValueKey('guild'),
+        onClose: () => setState(() => _guildOpen = false),
+      );
+    }
+    if (_seasonOpen) {
+      return SeasonTrackScreen(
+        key: const ValueKey('season'),
+        onClose: () => setState(() => _seasonOpen = false),
+      );
+    }
+    if (_talentsOpen) {
+      return TalentsScreen(
+        key: const ValueKey('talents'),
+        onClose: () => setState(() => _talentsOpen = false),
+      );
+    }
+    if (_achievementsOpen) {
+      return AchievementsScreen(
+        key: const ValueKey('achievements'),
+        onClose: () => setState(() => _achievementsOpen = false),
+      );
+    }
+    return null;
+  }
+
   // ── build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    // Listen for the first successful profile load to check login reward + hydrate tutorial.
+    // Listen for profile updates to keep tutorial state in sync.
     ref.listen(characterProfileProvider, (_, next) {
       if (!mounted) return;
       final profile = next.valueOrNull;
-      _checkLoginReward(profile);
       _syncTutorialWithProfile(profile);
     });
     ref.listen(guildProvider, (previous, next) {
@@ -1012,88 +1054,44 @@ class _MainShellState extends ConsumerState<MainShell>
               // ── tab content ─────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
-                child: IndexedStack(
+                child: AppAnimatedIndexedStack(
                   index: _tabIndex.clamp(0, _navIds.length - 1),
                   children: _navIds.map(_screenFor).toList(),
                 ),
               ),
 
-              // ── world map overlay ───────────────────────────────────────
-              // Note: the new WorldHubScreen uses push-based region navigation
-              // instead of the old onZoneSelected callback. Legacy callers
-              // (e.g. MapScreen._openWorldMap) will lose the pick-a-zone
-              // shortcut; to be reworked when the local-map is migrated.
-              if (_worldOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: WorldHubScreen(
-                    key: ValueKey('world_$_worldAutoOpenActive'),
-                    autoOpenActiveRegion: _worldAutoOpenActive,
-                    onClose: () => setState(() {
-                      _worldOpen = false;
-                      _worldAutoOpenActive = false;
-                      _pendingOnZoneSelected = null;
-                    }),
+              // ── shell feature overlays ──────────────────────────────────
+              Positioned.fill(
+                bottom: kNavBarH,
+                child: AnimatedSwitcher(
+                  duration: AppMotion.duration(
+                    context,
+                    AppMotionTokens.sheetEnter,
                   ),
-                ),
-
-              // ── titles & ranks overlay ───────────────────────────────────
-              if (_titlesOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: TitlesRanksScreen(
-                    onClose: () => setState(() => _titlesOpen = false),
+                  reverseDuration: AppMotion.duration(
+                    context,
+                    AppMotionTokens.sheetExit,
                   ),
+                  switchInCurve: AppMotionTokens.enterCurve,
+                  switchOutCurve: AppMotionTokens.exitCurve,
+                  transitionBuilder: (child, animation) {
+                    final faded = FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                    if (!AppMotion.isFull(context)) return faded;
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(.08, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: faded,
+                    );
+                  },
+                  child: _activeShellOverlay() ??
+                      const SizedBox.shrink(key: ValueKey('no-overlay')),
                 ),
-
-              // ── boss overlay ───────────────────────────────────────────
-              if (_bossOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: BossScreen(
-                    initialBossId: _pendingBossId,
-                    onClose: () => setState(() {
-                      _bossOpen = false;
-                      _pendingBossId = null;
-                    }),
-                  ),
-                ),
-
-              // ── guild overlay ──────────────────────────────────────────
-              if (_guildOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: GuildScreen(
-                    onClose: () => setState(() => _guildOpen = false),
-                  ),
-                ),
-
-              // ── season overlay ─────────────────────────────────────────
-              if (_seasonOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: SeasonTrackScreen(
-                    onClose: () => setState(() => _seasonOpen = false),
-                  ),
-                ),
-
-              // ── talents overlay ────────────────────────────────────────
-              if (_talentsOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: TalentsScreen(
-                    onClose: () => setState(() => _talentsOpen = false),
-                  ),
-                ),
-
-              // ── achievements overlay ───────────────────────────────────
-              if (_achievementsOpen)
-                Positioned.fill(
-                  bottom: kNavBarH,
-                  child: AchievementsScreen(
-                    onClose: () => setState(() => _achievementsOpen = false),
-                  ),
-                ),
+              ),
 
               // ── backdrop ────────────────────────────────────────────────
               Positioned.fill(
@@ -1323,7 +1321,7 @@ class _MainShellState extends ConsumerState<MainShell>
     // Otherwise push the screen as a full-screen route.
     final screen = _screenFor(id);
     if (screen is Center) return; // placeholder — no screen yet
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    Navigator.push(context, AppRoute(builder: (_) => screen));
   }
 
   Widget _buildItem(int i, List<double> angles, double fabCx, double fabCy) {
@@ -1342,7 +1340,10 @@ class _MainShellState extends ConsumerState<MainShell>
         child: Opacity(
           opacity: _openAnim.value.clamp(0.0, 1.0),
           child: GestureDetector(
-            onTap: () => _onRingItemTap(items[i].id),
+            onTap: () {
+              AppMotion.haptic(AppHaptic.selection);
+              _onRingItemTap(items[i].id);
+            },
             onPanStart: (d) => _onSpinStart(d.globalPosition),
             onPanUpdate: (d) => _onSpinUpdate(d.globalPosition),
             onPanEnd: (_) => _onSpinEnd(),

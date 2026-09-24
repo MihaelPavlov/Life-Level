@@ -31,8 +31,9 @@ class HomeProgressBar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors:
-                        colors.length > 1 ? colors : [colors.first, colors.first],
+                    colors: colors.length > 1
+                        ? colors
+                        : [colors.first, colors.first],
                   ),
                 ),
               ),

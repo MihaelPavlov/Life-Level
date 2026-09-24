@@ -29,10 +29,10 @@ class BossDamageHitRow extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.red.withValues(alpha: 0.12),
-              border:
-                  Border.all(color: AppColors.red.withValues(alpha: 0.35)),
+              border: Border.all(color: AppColors.red.withValues(alpha: 0.35)),
             ),
-            child: Text(hit.activityEmoji, style: const TextStyle(fontSize: 18)),
+            child:
+                Text(hit.activityEmoji, style: const TextStyle(fontSize: 18)),
           ),
           const SizedBox(width: 12),
           // Summary + timestamp

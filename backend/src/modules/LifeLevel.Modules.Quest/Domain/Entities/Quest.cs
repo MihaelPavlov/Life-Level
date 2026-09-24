@@ -10,6 +10,9 @@ public class Quest
     public string Description { get; set; } = string.Empty;
     public QuestType Type { get; set; }
     public QuestCategory Category { get; set; }
+    public QuestProgressMode ProgressMode { get; set; } = QuestProgressMode.Cumulative;
+    public QuestDifficultyTier DifficultyTier { get; set; } = QuestDifficultyTier.Standard;
+    public string GroupKey { get; set; } = string.Empty;
     public ActivityType? RequiredActivity { get; set; }
     public double? TargetValue { get; set; }
     public string TargetUnit { get; set; } = string.Empty;

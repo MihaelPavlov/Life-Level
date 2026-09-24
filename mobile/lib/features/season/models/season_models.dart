@@ -140,6 +140,10 @@ class SeasonTrack {
     required this.tiers,
   });
 
+  bool get hasClaimableReward => tiers.any(
+        (tier) => tier.free.isClaimable || tier.founder.isClaimable,
+      );
+
   factory SeasonTrack.fromJson(Map<String, dynamic> j) => SeasonTrack(
         hasActiveSeason: j['hasActiveSeason'] as bool? ?? false,
         season: j['season'] == null

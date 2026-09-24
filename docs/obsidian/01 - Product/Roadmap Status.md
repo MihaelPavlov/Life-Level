@@ -22,15 +22,15 @@ Spring Boot → ASP.NET Core setup, JWT auth, SecurityConfig, entity stubs.
 
 **Evidence:** commit `1df71dd` ("phase 1"). [[Character]], [[Activity]], [[XP and Leveling]].
 
-## Phase 2 — Daily Login & Quest System ✅
+## Phase 2 — Quest & Streak System ✅
 
 - Quest entity (type, requirements, progress, expiry) ✅
 - Daily quest generation cron + quest progress hooks ✅
 - Streak tracking (current, longest, shields) ✅
-- Login reward table (7-day cycle) ✅
-- **UI:** Quest tabs, streak shields, daily login screen ✅
+- Task reward milestones and claim flow ✅
+- **UI:** Daily/weekly quest tabs, streak shields, Rewards center ✅
 
-**Evidence:** commit `e3e0aee` ("quests"). [[Quest]], [[Streak]], [[LoginReward]], [[DailyResetJob]].
+**Evidence:** commit `e3e0aee` ("quests"), followed by the unified task-reward migration. [[Quest]], [[Streak]], [[DailyResetJob]].
 
 ## Phase 3 — Adventure Map & Zone Exploration ✅
 
@@ -75,7 +75,7 @@ Spring Boot → ASP.NET Core setup, JWT auth, SecurityConfig, entity stubs.
 | Item | Status |
 |------|--------|
 | Chest encounters | ✅ (as permanent map nodes) |
-| XP Storm flag on login reward Day 7 | ✅ |
+| XP Storm event trigger | ⏳ Phase 7 |
 | XP Storm ×2 multiplier wired into XP formula | ❌ |
 | XP Storm random-spawner job | ❌ |
 | Wandering Merchants | ❌ |

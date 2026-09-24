@@ -55,9 +55,6 @@ Module repositories receive `AppDbContext` (or `IAppDbContext`) via DI.
 ### Streak (1)
 - `Streaks`
 
-### LoginReward (1)
-- `LoginRewards`
-
 ### WorldZone (5)
 - `Worlds`
 - `WorldZones`
@@ -105,7 +102,6 @@ Module repositories receive `AppDbContext` (or `IAppDbContext`) via DI.
 - `Character → User` (1:1)
 - `Activity → Character` (N:1)
 - `Streak → User` (1:1)
-- `LoginReward → User` (1:1)
 - `UserQuestProgress → User` (N:1)
 - `UserWorldProgress → User` (N:1)
 - `UserZoneUnlock → User` (N:1)

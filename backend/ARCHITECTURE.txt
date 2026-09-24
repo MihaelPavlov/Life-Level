@@ -46,7 +46,6 @@ backend/
       LifeLevel.Modules.Activity/
       LifeLevel.Modules.Quest/
       LifeLevel.Modules.Streak/
-      LifeLevel.Modules.LoginReward/
       LifeLevel.Modules.Map/
       LifeLevel.Modules.WorldZone/
       LifeLevel.Modules.Adventure.Encounters/
@@ -87,7 +86,6 @@ Character        | Character, CharacterClass, XpHistoryEntry             | Chara
 Activity         | Activity                                              | ActivityLoggedEvent
 Quest            | Quest, UserQuestProgress                              | QuestCompletedEvent, AllDailyQuestsCompletedEvent
 Streak           | Streak                                                | StreakBrokenEvent
-LoginReward      | LoginReward                                           | -
 Map              | MapNode, MapEdge, UserMapProgress, UserNodeUnlock     | -
 WorldZone        | WorldZone, WorldZoneEdge, UserWorldProgress,          | -
                  | UserZoneUnlock                                        |
@@ -109,8 +107,7 @@ TIER 1 — Direct interface calls (synchronous, same transaction)
   Used when: caller needs the result in the same HTTP response.
 
   All modules that award XP     -> ICharacterXpPort.AwardXpAsync()
-  LoginRewardService            -> IStreakShieldPort.AddShieldAsync()
-  CharacterService.GetProfile   -> IStreakReadPort, ILoginRewardReadPort, IDailyQuestReadPort
+  CharacterService.GetProfile   -> IStreakReadPort, IDailyQuestReadPort
 
 TIER 2 — In-process domain events (fire-and-await, after save)
   Used when: side effect does not affect the response and direct coupling would create a cycle.
@@ -161,7 +158,6 @@ SharedKernel/
     ICharacterLevelReadPort.cs  <- GetLevelAsync(Guid userId)
     IStreakReadPort.cs          <- GetCurrentStreakAsync(Guid userId)
     IStreakShieldPort.cs        <- AddShieldAsync(Guid userId)
-    ILoginRewardReadPort.cs     <- HasClaimedTodayAsync(Guid userId)
     IDailyQuestReadPort.cs      <- CountCompletedDailyQuestsAsync(Guid userId)
     IMapProgressReadPort.cs     <- GetCurrentNodeIdAsync(Guid userId)
   Enums/
@@ -200,7 +196,6 @@ Character              -> SharedKernel
 Activity               -> SharedKernel
 Quest                  -> SharedKernel
 Streak                 -> SharedKernel
-LoginReward            -> SharedKernel
 Map                    -> SharedKernel
 WorldZone              -> SharedKernel
 Adventure.Encounters   -> SharedKernel, Map
@@ -236,11 +231,11 @@ Step | What                  | Status
 3    | Extract Identity module + UserRegisteredEvent      | DONE
 4    | Extract Quest module                               | DONE
 5    | Extract Activity module + event bus                | DONE
-6    | Extract LoginReward module                         | DONE
+6    | Remove superseded LoginReward module               | DONE
 7    | Extract Map, WorldZone, Adventure modules          | DONE
 8    | DailyResetJob fully port-based; CharacterCreatedHandler | DONE
 
-All 11 modules extracted. LifeLevel.Api is now a thin composition root:
+LifeLevel.Api is a thin composition root:
 - 16 controllers (no business logic)
 - Program.cs: AddXxxModule() calls + DbContext + JWT + CORS + Swagger
 - MapService (stays in Api — cross-module entity loading, extracting would create cycles)

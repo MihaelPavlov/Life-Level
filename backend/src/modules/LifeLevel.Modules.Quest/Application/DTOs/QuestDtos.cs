@@ -10,6 +10,8 @@ public class UserQuestProgressDto
     public string Description { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
+    public string ProgressMode { get; set; } = string.Empty;
+    public string DifficultyTier { get; set; } = string.Empty;
     public string? RequiredActivity { get; set; }
     public double TargetValue { get; set; }
     public double CurrentValue { get; set; }
@@ -45,6 +47,13 @@ public record TaskMilestoneClaimResult(
     string Period,
     int Threshold,
     TaskMilestoneRewardDto Reward,
+    TaskRewardPeriodDto UpdatedPeriod);
+
+public record TaskRewardsClaimResult(
+    string Period,
+    int TasksClaimed,
+    int Coins,
+    int Crystals,
     TaskRewardPeriodDto UpdatedPeriod);
 
 public class QuestProgressUpdateResult

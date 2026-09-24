@@ -70,7 +70,8 @@ class GearScreen extends ConsumerWidget {
                         Positioned(
                           left: 16,
                           top: topPad + 10,
-                          child: _CoinsPill(coins: profile?.talents?.coins ?? 0),
+                          child:
+                              _CoinsPill(coins: profile?.talents?.coins ?? 0),
                         ),
                         // Character posed on the cliff-edge rock, feet
                         // resting on the flattened top of the nearest slab —
@@ -85,7 +86,8 @@ class GearScreen extends ConsumerWidget {
                                   height: heroH * 0.66,
                                   fit: BoxFit.contain,
                                 )
-                              : GearPaperDoll(equipment: equipment, height: heroH * 0.66),
+                              : GearPaperDoll(
+                                  equipment: equipment, height: heroH * 0.66),
                         ),
                         Positioned(
                           right: 14,
@@ -170,11 +172,13 @@ class _CoinsPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(AppIcons.homeCoinIcon, width: 16, height: 16, fit: BoxFit.contain),
+          Image.asset(AppIcons.homeCoinIcon,
+              width: 16, height: 16, fit: BoxFit.contain),
           const SizedBox(width: 6),
           Text(
             '$coins',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
           ),
         ],
       ),

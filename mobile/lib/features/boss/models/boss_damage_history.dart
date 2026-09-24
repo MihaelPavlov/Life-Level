@@ -36,15 +36,24 @@ class BossDamageHistoryItem {
   /// Emoji for the activity type, matching the palette used elsewhere.
   String get activityEmoji {
     switch (activityType.toLowerCase()) {
-      case 'running':  return '🏃';
-      case 'cycling':  return '🚴';
-      case 'gym':      return '💪';
-      case 'yoga':     return '🧘';
-      case 'swimming': return '🏊';
-      case 'hiking':   return '🥾';
-      case 'climbing': return '🧗';
-      case 'walking':  return '🚶';
-      default:         return '⚡';
+      case 'running':
+        return '🏃';
+      case 'cycling':
+        return '🚴';
+      case 'gym':
+        return '💪';
+      case 'yoga':
+        return '🧘';
+      case 'swimming':
+        return '🏊';
+      case 'hiking':
+        return '🥾';
+      case 'climbing':
+        return '🧗';
+      case 'walking':
+        return '🚶';
+      default:
+        return '⚡';
     }
   }
 

@@ -48,7 +48,8 @@ class NotificationsService {
   String? get cachedToken => _cachedToken;
 
   // VAPID key for web push (Firebase Console → Cloud Messaging → Web Push certificates).
-  static const _webVapidKey = 'BB1aBzIAaah-JVNe9NXjCBub-lq4fZhjZ_tJYx27xWizE0xJ5fTKBd4HIZeEMh4IUhSro5HUiMdGUuVoum8kHcA';
+  static const _webVapidKey =
+      'BB1aBzIAaah-JVNe9NXjCBub-lq4fZhjZ_tJYx27xWizE0xJ5fTKBd4HIZeEMh4IUhSro5HUiMdGUuVoum8kHcA';
 
   /// Fetches the current FCM token, caching it after the first call.
   Future<String?> getToken() async {
@@ -107,7 +108,8 @@ class NotificationsService {
 
       // iOS only — web/Android handle foreground presentation differently.
       if (!kIsWeb && Platform.isIOS) {
-        await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+        await FirebaseMessaging.instance
+            .setForegroundNotificationPresentationOptions(
           alert: true,
           badge: true,
           sound: true,
@@ -119,8 +121,7 @@ class NotificationsService {
         await _registerTokenWithBackend(token);
       }
 
-      _tokenRefreshSub =
-          messaging.onTokenRefresh.listen((newToken) async {
+      _tokenRefreshSub = messaging.onTokenRefresh.listen((newToken) async {
         debugPrint('[NotificationsService] token refreshed');
         _cachedToken = newToken;
         await _registerTokenWithBackend(newToken);
@@ -132,7 +133,7 @@ class NotificationsService {
           'id=${message.messageId} data=${message.data}',
         );
         final title = message.notification?.title ?? message.data['title'];
-        final body  = message.notification?.body  ?? message.data['body'];
+        final body = message.notification?.body ?? message.data['body'];
         if (title != null) {
           NotificationBannerNotifier.notify(title, body ?? '');
         }
@@ -169,7 +170,8 @@ class NotificationsService {
   Future<void> unregister(String token) async {
     try {
       final body = UnregisterTokenRequest(token: token).toJson();
-      await ApiClient.instance.post('/notifications/unregister-token', data: body);
+      await ApiClient.instance
+          .post('/notifications/unregister-token', data: body);
     } catch (e) {
       debugPrint('[NotificationsService] unregister failed: $e');
     }
@@ -196,7 +198,8 @@ class NotificationsService {
         token: token,
         platform: platform,
       ).toJson();
-      await ApiClient.instance.post('/notifications/register-token', data: body);
+      await ApiClient.instance
+          .post('/notifications/register-token', data: body);
       _tokenRegistered = true;
       debugPrint('[NotificationsService] token registered ($platform)');
     } catch (e) {

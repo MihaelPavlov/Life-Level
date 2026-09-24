@@ -12,7 +12,7 @@ aliases: [API, REST, Controllers, Endpoints]
 
 ## CharacterController — `/api/character`
 - `POST /setup` — `CharacterSetupRequest(classId, avatarEmoji)` → `CharacterSetupResponse`
-- `GET /me` — `CharacterProfileResponse` (includes weekly stats, streak, loginRewardAvailable, quest counts)
+- `GET /me` — `CharacterProfileResponse` (includes weekly stats, streak, and quest counts)
 - `GET /xp-history` — last 50 `XpHistoryEntryResponse`
 - `POST /spend-stat` — `SpendStatRequest(stat)` → 200
 
@@ -30,13 +30,14 @@ aliases: [API, REST, Controllers, Endpoints]
 - `POST /generate/daily` — force regen (debug)
 - `POST /generate/weekly` — force regen (debug)
 
+## RewardsController — `/api/rewards`
+- `GET` — wallet balances plus Daily and Weekly task reward periods
+- `POST /milestones/{daily|weekly}/{threshold}/claim` — claim one unlocked milestone
+- `POST /milestones/{daily|weekly}/claim-available` — claim every unlocked milestone for the period
+
 ## StreakController — `/api/streak`
 - `GET` — `StreakDto`
 - `POST /use-shield` — `UseShieldResult(success, message, shieldsRemaining)`
-
-## LoginRewardController — `/api/login-reward`
-- `GET` — `LoginRewardStatusDto`
-- `POST /claim` — `LoginRewardClaimResult(xp, includesShield, isXpStorm, dayInCycle)`
 
 ## WorldZoneController — `/api/world`
 - `GET /full` — `WorldFullResponse(charLevel, zones[], edges[], userProgress)`

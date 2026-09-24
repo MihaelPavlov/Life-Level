@@ -94,8 +94,8 @@ class BossExpiredCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppColors.orange.withValues(alpha: 0.1),
-                    border:
-                        Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.orange.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Text(
@@ -115,7 +115,10 @@ class BossExpiredCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
             child: BossHpBar(
-                hpDealt: boss.hpDealt, maxHp: boss.maxHp, showLabel: true, height: 8),
+                hpDealt: boss.hpDealt,
+                maxHp: boss.maxHp,
+                showLabel: true,
+                height: 8),
           ),
           // Footer message
           Container(

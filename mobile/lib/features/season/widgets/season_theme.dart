@@ -15,7 +15,8 @@ class SeasonAccent {
         return const SeasonAccent(Color(0xFF2bb8c4), Color(0x142bb8c4));
       case 'ember':
       default:
-        return SeasonAccent(AppColors.orange, AppColors.orange.withValues(alpha: 0.10));
+        return SeasonAccent(
+            AppColors.orange, AppColors.orange.withValues(alpha: 0.10));
     }
   }
 }

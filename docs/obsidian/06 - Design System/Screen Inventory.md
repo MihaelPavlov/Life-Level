@@ -83,7 +83,6 @@ aliases: [Mockups, HTML Mockups, Design Mockups]
 | `quests.html` | Daily / weekly / special tabs |
 | `random-events.html` | Treasure chests, XP storms, merchants |
 | `seasonal-events.html` | Limited-time events + 5-stage reward ladder |
-| `daily-login.html` | 7-day login reward cycle + streak shields |
 
 ## Root of design-mockup/ (2 files)
 

@@ -2,28 +2,18 @@ import 'package:flutter/material.dart';
 import '../../features/boss/widgets/boss_icon.dart';
 import '../../features/guild/models/guild_models.dart';
 import '../constants/app_colors.dart';
+import '../motion/app_motion.dart';
 
 Future<void> showGuildRaidExpiredOverlay(
   BuildContext context,
   GuildRaidExpiredInfo info,
 ) {
-  return showGeneralDialog(
+  return showAppDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Dismiss guild raid expired popup',
     barrierColor: Colors.black.withValues(alpha: 0.78),
-    transitionDuration: const Duration(milliseconds: 360),
-    transitionBuilder: (ctx, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.9, end: 1.0).animate(curved),
-          child: child,
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, __) => _GuildRaidExpiredDialog(info: info),
+    builder: (_) => _GuildRaidExpiredDialog(info: info),
   );
 }
 

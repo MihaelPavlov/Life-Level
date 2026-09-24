@@ -36,7 +36,8 @@ class SetupResumeState {
 
     return SetupResumeState(
       step: SetupStep.values.firstWhere(
-        (value) => value.name == (json['step'] as String? ?? SetupStep.welcome.name),
+        (value) =>
+            value.name == (json['step'] as String? ?? SetupStep.welcome.name),
         orElse: () => SetupStep.welcome,
       ),
       ringItems: ((json['ringItems'] as List<dynamic>?) ?? const [])

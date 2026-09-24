@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/shell_overlay_notifier.dart';
 import '../../achievements/providers/achievements_provider.dart';
 import '../../character/providers/character_provider.dart';
-import '../../login_reward/login_reward_screen.dart';
+import '../../rewards/rewards_screen.dart';
 import '../../map/screens/region_chests_screen.dart';
 import '../../streak/widgets/streak_detail_sheet.dart';
 import '../../titles/providers/titles_provider.dart';
@@ -70,6 +71,7 @@ class HomeAdventureHub extends ConsumerWidget {
                 for (var i = 0; i < tiles.length; i++) ...[
                   if (i > 0) const SizedBox(width: 10),
                   _HubTile(
+                    key: ValueKey(tiles[i].label),
                     icon: AppIconImage(tiles[i].iconAsset, size: 30),
                     label: tiles[i].label,
                     showBadge: tiles[i].hasUpdate,
@@ -100,7 +102,7 @@ class HomeAdventureHub extends ConsumerWidget {
       _HubTileModel(
         iconAsset: AppIcons.rewardStreakFire,
         label: 'Streak',
-        hasUpdate: false,
+        hasUpdate: signals.streak,
         priority: 5,
         onTap: () => showStreakDetailSheet(context),
       ),
@@ -140,15 +142,15 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: _openTalents,
       ),
       _HubTileModel(
-        iconAsset: AppIcons.rewardTreasureChest,
+        iconAsset: AppIcons.seasonAdventureHub,
         label: 'Season',
         hasUpdate: signals.season,
         priority: 2,
         onTap: _openSeason,
       ),
       _HubTileModel(
-        iconAsset: AppIcons.itemDefaultChest,
-        label: 'Chests',
+        iconAsset: AppIcons.regionChestsHubIcon,
+        label: 'Region Chests',
         hasUpdate: false,
         priority: 8,
         onTap: () => _openRegionChests(context),
@@ -192,7 +194,7 @@ class HomeAdventureHub extends ConsumerWidget {
 
   void _openRegionChests(BuildContext context) => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const RegionChestsScreen()),
+        AppRoute(builder: (_) => const RegionChestsScreen()),
       );
 
   void _openTalents() => ShellOverlayNotifier.open('talents');
@@ -253,6 +255,7 @@ class _HubTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const _HubTile({
+    super.key,
     required this.icon,
     required this.label,
     this.showBadge = false,
@@ -261,8 +264,9 @@ class _HubTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: onTap,
+      haptic: AppHaptic.selection,
       child: SizedBox(
         width: 68,
         child: Column(
@@ -284,25 +288,56 @@ class _HubTile extends StatelessWidget {
                     ),
                     child: Center(child: icon),
                   ),
-                  if (showBadge)
-                    const Positioned(
-                      top: 4,
-                      right: 2,
-                      child: _HubAlertBadge(),
+                  Positioned(
+                    top: 4,
+                    right: 2,
+                    child: AnimatedSwitcher(
+                      duration: AppMotion.duration(
+                        context,
+                        AppMotionTokens.micro,
+                      ),
+                      switchInCurve: AppMotionTokens.enterCurve,
+                      switchOutCurve: AppMotionTokens.exitCurve,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      ),
+                      child: showBadge
+                          ? const _HubAlertBadge(key: ValueKey('alert'))
+                          : const SizedBox.shrink(key: ValueKey('clear')),
                     ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
+            SizedBox(
+              height: 26,
+              child: label.contains(' ')
+                  ? Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        height: 1.15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    )
+                  : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -312,7 +347,7 @@ class _HubTile extends StatelessWidget {
 }
 
 class _HubAlertBadge extends StatefulWidget {
-  const _HubAlertBadge();
+  const _HubAlertBadge({super.key});
 
   @override
   State<_HubAlertBadge> createState() => _HubAlertBadgeState();

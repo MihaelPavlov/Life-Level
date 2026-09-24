@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 
 /// Confirmation bottom-sheet shown when the user taps "Skip" on any bubble.
 /// Returns `true` if the user confirms, `false` / `null` otherwise.
@@ -11,7 +12,7 @@ import '../../../core/constants/app_colors.dart';
 /// if (confirmed == true) await controller.skip();
 /// ```
 Future<bool?> showTutorialSkipSheet(BuildContext context) {
-  return showModalBottomSheet<bool>(
+  return showAppBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -141,9 +142,7 @@ class _SheetButton extends StatelessWidget {
                 )
               : null,
           color: isConfirm ? null : AppColors.surfaceElevated,
-          border: isConfirm
-              ? null
-              : Border.all(color: AppColors.border),
+          border: isConfirm ? null : Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(10),
         ),
         alignment: Alignment.center,

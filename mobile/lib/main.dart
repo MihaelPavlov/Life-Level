@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/api/api_client.dart';
 import 'core/theme/app_theme.dart';
+import 'core/motion/app_motion.dart';
 import 'core/widgets/main_shell.dart';
 import 'features/auth/login_screen.dart';
 import 'features/character/setup/avatar_selection_screen.dart';
@@ -29,17 +30,22 @@ Future<void> main() async {
   runApp(const ProviderScope(child: LifeLevelApp()));
 }
 
-class LifeLevelApp extends StatelessWidget {
+class LifeLevelApp extends ConsumerWidget {
   const LifeLevelApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final motionSettings = ref.watch(appMotionSettingsProvider);
     return MaterialApp(
       title: 'LifeLevel',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       navigatorKey: navigatorKey,
       home: const _AuthGate(),
+      builder: (context, child) => AppMotionScope(
+        settings: motionSettings,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }
@@ -80,16 +86,15 @@ class _AuthGateState extends State<_AuthGate> {
                       selectedClass: resumeState.selectedClass!,
                       ringItems: resumeState.ringItems,
                     ),
-              SetupStep.characterCreated =>
-                resumeState.selectedClass == null ||
-                        resumeState.avatarEmoji == null ||
-                        resumeState.avatarEmoji!.isEmpty
-                    ? ClassSelectionScreen(ringItems: resumeState.ringItems)
-                    : CharacterCreatedScreen(
-                        selectedClass: resumeState.selectedClass!,
-                        avatarEmoji: resumeState.avatarEmoji!,
-                        ringItems: resumeState.ringItems,
-                      ),
+              SetupStep.characterCreated => resumeState.selectedClass == null ||
+                      resumeState.avatarEmoji == null ||
+                      resumeState.avatarEmoji!.isEmpty
+                  ? ClassSelectionScreen(ringItems: resumeState.ringItems)
+                  : CharacterCreatedScreen(
+                      selectedClass: resumeState.selectedClass!,
+                      avatarEmoji: resumeState.avatarEmoji!,
+                      ringItems: resumeState.ringItems,
+                    ),
             };
       if (!mounted) return;
       setState(() {
@@ -113,7 +118,8 @@ class _AuthGateState extends State<_AuthGate> {
     return _home ??
         const Scaffold(
           backgroundColor: Color(0xFF040810),
-          body: Center(child: CircularProgressIndicator(color: Color(0xFF4f9eff))),
+          body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF4f9eff))),
         );
   }
 }

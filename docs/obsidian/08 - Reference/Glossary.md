@@ -71,7 +71,7 @@ Consumed:
 
 ## XP Storm
 
-2-hour window with ×2 XP. Announced via push notification. Triggered by Day 7 login reward (flag set in response) or cron. **Multiplier not yet wired into XP formula** — Phase 7 target.
+Planned 2-hour window with ×2 XP, announced via push notification and triggered by a scheduled or administrative event. **Multiplier is not yet wired into the XP formula** — Phase 7 target.
 
 ## Ports
 

@@ -54,18 +54,23 @@ class CurrencyChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(iconAsset, width: iconSize, height: iconSize, fit: BoxFit.contain),
+          Image.asset(iconAsset,
+              width: iconSize, height: iconSize, fit: BoxFit.contain),
           SizedBox(width: gap),
           Text(
             value,
-            style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+                fontSize: valueFontSize,
+                fontWeight: FontWeight.w800,
+                color: Colors.white),
           ),
           if (showAdd) ...[
             SizedBox(width: gap),
             Container(
               width: addSize,
               height: addSize,
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.green),
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: AppColors.green),
               child: Icon(Icons.add, size: addIconSize, color: Colors.white),
             ),
           ],

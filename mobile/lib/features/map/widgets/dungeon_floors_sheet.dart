@@ -156,8 +156,7 @@ class _DungeonFloorsSheetState extends State<DungeonFloorsSheet> {
           ),
         ),
         for (final floor in state.floors) _FloorCard(floor: floor),
-        if (state.status == DungeonRunStatus.inProgress)
-          const _ForfeitHint(),
+        if (state.status == DungeonRunStatus.inProgress) const _ForfeitHint(),
       ],
     );
   }
@@ -345,9 +344,8 @@ class _FloorCard extends StatelessWidget {
   }
 
   String _subLabel(DungeonFloor f) {
-    final unit = f.targetKind == DungeonFloorTargetKind.distanceKm
-        ? 'km'
-        : 'minutes';
+    final unit =
+        f.targetKind == DungeonFloorTargetKind.distanceKm ? 'km' : 'minutes';
     if (f.status == DungeonFloorStatus.forfeited) return 'Forfeited';
     if (f.status == DungeonFloorStatus.locked) {
       return '${_fmt(f.targetValue)} $unit · locked';

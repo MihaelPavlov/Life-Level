@@ -30,7 +30,6 @@ class CharacterProfile {
   int weeklyRuns, weeklyXpEarned;
   double weeklyDistanceKm;
   int currentStreak, availableStatPoints;
-  bool loginRewardAvailable;     // triggers LoginRewardScreen dialog on resume
   GearBonusesDto? gearBonuses;   // sum of equipped items
 }
 ```

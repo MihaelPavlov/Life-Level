@@ -58,7 +58,7 @@ Key methods:
 
 - `GetAllClassesAsync()` → list of active classes
 - `SetupAsync(userId, CharacterSetupRequest)` — class + avatar; grants **+500 XP starter bonus**
-- `GetProfileAsync(userId, CharacterProfileContext)` → `CharacterProfileResponse` (full profile: weekly stats, streak, login-reward availability, completed-daily-quest count)
+- `GetProfileAsync(userId, CharacterProfileContext)` → `CharacterProfileResponse` (full profile: weekly stats, streak, and completed-daily-task count)
 - `SpendStatPointAsync(userId, stat)` — **+5** to chosen stat (cap 100)
 - `GetXpHistoryAsync(userId)` — last 50 entries
 - `AwardXpAsync(...)` — writes history entry, calls `CheckAndApplyLevelUpsAsync`
@@ -107,7 +107,7 @@ L 50+   → 100
 
 ## Ports consumed
 - `IEventPublisher`
-- `IStreakReadPort`, `ILoginRewardReadPort`, `IDailyQuestReadPort`, `IActivityStatsReadPort`, `IGearBonusReadPort` (for profile assembly)
+- `IStreakReadPort`, `IDailyQuestReadPort`, `IActivityStatsReadPort`, `IGearBonusReadPort` (for profile assembly)
 
 ## Events raised
 - `CharacterLeveledUpEvent(userId, previousLevel, newLevel)`

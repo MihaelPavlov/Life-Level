@@ -16,13 +16,10 @@ Users log or import workouts across 8 types (Running, Cycling, Gym, Yoga, Swimmi
 Quadratic curve: `level * (level-1) / 2 * 300` XP to reach level N. XP is multiplied by activity type modifier, distance bonus, calorie bonus, gear XP bonus, and (Phase 7) streak × XP Storm stacks up to ×3. → [[XP and Leveling]]
 
 ## Quest system
-Three types: **Daily** (5, refresh at midnight UTC, +300 XP bonus for all-5), **Weekly** (3, refresh Sunday midnight), **Special** (unlimited, never expire). Categories: duration, calories, distance, workouts, streak, login. → [[Quest System]]
+Three types: **Daily** (5, refresh at midnight UTC), **Weekly** (10, refresh Monday 00:00 UTC), and **Special** (unlimited, effectively never expire). Assignments adapt to recent activity, avoid unavailable game objectives, auto-grant task currency, and unlock claimable milestones in the unified Rewards center. → [[Quest System]]
 
 ## Streak system
-Consecutive activity days. Shields protect against 1 missed day per 7. Broken at midnight for 2+ day gaps without shields. Earned: +1 shield every 7 activity days + Day 3 login reward. → [[Streak System]]
-
-## Login rewards
-7-day repeating cycle: 50/75/100+shield/125/150/200/300+XP-Storm. Claim once per day. → [[Login Rewards]]
+Consecutive activity days. Shields protect against 1 missed day per 7. Broken at midnight for 2+ day gaps without shields. Earned from activity consistency and task milestones. → [[Streak System]]
 
 ## Adventure map
 Two-layer exploration: overworld zones (Forest of Endurance, Mountains of Strength, Ocean of Balance, etc.) and dungeon-layer node graphs inside each zone. Real-world km spent moves you along map edges. → [[Adventure Map and World]]
@@ -52,7 +49,7 @@ Design: friends, leaderboards, challenges, guilds with co-op raids. Implementati
 Stateful bottom-tab shell with a centre FAB that expands into a radial menu of 5 customisable items (World, Guild, Stats, Titles, Boss by default). → [[Shell and Radial FAB]]
 
 ## Global overlays
-Level-up celebration, item-obtained popup, inventory-full warning, login reward dialog — triggered by cross-feature events via broadcast streams. → [[Global Event Pattern]]
+Level-up celebration, item-obtained popup, and inventory-full warning — triggered by cross-feature events via broadcast streams. → [[Global Event Pattern]]
 
 ## Admin panel
 Web UI for managing items, achievements, map nodes/edges. Accessed with admin-role JWT. → [[Debug Endpoints]]

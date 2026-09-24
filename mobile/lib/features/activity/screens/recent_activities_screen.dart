@@ -22,7 +22,8 @@ class RecentActivitiesScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+                    icon: const Icon(Icons.arrow_back_ios,
+                        color: AppColors.textPrimary, size: 20),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Text(
@@ -50,8 +51,12 @@ class RecentActivitiesScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => ref.invalidate(activityHistoryProvider),
-                        child: const Text('Retry', style: TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700)),
+                        onPressed: () =>
+                            ref.invalidate(activityHistoryProvider),
+                        child: const Text('Retry',
+                            style: TextStyle(
+                                color: AppColors.blue,
+                                fontWeight: FontWeight.w700)),
                       ),
                     ],
                   ),
@@ -68,7 +73,8 @@ class RecentActivitiesScreen extends ConsumerWidget {
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: history.length,
-                    itemBuilder: (context, index) => _ActivityRow(activity: history[index]),
+                    itemBuilder: (context, index) =>
+                        _ActivityRow(activity: history[index]),
                   );
                 },
               ),
@@ -99,10 +105,12 @@ class _ActivityRow extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: AppColors.green.withValues(alpha: 0.1),
-              border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+              border:
+                  Border.all(color: AppColors.green.withValues(alpha: 0.25)),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+            child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 20))),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -120,7 +128,8 @@ class _ActivityRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   name,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.textSecondary),
                 ),
               ],
             ),
@@ -146,7 +155,8 @@ class _ActivityRow extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 _timeAgo(activity.loggedAt),
-                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                style: const TextStyle(
+                    fontSize: 10, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -157,7 +167,8 @@ class _ActivityRow extends StatelessWidget {
 
   String _subLine() {
     final parts = ['${activity.durationMinutes} min'];
-    if (activity.distanceKm > 0) parts.add('${activity.distanceKm.toStringAsFixed(1)} km');
+    if (activity.distanceKm > 0)
+      parts.add('${activity.distanceKm.toStringAsFixed(1)} km');
     return parts.join(' · ');
   }
 

@@ -2,14 +2,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_toast.dart';
+import '../../character/providers/character_provider.dart';
+import '../../home/providers/adventure_hub_status_provider.dart';
+import '../../talents/providers/talents_provider.dart';
 import '../models/streak_models.dart';
 import '../providers/streak_provider.dart';
+import '../services/streak_service.dart';
 
 /// Show the streak detail bottom sheet. Reused from the home streak strip,
 /// the home header flame chip, and the profile 🔥 Streak tile.
 Future<void> showStreakDetailSheet(BuildContext context) {
-  return showModalBottomSheet(
+  return showAppBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -32,6 +37,7 @@ class StreakDetailSheet extends ConsumerStatefulWidget {
 class _StreakDetailSheetState extends ConsumerState<StreakDetailSheet> {
   Timer? _countdownTick;
   bool _shieldBusy = false;
+  bool _rewardBusy = false;
 
   @override
   void initState() {
@@ -61,60 +67,65 @@ class _StreakDetailSheetState extends ConsumerState<StreakDetailSheet> {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3a4a5a),
-                    borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3a4a5a),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              streakAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: CircularProgressIndicator(color: AppColors.orange, strokeWidth: 2),
+                const SizedBox(height: 16),
+                streakAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                          color: AppColors.orange, strokeWidth: 2),
+                    ),
                   ),
-                ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Failed to load streak',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                  error: (e, _) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Failed to load streak',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextButton(
-                        onPressed: () =>
-                            ref.read(streakProvider.notifier).refresh(),
-                        child: const Text('Retry',
-                            style: TextStyle(color: AppColors.blue)),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        TextButton(
+                          onPressed: () =>
+                              ref.read(streakProvider.notifier).refresh(),
+                          child: const Text('Retry',
+                              style: TextStyle(color: AppColors.blue)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  data: (streak) => _Body(
+                    streak: streak,
+                    shieldBusy: _shieldBusy,
+                    rewardBusy: _rewardBusy,
+                    onUseShield: () => _handleUseShield(streak),
+                    onClaimReward: _handleClaimReward,
                   ),
                 ),
-                data: (streak) => _Body(
-                  streak: streak,
-                  shieldBusy: _shieldBusy,
-                  onUseShield: () => _handleUseShield(streak),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -125,8 +136,7 @@ class _StreakDetailSheetState extends ConsumerState<StreakDetailSheet> {
     if (_shieldBusy) return;
     setState(() => _shieldBusy = true);
     try {
-      final result =
-          await ref.read(streakProvider.notifier).useShield();
+      final result = await ref.read(streakProvider.notifier).useShield();
       if (!mounted) return;
       if (result.success) {
         AppToast.success(context, result.message);
@@ -140,6 +150,24 @@ class _StreakDetailSheetState extends ConsumerState<StreakDetailSheet> {
       if (mounted) setState(() => _shieldBusy = false);
     }
   }
+
+  Future<void> _handleClaimReward() async {
+    if (_rewardBusy) return;
+    setState(() => _rewardBusy = true);
+    try {
+      final result = await ref.read(streakProvider.notifier).claimReward();
+      ref.invalidate(characterProfileProvider);
+      ref.invalidate(talentsProvider);
+      ref.invalidate(adventureHubSignalsProvider);
+      if (mounted) {
+        AppToast.success(context, '+${result.coinsClaimed} coins claimed!');
+      }
+    } on StreakException catch (error) {
+      if (mounted) AppToast.error(context, error.message);
+    } finally {
+      if (mounted) setState(() => _rewardBusy = false);
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -150,12 +178,16 @@ class _Body extends StatelessWidget {
   const _Body({
     required this.streak,
     required this.shieldBusy,
+    required this.rewardBusy,
     required this.onUseShield,
+    required this.onClaimReward,
   });
 
   final StreakData streak;
   final bool shieldBusy;
+  final bool rewardBusy;
   final VoidCallback onUseShield;
+  final VoidCallback onClaimReward;
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +198,12 @@ class _Body extends StatelessWidget {
         _Header(current: streak.current, longest: streak.longest),
         const SizedBox(height: 16),
         _KeepAliveCard(streak: streak),
+        const SizedBox(height: 14),
+        _DailyRewardCard(
+          streak: streak,
+          busy: rewardBusy,
+          onClaim: onClaimReward,
+        ),
         const SizedBox(height: 14),
         _MilestoneRow(current: streak.current),
         const SizedBox(height: 14),
@@ -180,6 +218,95 @@ class _Body extends StatelessWidget {
           lastActivityDate: streak.lastActivityDate,
         ),
       ],
+    );
+  }
+}
+
+class _DailyRewardCard extends StatelessWidget {
+  const _DailyRewardCard({
+    required this.streak,
+    required this.busy,
+    required this.onClaim,
+  });
+
+  final StreakData streak;
+  final bool busy;
+  final VoidCallback onClaim;
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = streak.canClaimDailyReward && streak.pendingRewardCoins > 0;
+    final nextDay = streak.current + 1;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.orange.withValues(alpha: ready ? 0.11 : 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.orange.withValues(alpha: ready ? 0.55 : 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text('🪙', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text(
+                'DAILY STREAK REWARD',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            ready
+                ? '${streak.pendingRewardCoins} coins ready to collect'
+                : 'Complete streak day $nextDay to earn ${streak.nextRewardCoins} coins.',
+            style: TextStyle(
+              color: ready ? AppColors.orange : AppColors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (ready) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: busy ? null : onClaim,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.orange,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Claim Reward',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -376,8 +503,7 @@ class _MilestoneRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.purple.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
-          border:
-              Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -453,10 +579,8 @@ class _MilestoneRow extends StatelessWidget {
                 CircularProgressIndicator(
                   value: next == 0 ? 0 : (current / next).clamp(0.0, 1.0),
                   strokeWidth: 3,
-                  backgroundColor:
-                      AppColors.orange.withValues(alpha: 0.15),
-                  valueColor:
-                      const AlwaysStoppedAnimation(AppColors.orange),
+                  backgroundColor: AppColors.orange.withValues(alpha: 0.15),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.orange),
                 ),
                 Text(
                   '$current/$next',
@@ -493,7 +617,7 @@ class _ShieldsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = streak.shieldsAvailable;
-    final canUse = count > 0 && !streak.shieldUsedToday && streak.current > 0;
+    final canUse = streak.canUseShield;
 
     final String helperText;
     if (streak.shieldUsedToday) {
@@ -503,7 +627,8 @@ class _ShieldsCard extends StatelessWidget {
     } else if (streak.current == 0) {
       helperText = 'Start a streak before you can spend a shield.';
     } else {
-      helperText = 'Spend one to absorb a missed day without breaking your streak.';
+      helperText =
+          'Spend one to absorb a missed day without breaking your streak.';
     }
 
     return Container(
@@ -587,8 +712,8 @@ class _ShieldsCard extends StatelessWidget {
                     )
                   : const Text(
                       '🛡️ Use Shield',
-                      style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700),
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                     ),
             ),
           ),

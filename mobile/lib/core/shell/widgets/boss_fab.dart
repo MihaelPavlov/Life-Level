@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../constants/app_icons.dart';
 import '../../widgets/app_icon_image.dart';
+import '../../motion/app_motion.dart';
 import '../shell_constants.dart';
 
 class BossFab extends StatelessWidget {
@@ -18,11 +19,15 @@ class BossFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: onTap,
       onLongPress: onLongPress,
+      haptic: AppHaptic.light,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
+        duration: AppMotion.duration(
+          context,
+          const Duration(milliseconds: 280),
+        ),
         width: kFabSize,
         height: kFabSize,
         decoration: BoxDecoration(
@@ -57,7 +62,10 @@ class BossFab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
+              duration: AppMotion.duration(
+                context,
+                const Duration(milliseconds: 200),
+              ),
               child: isOpen
                   ? const Text(
                       'X',
@@ -67,7 +75,7 @@ class BossFab extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w300,
                       ),
-                      )
+                    )
                   : const AppIconImage(
                       AppIcons.menuIcon,
                       key: ValueKey('menu'),

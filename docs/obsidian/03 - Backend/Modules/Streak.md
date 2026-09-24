@@ -63,7 +63,7 @@ Manual shield consumption (endpoint `POST /api/streak/use-shield`). Only works i
 
 ### AddShieldAsync(userId)
 
-`IStreakShieldPort` — grants 1 shield. Called by [[LoginReward]] on Day 3 of the reward cycle.
+`IStreakShieldPort` — grants 1 shield. Used by Daily and Weekly task reward milestones.
 
 ### GetCurrentStreakAsync(userId)
 
@@ -104,5 +104,5 @@ Sets `ShieldUsedToday = false` on all Streak rows.
 ## Related
 - [[Streak System]]
 - [[Activity]]
-- [[LoginReward]] (awards shields on Day 3)
+- [[Quest]] (task milestones can award shields)
 - [[DailyResetJob]]

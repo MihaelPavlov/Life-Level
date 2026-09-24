@@ -101,7 +101,6 @@ public class CharacterService(
             LongestStreak: ctx.Streak?.Longest ?? 0,
             ShieldsAvailable: ctx.Streak?.ShieldsAvailable ?? 0,
             DailyQuestsCompleted: ctx.DailyQuestsCompleted,
-            LoginRewardAvailable: !ctx.HasClaimedLoginRewardToday,
             TutorialStep: character.TutorialStep,
             TutorialTopicsSeen: character.TutorialTopicsSeen,
             MapTutorialStep: character.MapTutorialStep

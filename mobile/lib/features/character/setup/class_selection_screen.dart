@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/constants/class_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../models/character_class.dart';
@@ -213,7 +214,7 @@ class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
                         if (!context.mounted) return;
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          AppRoute(
                             builder: (_) => AvatarSelectionScreen(
                               selectedClass: _selected!,
                               ringItems: widget.ringItems,
@@ -287,7 +288,8 @@ class _ClassCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? color.withOpacity(0.05) : AppColors.surface,
           border: Border.all(
-            color: selected ? color.withOpacity(0.6) : AppColors.surfaceElevated,
+            color:
+                selected ? color.withOpacity(0.6) : AppColors.surfaceElevated,
             width: selected ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -372,9 +374,8 @@ class _ClassCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: selected ? AppColors.purple : Colors.transparent,
                     border: Border.all(
-                      color: selected
-                          ? AppColors.purple
-                          : const Color(0xFF30363D),
+                      color:
+                          selected ? AppColors.purple : const Color(0xFF30363D),
                       width: 1.5,
                     ),
                   ),
@@ -407,10 +408,12 @@ class _ClassCard extends StatelessWidget {
   List<(String, Color)> _bonusList() {
     final result = <(String, Color)>[];
     if (cls.strMultiplier > 1.0) {
-      result.add(('+STR x${cls.strMultiplier.toStringAsFixed(1)}', AppColors.red));
+      result.add(
+          ('+STR x${cls.strMultiplier.toStringAsFixed(1)}', AppColors.red));
     }
     if (cls.endMultiplier > 1.0) {
-      result.add(('+END x${cls.endMultiplier.toStringAsFixed(1)}', AppColors.blue));
+      result.add(
+          ('+END x${cls.endMultiplier.toStringAsFixed(1)}', AppColors.blue));
     }
     if (cls.agiMultiplier > 1.0) {
       result.add((

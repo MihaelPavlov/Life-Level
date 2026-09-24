@@ -10,8 +10,13 @@ class QuestCategory {
   static const calories = 'calories';
   static const distance = 'distance';
   static const workouts = 'workouts';
-  static const streak = 'streak';
-  static const login = 'login';
+  static const zonesCompleted = 'zonescompleted';
+  static const chestsOpened = 'chestsopened';
+  static const bossContributions = 'bosscontributions';
+  static const bossesDefeated = 'bossesdefeated';
+  static const guildRaidContributions = 'guildraidcontributions';
+  static const guildRaidsWon = 'guildraidswon';
+  static const regionsCompleted = 'regionscompleted';
 }
 
 // ── Category display helpers ────────────────────────────────────────────────────
@@ -25,10 +30,18 @@ String questCategoryEmoji(String category) {
       return '📍';
     case QuestCategory.workouts:
       return '🏋️';
-    case QuestCategory.streak:
-      return '🔥';
-    case QuestCategory.login:
-      return '📅';
+    case QuestCategory.zonesCompleted:
+      return '🗺️';
+    case QuestCategory.chestsOpened:
+      return '🎁';
+    case QuestCategory.bossContributions:
+    case QuestCategory.bossesDefeated:
+      return '⚔️';
+    case QuestCategory.guildRaidContributions:
+    case QuestCategory.guildRaidsWon:
+      return '🛡️';
+    case QuestCategory.regionsCompleted:
+      return '🏔️';
     default:
       return '🎯';
   }
@@ -44,10 +57,16 @@ String questCategoryIcon(String category) {
       return AppIcons.questDistance;
     case QuestCategory.workouts:
       return AppIcons.questWorkoutCount;
-    case QuestCategory.streak:
+    case QuestCategory.zonesCompleted:
+    case QuestCategory.regionsCompleted:
+      return AppIcons.questDistance;
+    case QuestCategory.chestsOpened:
+      return AppIcons.regionChestsHubIcon;
+    case QuestCategory.bossContributions:
+    case QuestCategory.bossesDefeated:
+    case QuestCategory.guildRaidContributions:
+    case QuestCategory.guildRaidsWon:
       return AppIcons.questWorkoutCount;
-    case QuestCategory.login:
-      return AppIcons.questDailyLogin;
     default:
       return AppIcons.questGeneral;
   }
@@ -63,7 +82,10 @@ Color questCategoryColor(String category) {
       return AppColors.green;
     case QuestCategory.workouts:
       return AppColors.red;
-    case QuestCategory.streak:
+    case QuestCategory.zonesCompleted:
+    case QuestCategory.regionsCompleted:
+      return AppColors.green;
+    case QuestCategory.chestsOpened:
       return AppColors.orange;
     default:
       return AppColors.purple;
@@ -78,6 +100,8 @@ class UserQuestProgress {
   final String title;
   final String description;
   final String category;
+  final String progressMode;
+  final String difficultyTier;
   final String? requiredActivity;
   final double targetValue;
   final double currentValue;
@@ -97,6 +121,8 @@ class UserQuestProgress {
     required this.title,
     required this.description,
     required this.category,
+    this.progressMode = 'Cumulative',
+    this.difficultyTier = 'Standard',
     required this.requiredActivity,
     required this.targetValue,
     required this.currentValue,
@@ -125,6 +151,8 @@ class UserQuestProgress {
         title: json['title'] as String,
         description: json['description'] as String,
         category: json['category'] as String,
+        progressMode: json['progressMode'] as String? ?? 'Cumulative',
+        difficultyTier: json['difficultyTier'] as String? ?? 'Standard',
         requiredActivity: json['requiredActivity'] as String?,
         targetValue: (json['targetValue'] as num).toDouble(),
         currentValue: (json['currentValue'] as num).toDouble(),

@@ -24,7 +24,8 @@ class EquipmentNotifier extends AsyncNotifier<CharacterEquipmentResponse> {
 
   Future<void> equip(String characterItemId, String slotType) async {
     state = await AsyncValue.guard(
-      () => _service.equipItem(characterItemId: characterItemId, slotType: slotType),
+      () => _service.equipItem(
+          characterItemId: characterItemId, slotType: slotType),
     );
   }
 }

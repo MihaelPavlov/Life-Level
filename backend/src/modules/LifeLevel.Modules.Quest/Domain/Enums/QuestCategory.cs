@@ -6,6 +6,11 @@ public enum QuestCategory
     Calories,
     Distance,
     Workouts,
-    Streak,
-    Login
+    ZonesCompleted,
+    ChestsOpened,
+    BossContributions,
+    BossesDefeated,
+    GuildRaidContributions,
+    GuildRaidsWon,
+    RegionsCompleted
 }

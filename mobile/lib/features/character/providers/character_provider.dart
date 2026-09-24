@@ -27,7 +27,8 @@ class CharacterNotifier extends AsyncNotifier<CharacterProfile> {
 }
 
 final characterProfileProvider =
-    AsyncNotifierProvider<CharacterNotifier, CharacterProfile>(CharacterNotifier.new);
+    AsyncNotifierProvider<CharacterNotifier, CharacterProfile>(
+        CharacterNotifier.new);
 
 // ── XP History ────────────────────────────────────────────────────────────────
 // autoDispose so it re-fetches each time the sheet opens.

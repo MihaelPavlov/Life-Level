@@ -37,7 +37,8 @@ class GuildNotifier extends AsyncNotifier<GuildDetail?> {
 
   Future<void> join(String guildId) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(guildServiceProvider).join(guildId));
+    state = await AsyncValue.guard(
+        () => ref.read(guildServiceProvider).join(guildId));
   }
 
   Future<void> leave() async {
@@ -95,7 +96,7 @@ final guildRaidHistoryProvider = FutureProvider.autoDispose<List<GuildRaid>>(
   (ref) => ref.watch(guildServiceProvider).raidHistory(),
 );
 
-final guildSearchProvider = FutureProvider.autoDispose
-    .family<List<GuildSearchItem>, String>(
+final guildSearchProvider =
+    FutureProvider.autoDispose.family<List<GuildSearchItem>, String>(
   (ref, query) => ref.watch(guildServiceProvider).search(query),
 );

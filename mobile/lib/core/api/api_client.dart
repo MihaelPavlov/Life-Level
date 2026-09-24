@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../main.dart' show navigatorKey;
+import '../motion/app_motion.dart';
 import '../../features/auth/login_screen.dart';
 
 class ApiClient {
@@ -41,7 +41,8 @@ class ApiClient {
         if (error.response?.statusCode == 401 && !isAuthRequest) {
           await _storage.delete(key: 'jwt_token');
           navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            AppRoute(
+                builder: (_) => const LoginScreen(), style: AppRouteStyle.fade),
             (_) => false,
           );
         }

@@ -99,7 +99,9 @@ class SeasonRewardSlot extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       height: 1.15,
-                      color: locked ? AppColors.textSecondary : AppColors.textPrimary,
+                      color: locked
+                          ? AppColors.textSecondary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -133,7 +135,8 @@ class SeasonRewardSlot extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: AppColors.green,
                 ),
-                child: const Icon(Icons.add_rounded, size: 16, color: Colors.black),
+                child: const Icon(Icons.add_rounded,
+                    size: 16, color: Colors.black),
               )
             else if (received)
               const Icon(Icons.check_circle_rounded,

@@ -10,7 +10,6 @@ using LifeLevel.Modules.Adventure.Dungeons.Infrastructure;
 using LifeLevel.Modules.Adventure.Encounters.Infrastructure;
 using LifeLevel.Modules.Character.Infrastructure;
 using LifeLevel.Modules.Identity.Infrastructure;
-using LifeLevel.Modules.LoginReward.Infrastructure;
 using LifeLevel.Modules.Map.Infrastructure;
 using LifeLevel.Modules.Quest.Infrastructure;
 using LifeLevel.Modules.Streak.Infrastructure;
@@ -111,9 +110,6 @@ builder.Services.AddQuestModule();
 // Activity module
 builder.Services.AddActivityModule();
 
-// LoginReward module
-builder.Services.AddLoginRewardModule();
-
 // WorldZone module
 builder.Services.AddWorldZoneModule();
 
@@ -132,6 +128,10 @@ builder.Services.AddItemsModule();
 // Guild module
 builder.Services.AddGuildModule();
 builder.Services.AddScoped<IGuildRaidRealtimePort, GuildRaidRealtimePublisher>();
+builder.Services.AddScoped<ITaskEligibilityReadPort, TaskEligibilityReadAdapter>();
+// Keep adaptive task reads independent from ActivityService. ActivityService
+// writes quest progress, so using it here would form Quest -> Activity -> Quest.
+builder.Services.AddScoped<IActivityHistoryReadPort, TaskActivityHistoryReadAdapter>();
 
 // Achievements module
 builder.Services.AddAchievementsModule();

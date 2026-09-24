@@ -29,7 +29,6 @@ The rules, formulas, and systems that make the game tick.
 - [[XP and Leveling]] — the XP curve and all multipliers
 - [[Quest System]] — daily / weekly / special rules
 - [[Streak System]] — shields, break logic, 7-day shield cadence
-- [[Login Rewards]] — 7-day cycle with XP + shield + XP storm
 - [[Adventure Map and World]] — WorldZone vs Map, travel mechanics
 - [[Boss System]] — regular, mini, guild raids
 - [[Items and Equipment]] — rarity, slots, bonuses, drop rules
@@ -55,7 +54,6 @@ Modular monolith with 14 modules, 41 DbSets, 16 controllers.
 - [[Activity]] — workout logging + XP formula
 - [[Quest]] — daily / weekly / special generation
 - [[Streak]] — streak state + shield logic
-- [[LoginReward]] — 7-day reward cycle
 - [[Map]] — dungeon graph (MapNode / MapEdge)
 - [[WorldZone]] — overworld graph + zone unlock
 - [[Adventure.Encounters]] — Boss + Chest

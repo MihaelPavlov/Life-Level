@@ -18,10 +18,13 @@ public class QuestService(
     ILevelUpItemGrantPort levelUpItemGrant,
     ITalentBonusReadPort? talentBonus = null,
     IRewardCurrencyPort? rewardCurrency = null,
-    IStreakShieldPort? streakShield = null)
+    IStreakShieldPort? streakShield = null,
+    IActivityHistoryReadPort? activityHistory = null,
+    ITaskEligibilityReadPort? taskEligibility = null)
     : IDailyQuestReadPort, IQuestProgressPort
 {
-    private const int TasksPerPeriod = 10;
+    private const int DailyTasks = 5;
+    private const int WeeklyTasks = 10;
     private static readonly DateTime SpecialQuestExpiry = new(2099, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
     private static readonly IReadOnlyDictionary<int, TaskMilestoneRewardDto> DailyMilestones =
@@ -60,12 +63,14 @@ public class QuestService(
         var now = DateTime.UtcNow;
         var active = await db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
             .Where(p => p.UserId == userId && p.Quest.Type == type && p.ExpiresAt > now).ToListAsync();
-        if (active.Count < TasksPerPeriod)
+        var desiredCount = type == QuestType.Daily ? DailyTasks : WeeklyTasks;
+        if (active.Count < desiredCount)
         {
             var assignedIds = active.Select(p => p.QuestId).ToHashSet();
             var available = await db.Set<QuestEntity>()
                 .Where(q => q.IsActive && q.Type == type && !assignedIds.Contains(q.Id)).ToListAsync();
-            var selected = SelectBalancedTasks(available, TasksPerPeriod - active.Count);
+            var selected = await SelectBalancedTasksAsync(
+                userId, type, available, desiredCount - active.Count);
             var (_, resetAt) = PeriodBounds(type, now);
             foreach (var task in selected)
             {
@@ -80,32 +85,62 @@ public class QuestService(
         }
         var (_, canonicalResetAt) = PeriodBounds(type, now);
         foreach (var progress in active) progress.ExpiresAt = canonicalResetAt;
-        ApplyRewardSnapshots(active, type);
+        ApplyRewardSnapshots(active, type, desiredCount);
         await db.SaveChangesAsync();
     }
 
-    private static List<QuestEntity> SelectBalancedTasks(List<QuestEntity> available, int count)
+    private async Task<List<QuestEntity>> SelectBalancedTasksAsync(
+        Guid userId, QuestType type, List<QuestEntity> available, int count)
     {
         if (count <= 0) return [];
-        var general = available.Where(q => q.RequiredActivity == null).OrderBy(_ => Random.Shared.Next()).ToList();
-        var specific = available.Where(q => q.RequiredActivity != null).OrderBy(_ => Random.Shared.Next()).ToList();
-        var specificTarget = Math.Min(3, Math.Min(specific.Count, count));
-        var selected = general.Take(count - specificTarget).Concat(specific.Take(specificTarget)).ToList();
+
+        var eligibility = taskEligibility is null
+            ? new TaskEligibilitySnapshot(false, 0, false, false, false)
+            : await taskEligibility.GetAsync(userId);
+        available = available.Where(q => IsEligible(q, eligibility)).ToList();
+
+        IReadOnlyList<ActivityRecordDto> history = [];
+        if (activityHistory != null)
+            history = await activityHistory.ListForUserBetweenAsync(
+                userId, DateTime.UtcNow.AddDays(-28), DateTime.UtcNow);
+
+        var variants = available
+            .GroupBy(GroupKeyOf)
+            .Select(group => SelectPersonalVariant(group.ToList(), type, history))
+            .Where(q => q != null)
+            .Cast<QuestEntity>()
+            .ToList();
+
+        var gameCap = type == QuestType.Daily ? 1 : 2;
+        var game = variants.Where(IsGameTask).OrderBy(_ => Random.Shared.Next()).Take(gameCap).ToList();
+        var fitness = variants.Where(q => !IsGameTask(q)).OrderBy(_ => Random.Shared.Next()).ToList();
+        var selected = fitness.Take(Math.Max(0, count - game.Count)).Concat(game).ToList();
         if (selected.Count < count)
         {
-            var ids = selected.Select(q => q.Id).ToHashSet();
-            selected.AddRange(available.Where(q => !ids.Contains(q.Id)).OrderBy(_ => Random.Shared.Next())
+            // Keep the selected count stable even for a brand-new player with
+            // little activity history. Fill only with the easiest unused
+            // fitness groups; unavailable adventure/guild tasks remain out.
+            var usedGroups = selected.Select(GroupKeyOf).ToHashSet();
+            var fallback = available.Where(q => !IsGameTask(q) && !usedGroups.Contains(GroupKeyOf(q)))
+                .GroupBy(GroupKeyOf)
+                .Select(g => g.OrderBy(q => q.TargetValue ?? 0).First())
+                .OrderBy(_ => Random.Shared.Next());
+            selected.AddRange(fallback
                 .Take(count - selected.Count));
         }
         return selected.OrderBy(q => q.SortOrder).ToList();
     }
 
-    private static void ApplyRewardSnapshots(List<UserQuestProgressEntity> tasks, QuestType type)
+    private static void ApplyRewardSnapshots(List<UserQuestProgressEntity> tasks, QuestType type, int desiredCount)
     {
-        var ordered = tasks.OrderBy(p => p.Quest.SortOrder).ThenBy(p => p.Id).Take(TasksPerPeriod).ToList();
+        // Reward snapshots are immutable once assigned. This preserves active
+        // v1 periods during rollout and prevents a later catalog reorder from
+        // changing rewards already shown to the player.
+        if (tasks.Any(p => p.RewardPoints > 0)) return;
+        var ordered = tasks.OrderBy(p => p.Quest.SortOrder).ThenBy(p => p.Id).Take(desiredCount).ToList();
         var crystalCount = type == QuestType.Daily ? 1 : 2;
-        var points = type == QuestType.Daily ? 10 : 20;
-        var coins = type == QuestType.Daily ? 15 : 30;
+        var points = 20;
+        var coins = type == QuestType.Daily ? 35 : 30;
         for (var i = 0; i < ordered.Count; i++)
         {
             ordered[i].RewardPoints = points;
@@ -113,6 +148,73 @@ public class QuestService(
             ordered[i].RewardCoins = crystalReward ? 0 : coins;
             ordered[i].RewardCrystals = crystalReward ? 1 : 0;
         }
+    }
+
+    private static bool IsGameTask(QuestEntity quest) => quest.Category is
+        QuestCategory.ZonesCompleted or QuestCategory.ChestsOpened or
+        QuestCategory.BossContributions or QuestCategory.BossesDefeated or
+        QuestCategory.GuildRaidContributions or QuestCategory.GuildRaidsWon or
+        QuestCategory.RegionsCompleted;
+
+    private static bool IsEligible(QuestEntity quest, TaskEligibilitySnapshot eligibility) => quest.Category switch
+    {
+        QuestCategory.ZonesCompleted => eligibility.HasCompletableZone,
+        QuestCategory.ChestsOpened => eligibility.ReachableUnopenedChests >= quest.TargetValue,
+        QuestCategory.BossContributions or QuestCategory.BossesDefeated => eligibility.HasActiveBoss,
+        QuestCategory.GuildRaidContributions or QuestCategory.GuildRaidsWon => eligibility.HasActiveGuildRaid,
+        QuestCategory.RegionsCompleted => quest.Type == QuestType.Weekly && eligibility.CanCompleteCurrentRegion,
+        _ => true,
+    };
+
+    private static string GroupKeyOf(QuestEntity quest) => string.IsNullOrWhiteSpace(quest.GroupKey)
+        ? $"{quest.Type}:{quest.Category}:{quest.RequiredActivity}:{quest.ProgressMode}"
+        : quest.GroupKey;
+
+    private static QuestEntity? SelectPersonalVariant(
+        List<QuestEntity> variants, QuestType type, IReadOnlyList<ActivityRecordDto> history)
+    {
+        var activity = variants[0].RequiredActivity?.ToString();
+        if (activity != null && history.Count(h => h.Type.Equals(activity, StringComparison.OrdinalIgnoreCase)) < 2)
+            return null;
+
+        var relevant = activity is null
+            ? history
+            : history.Where(h => h.Type.Equals(activity, StringComparison.OrdinalIgnoreCase)).ToList();
+        var capacity = EstimateCapacity(variants[0], type, relevant);
+        var ordered = variants.OrderBy(q => q.TargetValue ?? 0).ToList();
+        if (capacity <= 0) return ordered.FirstOrDefault();
+        return ordered.LastOrDefault(q => (q.TargetValue ?? 0) <= capacity * 1.15)
+            ?? ordered.FirstOrDefault();
+    }
+
+    private static double EstimateCapacity(
+        QuestEntity quest, QuestType type, IReadOnlyList<ActivityRecordDto> history)
+    {
+        if (history.Count == 0 || IsGameTask(quest)) return 0;
+        double Value(ActivityRecordDto h) => quest.Category switch
+        {
+            QuestCategory.Duration => h.DurationMinutes,
+            QuestCategory.Calories => h.Calories,
+            QuestCategory.Distance => h.DistanceKm,
+            QuestCategory.Workouts => 1,
+            _ => 0,
+        };
+        if (quest.ProgressMode == QuestProgressMode.SingleActivity)
+            return Median(history.Select(Value).Where(v => v > 0));
+
+        var buckets = history.GroupBy(h => type == QuestType.Daily
+                ? h.LoggedAt.Date
+                : h.LoggedAt.Date.AddDays(-(((int)h.LoggedAt.DayOfWeek + 6) % 7)))
+            .Select(g => g.Sum(Value)).Where(v => v > 0);
+        return Median(buckets);
+    }
+
+    private static double Median(IEnumerable<double> values)
+    {
+        var sorted = values.OrderBy(v => v).ToArray();
+        if (sorted.Length == 0) return 0;
+        var middle = sorted.Length / 2;
+        return sorted.Length % 2 == 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
     }
 
     public async Task<TaskRewardPeriodDto> GetRewardPeriodAsync(Guid userId, QuestType type)
@@ -125,7 +227,8 @@ public class QuestService(
             .Where(p => p.UserId == userId && p.Quest.Type == type && p.ExpiresAt > now)
             .OrderBy(p => p.Quest.SortOrder).ToListAsync();
         var maximum = type == QuestType.Daily ? 100 : 200;
-        var points = Math.Min(tasks.Where(p => p.IsCompleted).Sum(p => p.RewardPoints), maximum);
+        var points = Math.Min(tasks.Where(p => p.IsCompleted && p.RewardClaimed)
+            .Sum(p => p.RewardPoints), maximum);
         var claimed = await db.Set<TaskRewardMilestoneClaim>()
             .Where(c => c.UserId == userId && c.PeriodType == type && c.PeriodStartUtc == periodStart)
             .Select(c => c.Threshold).ToListAsync();
@@ -142,6 +245,39 @@ public class QuestService(
         if (rewards is null || !rewards.TryGetValue(threshold, out var reward))
             throw new InvalidOperationException("Invalid reward milestone.");
         return await ClaimMilestoneInternalAsync(userId, type, threshold, reward);
+    }
+
+    public async Task<TaskRewardsClaimResult> ClaimAvailableTaskRewardsAsync(
+        Guid userId, QuestType type, CancellationToken ct = default)
+    {
+        if (type is not (QuestType.Daily or QuestType.Weekly))
+            throw new InvalidOperationException("Period must be daily or weekly.");
+
+        await GeneratePeriodTasksAsync(userId, type);
+        var now = DateTime.UtcNow;
+        var claimable = await db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
+            .Where(p => p.UserId == userId && p.Quest.Type == type &&
+                        p.ExpiresAt > now && p.IsCompleted && !p.RewardClaimed)
+            .OrderBy(p => p.Quest.SortOrder)
+            .ToListAsync(ct);
+
+        if (claimable.Count == 0)
+            throw new InvalidOperationException(
+                $"No completed {type.ToString().ToLowerInvariant()} tasks are ready to claim.");
+
+        var coins = claimable.Sum(p => p.RewardCoins);
+        var crystals = claimable.Sum(p => p.RewardCrystals);
+        foreach (var task in claimable) task.RewardClaimed = true;
+        await db.SaveChangesAsync(ct);
+
+        if (rewardCurrency != null)
+        {
+            await rewardCurrency.AddCoinsAsync(userId, coins, ct);
+            await rewardCurrency.AddCrystalsAsync(userId, crystals, ct);
+        }
+
+        return new(type.ToString(), claimable.Count, coins, crystals,
+            await GetRewardPeriodAsync(userId, type));
     }
 
     /// <summary>
@@ -224,30 +360,49 @@ public class QuestService(
                 _ => 0,
             };
             if (delta <= 0) continue;
-            progress.CurrentValue += delta;
+            progress.CurrentValue = task.ProgressMode == QuestProgressMode.SingleActivity
+                ? Math.Max(progress.CurrentValue, delta)
+                : progress.CurrentValue + delta;
             if (progress.CurrentValue < (task.TargetValue ?? 0)) continue;
             progress.IsCompleted = true;
             progress.CompletedAt = now;
-            progress.RewardClaimed = true;
             await db.SaveChangesAsync();
 
             long awardedXp = 0;
             if (task.Type == QuestType.Special && task.RewardXp > 0)
             {
+                progress.RewardClaimed = true;
                 awardedXp = await ApplyQuestXpTalentAsync(userId, task.RewardXp);
                 var xp = await characterXp.AwardXpAsync(userId, "Quest", "🎯", $"Quest complete: {task.Title}", awardedXp);
                 await GrantLevelItemsIfNeededAsync(userId, xp);
-            }
-            else if (rewardCurrency != null)
-            {
-                await rewardCurrency.AddCoinsAsync(userId, progress.RewardCoins);
-                await rewardCurrency.AddCrystalsAsync(userId, progress.RewardCrystals);
             }
             await events.PublishAsync(new QuestCompletedEvent(userId, task.Id, task.Title, awardedXp));
             completed.Add(progress);
         }
         await db.SaveChangesAsync();
         return new() { UpdatedQuests = completed.Select(MapToDto).ToList() };
+    }
+
+    public async Task UpdateProgressFromGameEventAsync(
+        Guid userId, QuestCategory category, double delta = 1, CancellationToken ct = default)
+    {
+        if (delta <= 0) return;
+        var now = DateTime.UtcNow;
+        var active = await db.Set<UserQuestProgressEntity>().Include(p => p.Quest)
+            .Where(p => p.UserId == userId && !p.IsCompleted && p.ExpiresAt > now &&
+                        p.Quest.Category == category)
+            .ToListAsync(ct);
+
+        foreach (var progress in active)
+        {
+            progress.CurrentValue += delta;
+            if (progress.CurrentValue < (progress.Quest.TargetValue ?? 0)) continue;
+            progress.IsCompleted = true;
+            progress.CompletedAt = now;
+            await events.PublishAsync(new QuestCompletedEvent(
+                userId, progress.Quest.Id, progress.Quest.Title, 0), ct);
+        }
+        await db.SaveChangesAsync(ct);
     }
 
     public Task ExpireStaleQuestsAsync() => Task.CompletedTask;
@@ -300,6 +455,7 @@ public class QuestService(
     {
         Id = p.Id, QuestId = p.QuestId, Title = p.Quest.Title, Description = p.Quest.Description,
         Type = p.Quest.Type.ToString(), Category = p.Quest.Category.ToString(),
+        ProgressMode = p.Quest.ProgressMode.ToString(), DifficultyTier = p.Quest.DifficultyTier.ToString(),
         RequiredActivity = p.Quest.RequiredActivity?.ToString(), TargetValue = p.Quest.TargetValue ?? 0,
         CurrentValue = p.CurrentValue, TargetUnit = p.Quest.TargetUnit, RewardXp = p.Quest.RewardXp,
         RewardCoins = p.RewardCoins, RewardCrystals = p.RewardCrystals, RewardPoints = p.RewardPoints,

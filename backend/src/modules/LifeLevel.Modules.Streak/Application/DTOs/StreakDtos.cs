@@ -8,6 +8,9 @@ public class StreakDto
     public bool ShieldUsedToday { get; set; }
     public DateTime? LastActivityDate { get; set; }
     public int TotalDaysActive { get; set; }
+    public int PendingRewardCoins { get; set; }
+    public bool CanClaimDailyReward { get; set; }
+    public int NextRewardCoins { get; set; }
 }
 
 public class StreakUpdateResult
@@ -24,4 +27,11 @@ public class UseShieldResult
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public int ShieldsRemaining { get; set; }
+}
+
+public class ClaimStreakRewardResult
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public int CoinsClaimed { get; set; }
 }

@@ -45,7 +45,7 @@ SharedKernel/
 | Interface | Method | Purpose |
 |-----------|--------|---------|
 | `IStreakReadPort` | `GetCurrentStreakAsync(userId)` | `StreakReadDto(Current, Longest, ShieldsAvailable)` |
-| `IStreakShieldPort` | `AddShieldAsync(userId)` | Grant a streak shield (used by LoginReward) |
+| `IStreakShieldPort` | `AddShieldAsync(userId)` | Grant a streak shield from reward milestones and other systems |
 | `IStreakDailyReset` | `CheckAndBreakExpiredStreaksAsync` + `ResetShieldUsedTodayFlagsAsync` | Midnight cron tasks |
 
 ### Quest ports (implemented by [[Quest]])
@@ -54,13 +54,7 @@ SharedKernel/
 |-----------|--------|---------|
 | `IDailyQuestReadPort` | `CountCompletedDailyQuestsAsync(userId)` | Today's completed-daily count |
 | `IQuestProgressPort` | `UpdateProgressFromActivityAsync(userId, type, duration, distance, calories)` | Advance quest progress from an activity |
-
-### Login Reward ports (implemented by [[LoginReward]])
-
-| Interface | Method | Purpose |
-|-----------|--------|---------|
-| `ILoginRewardReadPort` | `HasClaimedTodayAsync(userId)` | Claim-available check |
-| `ILoginRewardDailyReset` | `ResetDailyClaimFlagsAsync` | Midnight reset |
+| `ITaskEligibilityReadPort` | `GetAsync(userId)` | Snapshot whether zone, chest, boss, region, and guild task types are currently assignable |
 
 ### Map ports (implemented by [[Map]])
 
@@ -84,6 +78,7 @@ SharedKernel/
 | `IActivityLogPort` | `LogExternalActivityAsync(...)` | Ingest activity from external source (Strava, Health Connect) |
 | `IActivityExternalIdReadPort` | `FindActivityIdByExternalIdAsync(characterId, externalId)` | Dedup check |
 | `IActivityStatsReadPort` | `GetWeeklyStatsAsync(userId)` | `WeeklyActivityStatsDto(Runs, DistanceKm, XpEarned)` |
+| `IActivityHistoryReadPort` | `ListForUserBetweenAsync(userId, from, to)` | Raw 28-day activity history used for personalized task targets |
 
 ### Identity ports (implemented by [[Identity]])
 

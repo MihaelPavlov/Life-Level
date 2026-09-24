@@ -81,7 +81,8 @@ class HomeQuestItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: done ? AppColors.textSecondary : AppColors.textPrimary,
+                    color:
+                        done ? AppColors.textSecondary : AppColors.textPrimary,
                     decoration: done ? TextDecoration.lineThrough : null,
                   ),
                 ),
@@ -111,7 +112,8 @@ class HomeQuestItem extends StatelessWidget {
               if (done)
                 const Text(
                   '✓',
-                  style: TextStyle(fontSize: 16, color: AppColors.green, height: 1),
+                  style: TextStyle(
+                      fontSize: 16, color: AppColors.green, height: 1),
                 ),
               Text(
                 xp,

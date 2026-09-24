@@ -24,7 +24,6 @@ backend/
 │       ├── LifeLevel.Modules.Activity/
 │       ├── LifeLevel.Modules.Quest/
 │       ├── LifeLevel.Modules.Streak/
-│       ├── LifeLevel.Modules.LoginReward/
 │       ├── LifeLevel.Modules.Map/
 │       ├── LifeLevel.Modules.WorldZone/
 │       ├── LifeLevel.Modules.Adventure.Encounters/
@@ -68,7 +67,6 @@ Character             → SharedKernel
 Activity              → SharedKernel
 Quest                 → SharedKernel
 Streak                → SharedKernel
-LoginReward           → SharedKernel
 Map                   → SharedKernel
 WorldZone             → SharedKernel
 Adventure.Encounters  → SharedKernel, Map
@@ -87,8 +85,7 @@ Integrations          → SharedKernel
 Used when the caller needs the result in the same HTTP response.
 
 - All modules awarding XP → `ICharacterXpPort.AwardXpAsync`
-- `LoginRewardService` → `IStreakShieldPort.AddShieldAsync`
-- `CharacterService.GetProfile` → `IStreakReadPort`, `ILoginRewardReadPort`, `IDailyQuestReadPort`
+- `CharacterService.GetProfile` → `IStreakReadPort`, `IDailyQuestReadPort`
 
 ### Tier 2: in-process domain events (fire-and-await, after save)
 

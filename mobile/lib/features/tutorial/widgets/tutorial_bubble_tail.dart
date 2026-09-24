@@ -104,7 +104,5 @@ class _TailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TailPainter old) =>
-      old.direction != direction ||
-      old.accent != accent ||
-      old.fill != fill;
+      old.direction != direction || old.accent != accent || old.fill != fill;
 }

@@ -37,11 +37,16 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
     final r = widget.result;
 
     final statGains = <_StatChip>[
-      if (r.strGained > 0) _StatChip(label: 'STR +${r.strGained}', color: AppColors.red),
-      if (r.endGained > 0) _StatChip(label: 'END +${r.endGained}', color: AppColors.green),
-      if (r.agiGained > 0) _StatChip(label: 'AGI +${r.agiGained}', color: AppColors.blue),
-      if (r.flxGained > 0) _StatChip(label: 'FLX +${r.flxGained}', color: AppColors.purple),
-      if (r.staGained > 0) _StatChip(label: 'STA +${r.staGained}', color: AppColors.orange),
+      if (r.strGained > 0)
+        _StatChip(label: 'STR +${r.strGained}', color: AppColors.red),
+      if (r.endGained > 0)
+        _StatChip(label: 'END +${r.endGained}', color: AppColors.green),
+      if (r.agiGained > 0)
+        _StatChip(label: 'AGI +${r.agiGained}', color: AppColors.blue),
+      if (r.flxGained > 0)
+        _StatChip(label: 'FLX +${r.flxGained}', color: AppColors.purple),
+      if (r.staGained > 0)
+        _StatChip(label: 'STA +${r.staGained}', color: AppColors.orange),
     ];
 
     return Container(
@@ -114,8 +119,8 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
                               color: AppColors.orange.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: AppColors.orange
-                                      .withValues(alpha: 0.4)),
+                                  color:
+                                      AppColors.orange.withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               '\u26a1 +${r.xpBonusApplied} XP from gear',
@@ -178,7 +183,8 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
               if (r.streakUpdated) ...[
                 _ResultBanner(
                   icon: '🔥',
-                  text: 'Streak: ${r.currentStreak} day${r.currentStreak != 1 ? 's' : ''}!',
+                  text:
+                      'Streak: ${r.currentStreak} day${r.currentStreak != 1 ? 's' : ''}!',
                   color: AppColors.orange,
                 ),
                 const SizedBox(height: 8),
@@ -227,7 +233,6 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
                 ),
                 const SizedBox(height: 8),
               ],
-
 
               // All daily quests bonus
               if (r.allDailyQuestsCompleted) ...[

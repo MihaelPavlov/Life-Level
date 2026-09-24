@@ -28,4 +28,13 @@ public class StreakController(StreakService streakService, IUserContext userCont
             return BadRequest(new { error = result.Message });
         return Ok(result);
     }
+
+    [HttpPost("claim-reward")]
+    public async Task<IActionResult> ClaimReward(CancellationToken ct)
+    {
+        var result = await streakService.ClaimDailyRewardAsync(userContext.UserId, ct);
+        if (!result.Success)
+            return BadRequest(new { error = result.Message });
+        return Ok(result);
+    }
 }

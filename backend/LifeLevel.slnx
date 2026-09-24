@@ -10,7 +10,6 @@
     <Project Path="src/modules/LifeLevel.Modules.Quest/LifeLevel.Modules.Quest.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.Streak/LifeLevel.Modules.Streak.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.Integrations/LifeLevel.Modules.Integrations.csproj" />
-    <Project Path="src/modules/LifeLevel.Modules.LoginReward/LifeLevel.Modules.LoginReward.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.Map/LifeLevel.Modules.Map.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.WorldZone/LifeLevel.Modules.WorldZone.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.Adventure.Encounters/LifeLevel.Modules.Adventure.Encounters.csproj" />

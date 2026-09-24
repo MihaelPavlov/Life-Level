@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-const _kCommonColor    = Color(0xFF8b949e);
-const _kUncommonColor  = Color(0xFF3fb950);
-const _kRareColor      = Color(0xFF4f9eff);
-const _kEpicColor      = Color(0xFFa371f7);
+const _kCommonColor = Color(0xFF8b949e);
+const _kUncommonColor = Color(0xFF3fb950);
+const _kRareColor = Color(0xFF4f9eff);
+const _kEpicColor = Color(0xFFa371f7);
 const _kLegendaryColor = Color(0xFFf5a623);
 
 class AchievementDto {

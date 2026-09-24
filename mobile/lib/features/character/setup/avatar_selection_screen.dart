@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/class_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
@@ -96,7 +97,8 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                         children: [
                           GestureDetector(
                             onTap: () async {
-                              await SetupResumeService.instance.saveClassSelection(
+                              await SetupResumeService.instance
+                                  .saveClassSelection(
                                 ringItems: widget.ringItems,
                                 selectedClass: widget.selectedClass,
                               );
@@ -272,7 +274,8 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                             return GestureDetector(
                               onTap: () async {
                                 setState(() => _selected = option.emoji);
-                                await SetupResumeService.instance.saveAvatarSelection(
+                                await SetupResumeService.instance
+                                    .saveAvatarSelection(
                                   ringItems: widget.ringItems,
                                   selectedClass: widget.selectedClass,
                                   avatarEmoji: _selected,
@@ -294,14 +297,16 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                                   boxShadow: picked
                                       ? [
                                           BoxShadow(
-                                            color: AppColors.orange.withOpacity(0.15),
+                                            color: AppColors.orange
+                                                .withOpacity(0.15),
                                             blurRadius: 10,
                                           ),
                                         ]
                                       : null,
                                 ),
                                 child: Center(
-                                  child: AppIconImage(option.iconAsset, size: 44),
+                                  child:
+                                      AppIconImage(option.iconAsset, size: 44),
                                 ),
                               ),
                             );
@@ -375,7 +380,8 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            border: Border.all(color: AppColors.surfaceElevated),
+                            border:
+                                Border.all(color: AppColors.surfaceElevated),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Row(
@@ -424,7 +430,7 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                         if (!context.mounted) return;
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          AppRoute(
                             builder: (_) => CharacterCreatedScreen(
                               selectedClass: widget.selectedClass,
                               avatarEmoji: _selected!,

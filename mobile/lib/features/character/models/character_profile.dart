@@ -67,7 +67,6 @@ class CharacterProfile {
   final int weeklyXpEarned;
   final int currentStreak;
   final int availableStatPoints;
-  final bool loginRewardAvailable;
   final GearBonusesDto? gearBonuses;
   final TalentSummary? talents;
   // ── Combat stats (server-computed — see CombatStatsCalculator) ──
@@ -108,7 +107,6 @@ class CharacterProfile {
     required this.weeklyXpEarned,
     required this.currentStreak,
     required this.availableStatPoints,
-    this.loginRewardAvailable = false,
     this.gearBonuses,
     this.talents,
     this.attack = 0,
@@ -141,7 +139,6 @@ class CharacterProfile {
         weeklyXpEarned: json['weeklyXpEarned'] as int,
         currentStreak: json['currentStreak'] as int,
         availableStatPoints: json['availableStatPoints'] as int? ?? 0,
-        loginRewardAvailable: json['loginRewardAvailable'] as bool? ?? false,
         gearBonuses: json['gearBonuses'] != null
             ? GearBonusesDto.fromJson(
                 json['gearBonuses'] as Map<String, dynamic>)
