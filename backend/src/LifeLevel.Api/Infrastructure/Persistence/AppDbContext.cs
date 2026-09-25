@@ -126,6 +126,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Achievements
     public DbSet<Achievement> Achievements => Set<Achievement>();
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
+    public DbSet<UserAchievementStageChest> UserAchievementStageChests => Set<UserAchievementStageChest>();
 
     // Notifications
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();

@@ -1,4 +1,5 @@
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Achievements.Domain;
 using LifeLevel.Modules.Achievements.Domain.Entities;
 using LifeLevel.Modules.Achievements.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -42,8 +43,20 @@ public class AchievementSeeder(AppDbContext db)
 
     public async Task SeedAsync()
     {
-        if (await db.Achievements.AnyAsync()) return;
-        db.Achievements.AddRange(Catalog);
-        await db.SaveChangesAsync();
+        if (!await db.Achievements.AnyAsync())
+        {
+            foreach (var a in Catalog) ApplyRewards(a);
+            db.Achievements.AddRange(Catalog);
+            await db.SaveChangesAsync();
+            return;
+        }
+
+        // Reward Roads: achievements seeded before coins/gems existed get their tier's rewards.
+        var unpaid = await db.Achievements.Where(a => a.CoinReward == 0 && a.GemReward == 0).ToListAsync();
+        foreach (var a in unpaid) ApplyRewards(a);
+        if (unpaid.Count > 0) await db.SaveChangesAsync();
     }
+
+    private static void ApplyRewards(Achievement a) =>
+        (a.CoinReward, a.GemReward) = AchievementRewardTable.AchievementReward(a.Tier);
 }

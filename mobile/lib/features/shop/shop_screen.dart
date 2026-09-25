@@ -585,11 +585,14 @@ class _Chest extends StatelessWidget {
               Container(
                   width: 58,
                   height: 58,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                      color: color.withValues(alpha: .13),
+                      gradient: RadialGradient(colors: [
+                        color.withValues(alpha: .28),
+                        color.withValues(alpha: .08),
+                      ]),
                       borderRadius: BorderRadius.circular(13)),
-                  child: const Center(
-                      child: Text('🎁', style: TextStyle(fontSize: 31)))),
+                  child: _ChestArt(rarity: chest.rarity, emojiSize: 31)),
               const SizedBox(width: 11),
               Expanded(
                   child: Column(
@@ -617,6 +620,24 @@ class _Chest extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Chest Vault art for a rarity, falling back to the gift emoji.
+class _ChestArt extends StatelessWidget {
+  final String rarity;
+  final double emojiSize;
+  const _ChestArt({required this.rarity, required this.emojiSize});
+  @override
+  Widget build(BuildContext context) {
+    final fallback =
+        Center(child: Text('🎁', style: TextStyle(fontSize: emojiSize)));
+    final art = AppIcons.shopChestFor(rarity);
+    if (art == null) return fallback;
+    return Image.asset(art,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, __, ___) => fallback);
   }
 }
 
@@ -699,6 +720,11 @@ class _BuySheet extends StatelessWidget {
                     imageUrl: item!.inventoryIconUrl,
                     size: 88,
                     emojiSize: 48)
+              else if (rarity != null)
+                SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: _ChestArt(rarity: rarity!, emojiSize: 66))
               else
                 const Text('🎁', style: TextStyle(fontSize: 66)),
               const SizedBox(height: 10),

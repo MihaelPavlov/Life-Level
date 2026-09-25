@@ -15,6 +15,7 @@ public static class ItemsModule
         services.AddScoped<ShopService>();
         services.AddScoped<ILevelUpItemGrantPort, LevelUpItemGrantPortAdapter>();
         services.AddScoped<IItemRewardGrantPort, ItemRewardGrantPortAdapter>();
+        services.AddScoped<IChestItemRewardPort, ChestItemRewardPortAdapter>();
         return services;
     }
 }

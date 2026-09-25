@@ -32,6 +32,9 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("CoinReward")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ConditionType")
                         .IsRequired()
                         .HasColumnType("text");
@@ -40,6 +43,9 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<int>("GemReward")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Icon")
                         .IsRequired()
@@ -80,6 +86,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<Guid>("AchievementId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<double>("CurrentValue")
                         .HasColumnType("double precision");
 
@@ -97,6 +106,45 @@ namespace LifeLevel.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("UserAchievements");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Achievements.Domain.Entities.UserAchievementStageChest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("Coins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Gems")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("OpenedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Category", "Tier")
+                        .IsUnique();
+
+                    b.ToTable("UserAchievementStageChests");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.Activity", b =>

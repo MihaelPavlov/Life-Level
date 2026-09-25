@@ -17,10 +17,11 @@ import '../../map/models/world_map_models.dart';
 import '../../map/models/world_zone_models.dart';
 import '../../map/services/world_zone_service.dart';
 import '../providers/world_progress_provider.dart';
-import '../widgets/home_card.dart';
 import '../widgets/home_hero_button.dart';
 import '../widgets/home_progress_bar.dart';
 import '../../boss/widgets/boss_icon.dart';
+import '../../character/providers/character_provider.dart';
+import 'portal_idle.dart';
 
 /// The home screen's portal into the world map. Single morphing card at the
 /// top of home — always shows the player's current (or destination) world
@@ -448,6 +449,9 @@ class _BossRaidPortal extends StatelessWidget {
       primaryStyle: HomeHeroButtonStyle.solidRed,
       onPrimary: () => BossOverlayNotifier.notifyForBoss(boss.id),
       onSync: onSync,
+      motion: PortalMotion.full,
+      heartbeat: true,
+      signature: _Sig.raidEmber,
     );
   }
 }
@@ -479,7 +483,6 @@ class _EncounterPortal extends StatelessWidget {
     final travelled = world.userProgress.distanceTraveledOnEdge;
     final total = edge?.distanceKm ?? 0;
     final progress = total > 0 ? (travelled / total).clamp(0.0, 1.0) : 0.0;
-    final title = _encounterTitle(encounter);
     final accent = _encounterAccent(encounter.type);
     final label = _encounterPortalLabel(encounter.type);
     final sub = _encounterSubtitle(encounter, destination);
@@ -489,7 +492,8 @@ class _EncounterPortal extends StatelessWidget {
       accent: accent,
       label: label,
       labelColor: accent,
-      title: title,
+      title: _encounterName(encounter),
+      titleEmoji: _encounterEmoji(encounter),
       sub: sub,
       regionChip: regionChip,
       barLabel: 'Distance reached',
@@ -502,7 +506,7 @@ class _EncounterPortal extends StatelessWidget {
       branchPreview: preview,
       primaryLabel: encounter.type == TrailEncounterType.blocker
           ? 'View blocker'
-          : 'Open map ->',
+          : 'Open map →',
       primaryStyle: encounter.type == TrailEncounterType.blocker
           ? HomeHeroButtonStyle.solidRed
           : encounter.type == TrailEncounterType.merchant
@@ -510,11 +514,19 @@ class _EncounterPortal extends StatelessWidget {
               : HomeHeroButtonStyle.solidPurple,
       onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
+      motion: PortalMotion.full,
+      signature: switch (encounter.type) {
+        TrailEncounterType.blocker => _Sig.blockerShake,
+        TrailEncounterType.merchant => _Sig.merchantCoin,
+        TrailEncounterType.story => _Sig.storyTyping,
+      },
     );
   }
 }
 
-class _TravelingPortal extends StatelessWidget {
+/// Travelling: nothing to tap until more km are logged, so only the
+/// signature plays — the hero token walking on the distance bar.
+class _TravelingPortal extends ConsumerWidget {
   final WorldFullData world;
   final WorldZoneModel destination;
   final String? regionChip;
@@ -529,7 +541,8 @@ class _TravelingPortal extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatar = ref.watch(characterProfileProvider).valueOrNull?.avatarEmoji;
     final edgeId = world.userProgress.currentEdgeId;
     final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
           (e) => e!.id == edgeId,
@@ -559,6 +572,9 @@ class _TravelingPortal extends StatelessWidget {
       primaryStyle: HomeHeroButtonStyle.solidBlue,
       onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
+      motion: PortalMotion.waiting,
+      signature: _Sig.heroWalk,
+      avatarEmoji: avatar,
     );
   }
 }
@@ -598,6 +614,7 @@ class _StandardPortal extends StatelessWidget {
       primaryStyle: HomeHeroButtonStyle.solidBlue,
       onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
+      motion: PortalMotion.calm,
     );
   }
 }
@@ -628,7 +645,8 @@ class _BossZonePortal extends ConsumerWidget {
       accent: AppColors.red,
       label: '⚔️ BOSS ZONE · READY FOR THE RAID',
       labelColor: AppColors.red,
-      title: '👹 ${zone.name}',
+      title: zone.name,
+      titleEmoji: '👹',
       sub: zone.description ??
           'The boss awaits. Enter the map to start the fight.',
       regionChip: regionChip,
@@ -654,6 +672,9 @@ class _BossZonePortal extends ConsumerWidget {
         BossOverlayNotifier.notifyForBoss(boss.id);
       },
       onSync: onSync,
+      motion: PortalMotion.full,
+      heartbeat: true,
+      signature: _Sig.bossEmbers,
     );
   }
 }
@@ -681,7 +702,8 @@ class _ChestPortal extends StatelessWidget {
       accent: AppColors.orange,
       label: '🗝 TREASURE CHEST$labelSuffix',
       labelColor: AppColors.orange,
-      title: '💎 ${zone.name}',
+      title: zone.name,
+      titleEmoji: '💎',
       sub: opened
           ? 'You already claimed this reward. Move on to the next zone.'
           : (zone.description ??
@@ -697,6 +719,8 @@ class _ChestPortal extends StatelessWidget {
       primaryStyle: HomeHeroButtonStyle.solidOrange,
       onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
+      motion: opened ? PortalMotion.still : PortalMotion.full,
+      signature: _Sig.chestRattle,
     );
   }
 }
@@ -775,6 +799,8 @@ class _DungeonPortal extends StatelessWidget {
         : null;
 
     final statusText = _dungeonStatusLabel(node?.dungeonStatus);
+    final cleared = node?.dungeonStatus == DungeonRunStatus.completed ||
+        (total > 0 && done >= total);
     final floorLabel = total > 0 ? 'FLOOR $current / $total' : 'DUNGEON';
     return _HeroShell(
       accent: AppColors.purple,
@@ -795,6 +821,8 @@ class _DungeonPortal extends StatelessWidget {
       primaryStyle: HomeHeroButtonStyle.solidPurple,
       onPrimary: () => _openWorldDestination(regionId),
       onSync: onSync,
+      motion: cleared ? PortalMotion.still : PortalMotion.full,
+      signature: _Sig.dungeonTorch,
     );
   }
 }
@@ -854,113 +882,128 @@ class _CrossroadsPortal extends StatelessWidget {
       }
     }
 
-    return HomeCard(
-      borderColor: AppColors.blue.withValues(alpha: 0.4),
-      glowColor: AppColors.blue.withValues(alpha: 0.12),
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (regionChip != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.blue.withValues(alpha: 0.12),
-                border:
-                    Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                regionChip!,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.blue,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          const Text(
-            '🗺 CROSSROADS · CHOOSE YOUR PATH',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.4,
-              color: AppColors.blue,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '🚩 ${zone.name}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              height: 1.15,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Pick a branch on the map. Your choice is permanent — sibling path locks.',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (branches.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'No branches wired yet.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            )
-          else
-            ...branches.map((b) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: _BranchRow(
-                    entry: b,
-                    busy: busyBranchId == b.zone.id,
-                    onTap: onPickBranch == null
-                        ? null
-                        : () => onPickBranch!(b.zone),
-                  ),
-                )),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              HomeHeroButton(
-                label: '⟳ Sync',
-                style: HomeHeroButtonStyle.ghost,
-                onTap: onSync,
-              ),
-              const SizedBox(width: 8),
-              HomeHeroButton(
-                label: 'Choose on map →',
-                style: HomeHeroButtonStyle.solidBlue,
-                onTap: () => _openWorldDestination(regionId),
-              ),
-            ],
-          ),
-        ],
+    // Open branches call out one after another; level-gated ones stay still.
+    final openIds = [
+      for (final b in branches)
+        if (b.zone.userState?.isLevelMet != false) b.zone.id,
+    ];
+    return PortalIdle(
+      motion: PortalMotion.full,
+      builder: (_, fx) => PortalIdleCard(
+        fx: fx,
+        accent: AppColors.blue,
+        child: _body(branches, openIds, fx),
       ),
+    );
+  }
+
+  Widget _body(
+      List<_BranchEntry> branches, List<String> openIds, PortalFx? fx) {
+    final callout = (fx != null && fx.signature) ? fx.phase(3.0) : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (regionChip != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.blue.withValues(alpha: 0.12),
+              border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              regionChip!,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.blue,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        const Text(
+          '🗺 CROSSROADS · CHOOSE YOUR PATH',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
+            color: AppColors.blue,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '🚩 ${zone.name}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Pick a branch on the map. Your choice is permanent — sibling path locks.',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (branches.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'No branches wired yet.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          )
+        else
+          ...branches.map((b) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _BranchRow(
+                  entry: b,
+                  busy: busyBranchId == b.zone.id,
+                  callout: callout,
+                  calloutIndex: openIds.indexOf(b.zone.id),
+                  calloutCount: openIds.length,
+                  onTap:
+                      onPickBranch == null ? null : () => onPickBranch!(b.zone),
+                ),
+              )),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            HomeHeroButton(
+              label: '⟳ Sync',
+              style: HomeHeroButtonStyle.ghost,
+              onTap: onSync,
+            ),
+            const SizedBox(width: 8),
+            HomeHeroButton(
+              label: 'Choose on map →',
+              style: HomeHeroButtonStyle.solidBlue,
+              onTap: () => _openWorldDestination(regionId),
+              shine: fx?.buttonShine,
+              nudge: fx?.buttonNudge,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -975,10 +1018,46 @@ class _BranchRow extends StatelessWidget {
   final _BranchEntry entry;
   final bool busy;
   final VoidCallback? onTap;
-  const _BranchRow({required this.entry, this.busy = false, this.onTap});
+
+  /// Crossroads idle loop. Each open branch takes its slot
+  /// ([calloutIndex] of [calloutCount]) to light up and nudge its arrow.
+  final Animation<double>? callout;
+  final int calloutIndex;
+  final int calloutCount;
+  const _BranchRow({
+    required this.entry,
+    this.busy = false,
+    this.onTap,
+    this.callout,
+    this.calloutIndex = -1,
+    this.calloutCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final anim = callout;
+    if (anim == null || busy || calloutIndex < 0 || calloutCount == 0) {
+      return _build(0, 0);
+    }
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) {
+        // Local 0..1 within this branch's slot of the loop.
+        final t = (anim.value * calloutCount - calloutIndex) % calloutCount;
+        if (t < 0 || t >= 1) return _build(0, 0);
+        final glow = math.sin(t * math.pi);
+        double dx = 0;
+        if (t > .1 && t < .35) {
+          dx = 4 * math.sin((t - .1) / .25 * math.pi);
+        } else if (t >= .35 && t < .5) {
+          dx = 2 * math.sin((t - .35) / .15 * math.pi);
+        }
+        return _build(glow, dx);
+      },
+    );
+  }
+
+  Widget _build(double glow, double arrowDx) {
     final z = entry.zone;
     final typeColor = _typeColor(z.type);
     final levelGated = z.userState?.isLevelMet == false;
@@ -986,8 +1065,8 @@ class _BranchRow extends StatelessWidget {
     final row = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: typeColor.withValues(alpha: busy ? 0.04 : 0.06),
-        border: Border.all(color: typeColor.withValues(alpha: 0.4)),
+        color: typeColor.withValues(alpha: (busy ? 0.04 : 0.06) + .08 * glow),
+        border: Border.all(color: typeColor.withValues(alpha: 0.4 + .5 * glow)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Opacity(
@@ -1052,12 +1131,15 @@ class _BranchRow extends StatelessWidget {
               ],
               if (onTap != null) ...[
                 const SizedBox(width: 6),
-                Text(
-                  '→',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: typeColor,
+                Transform.translate(
+                  offset: Offset(arrowDx, 0),
+                  child: Text(
+                    '→',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: typeColor,
+                    ),
                   ),
                 ),
               ],
@@ -1187,6 +1269,7 @@ class _NoZonePortal extends StatelessWidget {
       primaryStyle: HomeHeroButtonStyle.solidBlue,
       onPrimary: () => _openWorldDestination(null),
       onSync: null,
+      motion: PortalMotion.calm,
     );
   }
 }
@@ -1198,10 +1281,10 @@ class _NoZonePortal extends StatelessWidget {
 // the misleading "Suggested next: 0 / 1 nodes" bar from the prior overload of
 // `_StandardPortal` with an actionable row of pills.
 /// "Next up" card. When the zone is open to travel (not level-gated) it
-/// idles with a light sweep across the card every 6 s, a shine on the
-/// Travel button, and footsteps walking inside the distance pill — a quiet
-/// "you can go here" nudge. Level-gated zones stay still.
-class _NextZoneHintPortal extends StatefulWidget {
+/// runs the full portal idle (breathe + light sweep + button shine/nudge) and
+/// footsteps walk inside the distance pill — a quiet "you can go here"
+/// nudge. Level-gated zones stay still.
+class _NextZoneHintPortal extends StatelessWidget {
   final WorldZoneModel zone;
   final WorldFullData world;
   final String? regionChip;
@@ -1216,65 +1299,16 @@ class _NextZoneHintPortal extends StatefulWidget {
   });
 
   @override
-  State<_NextZoneHintPortal> createState() => _NextZoneHintPortalState();
-}
-
-class _NextZoneHintPortalState extends State<_NextZoneHintPortal>
-    with TickerProviderStateMixin {
-  // Light sweep + button shine share one slow loop; the footsteps walk on
-  // their own faster one.
-  late final AnimationController _sweep = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 6000));
-  late final AnimationController _steps = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1600));
-  // Breathe: border/glow swell and the button arrow nudges once per breath.
-  late final AnimationController _breath = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 3600));
-
-  WorldZoneModel get zone => widget.zone;
-  WorldFullData get world => widget.world;
-  String? get regionChip => widget.regionChip;
-  String? get regionId => widget.regionId;
-  VoidCallback? get onSync => widget.onSync;
-
-  bool get _idle =>
-      zone.userState?.isLevelMet != false && AppMotion.isFull(context);
-
-  void _sync() {
-    if (_idle) {
-      if (!_sweep.isAnimating) _sweep.repeat();
-      if (!_steps.isAnimating) _steps.repeat();
-      if (!_breath.isAnimating) _breath.repeat();
-    } else {
-      _sweep.stop();
-      _steps.stop();
-      _breath.stop();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(_NextZoneHintPortal old) {
-    super.didUpdateWidget(old);
-    _sync();
-  }
-
-  @override
-  void dispose() {
-    _sweep.dispose();
-    _steps.dispose();
-    _breath.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final idle = _idle;
+    final levelGated = zone.userState?.isLevelMet == false;
+    return PortalIdle(
+      motion: levelGated ? PortalMotion.still : PortalMotion.full,
+      builder: (_, fx) => _build(fx),
+    );
+  }
+
+  Widget _build(PortalFx? fx) {
+    final idle = fx != null;
     final fromId = world.userProgress.currentZoneId;
     final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
           (e) =>
@@ -1294,7 +1328,7 @@ class _NextZoneHintPortalState extends State<_NextZoneHintPortal>
             ? _StepsPill(
                 label: '${distanceKm.toStringAsFixed(1)} km',
                 color: AppColors.blue,
-                steps: _steps,
+                steps: fx.phase(1.6),
               )
             : _Pill(
                 label: '→ ${distanceKm.toStringAsFixed(1)} km',
@@ -1405,70 +1439,19 @@ class _NextZoneHintPortalState extends State<_NextZoneHintPortal>
                   ? HomeHeroButtonStyle.locked
                   : HomeHeroButtonStyle.solidBlue,
               onTap: levelGated ? null : () => _openWorldDestination(regionId),
-              shine: idle ? _sweep : null,
-              nudge: idle ? _breath : null,
+              shine: fx?.buttonShine,
+              nudge: fx?.buttonNudge,
             ),
           ],
         ),
       ],
     );
-    HomeCard cardWith(double breath) => HomeCard(
-          borderColor: (levelGated ? AppColors.red : AppColors.blue)
-              .withValues(alpha: levelGated ? 0.65 : 0.4 + 0.55 * breath),
-          glowColor: (levelGated ? AppColors.red : AppColors.blue)
-              .withValues(alpha: levelGated ? 0.16 : 0.12 + 0.23 * breath),
-          margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-          child: content,
-        );
-    if (!idle) return cardWith(0);
-    // Breathe: the blue border and glow slowly brighten and fade.
-    final card = AnimatedBuilder(
-      animation: _breath,
-      builder: (_, __) =>
-          cardWith((1 - math.cos(_breath.value * 2 * math.pi)) / 2),
-    );
-    // Light sweep over the card body (the card has a 14 px bottom margin).
-    return Stack(
-      children: [
-        card,
-        Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: 14,
-          child: IgnorePointer(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: AnimatedBuilder(
-                animation: _sweep,
-                builder: (_, __) {
-                  final p = ((_sweep.value - .55) / .3).clamp(0.0, 1.0);
-                  if (p <= 0 || p >= 1) return const SizedBox.shrink();
-                  return Align(
-                    alignment: Alignment(-1.6 + 3.2 * p, 0),
-                    child: Transform(
-                      transform: Matrix4.skewX(-.32),
-                      child: Container(
-                        width: 90,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            Color(0x007DB8FF),
-                            Color(0x247DB8FF),
-                            Color(0x1AFFFFFF),
-                            Color(0x247DB8FF),
-                            Color(0x007DB8FF),
-                          ]),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
+    return PortalIdleCard(
+      fx: fx,
+      accent: levelGated ? AppColors.red : AppColors.blue,
+      borderAlpha: levelGated ? 0.65 : 0.4,
+      glowAlpha: levelGated ? 0.16 : 0.12,
+      child: content,
     );
   }
 }
@@ -1625,14 +1608,14 @@ Color _typeColor(String type) {
 
 // ── Type badge + helpers ─────────────────────────────────────────────────────
 
-String _encounterTitle(TrailEncounterNode enc) {
+String _encounterName(TrailEncounterNode enc) {
   switch (enc.type) {
     case TrailEncounterType.blocker:
-      return '${_encounterEmoji(enc)} ${enc.blocker?.name ?? 'Path blocker'}';
+      return enc.blocker?.name ?? 'Path blocker';
     case TrailEncounterType.merchant:
-      return '${_encounterEmoji(enc)} ${enc.merchant?.name ?? 'Trail merchant'}';
+      return enc.merchant?.name ?? 'Trail merchant';
     case TrailEncounterType.story:
-      return '${_encounterEmoji(enc)} ${enc.story?.npcName ?? 'Story encounter'}';
+      return enc.story?.npcName ?? 'Story encounter';
   }
 }
 
@@ -1765,11 +1748,27 @@ String _fmtNum(double v) {
 }
 
 // ── Hero shell (visuals) ─────────────────────────────────────────────────────
+/// Which signature motion a [_HeroShell] plays on top of breathe + sweep.
+enum _Sig {
+  none,
+  raidEmber,
+  blockerShake,
+  merchantCoin,
+  storyTyping,
+  heroWalk,
+  bossEmbers,
+  chestRattle,
+  dungeonTorch,
+}
+
 class _HeroShell extends StatelessWidget {
   final Color accent;
   final String? label;
   final Color labelColor;
   final String title;
+
+  /// Drawn before [title]; animated when [signature] targets the emoji.
+  final String? titleEmoji;
   final String? titleTrailing;
   final String sub;
   final String? regionChip;
@@ -1786,11 +1785,22 @@ class _HeroShell extends StatelessWidget {
   final VoidCallback? onPrimary;
   final VoidCallback? onSync;
 
+  /// Idle motion — see [PortalMotion].
+  final PortalMotion motion;
+  final _Sig signature;
+
+  /// Boss cards beat like a heart instead of the slow breath.
+  final bool heartbeat;
+
+  /// Hero token for [_Sig.heroWalk].
+  final String? avatarEmoji;
+
   const _HeroShell({
     required this.accent,
     this.label,
     required this.labelColor,
     required this.title,
+    this.titleEmoji,
     this.titleTrailing,
     required this.sub,
     this.regionChip,
@@ -1806,223 +1816,332 @@ class _HeroShell extends StatelessWidget {
     required this.primaryStyle,
     required this.onPrimary,
     required this.onSync,
+    this.motion = PortalMotion.still,
+    this.signature = _Sig.none,
+    this.heartbeat = false,
+    this.avatarEmoji,
   });
 
   @override
   Widget build(BuildContext context) {
-    return HomeCard(
-      borderColor: accent.withValues(alpha: 0.4),
-      glowColor: accent.withValues(alpha: 0.12),
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return PortalIdle(
+      motion: motion,
+      builder: (_, fx) => PortalIdleCard(
+        fx: fx,
+        accent: accent,
+        heartbeat: heartbeat,
+        child: _content(fx),
+      ),
+    );
+  }
+
+  Widget _content(PortalFx? fx) {
+    // Signature effects only run when the level includes them.
+    final sfx = (fx != null && fx.signature) ? fx : null;
+    final sig = sfx == null ? _Sig.none : signature;
+
+    Widget titleText(double size) => Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: size,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.15,
+          ),
+        );
+
+    Widget titleLine(double size) {
+      final emoji = titleEmoji;
+      if (emoji == null) return titleText(size);
+      final effect = switch (signature) {
+        _Sig.blockerShake => PortalEmojiFx.shake,
+        _Sig.merchantCoin => PortalEmojiFx.coin,
+        _Sig.chestRattle => PortalEmojiFx.rattle,
+        _ => null,
+      };
+      return Row(
         children: [
-          if (regionChip != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                border: Border.all(color: accent.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                regionChip!,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: labelColor,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (label != null && label!.isNotEmpty) ...[
-            Text(
-              label!,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.4,
-                color: labelColor,
-              ),
-            ),
-            const SizedBox(height: 6),
-          ],
-          if (leadingVisual != null)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                leadingVisual!,
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          height: 1.15,
-                        ),
+          effect == null
+              ? Text(emoji, style: TextStyle(fontSize: size, height: 1.15))
+              : PortalEmoji(emoji: emoji, effect: effect, fx: sfx, size: size),
+          const SizedBox(width: 6),
+          Flexible(child: titleText(size)),
+        ],
+      );
+    }
+
+    Widget preview(String text) {
+      Widget chip(double glow) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              border:
+                  Border.all(color: accent.withValues(alpha: 0.3 + .5 * glow)),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: glow > 0
+                  ? [
+                      BoxShadow(
+                        color: accent.withValues(alpha: .55 * glow),
+                        blurRadius: 8 + 12 * glow,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        sub,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          else ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      height: 1.15,
-                    ),
-                  ),
-                ),
-                if (titleTrailing != null) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    titleTrailing!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: accent,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
-              ],
+                    ]
+                  : null,
             ),
-            const SizedBox(height: 4),
-            Text(
-              sub,
-              maxLines: 2,
+            child: Text(
+              text,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                height: 1.4,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          );
+      if (sig == _Sig.dungeonTorch) {
+        final a = sfx!.phase(2.2);
+        return AnimatedBuilder(
+          animation: a,
+          builder: (_, __) => chip(portalTorch(a.value)),
+        );
+      }
+      if (sig == _Sig.merchantCoin) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            chip(0),
+            Positioned.fill(
+              child: PortalGlints(
+                fx: sfx!,
+                at: const [Offset(.18, .2), Offset(.52, .8), Offset(.7, .15)],
               ),
             ),
           ],
-          if (branchPreview != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.08),
-                border: Border.all(color: accent.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                branchPreview!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+        );
+      }
+      return chip(0);
+    }
+
+    Widget progressBar() {
+      final bar = HomeProgressBar(
+        progress: barProgress,
+        colors: barColors,
+        height: 10,
+      );
+      final overlay = switch (sig) {
+        _Sig.raidEmber => PortalBarEmber(fx: sfx!, progress: barProgress),
+        _Sig.bossEmbers => PortalRisingEmbers(fx: sfx!),
+        _Sig.heroWalk => PortalHeroWalk(
+            fx: sfx!,
+            progress: barProgress,
+            avatarEmoji: avatarEmoji ?? '🧙',
+          ),
+        _ => null,
+      };
+      if (overlay == null) return bar;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [bar, Positioned.fill(child: overlay)],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (regionChip != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              border: Border.all(color: accent.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              regionChip!,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: labelColor,
+                letterSpacing: 0.3,
               ),
             ),
-          ],
-          const SizedBox(height: 14),
-          if (showProgressBar) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: HomeProgressBar(
-                    progress: barProgress,
-                    colors: barColors,
-                    height: 10,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  barValue,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: barValueColor,
-                  ),
-                ),
-              ],
-            ),
-          ] else
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.09),
-                border: Border.all(color: accent.withValues(alpha: 0.28)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    barLabel,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    barValue,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: barValueColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 14),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (label != null && label!.isNotEmpty) ...[
           Row(
             children: [
-              HomeHeroButton(
-                label: '⟳ Sync',
-                style: HomeHeroButtonStyle.ghost,
-                onTap: onSync,
-              ),
-              const SizedBox(width: 8),
-              HomeHeroButton(
-                label: primaryLabel,
-                style: primaryStyle,
-                onTap: onPrimary,
+              if (sig == _Sig.raidEmber) ...[
+                PortalLiveDot(fx: sfx!, color: labelColor),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: Text(
+                  label!,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.4,
+                    color: labelColor,
+                  ),
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 6),
         ],
-      ),
+        if (leadingVisual != null)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              leadingVisual!,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    titleLine(21),
+                    const SizedBox(height: 4),
+                    Text(
+                      sub,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )
+        else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: titleLine(22)),
+              if (sig == _Sig.storyTyping) ...[
+                const SizedBox(width: 8),
+                PortalTypingBubble(fx: sfx!, color: accent),
+              ],
+              if (titleTrailing != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  titleTrailing!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            sub,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+        ],
+        if (branchPreview != null) ...[
+          const SizedBox(height: 10),
+          preview(branchPreview!),
+        ],
+        SizedBox(height: sig == _Sig.heroWalk ? 14 + kPortalWalkHeadroom : 14),
+        if (showProgressBar) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: progressBar()),
+              const SizedBox(width: 8),
+              Text(
+                barValue,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: barValueColor,
+                ),
+              ),
+            ],
+          ),
+        ] else
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.09),
+                  border: Border.all(color: accent.withValues(alpha: 0.28)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      barLabel,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      barValue,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: barValueColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (sig == _Sig.chestRattle)
+                Positioned.fill(
+                  child: PortalGlints(
+                    fx: sfx!,
+                    at: const [
+                      Offset(.74, .1),
+                      Offset(.92, .7),
+                      Offset(.6, .85)
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            HomeHeroButton(
+              label: '⟳ Sync',
+              style: HomeHeroButtonStyle.ghost,
+              onTap: onSync,
+            ),
+            const SizedBox(width: 8),
+            HomeHeroButton(
+              label: primaryLabel,
+              style: primaryStyle,
+              onTap: onPrimary,
+              shine: fx?.buttonShine,
+              nudge: fx?.buttonNudge,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

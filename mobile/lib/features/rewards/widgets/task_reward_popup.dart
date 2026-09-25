@@ -13,8 +13,14 @@ class TaskRewardItem {
   final String asset;
   final String label;
   final Color color;
+
+  /// Replaces the [asset] icon, e.g. a gear item's artwork.
+  final Widget? icon;
   const TaskRewardItem(
-      {required this.asset, required this.label, required this.color});
+      {required this.asset,
+      required this.label,
+      required this.color,
+      this.icon});
 }
 
 /// "Chest burst" claim popup: the screen dims, a treasure chest drops in,
@@ -24,18 +30,29 @@ class TaskRewardItem {
 ///
 /// Resolves with each reward tile's on-screen centre and icon at the moment
 /// it closes, so the caller can fly the rewards on to where they live.
+///
+/// [chestAsset] swaps the chest art (e.g. an achievement stage's own chest).
+/// [lootTitle] and [closeHint] hide the "You got loot!" line and the
+/// "Tap to close" pill (tapping still closes).
 Future<List<(Offset, String)>> showTaskRewardPopup(
   BuildContext context, {
   required List<TaskRewardItem> items,
   required String subtitle,
+  String chestAsset = AppIcons.rewardChestBurst,
+  bool lootTitle = true,
+  bool closeHint = true,
 }) async {
   final landed = await showGeneralDialog<List<(Offset, String)>>(
     context: context,
     barrierDismissible: false,
     barrierColor: Colors.transparent,
     transitionDuration: Duration.zero,
-    pageBuilder: (_, __, ___) =>
-        _TaskRewardPopup(items: items, subtitle: subtitle),
+    pageBuilder: (_, __, ___) => _TaskRewardPopup(
+        items: items,
+        subtitle: subtitle,
+        chestAsset: chestAsset,
+        lootTitle: lootTitle,
+        closeHint: closeHint),
   );
   return landed ?? const [];
 }
@@ -43,7 +60,15 @@ Future<List<(Offset, String)>> showTaskRewardPopup(
 class _TaskRewardPopup extends StatefulWidget {
   final List<TaskRewardItem> items;
   final String subtitle;
-  const _TaskRewardPopup({required this.items, required this.subtitle});
+  final String chestAsset;
+  final bool lootTitle;
+  final bool closeHint;
+  const _TaskRewardPopup(
+      {required this.items,
+      required this.subtitle,
+      required this.chestAsset,
+      required this.lootTitle,
+      required this.closeHint});
 
   @override
   State<_TaskRewardPopup> createState() => _TaskRewardPopupState();
@@ -103,7 +128,8 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
     }
     final landed = <(Offset, String)>[
       for (final (i, a) in _tiles.indexed)
-        if (a.center case final c?) (c, widget.items[i].asset),
+        if (a.center case final c?)
+          if (widget.items[i].asset.isNotEmpty) (c, widget.items[i].asset),
     ];
     Navigator.of(context).pop(landed);
   }
@@ -116,32 +142,37 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _tap,
-      child: LayoutBuilder(builder: (context, box) {
-        final cx = box.maxWidth / 2, cy = box.maxHeight / 2;
-        final chestC = Offset(cx, cy + 90);
-        final tilesY = cy - 40;
-        final titleY = cy - 150;
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: Opacity(
-                opacity: _seg(0, 300),
-                child: const ColoredBox(color: Color(0xB802050A)),
+    // A Material ancestor gives the texts the app's style; without it Flutter
+    // draws its yellow "missing Material" underline under them.
+    return Material(
+      type: MaterialType.transparency,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _tap,
+        child: LayoutBuilder(builder: (context, box) {
+          final cx = box.maxWidth / 2, cy = box.maxHeight / 2;
+          final chestC = Offset(cx, cy + 90);
+          final tilesY = cy - 40;
+          final titleY = cy - 150;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: _seg(0, 300),
+                  child: const ColoredBox(color: Color(0xB802050A)),
+                ),
               ),
-            ),
-            _glow(chestC),
-            _chestWidget(chestC),
-            for (final (i, item) in widget.items.indexed)
-              _tile(i, item, cx, tilesY, chestC),
-            _title(cx, titleY),
-            _closeHint(box.maxHeight),
-          ],
-        );
-      }),
+              _glow(chestC),
+              _chestWidget(chestC),
+              for (final (i, item) in widget.items.indexed)
+                _tile(i, item, cx, tilesY, chestC),
+              _title(cx, titleY),
+              if (widget.closeHint) _closeHint(box.maxHeight),
+            ],
+          );
+        }),
+      ),
     );
   }
 
@@ -220,7 +251,7 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
                   colorFilter: ColorFilter.mode(
                       Colors.white.withValues(alpha: .7 * flash.clamp(0, 1)),
                       BlendMode.srcATop),
-                  child: Image.asset(AppIcons.rewardChestBurst,
+                  child: Image.asset(widget.chestAsset,
                       width: size, height: size, fit: BoxFit.contain),
                 ),
               ),
@@ -272,11 +303,13 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const _StrokeText('You got loot!',
-                  fontSize: 28,
-                  fill: Color(0xFFFFD27A),
-                  stroke: Color(0xFF3A2206)),
-              const SizedBox(height: 6),
+              if (widget.lootTitle) ...[
+                const _StrokeText('You got loot!',
+                    fontSize: 28,
+                    fill: Color(0xFFFFD27A),
+                    stroke: Color(0xFF3A2206)),
+                const SizedBox(height: 6),
+              ],
               Text(
                 widget.subtitle,
                 textAlign: TextAlign.center,
@@ -361,7 +394,7 @@ class _RewardTile extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Center(child: AppIconImage(item.asset, size: 50)),
+          Center(child: item.icon ?? AppIconImage(item.asset, size: 50)),
           Positioned(
             right: 6,
             bottom: 4,

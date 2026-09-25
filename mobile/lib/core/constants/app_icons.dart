@@ -253,6 +253,26 @@ class AppIcons {
   // ── Shop page (decorative art) ───────────────────────────────────────────────
   static const String shopHeaderBg = 'assets/Shop/bg_moonlit_mountains.png';
 
+  // Chest Vault art, one per chest rarity (Wayfarer / Adept / Champion).
+  static const String shopChestCommon = 'assets/Shop/chest_common.png';
+  static const String shopChestRare = 'assets/Shop/chest_rare.png';
+  static const String shopChestLegendary = 'assets/Shop/chest_legendary.png';
+
+  /// Chest art for a chest key (`wayfarer` / `adept` / `champion`).
+  static String shopChestForKey(String key) => switch (key) {
+        'adept' => shopChestRare,
+        'champion' => shopChestLegendary,
+        _ => shopChestCommon,
+      };
+
+  /// Chest art for a shop chest rarity; null for a rarity without art.
+  static String? shopChestFor(String rarity) => switch (rarity) {
+        'Common' => shopChestCommon,
+        'Rare' => shopChestRare,
+        'Legendary' => shopChestLegendary,
+        _ => null,
+      };
+
   // ── Region Chests — painted banner art (rod + frame + scene baked in;
   // overlay only the chapter number and zone count on top) ────────────────────
   static const String regionBannerForestOfEndurance =

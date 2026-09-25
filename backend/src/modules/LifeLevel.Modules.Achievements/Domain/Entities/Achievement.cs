@@ -11,6 +11,8 @@ public class Achievement
     public AchievementCategory Category { get; set; }
     public AchievementTier Tier { get; set; }
     public long XpReward { get; set; }
+    public int CoinReward { get; set; }
+    public int GemReward { get; set; }
     public ConditionType ConditionType { get; set; }
     public double TargetValue { get; set; }
     public string TargetUnit { get; set; } = string.Empty;

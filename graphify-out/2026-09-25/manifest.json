@@ -5570,8 +5570,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_battle_screen.dart": {
-    "mtime": 1790280931.0220463,
-    "ast_hash": "fd583297abbc61135958070d7a14dde7",
+    "mtime": 1790322489.6533554,
+    "ast_hash": "9899a2ef765dc9759f0cc10414ec6328",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_screen.dart": {
@@ -5610,8 +5610,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_hp_bar.dart": {
-    "mtime": 1790238237.5713782,
-    "ast_hash": "e9b00d7e9a05ec71c1c844c4012e1b4a",
+    "mtime": 1790322488.4726167,
+    "ast_hash": "11d1cec9035689501e819bfe9d6779bc",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_icon.dart": {
@@ -5985,8 +5985,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_trail.dart": {
-    "mtime": 1790238238.686372,
-    "ast_hash": "0af952583ce16067dd6fa3201dc29013",
+    "mtime": 1790323288.324003,
+    "ast_hash": "f486615e9636a321b6d2d35c34a7f168",
     "semantic_hash": ""
   },
   "mobile/lib/features/notifications/models/notification_list_models.dart": {
@@ -6055,8 +6055,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/profile_overview_tab.dart": {
-    "mtime": 1790238003.9736266,
-    "ast_hash": "c04a406c089574cd07b4a5ba6d0955e7",
+    "mtime": 1790322810.890512,
+    "ast_hash": "bbf398818c6e382e8522b3f450e97cd7",
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/profile_screen.dart": {
@@ -6080,8 +6080,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/tabs/achievements_tab.dart": {
-    "mtime": 1790289576.6001475,
-    "ast_hash": "cdf22b6fd02163221557df3bbad00b85",
+    "mtime": 1790323109.3627033,
+    "ast_hash": "49a421560bb3bd882acedd7f8d69b6c3",
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/tabs/admin_tab.dart": {
@@ -6190,8 +6190,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_reward_slot.dart": {
-    "mtime": 1790238239.1553695,
-    "ast_hash": "b3aab9d545a529cbe5c927b920dd6b26",
+    "mtime": 1790322972.6477177,
+    "ast_hash": "2e3054769c63a9c39e2c9554b324d21b",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_theme.dart": {
@@ -6200,8 +6200,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_tier_row.dart": {
-    "mtime": 1789159720.1521947,
-    "ast_hash": "b71a9c4526b2266c99990d2452223c3c",
+    "mtime": 1790322972.7117174,
+    "ast_hash": "914364ca66e0652e6cedb39e1538fc79",
     "semantic_hash": ""
   },
   "mobile/lib/features/streak/models/streak_models.dart": {
@@ -6220,8 +6220,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/streak/widgets/streak_detail_sheet.dart": {
-    "mtime": 1790242092.7291117,
-    "ast_hash": "fe3525457e638795266d681499b241b5",
+    "mtime": 1790322876.0365088,
+    "ast_hash": "7c5cd94e168a8ce4f66f832b7ba4ff5f",
     "semantic_hash": ""
   },
   "mobile/lib/features/titles/models/title_models.dart": {
@@ -6255,8 +6255,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/titles/widgets/titles_profile_header.dart": {
-    "mtime": 1788511416.5790393,
-    "ast_hash": "fba07549b1304e8ccb56d0e7010444d4",
+    "mtime": 1790323180.534948,
+    "ast_hash": "dd69bfb16a7bab099c1757d11899499b",
     "semantic_hash": ""
   },
   "mobile/lib/features/tutorial/models/tutorial_placement.dart": {
@@ -10915,8 +10915,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/currency_chip.dart": {
-    "mtime": 1790238236.9553814,
-    "ast_hash": "dd49ec66a49dc1f2497c7acaaa6a9aab",
+    "mtime": 1790323667.0809422,
+    "ast_hash": "6282a9188707a3bcfc1c099045e945f3",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/achievements_screen.dart": {
@@ -10930,13 +10930,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/gear/gear_screen.dart": {
-    "mtime": 1790313813.519058,
-    "ast_hash": "4f2dd152cdcfdafdb6559fa15d6abf98",
+    "mtime": 1790314057.3120365,
+    "ast_hash": "d20a97961441470593f211c356ae9ab8",
     "semantic_hash": ""
   },
   "mobile/lib/features/gear/widgets/gear_hex_slots.dart": {
-    "mtime": 1790313649.0622814,
-    "ast_hash": "3e53f9d6dfb4f76991c0ce2833dfd45a",
+    "mtime": 1790314057.2880368,
+    "ast_hash": "3abdf7f6f58c3216a1057b4bc14299b4",
     "semantic_hash": ""
   },
   "mobile/lib/features/gear/widgets/gear_inventory_grid.dart": {
@@ -10960,8 +10960,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/gear/widgets/gear_stats_row.dart": {
-    "mtime": 1790313813.5186555,
-    "ast_hash": "47213764cedd447a9d14f21ba555e76b",
+    "mtime": 1790323495.36932,
+    "ast_hash": "71f14bc698d82cc1072dd8aecbde3b2d",
     "semantic_hash": ""
   },
   "mobile/lib/features/guild/screens/guild_find_views.dart": {
@@ -10980,8 +10980,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/guild/screens/guild_raid_view.dart": {
-    "mtime": 1790198755.2777343,
-    "ast_hash": "3d1dbc6663b0c6de931a10f5bee73951",
+    "mtime": 1790323467.9403973,
+    "ast_hash": "d52cbf4bbc10bedbdb17c1605e577113",
     "semantic_hash": ""
   },
   "mobile/lib/features/guild/widgets/guild_widgets.dart": {
@@ -11005,8 +11005,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_chests_screen.dart": {
-    "mtime": 1790238238.4163735,
-    "ast_hash": "1c4670193bbfb9114da787978832da23",
+    "mtime": 1790323383.4661565,
+    "ast_hash": "98895eb54916685dfddfb6160e6cb859",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/models/rewards_models.dart": {
@@ -11020,8 +11020,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/rewards_screen.dart": {
-    "mtime": 1790288772.5314791,
-    "ast_hash": "1727ea18ce2a03498edc8848c17d378e",
+    "mtime": 1790322655.7833126,
+    "ast_hash": "b356c9bc9b5e4e8be95253b265db521f",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/services/rewards_service.dart": {
@@ -11050,8 +11050,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/shop/shop_screen.dart": {
-    "mtime": 1790238239.2943687,
-    "ast_hash": "1ca4fb2b292ccc51280cd8668d1e0031",
+    "mtime": 1790323034.379201,
+    "ast_hash": "9068d1fd36c6e4b4f6871c673a4c7cc7",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/models/talent_models.dart": {
@@ -11752,6 +11752,21 @@
   "mobile/assets/images/forest_region_trail_background.png": {
     "mtime": 1790013197.923882,
     "ast_hash": "7b778071c759a85ea09382d04db55a8d",
+    "semantic_hash": ""
+  },
+  "mobile/lib/core/motion/motion_widgets.dart": {
+    "mtime": 1790323667.0804853,
+    "ast_hash": "fd562a42563c901f1e953a66875e1063",
+    "semantic_hash": ""
+  },
+  "mobile/lib/core/motion/reward_fx.dart": {
+    "mtime": 1790322925.075459,
+    "ast_hash": "87355f8e44b2a45d0f5ea21d7f597d30",
+    "semantic_hash": ""
+  },
+  "docs/obsidian/07 - Development/Plan - Reward and Progress Animations.md": {
+    "mtime": 1790323924.5955956,
+    "ast_hash": "0a64377c72460f79a1e9086755a7c7c4",
     "semantic_hash": ""
   }
 }

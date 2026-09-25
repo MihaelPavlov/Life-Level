@@ -24,6 +24,9 @@ public class ShopService(
         Id(31), Id(32), Id(33), Id(34), Id(35), Id(36),
     ];
 
+    /// <summary>Items a chest can draw from (Shop chests and achievement stage chests).</summary>
+    public static IReadOnlyList<Guid> ChestPool => Pool;
+
     private static readonly Dictionary<ItemRarity, (ShopCurrency Currency, int Price)> Prices = new()
     {
         [ItemRarity.Common] = (ShopCurrency.Coins, 150),

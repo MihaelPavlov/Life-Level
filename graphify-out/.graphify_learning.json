@@ -1,5 +1,102 @@
 {
-  "generated_at": "2026-09-23T19:15:40.181404+00:00",
-  "nodes": {},
+  "generated_at": "2026-09-25T21:52:09.015840+00:00",
+  "nodes": {
+    "backend_src_modules_lifelevel_modules_adventure_encounters_domain_enums_chestrarity_lifelevel_modules_adventure_encounters_domain_enums_chestrarity": {
+      "code_fingerprint": "916c9d0e37ae6263f99c0b5f9c8855b7d21c28e27873a7252ccafebffbb8163a",
+      "label": "ChestRarity",
+      "last": "2026-09-25T19:41:27.237613+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T19:41:27.237613+00:00",
+          "outcome": "useful",
+          "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
+        }
+      ],
+      "score": 0.997905165,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Adventure.Encounters/Domain/Enums/ChestRarity.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_quest_application_usecases_questservice": {
+      "code_fingerprint": "82ac6b6c505138dc5bb3625191b9bcedec99d4b1bcbd29189794a305b8d8a15d",
+      "label": "QuestService.cs",
+      "last": "2026-09-23T21:17:32.565296+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-23T21:17:32.565296+00:00",
+          "outcome": "useful",
+          "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
+        }
+      ],
+      "score": 0.954311547,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Quest/Application/UseCases/QuestService.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_quest_domain_data_questseeddata": {
+      "code_fingerprint": "12d4f1e36c9f3d422a13c927e3ddf2425cd728d25c0481fdcfc2783c4a4d1c93",
+      "label": "QuestSeedData.cs",
+      "last": "2026-09-23T21:17:32.565296+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-23T21:17:32.565296+00:00",
+          "outcome": "useful",
+          "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
+        }
+      ],
+      "score": 0.954311547,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Quest/Domain/Data/QuestSeedData.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "design_mockup_generated_icons_icon_prompts_hand_drawn_sticker_life_level_icon_prompts_hand_drawn_clean_sticker": {
+      "code_fingerprint": "c9a23299aa7271227e12bbe648a7f076edb7524415fd27466d427ad643242b94",
+      "label": "Life-Level Icon Prompts - Hand-Drawn Clean Sticker",
+      "last": "2026-09-25T19:41:27.237613+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T19:41:27.237613+00:00",
+          "outcome": "useful",
+          "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
+        }
+      ],
+      "score": 0.997905165,
+      "source_file": "design-mockup/generated-icons/icon-prompts-hand-drawn-sticker.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_equipment_icon_prompts_equipment_icon_prompts": {
+      "code_fingerprint": "15fbfb051f667702a000a0dd6420ab6a120a941dc05ba081e2a539ffd7d3c6d5",
+      "label": "Equipment Icon Prompts",
+      "last": "2026-09-25T19:41:27.237613+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T19:41:27.237613+00:00",
+          "outcome": "useful",
+          "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
+        }
+      ],
+      "score": 0.997905165,
+      "source_file": "docs/equipment-icon-prompts.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_quests_tabs_weekly_quests_tab": {
+      "code_fingerprint": "d403a5d961537bbec31e598473ed50b7df2b171f8190941ca840b9a647b3d362",
+      "label": "weekly_quests_tab.dart",
+      "last": "2026-09-23T21:17:32.565296+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-23T21:17:32.565296+00:00",
+          "outcome": "useful",
+          "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
+        }
+      ],
+      "score": 0.954311547,
+      "source_file": "mobile/lib/features/quests/tabs/weekly_quests_tab.dart",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
   "version": 1
 }

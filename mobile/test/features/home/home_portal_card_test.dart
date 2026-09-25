@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/core/services/boss_overlay_notifier.dart';
 import 'package:life_level/features/boss/models/boss_list_item.dart';
 import 'package:life_level/features/boss/providers/boss_provider.dart';
+import 'package:life_level/features/character/models/character_profile.dart';
+import 'package:life_level/features/character/providers/character_provider.dart';
 import 'package:life_level/features/home/cards/home_portal_card.dart';
 import 'package:life_level/features/home/providers/world_progress_provider.dart';
 import 'package:life_level/features/map/models/world_map_models.dart';
@@ -150,17 +152,30 @@ Widget _harness({
   required WorldFullData world,
   RegionDetail? region,
   List<BossListItem> bosses = const [],
+  bool animate = false,
 }) {
   return ProviderScope(
     overrides: [
       bossListProvider.overrideWith(() => _FakeBossListNotifier(bosses)),
       worldProgressProvider.overrideWith((ref) async => world),
       currentRegionDetailProvider.overrideWith((ref) async => region),
+      characterProfileProvider.overrideWith(_FakeCharacterNotifier.new),
     ],
-    child: const MaterialApp(
-      home: Scaffold(body: HomePortalCard()),
+    // Looping idle motion never settles; tests render the still layout,
+    // same as a device with reduced motion.
+    child: MaterialApp(
+      home: MediaQuery(
+        data: MediaQueryData(disableAnimations: !animate),
+        child: const Scaffold(body: HomePortalCard()),
+      ),
     ),
   );
+}
+
+/// The travelling card reads the avatar; never resolve so no network runs.
+class _FakeCharacterNotifier extends CharacterNotifier {
+  @override
+  Future<CharacterProfile> build() => Completer<CharacterProfile>().future;
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -278,7 +293,7 @@ void main() {
     final prev = _zone(id: 'prev', type: 'dungeon', name: 'Sunken Ruins');
     final a = _zone(id: 'a', type: 'zone', name: 'Branch A');
     final region = _region(nodes: [
-      ZoneNode(
+      const ZoneNode(
         id: 'a',
         name: 'Branch A',
         emoji: '',
@@ -352,7 +367,7 @@ void main() {
       nodes: [
         // Region detail reports the dungeon as completed — primary signal
         // when DungeonState hasn't loaded yet.
-        ZoneNode(
+        const ZoneNode(
           id: 'd',
           name: 'Pale Hollow',
           emoji: '🗿',
@@ -437,7 +452,7 @@ void main() {
       (tester) async {
     final bossZone =
         _zone(id: 'boss-zone', type: 'boss', name: 'Warden Hollow');
-    final boss = BossListItem(
+    const boss = BossListItem(
       id: 'boss-1',
       name: 'Forest Warden',
       icon: '👹',
@@ -525,6 +540,106 @@ void main() {
   // the test framework can't wait that out without runAsync acrobatics. The
   // 6 variant-rendering tests above cover the value of this widget; the
   // 4-line _openWorldDestination helper is verified by analyzer + smoke test.
+  // Idle motion: every variant runs its loop for a few seconds without
+  // layout or paint errors (hero walk overlays the bar, glints overflow
+  // their chip, etc.).
+  group('idle motion runs cleanly', () {
+    Future<void> runLoop(WidgetTester tester) async {
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 180));
+      }
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    }
+
+    const edge = WorldZoneEdgeModel(
+      id: 'e1',
+      fromZoneId: 'a',
+      toZoneId: 'b',
+      distanceKm: 4.0,
+      isBidirectional: true,
+    );
+
+    testWidgets('traveling (hero walk)', (tester) async {
+      await tester.pumpWidget(_harness(
+        animate: true,
+        world: _world(
+          zones: [
+            _zone(id: 'a', type: 'standard'),
+            _zone(id: 'b', type: 'dungeon', name: 'Iron Depths'),
+          ],
+          currentZoneId: 'a',
+          destinationZoneId: 'b',
+          currentEdgeId: 'e1',
+          edges: const [edge],
+        ),
+      ));
+      await runLoop(tester);
+    });
+
+    testWidgets('boss raid', (tester) async {
+      await tester.pumpWidget(_harness(
+        animate: true,
+        world: _world(
+            zones: [_zone(id: 'a', type: 'standard')], currentZoneId: 'a'),
+        bosses: [_activeBoss()],
+      ));
+      await runLoop(tester);
+    });
+
+    for (final type in ['boss', 'chest', 'dungeon', 'standard']) {
+      testWidgets('$type zone', (tester) async {
+        await tester.pumpWidget(_harness(
+          animate: true,
+          world: _world(
+            zones: [_zone(id: 'a', type: type)],
+            currentZoneId: 'a',
+            destinationZoneId: 'a',
+          ),
+          region: _region(nodes: [
+            _zoneNode(
+              id: 'a',
+              isChest: type == 'chest',
+              isDungeon: type == 'dungeon',
+              chestRewardXp: 300,
+              dungeonFloorsTotal: 3,
+              dungeonFloorsCompleted: 1,
+            ),
+          ]),
+        ));
+        await runLoop(tester);
+      });
+    }
+
+    testWidgets('crossroads', (tester) async {
+      await tester.pumpWidget(_harness(
+        animate: true,
+        world: _world(
+          zones: [
+            _zone(id: 'a', type: 'crossroads'),
+            _zone(id: 'b', type: 'standard', name: 'Mushroom Grove'),
+            _zone(id: 'c', type: 'chest', name: "Traveler's Cache"),
+          ],
+          currentZoneId: 'a',
+          edges: const [
+            WorldZoneEdgeModel(
+                id: 'e1',
+                fromZoneId: 'a',
+                toZoneId: 'b',
+                distanceKm: 3.2,
+                isBidirectional: false),
+            WorldZoneEdgeModel(
+                id: 'e2',
+                fromZoneId: 'a',
+                toZoneId: 'c',
+                distanceKm: 2.1,
+                isBidirectional: false),
+          ],
+        ),
+      ));
+      await runLoop(tester);
+    });
+  });
 }
 
 extension _ChestNodeOpened on ZoneNode {

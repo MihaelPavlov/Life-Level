@@ -2560,8 +2560,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Application/Services/AchievementSeeder.cs": {
-    "mtime": 1788511408.5689998,
-    "ast_hash": "be815abda7d1dc2ca03e038b59abc1c5",
+    "mtime": 1790372182.1675904,
+    "ast_hash": "240d27a3d6b0a01c01ac63f1764b4a81",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Application/Services/ItemSeeder.cs": {
@@ -2575,8 +2575,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/AchievementsController.cs": {
-    "mtime": 1788511408.569156,
-    "ast_hash": "1aed94df59dd4a49695ac1cc20fd5c9d",
+    "mtime": 1790372182.1678379,
+    "ast_hash": "e4d8af22c1575cf3d3c0294d7f0b0944",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/ActivityController.cs": {
@@ -2745,8 +2745,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/AppDbContext.cs": {
-    "mtime": 1790277865.4629943,
-    "ast_hash": "5b8a5e8f490512bf3397159b759ecd17",
+    "mtime": 1790372182.1680918,
+    "ast_hash": "efea5dd531ae5d6458f6a1ff3e771421",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/RankThresholdSeeder.cs": {
@@ -3280,8 +3280,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Migrations/AppDbContextModelSnapshot.cs": {
-    "mtime": 1790280411.385807,
-    "ast_hash": "fc9e2fa5ad83dbd5d98b7da26309d18a",
+    "mtime": 1790372182.1689749,
+    "ast_hash": "5d9561e5a5b6a046214f13c1d057076b",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Program.cs": {
@@ -3345,23 +3345,23 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Application/DTOs/AchievementDtos.cs": {
-    "mtime": 1788511408.6390915,
-    "ast_hash": "c8a90ada020a52532b0e9f1dbde1dff0",
+    "mtime": 1790372182.1692922,
+    "ast_hash": "cddc14c6f1d5f4178ce7803d9bc76667",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Application/UseCases/AchievementService.cs": {
-    "mtime": 1788511408.6390915,
-    "ast_hash": "b9319dce6043c3ac86c1f790a549a1c1",
+    "mtime": 1790372182.169582,
+    "ast_hash": "fbdae4e0ad2927efec418784fe22ef03",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Domain/Entities/Achievement.cs": {
-    "mtime": 1788511408.6393502,
-    "ast_hash": "9eda7f8509e7d6d4a1e651b2c89a2cf7",
+    "mtime": 1790372182.169802,
+    "ast_hash": "7f7dda7bf85620940f2d334476bc9f24",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Domain/Entities/UserAchievement.cs": {
-    "mtime": 1788511408.639429,
-    "ast_hash": "8ebfd794cebc12060f5816fed7c9b211",
+    "mtime": 1790372182.169802,
+    "ast_hash": "34e874f16416b84f3a2441c7b389e2b0",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Domain/Enums/AchievementCategory.cs": {
@@ -3390,8 +3390,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Infrastructure/Persistence/Configurations/UserAchievementConfiguration.cs": {
-    "mtime": 1788511408.6398787,
-    "ast_hash": "1b66d7858c8bbcd3d493e8d233caba7f",
+    "mtime": 1790372182.1701295,
+    "ast_hash": "036e9dc52c5af669d0b32acdd0614a52",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/LifeLevel.Modules.Achievements.csproj": {
@@ -4145,8 +4145,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Items/Infrastructure/ItemsModule.cs": {
-    "mtime": 1790086472.6609828,
-    "ast_hash": "37c42b9c37a6bd9d19e2429a699affab",
+    "mtime": 1790372182.1703658,
+    "ast_hash": "9090ef3a67be9bdeebd34f18530e4e48",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Items/Infrastructure/Persistence/Configurations/CharacterItemConfiguration.cs": {
@@ -4380,8 +4380,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Quest/Domain/Data/QuestSeedData.cs": {
-    "mtime": 1790229247.4177275,
-    "ast_hash": "e89a1f9852ad1533961df2f79c24623e",
+    "mtime": 1790343430.314833,
+    "ast_hash": "189e2575d6abf619d0b8d0746d7b3c93",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Quest/Domain/Entities/Quest.cs": {
@@ -5295,8 +5295,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/app_icons.dart": {
-    "mtime": 1790287863.722535,
-    "ast_hash": "52b5e6eadc79e91abb6774904f846724",
+    "mtime": 1790372182.292263,
+    "ast_hash": "769167c77133140d240ef4ce0a8d3187",
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/avatar_icons.dart": {
@@ -5490,18 +5490,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/models/achievement_models.dart": {
-    "mtime": 1790238237.1623805,
-    "ast_hash": "a016c61f20f0d7dac5803729c61381d4",
+    "mtime": 1790372182.2931716,
+    "ast_hash": "52ce020cd436450ebc16b95eacb8178f",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/providers/achievements_provider.dart": {
-    "mtime": 1790022556.520006,
-    "ast_hash": "52f32c9a5f9c1cecd5651c45dafd0f78",
+    "mtime": 1790372182.2931716,
+    "ast_hash": "fde32f9b758896ec5627e870c2a2beb6",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/services/achievements_service.dart": {
-    "mtime": 1788511416.563634,
-    "ast_hash": "c27721d98e1c931c209e29d8bbabd45f",
+    "mtime": 1790372182.2931716,
+    "ast_hash": "7e917f4cc0531efb52a2380d45c1d407",
     "semantic_hash": ""
   },
   "mobile/lib/features/activity/activity_result_sheet.dart": {
@@ -5715,8 +5715,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_portal_card.dart": {
-    "mtime": 1790238032.6614757,
-    "ast_hash": "0937bc6cbbf4b37fad268ae17c7ef097",
+    "mtime": 1790372182.293855,
+    "ast_hash": "a88b1ad0ee0f68dbc1f1c27d412ce073",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_recent_activities_card.dart": {
@@ -5760,8 +5760,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/widgets/home_hero_button.dart": {
-    "mtime": 1790019944.485073,
-    "ast_hash": "b28b9f30215ecdcf315acdb1fb49a3fa",
+    "mtime": 1790345020.231329,
+    "ast_hash": "4b7efed2d745a29a716c205d07f0fabd",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/widgets/home_palette.dart": {
@@ -5880,8 +5880,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_detail_screen.dart": {
-    "mtime": 1790238032.1954782,
-    "ast_hash": "c36e56966e75fd44ccc44ce55047859c",
+    "mtime": 1790346097.2753313,
+    "ast_hash": "e8e9c41251630eaa8d61b39adebd4a67",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/world_hub_screen.dart": {
@@ -5985,8 +5985,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_trail.dart": {
-    "mtime": 1790323288.324003,
-    "ast_hash": "f486615e9636a321b6d2d35c34a7f168",
+    "mtime": 1790345700.7567282,
+    "ast_hash": "8f8a5d730e8a7e57aa59c3b248bda867",
     "semantic_hash": ""
   },
   "mobile/lib/features/notifications/models/notification_list_models.dart": {
@@ -6079,11 +6079,6 @@
     "ast_hash": "30467f662f47715297de0e046cdfa19e",
     "semantic_hash": ""
   },
-  "mobile/lib/features/profile/tabs/achievements_tab.dart": {
-    "mtime": 1790323109.3627033,
-    "ast_hash": "49a421560bb3bd882acedd7f8d69b6c3",
-    "semantic_hash": ""
-  },
   "mobile/lib/features/profile/tabs/admin_tab.dart": {
     "mtime": 1790238238.881371,
     "ast_hash": "8ea939dea6b97ee784fe1c4dec9b5d3f",
@@ -6155,8 +6150,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/buy_founder_pass_screen.dart": {
-    "mtime": 1790238239.06737,
-    "ast_hash": "4f09f07c26f452b3eada72923f1fa500",
+    "mtime": 1790337811.8064485,
+    "ast_hash": "e07b740b64cbae1c5c3784018c12dce4",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/models/season_models.dart": {
@@ -6185,18 +6180,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_milestone_card.dart": {
-    "mtime": 1790238239.1463695,
-    "ast_hash": "46629972044ecc80639d3dec2396c6ce",
+    "mtime": 1790337762.2130234,
+    "ast_hash": "0165ddc6f26ce2af8483b9ec8c28b230",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_reward_slot.dart": {
-    "mtime": 1790322972.6477177,
-    "ast_hash": "2e3054769c63a9c39e2c9554b324d21b",
+    "mtime": 1790337762.1340244,
+    "ast_hash": "21a732847867d71f904fac74755cd2f1",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_theme.dart": {
-    "mtime": 1790238239.1583695,
-    "ast_hash": "51249c39666f428a6cc1c45620609407",
+    "mtime": 1790337848.294027,
+    "ast_hash": "dd78bdfac12949c046eaac1265a9b5f1",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_tier_row.dart": {
@@ -6345,8 +6340,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/home/home_portal_card_test.dart": {
-    "mtime": 1790238239.6963665,
-    "ast_hash": "443b6b150608dffebcffdd96ea661fce",
+    "mtime": 1790372182.2949908,
+    "ast_hash": "1af891bbbb6ea30768cae4be83b8c953",
     "semantic_hash": ""
   },
   "mobile/test/visual/app_screen_goldens_test.dart": {
@@ -10705,8 +10700,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Items/Application/UseCases/ShopService.cs": {
-    "mtime": 1790088120.221198,
-    "ast_hash": "f4bd63cb941bda3060cd88e124640786",
+    "mtime": 1790372182.1703658,
+    "ast_hash": "60ba5eef07541e52fc413817bc254d8e",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Items/Domain/Entities/ShopPurchase.cs": {
@@ -10745,8 +10740,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Application/DTOs/TalentDtos.cs": {
-    "mtime": 1789413477.9443731,
-    "ast_hash": "811ec69f9e626f06fb211552276973c6",
+    "mtime": 1790340430.015531,
+    "ast_hash": "b03bdfb40dc43704563d008dbacb4aa8",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Application/EventHandlers/TalentCurrencyHandlers.cs": {
@@ -10755,8 +10750,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Application/UseCases/TalentService.cs": {
-    "mtime": 1790088851.339189,
-    "ast_hash": "fb5c8ca44149cf7d9a3baf32639cc2e6",
+    "mtime": 1790340430.0955307,
+    "ast_hash": "b9eb6950a0e1bc58b0727b466b71a348",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/Entities/Talent.cs": {
@@ -10765,8 +10760,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/Entities/TalentDrawEntry.cs": {
-    "mtime": 1789413477.9463732,
-    "ast_hash": "1c688d2ac50e6e70b8efa30556a85894",
+    "mtime": 1790340429.9365313,
+    "ast_hash": "c8c2629fa7a439c41ed32240451fe80f",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/Entities/UserTalent.cs": {
@@ -10790,8 +10785,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/TalentEconomy.cs": {
-    "mtime": 1789413477.948373,
-    "ast_hash": "af78c2d51a490874dfde30d1db8deeb4",
+    "mtime": 1790340429.8535316,
+    "ast_hash": "5108cb2fc75ee87054b4238319dfe71b",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Infrastructure/Persistence/Configurations/TalentConfigurations.cs": {
@@ -10920,8 +10915,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/achievements_screen.dart": {
-    "mtime": 1790023041.750772,
-    "ast_hash": "397b8103b4ab708e4aefd8c6f4597e95",
+    "mtime": 1790372182.292966,
+    "ast_hash": "95c15e0561790484f3439e49b588b801",
     "semantic_hash": ""
   },
   "mobile/lib/features/gear/gear_paperdoll_assets.dart": {
@@ -11020,8 +11015,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/rewards_screen.dart": {
-    "mtime": 1790322655.7833126,
-    "ast_hash": "b356c9bc9b5e4e8be95253b265db521f",
+    "mtime": 1790342725.4273808,
+    "ast_hash": "65aa89197c4cd83ee62800e4ee367366",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/services/rewards_service.dart": {
@@ -11050,13 +11045,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/shop/shop_screen.dart": {
-    "mtime": 1790323034.379201,
-    "ast_hash": "9068d1fd36c6e4b4f6871c673a4c7cc7",
+    "mtime": 1790372182.294625,
+    "ast_hash": "7596b4d4cce5c356b7c119b6e3001c41",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/models/talent_models.dart": {
-    "mtime": 1789413477.9833732,
-    "ast_hash": "c31fb8161460dc5534488a24bb03d32b",
+    "mtime": 1790340676.5844872,
+    "ast_hash": "7434f00671fd8e49491ca4fc3cc78509",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/providers/talents_provider.dart": {
@@ -11070,13 +11065,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/talents_screen.dart": {
-    "mtime": 1790020212.0734982,
-    "ast_hash": "44079a84110a252da98a6588d09438ef",
+    "mtime": 1790340430.2555304,
+    "ast_hash": "b906759e65286b31fdb34a2026d2dde5",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/widgets/talent_info_sheet.dart": {
-    "mtime": 1790238003.7566276,
-    "ast_hash": "26795f0c8b9a07d97af18bca0db76fe7",
+    "mtime": 1790340430.33853,
+    "ast_hash": "14ec0a4278f07a293b0ef97bc1807aaa",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/widgets/talent_theme.dart": {
@@ -11225,8 +11220,8 @@
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Talents Redesign (Crystal Economy + Hex UI).md": {
-    "mtime": 1789413477.9703732,
-    "ast_hash": "0b3478abe74d31b8bcb82d93b0340c78",
+    "mtime": 1790340534.1481664,
+    "ast_hash": "c0f9cfe495b3b7c1ed2fd827d8e2b06d",
     "semantic_hash": ""
   },
   "docs/region-art-prompts.md": {
@@ -11760,13 +11755,248 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/motion/reward_fx.dart": {
-    "mtime": 1790322925.075459,
-    "ast_hash": "87355f8e44b2a45d0f5ea21d7f597d30",
+    "mtime": 1790342614.142917,
+    "ast_hash": "81d0f7d3e443b5a3ca66ffc55ba78f3a",
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Reward and Progress Animations.md": {
-    "mtime": 1790323924.5955956,
-    "ast_hash": "0a64377c72460f79a1e9086755a7c7c4",
+    "mtime": 1790345845.313322,
+    "ast_hash": "f91fdd73ca0b962bd1090536306ce305",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925105518_AddProgressiveTalentDrawCosts.Designer.cs": {
+    "mtime": 1790333718.6739807,
+    "ast_hash": "890327b3adfd1e8517d33fe3847c4272",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925105518_AddProgressiveTalentDrawCosts.cs": {
+    "mtime": 1790333718.6711092,
+    "ast_hash": "3304a409996d701150ee2e3e96983397",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925124949_ReplaceTalentPointsWithDrawNumber.Designer.cs": {
+    "mtime": 1790340589.580215,
+    "ast_hash": "7d9fa86eff21b12605311efeeb72d939",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925124949_ReplaceTalentPointsWithDrawNumber.cs": {
+    "mtime": 1790340654.7046032,
+    "ast_hash": "112cfa9fa8d8af947a35bc573194aabe",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925133759_ClarifyWorldMapChestTaskText.Designer.cs": {
+    "mtime": 1790343480.0364037,
+    "ast_hash": "b95d63d29cab56852f86fc91fd0e8cc6",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925133759_ClarifyWorldMapChestTaskText.cs": {
+    "mtime": 1790343480.034994,
+    "ast_hash": "aa3e1e6ce86b002faa713e6d394bcc8c",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/TalentProgressiveDrawCostTests.cs": {
+    "mtime": 1790340533.991167,
+    "ast_hash": "f1411319d1b1b1f29ab93c7577388e25",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/home/cards/portal_idle.dart": {
+    "mtime": 1790364481.3568795,
+    "ast_hash": "dd202d40a7e5b62b789d5856c7df3e26",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/rewards/widgets/task_reward_popup.dart": {
+    "mtime": 1790372182.2943697,
+    "ast_hash": "acb1c9ea75cf8e48b797d14b0b851112",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/rewards/reward_task_order_test.dart": {
+    "mtime": 1790337797.6076128,
+    "ast_hash": "66f79530c9e74a05ed4a75bcad208dee",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/season/season_reward_asset_test.dart": {
+    "mtime": 1790337797.6906118,
+    "ast_hash": "747a13be6070793123accaae2402a75d",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/talents/talent_models_test.dart": {
+    "mtime": 1790340677.0434847,
+    "ast_hash": "5a40a02159835ba2aeb465dbc0c2f6f1",
+    "semantic_hash": ""
+  },
+  "mobile/assets/icons/reward_chest_burst.png": {
+    "mtime": 1790342928.8697722,
+    "ast_hash": "548b474bfe0c5d366109ec5e7b2c8c66",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925212115_AchievementRewardRoads.Designer.cs": {
+    "mtime": 1790371275.311608,
+    "ast_hash": "208472819de5afd3a29aceb267c1c7d8",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260925212115_AchievementRewardRoads.cs": {
+    "mtime": 1790371285.9259946,
+    "ast_hash": "c34a2407bc668e4f7a009b0b33a76ca7",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Achievements/Domain/AchievementRewardTable.cs": {
+    "mtime": 1790371062.5758665,
+    "ast_hash": "3aa799d6893240f7e8b12e9467aed292",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Achievements/Domain/Entities/UserAchievementStageChest.cs": {
+    "mtime": 1790371062.5728667,
+    "ast_hash": "d7d156ab08016a828a63a5397fdb5609",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Items/Application/Ports/ChestItemRewardPortAdapter.cs": {
+    "mtime": 1790371091.7743206,
+    "ast_hash": "741254ae5f7c46afe730c1eaf744963b",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.SharedKernel/Ports/IChestItemRewardPort.cs": {
+    "mtime": 1790371091.7723207,
+    "ast_hash": "12e8b7ffdd8290201f156f50462e4341",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/AchievementRoadsTests.cs": {
+    "mtime": 1790371323.2854056,
+    "ast_hash": "28fd43010c3d56395307c80d31b20a58",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/achievements/roads/reward_road_screen.dart": {
+    "mtime": 1790371770.7371902,
+    "ast_hash": "78c513cb0865f375f5425cfb8e4870fb",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/achievements/roads/reward_roads_hub.dart": {
+    "mtime": 1790371741.2725642,
+    "ast_hash": "dd7bd471f225ccf300f61f7bf934b038",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/achievements/roads/road_fx.dart": {
+    "mtime": 1790371741.287564,
+    "ast_hash": "3ee8c32db3520e876c8e44c821d8e642",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/achievements/roads/road_meta.dart": {
+    "mtime": 1790371520.0075107,
+    "ast_hash": "9fca65524e94e003457d0cf58db7d031",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/achievements/roads/road_widgets.dart": {
+    "mtime": 1790371770.7371902,
+    "ast_hash": "f3add3ddfc7f2ab34c8864cc92c56016",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/achievements/reward_roads_test.dart": {
+    "mtime": 1790371899.3302739,
+    "ast_hash": "68e493831eb49c628eaf7daf6f25c526",
+    "semantic_hash": ""
+  },
+  "docs/obsidian/07 - Development/Plan - Achievement Reward Roads.md": {
+    "mtime": 1790372204.3353012,
+    "ast_hash": "3fa1e000ebba2b12fa0e044a699d16c4",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260925_194127_give_me_prompts_to_generate_3_chest_valuts_images.md": {
+    "mtime": 1790365287.2379105,
+    "ast_hash": "a9e0eebeffb489afd3834de9f38dae75",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Shop/chest_common.png": {
+    "mtime": 1790366809.052085,
+    "ast_hash": "0918637575ee26c56b4fb912a8e76fb5",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Shop/chest_legendary.png": {
+    "mtime": 1790366809.4190829,
+    "ast_hash": "bf13e00bbba3e9236e4b839b847aa991",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Shop/chest_rare.png": {
+    "mtime": 1790366809.239084,
+    "ast_hash": "6dc2a2d88045e0218fa1163f97208427",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/avatar_selection_screen_isolatedDiff.png": {
+    "mtime": 1790372161.2935045,
+    "ast_hash": "461eaf447a73083288866909ea6ddcd6",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/avatar_selection_screen_maskedDiff.png": {
+    "mtime": 1790372161.0915067,
+    "ast_hash": "0fdb09f47f60a115fc3c942ab3f8427c",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/avatar_selection_screen_masterImage.png": {
+    "mtime": 1790372160.461514,
+    "ast_hash": "835c63cd6a2b1c36214543db927ab273",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/avatar_selection_screen_testImage.png": {
+    "mtime": 1790372160.7785103,
+    "ast_hash": "cc763f6c9a760ddaccb1673d17a72421",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/login_screen_isolatedDiff.png": {
+    "mtime": 1790372155.0375764,
+    "ast_hash": "e614d64d7566dc1f1b276d74c49058da",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/login_screen_maskedDiff.png": {
+    "mtime": 1790372154.7945793,
+    "ast_hash": "2e18c8343fb15f7e3dd9fbadea801443",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/login_screen_masterImage.png": {
+    "mtime": 1790372154.4005837,
+    "ast_hash": "7af3f4873ec79c177221896914e3c775",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/login_screen_testImage.png": {
+    "mtime": 1790372154.6015813,
+    "ast_hash": "4dc90293d1190c1f9b29a703d950b16d",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/register_screen_isolatedDiff.png": {
+    "mtime": 1790372156.7585566,
+    "ast_hash": "cdf7e65332694ffb7b95daf8cb346c83",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/register_screen_maskedDiff.png": {
+    "mtime": 1790372156.554559,
+    "ast_hash": "397bf285b14085c67b1f2530487de9ae",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/register_screen_masterImage.png": {
+    "mtime": 1790372156.1645634,
+    "ast_hash": "967aa99859177f33a15045a8ab7f21c2",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/register_screen_testImage.png": {
+    "mtime": 1790372156.364561,
+    "ast_hash": "8b41d6783c480851277e1e352a84f1ec",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/welcome_setup_screen_isolatedDiff.png": {
+    "mtime": 1790372158.8395326,
+    "ast_hash": "31235a37ce03e9c2aef42c8f87960812",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/welcome_setup_screen_maskedDiff.png": {
+    "mtime": 1790372158.629535,
+    "ast_hash": "983a62ef4b408388e41d607efe5e4bd9",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/welcome_setup_screen_masterImage.png": {
+    "mtime": 1790372157.9145432,
+    "ast_hash": "3334a59f0ed5e77f7e231c5685f2ad75",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/failures/welcome_setup_screen_testImage.png": {
+    "mtime": 1790372158.273539,
+    "ast_hash": "5c0c08e1513df056474bfa7ac1102049",
     "semantic_hash": ""
   }
 }

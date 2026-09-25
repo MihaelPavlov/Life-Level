@@ -16,3 +16,14 @@ public class UserAchievementConfiguration : IEntityTypeConfiguration<UserAchieve
         entity.HasIndex(u => new { u.UserId, u.AchievementId }).IsUnique();
     }
 }
+
+public class UserAchievementStageChestConfiguration : IEntityTypeConfiguration<UserAchievementStageChest>
+{
+    public void Configure(EntityTypeBuilder<UserAchievementStageChest> entity)
+    {
+        entity.HasKey(c => c.Id);
+        entity.Property(c => c.Category).HasConversion<string>().HasMaxLength(32);
+        entity.Property(c => c.Tier).HasConversion<string>().HasMaxLength(32);
+        entity.HasIndex(c => new { c.UserId, c.Category, c.Tier }).IsUnique();
+    }
+}
