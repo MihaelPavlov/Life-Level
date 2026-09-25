@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
@@ -6,6 +9,9 @@ import '../models/guild_models.dart';
 import '../providers/guild_provider.dart';
 import '../widgets/guild_widgets.dart';
 import 'guild_home_view.dart' show guildTimeLeft;
+import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/motion_widgets.dart';
+import '../../../core/motion/reward_fx.dart';
 
 /// Active raid detail: boss, shared HP, your damage, contributions, rewards.
 class GuildRaidView extends ConsumerWidget {
@@ -178,12 +184,8 @@ class GuildRaidView extends ConsumerWidget {
                   value: 'Log a workout to hit the boss first.',
                 )
               else
-                for (final c in ranked.take(8))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _ContributionTile(
-                        contribution: c, topDamage: topDamage),
-                  ),
+                _ContributionRace(
+                    ranked: ranked.take(8).toList(), topDamage: topDamage),
               const GuildSectionHeader('Victory rewards'),
               Row(
                 children: [
@@ -290,6 +292,103 @@ class _BossHero extends StatelessWidget {
   }
 }
 
+/// Contributions ranking as a "bar race": when damage comes in, every bar
+/// and number animates to its new value first, then the rows glide into the
+/// new order. A member who climbs gets a burst and a "+N ▲" badge.
+class _ContributionRace extends StatefulWidget {
+  final List<GuildRaidContribution> ranked;
+  final int topDamage;
+  const _ContributionRace({required this.ranked, required this.topDamage});
+
+  @override
+  State<_ContributionRace> createState() => _ContributionRaceState();
+}
+
+class _ContributionRaceState extends State<_ContributionRace> {
+  static const _tileH = 60.0, _gap = 8.0;
+  late List<String> _order = [for (final c in widget.ranked) c.userId];
+  final _keys = <String, GlobalKey>{};
+  Timer? _reorder;
+
+  GlobalKey _keyFor(String id) => _keys.putIfAbsent(id, GlobalKey.new);
+
+  @override
+  void didUpdateWidget(_ContributionRace old) {
+    super.didUpdateWidget(old);
+    final next = [for (final c in widget.ranked) c.userId];
+    if (listEquals(next, _order)) return;
+    final oldRank = {for (final (i, id) in _order.indexed) id: i};
+    if (!RewardFx.enabled(context)) {
+      _order = next;
+      return;
+    }
+    // New members slot in at the bottom until the race settles.
+    _order = [
+      ..._order.where(next.contains),
+      ...next.where((id) => !_order.contains(id))
+    ];
+    _reorder?.cancel();
+    _reorder = Timer(const Duration(milliseconds: 950), () {
+      if (!mounted) return;
+      setState(() => _order = next);
+      for (final (i, id) in next.indexed) {
+        final was = oldRank[id];
+        if (was == null || was <= i) continue;
+        Future.delayed(const Duration(milliseconds: 450), () {
+          if (!mounted) return;
+          final r = RewardFx.rectOf(_keyFor(id));
+          if (r == null) return;
+          final badge = Offset(r.left + 25, r.center.dy);
+          RewardFx.burst(context, badge, kGuildGold, count: 14, distance: 34);
+          RewardFx.burst(context, badge, AppColors.blue,
+              count: 8, distance: 24);
+          RewardFx.floatText(context, Offset(r.right - 40, r.top),
+              '+${was - i} ▲', AppColors.green,
+              fontSize: 12,
+              rise: 20,
+              duration: const Duration(milliseconds: 1400));
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _reorder?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final byId = {for (final c in widget.ranked) c.userId: c};
+    final ids = _order.where(byId.containsKey).toList();
+    final slot = _tileH + _gap;
+    return SizedBox(
+      height: ids.length * slot,
+      child: Stack(
+        children: [
+          for (final (i, id) in ids.indexed)
+            AnimatedPositioned(
+              key: ValueKey(id),
+              duration: AppMotion.duration(
+                  context, const Duration(milliseconds: 650)),
+              curve: const Cubic(.3, .8, .3, 1),
+              left: 0,
+              right: 0,
+              top: i * slot,
+              height: _tileH,
+              child: KeyedSubtree(
+                key: _keyFor(id),
+                child: _ContributionTile(
+                    contribution: byId[id]!, topDamage: widget.topDamage),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ContributionTile extends StatelessWidget {
   final GuildRaidContribution contribution;
   final int topDamage;
@@ -299,6 +398,8 @@ class _ContributionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ratio = topDamage <= 0 ? 0.0 : contribution.damageDealt / topDamage;
+    final raceDuration =
+        AppMotion.duration(context, const Duration(milliseconds: 900));
     final (Color rankBg, Color rankFg) = switch (contribution.rank) {
       1 => (kGuildGold, const Color(0xFF2a1a00)),
       2 => (const Color(0xFFcdd6e4), const Color(0xFF1b2433)),
@@ -318,8 +419,12 @@ class _ContributionTile extends StatelessWidget {
             Positioned.fill(
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  widthFactor: ratio.clamp(0.0, 1.0).toDouble(),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: ratio.clamp(0.0, 1.0).toDouble()),
+                  duration: raceDuration,
+                  curve: const Cubic(.3, .7, .3, 1),
+                  builder: (_, v, child) =>
+                      FractionallySizedBox(widthFactor: v, child: child),
                   child: Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -342,11 +447,14 @@ class _ContributionTile extends StatelessWidget {
                       color: rankBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('${contribution.rank}',
-                        style: TextStyle(
-                            color: rankFg,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900)),
+                    child: FlipSwap(
+                      value: contribution.rank,
+                      child: Text('${contribution.rank}',
+                          style: TextStyle(
+                              color: rankFg,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900)),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   GuildAvatar(
@@ -389,11 +497,16 @@ class _ContributionTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Text(guildNum(contribution.damageDealt),
-                      style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900)),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(end: contribution.damageDealt.toDouble()),
+                    duration: raceDuration,
+                    curve: Curves.easeOutCubic,
+                    builder: (_, v, __) => Text(guildNum(v.round()),
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900)),
+                  ),
                 ],
               ),
             ),

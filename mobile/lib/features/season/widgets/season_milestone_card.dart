@@ -28,12 +28,12 @@ class SeasonMilestoneCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Image.asset(
-            seasonIconAsset(r.iconKey),
-            width: 48,
-            height: 48,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(Icons.emoji_events_rounded,
+          SeasonRewardAsset(
+            iconKey: r.iconKey,
+            size: 48,
+            locked: r.state == SeasonRewardState.locked ||
+                r.state == SeasonRewardState.unknown,
+            fallback: const Icon(Icons.emoji_events_rounded,
                 size: 40, color: AppColors.purple),
           ),
           const SizedBox(width: 13),

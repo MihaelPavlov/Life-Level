@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import 'dart:math' as math;
+
 import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/reward_fx.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../../core/widgets/currency_chip.dart';
@@ -270,8 +273,13 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                   Padding(
                     padding:
                         const EdgeInsets.fromLTRB(28, rewardsTopPad, 28, 0),
-                    child:
-                        _RewardsPanel(region: focused, onTap: _notImplemented),
+                    child: _RewardsPanel(
+                      key: ValueKey(focused.name),
+                      region: focused,
+                      ready: focused.status == RegionStatus.completed ||
+                          focused.totalZones - focused.completedZones <= 0,
+                      onTap: _notImplemented,
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -510,20 +518,82 @@ class _RegionBanner extends StatelessWidget {
 
 // ── Rewards panel ────────────────────────────────────────────────────────────
 
-class _RewardsPanel extends StatelessWidget {
+/// Reward tiles for the focused region. When the chest is ready, tapping
+/// plays "lid pop + light beam": the tiles shake, each tile's lid flips
+/// open over a warm glow, and a beam with sparkles rises out of it.
+// Region chest claims have no backend yet ([onTap] shows that), so this is
+// the reveal to wire to the real claim once it exists.
+class _RewardsPanel extends StatefulWidget {
   final RegionCard region;
+  final bool ready;
   final VoidCallback onTap;
-  const _RewardsPanel({required this.region, required this.onTap});
+  const _RewardsPanel(
+      {super.key,
+      required this.region,
+      required this.ready,
+      required this.onTap});
+
+  @override
+  State<_RewardsPanel> createState() => _RewardsPanelState();
+}
+
+class _RewardsPanelState extends State<_RewardsPanel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _open = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1100))
+    ..addListener(() => setState(() {}));
+  final _slotKeys = [GlobalKey(), GlobalKey()];
+
+  RegionCard get region => widget.region;
+
+  Future<void> _tap() async {
+    if (!widget.ready || _open.isAnimating || !RewardFx.enabled(context)) {
+      widget.onTap();
+      return;
+    }
+    _open.forward(from: 0);
+    AppMotion.haptic(AppHaptic.light);
+    await Future.delayed(const Duration(milliseconds: 450));
+    if (!mounted) return;
+    for (final (i, key) in _slotKeys.indexed) {
+      final r = RewardFx.rectOf(key);
+      if (r == null) continue;
+      Future.delayed(Duration(milliseconds: i * 200), () {
+        if (!mounted) return;
+        RewardFx.beam(context, r.topCenter + const Offset(0, 8),
+            width: 80, height: 240);
+        RewardFx.sparkles(context, r.topCenter, count: 10, spread: 26);
+      });
+    }
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (mounted) widget.onTap();
+  }
+
+  @override
+  void dispose() {
+    _open.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ms = _open.value * 1100;
+    double shake(int i) {
+      final p = ((ms - i * 80) / 450).clamp(0.0, 1.0);
+      return p <= 0 || p >= 1 ? 0 : math.sin(p * math.pi * 6) * 4 * (1 - p);
+    }
+
+    double lid(int i) => _open.isAnimating || _open.value == 1
+        ? Curves.easeOutBack
+            .transform(((ms - 450 - i * 200) / 380).clamp(0.0, 1.0))
+        : 0;
     final tier = _tierIndexFor(region.chapterIndex);
     final coins = [150, 300, 500, 800, 1200][tier];
     final gems = [20, 35, 50, 80, 120][tier];
     final tierColor = _tierColors[tier];
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: _tap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -542,15 +612,25 @@ class _RewardsPanel extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _RewardSlot(
-                    iconAsset: AppIcons.homeGemIcon,
-                    qty: gems,
-                    tierColor: tierColor),
+                Transform.rotate(
+                  key: _slotKeys[0],
+                  angle: shake(0) * math.pi / 180,
+                  child: _RewardSlot(
+                      iconAsset: AppIcons.homeGemIcon,
+                      qty: gems,
+                      tierColor: tierColor,
+                      lidOpen: lid(0)),
+                ),
                 const SizedBox(width: 14),
-                _RewardSlot(
-                    iconAsset: AppIcons.homeCoinIcon,
-                    qty: coins,
-                    tierColor: tierColor),
+                Transform.rotate(
+                  key: _slotKeys[1],
+                  angle: shake(1) * math.pi / 180,
+                  child: _RewardSlot(
+                      iconAsset: AppIcons.homeCoinIcon,
+                      qty: coins,
+                      tierColor: tierColor,
+                      lidOpen: lid(1)),
+                ),
               ],
             ),
           ],
@@ -564,11 +644,70 @@ class _RewardSlot extends StatelessWidget {
   final String iconAsset;
   final int qty;
   final Color tierColor;
+
+  /// 0 = closed, 1 = lid flipped open (glow showing underneath).
+  final double lidOpen;
   const _RewardSlot(
-      {required this.iconAsset, required this.qty, required this.tierColor});
+      {required this.iconAsset,
+      required this.qty,
+      required this.tierColor,
+      this.lidOpen = 0});
 
   @override
   Widget build(BuildContext context) {
+    final tile = _tile();
+    if (lidOpen <= 0) return tile;
+    return SizedBox(
+      width: 72,
+      height: 72,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Warm glow revealed as the lid lifts.
+          Positioned.fill(
+            child: Opacity(
+              opacity: lidOpen.clamp(0.0, 1.0),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const RadialGradient(colors: [
+                    Color(0xFFFFF6D0),
+                    Color(0xFFFFCF5A),
+                    Color(0x00FFA11C),
+                  ], stops: [
+                    0,
+                    .45,
+                    1
+                  ]),
+                ),
+              ),
+            ),
+          ),
+          // Bottom of the tile stays put, a little brighter.
+          ClipRect(
+            clipper: _BandClipper(top: 30),
+            child: ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                  Colors.white.withValues(alpha: .25 * lidOpen),
+                  BlendMode.plus),
+              child: tile,
+            ),
+          ),
+          // Lid: the top band flips back on its top edge.
+          Transform(
+            alignment: Alignment.topCenter,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, .004)
+              ..rotateX(-1.9 * lidOpen)
+              ..translate(0.0, -4 * lidOpen),
+            child: ClipRect(clipper: _BandClipper(bottom: 30), child: tile),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tile() {
     return Container(
       width: 72,
       height: 72,
@@ -609,4 +748,18 @@ class _RewardSlot extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Keeps only a horizontal band of the child: y < [bottom] or y >= [top].
+class _BandClipper extends CustomClipper<Rect> {
+  final double? top, bottom;
+  const _BandClipper({this.top, this.bottom});
+
+  @override
+  Rect getClip(Size size) => bottom != null
+      ? Rect.fromLTRB(0, 0, size.width, bottom!)
+      : Rect.fromLTRB(0, top!, size.width, size.height);
+
+  @override
+  bool shouldReclip(_BandClipper old) => old.top != top || old.bottom != bottom;
 }

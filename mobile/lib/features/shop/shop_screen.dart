@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/motion/motion_widgets.dart';
+import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/item_icon_image.dart';
 import '../../core/widgets/item_obtained_overlay.dart';
@@ -24,6 +29,9 @@ class ShopScreen extends ConsumerStatefulWidget {
 class _ShopScreenState extends ConsumerState<ShopScreen> {
   bool busy = false;
   Timer? timer;
+
+  /// Item id of the offer just bought — its tile plays the SOLD stamp.
+  final _soldId = ValueNotifier<String?>(null);
   @override
   void initState() {
     super.initState();
@@ -35,6 +43,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   @override
   void dispose() {
     timer?.cancel();
+    _soldId.dispose();
     super.dispose();
   }
 
@@ -63,6 +72,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   shop: shop,
                   busy: busy,
                   refresh: _refresh,
+                  soldId: _soldId,
                   select: (o) => _offer(shop, o)),
               _Chests(shop: shop, busy: busy, select: (c) => _chest(shop, c)),
               const _ComingSoon(
@@ -104,7 +114,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             shop: shop));
     if (yes == true) {
       await _purchase(
-          () => ref.read(shopProvider.notifier).buyItem(offer.item.id));
+          () => ref.read(shopProvider.notifier).buyItem(offer.item.id),
+          soldItemId: offer.item.id);
     }
   }
 
@@ -126,7 +137,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     }
   }
 
-  Future<void> _purchase(Future<ShopPurchaseResult> Function() action) async {
+  Future<void> _purchase(Future<ShopPurchaseResult> Function() action,
+      {String? soldItemId}) async {
     if (!mounted) return;
     setState(() => busy = true);
     try {
@@ -135,6 +147,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ref.invalidate(equipmentProvider);
       ref.invalidate(characterProfileProvider);
       ref.invalidate(talentsProvider);
+      if (soldItemId != null && mounted && RewardFx.enabled(context)) {
+        // Let the SOLD stamp land before the reward overlay covers it.
+        _soldId.value = soldItemId;
+        await Future.delayed(const Duration(milliseconds: 900));
+      }
       if (mounted) showItemObtainedOverlay(context, result.grantedItem);
     } catch (e) {
       if (mounted) AppToast.error(context, e.toString());
@@ -220,7 +237,7 @@ class _Currency extends StatelessWidget {
       child: Row(children: [
         Image.asset(asset, width: 20),
         const SizedBox(width: 6),
-        Text(_num(value),
+        FlapText(_num(value),
             style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.w900))
       ]));
@@ -267,11 +284,13 @@ class _Daily extends StatelessWidget {
   final ShopData shop;
   final bool busy;
   final VoidCallback refresh;
+  final ValueListenable<String?> soldId;
   final ValueChanged<ShopOffer> select;
   const _Daily(
       {required this.shop,
       required this.busy,
       required this.refresh,
+      required this.soldId,
       required this.select});
   @override
   Widget build(BuildContext context) => Padding(
@@ -296,8 +315,12 @@ class _Daily extends StatelessWidget {
                 childAspectRatio: .72,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10),
-            itemBuilder: (_, i) => _Offer(
-                shop.dailyOffers[i], busy, () => select(shop.dailyOffers[i]))),
+            itemBuilder: (_, i) => _SoldStamp(
+                  itemId: shop.dailyOffers[i].item.id,
+                  soldId: soldId,
+                  child: _Offer(shop.dailyOffers[i], busy,
+                      () => select(shop.dailyOffers[i])),
+                )),
         if (!shop.refresh.canRefresh && shop.refresh.unavailableReason != null)
           Padding(
               padding: const EdgeInsets.only(top: 7),
@@ -329,6 +352,107 @@ class _Title extends StatelessWidget {
         ])),
         if (trailing != null) trailing!
       ]);
+}
+
+/// Slams a red SOLD stamp onto its child when [soldId] matches [itemId]:
+/// the stamp drops from 3× with a tilt, the tile dips, dust puffs out, and
+/// the stamp stays on the (now owned) tile.
+class _SoldStamp extends StatefulWidget {
+  final String itemId;
+  final ValueListenable<String?> soldId;
+  final Widget child;
+  const _SoldStamp(
+      {required this.itemId, required this.soldId, required this.child});
+
+  @override
+  State<_SoldStamp> createState() => _SoldStampState();
+}
+
+class _SoldStampState extends State<_SoldStamp>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 520))
+    ..addListener(() => setState(() {}));
+  final _key = GlobalKey();
+  bool _landed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.soldId.addListener(_check);
+  }
+
+  void _check() {
+    if (widget.soldId.value != widget.itemId) return;
+    _c.forward(from: 0);
+    Future.delayed(const Duration(milliseconds: 240), () {
+      if (!mounted) return;
+      setState(() => _landed = true);
+      final r = RewardFx.rectOf(_key);
+      if (r != null) {
+        RewardFx.burst(
+            context, r.center + const Offset(0, 10), const Color(0x99BEC8D2),
+            count: 16,
+            distance: 80,
+            size: 7,
+            duration: const Duration(milliseconds: 700));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.soldId.removeListener(_check);
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_c.value == 0) return widget.child;
+    final t = (_c.value / .6).clamp(0.0, 1.0);
+    final scale =
+        t < .75 ? 3 - 2.08 * (t / .75) : .92 + .08 * ((t - .75) / .25);
+    final dip = _landed && _c.value < .9
+        ? math.sin(((_c.value - .45) / .45).clamp(0.0, 1.0) * math.pi) * 3
+        : 0.0;
+    return Stack(
+      key: _key,
+      alignment: Alignment.center,
+      children: [
+        Transform.translate(offset: Offset(0, dip), child: widget.child),
+        IgnorePointer(
+          child: Opacity(
+            opacity: (t * 1.4).clamp(0.0, 1.0),
+            child: Transform.rotate(
+              angle: -14 * math.pi / 180,
+              child: Transform.scale(
+                scale: scale,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0x73040810),
+                    border: Border.all(color: AppColors.red, width: 3),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'SOLD',
+                    style: TextStyle(
+                      color: AppColors.red,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 3.5,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _Offer extends StatelessWidget {

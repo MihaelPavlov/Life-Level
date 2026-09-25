@@ -7,12 +7,17 @@ class BossHpBar extends StatelessWidget {
   final bool showLabel;
   final double height;
 
+  /// While a hit animation plays: the damage level the orange "ember" layer
+  /// still covers. It sits behind the red fill and burns down to [hpDealt].
+  final int? emberHpDealt;
+
   const BossHpBar({
     super.key,
     required this.hpDealt,
     required this.maxHp,
     this.showLabel = true,
     this.height = 10,
+    this.emberHpDealt,
   });
 
   @override
@@ -55,16 +60,36 @@ class BossHpBar extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(height / 2),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: percent.clamp(0.0, 1.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.red, Color(0xFFff6b35)],
+            child: Stack(
+              children: [
+                if (emberHpDealt != null && maxHp > 0)
+                  FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor:
+                        ((maxHp - emberHpDealt!) / maxHp).clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.orange, Color(0xFFFFDD8A)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(color: AppColors.orange, blurRadius: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: percent.clamp(0.0, 1.0),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.red, Color(0xFFff6b35)],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

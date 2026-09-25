@@ -2,7 +2,7 @@ using LifeLevel.Modules.Talents.Domain.Enums;
 
 namespace LifeLevel.Modules.Talents.Domain.Entities;
 
-/// <summary>Audit trail of every draw. Not read by gameplay in v1; kept for balancing / future pity.</summary>
+/// <summary>Audit trail of every successful draw and the authoritative source for progressive pricing.</summary>
 public class TalentDrawEntry
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -13,4 +13,7 @@ public class TalentDrawEntry
     public TalentDrawKind Kind { get; set; }
     public Guid TalentId { get; set; }
     public int CrystalsAwarded { get; set; }
+    public int DrawNumber { get; set; }
+    public int CoinsSpent { get; set; }
+    public int CrystalsSpent { get; set; }
 }

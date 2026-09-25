@@ -1,9 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/motion/motion_widgets.dart';
+import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
@@ -40,10 +44,101 @@ class ProfileOverviewTab extends StatelessWidget {
   }
 }
 
-class ProfileXpSection extends StatelessWidget {
+/// XP card. Gains fill the bar like liquid (the bar swells and a wave rides
+/// the leading edge); a level-up fills to the brim, sloshes, flashes
+/// LEVEL UP and refills from zero for the new level.
+class ProfileXpSection extends StatefulWidget {
   final CharacterProfile profile;
 
   const ProfileXpSection({super.key, required this.profile});
+
+  @override
+  State<ProfileXpSection> createState() => _ProfileXpSectionState();
+}
+
+class _ProfileXpSectionState extends State<ProfileXpSection>
+    with TickerProviderStateMixin {
+  CharacterProfile get profile => widget.profile;
+
+  late final AnimationController _fill = AnimationController(vsync: this)
+    ..addListener(() => setState(() {}));
+  late final AnimationController _wave = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 350));
+  late final AnimationController _slosh = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 500))
+    ..addListener(() => setState(() {}));
+  final _levelKey = GlobalKey();
+  final _cardKey = GlobalKey();
+
+  // Values shown while an animation runs (null → use the profile).
+  double? _pctFrom, _pctTo;
+  int? _xpFrom, _xpTo;
+  int? _levelShown;
+  bool _rushing = false;
+
+  @override
+  void didUpdateWidget(ProfileXpSection old) {
+    super.didUpdateWidget(old);
+    final o = old.profile, n = widget.profile;
+    if (n.level == o.level && n.xp <= o.xp) return;
+    if (n.level < o.level || !RewardFx.enabled(context)) return;
+    if (n.level == o.level) {
+      _animate(o.xpProgress, n.xpProgress, o.xp, n.xp,
+          const Duration(milliseconds: 1100));
+    } else {
+      _levelUp(o, n);
+    }
+  }
+
+  Future<void> _animate(
+      double from, double to, int xpFrom, int xpTo, Duration d) async {
+    _pctFrom = from;
+    _pctTo = to;
+    _xpFrom = xpFrom;
+    _xpTo = xpTo;
+    setState(() => _rushing = true);
+    _wave.repeat();
+    _fill.duration = d;
+    await _fill.forward(from: 0).orCancel.catchError((_) {});
+    if (!mounted) return;
+    _wave.stop();
+    setState(() {
+      _rushing = false;
+      _pctFrom = _pctTo = null;
+      _xpFrom = _xpTo = null;
+    });
+  }
+
+  Future<void> _levelUp(CharacterProfile o, CharacterProfile n) async {
+    _levelShown = o.level;
+    await _animate(o.xpProgress, 1, o.xp, o.xpForNextLevel,
+        const Duration(milliseconds: 800));
+    if (!mounted) return;
+    _slosh.forward(from: 0);
+    final card = RewardFx.rectOf(_cardKey);
+    if (card != null) {
+      RewardFx.floatText(context, card.center, 'LEVEL UP', Colors.white,
+          fontSize: 26,
+          rise: 30,
+          popScale: 1.15,
+          duration: const Duration(milliseconds: 1400));
+    }
+    await Future.delayed(const Duration(milliseconds: 450));
+    if (!mounted) return;
+    final lv = RewardFx.centerOf(_levelKey);
+    if (lv != null) RewardFx.ring(context, lv, kPBlue, maxRadius: 50);
+    setState(() => _levelShown = null);
+    await _animate(0, n.xpProgress, n.xpForCurrentLevel, n.xp,
+        const Duration(milliseconds: 600));
+  }
+
+  @override
+  void dispose() {
+    _fill.dispose();
+    _wave.dispose();
+    _slosh.dispose();
+    super.dispose();
+  }
 
   static void _showXPHistory(BuildContext context) {
     showAppBottomSheet(
@@ -56,14 +151,25 @@ class ProfileXpSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = profile.xpProgress;
-    final remaining = profile.xpRemaining;
+    final animating = _pctTo != null;
+    final e = Curves.easeOutCubic.transform(_fill.value);
+    final pct =
+        animating ? _pctFrom! + (_pctTo! - _pctFrom!) * e : profile.xpProgress;
+    final xpShown =
+        animating ? (_xpFrom! + (_xpTo! - _xpFrom!) * e).round() : profile.xp;
+    final level = _levelShown ?? profile.level;
+    final nextAt = _levelShown != null ? _xpTo! : profile.xpForNextLevel;
+    final remaining = nextAt - xpShown;
+    final sloshK = _slosh.isAnimating
+        ? math.sin(_slosh.value * math.pi * 3) * (1 - _slosh.value)
+        : 0.0;
 
     return GestureDetector(
       onTap: () => _showXPHistory(context),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
+          key: _cardKey,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: kPSurface,
@@ -76,6 +182,7 @@ class ProfileXpSection extends StatelessWidget {
               Row(
                 children: [
                   Container(
+                    key: _levelKey,
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
@@ -93,7 +200,7 @@ class ProfileXpSection extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        '${profile.level}',
+                        '$level',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -110,7 +217,7 @@ class ProfileXpSection extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              'Level ${profile.level}',
+                              'Level $level',
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -119,7 +226,7 @@ class ProfileXpSection extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '-> ${profile.level + 1}',
+                              '-> ${level + 1}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: kPTextSec,
@@ -129,7 +236,7 @@ class ProfileXpSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${fmtXp(profile.xp)} / ${fmtXp(profile.xpForNextLevel)} XP  ·  ${fmtXp(remaining < 0 ? 0 : remaining)} to go',
+                          '${fmtXp(xpShown)} / ${fmtXp(nextAt)} XP  ·  ${fmtXp(remaining < 0 ? 0 : remaining)} to go',
                           style: const TextStyle(
                             fontSize: 10,
                             color: kPTextSec,
@@ -150,22 +257,55 @@ class ProfileXpSection extends StatelessWidget {
                   const Icon(Icons.history, size: 14, color: kPTextSec),
                 ],
               ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: Stack(
-                  children: [
-                    Container(height: 8, color: kPSurface2),
-                    FractionallySizedBox(
-                      widthFactor: pct,
-                      child: Container(
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(colors: [kPBlue, kPPurple]),
+              SizedBox(height: _rushing ? 9 : 12),
+              Transform(
+                alignment: Alignment.centerLeft,
+                transform: Matrix4.diagonal3Values(1, 1 + .35 * sloshK, 1),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  height: _rushing ? 14 : 8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: sloshK.abs() > .01
+                        ? [
+                            BoxShadow(
+                                color: kPPurple.withValues(
+                                    alpha: .6 * sloshK.abs()),
+                                blurRadius: 24)
+                          ]
+                        : null,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Container(color: kPSurface2),
+                        FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: pct.clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient:
+                                  LinearGradient(colors: [kPBlue, kPPurple]),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (_rushing)
+                          Align(
+                            alignment:
+                                Alignment(pct.clamp(0.0, 1.0) * 2 - 1, 0),
+                            child: AnimatedBuilder(
+                              animation: _wave,
+                              builder: (_, __) => CustomPaint(
+                                size: const Size(8, 14),
+                                painter: _WaveEdgePainter(_wave.value),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -210,8 +350,19 @@ class ProfileStatsSection extends StatelessWidget {
                     visualScale: 1.35,
                   ),
                   const SizedBox(width: 8),
+                  FlipSwap(
+                    value: availablePoints,
+                    child: Text(
+                      '$availablePoints',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.blue,
+                      ),
+                    ),
+                  ),
                   Text(
-                    '$availablePoints stat point${availablePoints == 1 ? '' : 's'} available — tap + to spend',
+                    ' stat point${availablePoints == 1 ? '' : 's'} available — tap + to spend',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -257,8 +408,39 @@ class ProfileStatCard extends ConsumerStatefulWidget {
   ConsumerState<ProfileStatCard> createState() => _ProfileStatCardState();
 }
 
-class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
+class _ProfileStatCardState extends ConsumerState<ProfileStatCard>
+    with SingleTickerProviderStateMixin {
   bool _spending = false;
+
+  // "Gauge tick": when the value rises the bar steps forward with a glow,
+  // the number slides up to its new value and a +N rune floats above it.
+  late final AnimationController _tick = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 800))
+    ..addListener(() => setState(() {}));
+  final _valueKey = GlobalKey();
+
+  @override
+  void didUpdateWidget(ProfileStatCard old) {
+    super.didUpdateWidget(old);
+    final gained = widget.stat.value - old.stat.value;
+    if (old.stat.key != widget.stat.key || gained <= 0) return;
+    if (!RewardFx.enabled(context)) return;
+    _tick.forward(from: 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final p = RewardFx.centerOf(_valueKey);
+      if (p == null) return;
+      RewardFx.floatText(
+          context, p + const Offset(0, -14), '+$gained', widget.stat.color,
+          rise: 22, duration: const Duration(milliseconds: 1000));
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick.dispose();
+    super.dispose();
+  }
 
   void _showDetail(BuildContext context) {
     showAppBottomSheet(
@@ -289,6 +471,9 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
   Widget build(BuildContext context) {
     final pct = (widget.stat.value / 100.0).clamp(0.0, 1.0);
     final hasPoints = widget.availablePoints > 0;
+    final glow = _tick.isAnimating
+        ? (_tick.value < .4 ? _tick.value / .4 : 1 - (_tick.value - .4) / .6)
+        : 0.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -302,6 +487,13 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
             border: Border.all(
               color: hasPoints ? widget.stat.color.withOpacity(0.5) : kPBorder,
             ),
+            boxShadow: glow > 0
+                ? [
+                    BoxShadow(
+                        color: widget.stat.color.withValues(alpha: .4 * glow),
+                        blurRadius: 16)
+                  ]
+                : null,
           ),
           child: Row(
             children: [
@@ -327,18 +519,26 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
                   child: Stack(
                     children: [
                       Container(height: 5, color: kPSurface2),
-                      FractionallySizedBox(
-                        widthFactor: pct,
-                        child: Container(
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: widget.stat.color,
-                            boxShadow: [
-                              BoxShadow(
-                                color: widget.stat.color.withOpacity(0.5),
-                                blurRadius: 6,
-                              ),
-                            ],
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(end: pct),
+                        duration: AppMotion.duration(
+                            context, const Duration(milliseconds: 600)),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, v, __) => FractionallySizedBox(
+                          widthFactor: v,
+                          child: Container(
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Color.lerp(
+                                  widget.stat.color, Colors.white, .45 * glow),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: widget.stat.color
+                                      .withOpacity(0.5 + .5 * glow),
+                                  blurRadius: 6 + 10 * glow,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -350,13 +550,15 @@ class _ProfileStatCardState extends ConsumerState<ProfileStatCard> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '${widget.stat.value}',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: widget.stat.color,
+                  KeyedSubtree(
+                    key: _valueKey,
+                    child: SlotNumber(
+                      '${widget.stat.value}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: widget.stat.color,
+                      ),
                     ),
                   ),
                   if (widget.stat.gearBonus > 0) ...[
@@ -568,4 +770,28 @@ class _TalentBonusSection extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Wavy leading edge painted on the XP bar while it fills.
+class _WaveEdgePainter extends CustomPainter {
+  final double phase;
+  _WaveEdgePainter(this.phase);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()..moveTo(0, 0);
+    const waves = 2.0;
+    for (var y = 0.0; y <= size.height; y += 1) {
+      final x = size.width *
+          (.5 + .5 * math.sin((y / size.height * waves + phase) * 2 * math.pi));
+      path.lineTo(x, y);
+    }
+    path
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(path, Paint()..color = const Color(0xFFE0B8FF));
+  }
+
+  @override
+  bool shouldRepaint(_WaveEdgePainter old) => old.phase != phase;
 }

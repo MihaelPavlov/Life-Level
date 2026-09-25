@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/reward_fx.dart';
 import '../../activity/log_activity_screen.dart';
 import '../models/boss_list_item.dart';
 import '../providers/boss_provider.dart';
@@ -27,9 +30,119 @@ class BossBattleView extends ConsumerStatefulWidget {
   ConsumerState<BossBattleView> createState() => _BossBattleViewState();
 }
 
-class _BossBattleViewState extends ConsumerState<BossBattleView> {
+class _BossBattleViewState extends ConsumerState<BossBattleView>
+    with SingleTickerProviderStateMixin {
   BossListItem get boss => widget.boss;
   VoidCallback get onBack => widget.onBack;
+
+  // ── Hit animation ("slash + ember burn") ──
+  // Plays when hpDealt rises while the battle is on screen: a slash across
+  // the avatar, a short screen shake, a floating damage number, the HP
+  // number counting down and the lost HP burning away as an orange ember.
+  static const _hitMs = 1300.0;
+  final _avatarKey = GlobalKey();
+  late final AnimationController _hit = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1300))
+    ..addListener(() => setState(() {}));
+  int _dealtFrom = 0;
+  int _dealtTo = 0;
+
+  double get _hitMsNow => _hit.value * _hitMs;
+  bool get _hitting => _hit.isAnimating;
+
+  double _phase(double start, double len, [Curve curve = Curves.linear]) =>
+      curve.transform(((_hitMsNow - start) / len).clamp(0.0, 1.0));
+
+  /// Damage dealt as currently displayed (counts up during a hit).
+  int get _shownDealt => _hitting
+      ? (_dealtFrom +
+              (_dealtTo - _dealtFrom) * _phase(120, 700, Curves.easeOutCubic))
+          .round()
+      : boss.hpDealt;
+
+  double get _shakeDx {
+    if (!_hitting) return 0;
+    final p = _phase(120, 380);
+    if (p <= 0 || p >= 1) return 0;
+    return math.sin(p * math.pi * 6) * 6 * (1 - p);
+  }
+
+  void _playHit(int from, int to) {
+    if (!RewardFx.enabled(context)) return;
+    _dealtFrom = from;
+    _dealtTo = to;
+    _hit.forward(from: 0);
+    AppMotion.haptic(AppHaptic.light);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final c = RewardFx.centerOf(_avatarKey);
+      if (c == null) return;
+      RewardFx.run(
+        context,
+        duration: const Duration(milliseconds: 360),
+        builder: (t, origin) => _slash(c - origin, t),
+      );
+      RewardFx.burst(context, c, AppColors.red,
+          count: 12, distance: 60, delay: const Duration(milliseconds: 120));
+      RewardFx.floatText(
+        context,
+        c + const Offset(30, -80),
+        '−${_fmtNumber(to - from)}',
+        AppColors.orange,
+        fontSize: 26,
+        rise: 28,
+        popScale: 1.2,
+        duration: const Duration(milliseconds: 1300),
+        delay: const Duration(milliseconds: 120),
+      );
+    });
+  }
+
+  Widget _slash(Offset c, double t) {
+    final grow = (t / .5).clamp(0.0, 1.0);
+    final fade = t < .5 ? 1.0 : 1 - (t - .5) / .5;
+    return Positioned(
+      left: c.dx - 85,
+      top: c.dy - 2.5,
+      child: Opacity(
+        opacity: fade,
+        child: Transform.rotate(
+          angle: -35 * math.pi / 180,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.diagonal3Values(1.3 * grow, 1, 1),
+            child: Container(
+              width: 170,
+              height: 5,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                gradient: const LinearGradient(colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Color(0xFFFFD0CC),
+                  Colors.transparent,
+                ], stops: [
+                  0,
+                  .4,
+                  .6,
+                  1
+                ]),
+                boxShadow: const [
+                  BoxShadow(color: Colors.white, blurRadius: 14),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hit.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -43,6 +156,10 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
     if (oldWidget.boss.id != widget.boss.id ||
         oldWidget.boss.hpDealt != widget.boss.hpDealt) {
       Future.microtask(_refreshBattleData);
+    }
+    if (oldWidget.boss.id == widget.boss.id &&
+        widget.boss.hpDealt > oldWidget.boss.hpDealt) {
+      _playHit(oldWidget.boss.hpDealt, widget.boss.hpDealt);
     }
   }
 
@@ -132,9 +249,14 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                   child: ListView(
                     padding: const EdgeInsets.only(bottom: 40),
                     children: [
-                      _buildHero(),
-                      const SizedBox(height: 16),
-                      _buildHpSection(),
+                      Transform.translate(
+                        offset: Offset(_shakeDx, 0),
+                        child: Column(children: [
+                          _buildHero(),
+                          const SizedBox(height: 16),
+                          _buildHpSection(),
+                        ]),
+                      ),
                       const SizedBox(height: 12),
                       _buildPlayerSection(),
                       const SizedBox(height: 16),
@@ -206,29 +328,48 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                         width: 1.5),
                   ),
                 ),
-                Container(
-                  width: 104,
-                  height: 104,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF230808),
-                    border: Border.all(color: AppColors.red, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.red.withValues(alpha: 0.5),
-                          blurRadius: 30),
-                      BoxShadow(
-                          color: AppColors.red.withValues(alpha: 0.15),
-                          blurRadius: 60),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: BossIcon(
-                    icon: boss.icon,
-                    size: 88,
-                    emojiSize: 50,
-                    visualScale: 1.15,
-                    visualOffset: const Offset(-0.75, -1.5),
+                Transform.translate(
+                  offset: Offset(
+                      _hitting
+                          ? -10 *
+                              math.sin(_phase(120, 500) * math.pi) *
+                              (1 - _phase(120, 500))
+                          : 0,
+                      0),
+                  child: Container(
+                    key: _avatarKey,
+                    width: 104,
+                    height: 104,
+                    foregroundDecoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(
+                          alpha: _hitting
+                              ? .45 *
+                                  (1 - _phase(120, 300)) *
+                                  (_hitMsNow >= 120 ? 1 : 0)
+                              : 0),
+                    ),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF230808),
+                      border: Border.all(color: AppColors.red, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                            color: AppColors.red.withValues(alpha: 0.5),
+                            blurRadius: 30),
+                        BoxShadow(
+                            color: AppColors.red.withValues(alpha: 0.15),
+                            blurRadius: 60),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: BossIcon(
+                      icon: boss.icon,
+                      size: 88,
+                      emojiSize: 50,
+                      visualScale: 1.15,
+                      visualOffset: const Offset(-0.75, -1.5),
+                    ),
                   ),
                 ),
               ],
@@ -272,7 +413,7 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
                 ),
               ),
               Text(
-                '${_fmtNumber(boss.maxHp - boss.hpDealt)} / ${_fmtNumber(boss.maxHp)}',
+                '${_fmtNumber(boss.maxHp - _shownDealt)} / ${_fmtNumber(boss.maxHp)}',
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 13,
@@ -283,15 +424,21 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
           ),
           const SizedBox(height: 7),
           BossHpBar(
-              hpDealt: boss.hpDealt,
+              hpDealt: _hitting && _hitMsNow < 120 ? _dealtFrom : boss.hpDealt,
               maxHp: boss.maxHp,
               showLabel: false,
-              height: 14),
+              height: 14,
+              emberHpDealt: _hitting
+                  ? (_dealtFrom +
+                          (_dealtTo - _dealtFrom) *
+                              _phase(320, 900, const Cubic(.5, 0, .6, 1)))
+                      .round()
+                  : null),
           const SizedBox(height: 5),
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              '${((boss.maxHp - boss.hpDealt) / boss.maxHp * 100).toStringAsFixed(0)}% remaining',
+              '${((boss.maxHp - _shownDealt) / boss.maxHp * 100).toStringAsFixed(0)}% remaining',
               style: const TextStyle(color: Color(0xFF586070), fontSize: 10),
             ),
           ),
@@ -332,7 +479,7 @@ class _BossBattleViewState extends ConsumerState<BossBattleView> {
             ],
           ),
           Text(
-            _fmtNumber(boss.hpDealt),
+            _fmtNumber(_shownDealt),
             style: const TextStyle(
               color: AppColors.red,
               fontSize: 26,

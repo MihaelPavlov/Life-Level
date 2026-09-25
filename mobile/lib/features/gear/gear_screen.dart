@@ -99,7 +99,6 @@ class GearScreen extends ConsumerWidget {
                               onSlotTap: (slotType, item) =>
                                   showGearItemDetailSheet(
                                 context,
-                                ref: ref,
                                 item: item,
                               ),
                             ),

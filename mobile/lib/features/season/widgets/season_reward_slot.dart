@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/reward_fx.dart';
 import '../models/season_models.dart';
 import 'season_theme.dart';
 
 /// A single reward tile — one of four states: received / locked / pending / ready.
 /// Tapping a `ready` tile calls [onClaim].
-class SeasonRewardSlot extends StatelessWidget {
+///
+/// State changes animate: becoming `ready` pops the tile with a glow;
+/// being claimed (`ready` → `received`) bursts rays out of the icon while
+/// the reward icon flies up and fades.
+class SeasonRewardSlot extends StatefulWidget {
   final SeasonRewardView reward;
   final bool isFounderLane;
   final VoidCallback? onClaim;
@@ -15,6 +20,91 @@ class SeasonRewardSlot extends StatelessWidget {
     required this.reward,
     required this.isFounderLane,
     this.onClaim,
+  });
+
+  @override
+  State<SeasonRewardSlot> createState() => _SeasonRewardSlotState();
+}
+
+class _SeasonRewardSlotState extends State<SeasonRewardSlot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pop = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 380))
+    ..addListener(() => setState(() {}));
+  final _icon = FxAnchor();
+
+  @override
+  void didUpdateWidget(SeasonRewardSlot old) {
+    super.didUpdateWidget(old);
+    final was = old.reward.state, now = widget.reward.state;
+    if (was == now || !RewardFx.enabled(context)) return;
+    if (now == SeasonRewardState.ready) {
+      _pop.forward(from: 0);
+    } else if (was == SeasonRewardState.ready &&
+        now == SeasonRewardState.received) {
+      final c = _icon.center;
+      if (c == null) return;
+      RewardFx.rays(context, c, AppColors.green, radius: 64);
+      RewardFx.burst(context, c, AppColors.green, count: 10, distance: 40);
+      RewardFx.run(
+        context,
+        duration: const Duration(milliseconds: 900),
+        builder: (t, origin) {
+          final p = c - origin + Offset(0, -72 * Curves.easeOut.transform(t));
+          final scale = t < .5 ? 1 + .8 * (t / .5) : 1.8 - .4 * ((t - .5) / .5);
+          return Positioned(
+            left: p.dx - 16,
+            top: p.dy - 16,
+            child: Opacity(
+              opacity: t < .5 ? 1 : 1 - (t - .5) / .5,
+              child: Transform.scale(
+                scale: scale,
+                child: Image.asset(seasonIconAsset(widget.reward.iconKey),
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const SizedBox()),
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _pop.value;
+    final k = _pop.isAnimating ? (t < .6 ? t / .6 : 1 - (t - .6) / .4) : 0.0;
+    return Transform.scale(
+      scale: 1 + .04 * k,
+      child: _SlotBody(
+        reward: widget.reward,
+        isFounderLane: widget.isFounderLane,
+        onClaim: widget.onClaim,
+        icon: _icon,
+      ),
+    );
+  }
+}
+
+class _SlotBody extends StatelessWidget {
+  final SeasonRewardView reward;
+  final bool isFounderLane;
+  final VoidCallback? onClaim;
+  final FxAnchor icon;
+
+  const _SlotBody({
+    required this.reward,
+    required this.isFounderLane,
+    required this.onClaim,
+    required this.icon,
   });
 
   @override
@@ -64,26 +154,13 @@ class SeasonRewardSlot extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Image.asset(
-                  seasonIconAsset(reward.iconKey),
-                  width: 32,
-                  height: 32,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.card_giftcard_rounded,
-                    size: 28,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                if (locked && !received)
-                  const Positioned.fill(
-                    child: Icon(Icons.lock_rounded,
-                        size: 16, color: AppColors.textMuted),
-                  ),
-              ],
+            FxAnchorTarget(
+              anchor: icon,
+              child: SeasonRewardAsset(
+                iconKey: reward.iconKey,
+                size: 32,
+                locked: locked && !received,
+              ),
             ),
             const SizedBox(width: 9),
             Expanded(

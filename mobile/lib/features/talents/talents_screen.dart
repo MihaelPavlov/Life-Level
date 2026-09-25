@@ -34,13 +34,14 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
   // opens gently in the centre.
   late final AnimationController _sweepCtrl = AnimationController(vsync: this);
   late final AnimationController _revealCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 700));
+      vsync: this, duration: const Duration(milliseconds: 800));
   late final Animation<double> _revealAnim =
       CurvedAnimation(parent: _revealCtrl, curve: Curves.easeOutCubic);
-  // Fractional sweep position. Tiles convert it to one active integer index
-  // so the highlight jumps cleanly and never lights neighboring cards.
+  // Spotlight spin: raw 0..1 progress plus the random tile path it drifts
+  // along (always ending on the drawn talent). The grid turns these into a
+  // spotlight position and a per-tile glow each frame.
   Animation<double>? _sweepAnim;
-  int _sweepLength = 0;
+  List<int>? _sweepPath;
   // Authoritative data for the just-drawn talent, from the draw API result
   // itself rather than the (still-refreshing) live grid — set at the exact
   // moment the sweep lands, never before, so the reveal can't spoil itself
@@ -172,6 +173,7 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
         setState(() {
           _busy = false;
           _sweepAnim = null;
+          _sweepPath = null;
           if (!revealing) {
             _selectedKey = null;
             _revealTalent = null;
@@ -183,17 +185,30 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
     }
   }
 
-  /// Jumps a single highlight across the real grid tiles, looping a couple
-  /// of times before decelerating into `targetIndex`.
+  /// "Spotlight" spin: the grid dims and a soft spotlight drifts over a
+  /// fully random path of tiles, slows down, and settles on `targetIndex`.
   Future<void> _runSweep(int targetIndex, int length) async {
-    const loops = 2;
-    final totalSteps = loops * length + targetIndex;
-    _sweepCtrl.duration = const Duration(milliseconds: 1500);
-    final anim = Tween<double>(begin: 0, end: totalSteps.toDouble()).animate(
-        CurvedAnimation(parent: _sweepCtrl, curve: Curves.easeOutCubic));
+    final rng = math.Random();
+    final path = <int>[];
+    if (length > 1) {
+      final hops = 12 + rng.nextInt(5);
+      path.add(rng.nextInt(length));
+      while (path.length < hops) {
+        int next;
+        do {
+          next = rng.nextInt(length);
+        } while (next == path.last);
+        path.add(next);
+      }
+      if (path.last == targetIndex) {
+        path.add((targetIndex + 1 + rng.nextInt(length - 1)) % length);
+      }
+    }
+    path.add(targetIndex);
+    _sweepCtrl.duration = const Duration(milliseconds: 3000);
     setState(() {
-      _sweepAnim = anim;
-      _sweepLength = length;
+      _sweepAnim = _sweepCtrl;
+      _sweepPath = path;
     });
     await _sweepCtrl.forward(from: 0);
   }
@@ -244,7 +259,7 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
                       },
                       onDraw: _draw,
                       sweepAnim: _sweepAnim,
-                      sweepLength: _sweepLength,
+                      sweepPath: _sweepPath,
                     ),
                   ),
                 ),
@@ -358,7 +373,7 @@ class _Body extends StatelessWidget {
   final ValueChanged<String> onSelect;
   final VoidCallback onDraw;
   final Animation<double>? sweepAnim;
-  final int sweepLength;
+  final List<int>? sweepPath;
 
   const _Body({
     required this.screen,
@@ -367,7 +382,7 @@ class _Body extends StatelessWidget {
     required this.onSelect,
     required this.onDraw,
     required this.sweepAnim,
-    required this.sweepLength,
+    required this.sweepPath,
   });
 
   @override
@@ -382,7 +397,7 @@ class _Body extends StatelessWidget {
           busy: busy,
           onSelect: onSelect,
           sweepAnim: sweepAnim,
-          sweepLength: sweepLength,
+          sweepPath: sweepPath,
         ),
         const SizedBox(height: 16),
         Center(
@@ -394,6 +409,7 @@ class _Body extends StatelessWidget {
               // Also disabled while a talent is popped up — drawing while
               // looking at one would fight the reveal for attention.
               enabled: screen.canDraw && !busy && !hasSelection,
+              collectionComplete: screen.collectionComplete,
               onTap: onDraw,
             ),
           ),
@@ -457,7 +473,7 @@ class _TalentGrid extends StatelessWidget {
   final bool busy;
   final ValueChanged<String> onSelect;
   final Animation<double>? sweepAnim;
-  final int sweepLength;
+  final List<int>? sweepPath;
 
   static const int _kCols = 4;
   static const double _kSpacing = 12;
@@ -469,11 +485,28 @@ class _TalentGrid extends StatelessWidget {
     required this.busy,
     required this.onSelect,
     required this.sweepAnim,
-    required this.sweepLength,
+    required this.sweepPath,
   });
+
+  // Spotlight timeline: travel for the first 85%, then settle on the
+  // result (the landed tile brightens and lifts, everything else fades).
+  static const double _kTravelEnd = .85;
+
+  static double _outQuint(double p) => 1 - math.pow(1 - p, 5).toDouble();
+  static double _inOut(double p) =>
+      p < .5 ? 4 * p * p * p : 1 - math.pow(-2 * p + 2, 3).toDouble() / 2;
 
   @override
   Widget build(BuildContext context) {
+    final anim = sweepAnim, path = sweepPath;
+    if (anim == null || path == null || path.isEmpty) return _grid(null, 0);
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (context, _) => _grid(path, anim.value),
+    );
+  }
+
+  Widget _grid(List<int>? path, double t) {
     if (talents.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
@@ -492,6 +525,53 @@ class _TalentGrid extends StatelessWidget {
       final rowCount = (talents.length / _kCols).ceil();
 
       final children = <Widget>[];
+      Offset centerOf(int i) => Offset(
+          (i % _kCols) * (tileW + _kSpacing) + tileW / 2,
+          (i ~/ _kCols) * rowStep + tileH / 2);
+
+      // Spotlight position + settle progress for this frame.
+      Offset? spot;
+      var settle = 0.0;
+      if (path != null) {
+        if (t < _kTravelEnd || path.length == 1) {
+          final f =
+              _outQuint((t / _kTravelEnd).clamp(0.0, 1.0)) * (path.length - 1);
+          final a = f.floor().clamp(0, path.length - 1);
+          final b = (a + 1).clamp(0, path.length - 1);
+          spot =
+              Offset.lerp(centerOf(path[a]), centerOf(path[b]), _inOut(f - a))!;
+        } else {
+          spot = centerOf(path.last);
+          settle = Curves.easeOut
+              .transform(((t - _kTravelEnd) / (1 - _kTravelEnd)).clamp(0, 1));
+        }
+      }
+      double intensityOf(int i) {
+        if (spot == null) return 0;
+        if (settle > 0) {
+          return i == path!.last ? .55 + .45 * settle : 0;
+        }
+        final d = (centerOf(i) - spot).distance;
+        return (1 - d / (tileW * .8)).clamp(0.0, 1.0) * .55;
+      }
+
+      if (spot != null) {
+        // Dim the grid so the spotlight reads as light.
+        children.add(Positioned(
+          left: -8,
+          top: -8,
+          right: -8,
+          height: (rowCount - 1) * rowStep + tileH + 16,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.background.withValues(alpha: .5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ));
+      }
 
       for (var idx = 0; idx < talents.length; idx++) {
         final t = talents[idx];
@@ -511,9 +591,36 @@ class _TalentGrid extends StatelessWidget {
             // Locked (not-owned) talents are non-interactive; all tiles are
             // inert while a draw's sweep/win flourish is playing.
             onTap: (t.owned && !busy) ? () => onSelect(t.key) : null,
-            sweepAnim: sweepAnim,
-            tileIndex: idx,
-            sweepLength: sweepLength,
+            sweepIntensity: intensityOf(idx),
+          ),
+        ));
+      }
+
+      if (spot != null) {
+        final r = tileW * 1.25;
+        children.add(Positioned(
+          left: spot.dx - r,
+          top: spot.dy - r,
+          width: r * 2,
+          height: r * 2,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 1 - .6 * settle,
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [
+                    Color(0x52FFE2A0),
+                    Color(0x24FFA11C),
+                    Color(0x00FFA11C),
+                  ], stops: [
+                    0,
+                    .45,
+                    1
+                  ]),
+                ),
+              ),
+            ),
           ),
         ));
       }
@@ -643,6 +750,41 @@ class _PoppedOverlay extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isRevealTarget)
+                  Positioned(
+                    left: cx - bigW,
+                    top: cy - bigW,
+                    width: bigW * 2,
+                    height: bigW * 2,
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: revealAnim,
+                        builder: (context, _) {
+                          final v = revealAnim.value.clamp(0.0, 1.0);
+                          return Opacity(
+                            opacity: v,
+                            child: Transform.scale(
+                              scale: .45 + .6 * v,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(colors: [
+                                    levelUpColor.withValues(alpha: .45),
+                                    levelUpColor.withValues(alpha: .12),
+                                    levelUpColor.withValues(alpha: 0),
+                                  ], stops: const [
+                                    0,
+                                    .55,
+                                    1
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 Positioned(
                   left: bigLeft,
                   top: bigTop,
@@ -917,11 +1059,9 @@ class _HexTalentTile extends StatelessWidget {
   final TalentView talent;
   final bool selected;
   final VoidCallback? onTap;
-  // The border sweep's position plus this tile's own index/grid length.
-  // Each frame resolves to exactly one highlighted tile.
-  final Animation<double>? sweepAnim;
-  final int? tileIndex;
-  final int? sweepLength;
+  // How strongly the draw spotlight is on this tile (0..1). Above .55 the
+  // tile is the landed result and lifts slightly.
+  final double sweepIntensity;
   // Non-null only for the popped-up card the draw just landed on — it
   // drives a soft reveal tilt plus a growing Lv badge, so the
   // "new/updated" result reads clearly without feeling jumpy.
@@ -931,9 +1071,7 @@ class _HexTalentTile extends StatelessWidget {
     required this.talent,
     required this.selected,
     required this.onTap,
-    this.sweepAnim,
-    this.tileIndex,
-    this.sweepLength,
+    this.sweepIntensity = 0,
     this.revealAnim,
   });
 
@@ -944,36 +1082,31 @@ class _HexTalentTile extends StatelessWidget {
     final borderW = selected ? 3.0 : 1.6;
     final anim = revealAnim;
 
-    Widget hex;
-    final sweep = sweepAnim;
-    if (sweep != null &&
-        sweepLength != null &&
-        sweepLength! > 0 &&
-        tileIndex != null) {
-      hex = AnimatedBuilder(
-        animation: sweep,
-        builder: (context, _) {
-          final activeIndex = sweep.value.floor() % sweepLength!;
-          final isActive = activeIndex == tileIndex;
-          return _buildHex(accent, dim, borderW, isActive ? 1.0 : 0.0);
-        },
+    Widget hex = _buildHex(accent, dim, borderW, sweepIntensity);
+    if (sweepIntensity > .55) {
+      final lift = (sweepIntensity - .55) / .45;
+      hex = Transform.translate(
+        offset: Offset(0, -4 * lift),
+        child: Transform.scale(scale: 1 + .06 * lift, child: hex),
       );
-    } else {
-      hex = _buildHex(accent, dim, borderW, 0.0);
     }
-
     if (anim != null) {
       hex = AnimatedBuilder(
         animation: anim,
         builder: (context, child) {
-          final angle = (1 - anim.value) * 0.22;
-          final lift = (1 - anim.value) * 6;
-          return Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.0015)
-              ..rotateY(angle),
-            child: Transform.translate(offset: Offset(0, lift), child: child),
+          // Unfold: starts turned almost edge-on and swings flat, with a
+          // small overshoot past flat before settling.
+          final v = anim.value;
+          final angle = (1 - v) * 1.45 - math.sin(v * math.pi) * .12;
+          return Opacity(
+            opacity: (.2 + .8 * (v / .3)).clamp(0.0, 1.0),
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0015)
+                ..rotateY(angle),
+              child: child,
+            ),
           );
         },
         child: hex,
@@ -1089,12 +1222,14 @@ class _DrawButton extends StatelessWidget {
   final int crystalCost;
   final int coinCost;
   final bool enabled;
+  final bool collectionComplete;
   final VoidCallback onTap;
 
   const _DrawButton({
     required this.crystalCost,
     required this.coinCost,
     required this.enabled,
+    required this.collectionComplete,
     required this.onTap,
   });
 
@@ -1128,17 +1263,23 @@ class _DrawButton extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const _OutlinedText('Card Draw',
-                            fontSize: 17, letterSpacing: 0.5),
+                        _OutlinedText(
+                            collectionComplete
+                                ? 'Talent Collection Complete'
+                                : 'Card Draw',
+                            fontSize: collectionComplete ? 13 : 17,
+                            letterSpacing: 0.5),
                         const SizedBox(height: 3),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _drawChip(AppIcons.homeCoinIcon, coinCost),
-                            const SizedBox(width: 14),
-                            _drawChip(AppIcons.talentCrystalIcon, crystalCost),
-                          ],
-                        ),
+                        if (!collectionComplete)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _drawChip(AppIcons.homeCoinIcon, coinCost),
+                              const SizedBox(width: 14),
+                              _drawChip(
+                                  AppIcons.talentCrystalIcon, crystalCost),
+                            ],
+                          ),
                       ],
                     ),
                   ),

@@ -30,8 +30,41 @@ public static class TalentEconomy
 
     // ── Draw ───────────────────────────────────────────────────────────────
 
-    public const int DrawCrystalCost = 1;
-    public const int DrawCoinCost = 300;
+    public const int BaseDrawCrystalCost = 1;
+    public const int BaseDrawCoinCost = 300;
+    private const double DrawGrowthRate = 1.015;
+    private const double DrawCoinLinearGrowth = 67.999411685344;
+    private const double DrawCoinExponentialGrowth = 43.279658674746;
+    private const double DrawCrystalLinearGrowth = 0.053924695724;
+    private const double DrawCrystalExponentialGrowth = 5.539796310368;
+
+    /// <summary>
+    /// Prices use the number of successful draws already completed. The linear component
+    /// keeps early growth predictable while the exponential component becomes meaningful
+    /// later. The fitted curve costs 1,675 Coins + 4 Crystals after 20 completed draws and
+    /// 8,675 Coins + 35 Crystals after 120 completed draws.
+    /// </summary>
+    public static int DrawCoinCost(int completedDraws)
+    {
+        var n = Math.Max(0, completedDraws);
+        var raw = BaseDrawCoinCost
+            + DrawCoinLinearGrowth * n
+            + DrawCoinExponentialGrowth * (Math.Pow(DrawGrowthRate, n) - 1);
+        if (!double.IsFinite(raw) || raw >= int.MaxValue) return int.MaxValue;
+        return Math.Max(BaseDrawCoinCost,
+            (int)Math.Round(raw / 5, MidpointRounding.AwayFromZero) * 5);
+    }
+
+    public static int DrawCrystalCost(int completedDraws)
+    {
+        var n = Math.Max(0, completedDraws);
+        var raw = BaseDrawCrystalCost
+            + DrawCrystalLinearGrowth * n
+            + DrawCrystalExponentialGrowth * (Math.Pow(DrawGrowthRate, n) - 1);
+        if (!double.IsFinite(raw) || raw >= int.MaxValue) return int.MaxValue;
+        return Math.Max(BaseDrawCrystalCost,
+            (int)Math.Round(raw, MidpointRounding.AwayFromZero));
+    }
 
     /// <summary>Chance (0..1) a draw yields a brand-new talent, while un-owned talents remain.</summary>
     public const double NewTalentChance = 0.60;

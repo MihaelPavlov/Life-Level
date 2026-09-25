@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/motion_widgets.dart';
+import '../../../core/motion/reward_fx.dart';
 import '../../achievements/models/achievement_models.dart';
 import '../../achievements/providers/achievements_provider.dart';
 import '../../achievements/services/achievements_service.dart';
@@ -40,6 +42,10 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
   String _activeCategory = 'All';
   bool _checkingUnlocks = false;
 
+  /// Achievements unlocked by the check that ran when this tab opened —
+  /// their cards play the emboss + rays reveal once.
+  final Set<String> _celebrate = {};
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +58,7 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
     try {
       final result = await AchievementsService().checkUnlocks();
       if (result.newlyUnlockedIds.isNotEmpty && mounted) {
+        _celebrate.addAll(result.newlyUnlockedIds.map((e) => e.toString()));
         ref.read(achievementsProvider.notifier).refresh();
         ref
             .read(achievementsByCategoryProvider(_activeCategory).notifier)
@@ -131,7 +138,11 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
         const SizedBox(height: 16),
         if (unlocked.isNotEmpty) ...[
           _SectionHeader('Recently Unlocked', unlocked.length),
-          ...unlocked.map((a) => _AchievementCard(a)),
+          ...unlocked.map((a) => _AchievementCard(
+                a,
+                celebrate: _celebrate.contains(a.id),
+                onCelebrated: () => _celebrate.remove(a.id),
+              )),
           const SizedBox(height: 8),
         ],
         if (inProgress.isNotEmpty) ...[
@@ -369,13 +380,81 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ── Achievement Card ──────────────────────────────────────────────────────────
-class _AchievementCard extends StatelessWidget {
+/// Achievement card. A freshly unlocked card ([celebrate]) plays
+/// "emboss + rays": tier-coloured light rays turn behind the icon, the icon
+/// rises off the card with a glow, higher tiers throw sparks, and
+/// "Completed!" types itself out.
+class _AchievementCard extends StatefulWidget {
   final AchievementDto achievement;
-  const _AchievementCard(this.achievement);
+  final bool celebrate;
+  final VoidCallback? onCelebrated;
+  const _AchievementCard(this.achievement,
+      {this.celebrate = false, this.onCelebrated});
+
+  @override
+  State<_AchievementCard> createState() => _AchievementCardState();
+}
+
+class _AchievementCardState extends State<_AchievementCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _rise = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1400))
+    ..addListener(() => setState(() {}));
+  final _iconKey = GlobalKey();
+  bool _typing = false;
+
+  AchievementDto get achievement => widget.achievement;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.celebrate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _play());
+    }
+  }
+
+  @override
+  void didUpdateWidget(_AchievementCard old) {
+    super.didUpdateWidget(old);
+    if (widget.celebrate && !old.celebrate) _play();
+  }
+
+  void _play() {
+    if (!mounted) return;
+    widget.onCelebrated?.call();
+    if (!RewardFx.enabled(context)) return;
+    final a = achievement;
+    final strong = a.tier == 'Epic' || a.tier == 'Legendary';
+    setState(() => _typing = true);
+    _rise.forward(from: 0);
+    final c = RewardFx.centerOf(_iconKey);
+    if (c == null) return;
+    RewardFx.rays(context, c, a.tierColor,
+        radius: strong ? 70 : 54,
+        duration: Duration(milliseconds: strong ? 2000 : 1500));
+    if (strong) {
+      RewardFx.burst(context, c, a.tierColor,
+          count: 14, distance: 56, delay: const Duration(milliseconds: 300));
+      RewardFx.burst(context, c, Colors.white,
+          count: 8, distance: 40, delay: const Duration(milliseconds: 550));
+    }
+  }
+
+  @override
+  void dispose() {
+    _rise.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final a = achievement;
+    final r = _rise.value;
+    final lift = _rise.isAnimating
+        ? (r < .45
+            ? Curves.easeOut.transform(r / .45)
+            : 1 - .6 * Curves.easeInOut.transform((r - .45) / .55))
+        : 0.0;
     final dimmed = !a.isUnlocked;
     final borderColor = a.tierColor.withOpacity(a.isUnlocked ? 0.7 : 0.25);
 
@@ -390,7 +469,30 @@ class _AchievementCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _IconBox(achievement: a, dimmed: dimmed),
+          Transform.translate(
+            offset: Offset(0, -6 * lift),
+            child: Transform.scale(
+              scale: 1 + .2 * lift,
+              child: DecoratedBox(
+                key: _iconKey,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: lift > 0
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(.6 * lift),
+                              blurRadius: 18,
+                              offset: Offset(0, 12 * lift)),
+                          BoxShadow(
+                              color: a.tierColor.withOpacity(.8 * lift),
+                              blurRadius: 22),
+                        ]
+                      : null,
+                ),
+                child: _IconBox(achievement: a, dimmed: dimmed),
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -448,14 +550,24 @@ class _AchievementCard extends StatelessWidget {
                     children: [
                       const Text('✅', style: TextStyle(fontSize: 11)),
                       const SizedBox(width: 4),
-                      const Text(
-                        'Completed!',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF3fb950),
+                      if (_typing)
+                        TypewriterText(
+                          'Completed! · ${a.tier} unlocked',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3fb950),
+                          ),
+                        )
+                      else
+                        const Text(
+                          'Completed!',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3fb950),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ],

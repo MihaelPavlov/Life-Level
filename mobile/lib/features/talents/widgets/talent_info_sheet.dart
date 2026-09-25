@@ -69,6 +69,13 @@ class _TalentInfoSheet extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
+              'Card Draw prices increase after each successful draw. Your '
+              'current Coin and Crystal cost is always shown on the draw button.',
+              style: TextStyle(
+                  fontSize: 12.5, height: 1.5, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 12),
+            const Text(
               'Crystals are needed for talent card draws. Each draw can '
               'unlock a new card or randomly upgrade one you already own. '
               'You earn Crystals by beating bosses, completing map regions, '

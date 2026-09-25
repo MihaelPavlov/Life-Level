@@ -11,6 +11,7 @@ import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../character/providers/character_provider.dart';
+import '../../home/providers/world_progress_provider.dart';
 import '../../tutorial/models/tutorial_step.dart';
 import '../../tutorial/providers/tutorial_provider.dart';
 import '../models/world_map_models.dart';
@@ -60,6 +61,13 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   // round-trip. Sourced from the world map endpoint because region-detail
   // alone doesn't carry journey info.
   ActiveJourney? _activeJourney;
+
+  // Trail walk: set after a "Travel here" that spends banked km. It's
+  // attached to the trail in the same setState as the reloaded region, so
+  // the walker never flashes at its new spot before walking there.
+  TrailTravel? _travel;
+  TrailTravel? _pendingTravel;
+  int _travelSeq = 0;
   String? _activeDestinationZoneId;
   // Derived from the world map region list so the boss bubble can render
   // "Boss · Unlocks X" without a dedicated backend field.
@@ -109,6 +117,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       setState(() {
         _region = region;
         _activeJourney = world.activeJourney;
+        if (_pendingTravel != null) {
+          _travel = _pendingTravel;
+          _pendingTravel = null;
+        }
         _activeDestinationZoneId = _findDestinationZoneId(region, world);
         _nextRegionName = _findNextRegionName(region, world);
         _userLevel = world.user.level;
@@ -237,6 +249,19 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       if (confirmed != true) return; // user cancelled; no destination change
     }
 
+    // Where the player stands and how much banked km they hold, for the
+    // trail walk that plays once the server has moved them.
+    final fromZoneId = _region?.nodes
+        .where((n) => n.status == ZoneNodeStatus.active)
+        .firstOrNull
+        ?.id;
+    final bankedKm = ref
+            .read(worldProgressProvider)
+            .valueOrNull
+            ?.userProgress
+            .pendingDistanceKm ??
+        0.0;
+
     SetDestinationResult result;
     try {
       result = await _service.setDestination(node.id);
@@ -266,9 +291,21 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     }
     if (!mounted) return;
     Navigator.of(context).pop(); // close the zone detail sheet
+    if (fromZoneId != null) {
+      _pendingTravel = TrailTravel(
+          id: ++_travelSeq, fromZoneId: fromZoneId, bankedKm: bankedKm);
+    }
     await _load();
     WorldZoneRefreshNotifier.notify();
     if (!mounted) return;
+    // Let the walk play out before the toast / encounter sheet. The trail
+    // completes straight away when no km were spent or motion is off.
+    final walk = _travel;
+    if (walk != null && walk.id == _travelSeq) {
+      await walk.done.future
+          .timeout(const Duration(seconds: 6), onTimeout: () {});
+      if (!mounted) return;
+    }
 
     // Encounter intercept — movement was stopped at an NPC on the path
     if (result.activeEncounter != null) {
@@ -276,15 +313,15 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       return;
     }
 
-    final forfeitMsg = result.forfeitedFloors > 0
-        ? ' · ${result.forfeitedFloors} floor${result.forfeitedFloors == 1 ? "" : "s"} forfeited'
-        : '';
-    AppToast.success(
-      context,
-      'Destination set - ${node.name}$forfeitMsg',
-      icon: Icons.flag_rounded,
-      duration: const Duration(seconds: 2),
-    );
+    // No "Destination set" toast — the trail walk shows the move. Only
+    // flag the one thing the map can't show: dungeon floors given up.
+    if (result.forfeitedFloors > 0) {
+      AppToast.warning(
+        context,
+        '${result.forfeitedFloors} dungeon floor${result.forfeitedFloors == 1 ? "" : "s"} forfeited',
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   /// Shows the encounter intercept modal and handles the outcome:
@@ -869,6 +906,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                           keysByNodeId: _tutorialZoneKeys,
                           encounters: region.encounters,
                           onEncounterTap: _showEncounterSheet,
+                          travel: _travel,
                         ),
                         if (_activeJourney != null)
                           Padding(

@@ -78,25 +78,31 @@ class TalentView {
 
 class TalentScreen {
   final TalentWallet wallet;
+  final int drawCount;
   final int drawCrystalCost;
   final int drawCoinCost;
   final bool canDraw;
+  final bool collectionComplete;
   final List<TalentView> talents;
 
   const TalentScreen({
     required this.wallet,
+    required this.drawCount,
     required this.drawCrystalCost,
     required this.drawCoinCost,
     required this.canDraw,
+    required this.collectionComplete,
     required this.talents,
   });
 
   factory TalentScreen.fromJson(Map<String, dynamic> j) => TalentScreen(
         wallet: TalentWallet.fromJson(
             j['wallet'] as Map<String, dynamic>? ?? const {}),
+        drawCount: (j['drawCount'] as num?)?.toInt() ?? 0,
         drawCrystalCost: (j['drawCrystalCost'] as num?)?.toInt() ?? 1,
         drawCoinCost: (j['drawCoinCost'] as num?)?.toInt() ?? 300,
         canDraw: j['canDraw'] as bool? ?? false,
+        collectionComplete: j['collectionComplete'] as bool? ?? false,
         talents: ((j['talents'] as List<dynamic>?) ?? const [])
             .map((e) => TalentView.fromJson(e as Map<String, dynamic>))
             .toList(),

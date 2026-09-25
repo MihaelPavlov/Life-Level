@@ -2,7 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/motion_widgets.dart';
+import '../../../core/motion/reward_fx.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../character/providers/character_provider.dart';
 import '../../home/providers/adventure_hub_status_provider.dart';
@@ -197,7 +201,20 @@ class _Body extends StatelessWidget {
       children: [
         _Header(current: streak.current, longest: streak.longest),
         const SizedBox(height: 16),
-        _KeepAliveCard(streak: streak),
+        AnimatedSwitcher(
+          duration:
+              AppMotion.duration(context, const Duration(milliseconds: 300)),
+          transitionBuilder: (child, a) => FadeTransition(
+            opacity: a,
+            child: ScaleTransition(
+                scale: Tween(begin: .97, end: 1.0).animate(a), child: child),
+          ),
+          child: _KeepAliveCard(
+            key: ValueKey(
+                '${streak.current}-${streak.lastActivityDate?.toLocal().day}'),
+            streak: streak,
+          ),
+        ),
         const SizedBox(height: 14),
         _DailyRewardCard(
           streak: streak,
@@ -315,29 +332,92 @@ class _DailyRewardCard extends StatelessWidget {
 // Header — 🔥 icon + title + subtitle
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _Header extends StatelessWidget {
+/// Streak header. When the day count rises the fire box ignites (flash,
+/// scale, a flame that rises out of it and a spray of embers) and the day
+/// count flips like a calendar page.
+class _Header extends StatefulWidget {
   const _Header({required this.current, required this.longest});
 
   final int current;
   final int longest;
 
   @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> with SingleTickerProviderStateMixin {
+  late final AnimationController _ignite = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 800))
+    ..addListener(() => setState(() {}));
+  final _boxKey = GlobalKey();
+
+  @override
+  void didUpdateWidget(_Header old) {
+    super.didUpdateWidget(old);
+    if (widget.current <= old.current || !RewardFx.enabled(context)) return;
+    _ignite.forward(from: 0);
+    final c = RewardFx.centerOf(_boxKey);
+    if (c == null) return;
+    RewardFx.run(
+      context,
+      duration: const Duration(milliseconds: 1000),
+      builder: (t, origin) {
+        final inT = (t / .45).clamp(0.0, 1.0);
+        final p = c - origin + Offset(0, 6 - 46 * Curves.easeOut.transform(t));
+        return Positioned(
+          left: p.dx - 20,
+          top: p.dy - 20,
+          child: Opacity(
+            opacity: t < .45 ? inT : 1 - (t - .45) / .55,
+            child: Transform.scale(
+              scale: .2 + 1.1 * Curves.easeOutBack.transform(inT),
+              child: const AppIconImage(AppIcons.rewardStreakFire, size: 40),
+            ),
+          ),
+        );
+      },
+    );
+    RewardFx.burst(context, c, const Color(0xFFFFB347),
+        count: 10, distance: 44, size: 5);
+  }
+
+  @override
+  void dispose() {
+    _ignite.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final subtitle = longest > 0
-        ? '$current day${current == 1 ? '' : 's'} · longest $longest'
-        : '$current day${current == 1 ? '' : 's'}';
+    final current = widget.current, longest = widget.longest;
+    final t = _ignite.value;
+    final k =
+        _ignite.isAnimating ? (t < .35 ? t / .35 : 1 - (t - .35) / .65) : 0.0;
     return Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.orange.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
-          ),
-          child: const Center(
-            child: Text('🔥', style: TextStyle(fontSize: 22)),
+        Transform.scale(
+          scale: 1 + .18 * k,
+          child: Container(
+            key: _boxKey,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Color.lerp(AppColors.orange.withValues(alpha: 0.12),
+                  AppColors.orange.withValues(alpha: .35), k),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.orange.withValues(alpha: 0.4 + .6 * k)),
+              boxShadow: k > 0
+                  ? [
+                      BoxShadow(
+                          color: AppColors.orange.withValues(alpha: .9 * k),
+                          blurRadius: 26)
+                    ]
+                  : null,
+            ),
+            child: const Center(
+              child: Text('🔥', style: TextStyle(fontSize: 22)),
+            ),
           ),
         ),
         const SizedBox(width: 14),
@@ -354,12 +434,27 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  FlipSwap(
+                    value: current,
+                    child: Text(
+                      '$current day${current == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  if (longest > 0)
+                    Text(
+                      ' · longest $longest',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
@@ -374,7 +469,7 @@ class _Header extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _KeepAliveCard extends StatelessWidget {
-  const _KeepAliveCard({required this.streak});
+  const _KeepAliveCard({super.key, required this.streak});
 
   final StreakData streak;
 
@@ -550,12 +645,15 @@ class _MilestoneRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  '$remaining day${remaining == 1 ? '' : 's'} to day $next',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                FlipSwap(
+                  value: remaining,
+                  child: Text(
+                    '$remaining day${remaining == 1 ? '' : 's'} to day $next',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -576,18 +674,28 @@ class _MilestoneRow extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                CircularProgressIndicator(
-                  value: next == 0 ? 0 : (current / next).clamp(0.0, 1.0),
-                  strokeWidth: 3,
-                  backgroundColor: AppColors.orange.withValues(alpha: 0.15),
-                  valueColor: const AlwaysStoppedAnimation(AppColors.orange),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(
+                      end: next == 0 ? 0 : (current / next).clamp(0.0, 1.0)),
+                  duration: AppMotion.duration(
+                      context, const Duration(milliseconds: 600)),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, v, __) => CircularProgressIndicator(
+                    value: v,
+                    strokeWidth: 3,
+                    backgroundColor: AppColors.orange.withValues(alpha: 0.15),
+                    valueColor: const AlwaysStoppedAnimation(AppColors.orange),
+                  ),
                 ),
-                Text(
-                  '$current/$next',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                FlipSwap(
+                  value: current,
+                  child: Text(
+                    '$current/$next',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],

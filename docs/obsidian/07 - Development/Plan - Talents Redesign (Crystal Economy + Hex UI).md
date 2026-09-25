@@ -9,6 +9,16 @@ icon-based currency display, inline detail text with paging arrows) and makes th
 like a real gacha pull — tap once, watch a highlight sweep across the grid and land on the
 result automatically.
 
+## Progressive card-draw costs
+
+Card draws now scale from the player's lifetime count of successful card draws. With `n` as
+the number of completed draws, the server calculates Coins using
+`roundTo5(300 + 67.999411685344n + 43.279658674746(1.015ⁿ - 1))` and Crystals using
+`round(1 + 0.053924695724n + 5.539796310368(1.015ⁿ - 1))`. This gives a gentle early
+increase, reaches 1,675 Coins + 4 Crystals after 20 draws, and accelerates to 8,675 Coins +
+35 Crystals after 120 draws. Only the current price is visible in the UI. Draws stop when
+every active talent reaches its configured maximum level.
+
 It also introduces a new currency, **Talent Crystals**, deliberately scarce and tied to real
 game-world progress rather than routine grinding:
 

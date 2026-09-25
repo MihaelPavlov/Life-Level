@@ -81,17 +81,17 @@ class GearInventoryGrid extends ConsumerWidget {
   }
 }
 
-class _InventoryTile extends ConsumerWidget {
+class _InventoryTile extends StatelessWidget {
   final ItemDto item;
   const _InventoryTile({required this.item});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final rColor = rarityColor(item.rarity);
     final equipped = item.isEquipped;
 
     return GestureDetector(
-      onTap: () => showGearItemDetailSheet(context, ref: ref, item: item),
+      onTap: () => showGearItemDetailSheet(context, item: item),
       child: Stack(
         children: [
           Container(

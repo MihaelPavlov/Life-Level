@@ -2210,7 +2210,7 @@ namespace LifeLevel.Api.Migrations
                         {
                             Id = new Guid("bbbbbbbb-0111-0000-0000-000000000000"),
                             Category = "ChestsOpened",
-                            Description = "Open 1 available chest today.",
+                            Description = "Open 1 chest on the World Map today.",
                             DifficultyTier = "Standard",
                             GroupKey = "daily:chest",
                             IsActive = true,
@@ -2634,7 +2634,7 @@ namespace LifeLevel.Api.Migrations
                         {
                             Id = new Guid("bbbbbbbb-0221-0000-0000-000000000000"),
                             Category = "ChestsOpened",
-                            Description = "Open 1 reachable chest this week.",
+                            Description = "Open 1 chest on the World Map this week.",
                             DifficultyTier = "Easy",
                             GroupKey = "weekly:chests",
                             IsActive = true,
@@ -2650,7 +2650,7 @@ namespace LifeLevel.Api.Migrations
                         {
                             Id = new Guid("bbbbbbbb-0222-0000-0000-000000000000"),
                             Category = "ChestsOpened",
-                            Description = "Open 2 reachable chests this week.",
+                            Description = "Open 2 chests on the World Map this week.",
                             DifficultyTier = "Stretch",
                             GroupKey = "weekly:chests",
                             IsActive = true,
@@ -3175,7 +3175,16 @@ namespace LifeLevel.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("CoinsSpent")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CrystalsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CrystalsSpent")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DrawNumber")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("DrawnAt")

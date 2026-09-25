@@ -108,6 +108,9 @@ class AppIcons {
   static const String rewardStreakFire = 'assets/icons/reward_streak_fire.png';
   static const String rewardStreakShield =
       'assets/icons/reward_streak_shield.png';
+
+  /// Open chest used by the task-claim "chest burst" popup.
+  static const String rewardChestBurst = 'assets/icons/reward_chest_burst.png';
   static const String rewardTreasureChest =
       'assets/icons/reward_treasure_chest.png';
   static const String seasonAdventureHub =

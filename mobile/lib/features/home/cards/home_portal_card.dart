@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1196,7 +1197,11 @@ class _NoZonePortal extends StatelessWidget {
 // destination, and `_pickNextZoneAfter` returns a forward neighbour. Replaces
 // the misleading "Suggested next: 0 / 1 nodes" bar from the prior overload of
 // `_StandardPortal` with an actionable row of pills.
-class _NextZoneHintPortal extends StatelessWidget {
+/// "Next up" card. When the zone is open to travel (not level-gated) it
+/// idles with a light sweep across the card every 6 s, a shine on the
+/// Travel button, and footsteps walking inside the distance pill — a quiet
+/// "you can go here" nudge. Level-gated zones stay still.
+class _NextZoneHintPortal extends StatefulWidget {
   final WorldZoneModel zone;
   final WorldFullData world;
   final String? regionChip;
@@ -1211,7 +1216,65 @@ class _NextZoneHintPortal extends StatelessWidget {
   });
 
   @override
+  State<_NextZoneHintPortal> createState() => _NextZoneHintPortalState();
+}
+
+class _NextZoneHintPortalState extends State<_NextZoneHintPortal>
+    with TickerProviderStateMixin {
+  // Light sweep + button shine share one slow loop; the footsteps walk on
+  // their own faster one.
+  late final AnimationController _sweep = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 6000));
+  late final AnimationController _steps = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1600));
+  // Breathe: border/glow swell and the button arrow nudges once per breath.
+  late final AnimationController _breath = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 3600));
+
+  WorldZoneModel get zone => widget.zone;
+  WorldFullData get world => widget.world;
+  String? get regionChip => widget.regionChip;
+  String? get regionId => widget.regionId;
+  VoidCallback? get onSync => widget.onSync;
+
+  bool get _idle =>
+      zone.userState?.isLevelMet != false && AppMotion.isFull(context);
+
+  void _sync() {
+    if (_idle) {
+      if (!_sweep.isAnimating) _sweep.repeat();
+      if (!_steps.isAnimating) _steps.repeat();
+      if (!_breath.isAnimating) _breath.repeat();
+    } else {
+      _sweep.stop();
+      _steps.stop();
+      _breath.stop();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_NextZoneHintPortal old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    _sweep.dispose();
+    _steps.dispose();
+    _breath.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final idle = _idle;
     final fromId = world.userProgress.currentZoneId;
     final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
           (e) =>
@@ -1227,127 +1290,254 @@ class _NextZoneHintPortal extends StatelessWidget {
 
     final pills = <Widget>[
       if (distanceKm != null && distanceKm > 0)
-        _Pill(
-          label: '→ ${distanceKm.toStringAsFixed(1)} km',
-          color: AppColors.blue,
-        ),
+        idle
+            ? _StepsPill(
+                label: '${distanceKm.toStringAsFixed(1)} km',
+                color: AppColors.blue,
+                steps: _steps,
+              )
+            : _Pill(
+                label: '→ ${distanceKm.toStringAsFixed(1)} km',
+                color: AppColors.blue,
+              ),
       if (zone.totalXp > 0)
         _Pill(label: '+${zone.totalXp} XP', color: AppColors.orange),
       _Pill(label: _typeLabel(zone.type), color: _typeColor(zone.type)),
     ];
 
-    return HomeCard(
-      borderColor: (levelGated ? AppColors.red : AppColors.blue)
-          .withValues(alpha: levelGated ? 0.65 : 0.4),
-      glowColor: (levelGated ? AppColors.red : AppColors.blue)
-          .withValues(alpha: levelGated ? 0.16 : 0.12),
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (regionChip != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.blue.withValues(alpha: 0.12),
-                border:
-                    Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                regionChip!,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.blue,
-                  letterSpacing: 0.3,
-                ),
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (regionChip != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.blue.withValues(alpha: 0.12),
+              border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              regionChip!,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.blue,
+                letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(height: 8),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            const Text(
+              '✨ NEXT UP',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.4,
+                color: AppColors.blue,
+              ),
+            ),
+            if (levelGated) ...[
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.red.withValues(alpha: 0.2),
+                  border: Border.all(
+                    color: AppColors.red.withValues(alpha: 0.75),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '🔒 LOCKED',
+                  style: TextStyle(
+                    color: AppColors.red,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+            ],
           ],
-          Row(
-            children: [
-              const Text(
-                '✨ NEXT UP',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.4,
-                  color: AppColors.blue,
-                ),
-              ),
-              if (levelGated) ...[
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.red.withValues(alpha: 0.2),
-                    border: Border.all(
-                      color: AppColors.red.withValues(alpha: 0.75),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    '🔒 LOCKED',
-                    style: TextStyle(
-                      color: AppColors.red,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '${_typeBadge(zone.type)}${zone.name}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.15,
           ),
-          const SizedBox(height: 6),
-          Text(
-            '${_typeBadge(zone.type)}${zone.name}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              height: 1.15,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          zone.description ?? 'Travel to ${zone.name} for the next reward.',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(spacing: 6, runSpacing: 6, children: pills),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            HomeHeroButton(
+              label: '⟳ Sync',
+              style: HomeHeroButtonStyle.ghost,
+              onTap: onSync,
+            ),
+            const SizedBox(width: 8),
+            HomeHeroButton(
+              label: levelGated
+                  ? '🔒 Level ${zone.levelRequirement} required'
+                  : 'Travel here →',
+              style: levelGated
+                  ? HomeHeroButtonStyle.locked
+                  : HomeHeroButtonStyle.solidBlue,
+              onTap: levelGated ? null : () => _openWorldDestination(regionId),
+              shine: idle ? _sweep : null,
+              nudge: idle ? _breath : null,
+            ),
+          ],
+        ),
+      ],
+    );
+    HomeCard cardWith(double breath) => HomeCard(
+          borderColor: (levelGated ? AppColors.red : AppColors.blue)
+              .withValues(alpha: levelGated ? 0.65 : 0.4 + 0.55 * breath),
+          glowColor: (levelGated ? AppColors.red : AppColors.blue)
+              .withValues(alpha: levelGated ? 0.16 : 0.12 + 0.23 * breath),
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          child: content,
+        );
+    if (!idle) return cardWith(0);
+    // Breathe: the blue border and glow slowly brighten and fade.
+    final card = AnimatedBuilder(
+      animation: _breath,
+      builder: (_, __) =>
+          cardWith((1 - math.cos(_breath.value * 2 * math.pi)) / 2),
+    );
+    // Light sweep over the card body (the card has a 14 px bottom margin).
+    return Stack(
+      children: [
+        card,
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 14,
+          child: IgnorePointer(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: AnimatedBuilder(
+                animation: _sweep,
+                builder: (_, __) {
+                  final p = ((_sweep.value - .55) / .3).clamp(0.0, 1.0);
+                  if (p <= 0 || p >= 1) return const SizedBox.shrink();
+                  return Align(
+                    alignment: Alignment(-1.6 + 3.2 * p, 0),
+                    child: Transform(
+                      transform: Matrix4.skewX(-.32),
+                      child: Container(
+                        width: 90,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(colors: [
+                            Color(0x007DB8FF),
+                            Color(0x247DB8FF),
+                            Color(0x1AFFFFFF),
+                            Color(0x247DB8FF),
+                            Color(0x007DB8FF),
+                          ]),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            zone.description ?? 'Travel to ${zone.name} for the next reward.',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              height: 1.4,
+        ),
+      ],
+    );
+  }
+}
+
+/// Distance pill with little footsteps walking in place of the arrow.
+class _StepsPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Animation<double> steps;
+  const _StepsPill(
+      {required this.label, required this.color, required this.steps});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 14,
+            height: 12,
+            child: ClipRect(
+              child: AnimatedBuilder(
+                animation: steps,
+                builder: (_, __) => Stack(
+                  children: [
+                    for (var i = 0; i < 4; i++)
+                      Builder(builder: (_) {
+                        final p = (steps.value + i * .25) % 1;
+                        final o = p < .15
+                            ? p / .15
+                            : p > .85
+                                ? (1 - p) / .15
+                                : 1.0;
+                        return Positioned(
+                          left: -4 + 18 * p,
+                          top: i.isEven ? 3 : 6,
+                          child: Opacity(
+                            opacity: o,
+                            child: Container(
+                              width: 4,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          Wrap(spacing: 6, runSpacing: 6, children: pills),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              HomeHeroButton(
-                label: '⟳ Sync',
-                style: HomeHeroButtonStyle.ghost,
-                onTap: onSync,
-              ),
-              const SizedBox(width: 8),
-              HomeHeroButton(
-                label: levelGated
-                    ? '🔒 Level ${zone.levelRequirement} required'
-                    : 'Travel here →',
-                style: levelGated
-                    ? HomeHeroButtonStyle.locked
-                    : HomeHeroButtonStyle.solidBlue,
-                onTap:
-                    levelGated ? null : () => _openWorldDestination(regionId),
-              ),
-            ],
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
         ],
       ),

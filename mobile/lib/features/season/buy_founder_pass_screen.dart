@@ -102,13 +102,11 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                     ),
                     child: Row(
                       children: [
-                        Image.asset(
-                          seasonIconAsset('item_aura_stone'),
-                          width: 58,
-                          height: 58,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) =>
-                              const Text('🔥', style: TextStyle(fontSize: 44)),
+                        const SeasonRewardAsset(
+                          iconKey: 'item_aura_stone',
+                          size: 58,
+                          locked: true,
+                          fallback: Text('🔥', style: TextStyle(fontSize: 44)),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -231,15 +229,12 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
                       ),
                       child: Row(
                         children: [
-                          Image.asset(
-                            seasonIconAsset(milestone.founder.iconKey),
-                            width: 44,
-                            height: 44,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const Icon(
-                                Icons.emoji_events_rounded,
-                                size: 36,
-                                color: AppColors.purple),
+                          SeasonRewardAsset(
+                            iconKey: milestone.founder.iconKey,
+                            size: 44,
+                            locked: true,
+                            fallback: const Icon(Icons.emoji_events_rounded,
+                                size: 36, color: AppColors.purple),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -414,15 +409,10 @@ class _GiveRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Image.asset(
-            seasonIconAsset(r.iconKey),
-            width: 30,
-            height: 30,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(
-                Icons.card_giftcard_rounded,
-                size: 24,
-                color: AppColors.textMuted),
+          SeasonRewardAsset(
+            iconKey: r.iconKey,
+            size: 30,
+            locked: true,
           ),
           const SizedBox(width: 11),
           Expanded(

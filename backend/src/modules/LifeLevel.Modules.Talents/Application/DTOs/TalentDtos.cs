@@ -25,9 +25,11 @@ public record TalentView(
 
 public record TalentScreenResponse(
     TalentWalletView Wallet,
+    int DrawCount,
     int DrawCrystalCost,
     int DrawCoinCost,
     bool CanDraw,
+    bool CollectionComplete,
     IReadOnlyList<TalentView> Talents);
 
 /// <summary>

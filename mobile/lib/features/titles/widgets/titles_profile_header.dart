@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/avatar_icons.dart';
 import '../../../core/constants/title_rank_icons.dart';
+import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/motion_widgets.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../character/models/character_profile.dart';
 import '../models/title_models.dart';
@@ -89,35 +91,55 @@ class TitlesProfileHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (activeTitleIcon != null) ...[
-                    AppIconImage(
-                      activeTitleIcon,
-                      size: 18,
-                      visualScale: 1.4,
-                    ),
-                    const SizedBox(width: 7),
-                  ] else ...[
-                    Text(
-                      data.activeTitleEmoji,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(width: 5),
-                  ],
-                  Flexible(
-                    child: Text(
-                      data.activeTitleName,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.orange,
+              child: AnimatedSize(
+                duration: AppMotion.duration(
+                    context, const Duration(milliseconds: 250)),
+                curve: Curves.easeOut,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: AppMotion.duration(
+                          context, const Duration(milliseconds: 320)),
+                      transitionBuilder: (child, a) => ScaleTransition(
+                        scale: CurvedAnimation(
+                            parent: a, curve: Curves.easeOutBack),
+                        child: RotationTransition(
+                          turns: Tween(begin: -.25, end: 0.0).animate(a),
+                          child: child,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      child: activeTitleIcon != null
+                          ? Padding(
+                              key: ValueKey(activeTitleIcon),
+                              padding: const EdgeInsets.only(right: 7),
+                              child: AppIconImage(
+                                activeTitleIcon,
+                                size: 18,
+                                visualScale: 1.4,
+                              ),
+                            )
+                          : Padding(
+                              key: ValueKey(data.activeTitleEmoji),
+                              padding: const EdgeInsets.only(right: 5),
+                              child: Text(
+                                data.activeTitleEmoji,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
                     ),
-                  ),
-                ],
+                    Flexible(
+                      child: NameplateSwap(
+                        data.activeTitleName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.orange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
           else

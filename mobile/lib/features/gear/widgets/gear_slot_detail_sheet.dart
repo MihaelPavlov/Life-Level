@@ -14,7 +14,6 @@ import '../../items/providers/items_provider.dart';
 /// dark scrim (not a bottom sheet), matching the reference mock's layout.
 Future<void> showGearItemDetailSheet(
   BuildContext context, {
-  required WidgetRef ref,
   required ItemDto item,
 }) {
   return showAppDialog(
@@ -22,15 +21,14 @@ Future<void> showGearItemDetailSheet(
     barrierDismissible: true,
     barrierLabel: 'Item details',
     barrierColor: Colors.black.withValues(alpha: 0.6),
-    builder: (context) => _GearItemDetailDialog(item: item, ref: ref),
+    builder: (context) => _GearItemDetailDialog(item: item),
   );
 }
 
 class _GearItemDetailDialog extends StatefulWidget {
   final ItemDto item;
-  final WidgetRef ref;
 
-  const _GearItemDetailDialog({required this.item, required this.ref});
+  const _GearItemDetailDialog({required this.item});
 
   @override
   State<_GearItemDetailDialog> createState() => _GearItemDetailDialogState();
@@ -41,22 +39,32 @@ class _GearItemDetailDialogState extends State<_GearItemDetailDialog> {
   // call, so any failure is reported afterward via a SnackBar on the
   // underlying screen (captured before the pop, since `context` here won't
   // be mounted anymore once the dialog route is gone).
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _run(
+      Future<void> Function(ProviderContainer container) action) async {
     final messenger = ScaffoldMessenger.of(context);
+    // The dialog can be opened from an inventory tile. Refreshing inventory
+    // disposes that tile (and its WidgetRef), so all post-pop work must use
+    // the ProviderScope's stable container instead of widget.ref.
+    final container = ProviderScope.containerOf(context, listen: false);
     Navigator.of(context).pop();
 
     try {
-      await action();
+      await action(container);
 
-      final equipmentState = widget.ref.read(equipmentProvider);
+      final equipmentState = container.read(equipmentProvider);
       if (equipmentState.hasError) {
         messenger.showSnackBar(
             SnackBar(content: Text(_friendlyError(equipmentState.error))));
         return;
       }
 
-      await widget.ref.read(inventoryProvider.notifier).refresh();
-      widget.ref.read(characterProfileProvider.notifier).refresh();
+      // Wait for both views to receive the server-authoritative state before
+      // completing the action. This makes equip and unequip update stats with
+      // identical timing.
+      await Future.wait([
+        container.read(inventoryProvider.notifier).refresh(),
+        container.read(characterProfileProvider.notifier).refresh(),
+      ]);
     } catch (_) {
       messenger.showSnackBar(const SnackBar(
           content: Text('Something went wrong. Please try again.')));
@@ -73,15 +81,14 @@ class _GearItemDetailDialogState extends State<_GearItemDetailDialog> {
     return 'Something went wrong. Please try again.';
   }
 
-  Future<void> _unequip() => _run(() => widget.ref
-      .read(equipmentProvider.notifier)
-      .unequip(widget.item.slotType));
+  Future<void> _unequip() => _run((container) =>
+      container.read(equipmentProvider.notifier).unequip(widget.item.slotType));
 
   Future<void> _equip() {
     final characterItemId = widget.item.characterItemId;
     if (characterItemId == null) return Future.value();
     return _run(
-      () => widget.ref
+      (container) => container
           .read(equipmentProvider.notifier)
           .equip(characterItemId, widget.item.slotType),
     );

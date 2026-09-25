@@ -4,6 +4,9 @@ using LifeLevel.Modules.Talents.Domain.Entities;
 using LifeLevel.Modules.Talents.Domain.Enums;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Collections.Concurrent;
+using System.Data;
 
 namespace LifeLevel.Modules.Talents.Application.UseCases;
 
@@ -22,6 +25,7 @@ public class TalentService(DbContext db)
     : ITalentBonusReadPort, ITalentProfileReadPort, ITalentStreakAssistPort, IRewardCurrencyPort, IShopWalletPort
 {
     private static readonly Random Rng = Random.Shared;
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> DrawLocks = new();
 
     // ── ITalentBonusReadPort ───────────────────────────────────────────────
 
@@ -226,13 +230,24 @@ public class TalentService(DbContext db)
         var wallet = await GetOrCreateWalletAsync(userId, ct);
 
         var views = catalog.Select(t => ToView(t, owned.GetValueOrDefault(t.Id))).ToList();
-        var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals, owned.Count, catalog.Count);
+        var activeOwnedCount = catalog.Count(t => owned.ContainsKey(t.Id));
+        var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals, activeOwnedCount, catalog.Count);
+        var talentPoints = catalog.Sum(t => Math.Clamp(
+            owned.GetValueOrDefault(t.Id)?.Level ?? 0, 0, Math.Max(0, t.MaxLevel)));
+        var maxTalentPoints = catalog.Sum(t => Math.Max(0, t.MaxLevel));
+        var collectionComplete = maxTalentPoints > 0 && talentPoints >= maxTalentPoints;
+        var drawCount = await db.Set<TalentDrawEntry>().CountAsync(x => x.UserId == userId, ct);
+        var drawCrystalCost = TalentEconomy.DrawCrystalCost(drawCount);
+        var drawCoinCost = TalentEconomy.DrawCoinCost(drawCount);
 
         return new TalentScreenResponse(
             Wallet: walletView,
-            DrawCrystalCost: TalentEconomy.DrawCrystalCost,
-            DrawCoinCost: TalentEconomy.DrawCoinCost,
-            CanDraw: wallet.Crystals >= TalentEconomy.DrawCrystalCost && wallet.Coins >= TalentEconomy.DrawCoinCost,
+            DrawCount: drawCount,
+            DrawCrystalCost: drawCrystalCost,
+            DrawCoinCost: drawCoinCost,
+            CanDraw: !collectionComplete && catalog.Count > 0 &&
+                wallet.Crystals >= drawCrystalCost && wallet.Coins >= drawCoinCost,
+            CollectionComplete: collectionComplete,
             Talents: views);
     }
 
@@ -241,18 +256,53 @@ public class TalentService(DbContext db)
     /// <exception cref="InvalidOperationException">Not enough currency.</exception>
     public async Task<TalentDrawResult> DrawAsync(Guid userId, CancellationToken ct = default)
     {
+        var drawLock = DrawLocks.GetOrAdd(userId, static _ => new SemaphoreSlim(1, 1));
+        await drawLock.WaitAsync(ct);
+        try
+        {
+            return await DrawInternalAsync(userId, ct);
+        }
+        finally
+        {
+            drawLock.Release();
+        }
+    }
+
+    private async Task<TalentDrawResult> DrawInternalAsync(Guid userId, CancellationToken ct)
+    {
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational())
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        await using var transactionScope = transaction;
+
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        if (wallet.Crystals < TalentEconomy.DrawCrystalCost || wallet.Coins < TalentEconomy.DrawCoinCost)
-            throw new InvalidOperationException("Not enough currency to draw a talent card.");
-
-        wallet.Crystals -= TalentEconomy.DrawCrystalCost;
-        wallet.Coins -= TalentEconomy.DrawCoinCost;
-        wallet.UpdatedAt = DateTime.UtcNow;
-
         var catalog = await db.Set<Talent>().Where(t => t.IsActive).ToListAsync(ct);
-        var owned = await db.Set<UserTalent>().Where(x => x.UserId == userId).ToListAsync(ct);
+        var catalogById = catalog.ToDictionary(t => t.Id);
+        var owned = (await db.Set<UserTalent>().Where(x => x.UserId == userId).ToListAsync(ct))
+            .Where(x => catalogById.ContainsKey(x.TalentId))
+            .ToList();
         var ownedIds = owned.Select(o => o.TalentId).ToHashSet();
         var unowned = catalog.Where(t => !ownedIds.Contains(t.Id)).ToList();
+        var talentPoints = owned
+            .Where(o => catalogById.ContainsKey(o.TalentId))
+            .Sum(o => Math.Clamp(o.Level, 0, Math.Max(0, catalogById[o.TalentId].MaxLevel)));
+        var maxTalentPoints = catalog.Sum(t => Math.Max(0, t.MaxLevel));
+
+        if (catalog.Count == 0)
+            throw new InvalidOperationException("No talent cards are currently available.");
+        if (maxTalentPoints > 0 && talentPoints >= maxTalentPoints)
+            throw new InvalidOperationException("Your talent collection is complete.");
+
+        var drawCount = await db.Set<TalentDrawEntry>().CountAsync(x => x.UserId == userId, ct);
+        var drawCrystalCost = TalentEconomy.DrawCrystalCost(drawCount);
+        var drawCoinCost = TalentEconomy.DrawCoinCost(drawCount);
+        if (wallet.Crystals < drawCrystalCost || wallet.Coins < drawCoinCost)
+            throw new InvalidOperationException(
+                $"Not enough currency. This draw costs {drawCoinCost} Coins and {drawCrystalCost} Crystals.");
+
+        wallet.Crystals -= drawCrystalCost;
+        wallet.Coins -= drawCoinCost;
+        wallet.UpdatedAt = DateTime.UtcNow;
 
         var giveNew = unowned.Count > 0 && (owned.Count == 0 || Rng.NextDouble() < TalentEconomy.NewTalentChance);
 
@@ -314,9 +364,13 @@ public class TalentService(DbContext db)
             Kind = kind,
             TalentId = talent.Id,
             CrystalsAwarded = crystalsAwarded,
+            DrawNumber = drawCount + 1,
+            CoinsSpent = drawCoinCost,
+            CrystalsSpent = drawCrystalCost,
         });
 
         await db.SaveChangesAsync(ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
 
         var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals,
             ownedIds.Count + (giveNew ? 1 : 0), catalog.Count);
