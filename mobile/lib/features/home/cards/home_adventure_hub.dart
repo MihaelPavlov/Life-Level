@@ -129,7 +129,7 @@ class HomeAdventureHub extends ConsumerWidget {
       ),
       _HubTileModel(
         iconAsset: AppIcons.ringTitles,
-        label: 'Milestones',
+        label: 'Ranks',
         hasUpdate: signals.titles,
         priority: 5,
         onTap: () => _openTitles(ref),

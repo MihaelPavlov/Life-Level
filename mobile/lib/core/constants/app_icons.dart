@@ -187,8 +187,8 @@ class AppIcons {
 
   // Gear page — paper-doll base + layers, all on the same 1024x1536 canvas
   // (see design-mockup/generated-icons/paperdoll-layer-spec.md). This is a
-  // separate base render from homeBaseRender (different canvas/aspect) used
-  // only by the Gear page's paper-doll, so Home's hero stage is unaffected.
+  // separate base render from the legacy homeBaseRender (different canvas /
+  // aspect), shared by the Gear paper doll and Home hero stage.
   static const String gearBaseRender = 'assets/Home/base_render_v2.png';
   static const String gearLayerShadowJoggers =
       'assets/Gear/layer_legs_shadow_joggers.png';

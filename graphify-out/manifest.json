@@ -5385,8 +5385,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/main_shell.dart": {
-    "mtime": 1790238961.324043,
-    "ast_hash": "82af88ca54b2643ce328eec2118a827b",
+    "mtime": 1790531786.143234,
+    "ast_hash": "8a9d8c00d67955414915a25ca309a212",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/shell_constants.dart": {
@@ -5570,8 +5570,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_battle_screen.dart": {
-    "mtime": 1790322489.6533554,
-    "ast_hash": "9899a2ef765dc9759f0cc10414ec6328",
+    "mtime": 1790531786.1435738,
+    "ast_hash": "651817fd0c33d24f1511f12c5a97cf7f",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_screen.dart": {
@@ -5715,8 +5715,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_portal_card.dart": {
-    "mtime": 1790372182.293855,
-    "ast_hash": "a88b1ad0ee0f68dbc1f1c27d412ce073",
+    "mtime": 1790531786.1438608,
+    "ast_hash": "5113767a4e9041a0027f3236b9e17e09",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_recent_activities_card.dart": {
@@ -5770,8 +5770,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/widgets/home_progress_bar.dart": {
-    "mtime": 1790238238.183375,
-    "ast_hash": "1783f530baea94f4f68da760cd5d0ed7",
+    "mtime": 1790531786.1438608,
+    "ast_hash": "95ef3de4cf64e2faf4184b9c9812100e",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/widgets/home_quest_item.dart": {
@@ -5935,8 +5935,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/encounter_blocker_sheet.dart": {
-    "mtime": 1790238238.5603728,
-    "ast_hash": "cc572db6f6e928761a71be9703507d35",
+    "mtime": 1790531786.1444764,
+    "ast_hash": "439550965ee3a51c5d911f0d4774c578",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/encounter_intercept_sheet.dart": {
@@ -11805,8 +11805,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/widgets/task_reward_popup.dart": {
-    "mtime": 1790372182.2943697,
-    "ast_hash": "acb1c9ea75cf8e48b797d14b0b851112",
+    "mtime": 1790374098.5950322,
+    "ast_hash": "812a0485655bf50d209ec53ea5dba1fe",
     "semantic_hash": ""
   },
   "mobile/test/features/rewards/reward_task_order_test.dart": {
@@ -11865,18 +11865,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/reward_road_screen.dart": {
-    "mtime": 1790371770.7371902,
-    "ast_hash": "78c513cb0865f375f5425cfb8e4870fb",
+    "mtime": 1790373567.9266424,
+    "ast_hash": "eadb1668a937016afce6d3efa7ad051b",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/reward_roads_hub.dart": {
-    "mtime": 1790371741.2725642,
-    "ast_hash": "dd7bd471f225ccf300f61f7bf934b038",
+    "mtime": 1790373566.807238,
+    "ast_hash": "1a0ed20dbb255d41435fc5ea3cced6b5",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/road_fx.dart": {
-    "mtime": 1790371741.287564,
-    "ast_hash": "3ee8c32db3520e876c8e44c821d8e642",
+    "mtime": 1790374097.8619475,
+    "ast_hash": "5543951fba61bd6fdac32afa980c9334",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/road_meta.dart": {
@@ -11885,13 +11885,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/road_widgets.dart": {
-    "mtime": 1790371770.7371902,
-    "ast_hash": "f3add3ddfc7f2ab34c8864cc92c56016",
+    "mtime": 1790373590.2044597,
+    "ast_hash": "788297c0d1ba5f25175ce3a72cb29c06",
     "semantic_hash": ""
   },
   "mobile/test/features/achievements/reward_roads_test.dart": {
-    "mtime": 1790371899.3302739,
-    "ast_hash": "68e493831eb49c628eaf7daf6f25c526",
+    "mtime": 1790374110.3204918,
+    "ast_hash": "3d0ae9e10f0ad2384d03ab75731a662a",
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Achievement Reward Roads.md": {
@@ -11997,6 +11997,31 @@
   "mobile/test/visual/failures/welcome_setup_screen_testImage.png": {
     "mtime": 1790372158.273539,
     "ast_hash": "5c0c08e1513df056474bfa7ac1102049",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/boss/widgets/boss_hit_fx.dart": {
+    "mtime": 1790531674.7157025,
+    "ast_hash": "43b93a65216800028f9c073779272bb6",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/boss/boss_hit_fx_test.dart": {
+    "mtime": 1790531806.272739,
+    "ast_hash": "36091061532ecddef76c06e6cf2198c6",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260925_215225_what_do_you_think_about_life_level_that_we_are_cur.md": {
+    "mtime": 1790373145.4027767,
+    "ast_hash": "66c08facfc69584ea44ea9565b527ecd",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260925_215617_audit_the_center_expandable_menu_in_the_bottom_nav.md": {
+    "mtime": 1790373377.0309954,
+    "ast_hash": "89d5c432c4cd68e494e8f8cd1ed5cb97",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260927_174447_currenthly_if_a_boss_or_enocunter_take_hit_do_we_h.md": {
+    "mtime": 1790531087.8615482,
+    "ast_hash": "1db964c540adb485144895d1a66edb7b",
     "semantic_hash": ""
   }
 }

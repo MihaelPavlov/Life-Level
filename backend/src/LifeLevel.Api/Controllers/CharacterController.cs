@@ -124,6 +124,24 @@ public class CharacterController(
         return Ok(history);
     }
 
+    [HttpGet("level-ups/pending")]
+    public async Task<IActionResult> GetPendingLevelUps(CancellationToken ct)
+        => Ok(await characterService.GetPendingLevelUpsAsync(userContext.UserId, ct));
+
+    [HttpPost("level-ups/{receiptId:guid}/acknowledge")]
+    public async Task<IActionResult> AcknowledgeLevelUp(Guid receiptId, CancellationToken ct)
+    {
+        try
+        {
+            await characterService.AcknowledgeLevelUpAsync(userContext.UserId, receiptId, ct);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
     [HttpPost("spend-stat")]
     public async Task<IActionResult> SpendStat([FromBody] SpendStatRequest req)
     {

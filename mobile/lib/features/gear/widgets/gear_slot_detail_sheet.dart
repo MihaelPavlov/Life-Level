@@ -7,6 +7,7 @@ import '../../../core/widgets/item_icon_image.dart';
 import '../../character/providers/character_provider.dart';
 import '../../items/models/item_models.dart';
 import '../../items/providers/items_provider.dart';
+import '../../../core/widgets/app_toast.dart';
 
 /// Item details popup shown when tapping an item — from an equipped hex slot
 /// or from the inventory grid: item details + stat bonuses + a Gear/Unequip
@@ -41,7 +42,8 @@ class _GearItemDetailDialogState extends State<_GearItemDetailDialog> {
   // be mounted anymore once the dialog route is gone).
   Future<void> _run(
       Future<void> Function(ProviderContainer container) action) async {
-    final messenger = ScaffoldMessenger.of(context);
+    // The dialog pops right away, so report on the root navigator's context.
+    final toastContext = Navigator.of(context, rootNavigator: true).context;
     // The dialog can be opened from an inventory tile. Refreshing inventory
     // disposes that tile (and its WidgetRef), so all post-pop work must use
     // the ProviderScope's stable container instead of widget.ref.
@@ -53,8 +55,9 @@ class _GearItemDetailDialogState extends State<_GearItemDetailDialog> {
 
       final equipmentState = container.read(equipmentProvider);
       if (equipmentState.hasError) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(_friendlyError(equipmentState.error))));
+        if (toastContext.mounted) {
+          AppToast.error(toastContext, _friendlyError(equipmentState.error));
+        }
         return;
       }
 
@@ -66,8 +69,10 @@ class _GearItemDetailDialogState extends State<_GearItemDetailDialog> {
         container.read(characterProfileProvider.notifier).refresh(),
       ]);
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(
-          content: Text('Something went wrong. Please try again.')));
+      if (toastContext.mounted) {
+        AppToast.error(toastContext, 'Something went wrong',
+            detail: 'Please try again.');
+      }
     }
   }
 

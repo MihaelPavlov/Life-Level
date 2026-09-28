@@ -1,5 +1,7 @@
 using LifeLevel.Modules.WorldZone.Application.Ports;
 using LifeLevel.Modules.WorldZone.Application.UseCases;
+using LifeLevel.Modules.WorldZone.Application.EventHandlers;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +21,7 @@ public static class WorldZoneModule
         services.AddScoped<IWorldDungeonActivityPort>(sp => sp.GetRequiredService<WorldDungeonService>());
         services.AddScoped<IWorldZoneCompletionPort, WorldZoneCompletionPortAdapter>();
         services.AddScoped<IWorldBlockerCompletionPort, WorldBlockerCompletionPortAdapter>();
+        services.AddScoped<IEventHandler<CharacterLeveledUpEvent>, LevelUpRegionAvailabilityHandler>();
         return services;
     }
 }

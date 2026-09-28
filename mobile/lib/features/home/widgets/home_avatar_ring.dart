@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import 'home_palette.dart';
+import '../../../core/widgets/reward_moment/reward_hud.dart';
 
 String? _avatarEmojiToAsset(String emoji) {
   switch (emoji) {
@@ -64,6 +65,11 @@ class HomeAvatarRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Claimed XP flies into the ring.
+    return RewardHudTarget(kind: RewardKind.xp, child: _ring());
+  }
+
+  Widget _ring() {
     return SizedBox(
       width: size,
       height: showLevelPill

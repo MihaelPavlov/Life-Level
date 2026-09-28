@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../boss/widgets/boss_hit_fx.dart';
 import '../models/encounter_models.dart';
 
 class BlockerSheet extends StatelessWidget {
@@ -46,9 +47,22 @@ class BlockerSheet extends StatelessWidget {
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: _data.isInCombat
-                    ? _buildInCombat(context)
-                    : _buildInitial(context),
+                // Plays the slash + ember burn if the blocker lost HP since
+                // the player last saw it (after the sheet slides in).
+                child: BossHitScope(
+                  hitId: _data.bossId ?? encounter.id,
+                  hp: _data.currentHp,
+                  maxHp: _data.maxHp,
+                  startDelay: const Duration(milliseconds: 320),
+                  slashWidth: 120,
+                  recoil: 8,
+                  builder: (context, hit, portraitKey) => Transform.translate(
+                    offset: Offset(hit.shakeDx, 0),
+                    child: _data.isInCombat
+                        ? _buildInCombat(context, hit, portraitKey)
+                        : _buildInitial(context, hit, portraitKey),
+                  ),
+                ),
               ),
             ),
           ],
@@ -57,15 +71,16 @@ class BlockerSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInitial(BuildContext context) {
+  Widget _buildInitial(
+      BuildContext context, BossHitFrame hit, GlobalKey portraitKey) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildHeader(isInCombat: false),
+        _buildHeader(isInCombat: false, hit: hit, portraitKey: portraitKey),
         const SizedBox(height: 12),
         _buildTimerPill(_formatDuration(_data.retreatsIn)),
         const SizedBox(height: 14),
-        _buildHpBar(),
+        _buildHpBar(hit),
         const SizedBox(height: 14),
         _buildInfoBox(
           color: AppColors.red,
@@ -134,13 +149,14 @@ class BlockerSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInCombat(BuildContext context) {
+  Widget _buildInCombat(
+      BuildContext context, BossHitFrame hit, GlobalKey portraitKey) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildHeader(isInCombat: true),
+        _buildHeader(isInCombat: true, hit: hit, portraitKey: portraitKey),
         const SizedBox(height: 14),
-        _buildHpBar(),
+        _buildHpBar(hit),
         const SizedBox(height: 12),
         _buildDamageTracker(),
         const SizedBox(height: 12),
@@ -179,10 +195,19 @@ class BlockerSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader({required bool isInCombat}) {
+  Widget _buildHeader({
+    required bool isInCombat,
+    required BossHitFrame hit,
+    required GlobalKey portraitKey,
+  }) {
     return Row(
       children: [
-        Container(
+        BossHitPortrait(
+          hit: hit,
+          portraitKey: portraitKey,
+          shape: BoxShape.rectangle,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
           width: 52,
           height: 52,
           decoration: BoxDecoration(
@@ -192,6 +217,7 @@ class BlockerSheet extends StatelessWidget {
           ),
           alignment: Alignment.center,
           child: const Text('🐺', style: TextStyle(fontSize: 28)),
+          ),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -263,8 +289,9 @@ class BlockerSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildHpBar() {
-    final frac = _data.hpFraction.clamp(0.0, 1.0);
+  Widget _buildHpBar(BossHitFrame hit) {
+    final maxHp = _data.maxHp;
+    double frac(int hp) => maxHp > 0 ? (hp / maxHp).clamp(0.0, 1.0) : 0.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -281,7 +308,7 @@ class BlockerSheet extends StatelessWidget {
               ),
             ),
             Text(
-              '${_data.currentHp} / ${_data.maxHp}',
+              '${hit.shownHp} / ${_data.maxHp}',
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 12,
@@ -299,16 +326,36 @@ class BlockerSheet extends StatelessWidget {
             border: Border.all(color: AppColors.red.withOpacity(0.25)),
           ),
           clipBehavior: Clip.hardEdge,
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: frac,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFf85149), Color(0xFFff6b3d)],
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (hit.emberHp != null)
+                FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: frac(hit.emberHp!),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.orange, Color(0xFFFFDD8A)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.orange, blurRadius: 12),
+                      ],
+                    ),
+                  ),
+                ),
+              FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: frac(hit.barHp),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFf85149), Color(0xFFff6b3d)],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ],

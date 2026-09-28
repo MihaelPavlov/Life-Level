@@ -53,6 +53,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LevelTitleGrant> LevelTitleGrants => Set<LevelTitleGrant>();
     public DbSet<LevelStatBonus> LevelStatBonuses => Set<LevelStatBonus>();
     public DbSet<RankThreshold> RankThresholds => Set<RankThreshold>();
+    public DbSet<LevelUpReceipt> LevelUpReceipts => Set<LevelUpReceipt>();
 
     // Activity
     public DbSet<Activity> Activities => Set<Activity>();

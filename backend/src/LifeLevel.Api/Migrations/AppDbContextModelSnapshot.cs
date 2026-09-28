@@ -918,6 +918,80 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("LevelTitleGrants");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.LevelUpReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AvailableAvatarsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AvailableRegionsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("BaseStatPointsGranted")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BlockedItemsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("BonusStatPointsGranted")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CoinsGranted")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FinalizedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GrantedItemsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GrantedTitlesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("NewInventorySlots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NewLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PowerGained")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PreviousInventorySlots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PreviousLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "AcknowledgedAt", "CreatedAt");
+
+                    b.ToTable("LevelUpReceipts");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.RankThreshold", b =>
                 {
                     b.Property<Guid>("Id")

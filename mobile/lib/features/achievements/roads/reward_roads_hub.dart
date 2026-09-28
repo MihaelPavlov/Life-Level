@@ -395,11 +395,9 @@ class _RoadTile extends StatelessWidget {
     final meta = RoadMeta.of(road.category);
     final (String? badge, Color badgeBg, Color badgeFg) = road.hasChestReady
         ? ('Chest ready', kRoadReady, const Color(0xFF1A1004))
-        : road.ready > 0
-            ? ('${road.ready} ready', kRoadReady, const Color(0xFF1A1004))
-            : road.isComplete
-                ? ('Complete', kRoadDone.withValues(alpha: .2), kRoadDone)
-                : (null, Colors.transparent, Colors.transparent);
+        : road.isComplete
+            ? ('Complete', kRoadDone.withValues(alpha: .2), kRoadDone)
+            : (null, Colors.transparent, Colors.transparent);
     final pct = road.total == 0 ? 0.0 : road.claimed / road.total;
     return Material(
       color: AppColors.surface,

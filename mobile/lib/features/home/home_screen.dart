@@ -99,7 +99,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Sync handler (wired into the Adventure Hero "Sync" button) ──────────
   Future<void> _handleSync(BuildContext context, WidgetRef ref) async {
-    AppToast.info(context, 'Syncing activities...', icon: Icons.sync_rounded);
+    // One toast: a spinner while syncing that turns into the result.
+    final toast = AppToast.progress(context, 'Syncing activities');
 
     int imported = 0;
     int skipped = 0;
@@ -126,12 +127,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // not, so always refresh all progress-backed Adventure Hub state here.
     invalidateUserScopedProviders(ref);
 
-    if (!context.mounted) return;
-    final msg = imported > 0
-        ? 'Synced $imported new activit${imported == 1 ? 'y' : 'ies'}!'
-        : skipped > 0
-            ? 'Already up to date ($skipped synced)'
-            : 'No new activities found';
-    AppToast.success(context, msg);
+    if (imported > 0) {
+      toast.success(
+          'Synced $imported new activit${imported == 1 ? 'y' : 'ies'}');
+    } else if (skipped > 0) {
+      toast.success('Already up to date',
+          detail:
+              '$skipped ${skipped == 1 ? 'activity' : 'activities'} checked');
+    } else {
+      toast.info('No new activities found');
+    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_toast.dart';
 
 /// Decorative "Outfit" / "Mount" preview cards. There's no cosmetic outfit or
 /// mount system in the domain yet — same static-placeholder precedent as
@@ -33,9 +34,8 @@ class GearOutfitMountRow extends StatelessWidget {
   }
 
   void _showComingSoon(BuildContext context, String label) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label are coming soon!')),
-    );
+    AppToast.info(context, '$label are coming soon',
+        detail: 'They unlock in a later update.');
   }
 }
 

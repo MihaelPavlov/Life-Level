@@ -47,6 +47,7 @@ final adventureHubSignalsProvider =
   final season = ref.watch(seasonProvider).valueOrNull;
   final titles = ref.watch(titlesProvider).valueOrNull;
   final achievements = ref.watch(achievementsProvider).valueOrNull;
+  final achievementRoads = ref.watch(achievementRoadsProvider).valueOrNull;
   final rewards = ref.watch(rewardCenterProvider).valueOrNull;
   final streak = ref.watch(streakProvider).valueOrNull;
 
@@ -78,9 +79,20 @@ final adventureHubSignalsProvider =
     talents: talents?.canDraw ?? false,
     season: season?.hasClaimableReward ?? false,
     titles: titlesUpdated,
-    achievements: achievementsUpdated,
+    achievements: achievementHubNeedsAttention(
+      hasUnseenAchievements: achievementsUpdated,
+      readyCount: achievementRoads?.readyCount ?? 0,
+      chestsReady: achievementRoads?.chestsReady ?? 0,
+    ),
   );
 });
+
+bool achievementHubNeedsAttention({
+  required bool hasUnseenAchievements,
+  required int readyCount,
+  required int chestsReady,
+}) =>
+    hasUnseenAchievements || readyCount > 0 || chestsReady > 0;
 
 class AdventureHubSeenStore {
   static const _prefix = 'home_adventure_hub';

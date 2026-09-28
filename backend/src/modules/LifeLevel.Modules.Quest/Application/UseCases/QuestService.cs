@@ -447,8 +447,7 @@ public class QuestService(
 
     private async Task GrantLevelItemsIfNeededAsync(Guid userId, XpAwardResult result)
     {
-        if (result.LeveledUp)
-            await levelUpItemGrant.EvaluateAndGrantAsync(userId, result.PreviousLevel, result.NewLevel);
+        await Task.CompletedTask;
     }
 
     private static UserQuestProgressDto MapToDto(UserQuestProgressEntity p) => new()

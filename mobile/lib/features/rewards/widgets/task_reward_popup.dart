@@ -8,22 +8,28 @@ import '../../../core/motion/app_motion.dart';
 import '../../../core/motion/reward_fx.dart';
 import '../../../core/widgets/app_icon_image.dart';
 
-/// One reward shown in the popup, e.g. coins ×35 or points +20.
-class TaskRewardItem {
+/// One item shown by the generic reward reveal, e.g. coins, distance, a shield,
+/// equipment, or any feature-owned widget.
+class RewardRevealItem {
   final String asset;
   final String label;
   final Color color;
 
+  /// Stable identifier returned when the reveal closes. Defaults to [asset].
+  /// This lets callers animate custom [icon] widgets to their destination.
+  final String? flightKey;
+
   /// Replaces the [asset] icon, e.g. a gear item's artwork.
   final Widget? icon;
-  const TaskRewardItem(
+  const RewardRevealItem(
       {required this.asset,
       required this.label,
       required this.color,
-      this.icon});
+      this.icon,
+      this.flightKey});
 }
 
-/// "Chest burst" claim popup: the screen dims, a treasure chest drops in,
+/// Generic reward reveal: the screen dims, a hero image drops in,
 /// shakes and bursts open (flash, glow, sparks, confetti), the rewards shoot
 /// up out of it into their slots and "You got loot!" appears. Tap anywhere
 /// to close — a tap during the intro skips to the end first.
@@ -31,50 +37,50 @@ class TaskRewardItem {
 /// Resolves with each reward tile's on-screen centre and icon at the moment
 /// it closes, so the caller can fly the rewards on to where they live.
 ///
-/// [chestAsset] swaps the chest art (e.g. an achievement stage's own chest).
-/// [lootTitle] and [closeHint] hide the "You got loot!" line and the
-/// "Tap to close" pill (tapping still closes).
-Future<List<(Offset, String)>> showTaskRewardPopup(
+/// [heroAsset] can be a chest, distance marker, shield, or other feature art.
+/// Set [title] to null to hide the title. [showCloseHint] only controls the
+/// hint; tapping still skips/ closes the reveal.
+Future<List<(Offset, String)>> showRewardRevealPopup(
   BuildContext context, {
-  required List<TaskRewardItem> items,
+  required List<RewardRevealItem> items,
   required String subtitle,
-  String chestAsset = AppIcons.rewardChestBurst,
-  bool lootTitle = true,
-  bool closeHint = true,
+  String heroAsset = AppIcons.rewardChestBurst,
+  String? title = 'You got loot!',
+  bool showCloseHint = true,
 }) async {
   final landed = await showGeneralDialog<List<(Offset, String)>>(
     context: context,
     barrierDismissible: false,
     barrierColor: Colors.transparent,
     transitionDuration: Duration.zero,
-    pageBuilder: (_, __, ___) => _TaskRewardPopup(
+    pageBuilder: (_, __, ___) => _RewardRevealPopup(
         items: items,
         subtitle: subtitle,
-        chestAsset: chestAsset,
-        lootTitle: lootTitle,
-        closeHint: closeHint),
+        heroAsset: heroAsset,
+        title: title,
+        showCloseHint: showCloseHint),
   );
   return landed ?? const [];
 }
 
-class _TaskRewardPopup extends StatefulWidget {
-  final List<TaskRewardItem> items;
+class _RewardRevealPopup extends StatefulWidget {
+  final List<RewardRevealItem> items;
   final String subtitle;
-  final String chestAsset;
-  final bool lootTitle;
-  final bool closeHint;
-  const _TaskRewardPopup(
+  final String heroAsset;
+  final String? title;
+  final bool showCloseHint;
+  const _RewardRevealPopup(
       {required this.items,
       required this.subtitle,
-      required this.chestAsset,
-      required this.lootTitle,
-      required this.closeHint});
+      required this.heroAsset,
+      required this.title,
+      required this.showCloseHint});
 
   @override
-  State<_TaskRewardPopup> createState() => _TaskRewardPopupState();
+  State<_RewardRevealPopup> createState() => _RewardRevealPopupState();
 }
 
-class _TaskRewardPopupState extends State<_TaskRewardPopup>
+class _RewardRevealPopupState extends State<_RewardRevealPopup>
     with SingleTickerProviderStateMixin {
   // Timeline (ms): drop 0–450 · land squash 450–570 · shake 570–1070 ·
   // burst open 1070–1520 · tiles fly out from 1190 (120 ms apart) ·
@@ -129,7 +135,8 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
     final landed = <(Offset, String)>[
       for (final (i, a) in _tiles.indexed)
         if (a.center case final c?)
-          if (widget.items[i].asset.isNotEmpty) (c, widget.items[i].asset),
+          if ((widget.items[i].flightKey ?? widget.items[i].asset).isNotEmpty)
+            (c, widget.items[i].flightKey ?? widget.items[i].asset),
     ];
     Navigator.of(context).pop(landed);
   }
@@ -168,7 +175,7 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
               for (final (i, item) in widget.items.indexed)
                 _tile(i, item, cx, tilesY, chestC),
               _title(cx, titleY),
-              if (widget.closeHint) _closeHint(box.maxHeight),
+              if (widget.showCloseHint) _closeHint(box.maxHeight),
             ],
           );
         }),
@@ -251,7 +258,7 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
                   colorFilter: ColorFilter.mode(
                       Colors.white.withValues(alpha: .7 * flash.clamp(0, 1)),
                       BlendMode.srcATop),
-                  child: Image.asset(widget.chestAsset,
+                  child: Image.asset(widget.heroAsset,
                       width: size, height: size, fit: BoxFit.contain),
                 ),
               ),
@@ -262,7 +269,8 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
     );
   }
 
-  Widget _tile(int i, TaskRewardItem item, double cx, double y, Offset chestC) {
+  Widget _tile(
+      int i, RewardRevealItem item, double cx, double y, Offset chestC) {
     const size = 82.0;
     final n = widget.items.length;
     final c = Offset(cx + (i - (n - 1) / 2) * (size + 18), y);
@@ -303,11 +311,11 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.lootTitle) ...[
-                const _StrokeText('You got loot!',
+              if (widget.title != null) ...[
+                _StrokeText(widget.title!,
                     fontSize: 28,
-                    fill: Color(0xFFFFD27A),
-                    stroke: Color(0xFF3A2206)),
+                    fill: const Color(0xFFFFD27A),
+                    stroke: const Color(0xFF3A2206)),
                 const SizedBox(height: 6),
               ],
               Text(
@@ -369,7 +377,7 @@ class _TaskRewardPopupState extends State<_TaskRewardPopup>
 /// Square reward tile: tinted gradient, thick coloured rim, big icon and the
 /// amount in the corner.
 class _RewardTile extends StatelessWidget {
-  final TaskRewardItem item;
+  final RewardRevealItem item;
   const _RewardTile(this.item);
 
   @override

@@ -8,6 +8,7 @@ import '../character/models/avatar_option.dart';
 import '../character/providers/character_provider.dart';
 import '../character/services/character_service.dart';
 import 'profile_stat_metadata.dart';
+import '../../core/widgets/app_toast.dart';
 
 class EditAvatarScreen extends ConsumerStatefulWidget {
   const EditAvatarScreen({super.key});
@@ -36,15 +37,11 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
       await CharacterService().updateAvatar(selected);
       await ref.read(characterProfileProvider.notifier).refresh();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avatar updated')),
-      );
+      AppToast.success(context, 'Avatar updated');
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_messageFrom(e, 'Could not update avatar.'))),
-      );
+      AppToast.error(context, _messageFrom(e, "Couldn't update your avatar."));
     } finally {
       if (mounted) setState(() => _saving = false);
     }

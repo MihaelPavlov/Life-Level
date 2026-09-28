@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Modules.Items.Application.UseCases;
 
-public record GrantItemResult(CharacterItem? Item, bool InventoryFull);
+public record GrantItemResult(CharacterItem? Item, bool InventoryFull, bool WasNew);
 public record BlockedItemInfo(Guid ItemId, string ItemName, string ItemIcon);
 public record LevelUpGrantSummary(List<ItemDto> Granted, List<BlockedItemInfo> Blocked);
 
@@ -16,21 +16,22 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
     public async Task<GrantItemResult> GrantItemAsync(Guid userId, Guid itemId, CancellationToken ct = default)
     {
         var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
-        if (characterId == null) return new GrantItemResult(null, InventoryFull: false);
+        if (characterId == null) return new GrantItemResult(null, InventoryFull: false, WasNew: false);
 
         var item = await db.Set<Item>().FindAsync([itemId], ct);
-        if (item == null) return new GrantItemResult(null, InventoryFull: false);
+        if (item == null) return new GrantItemResult(null, InventoryFull: false, WasNew: false);
 
-        // Enforce slot cap before idempotency check
+        // Idempotency must be checked before capacity. An already-owned item is
+        // neither a new reward nor blocked just because the inventory is full.
+        var existing = await db.Set<CharacterItem>()
+            .FirstOrDefaultAsync(ci => ci.CharacterId == characterId && ci.ItemId == itemId, ct);
+        if (existing != null)
+            return new GrantItemResult(existing, InventoryFull: false, WasNew: false);
+
         var maxSlots = await inventorySlotRead.GetMaxInventorySlotsAsync(userId, ct);
         var currentCount = await db.Set<CharacterItem>().CountAsync(ci => ci.CharacterId == characterId, ct);
         if (currentCount >= maxSlots)
-            return new GrantItemResult(null, InventoryFull: true);
-
-        // Idempotent — don't duplicate
-        var existing = await db.Set<CharacterItem>()
-            .FirstOrDefaultAsync(ci => ci.CharacterId == characterId && ci.ItemId == itemId, ct);
-        if (existing != null) return new GrantItemResult(existing, InventoryFull: false);
+            return new GrantItemResult(null, InventoryFull: true, WasNew: false);
 
         var charItem = new CharacterItem
         {
@@ -42,7 +43,7 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
         };
         db.Set<CharacterItem>().Add(charItem);
         await db.SaveChangesAsync(ct);
-        return new GrantItemResult(charItem, InventoryFull: false);
+        return new GrantItemResult(charItem, InventoryFull: false, WasNew: true);
     }
 
     public async Task<LevelUpGrantSummary> EvaluateLevelUpAsync(Guid userId, int previousLevel, int newLevel, CancellationToken ct = default)
@@ -83,7 +84,7 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
                 var item = await db.Set<Item>().FindAsync([rule.ItemId], ct);
                 if (item != null) blocked.Add(new BlockedItemInfo(item.Id, item.Name, item.Icon));
             }
-            else if (result.Item != null)
+            else if (result.Item != null && result.WasNew)
             {
                 var item = await db.Set<Item>().FindAsync([rule.ItemId], ct);
                 if (item != null)
@@ -130,7 +131,7 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
                 continue;
 
             var result = await GrantItemAsync(userId, rule.ItemId);
-            if (result.Item != null) granted.Add(result.Item);
+            if (result.Item != null && result.WasNew) granted.Add(result.Item);
         }
 
         return granted;

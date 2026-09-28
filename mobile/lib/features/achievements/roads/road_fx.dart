@@ -106,7 +106,7 @@ Future<void> showStageChestPopup(
   final item = result.item;
   final items = [
     if (item != null)
-      TaskRewardItem(
+      RewardRevealItem(
         asset: '',
         label: '×1',
         color: tierColor(item.rarity),
@@ -119,25 +119,25 @@ Future<void> showStageChestPopup(
         ),
       ),
     if (result.coins > 0)
-      TaskRewardItem(
+      RewardRevealItem(
           asset: AppIcons.homeCoinIcon,
           label: '×${result.coins}',
           color: AppColors.orange),
     if (result.gems > 0)
-      TaskRewardItem(
+      RewardRevealItem(
           asset: AppIcons.homeGemIcon,
           label: '×${result.gems}',
           color: AppColors.purple),
   ];
-  final landed = await showTaskRewardPopup(
+  final landed = await showRewardRevealPopup(
     context,
     items: items,
     subtitle: item == null
         ? 'Stage $stageNumber complete · ${result.chestName}'
         : '${item.name} · Stage $stageNumber complete',
-    chestAsset: AppIcons.shopChestForKey(result.chestKey),
-    lootTitle: false,
-    closeHint: false,
+    heroAsset: AppIcons.shopChestForKey(result.chestKey),
+    title: null,
+    showCloseHint: false,
   );
   if (!context.mounted || landed.isEmpty) return;
   final flights = <Future<void>>[];

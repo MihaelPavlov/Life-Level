@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../notifications/models/notification_preferences.dart';
 import '../notifications/services/notification_preferences_service.dart';
 import 'profile_stat_metadata.dart';
+import '../../core/widgets/app_toast.dart';
 
 class NotificationPreferencesScreen extends StatefulWidget {
   const NotificationPreferencesScreen({super.key});
@@ -37,14 +38,11 @@ class _NotificationPreferencesScreenState
           await NotificationPreferencesService().updatePreferences(prefs);
       if (!mounted) return;
       setState(() => _prefs = saved);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notification preferences saved')),
-      );
+      AppToast.success(context, 'Notification settings saved');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      AppToast.error(context, "Couldn't save notification settings",
+          detail: 'Check your connection and try again.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

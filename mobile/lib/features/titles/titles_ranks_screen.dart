@@ -1,19 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/motion/app_motion.dart';
+import '../../core/motion/reward_fx.dart';
+import '../../core/widgets/app_toast.dart';
 import '../character/providers/character_provider.dart';
+import 'models/title_models.dart';
 import 'providers/titles_provider.dart';
 import 'widgets/rank_ladder_widget.dart';
+import 'widgets/title_equip_flight.dart';
 import 'widgets/title_list_item.dart';
 import 'widgets/titles_profile_header.dart';
 
-class TitlesRanksScreen extends ConsumerWidget {
+class TitlesRanksScreen extends ConsumerStatefulWidget {
   final VoidCallback? onClose;
 
   const TitlesRanksScreen({super.key, this.onClose});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TitlesRanksScreen> createState() => _TitlesRanksScreenState();
+}
+
+class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
+  final _flight = TitleEquipFlight();
+
+  VoidCallback? get onClose => widget.onClose;
+
+  @override
+  void dispose() {
+    _flight.dispose();
+    super.dispose();
+  }
+
+  /// Ribbon flight: the title lifts off its card as a glowing pill, flies
+  /// into the header nameplate (the old title falls off meanwhile), and the
+  /// equip is committed as it lands — so the nameplate letters, badge and
+  /// border swap all play together from the optimistic update.
+  Future<void> _equip(TitleDto title) async {
+    if (_flight.inFlight) return;
+    final from = RewardFx.rectOf(_flight.nameKeyFor(title.id));
+    final to = RewardFx.rectOf(_flight.plateKey);
+    if (!RewardFx.enabled(context) || from == null || to == null) {
+      return _commit(title);
+    }
+    AppMotion.haptic(AppHaptic.selection);
+    _flight.launch(title.id);
+    await RewardFx.fly(
+      context,
+      child: TitleGhostPill(title: title),
+      from: from.center,
+      to: to.center,
+      lift: -70,
+      endScale: .92,
+      duration: const Duration(milliseconds: 560),
+      delay: const Duration(milliseconds: 80),
+    );
+    if (!mounted) return;
+    _flight.land();
+    RewardFx.burst(context, to.center, AppColors.orange,
+        count: 14, distance: 50);
+    AppMotion.haptic(AppHaptic.light);
+    await _commit(title);
+  }
+
+  Future<void> _commit(TitleDto title) async {
+    try {
+      await ref.read(titlesProvider.notifier).equipTitle(title.id);
+    } catch (_) {
+      _flight.cancel();
+      if (mounted) {
+        AppToast.error(context, 'Couldn\'t equip ${title.name}. Try again.');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final titlesAsync = ref.watch(titlesProvider);
     final profileAsync = ref.watch(characterProfileProvider);
 
@@ -92,7 +154,6 @@ class TitlesRanksScreen extends ConsumerWidget {
                 ),
                 data: (data) {
                   final profile = profileAsync.valueOrNull;
-                  final notifier = ref.read(titlesProvider.notifier);
 
                   return CustomScrollView(
                     slivers: [
@@ -101,6 +162,7 @@ class TitlesRanksScreen extends ConsumerWidget {
                             ? TitlesProfileHeader(
                                 data: data,
                                 profile: profile,
+                                flight: _flight,
                               )
                             : const SizedBox(height: 16),
                       ),
@@ -132,10 +194,18 @@ class TitlesRanksScreen extends ConsumerWidget {
                         delegate: SliverChildBuilderDelegate(
                           (_, i) => Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                            child: TitleListItem(
-                              title: data.earnedTitles[i],
-                              onEquip: () =>
-                                  notifier.equipTitle(data.earnedTitles[i].id),
+                            child: ListenableBuilder(
+                              listenable: _flight,
+                              builder: (_, __) {
+                                final t = data.earnedTitles[i];
+                                return TitleListItem(
+                                  key: ValueKey(t.id),
+                                  title: t,
+                                  nameKey: _flight.nameKeyFor(t.id),
+                                  equipDisabled: _flight.inFlight,
+                                  onEquip: () => _equip(t),
+                                );
+                              },
                             ),
                           ),
                           childCount: data.earnedTitles.length,

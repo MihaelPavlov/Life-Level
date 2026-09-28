@@ -1,6 +1,22 @@
 {
-  "generated_at": "2026-09-25T21:52:09.015840+00:00",
+  "generated_at": "2026-09-27T18:19:54.266662+00:00",
   "nodes": {
+    "backend_src_modules_lifelevel_modules_achievements_application_usecases_achievementservice": {
+      "code_fingerprint": "931aac570a66293e3779b5659dd99e9089b428dc590357565b7322b73c7768f7",
+      "label": "AchievementService.cs",
+      "last": "2026-09-25T21:52:25.362072+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T21:52:25.362072+00:00",
+          "outcome": "useful",
+          "q": "What do you think about Life-Level that we are currently building? Check the project."
+        }
+      ],
+      "score": 0.958103048,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Achievements/Application/UseCases/AchievementService.cs",
+      "status": "tentative",
+      "uses": 1
+    },
     "backend_src_modules_lifelevel_modules_adventure_encounters_domain_enums_chestrarity_lifelevel_modules_adventure_encounters_domain_enums_chestrarity": {
       "code_fingerprint": "916c9d0e37ae6263f99c0b5f9c8855b7d21c28e27873a7252ccafebffbb8163a",
       "label": "ChestRarity",
@@ -12,26 +28,47 @@
           "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
         }
       ],
-      "score": 0.997905165,
+      "score": 0.956091801,
       "source_file": "backend/src/modules/LifeLevel.Modules.Adventure.Encounters/Domain/Enums/ChestRarity.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_items_application_ports_chestitemrewardportadapter_lifelevel_modules_items_application_ports_chestitemrewardportadapter": {
+      "code_fingerprint": "d47d7a629ac9edd50a3b3d23ffc718d0dd685a1c6446ef30e4ddf7565ceeb3fd",
+      "label": "ChestItemRewardPortAdapter",
+      "last": "2026-09-27T18:07:14.430201+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:07:14.430201+00:00",
+          "outcome": "useful",
+          "q": "currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
+        }
+      ],
+      "score": 0.999796827,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Items/Application/Ports/ChestItemRewardPortAdapter.cs",
       "status": "tentative",
       "uses": 1
     },
     "backend_src_modules_lifelevel_modules_quest_application_usecases_questservice": {
       "code_fingerprint": "82ac6b6c505138dc5bb3625191b9bcedec99d4b1bcbd29189794a305b8d8a15d",
       "label": "QuestService.cs",
-      "last": "2026-09-23T21:17:32.565296+00:00",
+      "last": "2026-09-25T21:52:25.362072+00:00",
       "provenance": [
+        {
+          "date": "2026-09-25T21:52:25.362072+00:00",
+          "outcome": "useful",
+          "q": "What do you think about Life-Level that we are currently building? Check the project."
+        },
         {
           "date": "2026-09-23T21:17:32.565296+00:00",
           "outcome": "useful",
           "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
         }
       ],
-      "score": 0.954311547,
+      "score": 1.872427853,
       "source_file": "backend/src/modules/LifeLevel.Modules.Quest/Application/UseCases/QuestService.cs",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 2
     },
     "backend_src_modules_lifelevel_modules_quest_domain_data_questseeddata": {
       "code_fingerprint": "12d4f1e36c9f3d422a13c927e3ddf2425cd728d25c0481fdcfc2783c4a4d1c93",
@@ -44,8 +81,56 @@
           "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
         }
       ],
-      "score": 0.954311547,
+      "score": 0.914324805,
       "source_file": "backend/src/modules/LifeLevel.Modules.Quest/Domain/Data/QuestSeedData.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_worldzone_application_usecases_worldzoneservice": {
+      "code_fingerprint": "17b9f0e11caf39f459d1782f7d1074ae9553f1a3de0c7eb5ae1680ee9c05a0c7",
+      "label": "WorldZoneService.cs",
+      "last": "2026-09-25T21:52:25.362072+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T21:52:25.362072+00:00",
+          "outcome": "useful",
+          "q": "What do you think about Life-Level that we are currently building? Check the project."
+        }
+      ],
+      "score": 0.958103048,
+      "source_file": "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/WorldZoneService.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_tests_lifelevel_api_tests_achievementroadstests_lifelevel_api_tests_achievementroadstests": {
+      "code_fingerprint": "e607fbb92bbb25e79212d180b2f9ebf5e7c5069fb1669036d288623fc3348674",
+      "label": "AchievementRoadsTests",
+      "last": "2026-09-27T18:07:14.430201+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:07:14.430201+00:00",
+          "outcome": "useful",
+          "q": "currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
+        }
+      ],
+      "score": 0.999796827,
+      "source_file": "backend/tests/LifeLevel.Api.Tests/AchievementRoadsTests.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_tests_lifelevel_api_tests_guildservicetests": {
+      "code_fingerprint": "4f90a7cf95ecd7d12d01f86b4c549d0259c4cbce092287b889b192cbc3603fa8",
+      "label": "GuildServiceTests.cs",
+      "last": "2026-09-25T21:52:25.362072+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T21:52:25.362072+00:00",
+          "outcome": "useful",
+          "q": "What do you think about Life-Level that we are currently building? Check the project."
+        }
+      ],
+      "score": 0.958103048,
+      "source_file": "backend/tests/LifeLevel.Api.Tests/GuildServiceTests.cs",
       "status": "tentative",
       "uses": 1
     },
@@ -60,7 +145,7 @@
           "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
         }
       ],
-      "score": 0.997905165,
+      "score": 0.956091801,
       "source_file": "design-mockup/generated-icons/icon-prompts-hand-drawn-sticker.md",
       "status": "tentative",
       "uses": 1
@@ -76,8 +161,141 @@
           "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
         }
       ],
-      "score": 0.997905165,
+      "score": 0.956091801,
       "source_file": "docs/equipment-icon-prompts.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_obsidian_07_development_plan_achievement_reward_roads_plan_achievement_reward_roads": {
+      "code_fingerprint": "c2566306938e45220bab3494cf50b7e39c6d4e1d00c84e340e89ef5c2148eef5",
+      "label": "Plan - Achievement Reward Roads",
+      "last": "2026-09-25T21:52:25.362072+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T21:52:25.362072+00:00",
+          "outcome": "useful",
+          "q": "What do you think about Life-Level that we are currently building? Check the project."
+        }
+      ],
+      "score": 0.958103048,
+      "source_file": "docs/obsidian/07 - Development/Plan - Achievement Reward Roads.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_core_shell_main_shell": {
+      "code_fingerprint": "7605cff4cd9bdf71f413f51598c0ec5526126a2bd79ce1fcc67ceacf48d73f87",
+      "label": "shell/main_shell.dart",
+      "last": "2026-09-27T18:18:21.310933+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:18:21.310933+00:00",
+          "outcome": "useful",
+          "q": "on the home page where is the top left circle name and lv when we click on the icon of the user lets get navigated to the profile page, and also on the home page if we click on the mount and sword lets get navigate to gear page"
+        },
+        {
+          "date": "2026-09-25T21:56:17.030339+00:00",
+          "outcome": "useful",
+          "q": "Audit the center expandable menu in the bottom navigation and determine what happens if it is removed."
+        }
+      ],
+      "score": 1.958137549,
+      "source_file": "mobile/lib/core/shell/main_shell.dart",
+      "status": "preferred",
+      "uses": 2
+    },
+    "mobile_lib_core_shell_widgets_bottom_nav_bar": {
+      "code_fingerprint": "e5d68e440e939d7771005a7901ab56e74d99a6ae0f73d43a1676c1e7ec33f888",
+      "label": "bottom_nav_bar.dart",
+      "last": "2026-09-25T21:56:17.030339+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T21:56:17.030339+00:00",
+          "outcome": "useful",
+          "q": "Audit the center expandable menu in the bottom navigation and determine what happens if it is removed."
+        }
+      ],
+      "score": 0.958162407,
+      "source_file": "mobile/lib/core/shell/widgets/bottom_nav_bar.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_achievements_providers_achievements_provider_achievementroadsprovider": {
+      "code_fingerprint": "ae3ad68c303212ba230f27b6a06bb1c6ea7bf60ded202ae1e8a73718f328b524",
+      "label": "achievementRoadsProvider",
+      "last": "2026-09-27T18:07:14.430201+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:07:14.430201+00:00",
+          "outcome": "useful",
+          "q": "currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
+        }
+      ],
+      "score": 0.999796827,
+      "source_file": "mobile/lib/features/achievements/providers/achievements_provider.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_home_cards_home_hero_stage": {
+      "code_fingerprint": "cb7af5b71c5c510e6417ec8d3ffea7e55f4dc3a3a9c14bbd2dc65c2761f394bc",
+      "label": "home_hero_stage.dart",
+      "last": "2026-09-27T18:18:21.310933+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:18:21.310933+00:00",
+          "outcome": "useful",
+          "q": "on the home page where is the top left circle name and lv when we click on the icon of the user lets get navigated to the profile page, and also on the home page if we click on the mount and sword lets get navigate to gear page"
+        }
+      ],
+      "score": 0.999975142,
+      "source_file": "mobile/lib/features/home/cards/home_hero_stage.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_home_cards_home_portal_card_homeportalcard": {
+      "code_fingerprint": "e6b8d1d0c2b71f31cd6c974f4757a32537a53126781edeabae4d8a9714f6b639",
+      "label": "HomePortalCard",
+      "last": "2026-09-27T17:44:47.860968+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T17:44:47.860968+00:00",
+          "outcome": "useful",
+          "q": "currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?"
+        }
+      ],
+      "score": 0.999436868,
+      "source_file": "mobile/lib/features/home/cards/home_portal_card.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_home_widgets_home_progress_bar_homeprogressbar": {
+      "code_fingerprint": "2716f169d8e128c118e798c61d4f15e7b54ff4175fe86d7505b5e89281e2f27f",
+      "label": "HomeProgressBar",
+      "last": "2026-09-27T17:44:47.860968+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T17:44:47.860968+00:00",
+          "outcome": "useful",
+          "q": "currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?"
+        }
+      ],
+      "score": 0.999436868,
+      "source_file": "mobile/lib/features/home/widgets/home_progress_bar.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_map_widgets_encounter_blocker_sheet_blockersheet": {
+      "code_fingerprint": "46a73bcdbcf8ded43437c2f787d04074327dfc6803254a5981c7e29e09c4f5ef",
+      "label": "BlockerSheet",
+      "last": "2026-09-27T17:44:47.860968+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T17:44:47.860968+00:00",
+          "outcome": "useful",
+          "q": "currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?"
+        }
+      ],
+      "score": 0.999436868,
+      "source_file": "mobile/lib/features/map/widgets/encounter_blocker_sheet.dart",
       "status": "tentative",
       "uses": 1
     },
@@ -92,8 +310,24 @@
           "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
         }
       ],
-      "score": 0.954311547,
+      "score": 0.914324805,
       "source_file": "mobile/lib/features/quests/tabs/weekly_quests_tab.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "profile": {
+      "code_fingerprint": "",
+      "label": "Profile",
+      "last": "2026-09-25T21:56:17.030339+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-25T21:56:17.030339+00:00",
+          "outcome": "useful",
+          "q": "Audit the center expandable menu in the bottom navigation and determine what happens if it is removed."
+        }
+      ],
+      "score": 0.958162407,
+      "source_file": "",
       "status": "tentative",
       "uses": 1
     }

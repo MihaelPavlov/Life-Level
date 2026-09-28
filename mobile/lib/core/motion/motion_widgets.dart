@@ -421,11 +421,16 @@ class _TypewriterTextState extends State<TypewriterText>
 
 /// Title swap: when [text] changes the old text slides out to the left and
 /// fades, then the new text drops in letter by letter.
+///
+/// Pass `slideOut: false` when the caller already cleared the old text
+/// (e.g. the title-equip flight knocks it off) — only the letters drop in.
 class NameplateSwap extends StatefulWidget {
   final String text;
   final TextStyle style;
+  final bool slideOut;
 
-  const NameplateSwap(this.text, {super.key, required this.style});
+  const NameplateSwap(this.text,
+      {super.key, required this.style, this.slideOut = true});
 
   @override
   State<NameplateSwap> createState() => _NameplateSwapState();
@@ -434,7 +439,8 @@ class NameplateSwap extends StatefulWidget {
 class _NameplateSwapState extends State<NameplateSwap>
     with SingleTickerProviderStateMixin {
   final _mountedAt = DateTime.now();
-  static const _outMs = 200.0, _letterMs = 300.0, _stagger = 35.0;
+  static const _letterMs = 300.0, _stagger = 35.0;
+  double get _outMs => widget.slideOut ? 200.0 : 0.0;
   late final AnimationController _c = AnimationController(vsync: this)
     ..addListener(() => setState(() {}));
   String? _old;

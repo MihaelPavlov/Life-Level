@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:life_level/features/achievements/models/achievement_models.dart';
+import 'package:life_level/features/achievements/achievements_screen.dart';
 import 'package:life_level/features/achievements/providers/achievements_provider.dart';
 import 'package:life_level/features/achievements/roads/reward_roads_hub.dart';
 
@@ -29,8 +30,8 @@ Map<String, dynamic> _a(String id, String title, String tier,
     };
 
 Map<String, dynamic> _stage(String tier, String chestKey, String chestName,
-        List<Map<String, dynamic>> list,
-        {bool opened = false}) {
+    List<Map<String, dynamic>> list,
+    {bool opened = false}) {
   final claimed = list.where((a) => a['isClaimed'] == true).length;
   final unlocked = list.where((a) => a['isUnlocked'] == true).length;
   return {
@@ -50,16 +51,22 @@ Map<String, dynamic> _stage(String tier, String chestKey, String chestName,
   };
 }
 
-AchievementRoadsData _data({required bool stage2Claimed, bool stage2Opened = false}) {
+AchievementRoadsData _data(
+    {required bool stage2Claimed, bool stage2Opened = false}) {
   final stages = [
     _stage('Common', 'wayfarer', 'Wayfarer Chest',
         [_a('c1', 'First Steps', 'Common', unlocked: true, claimed: true)],
         opened: true),
-    _stage('Uncommon', 'wayfarer', 'Wayfarer Chest', [
-      _a('u1', 'Road Warrior', 'Uncommon', unlocked: true, claimed: true),
-      _a('u2', 'Weekend Long Run', 'Uncommon',
-          unlocked: true, claimed: stage2Claimed),
-    ], opened: stage2Opened),
+    _stage(
+        'Uncommon',
+        'wayfarer',
+        'Wayfarer Chest',
+        [
+          _a('u1', 'Road Warrior', 'Uncommon', unlocked: true, claimed: true),
+          _a('u2', 'Weekend Long Run', 'Uncommon',
+              unlocked: true, claimed: stage2Claimed),
+        ],
+        opened: stage2Opened),
     _stage('Rare', 'adept', 'Adept Chest',
         [_a('r1', 'Marathon Prep', 'Rare', current: 6)]),
   ];
@@ -148,6 +155,36 @@ Widget _app(_FakeRoads fake, {bool motion = false}) => ProviderScope(
     );
 
 void main() {
+  testWidgets('road detail stays inside achievements navigation',
+      (tester) async {
+    final fake = _FakeRoads();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [achievementRoadsProvider.overrideWith(() => fake)],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Expanded(child: AchievementsScreen()),
+                SizedBox(height: 64, child: Center(child: Text('BOTTOM NAV'))),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final runningRoad = find.text('Running').last;
+    await tester.ensureVisible(runningRoad);
+    await tester.pumpAndSettle();
+    await tester.tap(runningRoad);
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Back to all roads'), findsOneWidget);
+    expect(find.text('BOTTOM NAV'), findsOneWidget);
+  });
+
   testWidgets('hub shows the ready bar, continue card and road tiles',
       (tester) async {
     await tester.pumpWidget(_app(_FakeRoads()));
@@ -158,8 +195,20 @@ void main() {
     expect(find.text('CONTINUE'), findsOneWidget);
     expect(find.text('Claim 1 to open the Wayfarer Chest'), findsOneWidget);
     expect(find.text('Running'), findsOneWidget);
-    // Tile badge + the continue card's legend.
-    expect(find.text('1 ready'), findsNWidgets(2));
+    // Claimable achievements stay in the action surfaces; the road tile is
+    // reserved for a genuinely openable chest.
+    expect(find.text('1 ready'), findsOneWidget);
+    expect(find.text('Chest ready'), findsNothing);
+  });
+
+  testWidgets('only a road with an openable chest shows Chest ready',
+      (tester) async {
+    final fake = _FakeRoads()
+      ..current = _data(stage2Claimed: true, stage2Opened: false);
+    await tester.pumpWidget(_app(fake));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chest ready'), findsOneWidget);
   });
 
   testWidgets(

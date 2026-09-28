@@ -38,4 +38,11 @@ public class ActivityController(
         var history = await activityService.GetHistoryAsync(userId);
         return Ok(history);
     }
+
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(CancellationToken ct)
+    {
+        var summary = await activityService.GetSummaryAsync(userContext.UserId, ct);
+        return Ok(summary);
+    }
 }

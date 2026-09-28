@@ -48,6 +48,7 @@ Same as LogActivity but for 3rd-party integrations (Strava webhook, Health Conne
 ### Other methods
 
 - `GetHistoryAsync(userId)` — last 20 activities as `ActivityHistoryDto`
+- `GetSummaryAsync(userId)` — all-time persisted step total for the user's character
 - `GetWeeklyStatsAsync(userId)` — `WeeklyActivityStatsDto(Runs, DistanceKm, XpEarned)`
 - `FindActivityIdByExternalIdAsync(characterId, externalId)` — dedup lookup
 
@@ -92,6 +93,7 @@ int steps = (type in {Run, Cycle, Hike, Walk}) ? (int)(distance * 1250) : 0;
 ## Endpoints
 - `POST /api/activity/log`
 - `GET /api/activity/history`
+- `GET /api/activity/summary`
 
 ## Files
 - `backend/src/modules/LifeLevel.Modules.Activity/`

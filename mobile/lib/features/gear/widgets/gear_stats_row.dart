@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/motion/app_motion.dart';
+import '../../../core/widgets/resource_info_dialog.dart';
 import '../../character/models/character_profile.dart';
 
 /// Combat readout for the Gear page: Power alongside Attack / HP / Defense.
@@ -211,23 +212,70 @@ class _GearStatsRowState extends State<GearStatsRow>
       }
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        icon,
-        const SizedBox(width: 6),
-        // The arrow floats just right of the number without taking layout
-        // space, so the row doesn't shift while it's visible.
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            number,
-            if (arrow != null) Positioned(right: -12, top: 2, child: arrow),
-          ],
+    final info = _infoFor(s);
+    return Semantics(
+      button: true,
+      label: '${info.name} information',
+      child: GestureDetector(
+        key: ValueKey('gear-${s.name}-info'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showResourceInfoDialog(context, info),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              icon,
+              const SizedBox(width: 6),
+              // The arrow floats just right of the number without taking
+              // layout space, so the row doesn't shift while it's visible.
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  number,
+                  if (arrow != null)
+                    Positioned(right: -12, top: 2, child: arrow),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
+
+  ResourceInfoData _infoFor(_Stat stat) => switch (stat) {
+        _Stat.power => const ResourceInfoData(
+            name: 'Power',
+            icon: AppIcons.homePowerIcon,
+            description:
+                'Your overall combat rating from stats, equipped gear, and talents.',
+            destination: 'Combat',
+          ),
+        _Stat.attack => const ResourceInfoData(
+            name: 'Strength',
+            icon: AppIcons.homeSwordIcon,
+            description:
+                'Your attack strength. Higher values increase your offensive combat impact.',
+            destination: 'Attack',
+          ),
+        _Stat.health => const ResourceInfoData(
+            name: 'Health',
+            materialIcon: Icons.favorite_rounded,
+            materialIconColor: AppColors.red,
+            description:
+                'How much damage your hero can withstand before being defeated.',
+            destination: 'Survivability',
+          ),
+        _Stat.defense => const ResourceInfoData(
+            name: 'Shield',
+            materialIcon: Icons.shield_rounded,
+            materialIconColor: AppColors.blue,
+            description:
+                'Your defense rating from stats and equipment, reducing incoming combat pressure.',
+            destination: 'Defense',
+          ),
+      };
 
   static TextStyle _valueStyle(Color color, [List<Shadow>? shadows]) =>
       TextStyle(

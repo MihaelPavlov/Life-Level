@@ -1,5 +1,6 @@
 using LifeLevel.Api.Infrastructure.Persistence;
 using LifeLevel.Modules.Activity.Application.UseCases;
+using ActivityEntity = LifeLevel.Modules.Activity.Domain.Entities.Activity;
 using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Events;
@@ -12,7 +13,28 @@ namespace LifeLevel.Api.Tests;
 public class ActivityServiceExternalItemGrantTests
 {
     [Fact]
-    public async Task LogExternalActivityAsync_WhenLevelingUp_EvaluatesLevelItemRewards()
+    public async Task GetSummaryAsync_SumsOnlyTheUsersActivitySteps()
+    {
+        var userId = Guid.NewGuid();
+        var characterId = Guid.NewGuid();
+        var otherCharacterId = Guid.NewGuid();
+        await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options);
+        db.Set<ActivityEntity>().AddRange(
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = characterId, Steps = 2_100 },
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = characterId, Steps = 3_400 },
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = otherCharacterId, Steps = 9_999 });
+        await db.SaveChangesAsync();
+        var service = CreateService(db, characterId, new CapturingLevelUpItemGrantPort());
+
+        var summary = await service.GetSummaryAsync(userId);
+
+        Assert.Equal(5_500, summary.TotalSteps);
+    }
+
+    [Fact]
+    public async Task LogExternalActivityAsync_WhenLevelingUp_DefersItemsToLevelUpEvent()
     {
         var userId = Guid.NewGuid();
         var characterId = Guid.NewGuid();
@@ -20,20 +42,11 @@ public class ActivityServiceExternalItemGrantTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options);
         var itemGrant = new CapturingLevelUpItemGrantPort();
-        var service = new ActivityService(
+        var service = CreateService(
             db,
-            new StubCharacterXpPort(new XpAwardResult(true, 4, 9)),
-            new NoopCharacterStatPort(),
-            new StubCharacterIdReadPort(characterId),
-            new NoopEventPublisher(),
-            new NullStreakReadPort(),
-            new NoopQuestProgressPort(),
-            new NullWorldZoneDistancePort(),
-            new EmptyGearBonusReadPort(),
+            characterId,
             itemGrant,
-            new EmptyZoneUnlockReadPort(),
-            new NoopCharacterTutorialPort(),
-            NullLogger<ActivityService>.Instance);
+            new XpAwardResult(true, 4, 9));
 
         await service.LogExternalActivityAsync(
             userId,
@@ -45,11 +58,28 @@ public class ActivityServiceExternalItemGrantTests
             externalId: "sync-1",
             performedAt: DateTime.UtcNow);
 
-        Assert.Equal(userId, itemGrant.UserId);
-        Assert.Equal(4, itemGrant.PreviousLevel);
-        Assert.Equal(9, itemGrant.NewLevel);
-        Assert.Equal(1, itemGrant.Calls);
+        Assert.Equal(0, itemGrant.Calls);
     }
+
+    private static ActivityService CreateService(
+        AppDbContext db,
+        Guid characterId,
+        CapturingLevelUpItemGrantPort itemGrant,
+        XpAwardResult? xpResult = null) =>
+        new(
+            db,
+            new StubCharacterXpPort(xpResult ?? new XpAwardResult(false, 1, 1)),
+            new NoopCharacterStatPort(),
+            new StubCharacterIdReadPort(characterId),
+            new NoopEventPublisher(),
+            new NullStreakReadPort(),
+            new NoopQuestProgressPort(),
+            new NullWorldZoneDistancePort(),
+            new EmptyGearBonusReadPort(),
+            itemGrant,
+            new EmptyZoneUnlockReadPort(),
+            new NoopCharacterTutorialPort(),
+            NullLogger<ActivityService>.Instance);
 
     private sealed class StubCharacterXpPort(XpAwardResult result) : ICharacterXpPort
     {

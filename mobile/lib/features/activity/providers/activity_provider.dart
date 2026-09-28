@@ -8,3 +8,7 @@ final activityServiceProvider =
 final activityHistoryProvider = FutureProvider<List<ActivityHistoryDto>>(
   (ref) => ref.read(activityServiceProvider).getHistory(),
 );
+
+final activitySummaryProvider = FutureProvider<ActivitySummary>(
+  (ref) => ref.read(activityServiceProvider).getSummary(),
+);

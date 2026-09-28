@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../auth/models/account_models.dart';
 import '../auth/services/auth_service.dart';
 import 'profile_stat_metadata.dart';
+import '../../core/widgets/app_toast.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -51,14 +52,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       await ApiClient.saveToken(result.token);
       _emailPasswordController.clear();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email updated')),
-      );
+      AppToast.success(context, 'Email updated');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      AppToast.error(context, e.toString());
     } finally {
       if (mounted) setState(() => _savingEmail = false);
     }
@@ -77,14 +74,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       _newPasswordController.clear();
       _confirmPasswordController.clear();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password updated')),
-      );
+      AppToast.success(context, 'Password updated');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      AppToast.error(context, e.toString());
     } finally {
       if (mounted) setState(() => _savingPassword = false);
     }

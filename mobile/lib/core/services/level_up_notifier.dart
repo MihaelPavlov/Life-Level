@@ -24,4 +24,8 @@ class LevelUpNotifier {
 
   static void notify(int newLevel, {LevelUpUnlocks? unlocks}) =>
       _controller.add(LevelUpEvent(newLevel, unlocks: unlocks));
+
+  /// Requests a durable pending-receipt check when a mutation may have
+  /// awarded XP indirectly (bosses, chests, quests, guilds, and so on).
+  static void checkPending() => _controller.add(const LevelUpEvent(0));
 }

@@ -16,7 +16,7 @@ public class LevelUpNotificationHandler(INotificationPort notifications)
             userId: e.UserId,
             category: "level-up",
             title: "🎉 Level Up!",
-            body: $"You reached Level {e.NewLevel}. New zones unlocked!",
+            body: $"You reached Level {e.NewLevel}. Open Life-Level to see what changed.",
             data: new Dictionary<string, string>
             {
                 ["deeplink"] = "lifelevel://home"

@@ -34,12 +34,18 @@ import '../widgets/zone_trail.dart';
 /// Matches screens 2 + 4 of `design-mockup/map/WORLD-MAP-FINAL-MOCKUP.html`.
 class RegionDetailScreen extends ConsumerStatefulWidget {
   final String regionId;
+  final String? initialZoneId;
 
   /// When the hub embeds this screen inline (so the shell nav bar stays
   /// visible), the back arrow delegates here instead of popping a route.
   final VoidCallback? onBack;
 
-  const RegionDetailScreen({super.key, required this.regionId, this.onBack});
+  const RegionDetailScreen({
+    super.key,
+    required this.regionId,
+    this.initialZoneId,
+    this.onBack,
+  });
 
   @override
   ConsumerState<RegionDetailScreen> createState() => _RegionDetailScreenState();
@@ -52,6 +58,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   // Attached to the active zone bubble inside ZoneTrail so we can call
   // Scrollable.ensureVisible to auto-scroll the user there on entry.
   final GlobalKey _activeNodeKey = GlobalKey();
+  final GlobalKey _initialNodeKey = GlobalKey();
   final GlobalKey _backButtonKey = GlobalKey();
   final GlobalKey _trailKey = GlobalKey();
   final Map<String, GlobalKey> _tutorialZoneKeys = {};
@@ -76,6 +83,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   bool _loading = true;
   String? _error;
   TutorialStep? _lastTutorialStep;
+  bool _initialZoneHandled = false;
 
   @override
   void initState() {
@@ -130,7 +138,9 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       // Once the trail has laid out, snap the viewport to the active zone so
       // the user always lands on their current position.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToCurrentTutorialTarget();
+        if (!_openInitialZone(region)) {
+          _scrollToCurrentTutorialTarget();
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -154,6 +164,29 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
       // they're going) without having to scroll.
       alignment: 0.3,
     );
+  }
+
+  bool _openInitialZone(RegionDetail region) {
+    final zoneId = widget.initialZoneId;
+    if (_initialZoneHandled || zoneId == null || zoneId.isEmpty) return false;
+    final node = region.nodes.cast<ZoneNode?>().firstWhere(
+          (candidate) => candidate?.id == zoneId,
+          orElse: () => null,
+        );
+    if (node == null) return false;
+
+    _initialZoneHandled = true;
+    final nodeContext = _initialNodeKey.currentContext;
+    if (nodeContext != null) {
+      Scrollable.ensureVisible(
+        nodeContext,
+        duration: const Duration(milliseconds: 520),
+        curve: Curves.easeOutCubic,
+        alignment: 0.32,
+      );
+    }
+    _showNodeSheet(node);
+    return true;
   }
 
   void _scrollToCurrentTutorialTarget() {
@@ -903,7 +936,11 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                           avatarEmoji: avatar,
                           onTap: _showNodeSheet,
                           activeNodeKey: _activeNodeKey,
-                          keysByNodeId: _tutorialZoneKeys,
+                          keysByNodeId: {
+                            ..._tutorialZoneKeys,
+                            if (widget.initialZoneId case final zoneId?)
+                              zoneId: _initialNodeKey,
+                          },
                           encounters: region.encounters,
                           onEncounterTap: _showEncounterSheet,
                           travel: _travel,

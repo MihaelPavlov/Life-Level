@@ -5,7 +5,12 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../../core/widgets/currency_chip.dart';
+import '../../../core/widgets/resource_info_dialog.dart';
 import '../../character/models/character_profile.dart';
+import '../../activity/providers/activity_provider.dart';
+import '../../gear/widgets/gear_paperdoll.dart';
+import '../../items/models/item_models.dart';
+import '../../items/providers/items_provider.dart';
 import '../../shop/shop_screen.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../providers/world_progress_provider.dart';
@@ -17,12 +22,10 @@ import '../widgets/home_avatar_ring.dart';
 /// very top of the screen down through the character, instead of the header
 /// sitting on a flat page background above a separate bordered card.
 ///
-/// The scene/character/mount/sword art is fixed decorative art for every
-/// user — there is no per-user character render and no "Mount"/"Weapon"
-/// concept anywhere in the domain yet, so those two mini-cards' icons are
-/// static. The Run/Shields chips and the header's XP/currencies ARE wired to real
-/// data (same providers as the old standalone `HomeStatStrip`/`HomeHeader`,
-/// now folded into this one panel).
+/// The character uses the same equipment-aware paper doll as the Gear screen.
+/// Mount/Weapon mini-card art remains static because those concepts are not
+/// represented in the domain yet. Run/Shields and the header currencies are
+/// wired to real data.
 class HomeHeroStage extends ConsumerWidget {
   final CharacterProfile? profile;
   const HomeHeroStage({super.key, this.profile});
@@ -50,6 +53,9 @@ class HomeHeroStage extends ConsumerWidget {
         0.0;
     final shields =
         ref.watch(streakProvider).valueOrNull?.shieldsAvailable ?? 0;
+    final equipment = ref.watch(equipmentProvider).valueOrNull;
+    final totalSteps =
+        ref.watch(activitySummaryProvider).valueOrNull?.totalSteps;
     final bankedDim = pendingKm <= 0.001;
     final topPad = MediaQuery.of(context).padding.top;
 
@@ -126,7 +132,11 @@ class HomeHeroStage extends ConsumerWidget {
                   SizedBox(height: topPad + 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _HeaderRow(profile: p, coins: coins),
+                    child: _HeaderRow(
+                      profile: p,
+                      coins: coins,
+                      totalSteps: totalSteps,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Padding(
@@ -148,7 +158,10 @@ class HomeHeroStage extends ConsumerWidget {
                                 left: px(4),
                                 top: py(46),
                                 child: _MiniCard(
+                                  key: const ValueKey('home-mount-button'),
                                   size: px(72),
+                                  semanticsLabel: 'Open gear from mount',
+                                  onTap: () => NavTabNotifier.switchTo('gear'),
                                   icon: Image.asset(AppIcons.homeMountIcon,
                                       fit: BoxFit.contain),
                                 ),
@@ -159,20 +172,26 @@ class HomeHeroStage extends ConsumerWidget {
                                 right: px(4),
                                 top: py(46),
                                 child: _MiniCard(
+                                  key: const ValueKey('home-weapon-button'),
                                   size: px(72),
+                                  semanticsLabel: 'Open gear from weapon',
+                                  onTap: () => NavTabNotifier.switchTo('gear'),
                                   icon: Image.asset(AppIcons.homeSwordIcon,
                                       fit: BoxFit.contain),
                                 ),
                               ),
 
-                              // ── character (fixed art, floating+breathing)
+                              // ── equipped character (floating+breathing) ──
                               Positioned(
                                 left: 0,
                                 right: 0,
                                 bottom: py(20),
                                 child: Align(
                                   alignment: Alignment.center,
-                                  child: _FloatingCharacter(height: py(258)),
+                                  child: _FloatingCharacter(
+                                    equipment: equipment,
+                                    height: py(258),
+                                  ),
                                 ),
                               ),
 
@@ -182,24 +201,34 @@ class HomeHeroStage extends ConsumerWidget {
                               Positioned(
                                 left: px(4),
                                 bottom: py(12),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Image.asset(AppIcons.homePowerIcon,
-                                        width: px(32),
-                                        height: px(32),
-                                        fit: BoxFit.contain),
-                                    SizedBox(width: px(6)),
-                                    Text(
-                                      _fmtPower(p?.power ?? 0),
-                                      style: TextStyle(
-                                        fontSize: px(22),
-                                        fontWeight: FontWeight.w900,
-                                        height: 1.0,
-                                        color: AppColors.orange,
-                                      ),
+                                child: Semantics(
+                                  button: true,
+                                  label: 'Power information',
+                                  child: GestureDetector(
+                                    key: const ValueKey('home-power-button'),
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => _showPower(context),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Image.asset(AppIcons.homePowerIcon,
+                                            width: px(32),
+                                            height: px(32),
+                                            fit: BoxFit.contain),
+                                        SizedBox(width: px(6)),
+                                        Text(
+                                          _fmtPower(p?.power ?? 0),
+                                          style: TextStyle(
+                                            fontSize: px(22),
+                                            fontWeight: FontWeight.w900,
+                                            height: 1.0,
+                                            color: AppColors.orange,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
 
@@ -211,19 +240,23 @@ class HomeHeroStage extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     _StatChip(
+                                      key: const ValueKey(
+                                          'home-banked-distance-button'),
                                       iconAsset: AppIcons.mapCurrentLocation,
                                       label: bankedDim ? 'RUN' : 'BANKED',
                                       value: bankedDim
                                           ? '—'
                                           : '${pendingKm.toStringAsFixed(1)} km',
-                                      onTap: () =>
-                                          NavTabNotifier.switchTo('world'),
+                                      onTap: () => _showBankedDistance(context),
                                     ),
                                     SizedBox(width: px(7)),
                                     _StatChip(
+                                      key:
+                                          const ValueKey('home-shields-button'),
                                       iconAsset: AppIcons.rewardStreakShield,
                                       label: 'SHIELDS',
                                       value: '$shields',
+                                      onTap: () => _showShields(context),
                                     ),
                                   ],
                                 ),
@@ -247,7 +280,12 @@ class HomeHeroStage extends ConsumerWidget {
 class _HeaderRow extends StatelessWidget {
   final CharacterProfile? profile;
   final int coins;
-  const _HeaderRow({required this.profile, required this.coins});
+  final int? totalSteps;
+  const _HeaderRow({
+    required this.profile,
+    required this.coins,
+    required this.totalSteps,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -255,12 +293,21 @@ class _HeaderRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        HomeAvatarRing(
-          emoji: p?.avatarEmoji ?? '🧙',
-          level: p?.level ?? 1,
-          xpProgress: p?.xpProgress ?? 0.0,
-          size: 46,
-          showLevelPill: false,
+        Semantics(
+          button: true,
+          label: 'Open profile',
+          child: GestureDetector(
+            key: const ValueKey('home-profile-button'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => NavTabNotifier.switchTo('profile'),
+            child: HomeAvatarRing(
+              emoji: p?.avatarEmoji ?? '🧙',
+              level: p?.level ?? 1,
+              xpProgress: p?.xpProgress ?? 0.0,
+              size: 46,
+              showLevelPill: false,
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -309,11 +356,12 @@ class _HeaderRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        // TODO: no Steps concept yet — static placeholder.
-        const CurrencyChip(
+        CurrencyChip(
+          key: const ValueKey('home-steps-button'),
           iconAsset: AppIcons.homeStepsIcon,
-          value: '8,421',
+          value: totalSteps == null ? '—' : _fmtPower(totalSteps!),
           showAdd: false,
+          onTapAdd: () => _showSteps(context),
         ),
         const SizedBox(width: 6),
         CurrencyChip(
@@ -336,49 +384,114 @@ void _openShop(BuildContext context) {
   Navigator.of(context).push(AppRoute(builder: (_) => const ShopScreen()));
 }
 
+void _showSteps(BuildContext context) {
+  showResourceInfoDialog(
+    context,
+    const ResourceInfoData(
+      name: 'Steps',
+      icon: AppIcons.homeStepsIcon,
+      description:
+          'All steps recorded across your logged and synced activities.',
+      destination: 'Activity tracking',
+    ),
+  );
+}
+
+void _showPower(BuildContext context) {
+  showResourceInfoDialog(
+    context,
+    const ResourceInfoData(
+      name: 'Power',
+      icon: AppIcons.homePowerIcon,
+      description:
+          'Your overall combat strength, calculated from character stats, equipped gear, and talents.',
+      destination: 'Combat',
+    ),
+  );
+}
+
+void _showBankedDistance(BuildContext context) {
+  showResourceInfoDialog(
+    context,
+    const ResourceInfoData(
+      name: 'Banked Distance',
+      icon: AppIcons.mapCurrentLocation,
+      description:
+          'Distance saved from your activities and ready to advance your journey.',
+      destination: 'World map',
+    ),
+  );
+}
+
+void _showShields(BuildContext context) {
+  showResourceInfoDialog(
+    context,
+    const ResourceInfoData(
+      name: 'Streak Shields',
+      icon: AppIcons.rewardStreakShield,
+      description: 'Protects an active streak when you miss an eligible day.',
+      destination: 'Streak protection',
+    ),
+  );
+}
+
 class _MiniCard extends StatelessWidget {
   final double size;
   final Widget icon;
+  final String semanticsLabel;
+  final VoidCallback onTap;
 
   const _MiniCard({
+    super.key,
     required this.size,
     required this.icon,
+    required this.semanticsLabel,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: size,
-          height: size,
-          padding: EdgeInsets.all(size * 0.14),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.4),
-            border: Border.all(color: const Color(0xFF7DB6FF), width: 1.2),
-            borderRadius: BorderRadius.circular(size * 0.16),
-          ),
-          child: icon,
-        ),
-        // Decorative swap affordance — matches the reference art; no
-        // render-swap feature exists yet, so it's non-interactive.
-        Positioned(
-          top: -size * 0.14,
-          right: -size * 0.14,
-          child: Container(
-            width: size * 0.32,
-            height: size * 0.32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF0c1420),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: size,
+              height: size,
+              padding: EdgeInsets.all(size * 0.14),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4),
+                border: Border.all(color: const Color(0xFF7DB6FF), width: 1.2),
+                borderRadius: BorderRadius.circular(size * 0.16),
+              ),
+              child: icon,
             ),
-            child:
-                Icon(Icons.autorenew, size: size * 0.18, color: Colors.white70),
-          ),
+            // Decorative swap affordance — matches the reference art; no
+            // render-swap feature exists yet, so it's non-interactive.
+            Positioned(
+              top: -size * 0.14,
+              right: -size * 0.14,
+              child: Container(
+                width: size * 0.32,
+                height: size * 0.32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF0c1420),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                ),
+                child: Icon(Icons.autorenew,
+                    size: size * 0.18, color: Colors.white70),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -390,6 +503,7 @@ class _StatChip extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _StatChip({
+    super.key,
     required this.iconAsset,
     required this.label,
     required this.value,
@@ -451,8 +565,9 @@ class _StatChip extends StatelessWidget {
 }
 
 class _FloatingCharacter extends StatefulWidget {
+  final CharacterEquipmentResponse? equipment;
   final double height;
-  const _FloatingCharacter({required this.height});
+  const _FloatingCharacter({required this.equipment, required this.height});
 
   @override
   State<_FloatingCharacter> createState() => _FloatingCharacterState();
@@ -495,11 +610,17 @@ class _FloatingCharacterState extends State<_FloatingCharacter>
         offset: Offset(0, _dy.value),
         child: Transform.scale(scale: _scale.value, child: child),
       ),
-      child: Image.asset(
-        AppIcons.homeBaseRender,
-        height: widget.height,
-        fit: BoxFit.contain,
-      ),
+      child: widget.equipment == null
+          ? Image.asset(
+              AppIcons.gearBaseRender,
+              height: widget.height,
+              fit: BoxFit.contain,
+            )
+          : GearPaperDoll(
+              key: const ValueKey('home-equipped-hero'),
+              equipment: widget.equipment!,
+              height: widget.height,
+            ),
     );
   }
 }

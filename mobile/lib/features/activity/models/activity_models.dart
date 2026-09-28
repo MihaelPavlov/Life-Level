@@ -526,3 +526,12 @@ class ActivityHistoryDto {
     }
   }
 }
+
+class ActivitySummary {
+  final int totalSteps;
+
+  const ActivitySummary({required this.totalSteps});
+
+  factory ActivitySummary.fromJson(Map<String, dynamic> json) =>
+      ActivitySummary(totalSteps: (json['totalSteps'] as num?)?.toInt() ?? 0);
+}

@@ -4,6 +4,7 @@ import '../models/character_profile.dart';
 import '../models/character_setup_result.dart';
 import '../models/avatar_option.dart';
 import '../models/xp_history_entry.dart';
+import '../models/level_up_receipt.dart';
 
 class CharacterService {
   final _dio = ApiClient.instance;
@@ -37,6 +38,18 @@ class CharacterService {
     return list
         .map((e) => XpHistoryEntry.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<LevelUpReceipt>> getPendingLevelUps() async {
+    final response = await _dio.get('/character/level-ups/pending');
+    return (response.data as List<dynamic>)
+        .map(
+            (e) => LevelUpReceipt.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<void> acknowledgeLevelUp(String receiptId) async {
+    await _dio.post('/character/level-ups/$receiptId/acknowledge');
   }
 
   Future<void> spendStatPoint(String stat) async {

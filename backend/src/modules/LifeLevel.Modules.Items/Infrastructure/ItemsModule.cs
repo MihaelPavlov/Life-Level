@@ -1,5 +1,7 @@
 using LifeLevel.Modules.Items.Application.Ports;
 using LifeLevel.Modules.Items.Application.UseCases;
+using LifeLevel.Modules.Items.Application.EventHandlers;
+using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +18,7 @@ public static class ItemsModule
         services.AddScoped<ILevelUpItemGrantPort, LevelUpItemGrantPortAdapter>();
         services.AddScoped<IItemRewardGrantPort, ItemRewardGrantPortAdapter>();
         services.AddScoped<IChestItemRewardPort, ChestItemRewardPortAdapter>();
+        services.AddScoped<IEventHandler<CharacterLeveledUpEvent>, LevelUpItemGrantHandler>();
         return services;
     }
 }

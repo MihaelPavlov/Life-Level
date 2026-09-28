@@ -190,13 +190,11 @@ public class ActivityService(
         LevelUpUnlocksDto? levelUpUnlocks = null;
         if (xpResult.LeveledUp)
         {
-            var grantedItems = await levelUpItemGrant.EvaluateAndGrantAsync(
-                userId, xpResult.PreviousLevel, xpResult.NewLevel);
             var unlockedZones = await zoneUnlockRead.GetZonesUnlockedInRangeAsync(
                 xpResult.PreviousLevel, xpResult.NewLevel);
             levelUpUnlocks = new LevelUpUnlocksDto(
                 StatPointsGained: xpResult.NewLevel - xpResult.PreviousLevel,
-                GrantedItems: grantedItems,
+                GrantedItems: [],
                 UnlockedZones: unlockedZones);
         }
 
@@ -282,12 +280,6 @@ public class ActivityService(
         await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta));
         var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
             $"{type} workout · {durationMinutes} min", xp);
-        if (xpResult.LeveledUp)
-        {
-            await levelUpItemGrant.EvaluateAndGrantAsync(
-                userId, xpResult.PreviousLevel, xpResult.NewLevel, ct);
-        }
-
         if (distanceKm > 0)
         {
             logger.LogInformation("ActivityService.LogExternalActivity user={UserId} type={Type} incomingDistanceKm={Km} externalId={ExternalId}",
@@ -374,6 +366,20 @@ public class ActivityService(
                 LoggedAt = a.LoggedAt,
             })
             .ToListAsync();
+    }
+
+    public async Task<ActivitySummaryDto> GetSummaryAsync(
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null) return new ActivitySummaryDto(0);
+
+        var totalSteps = await db.Set<ActivityEntity>()
+            .Where(a => a.CharacterId == characterId)
+            .SumAsync(a => (long)a.Steps, ct);
+
+        return new ActivitySummaryDto(totalSteps);
     }
 
     // IActivityStatsReadPort

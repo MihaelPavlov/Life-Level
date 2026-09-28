@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:life_level/core/services/boss_overlay_notifier.dart';
+import 'package:life_level/core/services/world_map_notifier.dart';
 import 'package:life_level/features/boss/models/boss_list_item.dart';
 import 'package:life_level/features/boss/providers/boss_provider.dart';
 import 'package:life_level/features/character/models/character_profile.dart';
@@ -250,6 +251,38 @@ void main() {
     expect(find.textContaining('Pale Hollow'), findsOneWidget);
     expect(find.textContaining('FLOOR 2 / 3'), findsOneWidget);
     expect(find.text('Enter dungeon →'), findsOneWidget);
+  });
+
+  testWidgets('dungeon CTA targets its exact region and zone', (tester) async {
+    final zone = _zone(id: 'dungeon-1', type: 'dungeon', name: 'Pale Hollow');
+    final region = _region(
+      nodes: [
+        _zoneNode(
+          id: 'dungeon-1',
+          isDungeon: true,
+          dungeonFloorsTotal: 3,
+          dungeonFloorsCompleted: 1,
+        ),
+      ],
+    );
+    final request = Completer<WorldMapOpenRequest>();
+    final subscription = WorldMapNotifier.stream.listen(request.complete);
+    addTearDown(subscription.cancel);
+
+    await tester.pumpWidget(_harness(
+      world: _world(
+        zones: [zone],
+        currentZoneId: 'dungeon-1',
+        currentRegionId: 'region-1',
+      ),
+      region: region,
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enter dungeon →'));
+
+    final target = await request.future;
+    expect(target.regionId, 'region-1');
+    expect(target.zoneId, 'dungeon-1');
   });
 
   testWidgets('crossroads portal lists branches from edges', (tester) async {

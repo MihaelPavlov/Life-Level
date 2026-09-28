@@ -137,6 +137,47 @@ public class AchievementRoadsTests
         Assert.Equal(200, currency.Coins);
     }
 
+    [Fact]
+    public async Task LaterStageChest_WaitsForEveryPreviousStageChest()
+    {
+        await using var db = Db();
+        var (common, _, _, rare) = Seed(db);
+        Unlock(db, common, claimed: true);
+        Unlock(db, rare, claimed: true);
+        db.UserAchievementStageChests.Add(new UserAchievementStageChest
+        {
+            UserId = User,
+            Category = AchievementCategory.Running,
+            Tier = AchievementTier.Common,
+            OpenedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+        var (service, _, _, _) = Service(db);
+
+        var before = await service.GetRoadsAsync(User);
+        var running = Assert.Single(before.Roads);
+        Assert.Equal(1, running.CurrentStage);
+        Assert.False(running.Stages.Single(s => s.Tier == "Rare").ChestReady);
+        Assert.Equal(0, before.ChestsReady);
+
+        var blocked = await Assert.ThrowsAsync<AchievementException>(
+            () => service.OpenStageChestAsync(User, "Running", "Rare"));
+        Assert.Equal("previous_stage_not_opened", blocked.Code);
+
+        db.UserAchievementStageChests.Add(new UserAchievementStageChest
+        {
+            UserId = User,
+            Category = AchievementCategory.Running,
+            Tier = AchievementTier.Uncommon,
+            OpenedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var after = await service.GetRoadsAsync(User);
+        Assert.True(after.Roads.Single().Stages.Single(s => s.Tier == "Rare").ChestReady);
+        Assert.Equal(1, after.ChestsReady);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static AppDbContext Db() => new(new DbContextOptionsBuilder<AppDbContext>()

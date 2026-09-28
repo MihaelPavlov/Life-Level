@@ -22,6 +22,8 @@ class WorldHubScreen extends ConsumerStatefulWidget {
     super.key,
     this.onClose,
     this.autoOpenActiveRegion = false,
+    this.initialRegionId,
+    this.initialZoneId,
   });
 
   /// Provided when the shell opens this as an overlay so the screen can show
@@ -31,6 +33,10 @@ class WorldHubScreen extends ConsumerStatefulWidget {
   /// When true, automatically opens the player's active region on load
   /// (used when the bottom-nav "Map" tab is tapped directly).
   final bool autoOpenActiveRegion;
+
+  /// Optional direct target supplied by Home's current-zone portal.
+  final String? initialRegionId;
+  final String? initialZoneId;
 
   @override
   ConsumerState<WorldHubScreen> createState() => WorldHubScreenState();
@@ -55,6 +61,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   @override
   void initState() {
     super.initState();
+    _openRegionId = widget.initialRegionId;
     _refreshSub = WorldZoneRefreshNotifier.stream.listen((_) => _load());
     _load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,7 +95,14 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
         _data = data;
         _loading = false;
         final tutorial = ref.read(tutorialControllerProvider);
-        if (tutorial.isMapTutorial && tutorial.mapTutorialStep == 1) {
+        if (widget.autoOpenActiveRegion && _openRegionId == null) {
+          for (final region in data.regions) {
+            if (region.status == RegionStatus.active) {
+              _openRegionId = region.id;
+              break;
+            }
+          }
+        } else if (tutorial.isMapTutorial && tutorial.mapTutorialStep == 1) {
           _openRegionId = null;
           for (final r in data.regions) {
             if (r.status == RegionStatus.active) {
@@ -236,6 +250,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
             RegionDetailScreen(
               key: ValueKey(_openRegionId),
               regionId: _openRegionId!,
+              initialZoneId: widget.initialZoneId,
               onBack: _closeRegion,
             ),
         ],

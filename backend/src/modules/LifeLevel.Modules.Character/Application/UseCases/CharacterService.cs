@@ -2,9 +2,13 @@ using LifeLevel.Modules.Character.Application.DTOs;
 using LifeLevel.Modules.Character.Domain;
 using LifeLevel.Modules.Character.Domain.Data;
 using LifeLevel.Modules.Character.Domain.Entities;
+using LifeLevel.SharedKernel.Calculators;
+using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Events;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 // Aliases to resolve the namespace vs type conflict
 using CharacterEntity = LifeLevel.Modules.Character.Domain.Entities.Character;
@@ -16,8 +20,9 @@ namespace LifeLevel.Modules.Character.Application.UseCases;
 public class CharacterService(
     DbContext db,
     IEventPublisher events,
-    ITitleUnlockPort titleUnlock)
-    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort, ICharacterStatsSnapshotReadPort
+    ITitleUnlockPort titleUnlock,
+    ILogger<CharacterService>? logger = null)
+    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort, ICharacterStatsSnapshotReadPort, ILevelUpReceiptPort
 {
     private const int StarterXpReward = 500;
 
@@ -181,7 +186,7 @@ public class CharacterService(
         };
         db.Set<XpHistoryEntryEntity>().Add(entry);
         await db.SaveChangesAsync(ct);
-        var (leveled, previousLevel, newLevel) = await CheckAndApplyLevelUpsAsync(character.Id, ct);
+        var (leveled, previousLevel, newLevel) = await CheckAndApplyLevelUpsAsync(character.Id, source, ct);
         return new XpAwardResult(leveled, previousLevel, newLevel);
     }
 
@@ -209,13 +214,17 @@ public class CharacterService(
     }
 
 
-    public async Task<(bool LeveledUp, int PreviousLevel, int NewLevel)> CheckAndApplyLevelUpsAsync(Guid characterId, CancellationToken ct = default)
+    public async Task<(bool LeveledUp, int PreviousLevel, int NewLevel)> CheckAndApplyLevelUpsAsync(
+        Guid characterId, string source = "Unknown", CancellationToken ct = default)
     {
         var character = await db.Set<CharacterEntity>().FindAsync([characterId], ct);
         if (character == null) return (false, 0, 0);
 
         bool leveled = false;
         int previousLevel = character.Level;
+        int previousInventorySlots = character.MaxInventorySlots;
+        int bonusStatPoints = 0;
+        var grantedTitles = new List<LevelUpTitleInfo>();
         while (character.Xp >= XpAtLevelStart(character.Level + 1))
         {
             character.Level++;
@@ -237,7 +246,10 @@ public class CharacterService(
             var statBonus = await db.Set<LevelStatBonus>()
                 .FirstOrDefaultAsync(b => b.Level == character.Level, ct);
             if (statBonus != null)
+            {
                 character.AvailableStatPoints += statBonus.BonusPoints;
+                bonusStatPoints += statBonus.BonusPoints;
+            }
 
             // Title grants configured per level
             var titleGrants = await db.Set<LevelTitleGrant>()
@@ -248,6 +260,7 @@ public class CharacterService(
                 bool alreadyHas = await db.Set<CharacterTitle>()
                     .AnyAsync(ct2 => ct2.CharacterId == character.Id && ct2.TitleId == grant.TitleId, ct);
                 if (!alreadyHas)
+                {
                     db.Set<CharacterTitle>().Add(new CharacterTitle
                     {
                         Id = Guid.NewGuid(),
@@ -255,17 +268,120 @@ public class CharacterService(
                         TitleId = grant.TitleId,
                         EarnedAt = DateTime.UtcNow,
                     });
+                    var title = await db.Set<Title>().FindAsync([grant.TitleId], ct);
+                    if (title != null)
+                        grantedTitles.Add(new LevelUpTitleInfo(title.Id, title.Name, title.Emoji));
+                }
             }
         }
 
         if (leveled)
         {
+            var availableAvatars = AvatarCatalog.All
+                .Where(a => a.UnlockType == AvatarUnlockType.Level
+                            && a.RequiredValue > previousLevel
+                            && a.RequiredValue <= character.Level)
+                .Select(a => new LevelUpAvatarInfo(a.Name, a.Emoji, a.RequiredValue))
+                .ToList();
+            var receipt = new LevelUpReceipt
+            {
+                Id = Guid.NewGuid(),
+                UserId = character.UserId,
+                Source = source,
+                PreviousLevel = previousLevel,
+                NewLevel = character.Level,
+                BaseStatPointsGranted = character.Level - previousLevel,
+                BonusStatPointsGranted = bonusStatPoints,
+                PowerGained = (character.Level - previousLevel) * CombatStatsCalculator.PowerLevelWeight,
+                PreviousInventorySlots = previousInventorySlots,
+                NewInventorySlots = character.MaxInventorySlots,
+                GrantedTitlesJson = JsonSerializer.Serialize(grantedTitles),
+                AvailableAvatarsJson = JsonSerializer.Serialize(availableAvatars),
+            };
+            db.Set<LevelUpReceipt>().Add(receipt);
             await db.SaveChangesAsync(ct);
-            await events.PublishAsync(new CharacterLeveledUpEvent(character.UserId, previousLevel, character.Level), ct);
+            try
+            {
+                await events.PublishAsync(new CharacterLeveledUpEvent(
+                    character.UserId, receipt.Id, previousLevel, character.Level), ct);
+            }
+            catch (Exception ex)
+            {
+                // The level itself is authoritative and already persisted. Keep the
+                // receipt truthful about whichever secondary grants succeeded, and
+                // never roll back XP because a non-critical reward handler failed.
+                logger?.LogError(ex,
+                    "A level-up reward handler failed for receipt {ReceiptId}", receipt.Id);
+            }
+            finally
+            {
+                receipt.FinalizedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+            }
         }
 
         return (leveled, previousLevel, character.Level);
     }
+
+    public async Task<IReadOnlyList<LevelUpReceiptDto>> GetPendingLevelUpsAsync(
+        Guid userId, CancellationToken ct = default)
+    {
+        var rows = await db.Set<LevelUpReceipt>()
+            .Where(r => r.UserId == userId && r.FinalizedAt != null && r.AcknowledgedAt == null)
+            .OrderBy(r => r.CreatedAt)
+            .ToListAsync(ct);
+        return rows.Select(MapReceipt).ToList();
+    }
+
+    public async Task AcknowledgeLevelUpAsync(Guid userId, Guid receiptId,
+        CancellationToken ct = default)
+    {
+        var row = await db.Set<LevelUpReceipt>()
+            .FirstOrDefaultAsync(r => r.Id == receiptId && r.UserId == userId, ct)
+            ?? throw new InvalidOperationException("Level-up receipt not found.");
+        row.AcknowledgedAt ??= DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AddCoinsAsync(Guid receiptId, int coins, CancellationToken ct = default)
+    {
+        var row = await db.Set<LevelUpReceipt>().FindAsync([receiptId], ct);
+        if (row == null) return;
+        row.CoinsGranted += Math.Max(0, coins);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AddItemsAsync(Guid receiptId, IReadOnlyList<GrantedItemInfo> granted,
+        IReadOnlyList<LevelUpBlockedItemInfo> blocked, CancellationToken ct = default)
+    {
+        var row = await db.Set<LevelUpReceipt>().FindAsync([receiptId], ct);
+        if (row == null) return;
+        row.GrantedItemsJson = JsonSerializer.Serialize(granted);
+        row.BlockedItemsJson = JsonSerializer.Serialize(blocked);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AddRegionsAsync(Guid receiptId, IReadOnlyList<LevelUpRegionInfo> regions,
+        CancellationToken ct = default)
+    {
+        var row = await db.Set<LevelUpReceipt>().FindAsync([receiptId], ct);
+        if (row == null) return;
+        row.AvailableRegionsJson = JsonSerializer.Serialize(regions);
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static LevelUpReceiptDto MapReceipt(LevelUpReceipt row) => new(
+        row.Id, row.Source, row.PreviousLevel, row.NewLevel,
+        row.BaseStatPointsGranted, row.BonusStatPointsGranted, row.PowerGained,
+        row.CoinsGranted, row.PreviousInventorySlots, row.NewInventorySlots,
+        Deserialize<GrantedItemInfo>(row.GrantedItemsJson),
+        Deserialize<LevelUpBlockedItemInfo>(row.BlockedItemsJson),
+        Deserialize<LevelUpTitleInfo>(row.GrantedTitlesJson),
+        Deserialize<LevelUpAvatarInfo>(row.AvailableAvatarsJson),
+        Deserialize<LevelUpRegionInfo>(row.AvailableRegionsJson), row.CreatedAt);
+
+    private static IReadOnlyList<T> Deserialize<T>(string json) =>
+        JsonSerializer.Deserialize<List<T>>(json) ?? [];
 
     public async Task SpendStatPointAsync(Guid userId, string stat)
     {

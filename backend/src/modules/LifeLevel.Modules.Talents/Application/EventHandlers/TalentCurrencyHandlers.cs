@@ -3,6 +3,7 @@ using LifeLevel.Modules.Streak.Domain.Events;
 using LifeLevel.Modules.Talents.Application.UseCases;
 using LifeLevel.Modules.Talents.Domain;
 using LifeLevel.SharedKernel.Events;
+using LifeLevel.SharedKernel.Ports;
 
 namespace LifeLevel.Modules.Talents.Application.EventHandlers;
 
@@ -31,12 +32,16 @@ public class TalentCurrencyBossHandler(TalentService talents) : IEventHandler<Bo
 }
 
 /// <summary>Every character level grants Talent Coins.</summary>
-public class TalentCurrencyLevelUpHandler(TalentService talents) : IEventHandler<CharacterLeveledUpEvent>
+public class TalentCurrencyLevelUpHandler(
+    TalentService talents,
+    ILevelUpReceiptPort receipts) : IEventHandler<CharacterLeveledUpEvent>
 {
     public async Task HandleAsync(CharacterLeveledUpEvent e, CancellationToken ct = default)
     {
         var levels = Math.Max(1, e.NewLevel - e.PreviousLevel);
-        await talents.AddCoinsAsync(e.UserId, TalentEconomy.CoinsPerLevelUp * levels, ct);
+        var coins = TalentEconomy.CoinsPerLevelUp * levels;
+        await talents.AddCoinsAsync(e.UserId, coins, ct);
+        await receipts.AddCoinsAsync(e.ReceiptId, coins, ct);
     }
 }
 

@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../motion/app_motion.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
+import '../../features/character/services/character_service.dart';
 import '../session/invalidate_user_providers.dart';
 import '../services/boss_defeated_notifier.dart';
 import '../services/boss_overlay_notifier.dart';
@@ -91,6 +92,8 @@ class _MainShellState extends ConsumerState<MainShell>
   /// CTA fires, cleared when the overlay closes).
   String? _pendingBossId;
   bool _worldAutoOpenActive = false;
+  String? _worldTargetRegionId;
+  String? _worldTargetZoneId;
   bool _checkingPendingGuildVictories = false;
   bool _checkingPendingGuildExpiries = false;
   final Set<String> _guildVictoryInFlight = <String>{};
@@ -147,6 +150,9 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<Uri> _deepLinkNotifierSub;
   late final StreamSubscription<NotificationBannerPayload>
       _notificationBannerSub;
+  final _characterService = CharacterService();
+  final Set<String> _shownLevelUpReceipts = {};
+  bool _checkingLevelUps = false;
 
   final _fabKey = GlobalKey();
   final _mapNavKey = GlobalKey();
@@ -201,6 +207,8 @@ class _MainShellState extends ConsumerState<MainShell>
           _pendingOnZoneSelected = null;
           _worldOpen = true;
           _worldAutoOpenActive = false;
+          _worldTargetRegionId = null;
+          _worldTargetZoneId = null;
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
@@ -264,26 +272,9 @@ class _MainShellState extends ConsumerState<MainShell>
       }
       _wasOffline = !isOnline;
     });
-    _levelUpSub = LevelUpNotifier.stream.listen((event) async {
-      if (!mounted) return;
-      final oldIds = ref
-              .read(inventoryProvider)
-              .valueOrNull
-              ?.items
-              .map((i) => i.id)
-              .toSet() ??
-          {};
-      showLevelUpScreen(context, event.newLevel, unlocks: event.unlocks);
-      ref.invalidate(inventoryProvider);
-      try {
-        final newInventory = await ref.read(inventoryProvider.future);
-        final newItems =
-            newInventory.items.where((i) => !oldIds.contains(i.id)).toList();
-        for (final item in newItems) {
-          ItemObtainedNotifier.notify(item);
-        }
-      } catch (_) {/* silent — item popup is non-critical */}
-    });
+    _levelUpSub = LevelUpNotifier.stream.listen((_) => _checkPendingLevelUps());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _checkPendingLevelUps());
     _itemObtainedSub = ItemObtainedNotifier.stream.listen((item) {
       if (mounted) showItemObtainedOverlay(context, item);
     });
@@ -302,6 +293,8 @@ class _MainShellState extends ConsumerState<MainShell>
           _pendingOnZoneSelected = null;
           _worldOpen = true;
           _worldAutoOpenActive = false;
+          _worldTargetRegionId = null;
+          _worldTargetZoneId = null;
           _titlesOpen = false;
           _bossOpen = false;
           _guildOpen = false;
@@ -333,6 +326,8 @@ class _MainShellState extends ConsumerState<MainShell>
         _pendingOnZoneSelected = event.onZoneSelected;
         _worldOpen = true;
         _worldAutoOpenActive = event.autoOpenActiveRegion;
+        _worldTargetRegionId = event.regionId;
+        _worldTargetZoneId = event.zoneId;
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
@@ -674,6 +669,36 @@ class _MainShellState extends ConsumerState<MainShell>
       unawaited(_startGuildRealtime());
       _checkPendingGuildRaidVictories();
       _checkPendingGuildRaidExpiries();
+      _checkPendingLevelUps();
+    }
+  }
+
+  Future<void> _checkPendingLevelUps() async {
+    if (!mounted || _checkingLevelUps) return;
+    _checkingLevelUps = true;
+    try {
+      final pending = await _characterService.getPendingLevelUps();
+      for (final receipt in pending) {
+        if (!mounted || _shownLevelUpReceipts.contains(receipt.id)) continue;
+        _shownLevelUpReceipts.add(receipt.id);
+        await showLevelUpScreen(
+          context,
+          receipt.newLevel,
+          receipt: receipt,
+        );
+        try {
+          await _characterService.acknowledgeLevelUp(receipt.id);
+        } catch (_) {
+          // Do not trap the player offline. The server receipt remains pending
+          // and will be retried in a later app session.
+        }
+      }
+      ref.invalidate(inventoryProvider);
+      ref.invalidate(characterProfileProvider);
+    } catch (_) {
+      // Pending celebrations are durable on the server and retry on resume.
+    } finally {
+      _checkingLevelUps = false;
     }
   }
 
@@ -949,11 +974,18 @@ class _MainShellState extends ConsumerState<MainShell>
   Widget? _activeShellOverlay() {
     if (_worldOpen) {
       return WorldHubScreen(
-        key: ValueKey('world_$_worldAutoOpenActive'),
+        key: ValueKey(
+          'world_$_worldAutoOpenActive'
+          '_${_worldTargetRegionId ?? ''}_${_worldTargetZoneId ?? ''}',
+        ),
         autoOpenActiveRegion: _worldAutoOpenActive,
+        initialRegionId: _worldTargetRegionId,
+        initialZoneId: _worldTargetZoneId,
         onClose: () => setState(() {
           _worldOpen = false;
           _worldAutoOpenActive = false;
+          _worldTargetRegionId = null;
+          _worldTargetZoneId = null;
           _pendingOnZoneSelected = null;
         }),
       );
@@ -1044,6 +1076,7 @@ class _MainShellState extends ConsumerState<MainShell>
         final h = constraints.maxHeight;
         final fabCx = w / 2;
         final fabCy = h - kNavBarH;
+        final shellOverlay = _activeShellOverlay();
 
         return SizedBox(
           width: w,
@@ -1054,9 +1087,15 @@ class _MainShellState extends ConsumerState<MainShell>
               // ── tab content ─────────────────────────────────────────────
               Positioned.fill(
                 bottom: kNavBarH,
-                child: AppAnimatedIndexedStack(
-                  index: _tabIndex.clamp(0, _navIds.length - 1),
-                  children: _navIds.map(_screenFor).toList(),
+                // Tabs covered by a shell overlay stop ticking, so idle
+                // motion pauses and boss-hit effects wait until the tab is
+                // visible again.
+                child: TickerMode(
+                  enabled: shellOverlay == null,
+                  child: AppAnimatedIndexedStack(
+                    index: _tabIndex.clamp(0, _navIds.length - 1),
+                    children: _navIds.map(_screenFor).toList(),
+                  ),
                 ),
               ),
 
@@ -1088,7 +1127,7 @@ class _MainShellState extends ConsumerState<MainShell>
                       child: faded,
                     );
                   },
-                  child: _activeShellOverlay() ??
+                  child: shellOverlay ??
                       const SizedBox.shrink(key: ValueKey('no-overlay')),
                 ),
               ),
@@ -1150,6 +1189,8 @@ class _MainShellState extends ConsumerState<MainShell>
                         _tabIndex = i;
                         _worldOpen = true;
                         _worldAutoOpenActive = true;
+                        _worldTargetRegionId = null;
+                        _worldTargetZoneId = null;
                         _titlesOpen = false;
                         _bossOpen = false;
                         _guildOpen = false;

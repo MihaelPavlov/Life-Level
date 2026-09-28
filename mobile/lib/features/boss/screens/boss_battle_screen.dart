@@ -9,6 +9,7 @@ import '../../activity/log_activity_screen.dart';
 import '../models/boss_list_item.dart';
 import '../providers/boss_provider.dart';
 import '../widgets/boss_damage_hit_row.dart';
+import '../widgets/boss_hit_fx.dart';
 import '../widgets/boss_hp_bar.dart';
 import '../widgets/boss_damage_hint.dart';
 import '../widgets/boss_icon.dart';
@@ -77,11 +78,7 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
       if (!mounted) return;
       final c = RewardFx.centerOf(_avatarKey);
       if (c == null) return;
-      RewardFx.run(
-        context,
-        duration: const Duration(milliseconds: 360),
-        builder: (t, origin) => _slash(c - origin, t),
-      );
+      BossSlash.play(context, c);
       RewardFx.burst(context, c, AppColors.red,
           count: 12, distance: 60, delay: const Duration(milliseconds: 120));
       RewardFx.floatText(
@@ -98,46 +95,6 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
     });
   }
 
-  Widget _slash(Offset c, double t) {
-    final grow = (t / .5).clamp(0.0, 1.0);
-    final fade = t < .5 ? 1.0 : 1 - (t - .5) / .5;
-    return Positioned(
-      left: c.dx - 85,
-      top: c.dy - 2.5,
-      child: Opacity(
-        opacity: fade,
-        child: Transform.rotate(
-          angle: -35 * math.pi / 180,
-          child: Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.diagonal3Values(1.3 * grow, 1, 1),
-            child: Container(
-              width: 170,
-              height: 5,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                gradient: const LinearGradient(colors: [
-                  Colors.transparent,
-                  Colors.white,
-                  Color(0xFFFFD0CC),
-                  Colors.transparent,
-                ], stops: [
-                  0,
-                  .4,
-                  .6,
-                  1
-                ]),
-                boxShadow: const [
-                  BoxShadow(color: Colors.white, blurRadius: 14),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _hit.dispose();
@@ -147,12 +104,16 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
   @override
   void initState() {
     super.initState();
+    // The battle view plays its own hit; record the HP shown here so the
+    // home / map cards don't replay the same drop later.
+    BossHitMemory.markSeen(boss.id, boss.hpRemaining);
     Future.microtask(_refreshBattleData);
   }
 
   @override
   void didUpdateWidget(covariant BossBattleView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    BossHitMemory.markSeen(widget.boss.id, widget.boss.hpRemaining);
     if (oldWidget.boss.id != widget.boss.id ||
         oldWidget.boss.hpDealt != widget.boss.hpDealt) {
       Future.microtask(_refreshBattleData);

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../main.dart' show navigatorKey;
 import '../motion/app_motion.dart';
 import '../../features/auth/login_screen.dart';
+import '../services/level_up_notifier.dart';
 
 class ApiClient {
   static const _configuredBaseUrl = String.fromEnvironment('API_BASE_URL');
@@ -47,6 +48,15 @@ class ApiClient {
           );
         }
         handler.next(error);
+      },
+      onResponse: (response, handler) {
+        final method = response.requestOptions.method.toUpperCase();
+        final path = response.requestOptions.path;
+        if (const {'POST', 'PUT', 'PATCH', 'DELETE'}.contains(method) &&
+            !path.contains('/character/level-ups/')) {
+          LevelUpNotifier.checkPending();
+        }
+        handler.next(response);
       },
     ));
 

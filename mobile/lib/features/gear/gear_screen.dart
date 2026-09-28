@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/widgets/resource_info_dialog.dart';
 import '../character/providers/character_provider.dart';
 import '../items/providers/items_provider.dart';
 import 'widgets/gear_hex_slots.dart';
@@ -161,25 +162,45 @@ class _CoinsPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(AppIcons.homeCoinIcon,
-              width: 16, height: 16, fit: BoxFit.contain),
-          const SizedBox(width: 6),
-          Text(
-            '$coins',
-            style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+    return Semantics(
+      button: true,
+      label: 'Coins information',
+      child: GestureDetector(
+        key: const ValueKey('gear-coins-info'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showResourceInfoDialog(
+          context,
+          const ResourceInfoData(
+            name: 'Coins',
+            icon: AppIcons.homeCoinIcon,
+            description:
+                'Universal currency used to buy items and useful upgrades.',
+            destination: 'Shop',
           ),
-        ],
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(AppIcons.homeCoinIcon,
+                  width: 16, height: 16, fit: BoxFit.contain),
+              const SizedBox(width: 6),
+              Text(
+                '$coins',
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -13,7 +13,7 @@ namespace LifeLevel.Api.Tests;
 public class QuestLevelItemGrantTests
 {
     [Fact]
-    public async Task UpdateProgressFromActivityAsync_WhenQuestXpLevelsUp_EvaluatesLevelItemRewards()
+    public async Task UpdateProgressFromActivityAsync_WhenQuestXpLevelsUp_DefersItemsToLevelUpEvent()
     {
         var userId = Guid.NewGuid();
         var quest = new Quest
@@ -61,10 +61,7 @@ public class QuestLevelItemGrantTests
             distanceKm: 3,
             calories: 200);
 
-        Assert.Equal(userId, itemGrant.UserId);
-        Assert.Equal(4, itemGrant.PreviousLevel);
-        Assert.Equal(5, itemGrant.NewLevel);
-        Assert.Equal(1, itemGrant.Calls);
+        Assert.Equal(0, itemGrant.Calls);
     }
 
     private sealed class StubCharacterXpPort(XpAwardResult result) : ICharacterXpPort

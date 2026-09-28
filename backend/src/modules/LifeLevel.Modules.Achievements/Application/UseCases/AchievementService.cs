@@ -170,6 +170,32 @@ public class AchievementService(
         if (claimed < stageIds.Count)
             throw new AchievementException("stage_not_complete", "Claim every achievement in this stage first.");
 
+        var categoryTiers = await db.Set<Achievement>()
+            .Where(a => a.Category == cat)
+            .Select(a => a.Tier)
+            .Distinct()
+            .ToListAsync(ct);
+        // AchievementTier is persisted as text in PostgreSQL. Determine its
+        // progression order in memory instead of relying on a provider-specific
+        // numeric enum comparison.
+        var previousTiers = Enum.GetValues<AchievementTier>()
+            .TakeWhile(candidate => candidate != t)
+            .Where(categoryTiers.Contains)
+            .ToList();
+        if (previousTiers.Count > 0)
+        {
+            var openedPreviousTiers = await db.Set<UserAchievementStageChest>()
+                .Where(c => c.UserId == userId
+                            && c.Category == cat
+                            && previousTiers.Contains(c.Tier))
+                .Select(c => c.Tier)
+                .ToListAsync(ct);
+            if (previousTiers.Any(previous => !openedPreviousTiers.Contains(previous)))
+                throw new AchievementException(
+                    "previous_stage_not_opened",
+                    "Open every earlier stage chest on this road first.");
+        }
+
         if (await db.Set<UserAchievementStageChest>()
                 .AnyAsync(c => c.UserId == userId && c.Category == cat && c.Tier == t, ct))
             throw new AchievementException("chest_already_opened", "This chest is already open.");
@@ -243,7 +269,9 @@ public class AchievementService(
             {
                 var stage = achievements.Where(a => a.Category == cat && a.Tier == tier).ToList();
                 var allClaimed = stage.All(a => progress.TryGetValue(a.Id, out var p) && p.IsClaimed);
-                if (allClaimed && !opened.Contains((cat, tier)))
+                if (allClaimed
+                    && !opened.Contains((cat, tier))
+                    && ArePreviousStagesOpened(cat, tier, achievements, opened))
                     chestsReady.Add(new AchievementStageKeyDto(cat.ToString(), tier.ToString()));
             }
         }
@@ -261,6 +289,7 @@ public class AchievementService(
         HashSet<(AchievementCategory, AchievementTier)> opened)
     {
         var stages = new List<AchievementStageDto>();
+        var previousStagesOpened = true;
         foreach (var tier in Enum.GetValues<AchievementTier>())
         {
             var list = achievements.Where(a => a.Category == category && a.Tier == tier)
@@ -278,9 +307,10 @@ public class AchievementService(
                 list.Count(a => a.IsUnlocked),
                 claimed,
                 list.Count(a => a.IsUnlocked && !a.IsClaimed),
-                ChestReady: claimed == list.Count && !isOpened,
+                ChestReady: previousStagesOpened && claimed == list.Count && !isOpened,
                 ChestOpened: isOpened,
                 list));
+            previousStagesOpened = previousStagesOpened && isOpened;
         }
 
         return new AchievementRoadDto(
@@ -290,6 +320,19 @@ public class AchievementService(
             stages.Sum(s => s.Ready),
             stages.FindIndex(s => !s.ChestOpened),
             stages);
+    }
+
+    private static bool ArePreviousStagesOpened(
+        AchievementCategory category,
+        AchievementTier tier,
+        IEnumerable<Achievement> achievements,
+        HashSet<(AchievementCategory, AchievementTier)> opened)
+    {
+        var previousTiers = achievements
+            .Where(a => a.Category == category && (int)a.Tier < (int)tier)
+            .Select(a => a.Tier)
+            .Distinct();
+        return previousTiers.All(previous => opened.Contains((category, previous)));
     }
 
     private async Task<HashSet<(AchievementCategory, AchievementTier)>> OpenedStagesAsync(Guid userId, CancellationToken ct)

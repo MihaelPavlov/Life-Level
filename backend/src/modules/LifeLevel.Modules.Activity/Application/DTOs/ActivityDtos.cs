@@ -16,6 +16,8 @@ public class LogActivityRequest
 
 public record BlockedItemInfo(Guid ItemId, string ItemName, string ItemIcon);
 
+public record ActivitySummaryDto(long TotalSteps);
+
 public class LogActivityResult
 {
     public Guid ActivityId { get; set; }

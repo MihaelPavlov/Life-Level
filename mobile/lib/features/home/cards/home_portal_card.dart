@@ -19,6 +19,7 @@ import '../../map/services/world_zone_service.dart';
 import '../providers/world_progress_provider.dart';
 import '../widgets/home_hero_button.dart';
 import '../widgets/home_progress_bar.dart';
+import '../../boss/widgets/boss_hit_fx.dart';
 import '../../boss/widgets/boss_icon.dart';
 import '../../character/providers/character_provider.dart';
 import 'portal_idle.dart';
@@ -371,11 +372,14 @@ String? _buildRegionChip(RegionCard? region) {
   return '$emoji${region.name} · Ch. ${region.chapterIndex}';
 }
 
-/// Switch to the shell's 'world' tab so the world hub renders as an overlay
-/// above the bottom nav (instead of `Navigator.push`, which would cover the
-/// nav). The hub highlights the active region — one tap drills in. Region id
-void _openWorldDestination(String? regionId) {
-  WorldMapNotifier.open(autoOpenActiveRegion: regionId != null);
+/// Opens the exact region and zone represented by the Home portal while
+/// preserving the shell's bottom navigation.
+void _openWorldDestination(String? regionId, [String? zoneId]) {
+  WorldMapNotifier.open(
+    autoOpenActiveRegion: regionId != null,
+    regionId: regionId,
+    zoneId: zoneId,
+  );
 }
 
 // ── Variants ─────────────────────────────────────────────────────────────────
@@ -431,27 +435,41 @@ class _BossRaidPortal extends StatelessWidget {
     final remaining = boss.timeRemaining;
     final timer =
         remaining != null ? _fmtDuration(remaining) : '${boss.timerDays}d';
-    final hpRemaining = boss.hpRemaining;
-    final hpProgress = boss.maxHp > 0 ? hpRemaining / boss.maxHp : 0.0;
-    return _HeroShell(
-      accent: AppColors.red,
-      label: '⚔️ BOSS RAID · $timer LEFT',
-      labelColor: AppColors.red,
-      title: boss.name,
-      sub: 'Raid active. Every workout you log deals damage to ${boss.name}.',
-      leadingVisual: _BossPortalIcon(boss: boss),
-      barLabel: 'Boss HP',
-      barValue: '${_fmtNumber(hpRemaining)} / ${_fmtNumber(boss.maxHp)}',
-      barValueColor: AppColors.red,
-      barProgress: hpProgress,
-      barColors: const [AppColors.red, AppColors.redDark],
-      primaryLabel: 'Fight →',
-      primaryStyle: HomeHeroButtonStyle.solidRed,
-      onPrimary: () => BossOverlayNotifier.notifyForBoss(boss.id),
-      onSync: onSync,
-      motion: PortalMotion.full,
-      heartbeat: true,
-      signature: _Sig.raidEmber,
+    final maxHp = boss.maxHp;
+    double frac(int hp) => maxHp > 0 ? hp / maxHp : 0.0;
+    return BossHitScope(
+      hitId: boss.id,
+      hp: boss.hpRemaining,
+      maxHp: maxHp,
+      slashWidth: 130,
+      shakeAmplitude: 5,
+      recoil: 8,
+      builder: (context, hit, portraitKey) => _HeroShell(
+        accent: AppColors.red,
+        label: '⚔️ BOSS RAID · $timer LEFT',
+        labelColor: AppColors.red,
+        title: boss.name,
+        sub: 'Raid active. Every workout you log deals damage to ${boss.name}.',
+        leadingVisual: BossHitPortrait(
+          hit: hit,
+          portraitKey: portraitKey,
+          child: _BossPortalIcon(boss: boss),
+        ),
+        barLabel: 'Boss HP',
+        barValue: '${_fmtNumber(hit.shownHp)} / ${_fmtNumber(maxHp)}',
+        barValueColor: AppColors.red,
+        barProgress: frac(hit.barHp),
+        barBurnProgress: hit.emberHp == null ? null : frac(hit.emberHp!),
+        barColors: const [AppColors.red, AppColors.redDark],
+        hitShakeDx: hit.shakeDx,
+        primaryLabel: 'Fight →',
+        primaryStyle: HomeHeroButtonStyle.solidRed,
+        onPrimary: () => BossOverlayNotifier.notifyForBoss(boss.id),
+        onSync: onSync,
+        motion: PortalMotion.full,
+        heartbeat: true,
+        signature: _Sig.raidEmber,
+      ),
     );
   }
 }
@@ -487,39 +505,74 @@ class _EncounterPortal extends StatelessWidget {
     final label = _encounterPortalLabel(encounter.type);
     final sub = _encounterSubtitle(encounter, destination);
     final preview = _encounterPreview(encounter);
+    final blocker =
+        encounter.type == TrailEncounterType.blocker ? encounter.blocker : null;
 
-    return _HeroShell(
-      accent: accent,
-      label: label,
-      labelColor: accent,
-      title: _encounterName(encounter),
-      titleEmoji: _encounterEmoji(encounter),
-      sub: sub,
-      regionChip: regionChip,
-      barLabel: 'Distance reached',
-      barValue: total > 0
-          ? '${travelled.toStringAsFixed(1)} / ${total.toStringAsFixed(1)} km'
-          : 'Encounter reached',
-      barValueColor: accent,
-      barProgress: progress,
-      barColors: [accent, AppColors.orange],
-      branchPreview: preview,
-      primaryLabel: encounter.type == TrailEncounterType.blocker
-          ? 'View blocker'
-          : 'Open map →',
-      primaryStyle: encounter.type == TrailEncounterType.blocker
-          ? HomeHeroButtonStyle.solidRed
-          : encounter.type == TrailEncounterType.merchant
-              ? HomeHeroButtonStyle.solidOrange
-              : HomeHeroButtonStyle.solidPurple,
-      onPrimary: () => _openWorldDestination(regionId),
-      onSync: onSync,
-      motion: PortalMotion.full,
-      signature: switch (encounter.type) {
-        TrailEncounterType.blocker => _Sig.blockerShake,
-        TrailEncounterType.merchant => _Sig.merchantCoin,
-        TrailEncounterType.story => _Sig.storyTyping,
-      },
+    Widget shell({BossHitFrame? hit, GlobalKey? portraitKey}) => _HeroShell(
+          accent: accent,
+          label: label,
+          labelColor: accent,
+          title: _encounterName(encounter),
+          titleEmoji: _encounterEmoji(encounter),
+          sub: sub,
+          regionChip: regionChip,
+          titleEmojiWrap: hit == null
+              ? null
+              : (emoji) => BossHitPortrait(
+                    hit: hit,
+                    portraitKey: portraitKey!,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(8),
+                    child: emoji,
+                  ),
+          barLabel: blocker != null ? 'Blocker HP' : 'Distance reached',
+          barValue: blocker != null
+              ? '${_fmtNumber(hit?.shownHp ?? blocker.currentHp)} / ${_fmtNumber(blocker.maxHp)}'
+              : total > 0
+                  ? '${travelled.toStringAsFixed(1)} / ${total.toStringAsFixed(1)} km'
+                  : 'Encounter reached',
+          barValueColor: accent,
+          barProgress: blocker != null
+              ? _hpFrac(hit?.barHp ?? blocker.currentHp, blocker.maxHp)
+              : progress,
+          barBurnProgress: blocker != null && hit?.emberHp != null
+              ? _hpFrac(hit!.emberHp!, blocker.maxHp)
+              : null,
+          hitShakeDx: hit?.shakeDx ?? 0,
+          barColors: blocker != null
+              ? const [AppColors.red, AppColors.redDark]
+              : [accent, AppColors.orange],
+          branchPreview: preview,
+          primaryLabel: encounter.type == TrailEncounterType.blocker
+              ? 'View blocker'
+              : 'Open map →',
+          primaryStyle: encounter.type == TrailEncounterType.blocker
+              ? HomeHeroButtonStyle.solidRed
+              : encounter.type == TrailEncounterType.merchant
+                  ? HomeHeroButtonStyle.solidOrange
+                  : HomeHeroButtonStyle.solidPurple,
+          onPrimary: () => _openWorldDestination(regionId, destination.id),
+          onSync: onSync,
+          motion: PortalMotion.full,
+          signature: switch (encounter.type) {
+            TrailEncounterType.blocker => _Sig.blockerShake,
+            TrailEncounterType.merchant => _Sig.merchantCoin,
+            TrailEncounterType.story => _Sig.storyTyping,
+          },
+        );
+
+    if (blocker == null) return shell();
+    return BossHitScope(
+      // Blockers are backed by a boss when bossId is set — share its memory
+      // so the battle view and this card don't replay the same hit.
+      hitId: blocker.bossId ?? encounter.id,
+      hp: blocker.currentHp,
+      maxHp: blocker.maxHp,
+      slashWidth: 110,
+      shakeAmplitude: 5,
+      recoil: 6,
+      builder: (context, hit, portraitKey) =>
+          shell(hit: hit, portraitKey: portraitKey),
     );
   }
 }
@@ -570,7 +623,7 @@ class _TravelingPortal extends ConsumerWidget {
       barColors: const [AppColors.blue, AppColors.purple],
       primaryLabel: 'View on map →',
       primaryStyle: HomeHeroButtonStyle.solidBlue,
-      onPrimary: () => _openWorldDestination(regionId),
+      onPrimary: () => _openWorldDestination(regionId, destination.id),
       onSync: onSync,
       motion: PortalMotion.waiting,
       signature: _Sig.heroWalk,
@@ -612,7 +665,7 @@ class _StandardPortal extends StatelessWidget {
       barColors: const [AppColors.blue, AppColors.purple],
       primaryLabel: 'Open map →',
       primaryStyle: HomeHeroButtonStyle.solidBlue,
-      onPrimary: () => _openWorldDestination(regionId),
+      onPrimary: () => _openWorldDestination(regionId, zone.id),
       onSync: onSync,
       motion: PortalMotion.calm,
     );
@@ -717,7 +770,7 @@ class _ChestPortal extends StatelessWidget {
       showProgressBar: false,
       primaryLabel: opened ? 'View on map →' : 'Open chest →',
       primaryStyle: HomeHeroButtonStyle.solidOrange,
-      onPrimary: () => _openWorldDestination(regionId),
+      onPrimary: () => _openWorldDestination(regionId, zone.id),
       onSync: onSync,
       motion: opened ? PortalMotion.still : PortalMotion.full,
       signature: _Sig.chestRattle,
@@ -819,7 +872,7 @@ class _DungeonPortal extends StatelessWidget {
       barColors: const [AppColors.purple, AppColors.blue],
       primaryLabel: 'Enter dungeon →',
       primaryStyle: HomeHeroButtonStyle.solidPurple,
-      onPrimary: () => _openWorldDestination(regionId),
+      onPrimary: () => _openWorldDestination(regionId, zone.id),
       onSync: onSync,
       motion: cleared ? PortalMotion.still : PortalMotion.full,
       signature: _Sig.dungeonTorch,
@@ -997,7 +1050,7 @@ class _CrossroadsPortal extends StatelessWidget {
             HomeHeroButton(
               label: 'Choose on map →',
               style: HomeHeroButtonStyle.solidBlue,
-              onTap: () => _openWorldDestination(regionId),
+              onTap: () => _openWorldDestination(regionId, zone.id),
               shine: fx?.buttonShine,
               nudge: fx?.buttonNudge,
             ),
@@ -1438,7 +1491,9 @@ class _NextZoneHintPortal extends StatelessWidget {
               style: levelGated
                   ? HomeHeroButtonStyle.locked
                   : HomeHeroButtonStyle.solidBlue,
-              onTap: levelGated ? null : () => _openWorldDestination(regionId),
+              onTap: levelGated
+                  ? null
+                  : () => _openWorldDestination(regionId, zone.id),
               shine: fx?.buttonShine,
               nudge: fx?.buttonNudge,
             ),
@@ -1668,10 +1723,9 @@ String? _encounterPreview(TrailEncounterNode enc) {
     case TrailEncounterType.blocker:
       final blocker = enc.blocker;
       if (blocker == null) return null;
+      // HP is shown (and animated) in the card's bar.
       final rewards = blocker.rewards.take(2).join(' · ');
-      return rewards.isEmpty
-          ? 'HP ${blocker.currentHp} / ${blocker.maxHp}'
-          : 'HP ${blocker.currentHp} / ${blocker.maxHp} · $rewards';
+      return rewards.isEmpty ? null : rewards;
     case TrailEncounterType.merchant:
       final merchant = enc.merchant;
       if (merchant == null || merchant.items.isEmpty) return null;
@@ -1732,6 +1786,8 @@ String _fmtDuration(Duration d) {
   return '${d.inMinutes}m';
 }
 
+double _hpFrac(int hp, int maxHp) => maxHp > 0 ? hp / maxHp : 0.0;
+
 String _fmtNumber(int n) {
   if (n >= 1000) {
     return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
@@ -1777,6 +1833,9 @@ class _HeroShell extends StatelessWidget {
   final String barValue;
   final Color barValueColor;
   final double barProgress;
+
+  /// Boss hits: ember layer behind the bar fill (see [HomeProgressBar]).
+  final double? barBurnProgress;
   final List<Color> barColors;
   final bool showProgressBar;
   final String? branchPreview;
@@ -1795,6 +1854,12 @@ class _HeroShell extends StatelessWidget {
   /// Hero token for [_Sig.heroWalk].
   final String? avatarEmoji;
 
+  /// Boss hits: horizontal shake applied to the card content.
+  final double hitShakeDx;
+
+  /// Boss hits: wraps the title emoji so it can take the slash.
+  final Widget Function(Widget emoji)? titleEmojiWrap;
+
   const _HeroShell({
     required this.accent,
     this.label,
@@ -1809,6 +1874,7 @@ class _HeroShell extends StatelessWidget {
     required this.barValue,
     required this.barValueColor,
     required this.barProgress,
+    this.barBurnProgress,
     required this.barColors,
     this.showProgressBar = true,
     this.branchPreview,
@@ -1820,6 +1886,8 @@ class _HeroShell extends StatelessWidget {
     this.signature = _Sig.none,
     this.heartbeat = false,
     this.avatarEmoji,
+    this.hitShakeDx = 0,
+    this.titleEmojiWrap,
   });
 
   @override
@@ -1830,7 +1898,12 @@ class _HeroShell extends StatelessWidget {
         fx: fx,
         accent: accent,
         heartbeat: heartbeat,
-        child: _content(fx),
+        child: hitShakeDx == 0
+            ? _content(fx)
+            : Transform.translate(
+                offset: Offset(hitShakeDx, 0),
+                child: _content(fx),
+              ),
       ),
     );
   }
@@ -1861,11 +1934,12 @@ class _HeroShell extends StatelessWidget {
         _Sig.chestRattle => PortalEmojiFx.rattle,
         _ => null,
       };
+      final emojiWidget = effect == null
+          ? Text(emoji, style: TextStyle(fontSize: size, height: 1.15))
+          : PortalEmoji(emoji: emoji, effect: effect, fx: sfx, size: size);
       return Row(
         children: [
-          effect == null
-              ? Text(emoji, style: TextStyle(fontSize: size, height: 1.15))
-              : PortalEmoji(emoji: emoji, effect: effect, fx: sfx, size: size),
+          titleEmojiWrap?.call(emojiWidget) ?? emojiWidget,
           const SizedBox(width: 6),
           Flexible(child: titleText(size)),
         ],
@@ -1929,6 +2003,7 @@ class _HeroShell extends StatelessWidget {
         progress: barProgress,
         colors: barColors,
         height: 10,
+        burnProgress: barBurnProgress,
       );
       final overlay = switch (sig) {
         _Sig.raidEmber => PortalBarEmber(fx: sfx!, progress: barProgress),

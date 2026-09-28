@@ -1,453 +1,190 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../motion/app_motion.dart';
 import '../../features/activity/models/activity_models.dart';
+import '../../features/character/models/level_up_receipt.dart';
 import '../../features/items/models/item_models.dart' show rarityColor;
 import 'item_icon_image.dart';
+import 'reward_moment/reward_moment.dart';
 
-// ── constants matching home_screen palette ────────────────────────────────────
-const _surface1 = Color(0xFF161b22);
+/// Full-screen level-up moment. [level] is the new level the player
+/// reached; [unlocks] lists what it unlocked (stat points, zones, items).
+/// When null or empty the moment shows a neutral line instead.
+Future<void> showLevelUpScreen(BuildContext context, int level,
+    {LevelUpUnlocks? unlocks, LevelUpReceipt? receipt}) {
+  final list = <RewardUnlock>[
+    if (receipt != null && receipt.totalStatPoints > 0)
+      RewardUnlock(
+        icon: const Icon(Icons.star_rounded, color: AppColors.orange),
+        name:
+            '+${receipt.totalStatPoints} Stat Point${receipt.totalStatPoints == 1 ? '' : 's'}',
+        description: receipt.bonusStatPointsGranted > 0
+            ? '${receipt.baseStatPointsGranted} from levels + ${receipt.bonusStatPointsGranted} bonus'
+            : 'Spend on STR, END, AGI, FLX, or STA',
+        badge: 'RECEIVED',
+        color: AppColors.orange,
+      ),
+    if (receipt != null && receipt.powerGained > 0)
+      RewardUnlock(
+        icon: const Icon(Icons.bolt_rounded, color: AppColors.orange),
+        name: '+${receipt.powerGained} Power',
+        description: 'Permanent power gained from your new level',
+        badge: 'RECEIVED',
+        color: AppColors.orange,
+      ),
+    if (receipt != null && receipt.coinsGranted > 0)
+      RewardUnlock(
+        icon: const RewardEmoji('🪙'),
+        name: '+${receipt.coinsGranted} Coins',
+        description: 'Added to your wallet',
+        badge: 'RECEIVED',
+        color: AppColors.orange,
+      ),
+    if (receipt != null &&
+        receipt.newInventorySlots > receipt.previousInventorySlots)
+      RewardUnlock(
+        icon: const Icon(Icons.inventory_2_rounded, color: AppColors.blue),
+        name:
+            '${receipt.previousInventorySlots} → ${receipt.newInventorySlots} slots',
+        description: 'Inventory capacity increased',
+        badge: 'UPGRADED',
+        color: AppColors.blue,
+      ),
+    if (unlocks != null && unlocks.statPointsGained > 0)
+      RewardUnlock(
+        icon: const Icon(Icons.star_rounded, color: AppColors.orange),
+        name: unlocks.statPointsGained == 1
+            ? '+1 Stat Point'
+            : '+${unlocks.statPointsGained} Stat Points',
+        description: 'Spend on STR, END, AGI, FLX, or STA',
+        badge: 'POINTS',
+        color: AppColors.orange,
+      ),
+    for (final zone in unlocks?.unlockedZones ?? const <UnlockedZoneInfo>[])
+      RewardUnlock(
+        icon: RewardEmoji(zone.icon.isNotEmpty ? zone.icon : '🗺️'),
+        name: zone.name,
+        description: zone.region.isEmpty
+            ? 'New zone · Lvl ${zone.levelRequirement}'
+            : '${zone.region} · Lvl ${zone.levelRequirement}',
+        badge: 'ZONE',
+        color: AppColors.blue,
+      ),
+    for (final item in unlocks?.grantedItems ?? const <GrantedItemInfo>[])
+      RewardUnlock(
+        icon: ItemIconImage(
+          itemId: item.itemId,
+          itemName: item.name,
+          emojiFallback: item.icon.isNotEmpty ? item.icon : '🎁',
+          size: 26,
+          emojiSize: 20,
+        ),
+        name: item.name,
+        description: item.slot.isEmpty
+            ? _pretty(item.rarity)
+            : '${_pretty(item.rarity)} · ${item.slot}',
+        badge: item.rarity.isEmpty ? 'ITEM' : item.rarity.toUpperCase(),
+        color: rarityColor(item.rarity),
+      ),
+    for (final title in receipt?.grantedTitles ?? const <LevelUpTitleInfo>[])
+      RewardUnlock(
+        icon: RewardEmoji(title.emoji.isEmpty ? '🏅' : title.emoji),
+        name: title.name,
+        description: 'Title added to your collection',
+        badge: 'UNLOCKED',
+        color: AppColors.purple,
+      ),
+    for (final item in receipt?.grantedItems ?? const <GrantedItemInfo>[])
+      RewardUnlock(
+        icon: ItemIconImage(
+          itemId: item.itemId,
+          itemName: item.name,
+          emojiFallback: item.icon.isNotEmpty ? item.icon : '🎁',
+          size: 26,
+          emojiSize: 20,
+        ),
+        name: item.name,
+        description: item.slot.isEmpty
+            ? _pretty(item.rarity)
+            : '${_pretty(item.rarity)} · ${item.slot}',
+        badge: 'RECEIVED',
+        color: rarityColor(item.rarity),
+      ),
+    for (final avatar
+        in receipt?.availableAvatars ?? const <LevelUpAvatarInfo>[])
+      RewardUnlock(
+        icon: RewardEmoji(avatar.emoji.isEmpty ? '🧙' : avatar.emoji),
+        name: avatar.name,
+        description: 'Avatar now available · Level ${avatar.levelRequirement}',
+        badge: 'AVAILABLE',
+        color: AppColors.purple,
+      ),
+    for (final region
+        in receipt?.availableRegions ?? const <LevelUpRegionInfo>[])
+      RewardUnlock(
+        icon: RewardEmoji(region.emoji.isEmpty ? '🗺️' : region.emoji),
+        name: region.name,
+        description: 'Level requirement met · Reach it through the World Map',
+        badge: 'AVAILABLE',
+        color: AppColors.blue,
+      ),
+    for (final blocked in receipt?.blockedItems ?? const <LevelUpBlockedItem>[])
+      RewardUnlock(
+        icon: RewardEmoji(blocked.icon.isEmpty ? '🎒' : blocked.icon),
+        name: blocked.name,
+        description: 'Inventory full — this item was not granted',
+        badge: 'NOT GRANTED',
+        color: AppColors.red,
+      ),
+  ];
 
-/// Shows the full-screen level-up overlay as a dialog route.
-/// [level] is the new level the player reached. [unlocks] carries real
-/// per-level rewards (items, zones, stat points); when null or empty,
-/// the overlay renders a neutral fallback message.
-void showLevelUpScreen(BuildContext context, int level,
-    {LevelUpUnlocks? unlocks}) {
-  showAppCelebration(
-    context: context,
-    barrierDismissible: false,
-    barrierLabel: 'Level up',
-    barrierColor: Colors.transparent,
-    builder: (_) => LevelUpOverlay(level: level, unlocks: unlocks),
+  return RewardMoment.show(
+    context,
+    size: RewardMomentSize.takeover,
+    accent: AppColors.blue,
+    hero: _LevelBadge(level: level),
+    label: 'Level up',
+    title: 'Level $level',
+    subtitle: receipt != null && receipt.levelsGained > 1
+        ? '${receipt.levelsGained} levels gained · rewards grouped below'
+        : list.isEmpty
+            ? 'Your level increased. More rewards await ahead.'
+            : 'Your hero grows stronger.',
+    details: list.isEmpty ? null : RewardMomentUnlocks(unlocks: list),
+    primaryLabel: 'Continue',
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LevelUpOverlay
-// ─────────────────────────────────────────────────────────────────────────────
-class LevelUpOverlay extends StatefulWidget {
+String _pretty(String r) =>
+    r.isEmpty ? 'Item' : r[0].toUpperCase() + r.substring(1).toLowerCase();
+
+class _LevelBadge extends StatelessWidget {
   final int level;
-  final LevelUpUnlocks? unlocks;
-  const LevelUpOverlay({super.key, required this.level, this.unlocks});
-
-  @override
-  State<LevelUpOverlay> createState() => _LevelUpOverlayState();
-}
-
-class _LevelUpOverlayState extends State<LevelUpOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ringCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ringCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _ringCtrl.dispose();
-    super.dispose();
-  }
+  const _LevelBadge({required this.level});
 
   @override
   Widget build(BuildContext context) {
-    final unlocks = widget.unlocks;
-    final hasUnlocks = unlocks != null && !unlocks.isEmpty;
-
-    return Material(
-      color: Colors.transparent,
-      child: GestureDetector(
-        onTap: () {}, // absorb taps so content behind isn't triggered
-        child: Container(
-          color: const Color(0xED040810), // rgba(4,8,16,0.93)
-          child: Stack(
-            children: [
-              // radial blue glow
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment(0, -0.3),
-                        radius: 0.75,
-                        colors: [
-                          Color(0x384f9eff), // 22% blue
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // scrollable content
-              SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(22, 60, 22, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // eyebrow
-                    Text(
-                      '✦ RANK UP ✦',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.blue,
-                        letterSpacing: 1.8,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // pulsing rings + badge
-                    SizedBox(
-                      width: 160,
-                      height: 160,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          _PulsingRing(
-                              ctrl: _ringCtrl,
-                              size: 160,
-                              phaseOffset: 0.0,
-                              borderColor:
-                                  AppColors.blue.withValues(alpha: 0.12)),
-                          _PulsingRing(
-                              ctrl: _ringCtrl,
-                              size: 132,
-                              phaseOffset: 0.125,
-                              borderColor:
-                                  AppColors.blue.withValues(alpha: 0.22)),
-                          _PulsingRing(
-                              ctrl: _ringCtrl,
-                              size: 104,
-                              phaseOffset: 0.25,
-                              borderColor:
-                                  AppColors.blue.withValues(alpha: 0.38)),
-                          // level badge
-                          Container(
-                            width: 90,
-                            height: 90,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Color(0xFF1e3a5f), Color(0xFF2d1b4e)],
-                              ),
-                              border:
-                                  Border.all(color: AppColors.blue, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                    color:
-                                        AppColors.blue.withValues(alpha: 0.50),
-                                    blurRadius: 40),
-                                BoxShadow(
-                                    color:
-                                        AppColors.blue.withValues(alpha: 0.18),
-                                    blurRadius: 80),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'LEVEL',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white.withValues(alpha: 0.55),
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                                Text(
-                                  '${widget.level}',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    height: 1.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Level Up!',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'You reached Level ${widget.level}',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(height: 20),
-
-                    if (hasUnlocks) ...[
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'UNLOCKED',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      ..._buildUnlockTiles(unlocks),
-                    ] else
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Text(
-                          'Keep exploring to unlock zones and gear.',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                    const SizedBox(height: 20),
-
-                    // continue button
-                    SizedBox(
-                      width: double.infinity,
-                      child: GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [AppColors.blue, AppColors.purple],
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.blue.withValues(alpha: 0.35),
-                                blurRadius: 24,
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Continue →',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'LEVEL',
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
+            color: AppColors.blue,
           ),
         ),
-      ),
-    );
-  }
-
-  List<Widget> _buildUnlockTiles(LevelUpUnlocks u) {
-    final tiles = <Widget>[];
-
-    if (u.statPointsGained > 0) {
-      final s = u.statPointsGained;
-      tiles.add(_LuUnlock(
-        icon: '✨',
-        name: s == 1 ? '+1 Stat Point' : '+$s Stat Points',
-        desc: 'Spend on STR, END, AGI, FLX, or STA',
-        badgeLabel: 'POINTS',
-        badgeColor: AppColors.orange,
-      ));
-    }
-
-    for (final zone in u.unlockedZones) {
-      tiles.add(_LuUnlock(
-        icon: zone.icon.isNotEmpty ? zone.icon : '🗺️',
-        name: zone.name,
-        desc: zone.region.isEmpty
-            ? 'New zone · Lvl ${zone.levelRequirement}'
-            : '${zone.region} · Lvl ${zone.levelRequirement}',
-        badgeLabel: 'ZONE',
-        badgeColor: AppColors.blue,
-      ));
-    }
-
-    for (final item in u.grantedItems) {
-      final rColor = rarityColor(item.rarity);
-      tiles.add(_LuUnlock(
-        icon: item.icon.isNotEmpty ? item.icon : '🎁',
-        itemId: item.itemId,
-        name: item.name,
-        desc: item.slot.isEmpty
-            ? _prettyRarity(item.rarity)
-            : '${_prettyRarity(item.rarity)} · ${item.slot}',
-        badgeLabel: item.rarity.isEmpty ? 'ITEM' : item.rarity.toUpperCase(),
-        badgeColor: rColor,
-      ));
-    }
-
-    return _withSpacing(tiles, const SizedBox(height: 7));
-  }
-
-  String _prettyRarity(String r) =>
-      r.isEmpty ? 'Item' : r[0].toUpperCase() + r.substring(1).toLowerCase();
-
-  List<Widget> _withSpacing(List<Widget> items, Widget gap) {
-    if (items.isEmpty) return items;
-    final out = <Widget>[items.first];
-    for (var i = 1; i < items.length; i++) {
-      out
-        ..add(gap)
-        ..add(items[i]);
-    }
-    return out;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Private helper widgets
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _PulsingRing extends StatelessWidget {
-  final AnimationController ctrl;
-  final double size;
-  final double phaseOffset;
-  final Color borderColor;
-
-  const _PulsingRing({
-    required this.ctrl,
-    required this.size,
-    required this.phaseOffset,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: ctrl,
-      builder: (_, __) {
-        final t = (ctrl.value + phaseOffset) % 1.0;
-        // triangle wave: 0→1→0
-        final wave = t < 0.5 ? t * 2.0 : (1.0 - t) * 2.0;
-        final scale = 1.0 + wave * 0.05;
-        final opacity = 0.45 + wave * 0.55;
-        return Transform.scale(
-          scale: scale,
-          child: Opacity(
-            opacity: opacity,
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: borderColor, width: 2),
-                ),
-              ),
-            ),
+        Text(
+          '$level',
+          style: const TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.05,
           ),
-        );
-      },
-    );
-  }
-}
-
-class _LuUnlock extends StatelessWidget {
-  final String icon;
-  final String? itemId;
-  final String name;
-  final String desc;
-  final String badgeLabel;
-  final Color badgeColor;
-
-  const _LuUnlock({
-    required this.icon,
-    this.itemId,
-    required this.name,
-    required this.desc,
-    required this.badgeLabel,
-    required this.badgeColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: _surface1,
-        border: Border.all(color: const Color(0xFF30363d)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          if (itemId != null)
-            ItemIconImage(
-              itemId: itemId!,
-              itemName: name,
-              emojiFallback: icon,
-              size: 26,
-              emojiSize: 20,
-            )
-          else
-            Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    )),
-                const SizedBox(height: 1),
-                Text(desc,
-                    style: const TextStyle(
-                        fontSize: 10, color: AppColors.textSecondary)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: badgeColor.withValues(alpha: 0.12),
-              border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              badgeLabel,
-              style: TextStyle(
-                  fontSize: 9, fontWeight: FontWeight.w700, color: badgeColor),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

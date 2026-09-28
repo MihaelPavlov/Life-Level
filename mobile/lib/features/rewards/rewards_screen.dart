@@ -13,6 +13,7 @@ import '../../core/motion/motion_widgets.dart';
 import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/resource_info_dialog.dart';
 import '../character/providers/character_provider.dart';
 import '../quests/models/quest_models.dart';
 import 'models/rewards_models.dart';
@@ -241,17 +242,17 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
       if (RewardFx.enabled(context) && claimable.isNotEmpty) {
         final items = [
           if (result.coins > 0)
-            TaskRewardItem(
+            RewardRevealItem(
                 asset: AppIcons.homeCoinIcon,
                 label: '×${result.coins}',
                 color: AppColors.orange),
           if (result.crystals > 0)
-            TaskRewardItem(
+            RewardRevealItem(
                 asset: AppIcons.homeGemIcon,
                 label: '×${result.crystals}',
                 color: AppColors.purple),
           if (points > 0)
-            TaskRewardItem(
+            RewardRevealItem(
                 asset: AppIcons.dailyPointsBadge,
                 label: '+$points',
                 color: AppColors.blue),
@@ -261,8 +262,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
             : '${claimable.length} tasks complete';
         // Chest burst popup; when it closes, the rewards fly on into the
         // points badge. Not awaited so the claim button frees up at once.
-        unawaited(showTaskRewardPopup(context, items: items, subtitle: subtitle)
-            .then((landed) {
+        unawaited(
+            showRewardRevealPopup(context, items: items, subtitle: subtitle)
+                .then((landed) {
           if (mounted && landed.isNotEmpty) unawaited(_vacuum(landed));
         }));
       } else {
@@ -678,7 +680,10 @@ class _MilestoneNodeState extends State<_MilestoneNode>
         behavior: HitTestBehavior.opaque,
         onTap: claimable
             ? (claiming ? null : onClaim)
-            : () => _showRewardInfo(context, _milestoneRewardInfo(reward)),
+            : () => showResourceInfoDialog(
+                  context,
+                  _milestoneRewardInfo(reward),
+                ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 4),
           child: Column(children: [
@@ -1000,7 +1005,7 @@ class _TaskRowState extends State<_TaskRow> with TickerProviderStateMixin {
                 : AppIcons.homeCoinIcon,
             label:
                 'x${task.rewardCrystals > 0 ? task.rewardCrystals : task.rewardCoins}',
-            onTap: () => _showRewardInfo(
+            onTap: () => showResourceInfoDialog(
                   context,
                   task.rewardCrystals > 0
                       ? _crystalRewardInfo
@@ -1012,7 +1017,10 @@ class _TaskRowState extends State<_TaskRow> with TickerProviderStateMixin {
         anchor: widget.tileAnchors.$2,
         child: _PointsTile(
           label: '+${task.rewardPoints}',
-          onTap: () => _showRewardInfo(context, _dailyPointsRewardInfo),
+          onTap: () => showResourceInfoDialog(
+            context,
+            _dailyPointsRewardInfo,
+          ),
         ),
       ),
       const SizedBox(width: 11),
@@ -1257,35 +1265,21 @@ class _PointsTile extends StatelessWidget {
       );
 }
 
-class _RewardInfo {
-  final String name;
-  final String icon;
-  final String description;
-  final String destination;
-
-  const _RewardInfo({
-    required this.name,
-    required this.icon,
-    required this.description,
-    required this.destination,
-  });
-}
-
-const _coinRewardInfo = _RewardInfo(
+const _coinRewardInfo = ResourceInfoData(
   name: 'Coins',
   icon: AppIcons.homeCoinIcon,
   description: 'Universal currency used to buy items and useful upgrades.',
   destination: 'Shop',
 );
 
-const _crystalRewardInfo = _RewardInfo(
+const _crystalRewardInfo = ResourceInfoData(
   name: 'Crystals',
   icon: AppIcons.homeGemIcon,
   description: 'A rare currency used to unlock and improve powerful talents.',
   destination: 'Talents',
 );
 
-const _dailyPointsRewardInfo = _RewardInfo(
+const _dailyPointsRewardInfo = ResourceInfoData(
   name: 'Daily Points',
   icon: AppIcons.dailyPointsBadge,
   description:
@@ -1293,182 +1287,25 @@ const _dailyPointsRewardInfo = _RewardInfo(
   destination: 'Daily reward track',
 );
 
-const _xpRewardInfo = _RewardInfo(
+const _xpRewardInfo = ResourceInfoData(
   name: 'Experience',
   icon: AppIcons.rewardXpCrystals,
   description: 'Raises your character level and unlocks new progression.',
   destination: 'Character progression',
 );
 
-const _shieldRewardInfo = _RewardInfo(
+const _shieldRewardInfo = ResourceInfoData(
   name: 'Streak Shield',
   icon: AppIcons.rewardStreakShield,
   description: 'Protects an active streak when you miss an eligible day.',
   destination: 'Streak protection',
 );
 
-_RewardInfo _milestoneRewardInfo(MilestoneReward reward) {
+ResourceInfoData _milestoneRewardInfo(MilestoneReward reward) {
   if (reward.shields > 0) return _shieldRewardInfo;
   if (reward.crystals > 0) return _crystalRewardInfo;
   if (reward.coins > 0) return _coinRewardInfo;
   return _xpRewardInfo;
-}
-
-Future<void> _showRewardInfo(BuildContext context, _RewardInfo info) {
-  return showAppDialog<void>(
-    context: context,
-    barrierLabel: 'Dismiss ${info.name} information',
-    builder: (_) => Center(
-      child: Material(
-        color: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 390),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.blue, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.blue.withValues(alpha: .22),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.blue.withValues(alpha: .38),
-                        AppColors.surfaceElevated,
-                      ],
-                    ),
-                    border: const Border(
-                      bottom: BorderSide(color: AppColors.blue, width: 1),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 76,
-                        height: 76,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundAlt,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: AppColors.blue.withValues(alpha: .7),
-                              width: 2),
-                        ),
-                        child: AppIconImage(
-                          info.icon,
-                          size: 50,
-                          visualScale: info.icon == AppIcons.rewardXpCrystals
-                              ? 2.25
-                              : 1.12,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              info.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 7),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.blue.withValues(alpha: .25),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: const Text(
-                                'REWARD',
-                                style: TextStyle(
-                                  color: Color(0xFFAED6FF),
-                                  fontSize: 9,
-                                  letterSpacing: 1,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
-                  child: Text(
-                    info.description,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      height: 1.35,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(22, 0, 22, 22),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 17, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundAlt,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'USED IN',
-                        style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 9,
-                          letterSpacing: 1.6,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            info.destination,
-                            textAlign: TextAlign.end,
-                            style: const TextStyle(
-                              color: AppColors.blue,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
 }
 
 class _ErrorState extends StatelessWidget {

@@ -29,6 +29,7 @@ void invalidateProgressProviders(Ref ref) {
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
   ref.invalidate(activityHistoryProvider);
+  ref.invalidate(activitySummaryProvider);
   ref.invalidate(streakProvider);
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
@@ -50,6 +51,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
   ref.invalidate(activityHistoryProvider);
+  ref.invalidate(activitySummaryProvider);
   ref.invalidate(streakProvider);
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
@@ -74,6 +76,7 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(weeklyQuestsProvider);
   container.invalidate(rewardCenterProvider);
   container.invalidate(activityHistoryProvider);
+  container.invalidate(activitySummaryProvider);
   container.invalidate(streakProvider);
   container.invalidate(equipmentProvider);
   container.invalidate(inventoryProvider);

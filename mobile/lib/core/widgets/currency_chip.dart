@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import '../constants/app_icons.dart';
 import '../motion/app_motion.dart';
 import '../motion/motion_widgets.dart';
+import 'reward_moment/reward_hud.dart';
 
 /// Icon + value pill used to show a currency/stat (coins, gems, steps) in a
 /// screen header, with an optional green "+" badge.
@@ -137,17 +139,29 @@ class _CurrencyChipState extends State<CurrencyChip>
 
     final chip = _pill.isAnimating ? _withPill(content, up, tint, t) : content;
 
-    if (w.onTapAdd == null) return chip;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: w.borderRadius,
-      child: InkWell(
-        borderRadius: w.borderRadius,
-        onTap: w.onTapAdd,
-        child: chip,
-      ),
-    );
+    final Widget tappable = w.onTapAdd == null
+        ? chip
+        : Material(
+            color: Colors.transparent,
+            borderRadius: w.borderRadius,
+            child: InkWell(
+              borderRadius: w.borderRadius,
+              onTap: w.onTapAdd,
+              child: chip,
+            ),
+          );
+    // Coin and crystal chips are where claimed rewards fly to.
+    final kind = _hudKind(w.iconAsset);
+    return kind == null
+        ? tappable
+        : RewardHudTarget(kind: kind, child: tappable);
   }
+
+  static RewardKind? _hudKind(String iconAsset) => switch (iconAsset) {
+        AppIcons.homeCoinIcon => RewardKind.coins,
+        AppIcons.homeGemIcon || AppIcons.talentCrystalIcon => RewardKind.gems,
+        _ => null,
+      };
 
   Widget _withPill(Widget content, bool up, Color tint, double t) {
     final inT = (t / .2).clamp(0.0, 1.0);

@@ -15,4 +15,9 @@ class ActivityService {
         .map((j) => ActivityHistoryDto.fromJson(j as Map<String, dynamic>))
         .toList();
   }
+
+  Future<ActivitySummary> getSummary() async {
+    final res = await _dio.get('/activity/summary');
+    return ActivitySummary.fromJson(res.data as Map<String, dynamic>);
+  }
 }
