@@ -42,7 +42,10 @@ public class StravaWebhookServiceTests
             new StubActivityLogPort(),
             new StubActivityExternalIdReadPort());
 
-        return new StravaWebhookService(db, http, oAuth, healthSync, Options.Create(TestOptions));
+        var pending = new PendingActivityService(
+            db, new StubCharacterIdReadPort(), healthSync,
+            new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort());
+        return new StravaWebhookService(db, http, oAuth, healthSync, pending, Options.Create(TestOptions));
     }
 
     // ── VerifyChallenge ──────────────────────────────────────────────────────

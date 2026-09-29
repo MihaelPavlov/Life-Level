@@ -3,7 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/api/api_client.dart';
 import '../character/setup/setup_resume_service.dart';
-import '../character/setup/welcome_setup_screen.dart';
+import '../onboarding/onboarding_flow.dart';
 import 'services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -46,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushAndRemoveUntil(
           context,
           AppRoute(
-              builder: (_) => WelcomeSetupScreen(ringItems: result.ringItems)),
+              builder: (_) => OnboardingFlow.start(ringItems: result.ringItems)),
           (_) => false,
         );
       }

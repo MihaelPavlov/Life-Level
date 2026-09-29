@@ -26,9 +26,27 @@ public class ActivityService(
     IWorldDungeonActivityPort? worldDungeonActivity = null,
     IActivityBossDamagePort? activityBossDamage = null,
     IGuildRaidActivityPort? guildRaidActivity = null,
-    ITalentBonusReadPort? talentBonus = null)
-    : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort, IActivityHistoryReadPort
+    ITalentBonusReadPort? talentBonus = null,
+    ICharacterClassBonusReadPort? classBonus = null)
+    : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort, IActivityHistoryReadPort, IActivityMixReadPort, IActivityGainPreviewPort
 {
+    public ActivityGainPreview Preview(ActivityType type, int durationMinutes, double? distanceKm, int? calories)
+    {
+        var (xp, str, end, agi, flx, sta) = CalculateGains(new LogActivityRequest
+        {
+            Type = type,
+            DurationMinutes = durationMinutes,
+            DistanceKm = distanceKm,
+            Calories = calories,
+        });
+        return new ActivityGainPreview(xp, str, end, agi, flx, sta);
+    }
+
+    /// <summary>Window used for class detection and for keeping a devotion trait.</summary>
+    public const int RecentMixDays = 30;
+
+    /// <summary>Extra XP on the devoted activity type while the trait holds.</summary>
+    public const double DevotionXpBonus = 0.10;
     // LL-035: the "log your first activity" tutorial step gate. We advance the character
     // from step 4 → 5 only when the user actually logs a real activity (port-driven).
     private const int TutorialActivityGateStep = 4;
@@ -52,6 +70,8 @@ public class ActivityService(
             ?? throw new InvalidOperationException("Character not found.");
 
         var (xp, str, end, agi, flx, sta) = CalculateGains(request);
+        (xp, str, end, agi, flx, sta) = await ApplyClassBonusAsync(
+            userId, characterId, request.Type, (xp, str, end, agi, flx, sta));
 
         // Apply gear XP bonus
         var gearBonuses = await gearBonus.GetEquippedBonusesAsync(userId);
@@ -241,6 +261,8 @@ public class ActivityService(
             HeartRateAvg = heartRateAvg,
         };
         var (xp, str, end, agi, flx, sta) = CalculateGains(req);
+        (xp, str, end, agi, flx, sta) = await ApplyClassBonusAsync(
+            userId, characterId, type, (xp, str, end, agi, flx, sta), ct);
 
         // Imported activities get the same gear + talent XP bonuses as manual ones.
         var extGear = await gearBonus.GetEquippedBonusesAsync(userId, ct);
@@ -337,6 +359,108 @@ public class ActivityService(
             distanceKm ?? 0, calories ?? 0));
 
         return new ActivityLogPortResult(activity.Id, xp);
+    }
+
+    /// <summary>Implements IActivityLogPort — onboarding history import (see port docs).</summary>
+    public async Task<HistoricalActivityResult> ImportHistoricalActivityAsync(
+        Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
+        int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
+        CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct)
+            ?? throw new InvalidOperationException("Character not found.");
+
+        var (baseXp, str, end, agi, flx, sta) = CalculateGains(new LogActivityRequest
+        {
+            Type = type,
+            DurationMinutes = durationMinutes,
+            DistanceKm = distanceKm,
+            Calories = calories,
+            HeartRateAvg = heartRateAvg,
+        });
+        var xp = (int)Math.Round(baseXp * IActivityLogPort.HistoryXpRate);
+
+        var activity = new ActivityEntity
+        {
+            Id = Guid.NewGuid(),
+            CharacterId = characterId,
+            Type = type,
+            DurationMinutes = durationMinutes,
+            DistanceKm = distanceKm ?? 0,
+            Calories = calories ?? 0,
+            HeartRateAvg = heartRateAvg,
+            XpGained = xp,
+            StrGained = str,
+            EndGained = end,
+            AgiGained = agi,
+            FlxGained = flx,
+            StaGained = sta,
+            Steps = CalculateSteps(type, distanceKm ?? 0),
+            ExternalId = externalId,
+            LoggedAt = performedAt,
+        };
+        db.Set<ActivityEntity>().Add(activity);
+        await db.SaveChangesAsync(ct);
+
+        await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta), ct);
+        if (distanceKm > 0)
+            await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+
+        return new HistoricalActivityResult(
+            activity.Id, type, durationMinutes, distanceKm ?? 0, xp, performedAt);
+    }
+
+    /// <summary>Implements IActivityMixReadPort.</summary>
+    public async Task<IReadOnlyList<ActivityMixEntry>> GetRecentMixAsync(
+        Guid userId, DateTime sinceUtc, CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null) return [];
+
+        var rows = await db.Set<ActivityEntity>()
+            .Where(a => a.CharacterId == characterId
+                        && a.LoggedAt >= sinceUtc
+                        && (a.ExternalId == null || !a.ExternalId.Contains(":steps:")))
+            .GroupBy(a => a.Type)
+            .Select(g => new { Type = g.Key, Workouts = g.Count(), Minutes = g.Sum(a => a.DurationMinutes) })
+            .ToListAsync(ct);
+
+        return rows.Select(r => new ActivityMixEntry(r.Type, r.Workouts, r.Minutes)).ToList();
+    }
+
+    /// <summary>
+    /// Class stat multipliers (rounded, so a 1.3× END on +2 gives +3) and the
+    /// devotion trait's XP bonus. Neutral when the class port isn't wired.
+    /// </summary>
+    private async Task<(int Xp, int Str, int End, int Agi, int Flx, int Sta)> ApplyClassBonusAsync(
+        Guid userId, Guid characterId, ActivityType type,
+        (int Xp, int Str, int End, int Agi, int Flx, int Sta) g, CancellationToken ct = default)
+    {
+        if (classBonus is null) return g;
+        var bonus = await classBonus.GetClassBonusAsync(userId, ct);
+
+        static int Scale(int v, float m) => v <= 0 ? v : (int)Math.Round(v * m, MidpointRounding.AwayFromZero);
+        var xp = g.Xp;
+        if (bonus.TraitKey is not null)
+        {
+            var mix = await GetRecentMixAsync(userId, DateTime.UtcNow.AddDays(-RecentMixDays), ct);
+            if (IsDevotionActive(bonus.TraitKey, type, mix))
+                xp = (int)Math.Round(xp * (1 + DevotionXpBonus));
+        }
+        return (xp, Scale(g.Str, bonus.Str), Scale(g.End, bonus.End), Scale(g.Agi, bonus.Agi),
+            Scale(g.Flx, bonus.Flx), Scale(g.Sta, bonus.Sta));
+    }
+
+    /// <summary>A "devoted:&lt;Type&gt;" trait holds while that type is ≥ 75% of recent active minutes.</summary>
+    public static bool IsDevotionActive(string? traitKey, ActivityType type, IReadOnlyList<ActivityMixEntry> mix)
+    {
+        const string prefix = "devoted:";
+        if (traitKey is null || !traitKey.StartsWith(prefix, StringComparison.Ordinal)) return false;
+        if (!Enum.TryParse<ActivityType>(traitKey[prefix.Length..], out var devotedType) || devotedType != type)
+            return false;
+        var minutes = mix.Sum(m => m.Minutes);
+        if (minutes <= 0) return true;
+        return (double)mix.Where(m => m.Type == devotedType).Sum(m => m.Minutes) / minutes >= 0.75;
     }
 
     public async Task<List<ActivityHistoryDto>> GetHistoryAsync(Guid userId)

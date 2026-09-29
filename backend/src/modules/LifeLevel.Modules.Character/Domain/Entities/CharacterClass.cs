@@ -14,5 +14,8 @@ public class CharacterClass
     public float FlxMultiplier { get; set; } = 1.0f;
     public float StaMultiplier { get; set; } = 1.0f;
 
+    /// <summary>Hybrid classes combine two training styles. They are only granted by class detection, never picked by hand.</summary>
+    public bool IsHybrid { get; set; } = false;
+
     public bool IsActive { get; set; } = true;
 }

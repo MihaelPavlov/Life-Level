@@ -123,6 +123,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ExternalActivityRecord> ExternalActivityRecords => Set<ExternalActivityRecord>();
     public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
     public DbSet<GarminConnection> GarminConnections => Set<GarminConnection>();
+    public DbSet<PendingActivity> PendingActivities => Set<PendingActivity>();
 
     // Achievements
     public DbSet<Achievement> Achievements => Set<Achievement>();
@@ -411,6 +412,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<Character>()
             .WithMany()
             .HasForeignKey(r => r.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Integrations cross-module: PendingActivity → User
+        modelBuilder.Entity<PendingActivity>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Integrations cross-module: StravaConnection → User

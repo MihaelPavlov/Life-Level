@@ -7,6 +7,8 @@ import '../models/season_models.dart';
 import 'season_theme.dart';
 
 const _sheetRouteName = '_season_reward_sheet';
+ValueNotifier<SeasonClaimResult>? _activeResult;
+Completer<void>? _activeSheet;
 
 /// Lightweight reward confirmation for a claimed Season tile.
 ///
@@ -17,10 +19,21 @@ const _sheetRouteName = '_season_reward_sheet';
 /// while one is still up replaces it rather than stacking.
 Future<void> showSeasonRewardSheet(
     BuildContext context, SeasonClaimResult result) {
-  final nav = Navigator.of(context);
-  // Drop a previous reward sheet that hasn't auto-closed yet.
-  nav.popUntil((r) => r.settings.name != _sheetRouteName);
-  return showAppBottomSheet<void>(
+  // Keep the current route mounted when another reward arrives. Updating the
+  // notifier refreshes the contents and restarts the dismiss timer without a
+  // visible close/open animation.
+  final activeResult = _activeResult;
+  if (activeResult != null) {
+    activeResult.value = result;
+    return _activeSheet?.future ?? Future<void>.value();
+  }
+
+  final resultNotifier = ValueNotifier(result);
+  final completion = Completer<void>();
+  _activeResult = resultNotifier;
+  _activeSheet = completion;
+
+  final route = showAppBottomSheet<void>(
     context: context,
     isDismissible: true,
     enableDrag: true,
@@ -31,12 +44,21 @@ Future<void> showSeasonRewardSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
     ),
-    builder: (_) => _SeasonRewardSheet(result: result),
+    builder: (_) => _SeasonRewardSheet(result: resultNotifier),
   );
+  route.whenComplete(() {
+    if (identical(_activeResult, resultNotifier)) {
+      _activeResult = null;
+      _activeSheet = null;
+      resultNotifier.dispose();
+      if (!completion.isCompleted) completion.complete();
+    }
+  });
+  return completion.future;
 }
 
 class _SeasonRewardSheet extends StatefulWidget {
-  final SeasonClaimResult result;
+  final ValueNotifier<SeasonClaimResult> result;
   const _SeasonRewardSheet({required this.result});
 
   @override
@@ -53,6 +75,19 @@ class _SeasonRewardSheetState extends State<_SeasonRewardSheet>
   void initState() {
     super.initState();
     _bar = AnimationController(vsync: this, duration: _visible)..forward();
+    widget.result.addListener(_rewardChanged);
+    _scheduleDismiss();
+  }
+
+  void _rewardChanged() {
+    if (!mounted) return;
+    setState(() {});
+    _bar.forward(from: 0);
+    _scheduleDismiss();
+  }
+
+  void _scheduleDismiss() {
+    _dismiss?.cancel();
     _dismiss = Timer(_visible, () {
       if (mounted) Navigator.of(context).maybePop();
     });
@@ -60,6 +95,7 @@ class _SeasonRewardSheetState extends State<_SeasonRewardSheet>
 
   @override
   void dispose() {
+    widget.result.removeListener(_rewardChanged);
     _dismiss?.cancel();
     _bar.dispose();
     super.dispose();
@@ -67,7 +103,7 @@ class _SeasonRewardSheetState extends State<_SeasonRewardSheet>
 
   @override
   Widget build(BuildContext context) {
-    final r = widget.result;
+    final r = widget.result.value;
     final isFounder = r.track == 'Founder';
     final accent = isFounder ? AppColors.orange : AppColors.green;
 

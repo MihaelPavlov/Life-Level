@@ -55,6 +55,7 @@ class _Body extends ConsumerStatefulWidget {
 class _BodyState extends ConsumerState<_Body> {
   static const _tierRowExtent = 86.0;
   late final ScrollController _trackController;
+  bool _claiming = false;
 
   SeasonTrack get track => widget.track;
   VoidCallback? get onClose => widget.onClose;
@@ -88,6 +89,8 @@ class _BodyState extends ConsumerState<_Body> {
   }
 
   Future<void> _claim(BuildContext context) async {
+    if (_claiming) return;
+    setState(() => _claiming = true);
     try {
       final rewards = await ref.read(seasonProvider.notifier).claimAvailable();
       final result = SeasonClaimResult.combined(rewards);
@@ -103,6 +106,8 @@ class _BodyState extends ConsumerState<_Body> {
       if (context.mounted) {
         AppToast.error(context, e.toString());
       }
+    } finally {
+      if (mounted) setState(() => _claiming = false);
     }
   }
 
@@ -297,6 +302,7 @@ class _BodyState extends ConsumerState<_Body> {
               for (final tier in track.tiers)
                 SeasonTierRow(
                   tier: tier,
+                  claiming: _claiming,
                   onClaim: (_, __) => _claim(context),
                 ),
               const SeasonLegend(),

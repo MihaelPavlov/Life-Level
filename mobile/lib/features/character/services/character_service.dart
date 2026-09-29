@@ -19,10 +19,12 @@ class CharacterService {
   Future<CharacterSetupResult> setupCharacter({
     required String classId,
     required String avatarEmoji,
+    String? classSource,
   }) async {
     final res = await _dio.post('/character/setup', data: {
       'classId': classId,
       'avatarEmoji': avatarEmoji,
+      if (classSource != null) 'classSource': classSource,
     });
     return CharacterSetupResult.fromJson(res.data as Map<String, dynamic>);
   }

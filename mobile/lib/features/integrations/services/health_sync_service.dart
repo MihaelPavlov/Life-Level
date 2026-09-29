@@ -139,31 +139,110 @@ class HealthSyncService {
 
     // ── 2. Query Health Connect ─────────────────────────────────────────────
     // Always look back at least 30 days to catch workouts logged before first sync
-    final since = DateTime.now().toUtc().subtract(const Duration(days: 30));
+    final now = DateTime.now().toUtc();
+    final read = await _readWorkouts(days: 30);
+    if (read.error != null) {
+      return SyncResult(imported: 0, skipped: 0, errors: [read.error!]);
+    }
+    final activities = [...read.activities];
+    final provider = Platform.isIOS
+        ? IntegrationProviders.healthKit
+        : IntegrationProviders.healthConnect;
+    final prefix = Platform.isIOS ? 'healthkit' : 'healthconnect';
+
+    activities.addAll(await _buildDailyStepActivities(
+      provider: provider,
+      prefix: prefix,
+    ));
+
+    if (activities.isEmpty) {
+      await _saveLastSyncTime(now);
+      return const SyncResult.empty();
+    }
+
+    final result = await _postBatch(SyncBatchRequest(activities: activities));
+    await _saveLastSyncTime(now);
+    return result;
+  }
+
+  static const _lastBroadScanKey = 'health_last_broad_scan_ms';
+
+  /// Workouts to queue for review on Home (pull-to-import). Reads locally,
+  /// so it costs no provider API calls:
+  ///  * workouts since the last successful stage (minus a 2-day overlap),
+  ///    with a full 30-day scan once a day to catch anything missed;
+  ///  * daily step walks for finished days only (today's count keeps growing).
+  /// Returns null when the health store can't be read (permission revoked,
+  /// unavailable). Call [markStaged] after the server accepted the batch.
+  Future<List<ExternalActivityDto>?> readForStaging() async {
+    if (kIsWeb) return const [];
+    if (!await isPermissionGranted()) return const [];
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now().toUtc();
+    final lastSync = await getLastSyncTime();
+    final lastBroadMs = prefs.getInt(_lastBroadScanKey);
+    final broadDue = lastBroadMs == null ||
+        now.difference(DateTime.fromMillisecondsSinceEpoch(lastBroadMs,
+                isUtc: true)) >
+            const Duration(hours: 24);
+    var days = 30;
+    if (!broadDue && lastSync != null) {
+      final since = now.difference(lastSync.toUtc()).inHours / 24.0 + 2;
+      days = since.ceil().clamp(2, 30);
+    }
+
+    final read = await _readWorkouts(days: days);
+    if (read.error != null) return null;
+
+    final provider = Platform.isIOS
+        ? IntegrationProviders.healthKit
+        : IntegrationProviders.healthConnect;
+    final prefix = Platform.isIOS ? 'healthkit' : 'healthconnect';
+    final todayStart = DateTime.now();
+    final today = DateTime(todayStart.year, todayStart.month, todayStart.day);
+    final steps = (await _buildDailyStepActivities(
+      provider: provider,
+      prefix: prefix,
+    ))
+        .where((a) => a.performedAt.toLocal().isBefore(today))
+        .toList();
+    if (broadDue) await prefs.setInt(_lastBroadScanKey, now.millisecondsSinceEpoch);
+    return [...read.activities, ...steps];
+  }
+
+  /// Records that the phone's workouts up to now are queued on the server.
+  Future<void> markStaged() => _saveLastSyncTime(DateTime.now().toUtc());
+
+  /// Workouts (not step counts) recorded in the last [days] days, mapped for
+  /// the backend. Used by onboarding's history import, which posts them to
+  /// `/onboarding/import` instead of the live sync endpoint.
+  Future<List<ExternalActivityDto>> readRecentWorkouts({int days = 30}) async {
+    if (kIsWeb) return const [];
+    final read = await _readWorkouts(days: days);
+    return read.activities;
+  }
+
+  Future<({List<ExternalActivityDto> activities, String? error})> _readWorkouts(
+      {required int days}) async {
+    final since = DateTime.now().toUtc().subtract(Duration(days: days));
     final now = DateTime.now().toUtc();
 
     debugPrint('[HealthSync] querying $since → $now');
 
     List<HealthDataPoint> dataPoints;
     try {
+      await _health.configure();
       dataPoints = await _health.getHealthDataFromTypes(
         startTime: since,
         endTime: now,
-        types: _readTypes,
+        types: const [HealthDataType.WORKOUT],
       );
     } catch (e) {
       debugPrint('[HealthSync] ERROR reading health data: $e');
-      return SyncResult(
-          imported: 0,
-          skipped: 0,
-          errors: ['Failed to read Health Connect data: $e']);
-    }
-
-    debugPrint('[HealthSync] raw data points: ${dataPoints.length}');
-    for (final p in dataPoints) {
-      debugPrint(
-          '[HealthSync]   point: type=${p.typeString} from=${p.dateFrom} to=${p.dateTo} '
-          'value=${p.value.runtimeType} source=${p.sourceName}');
+      return (
+        activities: const <ExternalActivityDto>[],
+        error: 'Failed to read Health Connect data: $e'
+      );
     }
 
     final workouts = _health
@@ -182,45 +261,22 @@ class HealthSyncService {
     for (final point in workouts) {
       final workout = point.value as WorkoutHealthValue;
       final duration = point.dateTo.difference(point.dateFrom).inMinutes;
-      debugPrint('[HealthSync] workout: type=${workout.workoutActivityType} '
-          'duration=${duration}min dist=${workout.totalDistance}m '
-          'cal=${workout.totalEnergyBurned} uuid=${point.uuid}');
-      if (duration <= 0) {
-        debugPrint('[HealthSync]   skipping — zero duration');
-        continue;
-      }
-
-      final activityType =
-          ActivityTypeMapper.fromHealthConnect(workout.workoutActivityType);
-      final distanceKm = workout.totalDistance != null
-          ? workout.totalDistance! / 1000.0
-          : null;
-      final calories = workout.totalEnergyBurned?.toInt();
+      if (duration <= 0) continue;
 
       activities.add(ExternalActivityDto(
         provider: provider,
         externalId: '$prefix:${point.uuid}',
-        activityType: activityType,
+        activityType:
+            ActivityTypeMapper.fromHealthConnect(workout.workoutActivityType),
         durationMinutes: duration,
-        distanceKm: distanceKm,
-        calories: calories,
+        distanceKm: workout.totalDistance != null
+            ? workout.totalDistance! / 1000.0
+            : null,
+        calories: workout.totalEnergyBurned?.toInt(),
         performedAt: point.dateFrom.toUtc(),
       ));
     }
-
-    activities.addAll(await _buildDailyStepActivities(
-      provider: provider,
-      prefix: prefix,
-    ));
-
-    if (activities.isEmpty) {
-      await _saveLastSyncTime(now);
-      return const SyncResult.empty();
-    }
-
-    final result = await _postBatch(SyncBatchRequest(activities: activities));
-    await _saveLastSyncTime(now);
-    return result;
+    return (activities: activities, error: null);
   }
 
   Future<List<ExternalActivityDto>> _buildDailyStepActivities({

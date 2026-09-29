@@ -22,7 +22,7 @@ public class CharacterService(
     IEventPublisher events,
     ITitleUnlockPort titleUnlock,
     ILogger<CharacterService>? logger = null)
-    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort, ICharacterStatsSnapshotReadPort, ILevelUpReceiptPort
+    : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort, ICharacterStatsSnapshotReadPort, ILevelUpReceiptPort, ICharacterClassBonusReadPort
 {
     private const int StarterXpReward = 500;
 
@@ -38,11 +38,17 @@ public class CharacterService(
             .OrderBy(c => c.Name)
             .Select(c => new CharacterClassResponse(
                 c.Id, c.Name, c.Emoji, c.Description, c.Tagline,
-                c.StrMultiplier, c.EndMultiplier, c.AgiMultiplier, c.FlxMultiplier, c.StaMultiplier))
+                c.StrMultiplier, c.EndMultiplier, c.AgiMultiplier, c.FlxMultiplier, c.StaMultiplier, c.IsHybrid))
             .ToListAsync();
     }
 
-    public async Task<CharacterSetupResponse> SetupAsync(Guid userId, CharacterSetupRequest req)
+    /// <param name="detection">
+    /// The player's class detection at setup time. Hybrid classes are only
+    /// accepted when detection recommended them, and a devotion trait is
+    /// granted when the player keeps the detected class.
+    /// </param>
+    public async Task<CharacterSetupResponse> SetupAsync(
+        Guid userId, CharacterSetupRequest req, ClassDetectionResult? detection = null)
     {
         var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId)
             ?? throw new InvalidOperationException("Character not found.");
@@ -56,11 +62,22 @@ public class CharacterService(
         if (!IsStarterAvatar(req.AvatarEmoji))
             throw new InvalidOperationException("Avatar is locked.");
 
+        var detectedThisClass = detection?.RecommendedClass != null &&
+            string.Equals(detection.RecommendedClass, characterClass.Name, StringComparison.OrdinalIgnoreCase);
+        if (characterClass.IsHybrid && !detectedThisClass)
+            throw new InvalidOperationException("Hybrid classes come from your training and can't be picked by hand.");
+
         character.ClassId = req.ClassId;
         character.AvatarEmoji = req.AvatarEmoji;
+        character.TraitKey = detectedThisClass && detection!.State == ClassDetectionState.Devoted
+            ? detection.TraitKey
+            : null;
         character.IsSetupComplete = true;
-        character.Xp += StarterXpReward;
         character.UpdatedAt = DateTime.UtcNow;
+        logger?.LogInformation(
+            "Character setup user={UserId} class={Class} source={Source} detected={Detected} state={State} trait={Trait}",
+            userId, characterClass.Name, req.ClassSource ?? "unknown", detection?.RecommendedClass,
+            detection?.State, character.TraitKey);
 
         await db.SaveChangesAsync();
         await AwardXpAsync(userId, "CharacterSetup", "✨", "Character created · Starter bonus", StarterXpReward);
@@ -74,6 +91,26 @@ public class CharacterService(
             character.Level,
             character.IsSetupComplete
         );
+    }
+
+    /// <summary>Implements ICharacterClassBonusReadPort.</summary>
+    public async Task<ClassBonusSnapshot> GetClassBonusAsync(Guid userId, CancellationToken ct = default)
+    {
+        var row = await db.Set<CharacterEntity>()
+            .Where(c => c.UserId == userId)
+            .Select(c => new
+            {
+                c.TraitKey,
+                Str = c.Class != null ? c.Class.StrMultiplier : 1f,
+                End = c.Class != null ? c.Class.EndMultiplier : 1f,
+                Agi = c.Class != null ? c.Class.AgiMultiplier : 1f,
+                Flx = c.Class != null ? c.Class.FlxMultiplier : 1f,
+                Sta = c.Class != null ? c.Class.StaMultiplier : 1f,
+            })
+            .FirstOrDefaultAsync(ct);
+        return row is null
+            ? ClassBonusSnapshot.Neutral
+            : new ClassBonusSnapshot(row.Str, row.End, row.Agi, row.Flx, row.Sta, row.TraitKey);
     }
 
     public async Task<CharacterProfileResponse> GetProfileAsync(Guid userId, CharacterProfileContext ctx)

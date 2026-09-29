@@ -14,12 +14,14 @@ class SeasonRewardSlot extends StatefulWidget {
   final SeasonRewardView reward;
   final bool isFounderLane;
   final VoidCallback? onClaim;
+  final bool claiming;
 
   const SeasonRewardSlot({
     super.key,
     required this.reward,
     required this.isFounderLane,
     this.onClaim,
+    this.claiming = false,
   });
 
   @override
@@ -87,7 +89,8 @@ class _SeasonRewardSlotState extends State<SeasonRewardSlot>
       child: _SlotBody(
         reward: widget.reward,
         isFounderLane: widget.isFounderLane,
-        onClaim: widget.onClaim,
+        onClaim: widget.claiming ? null : widget.onClaim,
+        claiming: widget.claiming,
         icon: _icon,
       ),
     );
@@ -98,12 +101,14 @@ class _SlotBody extends StatelessWidget {
   final SeasonRewardView reward;
   final bool isFounderLane;
   final VoidCallback? onClaim;
+  final bool claiming;
   final FxAnchor icon;
 
   const _SlotBody({
     required this.reward,
     required this.isFounderLane,
     required this.onClaim,
+    required this.claiming,
     required this.icon,
   });
 
@@ -183,13 +188,15 @@ class _SlotBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    ready
-                        ? 'Ready · tap to collect'
-                        : pending
-                            ? 'In progress'
-                            : (rarityColor != null
-                                ? (reward.rarity ?? '').toUpperCase()
-                                : _typeCaption(reward.type)),
+                    ready && claiming
+                        ? 'Collecting…'
+                        : ready
+                            ? 'Ready · tap to collect'
+                            : pending
+                                ? 'In progress'
+                                : (rarityColor != null
+                                    ? (reward.rarity ?? '').toUpperCase()
+                                    : _typeCaption(reward.type)),
                     style: TextStyle(
                       fontSize: 8.5,
                       letterSpacing: 0.5,
@@ -204,7 +211,16 @@ class _SlotBody extends StatelessWidget {
                 ],
               ),
             ),
-            if (ready)
+            if (ready && claiming)
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.green,
+                ),
+              )
+            else if (ready)
               Container(
                 width: 26,
                 height: 26,

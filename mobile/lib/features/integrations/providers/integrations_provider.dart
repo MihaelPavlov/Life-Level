@@ -89,9 +89,9 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
   }
 
   /// Returns null on success, or an error message on failure.
-  Future<String?> connectStrava(String code) async {
+  Future<String?> connectStrava(String code, {String? redirectUri}) async {
     try {
-      final status = await _strava.connect(code);
+      final status = await _strava.connect(code, redirectUri: redirectUri);
       state = state.copyWith(
         isStravaConnected: status.isConnected,
         stravaAthleteName: status.athleteName,

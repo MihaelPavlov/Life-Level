@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +15,24 @@ class _FakeSeasonNotifier extends SeasonNotifier {
 
   @override
   Future<SeasonTrack> build() async => _data;
+}
+
+class _DelayedClaimSeasonNotifier extends SeasonNotifier {
+  _DelayedClaimSeasonNotifier(this.data);
+
+  final SeasonTrack data;
+
+  final claimCompleter = Completer<List<SeasonClaimResult>>();
+  int claimCalls = 0;
+
+  @override
+  Future<SeasonTrack> build() async => data;
+
+  @override
+  Future<List<SeasonClaimResult>> claimAvailable() {
+    claimCalls++;
+    return claimCompleter.future;
+  }
 }
 
 SeasonRewardView _rv(String state,
@@ -61,6 +81,11 @@ Widget _host(SeasonTrack data) => ProviderScope(
       overrides: [
         seasonProvider.overrideWith(() => _FakeSeasonNotifier(data)),
       ],
+      child: const MaterialApp(home: SeasonTrackScreen()),
+    );
+
+Widget _hostWithNotifier(SeasonNotifier notifier) => ProviderScope(
+      overrides: [seasonProvider.overrideWith(() => notifier)],
       child: const MaterialApp(home: SeasonTrackScreen()),
     );
 
@@ -117,5 +142,48 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.textContaining('No season is running'), findsOneWidget);
+  });
+
+  testWidgets('rapid reward taps send one claim and show collecting state',
+      (tester) async {
+    final notifier = _DelayedClaimSeasonNotifier(
+      _track(
+        currentTier: 1,
+        tiers: [
+          SeasonTier(
+            tier: 1,
+            isMilestone: false,
+            free: _rv('ready'),
+            founder: _rv('locked'),
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(_hostWithNotifier(notifier));
+    await tester.pumpAndSettle();
+
+    final collect = find.text('Ready · tap to collect');
+    await tester.tap(collect);
+    await tester.tap(collect);
+    await tester.pump();
+
+    expect(notifier.claimCalls, 1);
+    expect(find.text('Collecting…'), findsOneWidget);
+
+    notifier.claimCompleter.complete(const [
+      SeasonClaimResult(
+        tier: 1,
+        track: 'Free',
+        label: '+250 XP',
+        xpAwarded: 250,
+        leveledUp: false,
+        newLevel: null,
+        grantedItemName: null,
+        grantedTitleKey: null,
+      ),
+    ]);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
   });
 }

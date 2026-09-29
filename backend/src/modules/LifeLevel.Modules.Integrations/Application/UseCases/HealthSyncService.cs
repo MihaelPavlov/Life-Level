@@ -23,18 +23,114 @@ public class HealthSyncService(
 
         foreach (var dto in request.Activities)
         {
+            var one = await ImportOneAsync(userId, characterId.Value, dto, ct);
+            if (one.Error is not null) errors.Add(one.Error);
+            else if (one.Result is not null) imported++;
+            else skipped++;
+        }
+
+        return new SyncResult { Imported = imported, Skipped = skipped, Errors = errors };
+    }
+
+    /// <summary>
+    /// Imports a single external workout into the game with the same dedupe as
+    /// <see cref="SyncBatchAsync"/>. Result is null when it was already imported
+    /// (skipped); Error is set when processing failed.
+    /// </summary>
+    public async Task<(ActivityLogPortResult? Result, string? Error)> ImportOneAsync(
+        Guid userId, Guid characterId, ExternalActivityDto dto, CancellationToken ct = default)
+    {
+        try
+        {
+            // Check whether this external activity was already successfully processed.
+            // The unique index on ExternalActivityRecord is (CharacterId, Provider, ExternalId).
+            // We only skip if WasImported = true. A record with WasImported = false means a
+            // previous attempt saved the dedup row but crashed before finishing — retry it.
+            var existing = await db.Set<ExternalActivityRecord>()
+                .FirstOrDefaultAsync(r =>
+                    r.CharacterId == characterId &&
+                    r.Provider    == dto.Provider &&
+                    r.ExternalId  == dto.ExternalId, ct);
+
+            if (existing?.WasImported == true)
+                return (null, null);
+
+            if (!Enum.TryParse<ActivityType>(dto.ActivityType, ignoreCase: true, out var activityType))
+                activityType = ActivityType.Gym;
+
+            // Reuse a stuck (WasImported=false) record or insert a new dedup sentinel.
+            // Saving this before calling LogExternalActivityAsync prevents a second concurrent
+            // webhook delivery from racing past the dedup check and double-importing.
+            ExternalActivityRecord record;
+            if (existing is not null)
+            {
+                // Previous attempt left a stuck record; update its timestamp and retry.
+                record = existing;
+                record.SyncedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+            }
+            else
+            {
+                record = new ExternalActivityRecord
+                {
+                    Id = Guid.NewGuid(),
+                    CharacterId = characterId,
+                    Provider = dto.Provider,
+                    ExternalId = dto.ExternalId,
+                    ActivityStartTime = dto.PerformedAt,
+                    WasImported = false,
+                    SyncedAt = DateTime.UtcNow,
+                };
+                db.Set<ExternalActivityRecord>().Add(record);
+                await db.SaveChangesAsync(ct);
+            }
+
+            var result = await activityLog.LogExternalActivityAsync(
+                userId, activityType, dto.DurationMinutes,
+                dto.DistanceKm, dto.Calories, dto.HeartRateAvg,
+                dto.ExternalId, dto.PerformedAt, ct);
+
+            record.WasImported = true;
+            record.ImportedActivityId = result.ActivityId;
+            await db.SaveChangesAsync(ct);
+
+            return (result, null);
+        }
+        catch (Exception ex)
+        {
+            return (null, $"{dto.ExternalId}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Onboarding history import. Same dedupe as <see cref="SyncBatchAsync"/>,
+    /// but each workout goes through the history path (half XP, no XP award,
+    /// no quests/bosses/events). Step-count walks are not workouts and are skipped.
+    /// </summary>
+    public async Task<(SyncResult Result, List<HistoricalActivityResult> Workouts)> ImportHistoryAsync(
+        Guid userId, IEnumerable<ExternalActivityDto> activities, CancellationToken ct = default)
+    {
+        var workouts = new List<HistoricalActivityResult>();
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null)
+            return (new SyncResult { Errors = ["Character not found for this user."] }, workouts);
+
+        int skipped = 0;
+        var errors = new List<string>();
+        foreach (var dto in activities)
+        {
+            if (dto.ExternalId.Contains(":steps:", StringComparison.Ordinal) || dto.DurationMinutes <= 0)
+            {
+                skipped++;
+                continue;
+            }
             try
             {
-                // Check whether this external activity was already successfully processed.
-                // The unique index on ExternalActivityRecord is (CharacterId, Provider, ExternalId).
-                // We only skip if WasImported = true. A record with WasImported = false means a
-                // previous attempt saved the dedup row but crashed before finishing — retry it.
                 var existing = await db.Set<ExternalActivityRecord>()
                     .FirstOrDefaultAsync(r =>
                         r.CharacterId == characterId &&
                         r.Provider    == dto.Provider &&
                         r.ExternalId  == dto.ExternalId, ct);
-
                 if (existing?.WasImported == true)
                 {
                     skipped++;
@@ -44,34 +140,20 @@ public class HealthSyncService(
                 if (!Enum.TryParse<ActivityType>(dto.ActivityType, ignoreCase: true, out var activityType))
                     activityType = ActivityType.Gym;
 
-                // Reuse a stuck (WasImported=false) record or insert a new dedup sentinel.
-                // Saving this before calling LogExternalActivityAsync prevents a second concurrent
-                // webhook delivery from racing past the dedup check and double-importing.
-                ExternalActivityRecord record;
-                if (existing is not null)
+                var record = existing ?? new ExternalActivityRecord
                 {
-                    // Previous attempt left a stuck record; update its timestamp and retry.
-                    record = existing;
-                    record.SyncedAt = DateTime.UtcNow;
-                    await db.SaveChangesAsync(ct);
-                }
-                else
-                {
-                    record = new ExternalActivityRecord
-                    {
-                        Id = Guid.NewGuid(),
-                        CharacterId = characterId.Value,
-                        Provider = dto.Provider,
-                        ExternalId = dto.ExternalId,
-                        ActivityStartTime = dto.PerformedAt,
-                        WasImported = false,
-                        SyncedAt = DateTime.UtcNow,
-                    };
-                    db.Set<ExternalActivityRecord>().Add(record);
-                    await db.SaveChangesAsync(ct);
-                }
+                    Id = Guid.NewGuid(),
+                    CharacterId = characterId.Value,
+                    Provider = dto.Provider,
+                    ExternalId = dto.ExternalId,
+                    ActivityStartTime = dto.PerformedAt,
+                    WasImported = false,
+                };
+                record.SyncedAt = DateTime.UtcNow;
+                if (existing is null) db.Set<ExternalActivityRecord>().Add(record);
+                await db.SaveChangesAsync(ct);
 
-                var result = await activityLog.LogExternalActivityAsync(
+                var result = await activityLog.ImportHistoricalActivityAsync(
                     userId, activityType, dto.DurationMinutes,
                     dto.DistanceKm, dto.Calories, dto.HeartRateAvg,
                     dto.ExternalId, dto.PerformedAt, ct);
@@ -79,8 +161,7 @@ public class HealthSyncService(
                 record.WasImported = true;
                 record.ImportedActivityId = result.ActivityId;
                 await db.SaveChangesAsync(ct);
-
-                imported++;
+                workouts.Add(result);
             }
             catch (Exception ex)
             {
@@ -88,7 +169,7 @@ public class HealthSyncService(
             }
         }
 
-        return new SyncResult { Imported = imported, Skipped = skipped, Errors = errors };
+        return (new SyncResult { Imported = workouts.Count, Skipped = skipped, Errors = errors }, workouts);
     }
 
     public async Task<SyncResult> ImportSingleAsync(Guid userId, ExternalActivityDto dto, CancellationToken ct = default)

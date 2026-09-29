@@ -712,6 +712,10 @@ namespace LifeLevel.Api.Migrations
                     b.Property<int>("Strength")
                         .HasColumnType("integer");
 
+                    b.Property<string>("TraitKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime?>("TutorialCompletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -771,6 +775,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsHybrid")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -802,6 +809,7 @@ namespace LifeLevel.Api.Migrations
                             EndMultiplier = 1f,
                             FlxMultiplier = 1f,
                             IsActive = true,
+                            IsHybrid = false,
                             Name = "Warrior",
                             StaMultiplier = 1.2f,
                             StrMultiplier = 1.3f,
@@ -816,6 +824,7 @@ namespace LifeLevel.Api.Migrations
                             EndMultiplier = 1.3f,
                             FlxMultiplier = 1f,
                             IsActive = true,
+                            IsHybrid = false,
                             Name = "Ranger",
                             StaMultiplier = 1f,
                             StrMultiplier = 1f,
@@ -830,6 +839,7 @@ namespace LifeLevel.Api.Migrations
                             EndMultiplier = 1f,
                             FlxMultiplier = 1.4f,
                             IsActive = true,
+                            IsHybrid = false,
                             Name = "Mystic",
                             StaMultiplier = 1.2f,
                             StrMultiplier = 1f,
@@ -844,10 +854,116 @@ namespace LifeLevel.Api.Migrations
                             EndMultiplier = 1.1f,
                             FlxMultiplier = 1f,
                             IsActive = true,
+                            IsHybrid = false,
                             Name = "Sentinel",
                             StaMultiplier = 1.4f,
                             StrMultiplier = 1f,
                             Tagline = "Outlast everything."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0005-0000-0000-000000000000"),
+                            AgiMultiplier = 1f,
+                            Description = "At home in the water. Swimming builds your endurance and calm.",
+                            Emoji = "🌊",
+                            EndMultiplier = 1.2f,
+                            FlxMultiplier = 1.1f,
+                            IsActive = true,
+                            IsHybrid = false,
+                            Name = "Tidecaller",
+                            StaMultiplier = 1.2f,
+                            StrMultiplier = 1f,
+                            Tagline = "Own the water."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0006-0000-0000-000000000000"),
+                            AgiMultiplier = 1.2f,
+                            Description = "Born on the rock. Climbing trains your grip, pull and balance.",
+                            Emoji = "🧗",
+                            EndMultiplier = 1f,
+                            FlxMultiplier = 1.1f,
+                            IsActive = true,
+                            IsHybrid = false,
+                            Name = "Cragborn",
+                            StaMultiplier = 1f,
+                            StrMultiplier = 1.2f,
+                            Tagline = "Grip, pull, rise."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0007-0000-0000-000000000000"),
+                            AgiMultiplier = 1f,
+                            Description = "Long days on foot. Hikes and walks carry you across the world.",
+                            Emoji = "🥾",
+                            EndMultiplier = 1.2f,
+                            FlxMultiplier = 1f,
+                            IsActive = true,
+                            IsHybrid = false,
+                            Name = "Wayfarer",
+                            StaMultiplier = 1.3f,
+                            StrMultiplier = 1f,
+                            Tagline = "Every trail, every day."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0008-0000-0000-000000000000"),
+                            AgiMultiplier = 1f,
+                            Description = "Hybrid of Ranger and Warrior. You run and lift in the same week.",
+                            Emoji = "⚜️",
+                            EndMultiplier = 1.2f,
+                            FlxMultiplier = 1f,
+                            IsActive = true,
+                            IsHybrid = true,
+                            Name = "Vanguard",
+                            StaMultiplier = 1.1f,
+                            StrMultiplier = 1.2f,
+                            Tagline = "Run it, then lift it."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0009-0000-0000-000000000000"),
+                            AgiMultiplier = 1.1f,
+                            Description = "Hybrid of Warrior and Mystic. Strength with flow.",
+                            Emoji = "🗡️",
+                            EndMultiplier = 1f,
+                            FlxMultiplier = 1.2f,
+                            IsActive = true,
+                            IsHybrid = true,
+                            Name = "Spellblade",
+                            StaMultiplier = 1f,
+                            StrMultiplier = 1.2f,
+                            Tagline = "Strength with flow."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0010-0000-0000-000000000000"),
+                            AgiMultiplier = 1f,
+                            Description = "Hybrid of Ranger and Mystic. Trails outside, stretch after.",
+                            Emoji = "🌿",
+                            EndMultiplier = 1.2f,
+                            FlxMultiplier = 1.3f,
+                            IsActive = true,
+                            IsHybrid = true,
+                            Name = "Druid",
+                            StaMultiplier = 1f,
+                            StrMultiplier = 1f,
+                            Tagline = "Trails and stretch."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0011-0000-0000-000000000000"),
+                            AgiMultiplier = 1f,
+                            Description = "The multisport athlete. Swim, bike and run all feed your hero.",
+                            Emoji = "⚡",
+                            EndMultiplier = 1.3f,
+                            FlxMultiplier = 1f,
+                            IsActive = true,
+                            IsHybrid = true,
+                            Name = "Stormrunner",
+                            StaMultiplier = 1.2f,
+                            StrMultiplier = 1f,
+                            Tagline = "Swim, bike, run."
                         });
                 });
 
@@ -1450,6 +1566,73 @@ namespace LifeLevel.Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("GarminConnections");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Integrations.Domain.Entities.PendingActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("Calories")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("DistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid?>("DuplicateOfId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("HeartRateAvg")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ImportedActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ImportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("PerformedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("XpAwarded")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.HasIndex("UserId", "Provider", "ExternalId")
+                        .IsUnique();
+
+                    b.ToTable("PendingActivities");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Integrations.Domain.Entities.StravaConnection", b =>
@@ -4258,6 +4441,15 @@ namespace LifeLevel.Api.Migrations
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Integrations.Domain.Entities.GarminConnection", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Integrations.Domain.Entities.PendingActivity", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
                         .WithMany()

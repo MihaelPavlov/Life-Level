@@ -16,6 +16,8 @@ import '../../map/models/encounter_models.dart';
 import '../../map/models/world_map_models.dart';
 import '../../map/models/world_zone_models.dart';
 import '../../map/services/world_zone_service.dart';
+import '../../map/widgets/crossroads_choice_sheet.dart';
+import '../../map/journey/journey_state.dart';
 import '../providers/world_progress_provider.dart';
 import '../widgets/home_hero_button.dart';
 import '../widgets/home_progress_bar.dart';
@@ -53,49 +55,77 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
   // surfaced to the crossroads variant so the row dims while in flight.
   String? _pickingBranchId;
 
+  /// Branch row tapped on the crossroads card → open the shared path sheet
+  /// (same one the region map uses) with that branch pre-selected. The
+  /// sheet's "Take … →" button commits via [_commitCrossroadsBranch].
   Future<void> _pickCrossroadsBranch(WorldZoneModel branch) async {
     if (_pickingBranchId != null) return;
-    final confirmed = await showAppDialog<bool>(
+    final region = ref.read(currentRegionDetailProvider).valueOrNull;
+    final branchNode =
+        region?.nodes.where((n) => n.id == branch.id).firstOrNull;
+    final crossroadsId = branchNode?.branchOf;
+    final crossroads = crossroadsId == null
+        ? null
+        : region!.nodes.where((n) => n.id == crossroadsId).firstOrNull;
+    final branches = crossroadsId == null
+        ? const <ZoneNode>[]
+        : region!.nodes.where((n) => n.branchOf == crossroadsId).toList();
+
+    // Region detail not loaded (or the branch isn't flagged) — fall back to
+    // the map, where the same sheet is available on the crossroads node.
+    if (crossroads == null || branches.length < 2) {
+      final regionId = ref
+              .read(worldProgressProvider)
+              .valueOrNull
+              ?.userProgress
+              .currentRegionId ??
+          region?.id;
+      _openWorldDestination(regionId, crossroadsId ?? branch.id);
+      return;
+    }
+
+    await showAppBottomSheet<void>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'Choose ${branch.name}?',
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        content: const Text(
-          'Once you commit to this path, the sibling branches lock '
-          'permanently for this character.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Choose path'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => CrossroadsChoiceSheet(
+        crossroads: crossroads,
+        branches: branches.take(2).toList(),
+        regionTheme: region!.theme,
+        regionName: region.name,
+        alreadyChosenBranchId: region.pathChoices[crossroads.id],
+        initialSelectedBranchId: branch.id,
+        onChoose: (node) => _commitCrossroadsBranch(sheetCtx, node),
       ),
     );
-    if (confirmed != true || !mounted) return;
+  }
+
+  Future<void> _commitCrossroadsBranch(
+      BuildContext sheetCtx, ZoneNode branch) async {
+    if (_pickingBranchId != null) return;
     setState(() => _pickingBranchId = branch.id);
+    void closeSheet() {
+      if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+    }
+
     try {
       await WorldZoneService().setDestination(branch.id);
+      closeSheet();
       WorldZoneRefreshNotifier.notify();
       if (!mounted) return;
       AppToast.info(context, 'Heading to ${branch.name}',
           icon: Icons.alt_route_rounded);
     } on PathAlreadyChosenException {
+      closeSheet();
       if (!mounted) return;
       AppToast.warning(context, 'You already chose a different path here.');
     } on BranchRequiresCrossroadsArrivalException {
+      closeSheet();
       if (!mounted) return;
       AppToast.warning(
           context, 'Travel to the crossroads first, then pick a branch.');
     } catch (e) {
+      // Keep the sheet open so the player can retry.
       if (!mounted) return;
       AppToast.error(context, 'Could not choose path: $e');
     } finally {
@@ -159,7 +189,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
 
     final region = ref.watch(currentRegionDetailProvider).valueOrNull;
 
-    final pickedZone = _pickPortalZone(world);
+    final pickedZone = pickPortalZone(world);
     if (pickedZone == null) return const _NoZonePortal();
     WorldZoneModel zone = pickedZone;
 
@@ -204,7 +234,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     final regionChip = _buildRegionChip(region);
     final regionId = world.userProgress.currentRegionId ?? region?.id;
     if (isNonActionableHere) {
-      final next = _pickNextZoneAfter(world, zone);
+      final next = pickNextZoneAfter(world, zone);
       if (next != null) {
         return _NextZoneHintPortal(
           zone: next,
@@ -218,7 +248,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
 
     final isTraveling = (world.userProgress.currentEdgeId ?? '').isNotEmpty;
     if (isTraveling) {
-      final encounter = _currentEdgeEncounter(world, region);
+      final encounter = currentEdgeEncounter(world, region);
       if (encounter != null) {
         return _EncounterPortal(
           encounter: encounter,
@@ -290,82 +320,6 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
   }
 }
 
-// ── Zone picker ──────────────────────────────────────────────────────────────
-WorldZoneModel? _pickPortalZone(WorldFullData world) {
-  final destId = world.userProgress.destinationZoneId;
-  if (destId != null && destId.isNotEmpty) {
-    final d = world.zones.cast<WorldZoneModel?>().firstWhere(
-          (z) => z!.id == destId,
-          orElse: () => null,
-        );
-    if (d != null) return d;
-  }
-  final curId = world.userProgress.currentZoneId;
-  if (curId.isNotEmpty) {
-    final c = world.zones.cast<WorldZoneModel?>().firstWhere(
-          (z) => z!.id == curId,
-          orElse: () => null,
-        );
-    if (c != null) return c;
-  }
-  return null;
-}
-
-/// Pick a reasonable "next" zone reachable from `from` — used when the
-/// current zone is consumed (e.g. opened chest) and the portal should nudge
-/// forward instead of showing a spent CTA.
-///
-/// Adjacency is symmetric (bidirectional edges include both directions),
-/// so we have to disambiguate "forward" vs "backward" ourselves. Priority:
-///   1. Adjacent zones with `tier > from.tier` and unlocked + level-met
-///      (forward and ready-to-travel — the canonical "next").
-///   2. Adjacent zones with `tier > from.tier`, regardless of unlock state
-///      (forward but locked — still the right hint).
-///   3. Adjacent zones with `tier == from.tier`, unlocked + level-met
-///      (sideways at same difficulty).
-///   4. Fallback: first adjacent zone.
-///
-/// Within a priority bucket we sort by tier ascending then name for
-/// deterministic output across reloads.
-WorldZoneModel? _pickNextZoneAfter(WorldFullData world, WorldZoneModel from) {
-  final adjacentIds = <String>{
-    for (final e in world.edges)
-      if (e.fromZoneId == from.id)
-        e.toZoneId
-      else if (e.isBidirectional && e.toZoneId == from.id)
-        e.fromZoneId,
-  };
-  if (adjacentIds.isEmpty) return null;
-
-  final neighbors = <WorldZoneModel>[
-    for (final id in adjacentIds) ...world.zones.where((z) => z.id == id),
-  ]..sort((a, b) {
-      final t = a.tier.compareTo(b.tier);
-      return t != 0 ? t : a.name.compareTo(b.name);
-    });
-  if (neighbors.isEmpty) return null;
-
-  bool isReady(WorldZoneModel z) {
-    final state = z.userState;
-    return state != null && state.isUnlocked && state.isLevelMet;
-  }
-
-  // 1) forward (higher tier) and ready
-  for (final z in neighbors) {
-    if (z.tier > from.tier && isReady(z)) return z;
-  }
-  // 2) forward, even if locked
-  for (final z in neighbors) {
-    if (z.tier > from.tier) return z;
-  }
-  // 3) sideways at same tier, ready
-  for (final z in neighbors) {
-    if (z.tier == from.tier && isReady(z)) return z;
-  }
-  // 4) anything adjacent
-  return neighbors.first;
-}
-
 String? _buildRegionChip(RegionCard? region) {
   if (region == null || region.name.isEmpty) return null;
   final emoji = region.emoji.isNotEmpty ? '${region.emoji} ' : '';
@@ -383,47 +337,6 @@ void _openWorldDestination(String? regionId, [String? zoneId]) {
 }
 
 // ── Variants ─────────────────────────────────────────────────────────────────
-
-TrailEncounterNode? _currentEdgeEncounter(
-  WorldFullData world,
-  RegionDetail? region,
-) {
-  final edgeId = world.userProgress.currentEdgeId;
-  if (edgeId == null || edgeId.isEmpty || region == null) return null;
-
-  final edge = world.edges.cast<WorldZoneEdgeModel?>().firstWhere(
-        (e) => e?.id == edgeId,
-        orElse: () => null,
-      );
-  if (edge == null) return null;
-
-  final matches = region.encounters
-      .where((enc) =>
-          (enc.fromZoneId == edge.fromZoneId &&
-              enc.toZoneId == edge.toZoneId) ||
-          (edge.isBidirectional &&
-              enc.fromZoneId == edge.toZoneId &&
-              enc.toZoneId == edge.fromZoneId))
-      .toList()
-    ..sort((a, b) {
-      final typePriority =
-          _encounterPriority(a.type).compareTo(_encounterPriority(b.type));
-      return typePriority != 0 ? typePriority : b.t.compareTo(a.t);
-    });
-
-  return matches.firstOrNull;
-}
-
-int _encounterPriority(TrailEncounterType type) {
-  switch (type) {
-    case TrailEncounterType.blocker:
-      return 0;
-    case TrailEncounterType.merchant:
-      return 1;
-    case TrailEncounterType.story:
-      return 2;
-  }
-}
 
 class _BossRaidPortal extends StatelessWidget {
   final BossListItem boss;
@@ -999,7 +912,7 @@ class _CrossroadsPortal extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         const Text(
-          'Pick a branch on the map. Your choice is permanent — sibling path locks.',
+          'Tap a path to choose it. Your choice is permanent — the other path locks.',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

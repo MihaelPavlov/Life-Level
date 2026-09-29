@@ -15,7 +15,7 @@ public class GarminWebhookService(
     DbContext db,
     HttpClient http,
     GarminOAuthService oAuth,
-    HealthSyncService healthSync,
+    PendingActivityService pending,
     IOptions<GarminOptions> opts)
 {
     private readonly GarminOptions _opts = opts.Value;
@@ -67,7 +67,10 @@ public class GarminWebhookService(
             PerformedAt  = activity.StartTimeLocal.ToUniversalTime(),
         };
 
-        await healthSync.ImportSingleAsync(conn.UserId, dto, ct);
+        // Queue it for the player to import from Home instead of awarding XP now.
+        // The payload is stored in full, so importing never calls the provider again.
+        if (await pending.EnqueueAsync(conn.UserId, dto, ct))
+            await pending.NotifyIfFirstPendingAsync(conn.UserId, ct);
     }
 }
 

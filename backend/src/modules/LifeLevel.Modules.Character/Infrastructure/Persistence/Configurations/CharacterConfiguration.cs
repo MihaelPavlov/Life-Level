@@ -8,6 +8,7 @@ public class CharacterConfiguration : IEntityTypeConfiguration<Domain.Entities.C
     public void Configure(EntityTypeBuilder<Domain.Entities.Character> entity)
     {
         entity.HasKey(c => c.Id);
+        entity.Property(c => c.TraitKey).HasMaxLength(64);
         entity.HasOne(c => c.Class)
             .WithMany()
             .HasForeignKey(c => c.ClassId)

@@ -27,6 +27,15 @@ public class StravaOAuthService(
 
     public async Task<StravaStatusDto> ConnectAsync(Guid userId, StravaConnectRequest req, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(_opts.ClientId) ||
+            string.IsNullOrWhiteSpace(_opts.ClientSecret) ||
+            _opts.ClientId.StartsWith('<') ||
+            _opts.ClientSecret.StartsWith('<'))
+        {
+            throw new InvalidOperationException(
+                "Strava credentials are not configured on the local backend.");
+        }
+
         var form = new Dictionary<string, string>
         {
             ["client_id"]     = _opts.ClientId,

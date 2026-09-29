@@ -11,8 +11,14 @@ import 'season_reward_slot.dart';
 class SeasonTierRow extends StatefulWidget {
   final SeasonTier tier;
   final void Function(int tier, String track) onClaim;
+  final bool claiming;
 
-  const SeasonTierRow({super.key, required this.tier, required this.onClaim});
+  const SeasonTierRow({
+    super.key,
+    required this.tier,
+    required this.onClaim,
+    this.claiming = false,
+  });
 
   @override
   State<SeasonTierRow> createState() => _SeasonTierRowState();
@@ -100,6 +106,7 @@ class _SeasonTierRowState extends State<SeasonTierRow>
               child: SeasonRewardSlot(
                 reward: tier.free,
                 isFounderLane: false,
+                claiming: widget.claiming,
                 onClaim: () => onClaim(tier.tier, 'Free'),
               ),
             ),
@@ -163,6 +170,7 @@ class _SeasonTierRowState extends State<SeasonTierRow>
               child: SeasonRewardSlot(
                 reward: tier.founder,
                 isFounderLane: true,
+                claiming: widget.claiming,
                 onClaim: () => onClaim(tier.tier, 'Founder'),
               ),
             ),

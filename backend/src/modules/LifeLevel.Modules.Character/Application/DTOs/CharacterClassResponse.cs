@@ -10,5 +10,6 @@ public record CharacterClassResponse(
     float EndMultiplier,
     float AgiMultiplier,
     float FlxMultiplier,
-    float StaMultiplier
+    float StaMultiplier,
+    bool IsHybrid = false
 );

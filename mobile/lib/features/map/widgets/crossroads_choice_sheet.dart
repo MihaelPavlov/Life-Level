@@ -3,21 +3,30 @@ import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
 import 'map_icon_resolver.dart';
 
-/// Bottom sheet shown when the user taps a crossroads zone. Presents the two
-/// branch paths (Easy / Hard) as side-by-side cards. Picking one sets it as
-/// the active destination and — on the backend — records a permanent path
-/// choice; the sibling locks for that crossroads for the rest of the run.
+/// Bottom sheet shown when the user taps a crossroads zone (on the map) or a
+/// branch row on the Home crossroads card. Presents the branch paths as
+/// side-by-side cards. Tapping a card only selects it; the "Take … →" button
+/// commits the choice, which sets it as the active destination and — on the
+/// backend — records a permanent path choice; the sibling locks for that
+/// crossroads for the rest of the run.
 ///
 /// If the user has already chosen (`alreadyChosenBranchId != null`), the sheet
-/// still shows both cards but hides the CTAs — the chosen one gets a "Chosen"
-/// pill, the other a "Locked" pill.
-class CrossroadsChoiceSheet extends StatelessWidget {
+/// still shows both cards but hides the button — the chosen one gets a
+/// "Chosen" pill, the other a "Locked" pill.
+///
+/// [onChoose] owns closing the sheet (on success and on errors that end the
+/// flow); the sheet only shows a busy state while it runs.
+class CrossroadsChoiceSheet extends StatefulWidget {
   final ZoneNode crossroads;
   final List<ZoneNode> branches; // expect exactly 2
   final RegionTheme? regionTheme;
   final String? regionName;
   final String? alreadyChosenBranchId;
-  final void Function(ZoneNode branch) onChoose;
+
+  /// Branch pre-selected when the sheet opens (e.g. the row tapped on Home).
+  /// Defaults to the first branch.
+  final String? initialSelectedBranchId;
+  final Future<void> Function(ZoneNode branch) onChoose;
 
   const CrossroadsChoiceSheet({
     super.key,
@@ -26,12 +35,38 @@ class CrossroadsChoiceSheet extends StatelessWidget {
     this.regionTheme,
     this.regionName,
     required this.alreadyChosenBranchId,
+    this.initialSelectedBranchId,
     required this.onChoose,
   });
 
   @override
+  State<CrossroadsChoiceSheet> createState() => _CrossroadsChoiceSheetState();
+}
+
+class _CrossroadsChoiceSheetState extends State<CrossroadsChoiceSheet> {
+  late String? _selectedId = widget.branches
+          .any((b) => b.id == widget.initialSelectedBranchId)
+      ? widget.initialSelectedBranchId
+      : widget.branches.firstOrNull?.id;
+  bool _busy = false;
+
+  Future<void> _choose(ZoneNode branch) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.onChoose(branch);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final already = alreadyChosenBranchId != null;
+    final already = widget.alreadyChosenBranchId != null;
+    final branches = widget.branches;
+    final selected =
+        branches.where((b) => b.id == _selectedId).firstOrNull;
+    final others = branches.where((b) => b.id != _selectedId).toList();
 
     return Container(
       decoration: const BoxDecoration(
@@ -66,10 +101,10 @@ class CrossroadsChoiceSheet extends StatelessWidget {
                 ),
               ),
               _Header(
-                crossroads: crossroads,
+                crossroads: widget.crossroads,
                 already: already,
-                regionTheme: regionTheme,
-                regionName: regionName,
+                regionTheme: widget.regionTheme,
+                regionName: widget.regionName,
               ),
               const SizedBox(height: 16),
               // IntrinsicHeight gives the Row a defined height = tallest
@@ -86,32 +121,50 @@ class CrossroadsChoiceSheet extends StatelessWidget {
                       Expanded(
                         child: _PathCard(
                           branch: branches[i],
-                          regionTheme: regionTheme,
-                          regionName: regionName,
+                          regionTheme: widget.regionTheme,
+                          regionName: widget.regionName,
                           isChosen: already &&
-                              branches[i].id == alreadyChosenBranchId,
+                              branches[i].id == widget.alreadyChosenBranchId,
                           isLocked: already &&
-                              branches[i].id != alreadyChosenBranchId,
-                          // Tap suppressed on the locked sibling after a
-                          // choice. Idempotent for the already-chosen card.
-                          // Backend now auto-routes multi-hop, so even a
-                          // far-away crossroads can set its branch as the
+                              branches[i].id != widget.alreadyChosenBranchId,
+                          isSelected:
+                              !already && branches[i].id == _selectedId,
+                          // Before a choice: tapping only selects. After a
+                          // choice: the locked sibling is inert, and the
+                          // chosen card stays tappable (idempotent) — the
+                          // backend auto-routes multi-hop, so a far-away
+                          // crossroads can still set its branch as the
                           // end-of-journey destination.
-                          onChoose: (already &&
-                                  branches[i].id != alreadyChosenBranchId)
+                          onTap: _busy
                               ? null
-                              : () => onChoose(branches[i]),
+                              : !already
+                                  ? () => setState(
+                                      () => _selectedId = branches[i].id)
+                                  : branches[i].id ==
+                                          widget.alreadyChosenBranchId
+                                      ? () => _choose(branches[i])
+                                      : null,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
+              if (!already && selected != null) ...[
+                const SizedBox(height: 16),
+                _TakePathButton(
+                  label: 'Take ${selected.name} →',
+                  busy: _busy,
+                  onTap: () => _choose(selected),
+                ),
+              ],
               const SizedBox(height: 12),
               Text(
                 already
                     ? 'Your path is locked in.'
-                    : 'Tap a path to set it as your destination.',
+                    : others.length == 1
+                        ? '🔒 ${others.first.name} locks once you choose.'
+                        : '🔒 The other paths lock once you choose.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.textMuted,
@@ -121,6 +174,72 @@ class CrossroadsChoiceSheet extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Green commit button — same look as `HomeHeroButtonStyle.solidGreen`.
+class _TakePathButton extends StatelessWidget {
+  final String label;
+  final bool busy;
+  final VoidCallback onTap;
+
+  const _TakePathButton({
+    required this.label,
+    required this.busy,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: !busy,
+      label: label,
+      child: GestureDetector(
+        onTap: busy ? null : onTap,
+        child: Container(
+          height: 46,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.green, Color(0xFF2ea043)],
+            ),
+            border:
+                Border.all(color: AppColors.green.withValues(alpha: 0.55)),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.green.withValues(alpha: 0.3),
+                blurRadius: 16,
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: busy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
         ),
       ),
     );
@@ -206,7 +325,10 @@ class _PathCard extends StatelessWidget {
   final String? regionName;
   final bool isChosen;
   final bool isLocked;
-  final VoidCallback? onChoose;
+
+  /// Pre-commit selection (green border + filled radio).
+  final bool isSelected;
+  final VoidCallback? onTap;
 
   const _PathCard({
     required this.branch,
@@ -214,7 +336,8 @@ class _PathCard extends StatelessWidget {
     required this.regionName,
     required this.isChosen,
     required this.isLocked,
-    required this.onChoose,
+    required this.isSelected,
+    required this.onTap,
   });
 
   String get _difficultyLabel {
@@ -227,8 +350,9 @@ class _PathCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = isLocked ? AppColors.textMuted : AppColors.green;
-    final border = isChosen ? AppColors.green : AppColors.border;
-    final bg = isChosen
+    final highlighted = isChosen || isSelected;
+    final border = highlighted ? AppColors.green : AppColors.border;
+    final bg = highlighted
         ? AppColors.green.withOpacity(0.08)
         : AppColors.surfaceElevated;
     final radius = BorderRadius.circular(14);
@@ -260,6 +384,7 @@ class _PathCard extends StatelessWidget {
               if (isLocked)
                 const _StatusPill(
                     label: '🔒 LOCKED', color: AppColors.textMuted),
+              if (!isChosen && !isLocked) _SelectRadio(selected: isSelected),
             ],
           ),
           const SizedBox(height: 8),
@@ -318,13 +443,47 @@ class _PathCard extends StatelessWidget {
         borderRadius: radius,
         side: BorderSide(
           color: border,
-          width: isChosen ? 1.5 : 1,
+          width: highlighted ? 1.5 : 1,
         ),
       ),
       child: InkWell(
-        onTap: onChoose,
-        child: content,
+        onTap: onTap,
+        child: Semantics(
+          selected: isSelected,
+          child: content,
+        ),
       ),
+    );
+  }
+}
+
+class _SelectRadio extends StatelessWidget {
+  final bool selected;
+  const _SelectRadio({required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 18,
+      height: 18,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? AppColors.green : AppColors.border,
+          width: 2,
+        ),
+      ),
+      child: selected
+          ? Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.green,
+              ),
+            )
+          : null,
     );
   }
 }

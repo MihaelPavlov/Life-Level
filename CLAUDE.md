@@ -203,22 +203,23 @@ The mobile app lives in `mobile/lib/`. Each feature is self-contained under `fea
 
 ### `core/shell/` — App Shell
 
-Extracted from the old monolithic `main_shell.dart`. Owns the navigation container, radial FAB, and global overlays.
+Owns the navigation container, the tab bar with the raised Map button, and global overlays.
 
 | File | Description |
 |------|-------------|
-| `main_shell.dart` | Root scaffold. Hosts the `IndexedStack` of tab screens, renders the radial ring, backdrop, nav bar, and boss FAB. Listens to `LevelUpNotifier` to trigger the level-up overlay from anywhere in the app. Supports long-press on the FAB to open the customization sheet. |
-| `shell_models.dart` | `RingItem` and `NavTab` data classes. Declares `kAllRingItems` (10 items: World, Guild, Stats, Battle, Titles, Boss, Profile, Leaderboard, Map, Quests) and `kAllNavItems`. `kDefaultRingIds` and `kDefaultNavIds` define the out-of-box selections. |
-| `shell_constants.dart` | Layout constants: `kNavBarH = 82`, `kFabSize = 62`, `kRadius = 130` (ring orbit), `kItemSize = 54`. Also holds nav/card colour tokens. |
-| `widgets/boss_fab.dart` | Animated central FAB. Shows a boss icon; rotates/scales when the radial ring opens. |
-| `widgets/bottom_nav_bar.dart` | Renders the bottom tab bar from a `List<NavTab>`, highlights the active tab. |
-| `widgets/ring_item_tile.dart` | Single tile rendered at each ring position — emoji icon + label, colour-coded per item. |
+| `main_shell.dart` | Root scaffold. Hosts the `IndexedStack` of tabs (Home, Gear, Profile), shell feature overlays, the journey popover, the tab bar and the Map button. Listens to `LevelUpNotifier` to trigger the level-up overlay from anywhere in the app. On resume it refreshes the pending-workout queue. |
+| `widgets/shell_tab_bar.dart` | Bottom bar: Home · Gear · [Map caption] · Profile · Menu. |
+| `widgets/map_orb_button.dart` | Raised Map button. Ring, colour, icon, label and "act now" dot come from `journeyOrbStateProvider` (`features/map/journey/journey_state.dart`), which mirrors every journey-card state. |
+| `widgets/journey_popover.dart` | The journey card (`HomePortalCard`) shown above the Map button when it is tapped. |
+| `widgets/menu_sheet.dart` | "Everything else" sheet (World map, Bosses, Guild, Achievements, Talents, Titles, Season, Region Chests, Rewards, Log workout). Replaced the radial ring. |
+| `shell_anchors.dart` | Shared `FxAnchor`s (hero, avatar, Map button) that reward effects fly between. |
+| `shell_constants.dart` | Layout constants (`kNavBarH = 82`) and nav colour tokens. |
 
 ### `features/home/` — Home Screen
 
 | File | Description |
 |------|-------------|
-| `home_screen.dart` | Orchestrates the home feed. Fetches `CharacterProfile` and passes it to the card widgets below. Exposes `HomeScreenState.refresh()` so the shell can reload on tab switch. |
+| `home_screen.dart` | Hero stage, Adventure Hub and Happening now (`cards/home_happening_now.dart`). Pulling Home down runs the pull-to-import flow (`features/sync/`): check the pending-workout queue, review, import, rewards land on the hero. |
 | `home_cards.dart` | Card-level widgets: `HomeHeader` (greeting, avatar, badges, notification dot), `HomeXpCard` (XP progress bar to next level), `HomeStreakCard` (7-day streak grid + shield status), `HomeQuestsCard` (5 daily quests with progress + bonus XP banner), `HomeLastActivityCard` (most recent workout summary), `HomeStatsRow` (STR/END/AGI/FLX/STA gems), `HomeBossCard` (active boss HP bar + player damage). |
 | `home_widgets.dart` | Atomic micro-widgets reused by the cards: `HomeBadge`, `HomeCard` (surface container with optional glow), `HomeSectionTitle`, `HomeProgressBar`, `HomeStreakDay`, `HomeQuestItem`, `HomeGainChip`, `HomeStatGem`, `HomePulsingLvBadge` (animated pulsing badge on avatar). Also contains local palette constants and the `homeFmt()` number formatter. |
 

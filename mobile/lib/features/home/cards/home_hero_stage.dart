@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/class_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/reward_fx.dart';
+import '../../../core/shell/shell_anchors.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../../core/widgets/currency_chip.dart';
 import '../../../core/widgets/resource_info_dialog.dart';
@@ -188,9 +192,12 @@ class HomeHeroStage extends ConsumerWidget {
                                 bottom: py(20),
                                 child: Align(
                                   alignment: Alignment.center,
-                                  child: _FloatingCharacter(
-                                    equipment: equipment,
-                                    height: py(258),
+                                  child: FxAnchorTarget(
+                                    anchor: ShellAnchors.hero,
+                                    child: _FloatingCharacter(
+                                      equipment: equipment,
+                                      height: py(258),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -300,12 +307,15 @@ class _HeaderRow extends StatelessWidget {
             key: const ValueKey('home-profile-button'),
             behavior: HitTestBehavior.opaque,
             onTap: () => NavTabNotifier.switchTo('profile'),
-            child: HomeAvatarRing(
-              emoji: p?.avatarEmoji ?? '🧙',
-              level: p?.level ?? 1,
-              xpProgress: p?.xpProgress ?? 0.0,
-              size: 46,
-              showLevelPill: false,
+            child: FxAnchorTarget(
+              anchor: ShellAnchors.avatar,
+              child: HomeAvatarRing(
+                emoji: p?.avatarEmoji ?? '🧙',
+                level: p?.level ?? 1,
+                xpProgress: p?.xpProgress ?? 0.0,
+                size: 46,
+                showLevelPill: false,
+              ),
             ),
           ),
         ),
@@ -350,6 +360,29 @@ class _HeaderRow extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (classIconAssetForName(p?.className) != null) ...[
+                    const SizedBox(width: 5),
+                    // Class badge: the class detected (or picked) at setup.
+                    Tooltip(
+                      message: p!.className!,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: classColorForName(p.className)
+                              .withValues(alpha: .15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: classColorForName(p.className)
+                                  .withValues(alpha: .5)),
+                        ),
+                        alignment: Alignment.center,
+                        child: AppIconImage(
+                            classIconAssetForName(p.className)!,
+                            size: 16),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ],

@@ -10,6 +10,9 @@ class CharacterClass {
   final double flxMultiplier;
   final double staMultiplier;
 
+  /// Hybrid classes come from class detection only; hidden in the manual picker.
+  final bool isHybrid;
+
   const CharacterClass({
     required this.id,
     required this.name,
@@ -21,6 +24,7 @@ class CharacterClass {
     required this.agiMultiplier,
     required this.flxMultiplier,
     required this.staMultiplier,
+    this.isHybrid = false,
   });
 
   factory CharacterClass.fromJson(Map<String, dynamic> json) => CharacterClass(
@@ -34,6 +38,7 @@ class CharacterClass {
         agiMultiplier: (json['agiMultiplier'] as num).toDouble(),
         flxMultiplier: (json['flxMultiplier'] as num).toDouble(),
         staMultiplier: (json['staMultiplier'] as num).toDouble(),
+        isHybrid: json['isHybrid'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -47,5 +52,6 @@ class CharacterClass {
         'agiMultiplier': agiMultiplier,
         'flxMultiplier': flxMultiplier,
         'staMultiplier': staMultiplier,
+        'isHybrid': isHybrid,
       };
 }

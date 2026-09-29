@@ -46,12 +46,16 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
 
   Future<void> _connectStrava(BuildContext context) async {
     try {
-      // Open in external browser (not Chrome Custom Tab) so the deep link
-      // redirect lifelevel://oauth/strava is handled correctly on MIUI.
-      await launchUrl(
-        Uri.parse(StravaService().authorizationUrl),
-        mode: LaunchMode.externalApplication,
-      );
+      final result = await StravaService().authorize();
+      if (result != null) {
+        final error =
+            await ref.read(integrationSyncProvider.notifier).connectStrava(
+                  result.code,
+                  redirectUri: result.redirectUri,
+                );
+        if (error != null) throw StateError(error);
+        if (context.mounted) AppToast.success(context, 'Strava connected!');
+      }
     } catch (e) {
       debugPrint('Strava OAuth error: $e');
       if (context.mounted) {

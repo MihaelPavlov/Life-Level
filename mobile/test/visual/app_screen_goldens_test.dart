@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/core/theme/app_theme.dart';
 import 'package:life_level/features/auth/login_screen.dart';
 import 'package:life_level/features/auth/register_screen.dart';
-import 'package:life_level/features/character/models/character_class.dart';
-import 'package:life_level/features/character/setup/avatar_selection_screen.dart';
-import 'package:life_level/features/character/setup/welcome_setup_screen.dart';
+import 'package:life_level/features/character/setup/setup_resume_service.dart';
+import 'package:life_level/features/onboarding/onboarding_controller.dart';
+import 'package:life_level/features/onboarding/screens/welcome_step.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,39 +38,23 @@ void main() {
     );
   });
 
-  testWidgets('welcome setup screen golden', (tester) async {
+  testWidgets('onboarding welcome golden', (tester) async {
+    final ctrl = OnboardingController(
+      const SetupResumeState(
+          step: SetupStep.welcome, ringItems: ['boss', 'guild', 'world']),
+    );
     await pumpScreen(
       tester,
-      const WelcomeSetupScreen(ringItems: ['boss', 'guild', 'world']),
-    );
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('goldens/welcome_setup_screen.png'),
-    );
-  });
-
-  testWidgets('avatar selection screen golden', (tester) async {
-    await pumpScreen(
-      tester,
-      AvatarSelectionScreen(
-        selectedClass: const CharacterClass(
-          id: 'warrior',
-          name: 'Warrior',
-          emoji: '⚔️',
-          description: 'Front-line physical specialist',
-          tagline: 'Power through every challenge',
-          strMultiplier: 1.3,
-          endMultiplier: 1.1,
-          agiMultiplier: 1.0,
-          flxMultiplier: 1.0,
-          staMultiplier: 1.2,
-        ),
-        ringItems: const ['boss', 'guild', 'world'],
+      // Reduced motion renders every entrance in its final state.
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: OnboardingScope(controller: ctrl, child: const WelcomeStep()),
       ),
     );
+    await tester.pump(const Duration(seconds: 3));
     await expectLater(
       find.byType(MaterialApp),
-      matchesGoldenFile('goldens/avatar_selection_screen.png'),
+      matchesGoldenFile('goldens/onboarding_welcome.png'),
     );
   });
 }

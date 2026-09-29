@@ -16,7 +16,7 @@ class ZoneDetailSheet extends StatelessWidget {
   final int userLevel;
   final ActiveJourney? activeJourney;
   final bool isDestination;
-  final VoidCallback? onSetDestination;
+  final Future<void> Function()? onSetDestination;
 
   /// Callback for the crossroads `⚖ Choose a path` CTA. When non-null on a
   /// crossroads node, tapping the CTA dismisses this sheet and opens the
@@ -506,7 +506,7 @@ class _Cta extends StatelessWidget {
   final ZoneNode node;
   final bool levelMet;
   final bool showTravelingView;
-  final VoidCallback? onSetDestination;
+  final Future<void> Function()? onSetDestination;
   final VoidCallback? onChooseCrossroadsPath;
   final VoidCallback? onOpenChest;
   final VoidCallback? onEnterDungeon;
@@ -695,18 +695,56 @@ class _Cta extends StatelessWidget {
     // are no-op server-side (same destination, progress preserved) but the
     // button stays enabled so the UI never feels frozen.
     if (showTravelingView) {
-      return _CtaButton(
+      return _DestinationCtaButton(
         label: '✓ Heading here',
         color: AppColors.orange,
-        onTap: onSetDestination,
-        disabled: onSetDestination == null,
+        onPressed: onSetDestination,
       );
     }
-    return _CtaButton(
+    return _DestinationCtaButton(
       label: '→ Set as destination',
       color: AppColors.orange,
-      onTap: onSetDestination,
-      disabled: onSetDestination == null,
+      onPressed: onSetDestination,
+    );
+  }
+}
+
+class _DestinationCtaButton extends StatefulWidget {
+  final String label;
+  final Color color;
+  final Future<void> Function()? onPressed;
+
+  const _DestinationCtaButton({
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
+
+  @override
+  State<_DestinationCtaButton> createState() => _DestinationCtaButtonState();
+}
+
+class _DestinationCtaButtonState extends State<_DestinationCtaButton> {
+  bool _submitting = false;
+
+  Future<void> _submit() async {
+    if (_submitting || widget.onPressed == null) return;
+    setState(() => _submitting = true);
+    try {
+      await widget.onPressed!();
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _CtaButton(
+      label: _submitting ? 'Setting destination…' : widget.label,
+      color: widget.color,
+      onTap: _submitting ? null : _submit,
+      disabled: _submitting || widget.onPressed == null,
+      loading: _submitting,
     );
   }
 }
@@ -716,11 +754,13 @@ class _CtaButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onTap;
   final bool disabled;
+  final bool loading;
   const _CtaButton({
     required this.label,
     required this.color,
     required this.onTap,
     required this.disabled,
+    this.loading = false,
   });
 
   @override
@@ -747,14 +787,30 @@ class _CtaButton extends StatelessWidget {
               ? null
               : [BoxShadow(color: color.withOpacity(0.3), blurRadius: 16)],
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: disabled ? AppColors.textSecondary : Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.4,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (loading) ...[
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: disabled ? AppColors.textSecondary : Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
         ),
       ),
     );

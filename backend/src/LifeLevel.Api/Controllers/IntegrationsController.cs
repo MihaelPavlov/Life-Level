@@ -16,8 +16,30 @@ public class IntegrationsController(
     StravaWebhookService stravaWebhook,
     GarminOAuthService garminOAuth,
     GarminWebhookService garminWebhook,
+    PendingActivityService pendingActivities,
     IUserContext userContext) : ControllerBase
 {
+    // ── Pending workout queue (pull-to-import on Home) ─────────────────────────
+
+    /// <summary>GET /api/integrations/pending — workouts waiting to be imported. Reads our database only.</summary>
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending(CancellationToken ct) =>
+        Ok(await pendingActivities.ListAsync(userContext.UserId, ct));
+
+    /// <summary>POST /api/integrations/pending/stage — the phone queues workouts it read from Health Connect / Apple Health.</summary>
+    [HttpPost("pending/stage")]
+    public async Task<IActionResult> StagePending([FromBody] StagePendingRequest request, CancellationToken ct) =>
+        Ok(await pendingActivities.StageAsync(userContext.UserId, request ?? new StagePendingRequest(), ct));
+
+    /// <summary>POST /api/integrations/pending/import — turn the selected pending workouts into XP.</summary>
+    [HttpPost("pending/import")]
+    public async Task<IActionResult> ImportPending([FromBody] ImportPendingRequest request, CancellationToken ct)
+    {
+        if (request?.Ids is null || request.Ids.Count == 0)
+            return Ok(new ImportPendingResult());
+        return Ok(await pendingActivities.ImportAsync(userContext.UserId, request, ct));
+    }
+
     [HttpPost("health/sync")]
     public async Task<IActionResult> SyncHealth(
         [FromBody] SyncBatchRequest request,

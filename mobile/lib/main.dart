@@ -8,12 +8,9 @@ import 'core/theme/app_theme.dart';
 import 'core/motion/app_motion.dart';
 import 'core/widgets/main_shell.dart';
 import 'features/auth/login_screen.dart';
-import 'features/character/setup/avatar_selection_screen.dart';
-import 'features/character/setup/character_created_screen.dart';
-import 'features/character/setup/class_selection_screen.dart';
 import 'features/character/setup/setup_resume_service.dart';
-import 'features/character/setup/welcome_setup_screen.dart';
 import 'features/notifications/services/notifications_service.dart';
+import 'features/onboarding/onboarding_flow.dart';
 import 'firebase_options.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -75,27 +72,7 @@ class _AuthGateState extends State<_AuthGate> {
           token != null ? await SetupResumeService.instance.load() : null;
       final resumeScreen = resumeState == null
           ? null
-          : switch (resumeState.step) {
-              SetupStep.welcome =>
-                WelcomeSetupScreen(ringItems: resumeState.ringItems),
-              SetupStep.classSelection =>
-                ClassSelectionScreen(ringItems: resumeState.ringItems),
-              SetupStep.avatarSelection => resumeState.selectedClass == null
-                  ? ClassSelectionScreen(ringItems: resumeState.ringItems)
-                  : AvatarSelectionScreen(
-                      selectedClass: resumeState.selectedClass!,
-                      ringItems: resumeState.ringItems,
-                    ),
-              SetupStep.characterCreated => resumeState.selectedClass == null ||
-                      resumeState.avatarEmoji == null ||
-                      resumeState.avatarEmoji!.isEmpty
-                  ? ClassSelectionScreen(ringItems: resumeState.ringItems)
-                  : CharacterCreatedScreen(
-                      selectedClass: resumeState.selectedClass!,
-                      avatarEmoji: resumeState.avatarEmoji!,
-                      ringItems: resumeState.ringItems,
-                    ),
-            };
+          : OnboardingFlow(initial: resumeState);
       if (!mounted) return;
       setState(() {
         _home = token == null

@@ -81,6 +81,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   String? _nextRegionName;
   int _userLevel = 1;
   bool _loading = true;
+  bool _destinationRequestInFlight = false;
   String? _error;
   TutorialStep? _lastTutorialStep;
   bool _initialZoneHandled = false;
@@ -268,6 +269,19 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   Future<void> _handleSetDestination(ZoneNode node) async {
+    // The sheet remains visible until the request completes. Guard immediately
+    // so rapid taps cannot send two destination updates and surface the second
+    // request's conflict as an error toast.
+    if (_destinationRequestInFlight) return;
+    _destinationRequestInFlight = true;
+    try {
+      await _setDestination(node);
+    } finally {
+      _destinationRequestInFlight = false;
+    }
+  }
+
+  Future<void> _setDestination(ZoneNode node) async {
     // Pre-flight: if the user is currently inside an in-progress dungeon and
     // the target isn't that dungeon, warn them before forfeiting floors.
     final dungeonInProgress = _currentInProgressDungeon();

@@ -14,6 +14,7 @@ namespace LifeLevel.Api.Controllers;
 [Authorize]
 public class CharacterController(
     CharacterService characterService,
+    ClassRecommendationService classRecommendation,
     IUserContext userContext,
     IActivityStatsReadPort activityStatsPort,
     IStreakReadPort streakReadPort,
@@ -30,13 +31,25 @@ public class CharacterController(
         var userId = userContext.UserId;
         try
         {
-            var result = await characterService.SetupAsync(userId, req);
+            var detection = await classRecommendation.DetectAsync(userId);
+            var result = await characterService.SetupAsync(userId, req, detection);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// GET /api/character/class-recommendation — the class that fits the
+    /// player's last 30 days of training, with shares for the onboarding scan.
+    /// </summary>
+    [HttpGet("class-recommendation")]
+    public async Task<IActionResult> GetClassRecommendation(CancellationToken ct)
+    {
+        var result = await classRecommendation.GetAsync(userContext.UserId, ct);
+        return Ok(result);
     }
 
     [HttpGet("me")]

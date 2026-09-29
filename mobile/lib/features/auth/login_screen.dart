@@ -4,7 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/widgets/main_shell.dart';
 import '../character/setup/setup_resume_service.dart';
-import '../character/setup/welcome_setup_screen.dart';
+import '../onboarding/onboarding_flow.dart';
 import 'services/auth_service.dart';
 import 'register_screen.dart';
 
@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             AppRoute(
                 builder: (_) =>
-                    WelcomeSetupScreen(ringItems: result.ringItems)),
+                    OnboardingFlow.start(ringItems: result.ringItems)),
           );
         }
       }

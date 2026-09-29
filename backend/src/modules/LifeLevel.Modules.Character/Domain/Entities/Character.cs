@@ -27,6 +27,9 @@ public class Character
     public string? AvatarEmoji { get; set; }
     public bool IsSetupComplete { get; set; } = false;
 
+    /// <summary>Training trait detected at setup, e.g. "devoted:Running". Null when the player has none.</summary>
+    public string? TraitKey { get; set; }
+
     public Guid? EquippedTitleId { get; set; }
 
     // ─── Tutorial (LL-035) ─────────────────────────────────────────────────────

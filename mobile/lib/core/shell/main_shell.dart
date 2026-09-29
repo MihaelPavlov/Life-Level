@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../motion/app_motion.dart';
-import '../../features/auth/services/auth_service.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../../features/character/services/character_service.dart';
 import '../session/invalidate_user_providers.dart';
+import '../services/pending_welcome.dart';
+import '../services/oauth_code_guard.dart';
 import '../services/boss_defeated_notifier.dart';
 import '../services/boss_overlay_notifier.dart';
 import '../services/deep_link_notifier.dart';
@@ -26,7 +26,6 @@ import '../widgets/guild_raid_victory_overlay.dart';
 import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
-import '../widgets/customize_ring_sheet.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
@@ -55,10 +54,14 @@ import '../../features/items/models/item_models.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../widgets/app_toast.dart';
 import 'shell_constants.dart';
-import 'shell_models.dart';
-import 'widgets/ring_item_tile.dart';
-import 'widgets/boss_fab.dart';
-import 'widgets/bottom_nav_bar.dart';
+import 'widgets/journey_popover.dart';
+import 'widgets/map_orb_button.dart';
+import 'widgets/menu_sheet.dart';
+import 'widgets/shell_tab_bar.dart';
+import '../../features/activity/log_activity_screen.dart';
+import '../../features/map/screens/region_chests_screen.dart';
+import '../../features/sync/providers/pending_workouts_provider.dart';
+import '../../features/sync/pull_import_flow.dart';
 import '../../features/tutorial/providers/tutorial_provider.dart';
 import '../../features/tutorial/widgets/tutorial_overlay.dart';
 import '../../features/tutorial/screens/tutorial_intro_screen.dart';
@@ -76,7 +79,8 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   int _tabIndex = 0;
-  bool _radialOpen = false;
+  bool _journeyOpen = false;
+  bool _menuOpen = false;
   bool _worldOpen = false;
   ValueChanged<ZonePick>? _pendingOnZoneSelected;
   bool _titlesOpen = false;
@@ -107,34 +111,11 @@ class _MainShellState extends ConsumerState<MainShell>
   StreamSubscription<Uri>? _deepLinkSub;
   bool _oauthCallbackHandled = false;
 
-  late final AnimationController _openCtrl;
-  late final Animation<double> _openAnim;
-
-  final _authService = AuthService();
   final _guildRealtime = GuildRealtimeService();
 
-  late List<String> _ringIds;
-  List<RingItem> get _ringItems => sanitizeRingIds(_ringIds)
-      .map((id) => kAllRingItems.firstWhere((e) => e.id == id))
-      .toList();
-
-  late List<String> _navIds;
-  List<NavTab> get _navItems => sanitizeNavIds(_navIds)
-      .map((id) => kAllNavItems.firstWhere((e) => e.id == id))
-      .toList();
-
-  double get _snapStep => _ringItems.isEmpty ? 60.0 : 360.0 / _ringItems.length;
-
-  double _ringRotation = 0.0;
-  double _snapFrom = 0.0;
-  double _snapTarget = 0.0;
-  double? _dragStartAngle;
-  double _rotationAtDragStart = 0.0;
-  late final AnimationController _snapCtrl;
-
-  late final AnimationController _hintCtrl;
-  late final Animation<double> _hintAnim;
-  Timer? _hintTimer;
+  /// Tabs in the IndexedStack. Map and Menu are not tabs: the Map button
+  /// opens the journey card, Menu opens a sheet.
+  static const _navIds = ['home', 'gear', 'profile'];
   Timer? _guildVictoryPollTimer;
   Timer? _guildExpiryPollTimer;
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
@@ -154,7 +135,7 @@ class _MainShellState extends ConsumerState<MainShell>
   final Set<String> _shownLevelUpReceipts = {};
   bool _checkingLevelUps = false;
 
-  final _fabKey = GlobalKey();
+  final _menuKey = GlobalKey();
   final _mapNavKey = GlobalKey();
 
   // LL-035 tutorial integration: hooked once, consumed every rebuild.
@@ -280,6 +261,7 @@ class _MainShellState extends ConsumerState<MainShell>
     });
     _navTabSub = NavTabNotifier.stream.listen((tabId) {
       if (!mounted) return;
+      _closeJourney();
       final navIndex = _navIds.indexOf(tabId);
       // 'world' is rendered as an overlay above the IndexedStack — switching
       // to it without opening the overlay would leave the user staring at
@@ -322,6 +304,9 @@ class _MainShellState extends ConsumerState<MainShell>
       WorldZoneRefreshNotifier.notify();
       final navIndex = _navIds.indexOf('world');
       setState(() {
+        // An action on the journey card (Travel here, View on map…) hands
+        // over to the map, so the card closes.
+        _journeyOpen = false;
         if (navIndex != -1) _tabIndex = navIndex;
         _pendingOnZoneSelected = event.onZoneSelected;
         _worldOpen = true;
@@ -365,7 +350,7 @@ class _MainShellState extends ConsumerState<MainShell>
       // BossScreen to auto-open the battle view for that boss.
       ref.invalidate(bossListProvider);
       setState(() {
-        _radialOpen = false;
+        _journeyOpen = false;
         _worldOpen = false;
         _titlesOpen = false;
         _bossOpen = true;
@@ -375,8 +360,6 @@ class _MainShellState extends ConsumerState<MainShell>
         _pendingBossId = intent.bossId;
       });
     });
-    _ringIds = sanitizeRingIds(widget.initialRingIds);
-    _navIds = sanitizeNavIds(widget.initialNavIds);
 
     // OAuth deep-link handling — runs for both cold starts and warm resumes.
     // Cold start: getInitialLink() delivers the URI that launched the app.
@@ -414,6 +397,16 @@ class _MainShellState extends ConsumerState<MainShell>
       _onTutorialStateChanged();
     });
 
+    // Greeting handed over by onboarding (first landing on Home).
+    final welcome = PendingWelcome.take();
+    if (welcome != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppToast.success(context, welcome,
+            duration: const Duration(seconds: 4));
+      });
+    }
+
     // FCM push notifications: request permission, fetch+register token,
     // attach listeners. Idempotent — safe to call on every shell mount.
     NotificationsService.instance.initialize(ref);
@@ -431,47 +424,6 @@ class _MainShellState extends ConsumerState<MainShell>
       const Duration(seconds: 60),
       (_) => _checkPendingGuildRaidExpiries(),
     );
-
-    _openCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 350));
-    _openAnim = CurvedAnimation(parent: _openCtrl, curve: Curves.easeOutBack);
-
-    _snapCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 420));
-    _snapCtrl.addListener(() {
-      final t = Curves.easeOutBack.transform(_snapCtrl.value);
-      setState(() => _ringRotation = _snapFrom + (_snapTarget - _snapFrom) * t);
-    });
-
-    _hintCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3400));
-    _hintAnim = TweenSequence<double>([
-      TweenSequenceItem(
-          tween: Tween(begin: 0.0, end: -14.0)
-              .chain(CurveTween(curve: Curves.easeInOutSine)),
-          weight: 20),
-      TweenSequenceItem(
-          tween: Tween(begin: -14.0, end: 0.0)
-              .chain(CurveTween(curve: Curves.easeInOutSine)),
-          weight: 20),
-      TweenSequenceItem(
-          tween: Tween(begin: 0.0, end: -7.0)
-              .chain(CurveTween(curve: Curves.easeInOutSine)),
-          weight: 15),
-      TweenSequenceItem(
-          tween: Tween(begin: -7.0, end: 0.0)
-              .chain(CurveTween(curve: Curves.easeInOutSine)),
-          weight: 15),
-      TweenSequenceItem(
-          tween: Tween(begin: 0.0, end: -3.0)
-              .chain(CurveTween(curve: Curves.easeInOutSine)),
-          weight: 8),
-      TweenSequenceItem(
-          tween: Tween(begin: -3.0, end: 0.0)
-              .chain(CurveTween(curve: Curves.easeInOutSine)),
-          weight: 8),
-      TweenSequenceItem(tween: ConstantTween(0.0), weight: 14),
-    ]).animate(_hintCtrl);
   }
 
   void _handleDeepLink(Uri uri) {
@@ -484,6 +436,7 @@ class _MainShellState extends ConsumerState<MainShell>
       if (code == null) return;
       if (uri.pathSegments.contains('strava')) {
         if (_oauthCallbackHandled) return;
+        if (!OAuthCodeGuard.claim(code)) return;
         _oauthCallbackHandled = true;
         _handleStravaCallback(code);
       }
@@ -493,6 +446,8 @@ class _MainShellState extends ConsumerState<MainShell>
     // ── Notification deep links ────────────────────────────────────────────
     switch (uri.host) {
       case 'home':
+        // "New workout ready" push: refresh the queue so the pill shows.
+        ref.read(pendingWorkoutsProvider.notifier).checkQuietly();
         final navIndex = _navIds.indexOf('home');
         if (navIndex != -1) {
           setState(() {
@@ -528,7 +483,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
       case 'boss':
         setState(() {
-          _radialOpen = false;
+          _journeyOpen = false;
           _worldOpen = false;
           _titlesOpen = false;
           _bossOpen = true;
@@ -540,7 +495,7 @@ class _MainShellState extends ConsumerState<MainShell>
       case 'guild':
         final navIndex = _navIds.indexOf('guild');
         setState(() {
-          _radialOpen = false;
+          _journeyOpen = false;
           _worldOpen = false;
           _titlesOpen = false;
           _bossOpen = false;
@@ -553,7 +508,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
       case 'season':
         setState(() {
-          _radialOpen = false;
+          _journeyOpen = false;
           _worldOpen = false;
           _titlesOpen = false;
           _bossOpen = false;
@@ -565,7 +520,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
       case 'talents':
         setState(() {
-          _radialOpen = false;
+          _journeyOpen = false;
           _worldOpen = false;
           _titlesOpen = false;
           _bossOpen = false;
@@ -649,12 +604,8 @@ class _MainShellState extends ConsumerState<MainShell>
     _deepLinkNotifierSub.cancel();
     _notificationBannerSub.cancel();
     unawaited(_guildRealtime.stop());
-    _hintTimer?.cancel();
     _guildVictoryPollTimer?.cancel();
     _guildExpiryPollTimer?.cancel();
-    _openCtrl.dispose();
-    _snapCtrl.dispose();
-    _hintCtrl.dispose();
     if (_tutorialListener != null) {
       ref.read(tutorialControllerProvider).removeListener(_tutorialListener!);
     }
@@ -702,18 +653,10 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
+  /// On resume, queue anything new from the phone's health store and refresh
+  /// the pending pill. Nothing is imported until the player pulls Home.
   Future<void> _triggerForegroundHealthSync() async {
-    final syncState = ref.read(integrationSyncProvider);
-    if (!syncState.isHealthConnected || syncState.isSyncing) return;
-
-    // Only sync if more than 15 minutes have passed since the last sync
-    final lastSync = syncState.lastSyncAt;
-    if (lastSync != null &&
-        DateTime.now().difference(lastSync).inMinutes < 15) {
-      return;
-    }
-
-    ref.read(integrationSyncProvider.notifier).syncNow();
+    await ref.read(pendingWorkoutsProvider.notifier).checkQuietly();
   }
 
   void _invalidateAllProviders() {
@@ -850,93 +793,44 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
-  // ── open / close ──────────────────────────────────────────────────────────
-  void _toggleRadial() {
-    setState(() => _radialOpen = !_radialOpen);
-    if (_radialOpen) {
-      _openCtrl.forward();
-      _hintTimer?.cancel();
-      _hintTimer = Timer(const Duration(milliseconds: 500), () {
-        if (_radialOpen && _dragStartAngle == null) {
-          _hintCtrl.forward(from: 0);
-        }
-      });
-    } else {
-      _openCtrl.reverse();
-      _hintTimer?.cancel();
-      _hintCtrl.stop();
-      _hintCtrl.reset();
-    }
+  // ── journey card + menu ─────────────────────────────────────────────────
+  void _toggleJourney() {
+    setState(() => _journeyOpen = !_journeyOpen);
+    if (_journeyOpen) WorldZoneRefreshNotifier.notify();
   }
 
-  void _closeRadial() {
-    if (!_radialOpen) return;
-    setState(() => _radialOpen = false);
-    _openCtrl.reverse();
-    _hintTimer?.cancel();
-    _hintCtrl.stop();
-    _hintCtrl.reset();
+  void _closeJourney() {
+    if (!_journeyOpen) return;
+    setState(() => _journeyOpen = false);
   }
 
-  // ── spin helpers ──────────────────────────────────────────────────────────
-  Offset _fabGlobalCenter() {
-    final rb = _fabKey.currentContext!.findRenderObject() as RenderBox;
-    return rb.localToGlobal(const Offset(kFabSize / 2, kFabSize / 2));
+  Future<void> _openMenu() async {
+    _closeJourney();
+    setState(() => _menuOpen = true);
+    final id = await showMenuSheet(context);
+    if (!mounted) return;
+    setState(() => _menuOpen = false);
+    if (id != null) _onRingItemTap(id);
   }
 
-  double _angleFrom(Offset global, Offset centre) {
-    final dx = global.dx - centre.dx;
-    final dy = -(global.dy - centre.dy);
-    return (atan2(dy, dx) * 180 / pi + 360) % 360;
-  }
-
-  void _openCustomize() {
-    showAppBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CustomizeRingSheet(
-        currentIds: List.from(_ringIds),
-        currentNavIds: List.from(_navIds),
-        onSave: (newRingIds, newNavIds) {
-          final sanitizedRingIds = sanitizeRingIds(newRingIds);
-          final sanitizedNavIds = sanitizeNavIds(newNavIds);
-          setState(() {
-            _ringIds = sanitizedRingIds;
-            _navIds = sanitizedNavIds;
-            if (_tabIndex >= _navIds.length) _tabIndex = 0;
-          });
-          _authService.saveRingConfig(sanitizedRingIds);
-        },
-      ),
-    );
-  }
-
-  void _onSpinStart(Offset globalPos) {
-    _hintTimer?.cancel();
-    _hintCtrl.stop();
-    _hintCtrl.reset();
-    _snapCtrl.stop();
-    _dragStartAngle = _angleFrom(globalPos, _fabGlobalCenter());
-    _rotationAtDragStart = _ringRotation;
-  }
-
-  void _onSpinUpdate(Offset globalPos) {
-    if (_dragStartAngle == null) return;
-    double delta = _angleFrom(globalPos, _fabGlobalCenter()) - _dragStartAngle!;
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
-    setState(() => _ringRotation = _rotationAtDragStart + delta);
-  }
-
-  void _onSpinEnd() {
-    _dragStartAngle = null;
-    _snapFrom = _ringRotation;
-    _snapTarget = (_ringRotation / _snapStep).round() * _snapStep;
-    if ((_snapTarget - _snapFrom).abs() < 0.5) return;
-    _snapCtrl
-      ..reset()
-      ..forward();
+  /// Sync from the journey card: jump to Home so the rewards land on the
+  /// hero, then run the same flow as a pull.
+  Future<void> _syncFromJourney() async {
+    setState(() {
+      _journeyOpen = false;
+      _tabIndex = 0;
+      _worldOpen = false;
+      _titlesOpen = false;
+      _bossOpen = false;
+      _guildOpen = false;
+      _questsOpen = false;
+      _seasonOpen = false;
+      _talentsOpen = false;
+      _achievementsOpen = false;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+    await runPullImportFlow(context, ref);
   }
 
   Widget _screenFor(String id) {
@@ -1055,27 +949,23 @@ class _MainShellState extends ConsumerState<MainShell>
     });
 
     // Register shell-level tutorial targets once after the first frame paints
-    // (needs _fabKey / _mapNavKey in the tree before the controller can read rects).
+    // (needs _menuKey / _mapNavKey in the tree before the controller can read rects).
     if (!_tutorialKeysRegistered) {
       _tutorialKeysRegistered = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final c = ref.read(tutorialControllerProvider);
-        c.registerKey('bossFab', _fabKey);
+        c.registerKey('bossFab', _menuKey);
         c.registerKey('mapTab', _mapNavKey);
         _syncTutorialWithProfile();
       });
     }
-
-    final angles = anglesFor(_ringItems.length);
 
     return Scaffold(
       backgroundColor: AppColors.shellBackground,
       body: LayoutBuilder(builder: (_, constraints) {
         final w = constraints.maxWidth;
         final h = constraints.maxHeight;
-        final fabCx = w / 2;
-        final fabCy = h - kNavBarH;
         final shellOverlay = _activeShellOverlay();
 
         return SizedBox(
@@ -1132,76 +1022,29 @@ class _MainShellState extends ConsumerState<MainShell>
                 ),
               ),
 
-              // ── backdrop ────────────────────────────────────────────────
+              // ── journey card (from the Map button) ──────────────────────
               Positioned.fill(
-                bottom: kNavBarH,
-                child: AnimatedBuilder(
-                  animation: _openCtrl,
-                  builder: (_, __) {
-                    if (_openCtrl.value == 0) return const SizedBox.shrink();
-                    return GestureDetector(
-                      onTap: _closeRadial,
-                      child: Container(
-                        color: Color.lerp(
-                            Colors.transparent, kRadialScrim, _openCtrl.value),
-                      ),
-                    );
-                  },
+                child: JourneyPopover(
+                  open: _journeyOpen,
+                  onClose: _closeJourney,
+                  onSync: _syncFromJourney,
                 ),
               ),
 
-              // ── ring items ───────────────────────────────────────────────
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([_openCtrl, _hintCtrl]),
-                  builder: (_, __) {
-                    if (_openCtrl.value == 0) return const SizedBox.shrink();
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        for (int i = 0; i < _ringItems.length; i++)
-                          _buildItem(i, angles, fabCx, fabCy),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
-              // ── nav bar ──────────────────────────────────────────────────
+              // ── tab bar: Home · Gear · [Map] · Profile · Menu ───────────
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: ShellNavBar(
-                  currentIndex: _tabIndex.clamp(0, _navItems.length - 1),
-                  navTabs: _navItems,
-                  keysByTabId: {'world': _mapNavKey},
-                  onTap: (i) {
-                    _closeRadial();
-                    // 'world' opens the shell overlay AND advances the tab
-                    // index so the bottom nav highlights it. The IndexedStack
-                    // slot for 'world' renders SizedBox.shrink() beneath the
-                    // overlay, so the tab-index switch is purely cosmetic.
-                    if (_navIds[i] == 'world') {
-                      WorldZoneRefreshNotifier.notify();
-                      setState(() {
-                        _pendingOnZoneSelected = null;
-                        _tabIndex = i;
-                        _worldOpen = true;
-                        _worldAutoOpenActive = true;
-                        _worldTargetRegionId = null;
-                        _worldTargetZoneId = null;
-                        _titlesOpen = false;
-                        _bossOpen = false;
-                        _guildOpen = false;
-                        _questsOpen = false;
-                        _seasonOpen = false;
-                        _talentsOpen = false;
-                        _achievementsOpen = false;
-                      });
-                      return;
-                    }
+                child: ShellTabBar(
+                  currentIndex: _tabIndex.clamp(0, _navIds.length - 1),
+                  mapOpen: _journeyOpen || _worldOpen,
+                  menuOpen: _menuOpen,
+                  menuKey: _menuKey,
+                  onMenu: _openMenu,
+                  onTab: (i) {
                     setState(() {
+                      _journeyOpen = false;
                       _tabIndex = i;
                       _worldOpen = false;
                       _titlesOpen = false;
@@ -1220,15 +1063,14 @@ class _MainShellState extends ConsumerState<MainShell>
                 ),
               ),
 
-              // ── boss FAB ─────────────────────────────────────────────────
+              // ── Map button (raised, mirrors the journey) ────────────────
               Positioned(
-                bottom: kFabBottom,
-                left: fabCx - kFabSize / 2,
-                child: BossFab(
-                  key: _fabKey,
-                  isOpen: _radialOpen,
-                  onTap: _toggleRadial,
-                  onLongPress: _openCustomize,
+                bottom: 34,
+                left: w / 2 - kMapOrbSize / 2,
+                child: MapOrbButton(
+                  key: _mapNavKey,
+                  open: _journeyOpen,
+                  onTap: _toggleJourney,
                 ),
               ),
 
@@ -1247,9 +1089,19 @@ class _MainShellState extends ConsumerState<MainShell>
   }
 
   void _onRingItemTap(String id) {
-    _closeRadial();
+    _closeJourney();
     if (id == 'quests' || id == 'rewards') {
       _openRewardsDialog();
+      return;
+    }
+    if (id == 'chests') {
+      Navigator.push(
+          context, AppRoute(builder: (_) => const RegionChestsScreen()));
+      return;
+    }
+    if (id == 'log') {
+      Navigator.push(
+          context, AppRoute(builder: (_) => const LogActivityScreen()));
       return;
     }
     if (id != 'achievements' && _achievementsOpen) {
@@ -1363,36 +1215,5 @@ class _MainShellState extends ConsumerState<MainShell>
     final screen = _screenFor(id);
     if (screen is Center) return; // placeholder — no screen yet
     Navigator.push(context, AppRoute(builder: (_) => screen));
-  }
-
-  Widget _buildItem(int i, List<double> angles, double fabCx, double fabCy) {
-    final items = _ringItems;
-    if (i >= items.length || i >= angles.length) return const SizedBox.shrink();
-    final actualAngle = (angles[i] + _ringRotation + _hintAnim.value) % 360;
-    final rad = actualAngle * pi / 180;
-    final left = fabCx + cos(rad) * kRadius - kItemSize / 2;
-    final top = fabCy - sin(rad) * kRadius - kItemSize / 2;
-
-    return Positioned(
-      left: left,
-      top: top,
-      child: Transform.scale(
-        scale: _openAnim.value,
-        child: Opacity(
-          opacity: _openAnim.value.clamp(0.0, 1.0),
-          child: GestureDetector(
-            onTap: () {
-              AppMotion.haptic(AppHaptic.selection);
-              _onRingItemTap(items[i].id);
-            },
-            onPanStart: (d) => _onSpinStart(d.globalPosition),
-            onPanUpdate: (d) => _onSpinUpdate(d.globalPosition),
-            onPanEnd: (_) => _onSpinEnd(),
-            onPanCancel: _onSpinEnd,
-            child: RingItemTile(item: items[i]),
-          ),
-        ),
-      ),
-    );
   }
 }
