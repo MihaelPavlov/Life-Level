@@ -10,6 +10,7 @@ import '../../features/character/providers/character_provider.dart';
 import '../../features/guild/providers/guild_provider.dart';
 import '../../features/home/providers/adventure_hub_status_provider.dart';
 import '../../features/home/providers/world_progress_provider.dart';
+import '../../features/leaderboard/providers/leaderboard_provider.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/quests/providers/quest_provider.dart';
@@ -18,6 +19,8 @@ import '../../features/season/providers/season_provider.dart';
 import '../../features/streak/providers/streak_provider.dart';
 import '../../features/talents/providers/talents_provider.dart';
 import '../../features/titles/providers/titles_provider.dart';
+import '../../features/modes/burn_chain/burn_chain_provider.dart';
+import '../../features/modes/treasure_delve/delve_provider.dart';
 
 /// Refreshes progress-backed state after mutations initiated inside a
 /// Riverpod notifier, such as a Health Connect import.
@@ -34,12 +37,16 @@ void invalidateProgressProviders(Ref ref) {
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
+  ref.invalidate(leaderboardChestProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
   ref.invalidate(talentsProvider);
   ref.invalidate(titlesProvider);
   ref.invalidate(achievementsProvider);
   ref.invalidate(adventureHubSignalsProvider);
+  ref.invalidate(burnChainProvider);
+  ref.invalidate(delveStatusProvider);
+  ref.invalidate(delveRunProvider);
 }
 
 // Call on logout, app resume, and offline→online transitions so we never
@@ -56,12 +63,16 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
+  ref.invalidate(leaderboardChestProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
   ref.invalidate(talentsProvider);
   ref.invalidate(titlesProvider);
   ref.invalidate(achievementsProvider);
   ref.invalidate(adventureHubSignalsProvider);
+  ref.invalidate(burnChainProvider);
+  ref.invalidate(delveStatusProvider);
+  ref.invalidate(delveRunProvider);
 }
 
 // Container-scoped variant for call sites where the calling widget may be
@@ -81,12 +92,16 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(equipmentProvider);
   container.invalidate(inventoryProvider);
   container.invalidate(bossListProvider);
+  container.invalidate(leaderboardChestProvider);
   container.invalidate(guildProvider);
   container.invalidate(seasonProvider);
   container.invalidate(talentsProvider);
   container.invalidate(titlesProvider);
   container.invalidate(achievementsProvider);
   container.invalidate(adventureHubSignalsProvider);
+  container.invalidate(burnChainProvider);
+  container.invalidate(delveStatusProvider);
+  container.invalidate(delveRunProvider);
 }
 
 /// Clears the JWT, routes to LoginScreen, and invalidates user-scoped providers.

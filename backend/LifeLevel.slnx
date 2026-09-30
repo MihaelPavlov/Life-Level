@@ -15,6 +15,8 @@
     <Project Path="src/modules/LifeLevel.Modules.Adventure.Encounters/LifeLevel.Modules.Adventure.Encounters.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.Adventure.Dungeons/LifeLevel.Modules.Adventure.Dungeons.csproj" />
     <Project Path="src/modules/LifeLevel.Modules.Guild/LifeLevel.Modules.Guild.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Modes/LifeLevel.Modules.Modes.csproj" />
+    <Project Path="src/modules/LifeLevel.Modules.Leaderboard/LifeLevel.Modules.Leaderboard.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LifeLevel.Api.Tests/LifeLevel.Api.Tests.csproj" />

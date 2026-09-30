@@ -9,7 +9,7 @@ public enum TalentTileState
     Owned,
 }
 
-public record TalentWalletView(long Coins, int Crystals, int OwnedCount, int CatalogCount);
+public record TalentWalletView(long Coins, int TalentCrystals, int OwnedCount, int CatalogCount);
 
 public record TalentView(
     string Key,

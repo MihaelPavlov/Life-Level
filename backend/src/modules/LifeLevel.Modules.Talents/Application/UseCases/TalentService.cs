@@ -98,7 +98,8 @@ public class TalentService(DbContext db)
             CatalogCount: catalogCount,
             TotalLevels: owned.Sum(),
             Coins: wallet?.Coins ?? 0,
-            Crystals: wallet?.Crystals ?? 0,
+            Gems: wallet?.Gems ?? 0,
+            TalentCrystals: wallet?.TalentCrystals ?? 0,
             StrBonus: bonuses.StrBonus,
             EndBonus: bonuses.EndBonus,
             AgiBonus: bonuses.AgiBonus,
@@ -160,11 +161,20 @@ public class TalentService(DbContext db)
         await db.SaveChangesAsync(ct);
     }
 
-    public async Task AddCrystalsAsync(Guid userId, int amount, CancellationToken ct = default)
+    public async Task AddGemsAsync(Guid userId, int amount, CancellationToken ct = default)
     {
         if (amount <= 0) return;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        wallet.Crystals += amount;
+        wallet.Gems += amount;
+        wallet.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AddTalentCrystalsAsync(Guid userId, int amount, CancellationToken ct = default)
+    {
+        if (amount <= 0) return;
+        var wallet = await GetOrCreateWalletAsync(userId, ct);
+        wallet.TalentCrystals += amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
     }
@@ -172,7 +182,7 @@ public class TalentService(DbContext db)
     public async Task<ShopWalletBalance> GetBalanceAsync(Guid userId, CancellationToken ct = default)
     {
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        return new ShopWalletBalance(wallet.Coins, wallet.Crystals);
+        return new ShopWalletBalance(wallet.Coins, wallet.Gems);
     }
 
     public async Task<bool> TrySpendAsync(
@@ -189,9 +199,9 @@ public class TalentService(DbContext db)
                         .SetProperty(x => x.Coins, x => x.Coins - amount)
                         .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct)
                 : await db.Set<UserTalentWallet>()
-                    .Where(x => x.UserId == userId && x.Crystals >= amount)
+                    .Where(x => x.UserId == userId && x.Gems >= amount)
                     .ExecuteUpdateAsync(setters => setters
-                        .SetProperty(x => x.Crystals, x => x.Crystals - amount)
+                        .SetProperty(x => x.Gems, x => x.Gems - amount)
                         .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
             if (updated == 1) await db.Entry(wallet).ReloadAsync(ct);
             return updated == 1;
@@ -203,8 +213,8 @@ public class TalentService(DbContext db)
         }
         else
         {
-            if (wallet.Crystals < amount) return false;
-            wallet.Crystals -= amount;
+            if (wallet.Gems < amount) return false;
+            wallet.Gems -= amount;
         }
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -231,7 +241,7 @@ public class TalentService(DbContext db)
 
         var views = catalog.Select(t => ToView(t, owned.GetValueOrDefault(t.Id))).ToList();
         var activeOwnedCount = catalog.Count(t => owned.ContainsKey(t.Id));
-        var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals, activeOwnedCount, catalog.Count);
+        var walletView = new TalentWalletView(wallet.Coins, wallet.TalentCrystals, activeOwnedCount, catalog.Count);
         var talentPoints = catalog.Sum(t => Math.Clamp(
             owned.GetValueOrDefault(t.Id)?.Level ?? 0, 0, Math.Max(0, t.MaxLevel)));
         var maxTalentPoints = catalog.Sum(t => Math.Max(0, t.MaxLevel));
@@ -246,7 +256,7 @@ public class TalentService(DbContext db)
             DrawCrystalCost: drawCrystalCost,
             DrawCoinCost: drawCoinCost,
             CanDraw: !collectionComplete && catalog.Count > 0 &&
-                wallet.Crystals >= drawCrystalCost && wallet.Coins >= drawCoinCost,
+                wallet.TalentCrystals >= drawCrystalCost && wallet.Coins >= drawCoinCost,
             CollectionComplete: collectionComplete,
             Talents: views);
     }
@@ -296,11 +306,11 @@ public class TalentService(DbContext db)
         var drawCount = await db.Set<TalentDrawEntry>().CountAsync(x => x.UserId == userId, ct);
         var drawCrystalCost = TalentEconomy.DrawCrystalCost(drawCount);
         var drawCoinCost = TalentEconomy.DrawCoinCost(drawCount);
-        if (wallet.Crystals < drawCrystalCost || wallet.Coins < drawCoinCost)
+        if (wallet.TalentCrystals < drawCrystalCost || wallet.Coins < drawCoinCost)
             throw new InvalidOperationException(
                 $"Not enough currency. This draw costs {drawCoinCost} Coins and {drawCrystalCost} Crystals.");
 
-        wallet.Crystals -= drawCrystalCost;
+        wallet.TalentCrystals -= drawCrystalCost;
         wallet.Coins -= drawCoinCost;
         wallet.UpdatedAt = DateTime.UtcNow;
 
@@ -350,7 +360,7 @@ public class TalentService(DbContext db)
             {
                 var (coinsRefund, crystalsRefund) = TalentEconomy.DuplicateRefund(talent.Rarity);
                 wallet.Coins += coinsRefund;
-                wallet.Crystals += crystalsRefund;
+                wallet.TalentCrystals += crystalsRefund;
                 crystalsAwarded = crystalsRefund;
             }
             userTalent.UpdatedAt = DateTime.UtcNow;
@@ -372,7 +382,7 @@ public class TalentService(DbContext db)
         await db.SaveChangesAsync(ct);
         if (transaction != null) await transaction.CommitAsync(ct);
 
-        var walletView = new TalentWalletView(wallet.Coins, wallet.Crystals,
+        var walletView = new TalentWalletView(wallet.Coins, wallet.TalentCrystals,
             ownedIds.Count + (giveNew ? 1 : 0), catalog.Count);
         var view = ToView(talent, userTalent);
 

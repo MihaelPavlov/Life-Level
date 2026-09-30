@@ -12,8 +12,11 @@ public class UserTalentWallet
     /// <summary>Soft currency — earned from activities / quests / bosses. Spent on draws + upgrades.</summary>
     public long Coins { get; set; }
 
-    /// <summary>Scarce hard currency — earned only from bosses, zone/region completions, and reward claims. Spent on draws + upgrades.</summary>
-    public int Crystals { get; set; }
+    /// <summary>Premium currency used by the shop. Earned from tasks and achievements.</summary>
+    public int Gems { get; set; }
+
+    /// <summary>Talent-only currency. Earned from levels, gameplay chests, and modes.</summary>
+    public int TalentCrystals { get; set; }
 
     /// <summary>Rolling weekly count of Second Wind auto-recoveries used (reset by the streak day-key check).</summary>
     public int SecondWindUsedThisWeek { get; set; }

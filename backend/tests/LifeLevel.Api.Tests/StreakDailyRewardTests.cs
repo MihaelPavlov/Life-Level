@@ -66,7 +66,10 @@ public class StreakDailyRewardTests
             return Task.CompletedTask;
         }
 
-        public Task AddCrystalsAsync(Guid userId, int amount, CancellationToken ct = default) =>
+        public Task AddGemsAsync(Guid userId, int amount, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task AddTalentCrystalsAsync(Guid userId, int amount, CancellationToken ct = default) =>
             Task.CompletedTask;
     }
 

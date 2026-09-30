@@ -221,7 +221,7 @@ public class AchievementService(
         var item = await chestItems.GrantRandomUnownedAsync(userId, chest.ItemRarity, ct);
         row.ItemId = item?.ItemId;
         if (chest.Coins > 0) await currency.AddCoinsAsync(userId, chest.Coins, ct);
-        if (chest.Gems > 0) await currency.AddCrystalsAsync(userId, chest.Gems, ct);
+        if (chest.Gems > 0) await currency.AddGemsAsync(userId, chest.Gems, ct);
         await db.SaveChangesAsync(ct);
 
         return new StageChestOpenResult(
@@ -254,7 +254,7 @@ public class AchievementService(
                 ua.Achievement.Title, ua.Achievement.XpReward, ct);
         }
         if (coins > 0) await currency.AddCoinsAsync(userId, coins, ct);
-        if (gems > 0) await currency.AddCrystalsAsync(userId, gems, ct);
+        if (gems > 0) await currency.AddGemsAsync(userId, gems, ct);
 
         // Stages this claim finished whose chest is still closed.
         var chestsReady = new List<AchievementStageKeyDto>();

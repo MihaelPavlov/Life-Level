@@ -53,6 +53,7 @@ void main() {
             final rewardsReady = ref.watch(_rewardsReadyProvider);
             return AdventureHubSignals(
               rewards: rewardsReady,
+              bosses: false,
               streak: false,
               talents: false,
               season: false,
@@ -76,6 +77,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('!'), findsNothing);
     expect(find.text('Ranks'), findsOneWidget);
+    expect(find.text('Bosses'), findsOneWidget);
     expect(find.text('Milestones'), findsNothing);
 
     container.read(_rewardsReadyProvider.notifier).state = true;

@@ -117,7 +117,8 @@ public class AdminTalentsController(AppDbContext db) : ControllerBase
             db.Add(wallet);
         }
         wallet.Coins += Math.Max(0, req.Coins);
-        wallet.Crystals += Math.Max(0, req.Crystals);
+        wallet.Gems += Math.Max(0, req.Gems);
+        wallet.TalentCrystals += Math.Max(0, req.Crystals);
         wallet.UpdatedAt = DateTime.UtcNow;
 
         if (!string.IsNullOrWhiteSpace(req.TalentKey))
@@ -143,7 +144,7 @@ public class AdminTalentsController(AppDbContext db) : ControllerBase
         }
 
         await db.SaveChangesAsync();
-        return Ok(new { userId, wallet.Coins, wallet.Crystals });
+        return Ok(new { userId, wallet.Coins, wallet.Gems, wallet.TalentCrystals });
     }
 
     // POST /api/admin/talents/reset  — wipe a tester's talents + wallet
@@ -177,4 +178,5 @@ public record UpsertTalentRequest(
     string Rarity, string EffectType, double PerLevelValue,
     int MaxLevel, int DrawWeight, int SortOrder, bool IsActive);
 
-public record TalentGrantRequest(string? UserIdOrEmail, int Coins, int Crystals, string? TalentKey);
+public record TalentGrantRequest(
+    string? UserIdOrEmail, int Coins, int Crystals, string? TalentKey, int Gems = 0);

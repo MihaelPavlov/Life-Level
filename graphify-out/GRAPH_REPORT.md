@@ -1,47 +1,47 @@
-# Graph Report - Life-Level  (2026-09-29)
+# Graph Report - Life-Level  (2026-09-30)
 
 ## Corpus Check
-- 1666 files · ~14,128,703 words
+- 1736 files · ~14,200,380 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 20033 nodes · 34872 edges · 1208 communities (1035 shown, 173 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 3039 edges (avg confidence: 0.66)
+- 21079 nodes · 36796 edges · 1242 communities (1045 shown, 197 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 3090 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ebd47edc`
+- Built from commit: `a0703966`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - shell/main_shell.dart
-- Task
+- AppDbContext
 - home_portal_card.dart
 - region_detail_screen.dart
 - profile_overview_tab.dart
-- .ProcessEventAsync
-- LifeLevel.Api.Infrastructure.Persistence
+- ModesService
+- LifeLevel.SharedKernel.Ports
 - reward_moment.dart
 - integrations_screen.dart
-- notification_preferences_screen.dart
+- package:flutter/material.dart
 - core-plugins.json
 - talents_screen.dart
-- package:flutter_riverpod/flutter_riverpod.dart
+- .GetAsync
 - cdp-chrome-profile/WasmTtsEngine/20260625.1/bindings_main.js
-- VoidCallback
+- shop_screen.dart
 - tutorial_overlay.dart
 - boss_screen.dart
 - dungeon_floors_sheet.dart
 - gear_stats_row.dart
 - streak_detail_sheet.dart
 - hiddenItems
-- Strava Integration
+- Known Issues
 - FcmNotificationAdapter
 - zone_trail.dart
 - CLAUDE.md
 - region_chests_screen.dart
-- ../../../core/widgets/app_icon_image.dart
+- profile_widgets.dart
 - ControllerBase
 - boss_battle_screen.dart
 - StatelessWidget
@@ -52,7 +52,7 @@
 - portal_idle.dart
 - WorldSeedData
 - State Management (Mobile)
-- AnimationController
+- activity_result_sheet.dart
 - zone_detail_sheet.dart
 - cdp-chrome-profile-2/WasmTtsEngine/20260625.1/bindings_main.js
 - home_portal_card_test.dart
@@ -61,9 +61,9 @@
 - level_up_overlay.dart
 - connect_step.dart
 - rewards_screen.dart
-- notifications_sheet.dart
+- core/motion/app_motion.dart
 - cdp-chrome-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js
-- daily_bonus_banner.dart
+- .GetAsync
 - World Map v3 — Region Hub
 - app_icons.dart
 - World Map Final Design Spec
@@ -75,13 +75,13 @@
 - quests_screen.dart
 - onboarding_ui.dart
 - reward_fx.dart
-- LifeLevel.SharedKernel.Contracts
-- dart:async
-- package:flutter/material.dart
+- User
+- modes_api_service.dart
+- boss_hp_bar.dart
 - iOS AppIcon 1024x1024
 - notification_row.dart
-- shop_screen.dart
-- home_avatar_ring.dart
+- task_reward_popup.dart
+- pull_to_import.dart
 - zones.js
 - journey_state.dart
 - cdp-chrome-profile-2/WasmTtsEngine/20260625.1/offscreen_compiled.js
@@ -97,7 +97,7 @@
 - ImportFirstOnboardingTests
 - activity_models.dart
 - regions.js
-- boss_active_card.dart
+- delve_engine.dart
 - road_widgets.dart
 - boss_hit_fx.dart
 - kg
@@ -113,45 +113,45 @@
 - .g
 - health_sync_service.dart
 - world_zone_service.dart
-- TaskRewardCenterTests
+- XpAwardResult
 - b
-- title_equip_flight.dart
+- leaderboard_models.dart
 - talent_models.dart
-- stack
+- agent-context.json
 - typeMultipliers
 - gameEngine
 - EmptyServiceProvider
-- ActivityService
-- inventory_full_overlay.dart
+- ActivityType
+- VoidCallback
 - notifications_service.dart
-- c
-- .GetCharacterIdAsync
+- b
+- ItemService
 - guild_models.dart
 - .get
-- .V
+- .get
 - .AwardXpAsync
 - ce
 - class_step.dart
 - admin_tab.dart
 - Ok
-- AppDbContext.cs
-- AppDbContext
-- sync_status_banner.dart
+- adventure_hub_status_provider.dart
+- StravaOAuthServiceTests
+- ../../../core/constants/app_colors.dart
 - encounter_blocker_sheet.dart
 - ce
 - architecture
 - .I
 - edges.js
 - floors.js
-- c
+- dd
 - e
-- LifeLevel.Modules.Adventure.Dungeons.Domain.Entities
+- AppDbContext.cs
 - .OpenAsync
-- qh
+- ConsumerState
 - GuildService
-- daily_quests_tab.dart
+- home_adventure_hub.dart
 - .I
-- GuildServiceTests.cs
+- LifeLevel.Modules.Guild.Domain.Entities
 - web/manifest.json
 - .then
 - import_step.dart
@@ -160,24 +160,24 @@
 - b
 - .ChoosePath
 - Task
-- ActivityType
+- CancellationToken
 - rewards_models.dart
 - boss_damage_history.dart
-- .toString
-- adventure_hub_status_provider.dart
-- bool get
+- .then
+- gear_hex_slots.dart
+- .then
 - cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/manifest.json
 - garmin_service.dart
 - cdp-chrome-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/manifest.json
 - season_models.dart
 - GuildController
 - HealthSyncServiceTests
-- NotificationRepository
+- NotificationLog
 - WorldMapDtos.cs
 - api.js
 - .toString
-- integrations_provider.dart
-- AdminItemsController
+- leaderboard_widgets.dart
+- mode_ui.dart
 - questGeneration
 - worlds.js
 - ActivityServiceExternalItemGrantTests
@@ -186,7 +186,7 @@
 - world_zone_models.dart
 - World Lore and Region Story Seeds
 - auth_service.dart
-- XpAwardResult
+- IEventPublisher
 - .h
 - ShopService
 - season_service.dart
@@ -195,7 +195,7 @@
 - Plan: Random Trail Encounters + Admin Management
 - K
 - home_happening_now.dart
-- season_track_screen.dart
+- tutorials_hub_screen.dart
 - Core Features
 - Features
 - app-icon-512.png
@@ -209,11 +209,11 @@
 - onboarding_controller.dart
 - stepXpRewards
 - integration_models.dart
-- LifeLevel.Modules.Identity.Domain.Enums
-- I
-- yi
+- .UpdateEmailAsync
+- leaderboard_showcase_test.dart
+- .toString
 - shop_models.dart
-- LifeLevel.SharedKernel.Ports
+- IEventHandler
 - .toString
 - assert
 - World Map — Final Design Spec
@@ -223,7 +223,7 @@
 - pending_workouts_provider.dart
 - project_info
 - Plan - Progressive World Reveal
-- tutorial_bubble.dart
+- crossroads_choice_sheet.dart
 - app_toast.dart
 - guild_service.dart
 - QuestService
@@ -231,7 +231,7 @@
 - recent_activities_screen.dart
 - project_info
 - characterProfileProvider
-- CharacterLeveledUpEvent
+- .AddItemsAsync
 - cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
 - cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/manifest.json
 - cdp-chrome-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
@@ -240,15 +240,15 @@
 - Glossary
 - DESCRIPTION BASED.md
 - NotificationsController
-- I
-- task_reward_popup.dart
+- .v
+- .GetCombatStatsAsync
 - cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js
 - Talents (Gacha Talent Cards) — Design & Implementation Plan
-- static final
+- world_map_notifier.dart
 - level_up_receipt.dart
 - pull_import_showcase_test.dart
 - assert
-- vh
+- .get
 - cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/manifest.json
 - cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/manifest.json
 - Fitness Mode Mockup v2
@@ -257,20 +257,20 @@
 - TutorialStepRewardsTests
 - cdp-chrome-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js
 - .StartRaidAsync
-- Talent
+- UserTalent
 - Migration
 - .ca
 - shop_service.dart
 - reward_roads_hub.dart
 - item_models.dart
-- AchievementService
-- MapModule.cs
+- AchievementSeeder
+- .GetCompletedNodeCountsByZoneIdsAsync
 - activity_type_mapper.dart
 - GuildRaidDefeatedInfo
 - map_orb_button.dart
-- w
+- titles_profile_header.dart
 - notification_list_provider.dart
-- LifeLevel.Modules.Notifications.Domain.Entities
+- AdminItemsController
 - .ca
 - cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/uploadmanager.js
 - .v
@@ -280,17 +280,17 @@
 - .claude/agents/game-engine.md
 - CharacterService
 - info
-- ImportFirstOnboardingTests.cs
+- LifeLevel.Modules.Integrations.Domain.Entities
 - app.js
 - .SendToUserAsync
-- Quest
+- UserQuestProgress
 - AdminMapControllerTests
 - achievement_models.dart
 - Plan - Guild System End-to-End
-- streak_service.dart
+- talents_service.dart
 - tutorial_service.dart
 - firebase_options.dart
-- home_adventure_hub.dart
+- IEntityTypeConfiguration
 - .claude/agents/backend.md
 - Activity
 - info
@@ -330,17 +330,17 @@
 - BridgeWorldZoneBoss
 - AddPendingDistanceToWorldProgress
 - AppDbContextModelSnapshot.cs
-- guild_provider.dart
-- ../../constants/app_colors.dart
-- IDomainEvent
+- b
+- dungeon_floor_cleared_overlay.dart
+- static const
 - import_review_sheet.dart
 - StravaWebhookServiceTests
 - .N
 - titles_provider.dart
 - title_models.dart
-- User
+- delve_provider.dart
 - AdminSeasonsController
-- .AddDistanceAsync
+- AchievementService
 - Icon-192.png
 - register_screen.dart
 - Task
@@ -349,15 +349,15 @@
 - 20260328151316_AddMapNodeRewardXp.Designer.cs
 - 20260328170205_AddUserRole.Designer.cs
 - 20260329223234_ModularMonolithConfigs.Designer.cs
-- b
+- .N
 - 20260330221640_AddStravaConnection.Designer.cs
 - 20260424072106_AddChestZones.Designer.cs
 - home_screen.dart
 - cdp-chrome-profile-2/Default/Extensions/iekfdmgbpmcklocjhlabimljddkeflgl/0.2.0_0/manifest.json
 - cdp-chrome-profile/Default/Extensions/iekfdmgbpmcklocjhlabimljddkeflgl/0.2.0_0/manifest.json
 - .ApplyAsync
-- boss_damage_hit_row.dart
-- GuildRaidExpiryJob
+- tutorial_bubble.dart
+- ModesService.cs
 - SeasonRewardTier
 - PendingActivityService
 - Game Art Principles
@@ -365,7 +365,7 @@
 - character_service.dart
 - w
 - API Endpoints
-- menu_sheet.dart
+- burn_chain_rules.dart
 - StreakService
 - 3D Game Development
 - setup_resume_service.dart
@@ -382,10 +382,10 @@
 - 20260328153351_AddAvailableStatPoints.Designer.cs
 - 20260328181928_RemoveMapSeedData.Designer.cs
 - BossDamageHistoryTests
-- 20260329144049_AddWorldZones.Designer.cs
+- .v
 - 20260329150000_AddWorldEntity.Designer.cs
 - 20260330145027_AddItemsAndEquipment.Designer.cs
-- fe
+- e
 - 20260331182910_AddItemDropRuleTriggerParametersLength.Designer.cs
 - 20260331184758_AddItemCategoryAndDropRules.Designer.cs
 - title_equip_flight_test.dart
@@ -394,9 +394,9 @@
 - 20260401165218_AddTitleSystem.Designer.cs
 - 20260417201912_AddNotificationsModule.Designer.cs
 - 20260419090159_AddTutorialProgress.Designer.cs
-- 20260423190116_WorldMapFinalRestructure.Designer.cs
+- I
 - 20260423204643_AddCrossroadsBranchesAndPathChoice.Designer.cs
-- .GetAsync
+- TalentProgressiveDrawCostTests
 - PendingActivityServiceTests
 - .application
 - .enqueue
@@ -410,10 +410,10 @@
 - Game Design Principles
 - VR/AR Development
 - b
-- b
+- titles_ranks_screen.dart
 - Plan - Adaptive Skill Tree
 - Character
-- .v
+- modes_screens_test.dart
 - Plan - Verified Workout Recording and Activity Trust
 - Multiplayer Game Development
 - c
@@ -424,12 +424,12 @@
 - Quest
 - WorldZone
 - boss_models.dart
-- ConsumerWidget
+- I
 - ShopServiceTests
 - DeviceToken
 - .claude/agents/flutter-ui.md
 - b
-- .v
+- w
 - c
 - Streak
 - AdminEncountersController
@@ -443,7 +443,7 @@
 - Achievements
 - Items
 - streak_models.dart
-- GuildRaidRealtimePublisher
+- xp_history_sheet.dart
 - b
 - b
 - f
@@ -456,7 +456,7 @@
 - dungeon_models.dart
 - avatar_step.dart
 - item_icon_image.dart
-- .Update
+- LifeLevel.Api.Controllers.Admin
 - ExternalActivityDto
 - .GetTitlesAndRanksAsync
 - cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/zlabs-phishing.min.js
@@ -468,8 +468,8 @@
 - Identity
 - Full provider catalog
 - .Update
-- static Stream
-- LifeLevel.Modules.Talents.Domain.Entities
+- dungeon_floor_cleared_notifier.dart
+- Talent
 - Marketing and Positioning
 - XP and Leveling.md
 - Architecture Overview
@@ -497,8 +497,8 @@
 - Game Ui Design - Validations
 - .Claim
 - LifeLevel.Api.csproj
-- ../../core/widgets/app_toast.dart
-- ActivityTypeMapperTests
+- stat_detail_sheet.dart
+- .ProcessEventAsync
 - .ListForUserBetweenAsync
 - world_progress_provider.dart
 - cdp-chrome-profile-2/Default/Extensions/iekfdmgbpmcklocjhlabimljddkeflgl/0.2.0_0/background.js
@@ -507,7 +507,7 @@
 - cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/css/SBOM.json
 - AsyncNotifier
 - cdp-chrome-profile/Default/Extensions/iekfdmgbpmcklocjhlabimljddkeflgl/0.2.0_0/background.js
-- item_icons.dart
+- encounter_merchant_sheet.dart
 - GeneratedPluginRegistrant
 - cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/css/SBOM.json
 - Life-Level Backend
@@ -518,8 +518,8 @@
 - Feature — Activity
 - Feature — Integrations
 - streak_provider.dart
-- dungeon_floor_cleared_notifier.dart
-- Boss
+- encounter_story_sheet.dart
+- BossCombatTurn
 - rewards_screen_test.dart
 - Colorblind Failure
 - Controller Navigation Deadend
@@ -567,13 +567,13 @@
 - App Architecture
 - Feature — Boss
 - Feature — Character
-- xp_history_sheet.dart
+- AdminTalentsController
 - Feature — Titles
 - Routing and Deep Links
 - Shell and Radial FAB
 - Every-Session Startup
 - avatar_option.dart
-- pull_to_import_test.dart
+- map_tutorial_local_store.dart
 - HUD Text Without Shadow/Outline
 - flutter_export_environment.sh script
 - Missing Hover State
@@ -589,20 +589,20 @@
 - Unity Find for UI Element
 - Unity UI Without Raycast Consideration
 - AchievementsController
-- LifeLevel.SharedKernel.csproj
-- .ImportAsync
+- LifeLevel.slnx
+- .FetchRecentAsync
 - LifeLevel.Modules.Adventure.Encounters.csproj
 - LifeLevel.Modules.Guild.csproj
 - LifeLevel.Modules.Items.csproj
 - .GrantRandomUnownedAsync
-- LifeLevel.Modules.Quest.csproj
+- LifeLevel.SharedKernel.csproj
 - reward_hud.dart
 - LifeLevel.Api.Tests.csproj
 - .claude/commands/work-next-ticket.md
 - Work Next Ticket Prompt
-- dd
+- boss_active_card.dart
 - cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/service-worker.js
-- g
+- f
 - cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/service-worker.js
 - Life-Level Flutter UI
 - Activities
@@ -614,11 +614,11 @@
 - AppDbContext and Persistence
 - Feature — Items
 - Feature — Map
-- GrantedItemInfo
+- .EvaluateAndGrantAsync
 - The Setup Tasks
 - SetDestinationRequest.cs
 - character_setup_result.dart
-- WorldZoneController
+- .AddDistanceAsync
 - TutorialDtos.cs
 - LifeLevel.Modules.Identity.csproj
 - w
@@ -668,7 +668,7 @@
 - MakeBossEdgeBidirectional
 - api_error_state.dart
 - strava_service.dart
-- agent-context.json
+- agentInstructions
 - .Draw
 - Backend Agent Brief
 - Flutter UI Agent Brief
@@ -696,7 +696,7 @@
 - Run Board
 - Game Ui Design
 - AddNotificationLogReadFields
-- quest_provider.dart
+- quest_service.dart
 - AddRankThresholds
 - season_track_screen_test.dart
 - class_step_test.dart
@@ -706,11 +706,11 @@
 - AddGuildSystem
 - AddGuildRaidVictoryAcknowledgements
 - AddGuildRaidExpiryAcknowledgements
-- AdminTalentsController
+- home_hero_stage_navigation_test.dart
 - AddNotificationPreferences
 - streakRules
 - IGuildRaidMaintenancePort
-- shell_models.dart
+- .ReplayTopic
 - .RolloverDueSeasonsAsync
 - Board Dashboard Prompt
 - Phone Test Prompt
@@ -727,7 +727,7 @@
 - cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/filenamedetector.js
 - HandleStarupSetting
 - BertTokeniser
-- class_icons.dart
+- K
 - cdp-chrome-profile/OptimizationHints/703/manifest.json
 - cdp-chrome-profile/Subresource Filter/Unindexed Rules/9.69.0/manifest.json
 - mount
@@ -737,25 +737,25 @@
 - Boss & Combat
 - Quests
 - Map Zones
-- .GetZonesUnlockedInRangeAsync
+- .CreditActivityAsync
 - Seasonal Events
 - Game UI Design
-- RankThresholdSeeder
+- w
 - .ClaimAvailableTaskRewards
 - 20260524205831_AddRankThresholds.Designer.cs
-- DungeonXpPort
-- shell_tab_bar.dart
+- unlocks_provider.dart
+- Diagnosing Bugs
 - Season
-- boss_service.dart
+- .SendToUserAsync
 - road_fx.dart
 - LifeLevel.Modules.Seasons.Domain.Entities
-- IEventHandler
-- IEventPublisher
+- .CreditActivityAsync
+- return
 - GuildRaidConfiguration
 - ICurrentClock
 - achievements_provider.dart
-- level_up_notifier.dart
-- .EnsureSpawnedAsync
+- character_provider.dart
+- leaderboard_provider.dart
 - .claude/commands/board.md
 - Claude instructions for Life-Level
 - cdp-chrome-profile-2/ActorSafetyLists/9.3249.1600/manifest.json
@@ -794,15 +794,15 @@
 - pending_welcome.dart
 - ShopCurrency
 - Plan - Import-First Onboarding
-- dungeon_floor_cleared_overlay.dart
+- LeaderboardPass
 - crossroads_choice_sheet_test.dart
-- character_provider.dart
+- title_equip_flight.dart
 - AddLevelStatBonuses
 - AddRankThresholdDisplayFields
 - GarminOAuthService
 - cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/data-extractor.js
 - cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/data-extractor.js
-- activity_service.dart
+- .GetZonesUnlockedInRangeAsync
 - migration_runner/migration_runner.csproj
 - tmp_migration_runner/migration_runner.csproj
 - Game Ui Design - Sharp Edges
@@ -854,11 +854,11 @@
 - ItemDto?
 - List
 - LogActivityResult
-- .ClearBlockerAsync
+- LeaderboardReadAdapterTests
 - RegionBossStatus
 - RegionStatus
 - RegionTheme?
-- .GetWeeklyStatsAsync
+- dd
 - SeasonRewardView
 - SeasonTrack
 - String?
@@ -868,32 +868,32 @@
 - TitlesAndRanksResponse
 - UserQuestProgress
 - XpHistoryEntry
-- QuestCompletedEvent
+- MapNode
 - .TryConsumeSecondWindAsync
 - AddTaskRewardCenter
 - AddProgressiveTalentDrawCosts
-- ReplaceTalentPointsWithDrawNumber
+- .HandleAsync
 - Plan - Guild Redesign
-- TalentCatalog
-- app_motion_test.dart
-- .GetActiveQuestsAsync
+- LifeLevel.Modules.Talents.Domain.Entities
+- boss_expired_card.dart
+- boss_damage_hit_row.dart
 - Plan - Achievement Reward Roads
 - IStreakDailyReset
 - SeasonDtos.cs
 - 20260523193106_AddNotificationLogReadFields.Designer.cs
 - generate_boss_balance_workbook.py
-- shop_provider.dart
+- .GetActiveQuestsAsync
 - .EquipItem
 - 20260726043914_AddGuildRaidScaling.Designer.cs
-- zf
-- f
+- quest_error_state.dart
+- .GetDefeatedCountAsync
 - DateTime
-- .SendToUserAsync
-- 20260327231432_AddUserRingItems.Designer.cs
-- talents_provider.dart
-- .GetSummaryAsync
+- DungeonXpPort
+- .GetEquippedBonusesAsync
+- boss_defeated_card.dart
+- ModesServiceTests
 - 20260925105518_AddProgressiveTalentDrawCosts.Designer.cs
-- .AddCoinsAsync
+- boss_locked_card.dart
 - 20260424144459_BridgeWorldZoneBoss.Designer.cs
 - 20260424170703_AddBossTimerToWorldZone.Designer.cs
 - .GrantItemAsync
@@ -907,55 +907,55 @@
 - AddSeasonsModule
 - AddActiveTrailEncounterId
 - AddItemVisualAssets
-- NotificationLog
+- boss_service.dart
 - RenameAccessory2SlotToLegs
-- AddRegionArtwork
+- class_icons.dart
 - .GetMaxInventorySlotsAsync
 - RemoveLoginRewards
 - IActivityExternalIdReadPort
-- ua
+- Boss
 - shell_constants.dart
-- CancellationToken
-- account_models.dart
+- .GetCurrentStreakAsync
+- .SelectEncounterForEdge
 - 20260328121026_MakeBossEdgeBidirectional.Designer.cs
 - Q: How much the weekly tasks and daily tasks are actually undertandble ?
-- 20260524205736_AddLevelTitleGrants.Designer.cs
+- Process
 - 20260329141319_AddPhase2QuestStreakLoginReward.Designer.cs
 - 20260723051422_AddGuildSystem.Designer.cs
-- AchievementSeeder
-- AppRoute
-- 20260907150016_AddTalentsModule.Designer.cs
+- .GetAsync
+- Plan - Game Modes (Burn Chain, Treasure Delve)
+- ua
 - 20260912131023_RenameTalentTokensToCrystals.Designer.cs
 - 20260401112056_AddStepsAndPendingDistance.Designer.cs
-- notification_banner_notifier.dart
+- item_icons.dart
 - AddLevelTitleGrants
 - RankEnumToString
 - AddTalentsModule
 - Q: currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?
-- ExpandTaskSystem
+- .EquipTitle
 - Q: on the home page where is the top left circle name and lv when we click on the icon of the user lets get navigated to the profile page, and also on the home page if we click on the mount and sword lets get navigate to gear page
 - region-art-prompts.md
 - BossCombatTurnInfo?
 - double?
 - QuestService
 - TalentView?
-- encounter_intercept_sheet.dart
-- tutorial_placement.dart
+- TalentCatalog
+- .ClaimReward
 - wb
 - Q: give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST
 - 20260715163723_AddActiveBlockerEncounterId.Designer.cs
 - Q: does the pop up on rewards tab on click coins gems and other rewards, are generic can we use it for other things?
 - Q: lets make it generic , because we want to use it also for banked km on home page on click, shiels,
-- FakeHttpHandler
-- _meta
-- .GetState
+- Plan - Guided Unlocks
+- LifeLevel.Api.Infrastructure.Persistence
+- .ApplyStatGainsAsync
 - Q: let's make the actual hero on the gear to be visualized the same way on the home page, SO with the equipred items if they are visible
 - Q: wait whichi pop up animation you make generic for the banked and shields i was talking about when i click on the task coin or gem we see pop up with coins rewards type description
 - Ca
 - Q: agree let do it
 - Q: ADd to power also on the home screen such REsourceInfoData + Dont should the actual count on the info banked shield and power
 - onboarding_flow.dart
-- UserAchievementStageChest
+- onboarding_service.dart
 - Q: What do you think about Life-Level that we are currently building? Check the project.
 - Q: Audit the center expandable menu in the bottom navigation and determine what happens if it is removed.
 - Q: currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?
@@ -970,60 +970,91 @@
 - Q: Does the level-up thing show unlocks that are 100% real?
 - 20260527165116_AddTrailEncounterTemplates.Designer.cs
 - 20260715173805_AddEncounterPinnedZones.Designer.cs
-- .SelectEncounterForEdge
-- 20260924061354_ExpandTaskSystem.Designer.cs
+- InvalidOperationException
+- UserFounderPass
 - 20260924200651_AddBossCombatV2.Designer.cs
 - 20260925124949_ReplaceTalentPointsWithDrawNumber.Designer.cs
-- ua
-- 20260928181807_ImportFirstOnboarding.Designer.cs
-- UserSeasonProgress
-- ActivityService
-- OnboardingImportResult?
-- ICharacterIdReadPort
-- .CompleteBossZoneAsync
-- eh
-- nav_tab_notifier.dart
-- Known Issues
-- IEntityTypeConfiguration
-- world_zone_refresh_notifier.dart
-- bossDamageHistoryProvider
-- .GetStatsAsync
-- talentsProvider
-- Result.cs
-- package:flutter_test/flutter_test.dart
-- ActivityGainPreview
-- AddUserRingItems
-- .UnlockAsync
-- .CreditActivityAsync
+- .ListForUserBetweenAsync
 - .GetCompletedNodeCountsByZoneIdsAsync
 - .GetNodeCountsByZoneIdsAsync
+- ActivityService
+- OnboardingImportResult?
+- kg
+- tickets
+- Plan - Leaderboard (with rank-up chest)
+- 20260425060904_AddPendingDistanceToWorldProgress.Designer.cs
+- AddGuildRaidScaling
+- UserMapProgress
+- pending_workouts_service.dart
+- RankThresholdSeeder.cs
+- RenameTalentTokensToCrystals
+- AddShopPurchases
+- Result.cs
+- package:flutter_test/flutter_test.dart
+- AddBossCombatV2
+- AddUserRingItems
+- .UnlockAsync
+- ImportFirstOnboarding
+- SplitGemsAndTalentCrystals
+- TalentBonuses
 - Plan - Map Orb, Pull-to-Import, Happening Now
 - 20260401161752_AddMaxInventorySlots.Designer.cs
 - AddMapTutorialProgress
 - AddStreakDailyRewards
-- ClarifyWorldMapChestTaskText
+- AddServerAuthoritativeModes
 - AchievementRewardRoads
 - AddLevelUpReceipts
-- PendingActivities
-- TitleCatalog
+- AddLeaderboardPasses
+- EncountersModule
 - UnitTest1.cs
-- dl
-- 20260524211749_AddRankThresholdDisplayFields.Designer.cs
+- .SeedDropRulesAsync_WhenRulesAlreadyExist_InsertsNewManualRules
+- TitleCatalog
 - 20260727200402_AddNotificationPreferences.Designer.cs
-- 20260913055555_RenameAccessory2SlotToLegs.Designer.cs
+- TutorialTopic
 - 20260922055457_AddTaskRewardCenter.Designer.cs
 - 20260923201633_RemoveLoginRewards.Designer.cs
 - 20260927203615_AddLevelUpReceipts.Designer.cs
-- JourneyOrbState
+- GuildModule
 - ImportPendingResult
 - CustomizeRingSheet
-- RegionDetail
+- LifeLevel.Modules.Leaderboard.csproj
+- Q: DId we split the telants crystals and the gems
+- 20260524205807_AddLevelStatBonuses.Designer.cs
+- 20260723154022_AddGuildRaidVictoryAcknowledgements.Designer.cs
+- 20260724200927_AddGuildRaidExpiryAcknowledgements.Designer.cs
+- wb
+- Q: do we have something on the bottom nav menu that its not on the adventure hub section on the home page ?
+- Ca
+- AppMotionScope
+- AppPageTransitionsBuilder
+- AppPressable
+- Random
+- 20260913173621_AddItemVisualAssets.Designer.cs
+- 20260922143223_AddShopPurchases.Designer.cs
+- 20260924092722_AddStreakDailyRewards.Designer.cs
+- 20260925133759_ClarifyWorldMapChestTaskText.Designer.cs
+- 20260925212115_AchievementRewardRoads.Designer.cs
+- 20260929081515_PendingActivities.Designer.cs
+- 20260929204728_SplitGemsAndTalentCrystals.Designer.cs
+- 20260930060540_AddCharacterUnlocks.Designer.cs
+- 20260930062135_AddServerAuthoritativeModes.Designer.cs
+- AvatarDtos.cs
+- hitl-loop.template.sh
+- Colors and Typography
+- LeaderboardModule
+- StreakModule
+- cleanMessage
+- .Value
+- _BannerViewState
+- _ZoneTrailState
+- LeaderboardMetric
+- LeaderboardScope
 
 ## God Nodes (most connected - your core abstractions)
-1. `LifeLevel.SharedKernel.Ports` - 149 edges
-2. `LifeLevel.Api.Migrations` - 138 edges
-3. `AppDbContext` - 136 edges
-4. `LifeLevel.Api.Infrastructure.Persistence` - 119 edges
+1. `LifeLevel.SharedKernel.Ports` - 161 edges
+2. `AppDbContext` - 149 edges
+3. `LifeLevel.Api.Migrations` - 146 edges
+4. `LifeLevel.Api.Infrastructure.Persistence` - 129 edges
 5. `b()` - 87 edges
 6. `b()` - 87 edges
 7. `Ok()` - 86 edges
@@ -1033,28 +1064,28 @@
 
 ## Surprising Connections (you probably didn't know these)
 - `cc()` --indirect_call--> `xb()`  [INFERRED]
+  .codex-run/cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
+- `cc()` --indirect_call--> `xb()`  [INFERRED]
   .codex-run/cdp-chrome-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
 - `e()` --indirect_call--> `Bb()`  [INFERRED]
   .codex-run/cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
+- `lb()` --indirect_call--> `ib()`  [INFERRED]
+  .codex-run/cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile-2/WasmTtsEngine/20260625.1/offscreen_compiled.js
 - `Fb()` --indirect_call--> `Bb()`  [INFERRED]
-  .codex-run/cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
-- `cc()` --indirect_call--> `xb()`  [INFERRED]
-  .codex-run/cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
-- `bc()` --indirect_call--> `yb()`  [INFERRED]
   .codex-run/cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js → .codex-run/cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (1208 total, 173 thin omitted)
+## Communities (1242 total, 197 thin omitted)
 
 ### Community 0 - "shell/main_shell.dart"
 Cohesion: 0.01
-Nodes (141): GestureDetector, Positioned, Scaffold, SizedBox, SnackBar, Stack, ../../features/achievements/achievements_screen.dart, ../../features/activity/log_activity_screen.dart (+133 more)
+Nodes (139): GestureDetector, Positioned, Scaffold, SizedBox, SnackBar, Stack, ../../features/achievements/achievements_screen.dart, ../../features/activity/log_activity_screen.dart (+131 more)
 
-### Community 1 - "Task"
-Cohesion: 0.09
-Nodes (28): B, CancellationToken, Guid, HashSet, Task, BossDefeatAdapter, IBossDefeatReadPort, IMapNodeCompletedCountPort (+20 more)
+### Community 1 - "AppDbContext"
+Cohesion: 0.12
+Nodes (20): B, ModelBuilder, AppDbContext, Guid, LevelStatBonus, Guid, RankThreshold, CancellationToken (+12 more)
 
 ### Community 2 - "home_portal_card.dart"
 Cohesion: 0.02
@@ -1065,28 +1096,28 @@ Cohesion: 0.02
 Nodes (104): Alignment, BoxFit, Container, CustomScrollView, Padding, Scaffold, SizedBox, SliverToBoxAdapter (+96 more)
 
 ### Community 4 - "profile_overview_tab.dart"
-Cohesion: 0.02
-Nodes (96): Column, GestureDetector, Icon, ListView, Padding, SizedBox, Text, Container (+88 more)
+Cohesion: 0.04
+Nodes (56): Column, GestureDetector, Icon, ListView, Padding, SizedBox, Text, double? _pctFrom, (+48 more)
 
-### Community 5 - ".ProcessEventAsync"
-Cohesion: 0.25
-Nodes (5): CancellationToken, GarminOptions, Task, GarminWebhookEvent, GarminWebhookService
+### Community 5 - "ModesService"
+Cohesion: 0.08
+Nodes (37): CancellationToken, Guid, HttpGet, HttpPost, Task, ModesController, BurnChainDto, BurnChainLinkDto (+29 more)
 
-### Community 6 - "LifeLevel.Api.Infrastructure.Persistence"
+### Community 6 - "LifeLevel.SharedKernel.Ports"
 Cohesion: 0.03
-Nodes (72): Task, TitleSeeder, Guid, List, Region, RegionPin, Guid, TrailEncounterTemplate (+64 more)
+Nodes (59): IServiceCollection, ActivityModule, ClassDetectionResult, ClassDetectionState, ClassGroupShare, AvatarUnlockType, DateTime, Guid (+51 more)
 
 ### Community 7 - "reward_moment.dart"
 Cohesion: 0.02
 Nodes (97): accent, _actionKey, _actions, _actionsAt, amount, b, badge, _banner (+89 more)
 
 ### Community 8 - "integrations_screen.dart"
-Cohesion: 0.04
-Nodes (52): Center, Container, launchUrl, Padding, Scaffold, SizedBox, Text, TextStyle (+44 more)
+Cohesion: 0.03
+Nodes (72): IntegrationSyncState, Center, Container, launchUrl, Padding, Scaffold, SizedBox, Text (+64 more)
 
-### Community 9 - "notification_preferences_screen.dart"
-Cohesion: 0.09
-Nodes (22): Future, build, children, createState, enabled, _future, _HourPicker, initState (+14 more)
+### Community 9 - "package:flutter/material.dart"
+Cohesion: 0.01
+Nodes (139): app_icon_image.dart, Container, Container, Container, Padding, SizedBox, Container, Column (+131 more)
 
 ### Community 10 - "core-plugins.json"
 Cohesion: 0.06
@@ -1094,23 +1125,23 @@ Nodes (31): audio-recorder, backlink, bases, bookmarks, canvas, command-palette,
 
 ### Community 11 - "talents_screen.dart"
 Cohesion: 0.02
-Nodes (86): _amber, _AvailableBadge, _Body, _brown, _buildHex, _busy, _c, coinCost (+78 more)
+Nodes (90): talentsProvider, _amber, _AvailableBadge, _Body, _brown, build, _buildHex, _busy (+82 more)
 
-### Community 12 - "package:flutter_riverpod/flutter_riverpod.dart"
-Cohesion: 0.02
-Nodes (129): Container, SizedBox, Text, ../../character/providers/character_provider.dart, ../../../core/constants/item_icons.dart, ../../../core/widgets/currency_chip.dart, ../../core/widgets/item_icon_image.dart, ../../core/widgets/resource_info_dialog.dart (+121 more)
+### Community 12 - ".GetAsync"
+Cohesion: 0.05
+Nodes (51): ActionResult, CancellationToken, HttpGet, HttpPost, Task, LeaderboardController, CancellationToken, DateTime (+43 more)
 
 ### Community 13 - "cdp-chrome-profile/WasmTtsEngine/20260625.1/bindings_main.js"
 Cohesion: 0.02
 Nodes (14): EmscriptenEH, EmscriptenSjLj, RFC-2279, RFC-3629, NOTE: In our implementation, st_blocks = Math.ceil(st_size/st_blksize),, NOTE: This is also used as the process return code in shell environments, TODO: check for O_SEARCH? (== search for dir only), NOTE: None of the defaults here are true. We're just returning safe and (+6 more)
 
-### Community 14 - "VoidCallback"
-Cohesion: 0.02
-Nodes (131): Padding, SizedBox, GestureDetector, SafeArea, SizedBox, Text, core/motion/app_motion.dart, AchievementsScreen (+123 more)
+### Community 14 - "shop_screen.dart"
+Cohesion: 0.04
+Nodes (59): ../../core/widgets/item_obtained_overlay.dart, shopProvider, asset, build, busy, _BuySheet, _c, _check (+51 more)
 
 ### Community 15 - "tutorial_overlay.dart"
-Cohesion: 0.04
-Nodes (56): AnimatedBuilder, Center, LayoutBuilder, Positioned, SizedBox, Stack, animation, _buildOverlay (+48 more)
+Cohesion: 0.03
+Nodes (61): AnimatedBuilder, Center, LayoutBuilder, Positioned, SizedBox, Stack, BubblePlacement, choosePlacement (+53 more)
 
 ### Community 16 - "boss_screen.dart"
 Cohesion: 0.05
@@ -1122,22 +1153,19 @@ Nodes (45): Container, DraggableScrollableSheet, ListView, Opacity, Padding, Row
 
 ### Community 18 - "gear_stats_row.dart"
 Cohesion: 0.03
-Nodes (60): ../../../core/constants/app_icons.dart, Map, mapNormalZone,
-  mapChestZone,
-  mapSpecialZone,
-  mapDungeonZone,, gearOverlayAsset, gearOverlaySlotOrder, gearSlotDefaultIcon, _normalizeName, arrow (+52 more)
+Nodes (76): bool get, FontWeight?, AppIconImage, asset, build, defaultVisualScale, opacity, size (+68 more)
 
 ### Community 19 - "streak_detail_sheet.dart"
-Cohesion: 0.04
-Nodes (55): AlwaysStoppedAnimation, Column, Container, Expanded, Row, SizedBox, Text, ../../home/providers/adventure_hub_status_provider.dart (+47 more)
+Cohesion: 0.02
+Nodes (108): Container, SizedBox, AlwaysStoppedAnimation, Column, Container, Expanded, Row, SizedBox (+100 more)
 
 ### Community 20 - "hiddenItems"
 Cohesion: 0.14
 Nodes (20): active, bases:Create new base, canvas:Create new canvas, command-palette:Open command palette, daily-notes:Open today's daily note, graph:Open graph view, switcher:Open quick switcher, templates:Insert template (+12 more)
 
-### Community 21 - "Strava Integration"
-Cohesion: 0.16
-Nodes (15): api_client.dart, app_colors.dart, Colors and Typography, Screen Inventory, UI Patterns, Environment Setup, Every-Session Startup, iOS Pre-Testing Setup (+7 more)
+### Community 21 - "Known Issues"
+Cohesion: 0.12
+Nodes (25): ActivityTypeMapper.cs, Activity Type Mapping, api_client.dart, app_colors.dart, Debug Endpoints, Environment Setup, Every-Session Startup, Internal Testing Findings (+17 more)
 
 ### Community 22 - "FcmNotificationAdapter"
 Cohesion: 0.11
@@ -1153,23 +1181,23 @@ Nodes (30): Adventure Map, Boss & Challenge System, Character System, .claude/ag
 
 ### Community 25 - "region_chests_screen.dart"
 Cohesion: 0.03
-Nodes (67): CustomPaint, IgnorePointer, double? top,, WorldMapData, _aspect, _BandClipper, bottom, buf (+59 more)
+Nodes (74): CustomPaint, IgnorePointer, CustomClipper, double? top,, _BeamClipper, _HexagonClipper, _BannerClipper, _PennantClipper (+66 more)
 
-### Community 26 - "../../../core/widgets/app_icon_image.dart"
-Cohesion: 0.02
-Nodes (95): ../../activity/providers/activity_provider.dart, Center, Column, Container, SizedBox, Spacer, Text, Column (+87 more)
+### Community 26 - "profile_widgets.dart"
+Cohesion: 0.03
+Nodes (68): Center, Column, Container, SizedBox, Spacer, Text, Column, Expanded (+60 more)
 
 ### Community 27 - "ControllerBase"
 Cohesion: 0.07
-Nodes (27): CancellationToken, HttpGet, HttpPost, IActionResult, Task, ActivityController, HttpGet, IActionResult (+19 more)
+Nodes (28): CancellationToken, HttpGet, HttpPost, IActionResult, Task, ActivityController, HttpGet, IActionResult (+20 more)
 
 ### Community 28 - "boss_battle_screen.dart"
 Cohesion: 0.04
-Nodes (46): BossListItem get, BossDamageHint, Column, Container, Material, Padding, SizedBox, Spacer (+38 more)
+Nodes (52): BossListItem get, BossDamageHint, Column, Container, Material, Padding, SizedBox, Spacer (+44 more)
 
 ### Community 29 - "StatelessWidget"
 Cohesion: 0.01
-Nodes (178): Center, Container, GestureDetector, Scaffold, SizedBox, Text, TutorialProgressDots, Center (+170 more)
+Nodes (217): burn_chain_provider.dart, ../../core/widgets/app_toast.dart, build, GearOutfitMountRow, iconAsset, label, onTap, _PreviewCard (+209 more)
 
 ### Community 30 - "Life-Level Map of Content"
 Cohesion: 0.15
@@ -1180,32 +1208,32 @@ Cohesion: 0.04
 Nodes (47): Column, Container, Function, GestureDetector, Positioned, SizedBox, Text, main_shell.dart (+39 more)
 
 ### Community 32 - "world_hub_screen.dart"
-Cohesion: 0.04
-Nodes (48): Container, RefreshIndicator, Row, SizedBox, Text, WorldUser, autoOpenActiveRegion, _buildContent (+40 more)
+Cohesion: 0.03
+Nodes (70): Container, RefreshIndicator, Row, SizedBox, Text, dispose, initState, _syncTutorialWithProfile (+62 more)
 
 ### Community 33 - ".GetProfile"
-Cohesion: 0.06
-Nodes (32): CancellationToken, Guid, Task, CharacterCombatStatsAdapter, CancellationToken, Guid, HttpGet, HttpPost (+24 more)
+Cohesion: 0.12
+Nodes (18): CancellationToken, Guid, HttpGet, HttpPost, HttpPut, IActionResult, Task, CharacterController (+10 more)
 
 ### Community 34 - "portal_idle.dart"
 Cohesion: 0.02
-Nodes (114): Animation, AnimationStatus get, Flexible, dart:math, accent, addListener, addStatusListener, at (+106 more)
+Nodes (116): Animation, AnimationStatus get, Padding, SizedBox, Text, Duration, active, build (+108 more)
 
 ### Community 35 - "WorldSeedData"
-Cohesion: 0.10
-Nodes (19): Guid, IReadOnlyList, DungeonFloorSpec, RegionSpec, TemplateInput, WorldSeedData, ZoneSpec, Task (+11 more)
+Cohesion: 0.12
+Nodes (14): Guid, IReadOnlyList, DungeonFloorSpec, RegionSpec, TemplateInput, WorldSeedData, ZoneSpec, Task (+6 more)
 
 ### Community 36 - "State Management (Mobile)"
 Cohesion: 0.19
 Nodes (22): Map Module (Backend), Quest Module (Backend), Streak Module (Backend), WorldZone Module (Backend), App Architecture (Mobile), Core Infrastructure (Mobile), Flutter Dependencies (pubspec), Feature - Achievements (Mobile) (+14 more)
 
-### Community 37 - "AnimationController"
-Cohesion: 0.03
-Nodes (59): AnimationController, Center, Column, Container, Icon, SizedBox, Text, AnimatedBuilder (+51 more)
+### Community 37 - "activity_result_sheet.dart"
+Cohesion: 0.08
+Nodes (24): Center, Column, Container, Icon, SizedBox, Text, _BossTurnCard, build (+16 more)
 
 ### Community 38 - "zone_detail_sheet.dart"
 Cohesion: 0.01
-Nodes (186): RegionTheme, Container, SizedBox, Container, Function, Material, Row, SizedBox (+178 more)
+Nodes (148): RegionTheme, Container, SizedBox, BoxDecoration, Container, Opacity, Padding, Row (+140 more)
 
 ### Community 39 - "cdp-chrome-profile-2/WasmTtsEngine/20260625.1/bindings_main.js"
 Cohesion: 0.02
@@ -1213,7 +1241,7 @@ Nodes (14): EmscriptenEH, EmscriptenSjLj, RFC-2279, RFC-3629, NOTE: In our imple
 
 ### Community 40 - "home_portal_card_test.dart"
 Cohesion: 0.07
-Nodes (29): ProviderScope, CharacterProfile, CharacterNotifier, main, _activeBoss, animate, bosses, build (+21 more)
+Nodes (28): ProviderScope, CharacterProfile, CharacterNotifier, _activeBoss, animate, bosses, build, _copyWithChestOpened (+20 more)
 
 ### Community 41 - "AppDbContext and Persistence"
 Cohesion: 0.27
@@ -1224,28 +1252,28 @@ Cohesion: 0.10
 Nodes (20): centerStrength, close, collapse-color-groups, collapse-display, collapse-filter, collapse-forces, colorGroups, hideUnresolved (+12 more)
 
 ### Community 43 - "level_up_overlay.dart"
-Cohesion: 0.11
-Nodes (17): AnimatedBuilder, Container, FadeTransition, Material, SizedBox, Text, ../../features/character/models/level_up_receipt.dart, build (+9 more)
+Cohesion: 0.06
+Nodes (30): FadeTransition, Material, SizedBox, Text, AnimatedBuilder, Container, FadeTransition, Material (+22 more)
 
 ### Community 44 - "connect_step.dart"
-Cohesion: 0.03
-Nodes (69): ../../core/motion/reward_fx.dart, ../../../core/services/oauth_code_guard.dart, ../../integrations/services/strava_service.dart, _awaitingStrava, brand, build, _connectHealth, ConnectStep (+61 more)
+Cohesion: 0.06
+Nodes (33): ../../../core/services/oauth_code_guard.dart, ../../integrations/providers/integrations_provider.dart, ../../integrations/services/strava_service.dart, _awaitingStrava, brand, build, _connectHealth, _countStrava (+25 more)
 
 ### Community 45 - "rewards_screen.dart"
 Cohesion: 0.02
-Nodes (86): rewardCenterProvider, _anchor, _anchorsFor, _Badge, _badgeHits, badgeOnLeft, build, _buildBody (+78 more)
+Nodes (90): rewardCenterProvider, _anchor, _anchorsFor, _Badge, _badgeHits, badgeOnLeft, build, _buildBody (+82 more)
 
-### Community 46 - "notifications_sheet.dart"
-Cohesion: 0.08
-Nodes (25): Center, Container, DraggableScrollableSheet, Expanded, NotificationRow, SizedBox, Text, ../../../core/services/deep_link_notifier.dart (+17 more)
+### Community 46 - "core/motion/app_motion.dart"
+Cohesion: 0.03
+Nodes (64): ../../activity/log_activity_screen.dart, Padding, Center, Container, DraggableScrollableSheet, Expanded, NotificationRow, SizedBox (+56 more)
 
 ### Community 47 - "cdp-chrome-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js"
-Cohesion: 0.03
-Nodes (67): aj(), ak(), bb(), bh(), bj(), bk(), dl(), Ee() (+59 more)
+Cohesion: 0.02
+Nodes (75): ag(), aj(), ak(), bb(), bh(), bj(), bk(), dl() (+67 more)
 
-### Community 48 - "daily_bonus_banner.dart"
-Cohesion: 0.11
-Nodes (18): Column, Container, Expanded, Row, SizedBox, Text, dailyQuestsProvider, build (+10 more)
+### Community 48 - ".GetAsync"
+Cohesion: 0.07
+Nodes (34): CancellationToken, HttpGet, HttpPost, IActionResult, Task, UnlocksController, CancellationToken, Guid (+26 more)
 
 ### Community 49 - "World Map v3 — Region Hub"
 Cohesion: 0.13
@@ -1253,7 +1281,7 @@ Nodes (21): Achievements Screen, Map Admin Panel, Daily Login & Streak Screen, D
 
 ### Community 50 - "app_icons.dart"
 Cohesion: 0.01
-Nodes (208): activityClimbing, activityCycling, activityGym, activityHiit, activityHiking, activityMobility, activityMtbCycling, activityRockClimbing (+200 more)
+Nodes (212): activityClimbing, activityCycling, activityGym, activityHiit, activityHiking, activityMobility, activityMtbCycling, activityRockClimbing (+204 more)
 
 ### Community 51 - "World Map Final Design Spec"
 Cohesion: 0.13
@@ -1261,7 +1289,7 @@ Nodes (20): Adventure Map, Adventure Map Detailed, Adventure Map Flow, Crossroad
 
 ### Community 52 - "cdp-chrome-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/service_worker_bin_prod.js"
 Cohesion: 0.03
-Nodes (55): ab(), Ae(), aj(), ak(), bh(), bj(), cb(), Dg() (+47 more)
+Nodes (60): ab(), Ae(), ak(), al(), bh(), cb(), ef(), ej() (+52 more)
 
 ### Community 53 - "pubspec.yaml"
 Cohesion: 0.11
@@ -1272,16 +1300,16 @@ Cohesion: 0.06
 Nodes (31): app_toast.dart, Container, FadeTransition, Material, SizedBox, Wrap, ../../features/character/providers/character_provider.dart, ../../features/items/models/item_models.dart (+23 more)
 
 ### Community 55 - "log_activity_screen.dart"
-Cohesion: 0.03
-Nodes (64): activity_result_sheet.dart, Container, GestureDetector, Row, Scaffold, SizedBox, Text, TextField (+56 more)
+Cohesion: 0.04
+Nodes (53): activity_result_sheet.dart, Container, GestureDetector, Row, Scaffold, SizedBox, Text, TextField (+45 more)
 
 ### Community 56 - "cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/offscreendocument_main.js"
-Cohesion: 0.03
-Nodes (75): ag(), aj(), am(), bb(), Bg(), bj(), cl(), cm() (+67 more)
+Cohesion: 0.02
+Nodes (75): ag(), aj(), ak(), bb(), bh(), bj(), bk(), dl() (+67 more)
 
 ### Community 57 - "quests_screen.dart"
-Cohesion: 0.08
-Nodes (25): DailyBonusBanner, Scaffold, Spacer, Text, weeklyQuestsProvider, build, createState, ../../core/constants/app_colors.dart (+17 more)
+Cohesion: 0.03
+Nodes (75): DailyBonusBanner, Scaffold, Spacer, Text, Column, Container, Expanded, Row (+67 more)
 
 ### Community 58 - "onboarding_ui.dart"
 Cohesion: 0.03
@@ -1289,19 +1317,19 @@ Nodes (71): Curve, align, alignment, _amp, b, body, bottom, build (+63 more)
 
 ### Community 59 - "reward_fx.dart"
 Cohesion: 0.03
-Nodes (69): BuildContext, CustomPainter, double maxRadius, stroke,, double radius,, double t,, _CheckPainter, anchor, at (+61 more)
+Nodes (70): BuildContext, CustomPainter, double maxRadius, stroke,, double radius,, double t,, _CheckPainter, anchor, at (+62 more)
 
-### Community 60 - "LifeLevel.SharedKernel.Contracts"
+### Community 60 - "User"
+Cohesion: 0.06
+Nodes (25): HttpPut, IActionResult, Task, SaveRingRequest, UserController, Task, AdminUserSeeder, DateTime (+17 more)
+
+### Community 61 - "modes_api_service.dart"
 Cohesion: 0.05
-Nodes (32): HttpPut, IActionResult, Task, SaveRingRequest, UserController, Guid, HttpUserContext, ClassDetectionResult (+24 more)
+Nodes (41): acknowledge, acknowledgeBurn, acknowledgedLinks, activeRun, attempt, bank, bestRun, _burn (+33 more)
 
-### Community 61 - "dart:async"
-Cohesion: 0.03
-Nodes (75): Completer, dart:async, ../../../features/home/cards/home_portal_card.dart, map_orb_button.dart, autoOpenActiveRegion, _controller, dart:async, package:flutter/foundation.dart (+67 more)
-
-### Community 62 - "package:flutter/material.dart"
-Cohesion: 0.01
-Nodes (135): ../../activity/log_activity_screen.dart, Column, Text, Padding, Container, Container, Container, Padding (+127 more)
+### Community 62 - "boss_hp_bar.dart"
+Cohesion: 0.09
+Nodes (19): Column, Text, BossHpBar, build, ../../../core/constants/app_colors.dart, package:flutter/material.dart, emberHpDealt, _fmt (+11 more)
 
 ### Community 63 - "iOS AppIcon 1024x1024"
 Cohesion: 0.11
@@ -1311,13 +1339,13 @@ Nodes (18): Android ic_launcher hdpi, Android ic_launcher mdpi, Android ic_launc
 Cohesion: 0.07
 Nodes (25): InkWell, SizedBox, body, category, copyWith, createdAt, deepLink, fromJson (+17 more)
 
-### Community 65 - "shop_screen.dart"
-Cohesion: 0.04
-Nodes (57): ../../core/widgets/item_obtained_overlay.dart, shopProvider, asset, build, busy, _BuySheet, _c, _check (+49 more)
+### Community 65 - "task_reward_popup.dart"
+Cohesion: 0.03
+Nodes (76): AnimationController, AnimatedBuilder, Container, SizedBox, ../../core/motion/reward_fx.dart, FxAnchor, _anim, build (+68 more)
 
-### Community 66 - "home_avatar_ring.dart"
-Cohesion: 0.04
-Nodes (49): SizedBox, ClipRRect, Container, SizedBox, Text, ../../../core/widgets/reward_moment/reward_hud.dart, home_palette.dart, home_progress_bar.dart (+41 more)
+### Community 66 - "pull_to_import.dart"
+Cohesion: 0.02
+Nodes (95): SizedBox, Flexible, ClipRRect, Container, SizedBox, Text, ../../../core/widgets/reward_moment/reward_hud.dart, dart:math (+87 more)
 
 ### Community 67 - "zones.js"
 Cohesion: 0.28
@@ -1325,19 +1353,19 @@ Nodes (16): clear(), currentRegionChapter(), escapeHtml(), fillBranchSelect(), f
 
 ### Community 68 - "journey_state.dart"
 Cohesion: 0.04
-Nodes (51): ../../boss/models/boss_list_item.dart, ../../home/providers/world_progress_provider.dart, activeBoss, adjacentIds, alert, boss, chestExplicitlyUnopened, color (+43 more)
+Nodes (53): @immutable, ../../boss/models/boss_list_item.dart, ../../home/providers/world_progress_provider.dart, activeBoss, adjacentIds, alert, boss, chestExplicitlyUnopened (+45 more)
 
 ### Community 69 - "cdp-chrome-profile-2/WasmTtsEngine/20260625.1/offscreen_compiled.js"
 Cohesion: 0.04
-Nodes (76): $a(), ab(), ac(), ad(), Ah(), bb(), bc(), bd() (+68 more)
+Nodes (72): $a(), ab(), ac(), Ah(), bb(), bc(), be(), Bh() (+64 more)
 
 ### Community 70 - "login_screen.dart"
-Cohesion: 0.07
-Nodes (30): Scaffold, SizedBox, Text, TextFormField, TextStyle, FormState, _AuthField, _authService (+22 more)
+Cohesion: 0.06
+Nodes (31): Scaffold, SizedBox, Text, TextFormField, TextStyle, core/widgets/main_shell.dart, FormState, _AuthField (+23 more)
 
 ### Community 71 - "cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/service_worker_bin_prod.js"
 Cohesion: 0.03
-Nodes (57): ab(), Ae(), bh(), cb(), cg(), Ga(), gg(), Ha() (+49 more)
+Nodes (60): ab(), Ae(), ak(), al(), bh(), cb(), ef(), ej() (+52 more)
 
 ### Community 72 - "tutorial_controller.dart"
 Cohesion: 0.04
@@ -1357,7 +1385,7 @@ Nodes (18): build, claimAvailableMilestones, claimAvailableTaskRewards, claimMil
 
 ### Community 76 - "world_map_models.dart"
 Cohesion: 0.02
-Nodes (92): encounter_models.dart, activityType, arrivalBonusLabel, arrivalXpReward, bannerImageUrl, bonusXp, bossName, bossStatus (+84 more)
+Nodes (94): encounter_models.dart, activityType, arrivalBonusLabel, arrivalXpReward, bannerImageUrl, bonusXp, bossName, bossStatus (+86 more)
 
 ### Community 77 - "http"
 Cohesion: 0.13
@@ -1365,11 +1393,11 @@ Nodes (15): ASPNETCORE_ENVIRONMENT, applicationUrl, commandName, dotnetRunMessag
 
 ### Community 78 - "cdp-chrome-profile/WasmTtsEngine/20260625.1/offscreen_compiled.js"
 Cohesion: 0.04
-Nodes (72): $a(), ab(), ac(), Ah(), bb(), bc(), be(), Bh() (+64 more)
+Nodes (82): $a(), ab(), ac(), Ah(), bb(), bc(), be(), Bh() (+74 more)
 
 ### Community 79 - "ImportFirstOnboardingTests"
-Cohesion: 0.13
-Nodes (14): Dictionary, double, int, IReadOnlyList, string, ClassDetector, ActivityMixEntry, CharacterId (+6 more)
+Cohesion: 0.09
+Nodes (24): Dictionary, double, int, IReadOnlyList, string, ClassDetector, ActivityMixEntry, ITitleUnlockPort (+16 more)
 
 ### Community 80 - "activity_models.dart"
 Cohesion: 0.02
@@ -1379,17 +1407,20 @@ Nodes (97): activeEncounter, ActivityHistoryDto, activityId, ActivityType, Activ
 Cohesion: 0.24
 Nodes (17): bindImageField(), clear(), enumFirstValue(), escapeHtml(), fillEnumSelect(), fillForm(), load(), openEdit() (+9 more)
 
-### Community 82 - "boss_active_card.dart"
-Cohesion: 0.04
-Nodes (48): boss_hp_bar.dart, boss_icon.dart, Container, GestureDetector, SizedBox, Text, Container, SizedBox (+40 more)
+### Community 82 - "delve_engine.dart"
+Cohesion: 0.03
+Nodes (77): collapsedGate,
+  floodedTunnel,
+  trapCorridor,
+  crystalPuzzle,, DelveStat get, atRisk, attempt, backToPaths, bank, baseCoins, boosted (+69 more)
 
 ### Community 83 - "road_widgets.dart"
 Cohesion: 0.02
-Nodes (93): a, AchievementBadge, active, anchor, _anchored, arrived, asset, b (+85 more)
+Nodes (101): a, AchievementBadge, active, anchor, _anchored, arrived, asset, b (+93 more)
 
 ### Community 84 - "boss_hit_fx.dart"
 Cohesion: 0.04
-Nodes (48): BoxShape, active, b, barHp, borderRadius, BossHitBuilder, BossHitMemory, BossHitPortrait (+40 more)
+Nodes (53): BoxShape, active, b, barHp, borderRadius, BossHitBuilder, BossHitFrame, BossHitMemory (+45 more)
 
 ### Community 85 - "kg"
 Cohesion: 0.33
@@ -1412,8 +1443,8 @@ Cohesion: 0.12
 Nodes (17): boss, home, tutorial, worldMap, zoneSheet, designSystem, currentMockups, mockupDirectory (+9 more)
 
 ### Community 90 - "c"
-Cohesion: 0.07
-Nodes (43): ad(), Ag(), ak(), an(), bd(), c(), d(), dl() (+35 more)
+Cohesion: 0.08
+Nodes (39): Ag(), an(), bl(), c(), d(), dl(), e(), Ea() (+31 more)
 
 ### Community 91 - "default"
 Cohesion: 0.20
@@ -1421,7 +1452,7 @@ Nodes (11): default, android, ios, lib/firebase_options.dart, appId, fileOutput,
 
 ### Community 92 - "invalidate_user_providers.dart"
 Cohesion: 0.07
-Nodes (27): ../../features/achievements/providers/achievements_provider.dart, ../../features/activity/providers/activity_provider.dart, ../../features/boss/providers/boss_provider.dart, ../../features/guild/providers/guild_provider.dart, ../../features/home/providers/adventure_hub_status_provider.dart, ../../features/home/providers/world_progress_provider.dart, features/notifications/services/notifications_service.dart, ../../features/quests/providers/quest_provider.dart (+19 more)
+Nodes (29): ../../features/achievements/providers/achievements_provider.dart, ../../features/activity/providers/activity_provider.dart, ../../features/boss/providers/boss_provider.dart, ../../features/guild/providers/guild_provider.dart, ../../features/home/providers/adventure_hub_status_provider.dart, ../../features/home/providers/world_progress_provider.dart, ../../features/leaderboard/providers/leaderboard_provider.dart, ../../features/modes/burn_chain/burn_chain_provider.dart (+21 more)
 
 ### Community 93 - ".g"
 Cohesion: 0.08
@@ -1443,25 +1474,25 @@ Nodes (30): launchUrl, SyncResult, ../mappers/activity_type_mapper.dart, _buildD
 Cohesion: 0.04
 Nodes (54): Guid, BranchRequiresCrossroadsArrivalException, ChestAlreadyOpenedException, CrossRegionSwitchRequiresConfirmationException, PathAlreadyChosenException, RegionLockedException, Exception, AuthException (+46 more)
 
-### Community 98 - "TaskRewardCenterTests"
-Cohesion: 0.14
-Nodes (16): IStreakShieldPort, CancellationToken, DateTime, Fact, Guid, IReadOnlyList, Task, AllowAllEligibilityPort (+8 more)
+### Community 98 - "XpAwardResult"
+Cohesion: 0.12
+Nodes (18): IActivityHistoryReadPort, ICharacterXpPort, XpAwardResult, IStreakShieldPort, Xp, CancellationToken, DateTime, Fact (+10 more)
 
 ### Community 99 - "b"
 Cohesion: 0.08
-Nodes (42): b(), Bg(), bi(), c(), cg(), d(), Da(), e() (+34 more)
+Nodes (39): b(), Bg(), bi(), c(), cg(), d(), Da(), e() (+31 more)
 
-### Community 100 - "title_equip_flight.dart"
-Cohesion: 0.10
-Nodes (20): ChangeNotifier, int get, AppMotionScope, AppMotionSettings, _ToastStack, OnboardingController, build, cancel (+12 more)
+### Community 100 - "leaderboard_models.dart"
+Cohesion: 0.05
+Nodes (38): available, avatarEmoji, b, chest, className, coins, contextName, empty (+30 more)
 
 ### Community 101 - "talent_models.dart"
 Cohesion: 0.06
-Nodes (34): canDraw, catalogCount, coins, collectionComplete, crystals, crystalsAwarded, description, drawCoinCost (+26 more)
+Nodes (34): canDraw, catalogCount, coins, collectionComplete, crystalsAwarded, description, drawCoinCost, drawCount (+26 more)
 
-### Community 102 - "stack"
-Cohesion: 0.18
-Nodes (11): project, name, principle, stack, tagline, auth, cache, database (+3 more)
+### Community 102 - "agent-context.json"
+Cohesion: 0.10
+Nodes (21): backend, allEndpoints, modules, _meta, architectureFile, boardFile, generated, htmlMap (+13 more)
 
 ### Community 103 - "typeMultipliers"
 Cohesion: 0.36
@@ -1475,49 +1506,49 @@ Nodes (26): bossHpRanges, defeat, description, finalFormula, formula, timer, gam
 Cohesion: 0.67
 Nodes (3): EmptyServiceProvider, IServiceProvider, Type
 
-### Community 106 - "ActivityService"
+### Community 106 - "ActivityType"
 Cohesion: 0.10
-Nodes (26): Agi, ActivitySummaryDto, LogActivityRequest, CancellationToken, DateTime, double, Guid, int (+18 more)
+Nodes (28): Agi, LogActivityRequest, CancellationToken, DateTime, double, Guid, int, IReadOnlyList (+20 more)
 
-### Community 107 - "inventory_full_overlay.dart"
-Cohesion: 0.14
-Nodes (13): FadeTransition, Material, SizedBox, Text, item_icon_image.dart, ../constants/app_colors.dart, ../../features/activity/models/activity_models.dart, package:flutter/material.dart (+5 more)
+### Community 107 - "VoidCallback"
+Cohesion: 0.01
+Nodes (147): ../../activity/models/activity_models.dart, Padding, SizedBox, HubConnection?, active, build, currentIndex, iconAsset (+139 more)
 
 ### Community 108 - "notifications_service.dart"
-Cohesion: 0.07
-Nodes (29): @pragma, ../../../core/services/notification_banner_notifier.dart, _cachedToken, ../../../core/api/api_client.dart, ../../../core/services/deep_link_notifier.dart, dart:async, dart:io, package:firebase_messaging/firebase_messaging.dart (+21 more)
+Cohesion: 0.06
+Nodes (33): @pragma, ../../../core/services/notification_banner_notifier.dart, package:flutter_riverpod/flutter_riverpod.dart, notificationsServiceProvider, _cachedToken, ../../../core/api/api_client.dart, ../../../core/services/deep_link_notifier.dart, dart:async (+25 more)
 
-### Community 109 - "c"
+### Community 109 - "b"
 Cohesion: 0.08
-Nodes (37): bk(), c(), cg(), d(), Da(), e(), ed(), f() (+29 more)
+Nodes (39): b(), Bg(), bi(), c(), cg(), d(), Da(), e() (+31 more)
 
-### Community 110 - ".GetCharacterIdAsync"
-Cohesion: 0.16
-Nodes (17): Guid, List, CharacterEquipmentResponse, EquipItemRequest, EquipmentSlotDto, GearBonusesDto, InventoryResponse, ItemDto (+9 more)
+### Community 110 - "ItemService"
+Cohesion: 0.19
+Nodes (14): Guid, List, CharacterEquipmentResponse, EquipItemRequest, EquipmentSlotDto, GearBonusesDto, InventoryResponse, ItemDto (+6 more)
 
 ### Community 111 - "guild_models.dart"
 Cohesion: 0.03
-Nodes (66): activeRaid, avatarEmoji, baseMaxHp, baseRewardXp, bossIcon, bossId, bossName, canEditGuild (+58 more)
+Nodes (67): activeRaid, avatarEmoji, baseMaxHp, baseRewardXp, bossIcon, bossId, bossName, canEditGuild (+59 more)
 
 ### Community 112 - ".get"
-Cohesion: 0.11
-Nodes (26): af(), Ah(), be(), cf(), Ch(), fh(), gh(), hg() (+18 more)
+Cohesion: 0.07
+Nodes (41): af(), Ah(), be(), cf(), Ch(), cl(), df(), dh() (+33 more)
 
-### Community 113 - ".V"
-Cohesion: 0.06
-Nodes (47): Ye(), af(), Ah(), Ch(), dh(), ef(), ff(), fh() (+39 more)
+### Community 113 - ".get"
+Cohesion: 0.07
+Nodes (41): af(), Ah(), be(), cf(), Ch(), cl(), df(), dh() (+33 more)
 
 ### Community 114 - ".AwardXpAsync"
 Cohesion: 0.06
-Nodes (44): ActionResult, Authorize, CancellationToken, Guid, HttpGet, HttpPost, IActionResult, IReadOnlyList (+36 more)
+Nodes (45): ActionResult, Authorize, CancellationToken, Guid, HttpGet, HttpPost, IActionResult, IReadOnlyList (+37 more)
 
 ### Community 115 - "ce"
-Cohesion: 0.10
-Nodes (31): kb(), be(), cd(), ce(), cf(), dd(), de(), dj() (+23 more)
+Cohesion: 0.07
+Nodes (44): kb(), bd(), cd(), ce(), dd(), de(), dj(), ed() (+36 more)
 
 ### Community 116 - "class_step.dart"
-Cohesion: 0.01
-Nodes (234): app_motion.dart, _Header, AppAnimatedIndexedStack, _AppAnimatedIndexedStackState, AppPressable, _AppPressableState, build, _c (+226 more)
+Cohesion: 0.02
+Nodes (204): app_motion.dart, Entrance, _Header, AppAnimatedIndexedStack, _AppAnimatedIndexedStackState, build, _c, _cell (+196 more)
 
 ### Community 117 - "admin_tab.dart"
 Cohesion: 0.08
@@ -1527,33 +1558,33 @@ Nodes (23): GestureDetector, Icon, SingleChildScrollView, SizedBox, Text, accent
 Cohesion: 0.08
 Nodes (37): CreateEdgeRequest, CreateFloorRequest, CreateRegionRequest, CreateWorldRequest, CreateZoneRequest, EdgeDto, EnumOption, EnumsDto (+29 more)
 
-### Community 119 - "AppDbContext.cs"
-Cohesion: 0.06
-Nodes (30): CancellationToken, Guid, Task, UserReadPortAdapter, IServiceCollection, GuildModule, IServiceCollection, IntegrationsModule (+22 more)
+### Community 119 - "adventure_hub_status_provider.dart"
+Cohesion: 0.05
+Nodes (37): ../../achievements/providers/achievements_provider.dart, ../../boss/providers/boss_provider.dart, ../../leaderboard/providers/leaderboard_provider.dart, achievementHubNeedsAttention, achievementRoads, achievements, _achievementsKey, achievementsUpdated (+29 more)
 
-### Community 120 - "AppDbContext"
-Cohesion: 0.04
-Nodes (49): ModelBuilder, AppDbContext, CharacterClasses, Guid, CharacterClass, DateTime, Guid, CharacterTitle (+41 more)
+### Community 120 - "StravaOAuthServiceTests"
+Cohesion: 0.31
+Nodes (7): string, StravaOptions, Fact, HttpClient, StravaOptions, Task, StravaOAuthServiceTests
 
-### Community 121 - "sync_status_banner.dart"
-Cohesion: 0.12
-Nodes (16): Container, SizedBox, build, createState, ../../../core/constants/app_colors.dart, dart:async, ../models/integration_models.dart, package:flutter/material.dart (+8 more)
+### Community 121 - "../../../core/constants/app_colors.dart"
+Cohesion: 0.01
+Nodes (180): ../../activity/providers/activity_provider.dart, burn_chain/burn_chain_provider.dart, ../burn_chain/burn_chain_rules.dart, burn_chain/burn_chain_screen.dart, Center, Container, GestureDetector, Scaffold (+172 more)
 
 ### Community 122 - "encounter_blocker_sheet.dart"
 Cohesion: 0.09
 Nodes (22): BlockerEncounterData get, ../../boss/widgets/boss_hit_fx.dart, BlockerSheet, build, _buildDamageTracker, _buildEstimateCard, _buildHeader, _buildHpBar (+14 more)
 
 ### Community 123 - "ce"
-Cohesion: 0.06
-Nodes (50): kb(), Pl(), bd(), cd(), ce(), dd(), de(), dj() (+42 more)
+Cohesion: 0.07
+Nodes (44): kb(), bd(), cd(), ce(), dd(), de(), dj(), ed() (+36 more)
 
 ### Community 124 - "architecture"
 Cohesion: 0.13
 Nodes (16): architecture, compositionRoot, compositionRootResponsibilities, crossModuleCommunicationRules, moduleDAG, pattern, tier1SyncPortCalls, tier2DomainEvents (+8 more)
 
 ### Community 125 - ".I"
-Cohesion: 0.06
-Nodes (45): ad(), ae(), ak(), bd(), be(), bl(), cd(), ce() (+37 more)
+Cohesion: 0.07
+Nodes (37): ad(), ae(), bd(), bl(), cd(), ce(), dd(), dj() (+29 more)
 
 ### Community 126 - "edges.js"
 Cohesion: 0.35
@@ -1563,105 +1594,105 @@ Nodes (9): clear(), escapeHtml(), fillZoneSelects(), load(), openEdit(), openNew
 Cohesion: 0.38
 Nodes (10): escapeHtml(), fillEnumSelect(), floorBody(), openEdit(), openNew(), reloadFloors(), remove(), render() (+2 more)
 
-### Community 128 - "c"
-Cohesion: 0.15
-Nodes (12): Ba(), c(), Hd(), Jd(), Kd(), Lb(), md(), p() (+4 more)
+### Community 128 - "dd"
+Cohesion: 0.22
+Nodes (13): S(), Ke(), ad(), ae(), bd(), dd(), de(), pe() (+5 more)
 
 ### Community 129 - "e"
 Cohesion: 0.08
 Nodes (36): af(), Ba(), bf(), c(), ce(), cf(), d(), e() (+28 more)
 
-### Community 130 - "LifeLevel.Modules.Adventure.Dungeons.Domain.Entities"
-Cohesion: 0.05
-Nodes (36): Guid, ICollection, Crossroads, Guid, CrossroadsPath, Guid, DungeonFloor, Guid (+28 more)
+### Community 130 - "AppDbContext.cs"
+Cohesion: 0.03
+Nodes (59): Guid, ICollection, Crossroads, Guid, CrossroadsPath, Guid, DungeonFloor, Guid (+51 more)
 
 ### Community 131 - ".OpenAsync"
-Cohesion: 0.14
-Nodes (15): OpenChestResult, CancellationToken, Guid, Task, WorldChestService, CancellationToken, Fact, Guid (+7 more)
+Cohesion: 0.05
+Nodes (38): AwardCall, CancellationToken, Guid, Task, UserReadPortAdapter, CancellationToken, Guid, HashSet (+30 more)
 
-### Community 132 - "qh"
-Cohesion: 0.07
-Nodes (25): Qf(), cl(), df(), dh(), ef(), ff(), fm(), gf() (+17 more)
+### Community 132 - "ConsumerState"
+Cohesion: 0.09
+Nodes (34): ConsumerState, ConsumerStatefulWidget, MainShell, _MainShellState, GuildSearchView, _GuildSearchViewState, IntegrationsScreen, _IntegrationsScreenState (+26 more)
 
 ### Community 133 - "GuildService"
 Cohesion: 0.15
 Nodes (13): CancellationToken, DateTime, Guid, IDictionary, int, IReadOnlyList, Task, GuildService (+5 more)
 
-### Community 134 - "daily_quests_tab.dart"
-Cohesion: 0.07
-Nodes (32): specialQuestsProvider, ../../../core/constants/app_colors.dart, package:flutter/material.dart, package:flutter_riverpod/flutter_riverpod.dart, ../providers/quest_provider.dart, ../widgets/quest_card.dart, ../widgets/quest_empty_state.dart, ../widgets/quest_error_state.dart (+24 more)
+### Community 134 - "home_adventure_hub.dart"
+Cohesion: 0.06
+Nodes (33): ../../core/services/shell_overlay_notifier.dart, home_recent_activities_card.dart, Key?, ../../leaderboard/leaderboard_screen.dart, ../../map/screens/region_chests_screen.dart, _controller, createState, dispose (+25 more)
 
 ### Community 135 - ".I"
 Cohesion: 0.07
 Nodes (37): ad(), ae(), bd(), bl(), cd(), ce(), dd(), dj() (+29 more)
 
-### Community 136 - "GuildServiceTests.cs"
-Cohesion: 0.05
-Nodes (36): DateTime, Guid, ICollection, Guild, DateTime, Guid, GuildMember, DateTime (+28 more)
+### Community 136 - "LifeLevel.Modules.Guild.Domain.Entities"
+Cohesion: 0.04
+Nodes (40): Task, GuildRaidHub, DateTime, Guid, ICollection, Guild, DateTime, Guid (+32 more)
 
 ### Community 137 - "web/manifest.json"
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
 ### Community 138 - ".then"
-Cohesion: 0.09
-Nodes (39): am(), bg(), bm(), cm(), dm(), em(), Fg(), hm() (+31 more)
+Cohesion: 0.08
+Nodes (45): am(), bg(), bm(), cm(), Dg(), di(), dm(), em() (+37 more)
 
 ### Community 139 - "import_step.dart"
-Cohesion: 0.06
-Nodes (33): AnimatedListState, ImportedWorkout, build, createState, date, _done, _error, _FeedRow (+25 more)
+Cohesion: 0.03
+Nodes (58): AnimatedListState, ImportedWorkout, build, createState, date, _done, _error, _FeedRow (+50 more)
 
 ### Community 140 - "guild_screen.dart"
-Cohesion: 0.08
-Nodes (30): guild_find_views.dart, guild_home_view.dart, guild_members_view.dart, guild_raid_view.dart, guildProvider, build, _buildBody, _close (+22 more)
+Cohesion: 0.05
+Nodes (54): guild_find_views.dart, guild_home_view.dart, guild_members_view.dart, guild_raid_view.dart, GuildService, build, _checkPendingGuildRaidExpiries, _checkPendingGuildRaidVictories (+46 more)
 
 ### Community 141 - "encounter_models.dart"
 Cohesion: 0.04
 Nodes (47): blockedZoneName, blocker, BlockerEncounterData, bossId, choices, currentHp, description, dialogue (+39 more)
 
 ### Community 142 - "b"
-Cohesion: 0.09
-Nodes (23): Me(), E(), n(), af(), b(), bf(), cf(), d() (+15 more)
+Cohesion: 0.13
+Nodes (14): Me(), E(), n(), b(), f(), I(), l(), pa() (+6 more)
 
 ### Community 143 - ".ChoosePath"
 Cohesion: 0.16
 Nodes (13): Guid, HttpPost, IActionResult, Task, ChoosePathRequest, CrossroadsController, DateTime, Guid (+5 more)
 
 ### Community 144 - "Task"
-Cohesion: 0.23
-Nodes (10): DungeonStateDto, CancellationToken, Guid, Task, WorldDungeonService, Fact, Task, DungeonSetup (+2 more)
+Cohesion: 0.39
+Nodes (5): Fact, Task, DungeonSetup, WorldDungeonServiceTests, DungeonSetup
 
-### Community 145 - "ActivityType"
-Cohesion: 0.13
-Nodes (18): int, SeasonXpRules, ActivityType, CancellationToken, DateTime, double, Guid, Task (+10 more)
+### Community 145 - "CancellationToken"
+Cohesion: 0.09
+Nodes (24): CancellationToken, DateTime, double, Guid, Task, ActivityLogPortResult, HistoricalActivityResult, IActivityLogPort (+16 more)
 
 ### Community 146 - "rewards_models.dart"
 Cohesion: 0.06
-Nodes (31): coins, crystals, daily, fromJson, hasClaimableMilestone, hasClaimableReward, hasClaimableTask, isClaimed (+23 more)
+Nodes (32): coins, crystals, daily, fromJson, gems, hasClaimableMilestone, hasClaimableReward, hasClaimableTask (+24 more)
 
 ### Community 147 - "boss_damage_history.dart"
 Cohesion: 0.12
 Nodes (15): activityId, activityType, bossMitigation, calories, damage, damageMultiplier, damageTaken, distanceKm (+7 more)
 
-### Community 148 - ".toString"
+### Community 148 - ".then"
 Cohesion: 0.08
-Nodes (42): am(), bg(), bm(), cm(), df(), Dg(), di(), dk() (+34 more)
+Nodes (45): am(), bg(), bm(), cm(), Dg(), di(), dm(), em() (+37 more)
 
-### Community 149 - "adventure_hub_status_provider.dart"
-Cohesion: 0.06
-Nodes (32): ../../achievements/providers/achievements_provider.dart, achievementHubNeedsAttention, achievementRoads, achievements, _achievementsKey, achievementsUpdated, AdventureHubSeenStore, adventureHubSeenStoreProvider (+24 more)
+### Community 149 - "gear_hex_slots.dart"
+Cohesion: 0.07
+Nodes (29): ../../../core/constants/item_icons.dart, ../gear_paperdoll_assets.dart, ../items/models/item_models.dart, build, characterLevel, color, _EmptySlotIcon, equipment (+21 more)
 
-### Community 150 - "bool get"
-Cohesion: 0.05
-Nodes (42): bool get, FontWeight?, AppIconImage, asset, build, defaultVisualScale, opacity, size (+34 more)
+### Community 150 - ".then"
+Cohesion: 0.10
+Nodes (24): be(), cl(), cm(), dm(), em(), fm(), Gc(), gl() (+16 more)
 
 ### Community 151 - "cdp-chrome-profile-2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/manifest.json"
 Cohesion: 0.06
 Nodes (44): author, email, background, service_worker, content_capabilities, matches, permissions, content_security_policy (+36 more)
 
 ### Community 152 - "garmin_service.dart"
-Cohesion: 0.08
-Nodes (23): base64UrlEncode, dart:convert, authorizationUrl, _clientId, connect, ../../../core/api/api_client.dart, dart:convert, dart:math (+15 more)
+Cohesion: 0.12
+Nodes (16): base64UrlEncode, authorizationUrl, _clientId, connect, ../../../core/api/api_client.dart, dart:convert, dart:math, ../models/integration_models.dart (+8 more)
 
 ### Community 153 - "cdp-chrome-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.107.1_0/manifest.json"
 Cohesion: 0.06
@@ -1679,13 +1710,13 @@ Nodes (24): ActionResult, CancellationToken, Guid, HttpDelete, HttpGet, HttpPost
 Cohesion: 0.36
 Nodes (6): CharacterId, Fact, Guid, Task, UserId, HealthSyncServiceTests
 
-### Community 157 - "NotificationRepository"
-Cohesion: 0.29
-Nodes (7): CancellationToken, DateTime, Guid, List, Task, NotificationRepository, INotificationRepository
+### Community 157 - "NotificationLog"
+Cohesion: 0.17
+Nodes (12): DateTime, Guid, NotificationLog, NotificationOutcome, EntityTypeBuilder, CancellationToken, DateTime, Guid (+4 more)
 
 ### Community 158 - "WorldMapDtos.cs"
-Cohesion: 0.06
-Nodes (42): ActionResult, CancellationToken, Guid, HttpGet, Task, WorldMapController, ActiveJourneyDto, BlockerEncounterDto (+34 more)
+Cohesion: 0.05
+Nodes (47): ActionResult, CancellationToken, Guid, HttpGet, Task, WorldMapController, ActiveJourneyDto, BlockerEncounterDto (+39 more)
 
 ### Community 159 - "api.js"
 Cohesion: 0.26
@@ -1693,15 +1724,15 @@ Nodes (8): api, closeModal(), confirmDialog(), getBaseUrl(), getToken(), openMod
 
 ### Community 160 - ".toString"
 Cohesion: 0.08
-Nodes (29): ab(), ag(), Ai(), Ci(), di(), ei(), ek(), fi() (+21 more)
+Nodes (30): ab(), Ai(), Ci(), cj(), di(), eh(), ei(), ek() (+22 more)
 
-### Community 161 - "integrations_provider.dart"
-Cohesion: 0.08
-Nodes (23): IntegrationSyncState, IntegrationSyncState, build, connectGarmin, connectStrava, ../models/integration_models.dart, package:flutter_riverpod/flutter_riverpod.dart, ../services/garmin_service.dart (+15 more)
+### Community 161 - "leaderboard_widgets.dart"
+Cohesion: 0.06
+Nodes (32): LeaderboardEntry, avatarEmoji, _bob, border, build, busy, _c, color (+24 more)
 
-### Community 162 - "AdminItemsController"
-Cohesion: 0.17
-Nodes (16): CancellationToken, Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, IFormFile (+8 more)
+### Community 162 - "mode_ui.dart"
+Cohesion: 0.04
+Nodes (45): asset, b, blue, border, bottom, build, burn, child (+37 more)
 
 ### Community 163 - "questGeneration"
 Cohesion: 0.22
@@ -1712,16 +1743,16 @@ Cohesion: 0.44
 Nodes (7): escapeHtml(), load(), openEdit(), remove(), render(), save(), select()
 
 ### Community 165 - "ActivityServiceExternalItemGrantTests"
-Cohesion: 0.10
-Nodes (23): ICharacterStatPort, StatGains, IQuestProgressPort, QuestActivityResult, IWorldZoneDistancePort, CancellationToken, Fact, Guid (+15 more)
+Cohesion: 0.07
+Nodes (35): CancellationToken, Guid, IReadOnlyList, Task, LevelUpItemGrantPortAdapter, GrantedItemInfo, CancellationToken, Guid (+27 more)
 
 ### Community 166 - ".S"
-Cohesion: 0.06
-Nodes (38): af(), bf(), bm(), cf(), df(), dh(), ef(), fh() (+30 more)
+Cohesion: 0.08
+Nodes (28): bm(), cf(), df(), dh(), ef(), fh(), ge(), gh() (+20 more)
 
 ### Community 167 - ".h"
-Cohesion: 0.13
-Nodes (30): Cd(), db(), eb(), Fh(), gb(), gf(), hf(), ib() (+22 more)
+Cohesion: 0.16
+Nodes (27): Cd(), db(), Fh(), gb(), jh(), kh(), ma(), mh() (+19 more)
 
 ### Community 168 - "world_zone_models.dart"
 Cohesion: 0.05
@@ -1735,25 +1766,25 @@ Nodes (40): Abyssal Trench, Apex Caldera, Arc 1: The Awakening World, Arc 2: The
 Cohesion: 0.08
 Nodes (23): FormatException, _asMap, AuthResult, AuthService, changePassword, characterId, ../../../core/api/api_client.dart, package:dio/dio.dart (+15 more)
 
-### Community 171 - "XpAwardResult"
-Cohesion: 0.11
-Nodes (17): AwardCall, ICharacterXpPort, XpAwardResult, Xp, CancellationToken, Fact, Guid, Task (+9 more)
+### Community 171 - "IEventPublisher"
+Cohesion: 0.12
+Nodes (13): IEventPublisher, CancellationToken, Task, InProcessEventPublisher, CancellationToken, Fact, Guid, Task (+5 more)
 
 ### Community 172 - ".h"
-Cohesion: 0.14
-Nodes (29): Cd(), db(), fd(), Fh(), gb(), gf(), hf(), jb() (+21 more)
+Cohesion: 0.13
+Nodes (30): Cd(), db(), eb(), Fh(), gb(), gf(), hf(), ib() (+22 more)
 
 ### Community 173 - "ShopService"
-Cohesion: 0.17
-Nodes (18): ShopPurchaseResult, ShopResponse, CancellationToken, Currency, DateTime, Dictionary, Func, Guid (+10 more)
+Cohesion: 0.18
+Nodes (16): ShopPurchaseResult, CancellationToken, Currency, DateTime, Dictionary, Func, Guid, HashSet (+8 more)
 
 ### Community 174 - "season_service.dart"
-Cohesion: 0.18
-Nodes (12): claimAvailable, claimTier, _dio, _errorMessage, getTrack, message, purchaseFounderPass, SeasonException (+4 more)
+Cohesion: 0.16
+Nodes (13): claimAvailable, claimTier, _dio, _errorMessage, getTrack, message, purchaseFounderPass, SeasonException (+5 more)
 
 ### Community 175 - ".S"
-Cohesion: 0.12
-Nodes (18): bm(), cf(), df(), dh(), ef(), ge(), me(), Oe() (+10 more)
+Cohesion: 0.08
+Nodes (28): bm(), cf(), df(), dh(), ef(), fh(), ge(), gh() (+20 more)
 
 ### Community 176 - "Screen Inventory"
 Cohesion: 0.05
@@ -1764,16 +1795,16 @@ Cohesion: 0.05
 Nodes (37): Achievements debug, Admin web panel, Boss debug — `/api/boss/{bossId}/debug/*`, Debug Endpoints, Map debug — `/api/map/debug/*`, Mobile debug panel, Quest debug, Related (+29 more)
 
 ### Community 178 - "K"
-Cohesion: 0.09
-Nodes (15): Pl(), Qf(), aj(), bj(), bl(), cl(), K(), Li() (+7 more)
+Cohesion: 0.14
+Nodes (11): Pl(), Qf(), aj(), bj(), K(), Li(), mi(), Sl() (+3 more)
 
 ### Community 179 - "home_happening_now.dart"
 Cohesion: 0.04
-Nodes (58): ../../boss/providers/boss_provider.dart, Padding, SizedBox, Text, ../../../core/services/boss_overlay_notifier.dart, Duration, ../../guild/providers/guild_provider.dart, _blink (+50 more)
+Nodes (47): ../../../core/services/boss_overlay_notifier.dart, ../../guild/providers/guild_provider.dart, _blink, boss, bossLeft, build, chain, chainEnds (+39 more)
 
-### Community 180 - "season_track_screen.dart"
-Cohesion: 0.03
-Nodes (85): _Body, buy_founder_pass_screen.dart, ConsumerState, ConsumerStatefulWidget, GuildSearchItem, guildSearchProvider, actionLabel, build (+77 more)
+### Community 180 - "tutorials_hub_screen.dart"
+Cohesion: 0.04
+Nodes (51): Container, Expanded, GestureDetector, Padding, _PlayAllCard, Row, Scaffold, SizedBox (+43 more)
 
 ### Community 181 - "Core Features"
 Cohesion: 0.05
@@ -1789,19 +1820,19 @@ Nodes (9): Icon-App-40x40@3x.png, Icon-App-60x60@2x.png, Icon-App-60x60@3x.png, 
 
 ### Community 184 - "TitleServiceTests"
 Cohesion: 0.14
-Nodes (14): IDailyQuestReadPort, IStreakReadPort, StreakReadDto, NullStreak, CancellationToken, Fact, Guid, List (+6 more)
+Nodes (15): CancellationToken, Guid, Task, TitleUnlockAdapter, IDailyQuestReadPort, CancellationToken, Fact, Guid (+7 more)
 
 ### Community 185 - "api_client.dart"
-Cohesion: 0.07
-Nodes (28): Dio, features/auth/login_screen.dart, ../../main.dart, ApiClient, _baseUrl, clearToken, _configuredBaseUrl, dart:convert (+20 more)
+Cohesion: 0.10
+Nodes (19): features/auth/login_screen.dart, ../../main.dart, ApiClient, _baseUrl, clearToken, _configuredBaseUrl, dart:convert, ../../features/auth/login_screen.dart (+11 more)
 
 ### Community 186 - "onboarding_models.dart"
 Cohesion: 0.04
 Nodes (49): ClassDetectionState, activeMinutes, activities, ActivityShare, alternativeClassIds, alternatives, classById, classByName (+41 more)
 
 ### Community 187 - "TalentService"
-Cohesion: 0.15
-Nodes (16): TalentDrawResult, TalentScreenResponse, TalentTileState, TalentView, TalentWalletView, CancellationToken, DateTime, Func (+8 more)
+Cohesion: 0.32
+Nodes (8): TalentDrawResult, CancellationToken, DateTime, Guid, Random, Task, TalentService, ConcurrentDictionary
 
 ### Community 188 - "📋 Backlog"
 Cohesion: 0.05
@@ -1816,8 +1847,8 @@ Cohesion: 0.14
 Nodes (15): models, neverDropServiceFilesLooseInFeatureRoot, providers, screenFiles, services, tabs, widgets, mobile (+7 more)
 
 ### Community 191 - "onboarding_controller.dart"
-Cohesion: 0.04
-Nodes (46): ../../character/models/character_class.dart, ../character/models/level_up_receipt.dart, CharacterClass? get, CharacterService, acknowledgeReceipts, avatarEmoji, back, _characters (+38 more)
+Cohesion: 0.05
+Nodes (40): ../../character/models/character_class.dart, ../character/models/level_up_receipt.dart, CharacterClass? get, CharacterService, acknowledgeReceipts, avatarEmoji, back, _characters (+32 more)
 
 ### Community 192 - "stepXpRewards"
 Cohesion: 0.24
@@ -1827,29 +1858,29 @@ Nodes (10): 1, 10, 2, 5, examples, 0, 3, 4 (+2 more)
 Cohesion: 0.05
 Nodes (37): activities, activityType, athleteId, athleteName, calories, connectedAt, copyWith, displayName (+29 more)
 
-### Community 194 - "LifeLevel.Modules.Identity.Domain.Enums"
+### Community 194 - ".UpdateEmailAsync"
 Cohesion: 0.09
-Nodes (13): Task, AdminUserSeeder, Guid, UserRingItem, RingItemType, IServiceCollection, IdentityModule, EntityTypeBuilder (+5 more)
+Nodes (28): Authorize, CancellationToken, HttpGet, HttpPost, HttpPut, IActionResult, Task, AuthController (+20 more)
 
-### Community 195 - "I"
-Cohesion: 0.11
-Nodes (15): ad(), ee(), fl(), gj(), Gl(), gm(), hj(), I() (+7 more)
+### Community 195 - "leaderboard_showcase_test.dart"
+Cohesion: 0.07
+Nodes (29): dart:io, main, _profile, _app, _boardJson, build, _entry, main (+21 more)
 
-### Community 196 - "yi"
-Cohesion: 0.11
-Nodes (19): Ai(), bi(), Ci(), cj(), eh(), fi(), gi(), hi() (+11 more)
+### Community 196 - ".toString"
+Cohesion: 0.10
+Nodes (22): Ai(), bi(), Ci(), cj(), dk(), eh(), ei(), fi() (+14 more)
 
 ### Community 197 - "shop_models.dart"
 Cohesion: 0.06
 Nodes (30): canPurchase, canRefresh, chests, coins, costCoins, currency, dailyOffers, displayName (+22 more)
 
-### Community 198 - "LifeLevel.SharedKernel.Ports"
+### Community 198 - "IEventHandler"
 Cohesion: 0.03
-Nodes (52): DateTime, Guid, IReadOnlyList, ActivityHistoryDto, BlockedItemInfo, LogActivityResult, IServiceCollection, ActivityModule (+44 more)
+Nodes (64): CancellationToken, Task, CharacterCreatedHandler, CancellationToken, Task, TitleGrantHandler, CancellationToken, Task (+56 more)
 
 ### Community 199 - ".toString"
-Cohesion: 0.09
-Nodes (25): Ai(), bi(), Ci(), cj(), eh(), ei(), ek(), fi() (+17 more)
+Cohesion: 0.08
+Nodes (30): ab(), Ai(), Ci(), cj(), di(), eh(), ei(), ek() (+22 more)
 
 ### Community 200 - "assert"
 Cohesion: 0.09
@@ -1872,8 +1903,8 @@ Cohesion: 0.06
 Nodes (35): Accessories, Aero Race Cap, Apex GPS Pro, Aura Stone, Basic Step Counter, Boss Scroll, Carbon X3, Champion Gloves (+27 more)
 
 ### Community 205 - "pending_workouts_provider.dart"
-Cohesion: 0.08
-Nodes (33): ../../integrations/models/integration_models.dart, ../../integrations/services/health_sync_service.dart, build, check, checking, checkQuietly, copyWith, _health (+25 more)
+Cohesion: 0.10
+Nodes (26): ../../integrations/services/health_sync_service.dart, build, check, checking, checkQuietly, copyWith, _health, _HealthStoreReader (+18 more)
 
 ### Community 206 - "project_info"
 Cohesion: 0.29
@@ -1883,21 +1914,21 @@ Nodes (6): client, configuration_version, project_info, project_id, project_numb
 Cohesion: 0.06
 Nodes (35): 1. Region Visibility, 2. Zone Visibility Inside a Region, 3. Crossroads Visibility, 4. Boss Visibility, Backend / System Plan, Benefits, Copy examples, Data states needed (+27 more)
 
-### Community 208 - "tutorial_bubble.dart"
-Cohesion: 0.04
-Nodes (53): Container, GestureDetector, Material, Opacity, Padding, Row, SizedBox, Spacer (+45 more)
+### Community 208 - "crossroads_choice_sheet.dart"
+Cohesion: 0.05
+Nodes (38): Container, Function, Material, Row, SizedBox, Spacer, already, alreadyChosenBranchId (+30 more)
 
 ### Community 209 - "app_toast.dart"
 Cohesion: 0.03
-Nodes (70): @visibleForTesting, _, action, AppToast, AppToastHandle, AppToastType, _arm, _attach (+62 more)
+Nodes (70): _, action, AppToast, AppToastHandle, AppToastType, _arm, _attach, build (+62 more)
 
 ### Community 210 - "guild_service.dart"
-Cohesion: 0.06
-Nodes (32): ../../activity/models/activity_models.dart, HubConnection?, _asStringMap, _connection, _firstMap, GuildRealtimeService, refreshGuildGroup, start (+24 more)
+Cohesion: 0.10
+Nodes (20): acknowledgeRaidExpiry, acknowledgeRaidVictory, create, _decode, delete, GuildService, join, kick (+12 more)
 
 ### Community 211 - "QuestService"
-Cohesion: 0.14
-Nodes (15): TaskMilestoneClaimResult, CancellationToken, DateTime, Guid, IEnumerable, int, IReadOnlyDictionary, IReadOnlyList (+7 more)
+Cohesion: 0.08
+Nodes (30): DateTime, Guid, List, QuestProgressUpdateResult, TaskMilestoneClaimResult, TaskMilestoneDto, TaskMilestoneRewardDto, TaskRewardPeriodDto (+22 more)
 
 ### Community 212 - "Plan - Power Score System"
 Cohesion: 0.06
@@ -1912,16 +1943,16 @@ Cohesion: 0.29
 Nodes (6): client, configuration_version, project_info, project_id, project_number, storage_bucket
 
 ### Community 215 - "characterProfileProvider"
-Cohesion: 0.08
-Nodes (33): build, dispose, _handleDeepLink, initState, MainShell, _MainShellState, _syncTutorialWithProfile, _triggerForegroundHealthSync (+25 more)
+Cohesion: 0.05
+Nodes (57): ConsumerWidget, appMotionSettingsProvider, AppRoute, _onRingItemTap, _onTutorialStateChanged, achievementsProvider, _openRoad, activitySummaryProvider (+49 more)
 
-### Community 216 - "CharacterLeveledUpEvent"
-Cohesion: 0.13
-Nodes (16): CancellationToken, Task, LevelUpItemGrantHandler, CancellationToken, Task, LevelUpNotificationHandler, TalentCurrencyLevelUpHandler, CancellationToken (+8 more)
+### Community 216 - ".AddItemsAsync"
+Cohesion: 0.22
+Nodes (10): LevelUpAvatarInfo, LevelUpBlockedItemInfo, LevelUpReceiptDto, LevelUpRegionInfo, LevelUpTitleInfo, CancellationToken, Guid, IReadOnlyList (+2 more)
 
 ### Community 217 - "cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js"
 Cohesion: 0.07
-Nodes (12): id(), Aa(), Ab(), Ba(), Bb(), Ca(), Ea(), Pa() (+4 more)
+Nodes (14): id(), Aa(), Ab(), Ba(), Bb(), Ea(), Pa(), ra() (+6 more)
 
 ### Community 218 - "cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/manifest.json"
 Cohesion: 0.06
@@ -1951,41 +1982,41 @@ Nodes (32): 10. Interaction state machine, 11. Recommended implementation order,
 Cohesion: 0.15
 Nodes (17): CancellationToken, HttpGet, HttpPost, HttpPut, IActionResult, Task, NotificationsController, NotificationItemDto (+9 more)
 
-### Community 225 - "I"
-Cohesion: 0.07
-Nodes (38): bc(), cc(), dc(), ec(), ee(), fc(), fd(), fl() (+30 more)
+### Community 225 - ".v"
+Cohesion: 0.14
+Nodes (21): bb(), bc(), cc(), dc(), ec(), ek(), fc(), fk() (+13 more)
 
-### Community 226 - "task_reward_popup.dart"
-Cohesion: 0.05
-Nodes (38): asset, build, _burst, _c, _chest, _chestWidget, _closeHint, color (+30 more)
+### Community 226 - ".GetCombatStatsAsync"
+Cohesion: 0.10
+Nodes (15): CancellationToken, Guid, Task, int, BossBalanceCalculator, Profile, int, BossCombatCalculator (+7 more)
 
 ### Community 227 - "cdp-chrome-profile-2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js"
 Cohesion: 0.09
-Nodes (16): a(), aa(), c(), d(), Fa(), Ga(), ja(), ka() (+8 more)
+Nodes (14): a(), aa(), c(), d(), Fa(), Ga(), ja(), ka() (+6 more)
 
 ### Community 228 - "Talents (Gacha Talent Cards) — Design & Implementation Plan"
 Cohesion: 0.07
 Nodes (26): Add — backend, Add — mobile, Admin web UI, API (`backend/src/LifeLevel.Api/Controllers/`), `Application/UseCases/TalentService.cs`, Backend — `LifeLevel.Modules.Talents`, Context, Cross-module hook edits (the main cross-cutting change) (+18 more)
 
-### Community 229 - "static final"
-Cohesion: 0.08
-Nodes (20): _controller, dart:async, DeepLinkNotifier, notify, stream, _controller, dart:async, ../../features/activity/models/activity_models.dart (+12 more)
+### Community 229 - "world_map_notifier.dart"
+Cohesion: 0.04
+Nodes (44): _controller, dart:async, DeepLinkNotifier, notify, stream, _controller, dart:async, NavTabNotifier (+36 more)
 
 ### Community 230 - "level_up_receipt.dart"
 Cohesion: 0.06
-Nodes (30): availableAvatars, availableRegions, baseStatPointsGranted, blockedItems, bonusStatPointsGranted, coinsGranted, emoji, fromJson (+22 more)
+Nodes (31): availableAvatars, availableRegions, baseStatPointsGranted, blockedItems, bonusStatPointsGranted, coinsGranted, emoji, fromJson (+23 more)
 
 ### Community 231 - "pull_import_showcase_test.dart"
-Cohesion: 0.06
-Nodes (37): dart:io, dart:ui, _app, _crossroads, main, _traveling, main, _region (+29 more)
+Cohesion: 0.04
+Nodes (54): dart:ui, _app, _crossroads, main, _traveling, main, _region, _resolve (+46 more)
 
 ### Community 232 - "assert"
 Cohesion: 0.09
 Nodes (32): assert(), assignWasmExports(), checkStackCookie(), consumedModuleProp(), createExportWrapper(), createNode(), createStandardStreams(), createStream() (+24 more)
 
-### Community 233 - "vh"
-Cohesion: 0.11
-Nodes (25): Ah(), bh(), Ch(), di(), hf(), hh(), hi(), ih() (+17 more)
+### Community 233 - ".get"
+Cohesion: 0.21
+Nodes (12): Ah(), Ch(), mf(), mh(), uh(), vh(), We(), wh() (+4 more)
 
 ### Community 234 - "cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/manifest.json"
 Cohesion: 0.06
@@ -2000,8 +2031,8 @@ Cohesion: 0.33
 Nodes (6): Fitness Mode Mockup v1, Fitness Mode Mockup v2, Fitness Mode Mockup v3, Fitness Mode Mockup v4, Fitness Mode Mockup v5, Fitness Mode Mockup v6
 
 ### Community 237 - ".toString"
-Cohesion: 0.09
-Nodes (25): Ai(), bi(), Ci(), cj(), dk(), eh(), ei(), fi() (+17 more)
+Cohesion: 0.10
+Nodes (22): Ai(), bi(), Ci(), cj(), dk(), eh(), ei(), fi() (+14 more)
 
 ### Community 238 - "pending_models.dart"
 Cohesion: 0.05
@@ -2019,21 +2050,21 @@ Nodes (14): a(), aa(), c(), d(), Fa(), Ga(), ja(), ka() (+6 more)
 Cohesion: 0.35
 Nodes (5): Fact, Guid, IDictionary, Task, GuildServiceTests
 
-### Community 242 - "Talent"
-Cohesion: 0.08
-Nodes (26): Guid, Talent, DateTime, Guid, TalentDrawEntry, DateTime, Guid, UserTalent (+18 more)
+### Community 242 - "UserTalent"
+Cohesion: 0.13
+Nodes (14): DateTime, Guid, TalentDrawEntry, DateTime, Guid, UserTalent, DateTime, Guid (+6 more)
 
 ### Community 243 - "Migration"
-Cohesion: 0.08
-Nodes (13): MigrationBuilder, InitialCreate, MigrationBuilder, AddGuildRaidScaling, MigrationBuilder, RenameTalentTokensToCrystals, MigrationBuilder, AddShopPurchases (+5 more)
+Cohesion: 0.07
+Nodes (15): MigrationBuilder, InitialCreate, MigrationBuilder, AddRegionArtwork, MigrationBuilder, ExpandTaskSystem, MigrationBuilder, ReplaceTalentPointsWithDrawNumber (+7 more)
 
 ### Community 244 - ".ca"
-Cohesion: 0.11
-Nodes (30): ac(), bc(), cc(), dc(), ec(), ff(), hj(), Ib() (+22 more)
+Cohesion: 0.13
+Nodes (26): ac(), bc(), cc(), dc(), ec(), hj(), Ib(), ij() (+18 more)
 
 ### Community 245 - "shop_service.dart"
 Cohesion: 0.10
-Nodes (20): buyChest, buyItem, _dio, getShop, message, _purchase, refresh, ShopException (+12 more)
+Nodes (21): ShopData, build, buyChest, buyItem, refreshOffers, reload, ShopNotifier, shopServiceProvider (+13 more)
 
 ### Community 246 - "reward_roads_hub.dart"
 Cohesion: 0.08
@@ -2043,45 +2074,49 @@ Nodes (25): AchievementRoad, AchievementWallet, _barAnchor, _body, _busy, _coinA
 Cohesion: 0.06
 Nodes (32): GearBonusesDto, agiBonus, category, CharacterEquipmentResponse, characterItemId, description, endBonus, EquipmentSlotDto (+24 more)
 
-### Community 248 - "AchievementService"
-Cohesion: 0.11
-Nodes (30): AchievementClaimResult, AchievementDto, AchievementRoadDto, AchievementRoadsResponse, AchievementStageDto, AchievementStageKeyDto, AchievementWalletDto, CheckUnlocksResult (+22 more)
+### Community 248 - "AchievementSeeder"
+Cohesion: 0.22
+Nodes (7): Achievement, Task, AchievementSeeder, Coins, Gems, AchievementRewardTable, StageChest
 
-### Community 249 - "MapModule.cs"
-Cohesion: 0.13
-Nodes (14): CancellationToken, Dictionary, Guid, IEnumerable, IServiceCollection, Task, MapModule, MapNodeCompletedCountPortAdapter (+6 more)
+### Community 249 - ".GetCompletedNodeCountsByZoneIdsAsync"
+Cohesion: 0.10
+Nodes (18): CancellationToken, Dictionary, Guid, IEnumerable, Task, MapNodeCompletedCountPortAdapter, MapNodeCountPortAdapter, MapProgressReadPortAdapter (+10 more)
 
 ### Community 250 - "activity_type_mapper.dart"
 Cohesion: 0.11
 Nodes (18): ActivityTypeMapper, ActivityTypes, climbing, cycling, package:health/health.dart, fromHealthConnect, garmin, gym (+10 more)
 
 ### Community 251 - "GuildRaidDefeatedInfo"
-Cohesion: 0.17
-Nodes (14): CancellationToken, DateTime, Guid, IReadOnlyList, Task, GuildRaidDefeatedInfo, GuildRaidExpiredInfo, GuildRaidHpUpdatedInfo (+6 more)
+Cohesion: 0.13
+Nodes (18): CancellationToken, Guid, Task, GuildRaidRealtimePublisher, CancellationToken, DateTime, Guid, IReadOnlyList (+10 more)
 
 ### Community 252 - "map_orb_button.dart"
 Cohesion: 0.08
 Nodes (27): ../../../features/map/journey/journey_state.dart, build, color, createState, dispose, JourneyRingPainter, kMapOrbSize, _labelColor (+19 more)
 
-### Community 254 - "notification_list_provider.dart"
-Cohesion: 0.18
-Nodes (13): build, ../models/notification_list_models.dart, package:flutter_riverpod/flutter_riverpod.dart, list, markAllRead, NotificationListNotifier, notificationListServiceProvider, notificationUnreadCountProvider (+5 more)
+### Community 253 - "titles_profile_header.dart"
+Cohesion: 0.07
+Nodes (30): Padding, SizedBox, Text, ../../character/models/character_profile.dart, CharacterProfile get, ../../../core/motion/motion_widgets.dart, build, createState (+22 more)
 
-### Community 255 - "LifeLevel.Modules.Notifications.Domain.Entities"
-Cohesion: 0.15
-Nodes (11): DeviceTokenConfiguration, NotificationPreferenceConfiguration, LifeLevel.Modules.Notifications.Infrastructure.Persistence.Configurations, LifeLevel.Modules.Notifications.Application.Ports.Out, LifeLevel.Modules.Notifications.Domain.Enums, LifeLevel.Modules.Notifications.Domain.Entities, LifeLevel.Modules.Notifications.Infrastructure.Fcm, LifeLevel.Modules.Notifications.Application.DTOs (+3 more)
+### Community 254 - "notification_list_provider.dart"
+Cohesion: 0.10
+Nodes (22): Dio, build, ../models/notification_list_models.dart, package:flutter_riverpod/flutter_riverpod.dart, list, markAllRead, NotificationListNotifier, notificationListServiceProvider (+14 more)
+
+### Community 255 - "AdminItemsController"
+Cohesion: 0.17
+Nodes (16): CancellationToken, Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, IFormFile (+8 more)
 
 ### Community 256 - ".ca"
-Cohesion: 0.16
-Nodes (20): ac(), bc(), cc(), dc(), ec(), gj(), hj(), ij() (+12 more)
+Cohesion: 0.13
+Nodes (26): ac(), bc(), cc(), dc(), ec(), hj(), Ib(), ij() (+18 more)
 
 ### Community 257 - "cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/uploadmanager.js"
 Cohesion: 0.20
 Nodes (24): a(), attachListeners(), buildViolationRemarks(), checkisDir(), convertToMBEx(), e(), evaluateRuleJSON(), evaluateSinglePolicy() (+16 more)
 
 ### Community 258 - ".v"
-Cohesion: 0.17
-Nodes (11): fk(), gk(), nk(), oa(), ok(), tk(), Uj(), Wj() (+3 more)
+Cohesion: 0.10
+Nodes (15): fk(), gk(), K(), nk(), oa(), ob(), ok(), Tf() (+7 more)
 
 ### Community 259 - "cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/uploadmanager.js"
 Cohesion: 0.20
@@ -2093,23 +2128,23 @@ Nodes (33): double get, activated, armor, canFight, counterattackDamage, current
 
 ### Community 261 - "LifeLevel.Modules.Items.Domain.Entities"
 Cohesion: 0.05
-Nodes (33): BlockedItemInfo, DateTime, Guid, CharacterItem, DateTime, Guid, EquipmentSlot, DateTime (+25 more)
+Nodes (31): Task, TitleSeeder, BlockedItemInfo, DateTime, Guid, CharacterItem, DateTime, Guid (+23 more)
 
 ### Community 262 - ".claude/agents/game-engine.md"
 Cohesion: 0.08
 Nodes (25): Achievements, Activity Modifiers, Activity → Stat Mapping, Adventure Map Movement, Boss System, Character Stats, Completion Bonus, Core Philosophy (+17 more)
 
 ### Community 263 - "CharacterService"
-Cohesion: 0.06
-Nodes (35): CancellationToken, HttpPost, IActionResult, Task, TutorialController, AvatarOptionResponse, UpdateAvatarRequest, CharacterClassResponse (+27 more)
+Cohesion: 0.09
+Nodes (20): CharacterClassResponse, CharacterProfileContext, CharacterProfileResponse, CharacterSetupResponse, XpHistoryEntryResponse, CancellationToken, Guid, int (+12 more)
 
 ### Community 264 - "info"
 Cohesion: 0.40
 Nodes (4): images, info, author, version
 
-### Community 265 - "ImportFirstOnboardingTests.cs"
+### Community 265 - "LifeLevel.Modules.Integrations.Domain.Entities"
 Cohesion: 0.05
-Nodes (34): string, GarminOptions, string, IntegrationProviders, GarminProfileDto, GarminTokenResponseDto, GarminActivityDto, StravaAthleteDto (+26 more)
+Nodes (36): string, GarminOptions, string, IntegrationProviders, GarminProfileDto, GarminTokenResponseDto, GarminActivityDto, StravaAthleteDto (+28 more)
 
 ### Community 266 - "app.js"
 Cohesion: 0.48
@@ -2119,13 +2154,13 @@ Nodes (6): boot(), devLogin(), fetchAdminConfig(), hideLoader(), tokenInput, try
 Cohesion: 0.23
 Nodes (11): IDictionary, DateTime, Fact, Guid, Task, FixedClock, NotificationServiceTests, db (+3 more)
 
-### Community 268 - "Quest"
-Cohesion: 0.10
-Nodes (21): QuestSeedData, Guid, ICollection, Quest, DateTime, Guid, TaskRewardMilestoneClaim, DateTime (+13 more)
+### Community 268 - "UserQuestProgress"
+Cohesion: 0.12
+Nodes (15): QuestSeedData, DateTime, Guid, TaskRewardMilestoneClaim, DateTime, Guid, UserQuestProgress, EntityTypeBuilder (+7 more)
 
 ### Community 269 - "AdminMapControllerTests"
-Cohesion: 0.29
-Nodes (7): Fact, Guid, IActionResult, Task, AdminMapControllerTests, regionId, worldId
+Cohesion: 0.34
+Nodes (6): Fact, Guid, Task, AdminMapControllerTests, regionId, worldId
 
 ### Community 270 - "achievement_models.dart"
 Cohesion: 0.03
@@ -2135,9 +2170,9 @@ Nodes (66): AchievementStage? get, _tierColor, AchievementClaimResult, Achieveme
 Cohesion: 0.08
 Nodes (24): API Endpoints, Backend Entities, Backend Module, Backend Services, Current Status, GuildRaidService, GuildService, Implementation Order (+16 more)
 
-### Community 272 - "streak_service.dart"
-Cohesion: 0.18
-Nodes (10): claimReward, ../../../core/api/api_client.dart, ../models/streak_models.dart, _dio, getStreak, message, StreakException, StreakService (+2 more)
+### Community 272 - "talents_service.dart"
+Cohesion: 0.13
+Nodes (17): TalentScreen, build, draw, refresh, TalentsNotifier, talentsServiceProvider, _dio, draw (+9 more)
 
 ### Community 273 - "tutorial_service.dart"
 Cohesion: 0.08
@@ -2147,17 +2182,17 @@ Nodes (23): advance, advanceMapTutorial, ../../../core/api/api_client.dart, ../m
 Cohesion: 0.40
 Nodes (4): DefaultFirebaseOptions, UnsupportedError, package:firebase_core/firebase_core.dart, package:flutter/foundation.dart
 
-### Community 275 - "home_adventure_hub.dart"
+### Community 275 - "IEntityTypeConfiguration"
 Cohesion: 0.03
-Nodes (63): CustomScrollView, Expanded, Icon, Padding, Scaffold, SizedBox, SliverToBoxAdapter, ../../../core/services/shell_overlay_notifier.dart (+55 more)
+Nodes (50): CharacterClasses, Guid, CharacterClass, DateTime, Guid, CharacterTitle, DateTime, Guid (+42 more)
 
 ### Community 276 - ".claude/agents/backend.md"
 Cohesion: 0.08
 Nodes (23): 1. Domain, 2. Application, 3. Infrastructure, 4. Presentation, Adding a New Feature Checklist, Architecture Overview, ASP.NET Core Clean Architecture README, Auth (+15 more)
 
 ### Community 277 - "Activity"
-Cohesion: 0.06
-Nodes (22): IServiceCollection, AchievementsModule, DateTime, Guid, Activity, EntityTypeBuilder, ActivityConfiguration, DateTime (+14 more)
+Cohesion: 0.07
+Nodes (19): IServiceCollection, AchievementsModule, DateTime, Guid, Activity, EntityTypeBuilder, ActivityConfiguration, DateTime (+11 more)
 
 ### Community 278 - "info"
 Cohesion: 0.40
@@ -2173,11 +2208,11 @@ Nodes (23): 1. Audio Category System, 2. Sound Design Decisions, 3. Music Integr
 
 ### Community 281 - "LifeLevel.Api.Migrations"
 Cohesion: 0.03
-Nodes (31): ModelBuilder, InitialCreate, LifeLevel.Api.Migrations, ModelBuilder, LifeLevel.Api.Migrations, AddPendingDistanceToWorldProgress, ModelBuilder, AddLevelStatBonuses (+23 more)
+Nodes (33): ModelBuilder, InitialCreate, LifeLevel.Api.Migrations, ModelBuilder, LifeLevel.Api.Migrations, AddUserRingItems, ModelBuilder, LifeLevel.Api.Migrations (+25 more)
 
 ### Community 282 - "account_settings_screen.dart"
-Cohesion: 0.07
-Nodes (29): ../auth/models/account_models.dart, ../auth/services/auth_service.dart, _accountFuture, AccountSettingsScreen, _AccountSettingsScreenState, _ActionButton, build, children (+21 more)
+Cohesion: 0.03
+Nodes (57): ../auth/models/account_models.dart, ../auth/services/auth_service.dart, Future, AccountInfo, email, fromJson, token, UpdateEmailResult (+49 more)
 
 ### Community 283 - "AddBossStateTimerFields"
 Cohesion: 0.40
@@ -2307,29 +2342,29 @@ Nodes (3): MigrationBuilder, LifeLevel.Api.Migrations, AddPendingDistanceToWorld
 Cohesion: 0.33
 Nodes (4): ModelBuilder, LifeLevel.Api.Migrations, AppDbContextModelSnapshot, ModelSnapshot
 
-### Community 316 - "guild_provider.dart"
-Cohesion: 0.14
-Nodes (22): GuildService, _checkPendingGuildRaidExpiries, _checkPendingGuildRaidVictories, GuildDetail, build, create, delete, GuildNotifier (+14 more)
+### Community 316 - "b"
+Cohesion: 0.13
+Nodes (14): Me(), E(), n(), b(), f(), I(), l(), pa() (+6 more)
 
-### Community 317 - "../../constants/app_colors.dart"
-Cohesion: 0.05
-Nodes (37): Container, FadeTransition, Material, SizedBox, Text, Container, FadeTransition, Material (+29 more)
+### Community 317 - "dungeon_floor_cleared_overlay.dart"
+Cohesion: 0.04
+Nodes (56): Container, FadeTransition, Material, SizedBox, Text, Container, FadeTransition, Material (+48 more)
 
-### Community 318 - "IDomainEvent"
-Cohesion: 0.15
-Nodes (17): CancellationToken, Task, BossDefeatedNotificationHandler, CancellationToken, Task, QuestGameProgressHandler, CancellationToken, Task (+9 more)
+### Community 318 - "static const"
+Cohesion: 0.03
+Nodes (80): _Body, buy_founder_pass_screen.dart, Container, SizedBox, Text, Completer, BossDamageHint, build (+72 more)
 
 ### Community 320 - "import_review_sheet.dart"
 Cohesion: 0.04
 Nodes (48): ../../core/shell/shell_anchors.dart, PendingWorkoutList, choice, context, hero, list, n, notifier (+40 more)
 
 ### Community 321 - "StravaWebhookServiceTests"
-Cohesion: 0.24
-Nodes (8): string, StravaOptions, Fact, HttpClient, StravaOptions, string, Task, StravaWebhookServiceTests
+Cohesion: 0.30
+Nodes (6): Fact, HttpClient, StravaOptions, string, Task, StravaWebhookServiceTests
 
 ### Community 322 - ".N"
-Cohesion: 0.14
-Nodes (13): af(), bf(), K(), ke(), M(), P(), qa(), ra() (+5 more)
+Cohesion: 0.18
+Nodes (12): af(), bf(), ke(), M(), P(), qa(), ra(), ua() (+4 more)
 
 ### Community 323 - "titles_provider.dart"
 Cohesion: 0.14
@@ -2339,17 +2374,17 @@ Nodes (16): build, ../models/title_models.dart, package:flutter_riverpod/flutter
 Cohesion: 0.09
 Nodes (22): activeTitleEmoji, activeTitleName, bossesDefeated, bossesRemainingForNextRank, bossesRequiredForNextRank, copyWith, currentRank, earnedTitles (+14 more)
 
-### Community 325 - "User"
-Cohesion: 0.08
-Nodes (30): Authorize, CancellationToken, HttpGet, HttpPost, HttpPut, IActionResult, Task, AuthController (+22 more)
+### Community 325 - "delve_provider.dart"
+Cohesion: 0.07
+Nodes (36): burn_chain_rules.dart, ChainLink? get, delve_engine.dart, build, BurnChainNotifier, BurnChainView, chain, collect (+28 more)
 
 ### Community 326 - "AdminSeasonsController"
-Cohesion: 0.23
-Nodes (12): Guid, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminSeasonsController, PassGrantRequest (+4 more)
+Cohesion: 0.21
+Nodes (13): Guid, HttpGet, HttpPost, HttpPut, IActionResult, Task, userId, AdminSeasonsController (+5 more)
 
-### Community 327 - ".AddDistanceAsync"
-Cohesion: 0.32
-Nodes (8): ActiveEncounterDto, ActiveEncounterPortDto, CancellationToken, Guid, HashSet, Task, WorldZoneService, SetWorldDestinationResult
+### Community 327 - "AchievementService"
+Cohesion: 0.08
+Nodes (37): AchievementClaimResult, AchievementDto, AchievementRoadDto, AchievementRoadsResponse, AchievementStageDto, AchievementStageKeyDto, AchievementWalletDto, CheckUnlocksResult (+29 more)
 
 ### Community 328 - "Icon-192.png"
 Cohesion: 0.50
@@ -2360,8 +2395,8 @@ Cohesion: 0.07
 Nodes (29): Icon, Scaffold, SizedBox, Text, TextFormField, TextStyle, _AuthField, _authService (+21 more)
 
 ### Community 330 - "Task"
-Cohesion: 0.21
-Nodes (9): CancellationToken, Dictionary, Fact, Guid, IEnumerable, Task, BossFixture, BridgeEventPublisher (+1 more)
+Cohesion: 0.06
+Nodes (33): CancellationToken, Guid, Task, BossSpawnAdapter, CancellationToken, Guid, Task, WorldZoneCompletionPortAdapter (+25 more)
 
 ### Community 331 - "20260328073552_AddMapSystem.Designer.cs"
 Cohesion: 0.40
@@ -2383,9 +2418,9 @@ Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddUserRole
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, ModularMonolithConfigs
 
-### Community 336 - "b"
-Cohesion: 0.09
-Nodes (20): b(), kk(), Mk(), mm(), Ni(), nk(), nm(), oi() (+12 more)
+### Community 336 - ".N"
+Cohesion: 0.18
+Nodes (12): af(), bf(), ke(), M(), P(), qa(), ra(), ua() (+4 more)
 
 ### Community 337 - "20260330221640_AddStravaConnection.Designer.cs"
 Cohesion: 0.40
@@ -2396,8 +2431,8 @@ Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddChestZones
 
 ### Community 339 - "home_screen.dart"
-Cohesion: 0.05
-Nodes (42): Container, HomeLoginRewardChip, HomeSeasonalEventRow, HomeStreakStrip, HomeXpStormBanner, Positioned, SizedBox, SnackBar (+34 more)
+Cohesion: 0.04
+Nodes (49): Container, HomeLoginRewardChip, HomeSeasonalEventRow, HomeStreakStrip, HomeXpStormBanner, Positioned, SizedBox, SnackBar (+41 more)
 
 ### Community 340 - "cdp-chrome-profile-2/Default/Extensions/iekfdmgbpmcklocjhlabimljddkeflgl/0.2.0_0/manifest.json"
 Cohesion: 0.09
@@ -2409,19 +2444,19 @@ Nodes (21): background, service_worker, description, host_permissions, icons, 12
 
 ### Community 342 - ".ApplyAsync"
 Cohesion: 0.10
-Nodes (20): CancellationToken, DateTime, Guid, IReadOnlyList, Task, ActivityBossDamageAdapter, int, BossCombatCalculator (+12 more)
+Nodes (23): DateTime, Guid, IReadOnlyList, ActivityHistoryDto, ActivitySummaryDto, BlockedItemInfo, LogActivityResult, CancellationToken (+15 more)
 
-### Community 343 - "boss_damage_hit_row.dart"
-Cohesion: 0.17
-Nodes (11): Container, SizedBox, BossDamageHistoryItem, BossDamageHitRow, build, ../../../core/constants/app_colors.dart, ../models/boss_damage_history.dart, package:flutter/material.dart (+3 more)
+### Community 343 - "tutorial_bubble.dart"
+Cohesion: 0.04
+Nodes (53): Container, GestureDetector, Material, Opacity, Padding, Row, SizedBox, Spacer (+45 more)
 
-### Community 344 - "GuildRaidExpiryJob"
-Cohesion: 0.12
-Nodes (13): CancellationToken, Task, DailyResetJob, CancellationToken, Task, TimeSpan, GuildRaidExpiryJob, CancellationToken (+5 more)
+### Community 344 - "ModesService.cs"
+Cohesion: 0.05
+Nodes (30): CancellationToken, Task, DailyResetJob, CancellationToken, Task, TimeSpan, GuildRaidExpiryJob, CancellationToken (+22 more)
 
 ### Community 345 - "SeasonRewardTier"
-Cohesion: 0.18
-Nodes (12): Task, SeasonSeeder, Guid, SeasonRewardTier, SeasonRewardType, SeasonTrack, Guid, int (+4 more)
+Cohesion: 0.16
+Nodes (14): Guid, SeasonRewardTier, DateTime, Guid, UserSeasonClaim, SeasonRewardType, SeasonState, SeasonTrack (+6 more)
 
 ### Community 346 - "PendingActivityService"
 Cohesion: 0.16
@@ -2440,20 +2475,20 @@ Cohesion: 0.10
 Nodes (20): acknowledgeLevelUp, CharacterService, ../../../core/api/api_client.dart, ../models/character_class.dart, ../models/character_profile.dart, ../models/character_setup_result.dart, ../models/xp_history_entry.dart, _dio (+12 more)
 
 ### Community 350 - "w"
-Cohesion: 0.08
-Nodes (6): am(), Ti(), Uf(), vf(), w(), wf()
+Cohesion: 0.10
+Nodes (5): am(), Uf(), vf(), w(), wf()
 
 ### Community 351 - "API Endpoints"
 Cohesion: 0.10
 Nodes (21): AchievementsController — `/api/achievements`, ActivityController — `/api/activity`, API Endpoints, AuthController — `/api/auth`, BossController — `/api/boss`, CharacterController — `/api/character`, ChestController — `/api/chest`, ClassesController — `/api/classes` (+13 more)
 
-### Community 352 - "menu_sheet.dart"
-Cohesion: 0.05
-Nodes (38): app_icon_image.dart, GestureDetector, SizedBox, ../../constants/app_icons.dart, IconData, BossFab, build, package:flutter/material.dart (+30 more)
+### Community 352 - "burn_chain_rules.dart"
+Cohesion: 0.06
+Nodes (33): DateTime? get, activityId, bar, barBefore, beats, bestLink, BurnChainEndReason, BurnChainPhase (+25 more)
 
 ### Community 353 - "StreakService"
-Cohesion: 0.18
-Nodes (13): DateTime, ClaimStreakRewardResult, StreakDto, StreakUpdateResult, UseShieldResult, CancellationToken, DateTime, Guid (+5 more)
+Cohesion: 0.10
+Nodes (22): DateTime, ClaimStreakRewardResult, StreakDto, StreakUpdateResult, UseShieldResult, CancellationToken, DateTime, Guid (+14 more)
 
 ### Community 354 - "3D Game Development"
 Cohesion: 0.10
@@ -2464,8 +2499,8 @@ Cohesion: 0.10
 Nodes (20): avatarEmoji, classId, classSource, clear, copyWith, fromJson, importJson, instance (+12 more)
 
 ### Community 356 - "Item"
-Cohesion: 0.11
-Nodes (14): CancellationToken, Task, ItemSeeder, DateTime, Guid, Item, ItemCategory, ItemRarity (+6 more)
+Cohesion: 0.09
+Nodes (19): CancellationToken, Task, ItemSeeder, DateTime, Guid, Item, DateTime, Guid (+11 more)
 
 ### Community 357 - "reward_road_screen.dart"
 Cohesion: 0.05
@@ -2508,12 +2543,12 @@ Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, RemoveMapSeedData
 
 ### Community 368 - "BossDamageHistoryTests"
-Cohesion: 0.20
-Nodes (11): CancellationToken, DateTime, Fact, Guid, IReadOnlyList, Task, BossDamageHistoryTests, BossFixture (+3 more)
+Cohesion: 0.19
+Nodes (12): CancellationToken, DateTime, Fact, Guid, IReadOnlyList, Task, BossDamageHistoryTests, BossFixture (+4 more)
 
-### Community 369 - "20260329144049_AddWorldZones.Designer.cs"
-Cohesion: 0.40
-Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddWorldZones
+### Community 369 - ".v"
+Cohesion: 0.10
+Nodes (15): fk(), gk(), K(), nk(), oa(), ob(), ok(), Tf() (+7 more)
 
 ### Community 370 - "20260329150000_AddWorldEntity.Designer.cs"
 Cohesion: 0.40
@@ -2523,9 +2558,9 @@ Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddWorldEntity
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddItemsAndEquipment
 
-### Community 372 - "fe"
-Cohesion: 0.16
-Nodes (23): Ke(), ae(), ce(), dd(), de(), fe(), ge(), H() (+15 more)
+### Community 372 - "e"
+Cohesion: 0.08
+Nodes (36): af(), Ba(), bf(), c(), ce(), cf(), d(), e() (+28 more)
 
 ### Community 373 - "20260331182910_AddItemDropRuleTriggerParametersLength.Designer.cs"
 Cohesion: 0.40
@@ -2536,12 +2571,12 @@ Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddItemCategoryAndDropRules
 
 ### Community 375 - "title_equip_flight_test.dart"
-Cohesion: 0.07
-Nodes (25): main, _profile, build, _data, ensureVisible, _equipButton, equipped, equipTitle (+17 more)
+Cohesion: 0.10
+Nodes (20): build, _data, ensureVisible, _equipButton, equipped, equipTitle, fail, getTitlesAndRanks (+12 more)
 
 ### Community 376 - "main.dart"
 Cohesion: 0.07
-Nodes (28): MaterialApp, Scaffold, core/theme/app_theme.dart, core/widgets/main_shell.dart, features/character/setup/setup_resume_service.dart, features/onboarding/onboarding_flow.dart, firebase_options.dart, _AuthGate (+20 more)
+Nodes (27): MaterialApp, Scaffold, core/theme/app_theme.dart, features/character/setup/setup_resume_service.dart, features/notifications/services/notifications_service.dart, features/onboarding/onboarding_flow.dart, firebase_options.dart, _AuthGate (+19 more)
 
 ### Community 377 - "20260401162847_AddAchievements.Designer.cs"
 Cohesion: 0.40
@@ -2559,17 +2594,17 @@ Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddNotificationsModule
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddTutorialProgress
 
-### Community 381 - "20260423190116_WorldMapFinalRestructure.Designer.cs"
-Cohesion: 0.40
-Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, WorldMapFinalRestructure
+### Community 381 - "I"
+Cohesion: 0.11
+Nodes (15): ad(), ee(), fl(), gj(), Gl(), gm(), hj(), I() (+7 more)
 
 ### Community 382 - "20260423204643_AddCrossroadsBranchesAndPathChoice.Designer.cs"
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddCrossroadsBranchesAndPathChoice
 
-### Community 383 - ".GetAsync"
-Cohesion: 0.20
-Nodes (9): CancellationToken, Guid, Task, TaskEligibilityReadAdapter, CancellationToken, Guid, Task, ITaskEligibilityReadPort (+1 more)
+### Community 383 - "TalentProgressiveDrawCostTests"
+Cohesion: 0.25
+Nodes (6): Fact, Guid, InlineData, Task, Theory, TalentProgressiveDrawCostTests
 
 ### Community 384 - "PendingActivityServiceTests"
 Cohesion: 0.25
@@ -2584,8 +2619,8 @@ Cohesion: 0.11
 Nodes (19): assignWasmImports(), _clock_time_get(), EnsureDir(), _environ_get(), _environ_sizes_get(), _fd_close(), _fd_read(), _fd_seek() (+11 more)
 
 ### Community 388 - "bottom_nav_bar.dart"
-Cohesion: 0.07
-Nodes (28): Container, Expanded, SizedBox, Container, SizedBox, NavTab, RingItem, active (+20 more)
+Cohesion: 0.04
+Nodes (56): GestureDetector, SizedBox, Container, Expanded, SizedBox, Container, SizedBox, ../../constants/app_icons.dart (+48 more)
 
 ### Community 389 - "Feature Catalog"
 Cohesion: 0.11
@@ -2593,7 +2628,7 @@ Nodes (18): Achievements & titles, Activity system, Admin panel, Adventure map, 
 
 ### Community 390 - "AchievementRoadsTests"
 Cohesion: 0.18
-Nodes (15): A, CancellationToken, Currency, Fact, Guid, Task, Xp, AchievementRoadsTests (+7 more)
+Nodes (14): A, CancellationToken, Currency, Fact, Guid, Task, Xp, AchievementRoadsTests (+6 more)
 
 ### Community 391 - "integration_tile.dart"
 Cohesion: 0.10
@@ -2616,12 +2651,12 @@ Cohesion: 0.11
 Nodes (17): 1. Platform Selection, 2. Comfort Principles, 3. Performance Requirements, 4. Interaction Principles, 5. Spatial Design, 6. Anti-Patterns, AR Platforms, Comfort Settings (+9 more)
 
 ### Community 396 - "b"
-Cohesion: 0.07
-Nodes (19): al(), b(), cg(), hl(), jg(), mk(), og(), pg() (+11 more)
+Cohesion: 0.08
+Nodes (16): b(), cg(), hl(), jg(), mk(), og(), pg(), q() (+8 more)
 
-### Community 397 - "b"
-Cohesion: 0.13
-Nodes (14): Me(), E(), n(), b(), f(), I(), l(), pa() (+6 more)
+### Community 397 - "titles_ranks_screen.dart"
+Cohesion: 0.07
+Nodes (30): CustomScrollView, Expanded, Icon, Padding, Scaffold, SizedBox, SliverToBoxAdapter, _markTitlesSeen (+22 more)
 
 ### Community 398 - "Plan - Adaptive Skill Tree"
 Cohesion: 0.11
@@ -2631,9 +2666,9 @@ Nodes (17): 1. Class root, 2. Behavior branches, 3. Motivation branches, 4. Hidd
 Cohesion: 0.11
 Nodes (18): Character, Character, CharacterClass, CharacterCreatedHandler, CharacterService (implements 6 ports), Endpoints, Entities, Events raised (+10 more)
 
-### Community 400 - ".v"
-Cohesion: 0.14
-Nodes (15): ab(), fk(), gk(), oa(), ok(), qj(), rj(), sj() (+7 more)
+### Community 400 - "modes_screens_test.dart"
+Cohesion: 0.08
+Nodes (24): DelveEngine get, _chain, main, _start, _workout, build, _ended, _engine (+16 more)
 
 ### Community 401 - "Plan - Verified Workout Recording and Activity Trust"
 Cohesion: 0.09
@@ -2644,12 +2679,12 @@ Cohesion: 0.12
 Nodes (16): 1. Architecture Selection, 2. Synchronization Principles, 3. Network Optimization, 4. Security Principles, 5. Matchmaking, 6. Anti-Patterns, Anti-Cheat, Bandwidth Reduction (+8 more)
 
 ### Community 403 - "c"
-Cohesion: 0.12
-Nodes (3): c(), Cb(), wb()
+Cohesion: 0.13
+Nodes (4): a(), c(), Cb(), fa()
 
 ### Community 404 - ".get"
-Cohesion: 0.12
-Nodes (22): Ah(), Ch(), fh(), gh(), kf(), Le(), lf(), lh() (+14 more)
+Cohesion: 0.21
+Nodes (12): Ah(), Ch(), mf(), mh(), uh(), vh(), We(), wh() (+4 more)
 
 ### Community 405 - ".v"
 Cohesion: 0.14
@@ -2660,8 +2695,8 @@ Cohesion: 0.12
 Nodes (17): Credentials, Deduplication, Endpoints, Entities, ExternalActivityRecord (dedup), Files, GarminConnection, GarminOAuthService + GarminWebhookService (+9 more)
 
 ### Community 407 - ".PurchaseItem"
-Cohesion: 0.20
-Nodes (13): CancellationToken, Func, Guid, HttpGet, HttpPost, IActionResult, Task, ShopController (+5 more)
+Cohesion: 0.19
+Nodes (14): CancellationToken, Func, Guid, HttpGet, HttpPost, IActionResult, Task, ShopController (+6 more)
 
 ### Community 408 - "Quest"
 Cohesion: 0.33
@@ -2675,29 +2710,25 @@ Nodes (17): AddDistanceAsync(userId, km), CompleteZoneAsync(userId, zoneId), Def
 Cohesion: 0.12
 Nodes (16): BossData, defeatedAt, fromJson, hpDealt, icon, id, isActivated, isDefeated (+8 more)
 
-### Community 411 - "ConsumerWidget"
-Cohesion: 0.12
-Nodes (20): ConsumerWidget, appMotionSettingsProvider, activitySummaryProvider, build, GearScreen, build, GearInventoryGrid, GuildRaidView (+12 more)
+### Community 411 - "I"
+Cohesion: 0.11
+Nodes (15): ad(), ee(), fl(), gj(), Gl(), gm(), hj(), I() (+7 more)
 
 ### Community 412 - "ShopServiceTests"
 Cohesion: 0.27
 Nodes (8): CancellationToken, Fact, Guid, Task, ShopServiceTests, Slots, Wallet, Wallet
 
 ### Community 413 - "DeviceToken"
-Cohesion: 0.23
-Nodes (10): CancellationToken, DateTime, Guid, List, Task, INotificationRepository, DateTime, Guid (+2 more)
+Cohesion: 0.22
+Nodes (11): CancellationToken, DateTime, Guid, List, Task, INotificationRepository, DateTime, Guid (+3 more)
 
 ### Community 414 - ".claude/agents/flutter-ui.md"
 Cohesion: 0.12
 Nodes (15): Animation Patterns, API / Services, Borders & Radius, Colors — always use `AppColors` from `lib/core/constants/app_colors.dart`, Design System, Folder Structure, Naming Conventions, Navigation (+7 more)
 
 ### Community 415 - "b"
-Cohesion: 0.09
-Nodes (16): al(), b(), Ea(), hl(), mk(), q(), qa(), qb() (+8 more)
-
-### Community 416 - ".v"
-Cohesion: 0.10
-Nodes (8): bb(), ek(), fk(), nk(), oa(), w(), Xj(), Yj()
+Cohesion: 0.08
+Nodes (16): b(), cg(), hl(), jg(), mk(), og(), pg(), q() (+8 more)
 
 ### Community 417 - "c"
 Cohesion: 0.13
@@ -2708,7 +2739,7 @@ Cohesion: 0.12
 Nodes (14): AddShieldAsync(userId), Endpoints, Entity, Events raised, Files, GetCurrentStreakAsync(userId), Ports consumed, Ports implemented (+6 more)
 
 ### Community 419 - "AdminEncountersController"
-Cohesion: 0.30
+Cohesion: 0.28
 Nodes (9): Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminEncountersController (+1 more)
 
 ### Community 420 - ".ClaimTierInternalAsync"
@@ -2743,9 +2774,9 @@ Nodes (16): CharacterItem (instance in inventory), Endpoints, Entities, Equipmen
 Cohesion: 0.11
 Nodes (18): canClaimDailyReward, canUseShield, ClaimStreakRewardResult, coinsClaimed, current, empty, fromJson, lastActivityDate (+10 more)
 
-### Community 430 - "GuildRaidRealtimePublisher"
-Cohesion: 0.27
-Nodes (7): Task, GuildRaidHub, CancellationToken, Guid, Task, GuildRaidRealtimePublisher, Hub
+### Community 430 - "xp_history_sheet.dart"
+Cohesion: 0.10
+Nodes (20): Column, Container, Divider, Padding, SizedBox, Text, ../character/models/xp_history_entry.dart, xpHistoryProvider (+12 more)
 
 ### Community 431 - "b"
 Cohesion: 0.14
@@ -2789,23 +2820,23 @@ Nodes (13): currentFloor, DungeonFloorData, DungeonPortalData, floorNumber, floo
 
 ### Community 441 - "avatar_step.dart"
 Cohesion: 0.04
-Nodes (47): ../character/models/avatar_option.dart, ../character/services/character_service.dart, ../../../core/constants/avatar_icons.dart, ../../core/constants/class_icons.dart, AvatarStep, _AvatarStepState, _AvatarTile, build (+39 more)
+Nodes (48): ../character/models/avatar_option.dart, ../character/services/character_service.dart, ../../../core/constants/avatar_icons.dart, ../../core/constants/class_icons.dart, AvatarStep, _AvatarStepState, _AvatarTile, build (+40 more)
 
 ### Community 442 - "item_icon_image.dart"
 Cohesion: 0.13
 Nodes (14): ../api/api_client.dart, ../constants/item_icons.dart, build, emoji, emojiFallback, _EmojiIcon, emojiSize, _fallback (+6 more)
 
-### Community 443 - ".Update"
-Cohesion: 0.26
-Nodes (9): Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminRankThresholdsController (+1 more)
+### Community 443 - "LifeLevel.Api.Controllers.Admin"
+Cohesion: 0.20
+Nodes (10): Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminRankThresholdsController (+2 more)
 
 ### Community 444 - "ExternalActivityDto"
-Cohesion: 0.25
-Nodes (13): DateTime, List, ExternalActivityDto, SyncBatchRequest, SyncResult, CancellationToken, Guid, IEnumerable (+5 more)
+Cohesion: 0.23
+Nodes (14): DateTime, List, ExternalActivityDto, SyncBatchRequest, SyncResult, CancellationToken, Error, Guid (+6 more)
 
 ### Community 445 - ".GetTitlesAndRanksAsync"
-Cohesion: 0.09
-Nodes (24): CancellationToken, HttpGet, HttpPost, IActionResult, Task, TitlesController, EquipTitleRequest, RankProgressionDto (+16 more)
+Cohesion: 0.12
+Nodes (18): EquipTitleRequest, RankProgressionDto, TitleDto, TitlesAndRanksResponse, CancellationToken, Guid, string, Task (+10 more)
 
 ### Community 446 - "cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/zlabs-phishing.min.js"
 Cohesion: 0.21
@@ -2835,13 +2866,13 @@ Nodes (13): Achievements, Activity, Boss, Character, Full provider catalog, Home
 Cohesion: 0.23
 Nodes (10): Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminClassesController (+2 more)
 
-### Community 455 - "static Stream"
-Cohesion: 0.08
-Nodes (25): ../../features/activity/models/activity_models.dart, BossDefeatedNotifier, _controller, dart:async, ../../features/activity/models/activity_models.dart, notify, stream, bossId (+17 more)
+### Community 455 - "dungeon_floor_cleared_notifier.dart"
+Cohesion: 0.04
+Nodes (54): ../../features/activity/models/activity_models.dart, BossDefeatedNotifier, _controller, dart:async, ../../features/activity/models/activity_models.dart, notify, stream, bossId (+46 more)
 
-### Community 456 - "LifeLevel.Modules.Talents.Domain.Entities"
-Cohesion: 0.32
-Nodes (4): LifeLevel.Modules.Talents.Application.UseCases, LifeLevel.Modules.Talents.Domain.Entities, LifeLevel.Modules.Talents.Domain.Enums, LifeLevel.Modules.Talents.Domain
+### Community 456 - "Talent"
+Cohesion: 0.14
+Nodes (11): TalentScreenResponse, TalentTileState, TalentView, TalentWalletView, Guid, Talent, TalentDrawKind, TalentEffectType (+3 more)
 
 ### Community 457 - "Marketing and Positioning"
 Cohesion: 0.17
@@ -2872,8 +2903,8 @@ Cohesion: 0.17
 Nodes (12): Achievements tab, Admin tab (admin-only), Equipment tab, Feature — Profile, Files, Inventory tab, Overview tab, profile_stat_metadata.dart (+4 more)
 
 ### Community 464 - "core/api/api_client.dart"
-Cohesion: 0.08
-Nodes (20): core/api/api_client.dart, ChestService, collect, ../../../core/api/api_client.dart, debugReset, choosePath, CrossroadsService, ../../../core/api/api_client.dart (+12 more)
+Cohesion: 0.06
+Nodes (27): core/api/api_client.dart, ActivityService, ../../../core/api/api_client.dart, ../models/activity_models.dart, _dio, getHistory, getSummary, logActivity (+19 more)
 
 ### Community 465 - "The 6 notifiers"
 Cohesion: 0.17
@@ -2935,17 +2966,17 @@ Nodes (6): HttpGet, HttpPost, IActionResult, Task, ClaimTierRequest, SeasonContr
 Cohesion: 0.20
 Nodes (9): net10.0, BCrypt.Net-Next (4.0.3), FirebaseAdmin (3.1.0), Microsoft.AspNetCore.Authentication.JwtBearer (9.0.3), Microsoft.EntityFrameworkCore (9.0.3), Microsoft.EntityFrameworkCore.Design (9.0.3), Npgsql.EntityFrameworkCore.PostgreSQL (9.0.4), Swashbuckle.AspNetCore (7.3.1) (+1 more)
 
-### Community 484 - "../../core/widgets/app_toast.dart"
-Cohesion: 0.05
-Nodes (44): ../../core/widgets/app_toast.dart, MerchantEncounterData get, build, GearOutfitMountRow, iconAsset, label, onTap, _PreviewCard (+36 more)
+### Community 484 - "stat_detail_sheet.dart"
+Cohesion: 0.11
+Nodes (18): Container, SizedBox, StatData, availablePoints, build, createState, ../character/providers/character_provider.dart, package:flutter/material.dart (+10 more)
 
-### Community 485 - "ActivityTypeMapperTests"
-Cohesion: 0.23
-Nodes (7): string, ActivityTypeMapper, Types, Fact, InlineData, Theory, ActivityTypeMapperTests
+### Community 485 - ".ProcessEventAsync"
+Cohesion: 0.13
+Nodes (12): string, ActivityTypeMapper, Types, CancellationToken, GarminOptions, Task, GarminWebhookEvent, GarminWebhookService (+4 more)
 
 ### Community 486 - ".ListForUserBetweenAsync"
-Cohesion: 0.12
-Nodes (13): CancellationToken, DateTime, Guid, IReadOnlyList, Task, TaskActivityHistoryReadAdapter, CancellationToken, DateTime (+5 more)
+Cohesion: 0.29
+Nodes (6): CancellationToken, DateTime, Guid, IReadOnlyList, Task, TaskActivityHistoryReadAdapter
 
 ### Community 487 - "world_progress_provider.dart"
 Cohesion: 0.13
@@ -2957,23 +2988,23 @@ Nodes (8): create_port(), _detect_browser(), get_brand(), handle_disconnect(), h
 
 ### Community 490 - "character_profile.dart"
 Cohesion: 0.04
-Nodes (44): agiBonus, agility, attack, availableStatPoints, avatarEmoji, catalogCount, classEmoji, className (+36 more)
+Nodes (45): agiBonus, agility, attack, availableStatPoints, avatarEmoji, catalogCount, classEmoji, className (+37 more)
 
 ### Community 491 - "cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/css/SBOM.json"
 Cohesion: 0.20
 Nodes (9): bomFormat, components, dependencies, metadata, timestamp, tools, services, specVersion (+1 more)
 
 ### Community 492 - "AsyncNotifier"
-Cohesion: 0.09
-Nodes (22): AsyncNotifier, AchievementsNotifier, build, ../models/item_models.dart, package:flutter_riverpod/flutter_riverpod.dart, equip, EquipmentNotifier, InventoryNotifier (+14 more)
+Cohesion: 0.07
+Nodes (32): AsyncNotifier, op, _withSingleRetry, build, ../models/item_models.dart, package:flutter_riverpod/flutter_riverpod.dart, equip, EquipmentNotifier (+24 more)
 
 ### Community 493 - "cdp-chrome-profile/Default/Extensions/iekfdmgbpmcklocjhlabimljddkeflgl/0.2.0_0/background.js"
 Cohesion: 0.36
 Nodes (8): create_port(), _detect_browser(), get_brand(), handle_disconnect(), handle_native_response(), handle_url_request(), reset_inactivity_alarm(), send_hello()
 
-### Community 494 - "item_icons.dart"
+### Community 494 - "encounter_merchant_sheet.dart"
 Cohesion: 0.11
-Nodes (17): app_icons.dart, avatarIconAsset, byId, itemIconAsset, _itemIconAssetById, _itemIconAssetByName, name, _normalizeId (+9 more)
+Nodes (18): MerchantEncounterData get, _blink, build, _buildDismissButton, _buildHeader, _buildItemRow, _buildItemsHeader, _buildTimerRow (+10 more)
 
 ### Community 496 - "cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/css/SBOM.json"
 Cohesion: 0.20
@@ -3000,16 +3031,16 @@ Cohesion: 0.20
 Nodes (10): Feature — Integrations, Files, Foreground auto-sync, GarminService, HealthSyncService, IntegrationsScreen, IntegrationSyncNotifier, IntegrationSyncState (+2 more)
 
 ### Community 505 - "streak_provider.dart"
-Cohesion: 0.19
-Nodes (13): StreakData, build, claimReward, ../models/streak_models.dart, package:flutter_riverpod/flutter_riverpod.dart, refresh, StreakNotifier, streakServiceProvider (+5 more)
+Cohesion: 0.09
+Nodes (23): StreakData, build, claimReward, ../models/streak_models.dart, package:flutter_riverpod/flutter_riverpod.dart, refresh, StreakNotifier, streakServiceProvider (+15 more)
 
-### Community 506 - "dungeon_floor_cleared_notifier.dart"
-Cohesion: 0.15
-Nodes (12): bonusXpAwarded, clearedFloorOrdinal, _controller, dart:async, DungeonFloorClearedEvent, DungeonFloorClearedNotifier, dungeonName, fromJson (+4 more)
+### Community 506 - "encounter_story_sheet.dart"
+Cohesion: 0.11
+Nodes (18): TrailEncounterNode, build, _buildChoiceRow, _buildDialogueBubble, _buildPortraitRow, _buildRewardChips, _Chip, color (+10 more)
 
-### Community 507 - "Boss"
-Cohesion: 0.29
-Nodes (4): Guid, ICollection, Boss, EntityTypeBuilder
+### Community 507 - "BossCombatTurn"
+Cohesion: 0.08
+Nodes (18): DateTime, Guid, BossCombatTurn, Guid, ICollection, Chest, DateTime, Guid (+10 more)
 
 ### Community 508 - "rewards_screen_test.dart"
 Cohesion: 0.10
@@ -3128,8 +3159,8 @@ Cohesion: 0.14
 Nodes (14): ActivityShareDto, ClassRecommendationResponse, ClassShareDto, CancellationToken, Guid, int, Task, ClassRecommendationService (+6 more)
 
 ### Community 539 - "reward_moment_test.dart"
-Cohesion: 0.07
-Nodes (28): main, _open, pumpWidget, tap, build, main, main, package:life_level/core/services/dungeon_floor_cleared_notifier.dart (+20 more)
+Cohesion: 0.12
+Nodes (16): main, _open, pumpWidget, tap, package:life_level/core/services/dungeon_floor_cleared_notifier.dart, package:life_level/core/widgets/boss_defeated_overlay.dart, package:life_level/core/widgets/chest_opened_overlay.dart, package:life_level/core/widgets/dungeon_floor_cleared_overlay.dart (+8 more)
 
 ### Community 540 - "Rewards & XP"
 Cohesion: 0.22
@@ -3191,9 +3222,9 @@ Nodes (9): BossBattleScreen, BossListItem model, BossNotifier, BossPageService, 
 Cohesion: 0.22
 Nodes (9): CharacterClass model, CharacterNotifier, CharacterProfile model, CharacterService, Feature — Character, Files, Related, XpHistoryEntry model (+1 more)
 
-### Community 555 - "xp_history_sheet.dart"
-Cohesion: 0.10
-Nodes (20): Column, Container, Divider, Padding, SizedBox, Text, ../character/models/xp_history_entry.dart, xpHistoryProvider (+12 more)
+### Community 555 - "AdminTalentsController"
+Cohesion: 0.25
+Nodes (10): Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminTalentsController (+2 more)
 
 ### Community 556 - "Feature — Titles"
 Cohesion: 0.22
@@ -3215,9 +3246,9 @@ Nodes (9): Every-Session Startup, Related, Step 1 — Start the backend, Step 2 
 Cohesion: 0.22
 Nodes (8): AvatarOption, emoji, fromJson, isEquipped, isUnlocked, name, sortOrder, unlockRequirement
 
-### Community 561 - "pull_to_import_test.dart"
-Cohesion: 0.10
-Nodes (20): fail, import, importedIds, list, main, markStaged, next, readForStaging (+12 more)
+### Community 561 - "map_tutorial_local_store.dart"
+Cohesion: 0.12
+Nodes (16): dart:convert, clearTerminalStep, _key, MapTutorialLocalStore, _prefix, readTerminalStep, saveTerminalStep, _userKeyFromToken (+8 more)
 
 ### Community 562 - "HUD Text Without Shadow/Outline"
 Cohesion: 0.25
@@ -3263,13 +3294,13 @@ Nodes (8): **Applies To**, **Fix Action**, **Id**, **Message**, **Pattern**, **S
 Cohesion: 0.40
 Nodes (7): CancellationToken, Guid, HttpGet, HttpPost, IActionResult, Task, AchievementsController
 
-### Community 578 - "LifeLevel.SharedKernel.csproj"
-Cohesion: 0.15
-Nodes (12): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3) (+4 more)
+### Community 578 - "LifeLevel.slnx"
+Cohesion: 0.17
+Nodes (9): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3) (+1 more)
 
-### Community 579 - ".ImportAsync"
-Cohesion: 0.10
-Nodes (21): CancellationToken, HttpGet, HttpPost, IActionResult, Task, OnboardingController, AchievementException, List (+13 more)
+### Community 579 - ".FetchRecentAsync"
+Cohesion: 0.08
+Nodes (26): Activities, CancellationToken, HttpGet, HttpPost, IActionResult, Task, OnboardingController, List (+18 more)
 
 ### Community 580 - "LifeLevel.Modules.Adventure.Encounters.csproj"
 Cohesion: 0.20
@@ -3284,20 +3315,20 @@ Cohesion: 0.40
 Nodes (4): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.EntityFrameworkCore.Relational (9.0.3), Microsoft.NET.Sdk
 
 ### Community 583 - ".GrantRandomUnownedAsync"
-Cohesion: 0.20
-Nodes (9): CancellationToken, Guid, Task, ChestItemRewardPortAdapter, CancellationToken, Guid, Task, ChestItemGrant (+1 more)
+Cohesion: 0.16
+Nodes (11): CancellationToken, Guid, Task, ChestItemRewardPortAdapter, CancellationToken, Guid, Task, ChestItemGrant (+3 more)
 
-### Community 584 - "LifeLevel.Modules.Quest.csproj"
-Cohesion: 0.15
-Nodes (10): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3) (+2 more)
+### Community 584 - "LifeLevel.SharedKernel.csproj"
+Cohesion: 0.13
+Nodes (13): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.EntityFrameworkCore (9.0.3) (+5 more)
 
 ### Community 585 - "reward_hud.dart"
 Cohesion: 0.12
 Nodes (16): _add, build, child, createState, didChangeDependencies, didUpdateWidget, dispose, kind (+8 more)
 
 ### Community 586 - "LifeLevel.Api.Tests.csproj"
-Cohesion: 0.25
-Nodes (7): net10.0, Microsoft.NET.Sdk, coverlet.collector (6.0.4), Microsoft.EntityFrameworkCore.InMemory (9.0.0), Microsoft.NET.Test.Sdk (17.14.1), xunit (2.9.3), xunit.runner.visualstudio (3.1.4)
+Cohesion: 0.15
+Nodes (11): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.EntityFrameworkCore.Relational (9.0.3), Microsoft.NET.Sdk, net10.0, Microsoft.NET.Sdk, coverlet.collector (6.0.4), Microsoft.EntityFrameworkCore.InMemory (9.0.0) (+3 more)
 
 ### Community 587 - ".claude/commands/work-next-ticket.md"
 Cohesion: 0.25
@@ -3307,17 +3338,17 @@ Nodes (7): 1. Pick the ticket, 2. Summarise — CHECKPOINT, 3. Dispatch, 4. Veri
 Cohesion: 0.25
 Nodes (7): Board Update, Checkpoint, Execution, Final Report, Ticket Selection, Verification, Work Next Ticket Prompt
 
-### Community 589 - "dd"
-Cohesion: 0.22
-Nodes (13): S(), Ke(), ad(), ae(), bd(), dd(), de(), pe() (+5 more)
+### Community 589 - "boss_active_card.dart"
+Cohesion: 0.11
+Nodes (17): Container, GestureDetector, SizedBox, Text, boss, BossActiveCard, build, _buildCta (+9 more)
 
 ### Community 590 - "cdp-chrome-profile-2/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/service-worker.js"
 Cohesion: 0.29
 Nodes (5): browserIdentifier, chromeIndex, clearBSPIncognitoPopup(), mozIndex, showBSPIncognitoPopup()
 
-### Community 591 - "g"
-Cohesion: 0.25
-Nodes (3): g(), Ka(), z()
+### Community 591 - "f"
+Cohesion: 0.16
+Nodes (7): g(), Ka(), ma(), f(), ta(), ua(), z()
 
 ### Community 592 - "cdp-chrome-profile/Default/Extensions/mhkgegcmcapcgmnnloigolapjkajgfmd/3.2.5_0/js/service-worker.js"
 Cohesion: 0.29
@@ -3363,9 +3394,9 @@ Nodes (8): Feature — Items, Files, Inventory UX, item_models.dart, ItemsServic
 Cohesion: 0.25
 Nodes (8): Feature — Map, Files, MapScreen, MapService, Models, Node detail sheets, Related, WorldMapScreen
 
-### Community 604 - "GrantedItemInfo"
-Cohesion: 0.09
-Nodes (22): CancellationToken, Guid, IReadOnlyList, Task, LevelUpItemGrantPortAdapter, GrantedItemInfo, LevelUpUnlocksDto, CancellationToken (+14 more)
+### Community 604 - ".EvaluateAndGrantAsync"
+Cohesion: 0.24
+Nodes (9): CancellationToken, Fact, Guid, IReadOnlyList, Task, CapturingLevelUpItemGrantPort, NoopEventPublisher, QuestLevelItemGrantTests (+1 more)
 
 ### Community 605 - "The Setup Tasks"
 Cohesion: 0.25
@@ -3379,9 +3410,9 @@ Nodes (6): Guid, DebugAddDistanceRequest, DebugAdjustLevelRequest, DebugSetXpReq
 Cohesion: 0.20
 Nodes (9): avatarEmoji, characterId, CharacterSetupResult, classEmoji, className, fromJson, isSetupComplete, level (+1 more)
 
-### Community 608 - "WorldZoneController"
-Cohesion: 0.16
-Nodes (20): ActionResult, CancellationToken, Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult (+12 more)
+### Community 608 - ".AddDistanceAsync"
+Cohesion: 0.10
+Nodes (31): ActionResult, CancellationToken, Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult (+23 more)
 
 ### Community 609 - "TutorialDtos.cs"
 Cohesion: 0.29
@@ -3390,6 +3421,10 @@ Nodes (6): AdvanceTutorialResponse, MapTutorialResponse, ReplayAllTutorialRespon
 ### Community 610 - "LifeLevel.Modules.Identity.csproj"
 Cohesion: 0.29
 Nodes (6): net10.0, BCrypt.Net-Next (4.0.3), Microsoft.AspNetCore.Authentication.JwtBearer (9.0.3), Microsoft.EntityFrameworkCore (9.0.3), Microsoft.Extensions.Configuration.Abstractions (9.0.3), Microsoft.NET.Sdk
+
+### Community 611 - "w"
+Cohesion: 0.10
+Nodes (5): am(), Uf(), vf(), w(), wf()
 
 ### Community 612 - "Ports"
 Cohesion: 0.16
@@ -3488,8 +3523,8 @@ Cohesion: 0.29
 Nodes (6): ../shell/main_shell.dart, ../shell/shell_constants.dart, ../shell/shell_models.dart, ../shell/widgets/boss_fab.dart, ../shell/widgets/bottom_nav_bar.dart, ../shell/widgets/ring_item_tile.dart
 
 ### Community 656 - ".Ok"
-Cohesion: 0.12
-Nodes (24): Activities, AllowAnonymous, CancellationToken, HttpDelete, HttpGet, HttpPost, IActionResult, Task (+16 more)
+Cohesion: 0.18
+Nodes (15): AllowAnonymous, CancellationToken, HttpDelete, HttpGet, HttpPost, IActionResult, Task, IntegrationsController (+7 more)
 
 ### Community 657 - "chest_models.dart"
 Cohesion: 0.29
@@ -3507,9 +3542,9 @@ Nodes (12): Center, SizedBox, Text, ApiErrorState, build, ../constants/app_color
 Cohesion: 0.10
 Nodes (20): StravaStatusDto, _authBase, authorizationUrl, authorizationUrlFor, authorize, _clientId, code, connect (+12 more)
 
-### Community 661 - "agent-context.json"
-Cohesion: 0.12
-Nodes (15): agentInstructions, beforeAnyBackendWork, crossModuleCommunicationChecklist, newEndpointChecklist, newFlutterFeatureChecklist, newModuleChecklist, backend, allEndpoints (+7 more)
+### Community 661 - "agentInstructions"
+Cohesion: 0.33
+Nodes (6): agentInstructions, beforeAnyBackendWork, crossModuleCommunicationChecklist, newEndpointChecklist, newFlutterFeatureChecklist, newModuleChecklist
 
 ### Community 662 - ".Draw"
 Cohesion: 0.23
@@ -3615,9 +3650,9 @@ Nodes (5): Files, Notes, Overview, Run Board, Workflow
 Cohesion: 0.40
 Nodes (4): Game Ui Design, Identity, Principles, Reference System Usage
 
-### Community 691 - "quest_provider.dart"
-Cohesion: 0.11
-Nodes (19): op, _withSingleRetry, build, DailyQuestsNotifier, ../models/quest_models.dart, package:flutter_riverpod/flutter_riverpod.dart, _kFirstLoadRetryDelay, questServiceProvider (+11 more)
+### Community 691 - "quest_service.dart"
+Cohesion: 0.22
+Nodes (8): ../../../core/api/api_client.dart, ../models/quest_models.dart, _dio, getDailyQuests, getSpecialQuests, getWeeklyQuests, QuestService, ../models/quest_models.dart
 
 ### Community 693 - "season_track_screen_test.dart"
 Cohesion: 0.09
@@ -3631,9 +3666,9 @@ Nodes (20): _classes, _cls, ctrl, main, _pump, pumpWidget, _rec, main (+12 more)
 Cohesion: 0.24
 Nodes (10): Guid, HttpPost, IActionResult, Task, CompleteFloorRequest, DebugSetFloorRequest, DungeonController, Guid (+2 more)
 
-### Community 701 - "AdminTalentsController"
-Cohesion: 0.26
-Nodes (10): Guid, HttpDelete, HttpGet, HttpPost, HttpPut, IActionResult, Task, AdminTalentsController (+2 more)
+### Community 701 - "home_hero_stage_navigation_test.dart"
+Cohesion: 0.12
+Nodes (15): main, build, main, main, package:life_level/core/services/nav_tab_notifier.dart, package:life_level/core/shell/widgets/journey_popover.dart, package:life_level/features/activity/providers/activity_provider.dart, package:life_level/features/gear/widgets/gear_paperdoll.dart (+7 more)
 
 ### Community 703 - "streakRules"
 Cohesion: 0.25
@@ -3643,9 +3678,9 @@ Nodes (8): streakRules, atRiskNotification, break, day7LoginReward, increment, m
 Cohesion: 0.40
 Nodes (3): CancellationToken, Task, IGuildRaidMaintenancePort
 
-### Community 705 - "shell_models.dart"
-Cohesion: 0.11
-Nodes (18): anglesFor, color, package:flutter/material.dart, emoji, generate, iconAsset, id, kAllNavItems (+10 more)
+### Community 705 - ".ReplayTopic"
+Cohesion: 0.41
+Nodes (6): CancellationToken, HttpPost, IActionResult, Task, TutorialController, TutorialTopicsSeen
 
 ### Community 706 - ".RolloverDueSeasonsAsync"
 Cohesion: 0.40
@@ -3695,9 +3730,9 @@ Nodes (4): manifest_version, name, preload_data_format, version
 Cohesion: 0.60
 Nodes (4): doExtractFileName(), getFilterFileName(), isSlashOrBackslash(), kPrimaryMappings
 
-### Community 724 - "class_icons.dart"
-Cohesion: 0.33
-Nodes (5): classColorForName, classIconAsset, classIconAssetForEmoji, classIconAssetForName, package:flutter/painting.dart
+### Community 724 - "K"
+Cohesion: 0.14
+Nodes (11): Pl(), Qf(), aj(), bj(), K(), Li(), mi(), Sl() (+3 more)
 
 ### Community 725 - "cdp-chrome-profile/OptimizationHints/703/manifest.json"
 Cohesion: 0.40
@@ -3735,9 +3770,9 @@ Nodes (5): Daily Quest, Quests, Special Quest, Story Quest, Weekly Quest
 Cohesion: 0.40
 Nodes (5): Desert, Forest, Map Zones, Mountains, Ocean
 
-### Community 734 - ".GetZonesUnlockedInRangeAsync"
-Cohesion: 0.14
-Nodes (13): CancellationToken, IReadOnlyList, Task, ZoneUnlockReadPortAdapter, UnlockedZoneInfo, CancellationToken, IReadOnlyList, Task (+5 more)
+### Community 734 - ".CreditActivityAsync"
+Cohesion: 0.33
+Nodes (5): CancellationToken, Guid, Task, FloorCreditResult, IWorldDungeonActivityPort
 
 ### Community 735 - "Seasonal Events"
 Cohesion: 0.40
@@ -3747,45 +3782,41 @@ Nodes (5): Design intent (from CLAUDE.md), Likely implementation shape (when bui
 Cohesion: 0.50
 Nodes (3): Anti-Patterns, Game UI Design, Patterns
 
-### Community 737 - "RankThresholdSeeder"
-Cohesion: 0.50
-Nodes (3): string, Task, RankThresholdSeeder
-
 ### Community 738 - ".ClaimAvailableTaskRewards"
 Cohesion: 0.38
 Nodes (6): CancellationToken, HttpGet, HttpPost, IActionResult, Task, RewardsController
 
-### Community 740 - "DungeonXpPort"
-Cohesion: 0.15
-Nodes (12): CancellationToken, Dictionary, Guid, IEnumerable, List, Xp, DungeonDbCharacterLevelReadPort, DungeonNoOpEventPublisher (+4 more)
+### Community 740 - "unlocks_provider.dart"
+Cohesion: 0.17
+Nodes (15): build, isFreshUnlockProvider, isUnlockedProvider, markSeen, markToured, _patch, refresh, UnlocksNotifier (+7 more)
 
-### Community 741 - "shell_tab_bar.dart"
-Cohesion: 0.12
-Nodes (16): Key?, active, build, currentIndex, icon, iconAsset, kMapSlotWidth, label (+8 more)
+### Community 741 - "Diagnosing Bugs"
+Cohesion: 0.13
+Nodes (14): Completion criterion: a tight loop that goes red, Diagnosing Bugs, Minimise, Non-deterministic bugs, Phase 1: Build a feedback loop, Phase 2: Reproduce + minimise, Phase 3: Hypothesise, Phase 4: Instrument (+6 more)
 
 ### Community 742 - "Season"
-Cohesion: 0.12
-Nodes (17): DateTime, Guid, ICollection, Season, DateTime, Guid, UserFounderPass, DateTime (+9 more)
+Cohesion: 0.15
+Nodes (12): DateTime, Guid, ICollection, Season, DateTime, Guid, UserSeasonProgress, EntityTypeBuilder (+4 more)
 
-### Community 743 - "boss_service.dart"
-Cohesion: 0.20
-Nodes (9): activateFight, BossService, ../../../core/api/api_client.dart, dealActivityDamage, dealDamage, debugForceDefeat, debugForceExpire, debugReset (+1 more)
+### Community 743 - ".SendToUserAsync"
+Cohesion: 0.31
+Nodes (7): CancellationToken, Guid, IDictionary, Task, INotificationPort, NoOpNotificationPort, NotificationSendResult
 
 ### Community 744 - "road_fx.dart"
 Cohesion: 0.12
 Nodes (16): delay, ease, flights, flyClaimRewards, item, items, landed, lift (+8 more)
 
 ### Community 745 - "LifeLevel.Modules.Seasons.Domain.Entities"
-Cohesion: 0.21
-Nodes (6): UpsertTierRequest, LifeLevel.Modules.Seasons.Application.EventHandlers, LifeLevel.Modules.Seasons.Domain.Enums, LifeLevel.Modules.Seasons.Application.UseCases, LifeLevel.Modules.Seasons.Domain.Entities, LifeLevel.Modules.Seasons.Domain
+Cohesion: 0.26
+Nodes (4): Task, SeasonSeeder, LifeLevel.Modules.Seasons.Domain.Enums, LifeLevel.Modules.Seasons.Domain.Entities
 
-### Community 746 - "IEventHandler"
-Cohesion: 0.06
-Nodes (32): CancellationToken, Task, TitleGrantHandler, CancellationToken, Task, ActivityLoggedNotificationHandler, CancellationToken, Task (+24 more)
+### Community 746 - ".CreditActivityAsync"
+Cohesion: 0.23
+Nodes (7): DungeonStateDto, CancellationToken, Guid, Task, WorldDungeonService, DungeonFloorStatus, DungeonRunStatus
 
-### Community 747 - "IEventPublisher"
-Cohesion: 0.16
-Nodes (10): IEventPublisher, CancellationToken, Task, InProcessEventPublisher, NoopEvents, CancellationToken, Guid, Task (+2 more)
+### Community 747 - "return"
+Cohesion: 0.25
+Nodes (7): _normalize, normalizedId, normalizedName, null, rankIconAsset, titleIconAsset, return
 
 ### Community 749 - "ICurrentClock"
 Cohesion: 0.83
@@ -3793,15 +3824,15 @@ Nodes (3): DateTime, ICurrentClock, SystemClock
 
 ### Community 750 - "achievements_provider.dart"
 Cohesion: 0.12
-Nodes (15): class, FamilyAsyncNotifier, AchievementsByCategoryNotifier, achievementsByCategoryProvider, _achievementsService, build, claim, claimAll (+7 more)
+Nodes (16): class, FamilyAsyncNotifier, AchievementsByCategoryNotifier, achievementsByCategoryProvider, AchievementsNotifier, _achievementsService, build, claim (+8 more)
 
-### Community 751 - "level_up_notifier.dart"
-Cohesion: 0.17
-Nodes (11): checkPending, _controller, dart:async, ../../features/activity/models/activity_models.dart, LevelUpEvent, LevelUpNotifier, newLevel, notify (+3 more)
+### Community 751 - "character_provider.dart"
+Cohesion: 0.14
+Nodes (13): CharacterService, ../../../core/services/level_up_notifier.dart, build, ../../../core/services/level_up_notifier.dart, ../models/character_profile.dart, ../models/xp_history_entry.dart, package:flutter_riverpod/flutter_riverpod.dart, ../services/character_service.dart (+5 more)
 
-### Community 752 - ".EnsureSpawnedAsync"
-Cohesion: 0.24
-Nodes (8): CancellationToken, Guid, string, Task, WorldBossBridgeService, CancellationToken, Guid, Task
+### Community 752 - "leaderboard_provider.dart"
+Cohesion: 0.14
+Nodes (12): LeaderboardService, _openChest, LeaderboardChest, leaderboardChestProvider, leaderboardServiceProvider, _dio, getBoard, getChest (+4 more)
 
 ### Community 753 - ".claude/commands/board.md"
 Cohesion: 0.50
@@ -3955,30 +3986,30 @@ Nodes (6): CancellationToken, Guid, Task, IShopWalletPort, ShopCurrency, ShopWal
 Cohesion: 0.22
 Nodes (8): Backend, Class detection (Character), Classes & traits, Flow (mobile, `features/onboarding/`), History import (Integrations + Activity), Mobile structure, Plan - Import-First Onboarding, Verification
 
-### Community 798 - "dungeon_floor_cleared_overlay.dart"
-Cohesion: 0.14
-Nodes (13): Container, FadeTransition, Material, Row, SizedBox, Text, cleared, ../constants/app_colors.dart (+5 more)
+### Community 798 - "LeaderboardPass"
+Cohesion: 0.24
+Nodes (9): DateTime, Guid, LeaderboardPass, LeaderboardWatch, EntityTypeBuilder, LeaderboardPassConfiguration, LeaderboardWatchConfiguration, LifeLevel.Modules.Leaderboard.Domain.Entities (+1 more)
 
 ### Community 800 - "crossroads_choice_sheet_test.dart"
 Cohesion: 0.22
 Nodes (8): _fork, _harness, main, _node, _ruined, _valley, package:life_level/features/map/models/world_map_models.dart, package:life_level/features/map/widgets/crossroads_choice_sheet.dart
 
-### Community 801 - "character_provider.dart"
-Cohesion: 0.14
-Nodes (13): CharacterService, ../../../core/services/level_up_notifier.dart, build, ../../../core/services/level_up_notifier.dart, ../models/character_profile.dart, ../models/xp_history_entry.dart, package:flutter_riverpod/flutter_riverpod.dart, ../services/character_service.dart (+5 more)
+### Community 801 - "title_equip_flight.dart"
+Cohesion: 0.11
+Nodes (18): ChangeNotifier, int get, _ToastStack, OnboardingController, build, cancel, _flyingId, inFlight (+10 more)
 
 ### Community 804 - "GarminOAuthService"
 Cohesion: 0.28
 Nodes (8): GarminConnectRequest, GarminStatusDto, CancellationToken, GarminOptions, Guid, string, Task, GarminOAuthService
 
-### Community 811 - "activity_service.dart"
-Cohesion: 0.25
-Nodes (7): ActivityService, ../../../core/api/api_client.dart, ../models/activity_models.dart, _dio, getHistory, getSummary, logActivity
+### Community 811 - ".GetZonesUnlockedInRangeAsync"
+Cohesion: 0.14
+Nodes (12): CancellationToken, IReadOnlyList, Task, ZoneUnlockReadPortAdapter, LevelUpUnlocksDto, UnlockedZoneInfo, CancellationToken, IReadOnlyList (+4 more)
 
 ### Community 816 - "app_motion.dart"
 Cohesion: 0.03
-Nodes (66): AppMotionPreference get, bool? showDragHandle,
-  Color, HitTestBehavior, allowsDecorativeMotion, animationStyle, AppAnimatedState, AppHaptic, AppMotion (+58 more)
+Nodes (64): AppMotionPreference get, bool? showDragHandle,
+  Color, HitTestBehavior, allowsDecorativeMotion, animationStyle, AppAnimatedState, AppHaptic, AppMotion (+56 more)
 
 ### Community 848 - ".GrantAsync"
 Cohesion: 0.18
@@ -3992,37 +4023,41 @@ Nodes (11): color, emoji, left, n, name, of, RoadMeta, stageHeadline (+3 more)
 Cohesion: 0.17
 Nodes (11): AchievementsService, checkUnlocks, claim, claimAll, ../../../core/api/api_client.dart, ../models/achievement_models.dart, _dio, getAchievements (+3 more)
 
-### Community 1043 - ".ClearBlockerAsync"
-Cohesion: 0.50
-Nodes (3): CancellationToken, Guid, Task
+### Community 1043 - "LeaderboardReadAdapterTests"
+Cohesion: 0.20
+Nodes (12): CharacterCombatStatsAdapter, CombatStatsSnapshot, ICharacterCombatStatsReadPort, CancellationToken, CharacterId, DateTime, Fact, Guid (+4 more)
 
-### Community 1047 - ".GetWeeklyStatsAsync"
-Cohesion: 0.33
-Nodes (5): CancellationToken, Guid, Task, IActivityStatsReadPort, WeeklyActivityStatsDto
+### Community 1047 - "dd"
+Cohesion: 0.22
+Nodes (13): S(), Ke(), ad(), ae(), bd(), dd(), de(), pe() (+5 more)
 
-### Community 1058 - "QuestCompletedEvent"
-Cohesion: 0.24
-Nodes (8): CancellationToken, Task, QuestCompletedNotificationHandler, QuestCompletedEvent, CancellationToken, Task, SeasonXpQuestHandler, TalentCurrencyQuestHandler
+### Community 1058 - "MapNode"
+Cohesion: 0.21
+Nodes (8): Guid, ICollection, MapNode, MapNodeType, MapRegion, EntityTypeBuilder, MapNodeConfiguration, LifeLevel.Modules.Map.Domain.Enums
 
 ### Community 1059 - ".TryConsumeSecondWindAsync"
 Cohesion: 0.29
 Nodes (5): CancellationToken, DateTime, Guid, Task, ITalentStreakAssistPort
 
+### Community 1062 - ".HandleAsync"
+Cohesion: 0.23
+Nodes (7): CancellationToken, Task, StreakBrokenNotificationHandler, StreakBrokenEvent, CancellationToken, Task, TalentStreakBrokenHandler
+
 ### Community 1063 - "Plan - Guild Redesign"
 Cohesion: 0.22
 Nodes (8): Assets, Data mapping, Follow-ups (need backend), Plan - Guild Redesign, Role permissions (from `GuildService`), Scope, Screens, Structure
 
-### Community 1064 - "TalentCatalog"
-Cohesion: 0.25
-Nodes (6): Task, TalentSeeder, IReadOnlyList, Def, TalentCatalog, Def
+### Community 1064 - "LifeLevel.Modules.Talents.Domain.Entities"
+Cohesion: 0.35
+Nodes (4): LifeLevel.Modules.Talents.Application.UseCases, LifeLevel.Modules.Talents.Domain.Entities, LifeLevel.Modules.Talents.Domain.Enums, LifeLevel.Modules.Talents.Domain
 
-### Community 1065 - "app_motion_test.dart"
-Cohesion: 0.25
-Nodes (8): build, count, _CounterTab, _CounterTabState, createState, main, package:life_level/core/motion/app_motion.dart, package:shared_preferences/shared_preferences.dart
+### Community 1065 - "boss_expired_card.dart"
+Cohesion: 0.17
+Nodes (11): boss_hp_bar.dart, Container, SizedBox, boss, BossExpiredCard, build, boss_hp_bar.dart, ../../../core/constants/app_colors.dart (+3 more)
 
-### Community 1066 - ".GetActiveQuestsAsync"
-Cohesion: 0.15
-Nodes (15): HttpGet, HttpPost, IActionResult, Task, QuestController, DateTime, Guid, List (+7 more)
+### Community 1066 - "boss_damage_hit_row.dart"
+Cohesion: 0.17
+Nodes (11): Container, SizedBox, BossDamageHistoryItem, BossDamageHitRow, build, ../../../core/constants/app_colors.dart, ../models/boss_damage_history.dart, package:flutter/material.dart (+3 more)
 
 ### Community 1067 - "Plan - Achievement Reward Roads"
 Cohesion: 0.25
@@ -4040,45 +4075,45 @@ Nodes (10): NextRewardView, SeasonHeader, SeasonRewardView, SeasonTierView, Seas
 Cohesion: 0.43
 Nodes (7): PropertyValue, build_workbook(), connect(), prop(), set_row(), style_range(), width()
 
-### Community 1072 - "shop_provider.dart"
-Cohesion: 0.24
-Nodes (10): ShopData, build, buyChest, buyItem, refreshOffers, reload, ShopNotifier, shopServiceProvider (+2 more)
+### Community 1072 - ".GetActiveQuestsAsync"
+Cohesion: 0.45
+Nodes (5): HttpGet, HttpPost, IActionResult, Task, QuestController
 
 ### Community 1073 - ".EquipItem"
 Cohesion: 0.36
 Nodes (6): HttpDelete, HttpGet, HttpPost, IActionResult, Task, ItemsController
 
-### Community 1075 - "zf"
-Cohesion: 0.20
-Nodes (6): fa(), Ga(), ob(), X(), zf(), Zk()
+### Community 1075 - "quest_error_state.dart"
+Cohesion: 0.17
+Nodes (11): Center, Icon, SizedBox, ../../../core/session/invalidate_user_providers.dart, build, ../../../core/constants/app_colors.dart, ../../../core/session/invalidate_user_providers.dart, package:flutter/material.dart (+3 more)
 
-### Community 1076 - "f"
-Cohesion: 0.22
-Nodes (6): a(), fa(), ma(), ra(), sa(), f()
+### Community 1076 - ".GetDefeatedCountAsync"
+Cohesion: 0.29
+Nodes (5): CancellationToken, Guid, Task, BossDefeatedCountAdapter, IBossDefeatedCountReadPort
 
 ### Community 1077 - "DateTime"
 Cohesion: 0.20
 Nodes (9): DateTime, description, earnedAt, fromJson, id, source, sourceEmoji, xp (+1 more)
 
-### Community 1078 - ".SendToUserAsync"
-Cohesion: 0.31
-Nodes (7): CancellationToken, Guid, IDictionary, Task, INotificationPort, NoOpNotificationPort, NotificationSendResult
+### Community 1078 - "DungeonXpPort"
+Cohesion: 0.17
+Nodes (11): CancellationToken, Dictionary, Guid, IEnumerable, List, Xp, DungeonNoOpEventPublisher, DungeonXpPort (+3 more)
 
-### Community 1079 - "20260327231432_AddUserRingItems.Designer.cs"
-Cohesion: 0.40
-Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddUserRingItems
+### Community 1079 - ".GetEquippedBonusesAsync"
+Cohesion: 0.25
+Nodes (7): CancellationToken, Guid, Task, GearBonuses, IGearBonusReadPort, EmptyGearBonusReadPort, NoGear
 
-### Community 1080 - "talents_provider.dart"
-Cohesion: 0.27
-Nodes (9): TalentScreen, build, draw, refresh, TalentsNotifier, talentsServiceProvider, TalentsService, models/talent_models.dart (+1 more)
+### Community 1080 - "boss_defeated_card.dart"
+Cohesion: 0.18
+Nodes (10): boss_icon.dart, Container, SizedBox, Text, boss, BossDefeatedCard, build, ../../../core/constants/app_colors.dart (+2 more)
 
-### Community 1081 - ".GetSummaryAsync"
-Cohesion: 0.38
-Nodes (5): CancellationToken, Guid, Task, ITalentProfileReadPort, TalentSummaryDto
+### Community 1081 - "ModesServiceTests"
+Cohesion: 0.10
+Nodes (24): ActivityRecordDto, CancellationToken, Guid, Task, CharacterStatsSnapshot, ICharacterStatsSnapshotReadPort, CancellationToken, Guid (+16 more)
 
-### Community 1083 - ".AddCoinsAsync"
-Cohesion: 0.43
-Nodes (4): CancellationToken, Guid, Task, IRewardCurrencyPort
+### Community 1083 - "boss_locked_card.dart"
+Cohesion: 0.18
+Nodes (10): Container, SizedBox, Text, BossListItem, boss, BossLockedCard, build, ../../../core/constants/app_colors.dart (+2 more)
 
 ### Community 1084 - "20260424144459_BridgeWorldZoneBoss.Designer.cs"
 Cohesion: 0.40
@@ -4112,9 +4147,13 @@ Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddIntegrationsModule
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddGarminConnection
 
-### Community 1097 - "NotificationLog"
-Cohesion: 0.25
-Nodes (6): DateTime, Guid, NotificationLog, NotificationOutcome, EntityTypeBuilder, NotificationLogConfiguration
+### Community 1097 - "boss_service.dart"
+Cohesion: 0.20
+Nodes (9): activateFight, BossService, ../../../core/api/api_client.dart, dealActivityDamage, dealDamage, debugForceDefeat, debugForceExpire, debugReset (+1 more)
+
+### Community 1099 - "class_icons.dart"
+Cohesion: 0.22
+Nodes (7): app_icons.dart, avatarIconAsset, classColorForName, classIconAsset, classIconAssetForEmoji, classIconAssetForName, package:flutter/painting.dart
 
 ### Community 1100 - ".GetMaxInventorySlotsAsync"
 Cohesion: 0.33
@@ -4124,21 +4163,21 @@ Nodes (4): CancellationToken, Guid, Task, IInventorySlotReadPort
 Cohesion: 0.22
 Nodes (7): CancellationToken, Guid, Task, IActivityExternalIdReadPort, Dictionary, StubActivityExternalIdReadPort, Dictionary
 
-### Community 1103 - "ua"
-Cohesion: 0.58
-Nodes (7): ma(), na(), oa(), ra(), sa(), ta(), ua()
+### Community 1103 - "Boss"
+Cohesion: 0.25
+Nodes (5): Guid, ICollection, Boss, EntityTypeBuilder, BossConfiguration
 
 ### Community 1104 - "shell_constants.dart"
 Cohesion: 0.18
 Nodes (10): package:flutter/material.dart, kCardBg, kFabBottom, kFabSize, kItemSize, kNavBarH, kNavBg, kNavBorder (+2 more)
 
-### Community 1105 - "CancellationToken"
-Cohesion: 0.07
-Nodes (22): CancellationToken, Guid, Task, TitleUnlockAdapter, CancellationToken, Guid, Task, CharacterInfoDto (+14 more)
+### Community 1105 - ".GetCurrentStreakAsync"
+Cohesion: 0.14
+Nodes (10): CancellationToken, Guid, Task, ICharacterTutorialPort, CancellationToken, Guid, Task, IStreakReadPort (+2 more)
 
-### Community 1106 - "account_models.dart"
-Cohesion: 0.29
-Nodes (6): AccountInfo, email, fromJson, token, UpdateEmailResult, username
+### Community 1106 - ".SelectEncounterForEdge"
+Cohesion: 0.36
+Nodes (6): Guid, IEnumerable, T, TrailEncounterHelper, Spawns, Template
 
 ### Community 1107 - "20260328121026_MakeBossEdgeBidirectional.Designer.cs"
 Cohesion: 0.40
@@ -4148,41 +4187,53 @@ Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, MakeBossEdgeBidirectional
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: How much the weekly tasks and daily tasks are actually undertandble ?, Source Nodes
 
+### Community 1109 - "Process"
+Cohesion: 0.22
+Nodes (8): 1. Gather context, 2. Explore the codebase (optional), 3. Draft vertical slices, 4. Quiz the user, 5. Publish the tickets to docs/board.md, LL-NNN — <Short imperative title>, Process, To Tickets
+
 ### Community 1110 - "20260329141319_AddPhase2QuestStreakLoginReward.Designer.cs"
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddPhase2QuestStreakLoginReward
 
-### Community 1112 - "AchievementSeeder"
-Cohesion: 0.22
-Nodes (7): Achievement, Task, AchievementSeeder, Coins, AchievementRewardTable, StageChest, Gems
+### Community 1112 - ".GetAsync"
+Cohesion: 0.18
+Nodes (10): CancellationToken, Guid, Task, TaskEligibilityReadAdapter, CancellationToken, Guid, Task, ITaskEligibilityReadPort (+2 more)
 
-### Community 1113 - "AppRoute"
-Cohesion: 0.22
-Nodes (9): AppRoute, _onRingItemTap, _onTutorialStateChanged, _openRoad, build, _openLogWorkout, _openShop, _openShop (+1 more)
+### Community 1113 - "Plan - Game Modes (Burn Chain, Treasure Delve)"
+Cohesion: 0.25
+Nodes (7): Backend implementation, Burn Chain rules (`burn_chain_rules.dart`), Files, Goals, Plan - Game Modes (Burn Chain, Treasure Delve), Treasure Delve rules (`delve_engine.dart`), Verification
+
+### Community 1114 - "ua"
+Cohesion: 0.58
+Nodes (7): ma(), na(), oa(), ra(), sa(), ta(), ua()
 
 ### Community 1116 - "20260401112056_AddStepsAndPendingDistance.Designer.cs"
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddStepsAndPendingDistance
 
-### Community 1117 - "notification_banner_notifier.dart"
-Cohesion: 0.25
-Nodes (7): body, _controller, NotificationBannerNotifier, NotificationBannerPayload, notify, stream, title
+### Community 1117 - "item_icons.dart"
+Cohesion: 0.22
+Nodes (8): byId, itemIconAsset, _itemIconAssetById, _itemIconAssetByName, name, _normalizeId, _normalizeName, null
 
 ### Community 1121 - "Q: currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?, Source Nodes
 
+### Community 1122 - ".EquipTitle"
+Cohesion: 0.36
+Nodes (6): CancellationToken, HttpGet, HttpPost, IActionResult, Task, TitlesController
+
 ### Community 1123 - "Q: on the home page where is the top left circle name and lv when we click on the icon of the user lets get navigated to the profile page, and also on the home page if we click on the mount and sword lets get navigate to gear page"
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: on the home page where is the top left circle name and lv when we click on the icon of the user lets get navigated to the profile page, and also on the home page if we click on the mount and sword lets get navigate to gear page, Source Nodes
 
-### Community 1129 - "encounter_intercept_sheet.dart"
+### Community 1129 - "TalentCatalog"
 Cohesion: 0.25
-Nodes (7): ActiveEncounterResult, _bodyText, build, destinationZoneName, encounter, EncounterInterceptSheet, ../services/world_zone_service.dart
+Nodes (6): Task, TalentSeeder, IReadOnlyList, Def, TalentCatalog, Def
 
-### Community 1130 - "tutorial_placement.dart"
-Cohesion: 0.25
-Nodes (7): BubblePlacement, choosePlacement, package:flutter/material.dart, isFabLike, isNearBottom, isRightEdge, spaceAbove
+### Community 1130 - ".ClaimReward"
+Cohesion: 0.36
+Nodes (6): CancellationToken, HttpGet, HttpPost, IActionResult, Task, StreakController
 
 ### Community 1132 - "Q: give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
 Cohesion: 0.40
@@ -4196,17 +4247,17 @@ Nodes (4): Answer, Outcome, Q: does the pop up on rewards tab on click coins gem
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: lets make it generic , because we want to use it also for banked km on home page on click, shiels,, Source Nodes
 
-### Community 1136 - "FakeHttpHandler"
+### Community 1136 - "Plan - Guided Unlocks"
 Cohesion: 0.29
-Nodes (6): bool, FakeHttpHandler, HttpMessageHandler, HttpRequestMessage, HttpResponseMessage, HttpStatusCode
+Nodes (6): Backend, Context, Mobile, Plan - Guided Unlocks, The chain, Verification
 
-### Community 1137 - "_meta"
-Cohesion: 0.29
-Nodes (7): _meta, architectureFile, boardFile, generated, htmlMap, purpose, version
+### Community 1137 - "LifeLevel.Api.Infrastructure.Persistence"
+Cohesion: 0.03
+Nodes (70): Guid, List, Region, RegionPin, DateTime, Guid, UserPathChoice, DateTime (+62 more)
 
-### Community 1138 - ".GetState"
-Cohesion: 0.33
-Nodes (7): CancellationToken, Guid, HttpGet, HttpPost, IActionResult, Task, WorldDungeonController
+### Community 1138 - ".ApplyStatGainsAsync"
+Cohesion: 0.31
+Nodes (6): CancellationToken, Guid, Task, ICharacterStatPort, StatGains, CapturingStats
 
 ### Community 1139 - "Q: let's make the actual hero on the gear to be visualized the same way on the home page, SO with the equipred items if they are visible"
 Cohesion: 0.40
@@ -4228,9 +4279,9 @@ Nodes (4): Answer, Outcome, Q: ADd to power also on the home screen such REsourc
 Cohesion: 0.07
 Nodes (27): ../../character/setup/setup_resume_service.dart, InheritedNotifier, OnboardingScope, build, createState, _ctrl, dispose, _forward (+19 more)
 
-### Community 1145 - "UserAchievementStageChest"
-Cohesion: 0.33
-Nodes (4): DateTime, Guid, UserAchievementStageChest, EntityTypeBuilder
+### Community 1145 - "onboarding_service.dart"
+Cohesion: 0.29
+Nodes (6): _dio, getRecommendation, importHistory, OnboardingService, previewStrava, ../models/onboarding_models.dart
 
 ### Community 1146 - "Q: What do you think about Life-Level that we are currently building? Check the project."
 Cohesion: 0.40
@@ -4265,8 +4316,8 @@ Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: LETs add again resourceINfoDAta for the gear , power str, health,shield and coins, Source Nodes
 
 ### Community 1154 - "map_step.dart"
-Cohesion: 0.04
-Nodes (50): ../../../core/services/pending_welcome.dart, ../../../core/shell/main_shell.dart, CustomClipper, ../../map/widgets/map_icon_resolver.dart, _BeamClipper, _HexagonClipper, _BannerClipper, _PennantClipper (+42 more)
+Cohesion: 0.05
+Nodes (44): ../../../core/services/pending_welcome.dart, ../../../core/shell/main_shell.dart, ../../map/widgets/map_icon_resolver.dart, asset, avatarAsset, banked, build, _checkZones (+36 more)
 
 ### Community 1155 - "Q: also right now the map that we did on the home map section currently if we click on the map from the bottom nav we do not want to be navigate to the opened current zone just to the current zone position"
 Cohesion: 0.40
@@ -4280,65 +4331,57 @@ Nodes (4): Answer, Outcome, Q: Where is the coins collected snackbar shown, incl
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Does the level-up thing show unlocks that are 100% real?, Source Nodes
 
-### Community 1160 - ".SelectEncounterForEdge"
-Cohesion: 0.36
-Nodes (6): Guid, IEnumerable, T, TrailEncounterHelper, Spawns, Template
+### Community 1160 - "InvalidOperationException"
+Cohesion: 0.33
+Nodes (5): AchievementException, SetupAlreadyCompleteException, ShopException, ModeRuleException, InvalidOperationException
 
-### Community 1164 - "ua"
-Cohesion: 0.58
-Nodes (7): ma(), na(), oa(), ra(), sa(), ta(), ua()
-
-### Community 1166 - "UserSeasonProgress"
+### Community 1161 - "UserFounderPass"
 Cohesion: 0.40
-Nodes (4): DateTime, Guid, UserSeasonProgress, UserSeasonProgressConfiguration
+Nodes (5): DateTime, Guid, UserFounderPass, FounderPassSource, UserFounderPassConfiguration
 
-### Community 1169 - "ICharacterIdReadPort"
+### Community 1164 - ".ListForUserBetweenAsync"
 Cohesion: 0.33
-Nodes (3): ICharacterIdReadPort, DbCharacterIdReadPort, StubCharacterIdReadPort
+Nodes (5): CancellationToken, DateTime, Guid, IReadOnlyList, Task
 
-### Community 1170 - ".CompleteBossZoneAsync"
+### Community 1165 - ".GetCompletedNodeCountsByZoneIdsAsync"
+Cohesion: 0.33
+Nodes (5): CancellationToken, Dictionary, Guid, IEnumerable, Task
+
+### Community 1166 - ".GetNodeCountsByZoneIdsAsync"
+Cohesion: 0.33
+Nodes (5): CancellationToken, Dictionary, Guid, IEnumerable, Task
+
+### Community 1169 - "kg"
+Cohesion: 0.33
+Nodes (4): dg(), kg(), pg(), qg()
+
+### Community 1170 - "tickets"
+Cohesion: 0.33
+Nodes (6): tickets, backlog, bugs, inProgress, sourceFile, ticketFormat
+
+### Community 1171 - "Plan - Leaderboard (with rank-up chest)"
+Cohesion: 0.33
+Nodes (5): Backend, Mobile, Plan - Leaderboard (with rank-up chest), Rules, What the player sees
+
+### Community 1172 - "20260425060904_AddPendingDistanceToWorldProgress.Designer.cs"
+Cohesion: 0.40
+Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddPendingDistanceToWorldProgress
+
+### Community 1174 - "UserMapProgress"
+Cohesion: 0.09
+Nodes (16): Guid, MapEdge, DateTime, Guid, ICollection, UserMapProgress, DateTime, Guid (+8 more)
+
+### Community 1175 - "pending_workouts_service.dart"
 Cohesion: 0.25
-Nodes (6): CancellationToken, Guid, Task, WorldZoneCompletionPortAdapter, IWorldZoneCompletionPort, TrackingWorldZoneCompletionPort
+Nodes (7): ../../integrations/models/integration_models.dart, import, list, PendingWorkoutsService, stage, _FakeService, ../models/pending_models.dart
 
-### Community 1171 - "eh"
-Cohesion: 0.33
-Nodes (4): cj(), eh(), I(), Ic()
-
-### Community 1172 - "nav_tab_notifier.dart"
-Cohesion: 0.33
-Nodes (5): _controller, dart:async, NavTabNotifier, stream, switchTo
-
-### Community 1173 - "Known Issues"
-Cohesion: 0.21
-Nodes (14): ActivityTypeMapper.cs, Activity Type Mapping, Debug Endpoints, Internal Testing Findings, Known Issues, Feature - Quests, Feature - Streak, Feature - Titles (+6 more)
-
-### Community 1174 - "IEntityTypeConfiguration"
-Cohesion: 0.03
-Nodes (63): UserAchievementConfiguration, UserAchievementStageChestConfiguration, DateTime, Guid, BossCombatTurn, Guid, ICollection, Chest (+55 more)
-
-### Community 1175 - "world_zone_refresh_notifier.dart"
-Cohesion: 0.33
-Nodes (5): _controller, dart:async, notify, stream, WorldZoneRefreshNotifier
-
-### Community 1176 - "bossDamageHistoryProvider"
-Cohesion: 0.33
-Nodes (6): bossDamageHistoryProvider, BossBattleView, _BossBattleViewState, _BossDamageHistorySheet, build, _buildRecentHits
-
-### Community 1177 - ".GetStatsAsync"
-Cohesion: 0.33
-Nodes (5): CancellationToken, Guid, Task, CharacterStatsSnapshot, ICharacterStatsSnapshotReadPort
-
-### Community 1178 - "talentsProvider"
-Cohesion: 0.33
-Nodes (6): talentsProvider, build, _draw, _step, TalentsScreen, _TalentsScreenState
+### Community 1176 - "RankThresholdSeeder.cs"
+Cohesion: 0.40
+Nodes (3): string, Task, RankThresholdSeeder
 
 ### Community 1180 - "package:flutter_test/flutter_test.dart"
-Cohesion: 0.07
-Nodes (24): BossHitFrame, main, _pump, pumpWidget, tap, _host, _last, main (+16 more)
-
-### Community 1181 - "ActivityGainPreview"
-Cohesion: 0.50
-Nodes (3): ActivityGainPreview, IActivityGainPreviewPort, StubActivityGainPreviewPort
+Cohesion: 0.11
+Nodes (15): main, _pump, pumpWidget, tap, main, main, _result, main (+7 more)
 
 ### Community 1182 - "AddUserRingItems"
 Cohesion: 0.40
@@ -4348,17 +4391,9 @@ Nodes (3): MigrationBuilder, LifeLevel.Api.Migrations, AddUserRingItems
 Cohesion: 0.50
 Nodes (3): CancellationToken, Guid, Task
 
-### Community 1184 - ".CreditActivityAsync"
-Cohesion: 0.50
-Nodes (3): CancellationToken, Guid, Task
-
-### Community 1185 - ".GetCompletedNodeCountsByZoneIdsAsync"
-Cohesion: 0.33
-Nodes (5): CancellationToken, Dictionary, Guid, IEnumerable, Task
-
-### Community 1186 - ".GetNodeCountsByZoneIdsAsync"
-Cohesion: 0.33
-Nodes (5): CancellationToken, Dictionary, Guid, IEnumerable, Task
+### Community 1186 - "TalentBonuses"
+Cohesion: 0.40
+Nodes (3): Func, IReadOnlyList, TalentBonuses
 
 ### Community 1187 - "Plan - Map Orb, Pull-to-Import, Happening Now"
 Cohesion: 0.33
@@ -4368,35 +4403,67 @@ Nodes (5): Backend (Integrations module), Goals, Mobile, Plan - Map Orb, Pull-to
 Cohesion: 0.40
 Nodes (3): ModelBuilder, LifeLevel.Api.Migrations, AddMaxInventorySlots
 
-### Community 1195 - "TitleCatalog"
+### Community 1197 - ".SeedDropRulesAsync_WhenRulesAlreadyExist_InsertsNewManualRules"
+Cohesion: 0.60
+Nodes (3): Fact, Task, ItemSeederTests
+
+### Community 1198 - "TitleCatalog"
 Cohesion: 0.40
 Nodes (4): Guid, IReadOnlyDictionary, TitleCatalog, IReadOnlyDictionary
 
+### Community 1207 - "LifeLevel.Modules.Leaderboard.csproj"
+Cohesion: 0.40
+Nodes (4): net10.0, Microsoft.EntityFrameworkCore (9.0.3), Microsoft.EntityFrameworkCore.Relational (9.0.3), Microsoft.NET.Sdk
+
+### Community 1208 - "Q: DId we split the telants crystals and the gems"
+Cohesion: 0.40
+Nodes (4): Answer, Outcome, Q: DId we split the telants crystals and the gems, Source Nodes
+
+### Community 1213 - "Q: do we have something on the bottom nav menu that its not on the adventure hub section on the home page ?"
+Cohesion: 0.40
+Nodes (4): Answer, Outcome, Q: do we have something on the bottom nav menu that its not on the adventure hub section on the home page ?, Source Nodes
+
+### Community 1229 - "hitl-loop.template.sh"
+Cohesion: 0.83
+Nodes (3): capture(), hitl-loop.template.sh script, step()
+
+### Community 1230 - "Colors and Typography"
+Cohesion: 0.67
+Nodes (4): Colors and Typography, Screen Inventory, UI Patterns, Privacy Policy
+
 ## Knowledge Gaps
-- **8514 isolated node(s):** `manifest_version`, `name`, `version`, `manifest_version`, `name` (+8509 more)
+- **8971 isolated node(s):** `manifest_version`, `name`, `version`, `manifest_version`, `name` (+8966 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **173 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **197 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Work-memory lessons
 
 **Preferred sources** — corroborated by past sessions; start here.
-- `shell/main_shell.dart` (2× useful, score=1.958137549) _(code changed — re-verify)_
-- `QuestService.cs` (2× useful, score=1.872427853) _(code changed — re-verify)_
+- `home_hero_stage.dart` (8× useful, score=7.626269915) _(code changed — re-verify)_
+- `rewards_screen.dart` (5× useful, score=4.766614176) _(code changed — re-verify)_
+- `shell/main_shell.dart` (3× useful, score=2.863403024) _(code changed — re-verify)_
+- `resource_info_dialog.dart` (3× useful, score=2.860503771)
+- `home_hero_stage_navigation_test.dart` (3× useful, score=2.859833585)
+- `ActivityService.cs` (2× useful, score=1.908086953)
+- `main_shell.dart` (2× useful, score=1.907333184)
+- `world_hub_screen.dart` (2× useful, score=1.907333184)
+- `task_reward_popup.dart` (2× useful, score=1.905972376)
+- `QuestService.cs` (2× useful, score=1.784305786) _(code changed — re-verify)_
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `LifeLevel.Api.Infrastructure.Persistence` connect `LifeLevel.Api.Infrastructure.Persistence` to `LifeLevel.Modules.Items.Domain.Entities`, `20260527165116_AddTrailEncounterTemplates.Designer.cs`, `20260715173805_AddEncounterPinnedZones.Designer.cs`, `GuildServiceTests.cs`, `20260924061354_ExpandTaskSystem.Designer.cs`, `20260924200651_AddBossCombatV2.Designer.cs`, `20260925124949_ReplaceTalentPointsWithDrawNumber.Designer.cs`, `ImportFirstOnboardingTests.cs`, `20260928181807_ImportFirstOnboarding.Designer.cs`, `Activity`, `IEntityTypeConfiguration`, `LifeLevel.Api.Migrations`, `WorldSeedData`, `20260401161752_AddMaxInventorySlots.Designer.cs`, `AddMapTutorialProgress`, `20260523193106_AddNotificationLogReadFields.Designer.cs`, `20260524211749_AddRankThresholdDisplayFields.Designer.cs`, `20260727200402_AddNotificationPreferences.Designer.cs`, `20260913055555_RenameAccessory2SlotToLegs.Designer.cs`, `20260726043914_AddGuildRaidScaling.Designer.cs`, `20260922055457_AddTaskRewardCenter.Designer.cs`, `20260923201633_RemoveLoginRewards.Designer.cs`, `20260927203615_AddLevelUpReceipts.Designer.cs`, `20260327231432_AddUserRingItems.Designer.cs`, `AddTrailBlockerBossBridge`, `20260925105518_AddProgressiveTalentDrawCosts.Designer.cs`, `AppDbContextModelSnapshot.cs`, `LifeLevel.SharedKernel.Contracts`, `20260424144459_BridgeWorldZoneBoss.Designer.cs`, `20260424170703_AddBossTimerToWorldZone.Designer.cs`, `20260328114810_AddBossStateTimerFields.Designer.cs`, `20260330214919_AddIntegrationsModule.Designer.cs`, `20260331081836_AddGarminConnection.Designer.cs`, `LifeLevel.SharedKernel.Ports`, `AddActiveTrailEncounterId`, `LifeLevel.Modules.Talents.Domain.Entities`, `20260328073552_AddMapSystem.Designer.cs`, `20260328145827_AddMiniBosses.Designer.cs`, `20260328151316_AddMapNodeRewardXp.Designer.cs`, `20260328170205_AddUserRole.Designer.cs`, `20260329223234_ModularMonolithConfigs.Designer.cs`, `20260330221640_AddStravaConnection.Designer.cs`, `20260424072106_AddChestZones.Designer.cs`, `20260328121026_MakeBossEdgeBidirectional.Designer.cs`, `20260524205736_AddLevelTitleGrants.Designer.cs`, `20260329141319_AddPhase2QuestStreakLoginReward.Designer.cs`, `20260723051422_AddGuildSystem.Designer.cs`, `20260907150016_AddTalentsModule.Designer.cs`, `20260912131023_RenameTalentTokensToCrystals.Designer.cs`, `20260401112056_AddStepsAndPendingDistance.Designer.cs`, `20260524205831_AddRankThresholds.Designer.cs`, `LifeLevel.Modules.Seasons.Domain.Entities`, `20260328072418_AddCharacterSetup.Designer.cs`, `20260328145925_AddXpHistory.Designer.cs`, `20260328153351_AddAvailableStatPoints.Designer.cs`, `20260328181928_RemoveMapSeedData.Designer.cs`, `20260715163723_AddActiveBlockerEncounterId.Designer.cs`, `20260329144049_AddWorldZones.Designer.cs`, `20260329150000_AddWorldEntity.Designer.cs`, `20260330145027_AddItemsAndEquipment.Designer.cs`, `20260331182910_AddItemDropRuleTriggerParametersLength.Designer.cs`, `20260331184758_AddItemCategoryAndDropRules.Designer.cs`, `AppDbContext.cs`, `20260401162847_AddAchievements.Designer.cs`, `20260401165218_AddTitleSystem.Designer.cs`, `20260417201912_AddNotificationsModule.Designer.cs`, `20260419090159_AddTutorialProgress.Designer.cs`, `20260423190116_WorldMapFinalRestructure.Designer.cs`, `20260423204643_AddCrossroadsBranchesAndPathChoice.Designer.cs`, `LifeLevel.Modules.Notifications.Domain.Entities`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `DateTime` connect `DateTime` to `boss_list_item.dart`, `integration_tile.dart`, `achievement_models.dart`, `VoidCallback`, `rewards_models.dart`, `boss_damage_history.dart`, `streak_detail_sheet.dart`, `season_models.dart`, `boss_models.dart`, `rewards_screen.dart`, `streak_models.dart`, `onboarding_models.dart`, `notification_row.dart`, `integration_models.dart`, `shop_models.dart`, `pending_workouts_provider.dart`, `activity_models.dart`, `QuestService`, `quest_models.dart`, `pending_models.dart`, `guild_models.dart`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
-- **Why does `QuestService` connect `QuestService` to `TaskRewardCenterTests`, `ActivityServiceExternalItemGrantTests`, `LifeLevel.SharedKernel.Ports`, `.GetActiveQuestsAsync`, `DateTime`, `TitleServiceTests`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `AppDbContext` connect `AppDbContext` to `NotificationPreference`, `PendingActivityServiceTests`, `AppDbContext.cs`, `.OpenAsync`, `GuildService`, `LifeLevel.SharedKernel.Ports`, `LifeLevel.Modules.Items.Domain.Entities`, `LifeLevel.Modules.Guild.Domain.Entities`, `LifeLevel.Modules.Integrations.Domain.Entities`, `ModesService`, `UserFounderPass`, `UserQuestProgress`, `AchievementRoadsTests`, `AdminMapControllerTests`, `.GetAsync`, `.SendToUserAsync`, `Task`, `IEntityTypeConfiguration`, `LeaderboardReadAdapterTests`, `Activity`, `UserMapProgress`, `HealthSyncServiceTests`, `DeviceToken`, `LeaderboardPass`, `NotificationLog`, `WorldMapDtos.cs`, `ShopServiceTests`, `MapNode`, `ActivityServiceExternalItemGrantTests`, `IEventPublisher`, `.SeedDropRulesAsync_WhenRulesAlreadyExist_InsertsNewManualRules`, `.GetAsync`, `TitleServiceTests`, `ModesServiceTests`, `User`, `StravaWebhookServiceTests`, `AchievementService`, `Talent`, `Task`, `Boss`, `ImportFirstOnboardingTests`, `QuestService`, `SeasonRewardTier`, `PendingActivityService`, `StreakService`, `XpAwardResult`, `Item`, `Season`, `BossDamageHistoryTests`, `LifeLevel.Api.Infrastructure.Persistence`, `.AwardXpAsync`, `UserTalent`, `.StartRaidAsync`, `StravaOAuthServiceTests`, `BossCombatTurn`, `TalentProgressiveDrawCostTests`?**
+  _High betweenness centrality (0.085) - this node is a cross-community bridge._
+- **Why does `LifeLevel.Api.Infrastructure.Persistence` connect `LifeLevel.Api.Infrastructure.Persistence` to `LifeLevel.SharedKernel.Ports`, `WorldSeedData`, `LifeLevel.Modules.Talents.Domain.Entities`, `AdminTalentsController`, `20260523193106_AddNotificationLogReadFields.Designer.cs`, `20260726043914_AddGuildRaidScaling.Designer.cs`, `20260925105518_AddProgressiveTalentDrawCosts.Designer.cs`, `User`, `20260424144459_BridgeWorldZoneBoss.Designer.cs`, `20260424170703_AddBossTimerToWorldZone.Designer.cs`, `20260328114810_AddBossStateTimerFields.Designer.cs`, `20260330214919_AddIntegrationsModule.Designer.cs`, `20260331081836_AddGarminConnection.Designer.cs`, `AddActiveTrailEncounterId`, `20260328121026_MakeBossEdgeBidirectional.Designer.cs`, `20260329141319_AddPhase2QuestStreakLoginReward.Designer.cs`, `20260723051422_AddGuildSystem.Designer.cs`, `20260912131023_RenameTalentTokensToCrystals.Designer.cs`, `20260401112056_AddStepsAndPendingDistance.Designer.cs`, `20260715163723_AddActiveBlockerEncounterId.Designer.cs`, `AppDbContext.cs`, `.OpenAsync`, `20260527165116_AddTrailEncounterTemplates.Designer.cs`, `20260715173805_AddEncounterPinnedZones.Designer.cs`, `LifeLevel.Modules.Guild.Domain.Entities`, `20260924200651_AddBossCombatV2.Designer.cs`, `20260925124949_ReplaceTalentPointsWithDrawNumber.Designer.cs`, `20260425060904_AddPendingDistanceToWorldProgress.Designer.cs`, `RankThresholdSeeder.cs`, `20260401161752_AddMaxInventorySlots.Designer.cs`, `AddMapTutorialProgress`, `20260727200402_AddNotificationPreferences.Designer.cs`, `20260922055457_AddTaskRewardCenter.Designer.cs`, `20260923201633_RemoveLoginRewards.Designer.cs`, `20260927203615_AddLevelUpReceipts.Designer.cs`, `20260524205807_AddLevelStatBonuses.Designer.cs`, `AddTrailBlockerBossBridge`, `20260723154022_AddGuildRaidVictoryAcknowledgements.Designer.cs`, `20260724200927_AddGuildRaidExpiryAcknowledgements.Designer.cs`, `20260913173621_AddItemVisualAssets.Designer.cs`, `20260922143223_AddShopPurchases.Designer.cs`, `20260924092722_AddStreakDailyRewards.Designer.cs`, `20260925133759_ClarifyWorldMapChestTaskText.Designer.cs`, `20260925212115_AchievementRewardRoads.Designer.cs`, `20260929081515_PendingActivities.Designer.cs`, `20260929204728_SplitGemsAndTalentCrystals.Designer.cs`, `20260930060540_AddCharacterUnlocks.Designer.cs`, `20260930062135_AddServerAuthoritativeModes.Designer.cs`, `20260524205831_AddRankThresholds.Designer.cs`, `LifeLevel.Modules.Seasons.Domain.Entities`, `AdminItemsController`, `LifeLevel.Modules.Items.Domain.Entities`, `LifeLevel.Modules.Integrations.Domain.Entities`, `IEntityTypeConfiguration`, `Activity`, `LifeLevel.Api.Migrations`, `AppDbContextModelSnapshot.cs`, `AdminSeasonsController`, `20260328073552_AddMapSystem.Designer.cs`, `20260328145827_AddMiniBosses.Designer.cs`, `20260328151316_AddMapNodeRewardXp.Designer.cs`, `20260328170205_AddUserRole.Designer.cs`, `20260329223234_ModularMonolithConfigs.Designer.cs`, `20260330221640_AddStravaConnection.Designer.cs`, `20260424072106_AddChestZones.Designer.cs`, `20260328072418_AddCharacterSetup.Designer.cs`, `20260328145925_AddXpHistory.Designer.cs`, `20260328153351_AddAvailableStatPoints.Designer.cs`, `20260328181928_RemoveMapSeedData.Designer.cs`, `20260329150000_AddWorldEntity.Designer.cs`, `20260330145027_AddItemsAndEquipment.Designer.cs`, `20260331182910_AddItemDropRuleTriggerParametersLength.Designer.cs`, `20260331184758_AddItemCategoryAndDropRules.Designer.cs`, `20260401162847_AddAchievements.Designer.cs`, `20260401165218_AddTitleSystem.Designer.cs`, `20260417201912_AddNotificationsModule.Designer.cs`, `20260419090159_AddTutorialProgress.Designer.cs`, `20260423204643_AddCrossroadsBranchesAndPathChoice.Designer.cs`, `AdminEncountersController`, `LifeLevel.Api.Controllers.Admin`?**
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+- **Why does `DateTime` connect `DateTime` to `boss_list_item.dart`, `integration_tile.dart`, `achievement_models.dart`, `rewards_models.dart`, `boss_damage_history.dart`, `streak_detail_sheet.dart`, `season_models.dart`, `boss_models.dart`, `rewards_screen.dart`, `streak_models.dart`, `core/motion/app_motion.dart`, `onboarding_models.dart`, `modes_api_service.dart`, `notification_row.dart`, `integration_models.dart`, `shop_models.dart`, `pending_workouts_provider.dart`, `activity_models.dart`, `QuestService`, `quest_models.dart`, `burn_chain_rules.dart`, `leaderboard_models.dart`, `pending_models.dart`, `guild_models.dart`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **What connects `manifest_version`, `name`, `version` to the rest of the system?**
-  _8514 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _8971 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `shell/main_shell.dart` be split into smaller, more focused modules?**
-  _Cohesion score 0.014084507042253521 - nodes in this community are weakly interconnected._
-- **Should `Task` be split into smaller, more focused modules?**
-  _Cohesion score 0.08653353814644137 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.014285714285714285 - nodes in this community are weakly interconnected._
+- **Should `AppDbContext` be split into smaller, more focused modules?**
+  _Cohesion score 0.11530398322851153 - nodes in this community are weakly interconnected._
 - **Should `home_portal_card.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.01639344262295082 - nodes in this community are weakly interconnected._

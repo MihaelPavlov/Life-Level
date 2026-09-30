@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../achievements/providers/achievements_provider.dart';
+import '../../boss/providers/boss_provider.dart';
 import '../../character/providers/character_provider.dart';
+import '../../leaderboard/providers/leaderboard_provider.dart';
 import '../../rewards/providers/rewards_provider.dart';
 import '../../season/providers/season_provider.dart';
 import '../../streak/providers/streak_provider.dart';
@@ -11,23 +13,30 @@ import '../../titles/providers/titles_provider.dart';
 
 class AdventureHubSignals {
   final bool rewards;
+  final bool bosses;
   final bool streak;
   final bool talents;
   final bool season;
   final bool titles;
   final bool achievements;
 
+  /// The rank-up chest holds rewards for players you passed.
+  final bool leaderboard;
+
   const AdventureHubSignals({
     required this.rewards,
+    required this.bosses,
     required this.streak,
     required this.talents,
     required this.season,
     required this.titles,
     required this.achievements,
+    this.leaderboard = false,
   });
 
   static const empty = AdventureHubSignals(
     rewards: false,
+    bosses: false,
     streak: false,
     talents: false,
     season: false,
@@ -50,6 +59,8 @@ final adventureHubSignalsProvider =
   final achievementRoads = ref.watch(achievementRoadsProvider).valueOrNull;
   final rewards = ref.watch(rewardCenterProvider).valueOrNull;
   final streak = ref.watch(streakProvider).valueOrNull;
+  final bosses = ref.watch(bossListProvider).valueOrNull;
+  final leaderboardChest = ref.watch(leaderboardChestProvider).valueOrNull;
 
   final store = ref.watch(adventureHubSeenStoreProvider);
   final earnedTitleIds =
@@ -75,6 +86,8 @@ final adventureHubSignalsProvider =
 
   return AdventureHubSignals(
     rewards: rewards?.hasClaimableReward ?? false,
+    // A boss fight is running.
+    bosses: bosses?.any((b) => b.isActive) ?? false,
     streak: streak?.canClaimDailyReward ?? false,
     talents: talents?.canDraw ?? false,
     season: season?.hasClaimableReward ?? false,
@@ -84,6 +97,7 @@ final adventureHubSignalsProvider =
       readyCount: achievementRoads?.readyCount ?? 0,
       chestsReady: achievementRoads?.chestsReady ?? 0,
     ),
+    leaderboard: (leaderboardChest?.stack ?? 0) > 0,
   );
 });
 

@@ -270,7 +270,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
       } else {
         final rewards = <String>[
           if (result.coins > 0) '${result.coins} coins',
-          if (result.crystals > 0) '${result.crystals} crystals',
+          if (result.crystals > 0) '${result.crystals} gems',
         ];
         final suffix = rewards.isEmpty ? '' : ' · ${rewards.join(', ')}';
         AppToast.success(

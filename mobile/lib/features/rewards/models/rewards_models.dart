@@ -2,11 +2,11 @@ import '../../quests/models/quest_models.dart';
 
 class RewardWallet {
   final int coins;
-  final int crystals;
-  const RewardWallet({required this.coins, required this.crystals});
+  final int gems;
+  const RewardWallet({required this.coins, required this.gems});
   factory RewardWallet.fromJson(Map<String, dynamic> j) => RewardWallet(
         coins: (j['coins'] as num?)?.toInt() ?? 0,
-        crystals: (j['crystals'] as num?)?.toInt() ?? 0,
+        gems: (j['gems'] as num?)?.toInt() ?? 0,
       );
 }
 

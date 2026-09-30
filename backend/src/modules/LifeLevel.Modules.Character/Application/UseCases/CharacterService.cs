@@ -388,6 +388,15 @@ public class CharacterService(
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task AddTalentCrystalsAsync(Guid receiptId, int talentCrystals,
+        CancellationToken ct = default)
+    {
+        var row = await db.Set<LevelUpReceipt>().FindAsync([receiptId], ct);
+        if (row == null) return;
+        row.TalentCrystalsGranted += Math.Max(0, talentCrystals);
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task AddItemsAsync(Guid receiptId, IReadOnlyList<GrantedItemInfo> granted,
         IReadOnlyList<LevelUpBlockedItemInfo> blocked, CancellationToken ct = default)
     {
@@ -410,7 +419,8 @@ public class CharacterService(
     private static LevelUpReceiptDto MapReceipt(LevelUpReceipt row) => new(
         row.Id, row.Source, row.PreviousLevel, row.NewLevel,
         row.BaseStatPointsGranted, row.BonusStatPointsGranted, row.PowerGained,
-        row.CoinsGranted, row.PreviousInventorySlots, row.NewInventorySlots,
+        row.CoinsGranted, row.TalentCrystalsGranted,
+        row.PreviousInventorySlots, row.NewInventorySlots,
         Deserialize<GrantedItemInfo>(row.GrantedItemsJson),
         Deserialize<LevelUpBlockedItemInfo>(row.BlockedItemsJson),
         Deserialize<LevelUpTitleInfo>(row.GrantedTitlesJson),

@@ -20,13 +20,15 @@ public static class TalentEconomy
     public const int CoinsPerBossDefeat = 100;
     public const int CoinsPerLevelUp = 200;
 
-    /// <summary>
-    /// Crystals are deliberately scarce — Coins already cover high-frequency rewards
-    /// (activities, quests), so Crystals only trickle in from occasional milestones.
-    /// </summary>
-    public const int CrystalsPerBossDefeat = 2;
-    public const int CrystalsPerZoneCompletion = 2;
-    public const int CrystalsPerRewardClaim = 1;
+    public const int TalentCrystalsPerLevel = 1;
+
+    public static int TalentCrystalsForChest(string? rarity) => rarity?.ToLowerInvariant() switch
+    {
+        "rare" => 2,
+        "epic" => 3,
+        "legendary" => 5,
+        _ => 1,
+    };
 
     // ── Draw ───────────────────────────────────────────────────────────────
 

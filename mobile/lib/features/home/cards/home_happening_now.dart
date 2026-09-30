@@ -9,6 +9,8 @@ import '../../../core/services/shell_overlay_notifier.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../boss/providers/boss_provider.dart';
 import '../../guild/providers/guild_provider.dart';
+import '../../modes/burn_chain/burn_chain_provider.dart';
+import '../../modes/burn_chain/burn_chain_rules.dart';
 import '../../season/providers/season_provider.dart';
 
 /// One live, timed thing shown under the Adventure Hub.
@@ -121,6 +123,25 @@ final happeningEventsProvider =
       endsLabel: formatEndsAt(DateTime.now().add(bossLeft)),
       cta: 'Fight',
       onCta: () => BossOverlayNotifier.notifyForBoss(boss.id),
+    ));
+  }
+
+  final chain = ref.watch(burnChainProvider).valueOrNull?.chain;
+  final chainEnds = chain?.endsAt;
+  if (chain != null && chain.phase == BurnChainPhase.live && chainEnds != null) {
+    final bar = chain.bar;
+    events.add(HappeningEvent(
+      id: 'burn_chain',
+      icon: AppIcons.rewardStreakFire,
+      color: const Color(0xFFF0883E),
+      title: 'Burn Chain',
+      detail: bar == null
+          ? 'Your first workout sets the bar.'
+          : 'Next workout must beat $bar kcal to earn ×$kBurnChainBeatMultiplier.',
+      timeLeft: chainEnds.toUtc().difference(now),
+      endsLabel: formatEndsAt(chainEnds),
+      cta: 'View chain',
+      onCta: () => ShellOverlayNotifier.open('burn_chain'),
     ));
   }
 

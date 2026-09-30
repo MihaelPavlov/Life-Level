@@ -291,9 +291,7 @@ void main() {
           child: ShellTabBar(
               currentIndex: 0,
               mapOpen: false,
-              menuOpen: false,
-              onTab: (_) {},
-              onMenu: () {}),
+              onTab: (_) {}),
         ),
         Positioned(
           bottom: 34,

@@ -164,11 +164,11 @@ const Map<TutorialStep, TutorialStepContent> kTutorialStepContent = {
     accent: AppColors.green,
   ),
   TutorialStep.bossFab: TutorialStepContent(
-    iconAsset: AppIcons.ringTitles,
-    title: 'Quick Menu',
+    iconAsset: AppIcons.ringBoss,
+    title: 'Bosses',
     body:
-        'This center button opens the quick menu. From here you can jump to bosses, world, titles, stats, guild, and the rest of the extra navigation.',
-    accent: AppColors.blue,
+        'Your boss fights live here in the Adventure Hub. Every workout deals damage, so beat the boss before its timer runs out.',
+    accent: AppColors.red,
   ),
   TutorialStep.mapWorldBack: TutorialStepContent(
     iconAsset: AppIcons.mapDestination,

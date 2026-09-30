@@ -135,9 +135,6 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
         final targetRect = c.currentTargetRect();
         final placement = c.currentPlacement(screenSize);
 
-        // FAB + small round targets read nicer with a circular pulse ring.
-        final circular = step == TutorialStep.bossFab;
-
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -150,7 +147,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay>
                 child: TutorialDimBackdrop(
                   targetRect: targetRect,
                   accentColor: content.accent,
-                  circular: circular,
+                  circular: false,
                 ),
               ),
             ),

@@ -273,7 +273,7 @@ public class QuestService(
         if (rewardCurrency != null)
         {
             await rewardCurrency.AddCoinsAsync(userId, coins, ct);
-            await rewardCurrency.AddCrystalsAsync(userId, crystals, ct);
+            await rewardCurrency.AddGemsAsync(userId, crystals, ct);
         }
 
         return new(type.ToString(), claimable.Count, coins, crystals,
@@ -326,7 +326,7 @@ public class QuestService(
         if (rewardCurrency != null)
         {
             await rewardCurrency.AddCoinsAsync(userId, reward.Coins);
-            await rewardCurrency.AddCrystalsAsync(userId, reward.Crystals);
+            await rewardCurrency.AddGemsAsync(userId, reward.Crystals);
         }
         if (reward.Xp > 0)
         {

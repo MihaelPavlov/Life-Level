@@ -22,6 +22,8 @@ using LifeLevel.Modules.Integrations.Infrastructure;
 using LifeLevel.Modules.Notifications;
 using LifeLevel.Modules.Seasons.Infrastructure;
 using LifeLevel.Modules.Talents.Infrastructure;
+using LifeLevel.Modules.Modes.Infrastructure;
+using LifeLevel.Modules.Leaderboard.Infrastructure;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Events;
@@ -81,7 +83,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(opts =>
     opts.AddPolicy("Admin", p => p.RequireRole("Admin")));
-builder.Services.AddControllers()
+builder.Services.AddControllers(options => options.Filters.Add<ModeRuleExceptionFilter>())
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -129,6 +131,9 @@ builder.Services.AddItemsModule();
 builder.Services.AddGuildModule();
 builder.Services.AddScoped<IGuildRaidRealtimePort, GuildRaidRealtimePublisher>();
 builder.Services.AddScoped<ITaskEligibilityReadPort, TaskEligibilityReadAdapter>();
+builder.Services.AddScoped<IUnlockFactsReadPort, UnlockFactsReadAdapter>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ILeaderboardReadPort, LeaderboardReadAdapter>();
 // Keep adaptive task reads independent from ActivityService. ActivityService
 // writes quest progress, so using it here would form Quest -> Activity -> Quest.
 builder.Services.AddScoped<IActivityHistoryReadPort, TaskActivityHistoryReadAdapter>();
@@ -144,6 +149,10 @@ builder.Services.AddSeasonsModule();
 
 // Talents module (gacha talent cards — depends on Streak port; provides ITalentBonusReadPort)
 builder.Services.AddTalentsModule();
+
+// Server-authoritative workout game modes.
+builder.Services.AddModesModule();
+builder.Services.AddLeaderboardModule();
 
 // ICharacterCombatStatsReadPort — composition-root adapter over Character +
 // Items + Talents + Encounters ports (see CharacterCombatStatsAdapter for
@@ -177,6 +186,7 @@ builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddHostedService<DailyResetJob>();
 builder.Services.AddHostedService<GuildRaidExpiryJob>();
 builder.Services.AddHostedService<SeasonRolloverJob>();
+builder.Services.AddHostedService<ModesExpiryJob>();
 
 // CORS — allow Flutter dev clients + local HTML files (Origin: null from file://)
 builder.Services.AddCors(options =>

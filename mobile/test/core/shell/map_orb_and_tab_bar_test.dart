@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/core/constants/app_colors.dart';
 import 'package:life_level/core/constants/app_icons.dart';
 import 'package:life_level/core/shell/widgets/map_orb_button.dart';
-import 'package:life_level/core/shell/widgets/menu_sheet.dart';
 import 'package:life_level/core/shell/widgets/shell_tab_bar.dart';
 import 'package:life_level/features/home/cards/home_happening_now.dart';
 import 'package:life_level/features/map/journey/journey_state.dart';
@@ -91,56 +90,26 @@ void main() {
     recorder.endRecording();
   });
 
-  testWidgets('tab bar: Home, Gear, Map caption, Profile, Menu',
+  testWidgets('tab bar: Home, Gear, Map caption, Mode, Profile',
       (tester) async {
     final tapped = <int>[];
-    var menu = 0;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         bottomNavigationBar: ShellTabBar(
           currentIndex: 0,
           mapOpen: false,
-          menuOpen: false,
           onTab: tapped.add,
-          onMenu: () => menu++,
         ),
       ),
     ));
-    for (final label in ['Home', 'Gear', 'Map', 'Profile', 'Menu']) {
+    for (final label in ['Home', 'Gear', 'Map', 'Mode', 'Profile']) {
       expect(find.text(label), findsOneWidget);
     }
     await tester.tap(find.text('Gear'));
     await tester.tap(find.text('Profile'));
-    await tester.tap(find.text('Menu'));
+    await tester.tap(find.text('Mode'));
     await tester.pump(const Duration(milliseconds: 200));
-    expect(tapped, [1, 2]);
-    expect(menu, 1);
-  });
-
-  testWidgets('menu sheet returns the chosen feature', (tester) async {
-    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
-    String? picked;
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: TextButton(
-            onPressed: () async => picked = await showMenuSheet(context),
-            child: const Text('open'),
-          ),
-        ),
-      ),
-    ));
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-    expect(find.text('Everything else'), findsOneWidget);
-    for (final e in kMenuEntries) {
-      expect(find.text(e.label), findsOneWidget);
-    }
-    await tester.tap(find.text('Guild'));
-    await tester.pumpAndSettle();
-    expect(picked, 'guild');
+    expect(tapped, [1, 2, 3]);
   });
 
   group('happening now', () {

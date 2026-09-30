@@ -12,6 +12,15 @@ class AppIcons {
   static const String navQuests = 'assets/icons/nav_quests.png';
   static const String navStats = 'assets/icons/nav_stats.png';
   static const String navGear = 'assets/icons/nav_gear.png';
+  static const String navMode = 'assets/icons/nav_mode.png';
+
+  // ── Game Modes (Mode tab banners) ─────────────────────────────────────────
+  static const String modeBurnChainBanner = 'assets/Modes/banner_burn_chain.jpg';
+  static const String modeTreasureDelveBanner =
+      'assets/Modes/banner_treasure_delve.jpg';
+  /// Hero render cropped to the character, so it centres exactly on a
+  /// leaderboard pedestal (243x600, feet on the bottom edge).
+  static const String leaderboardHero = 'assets/Leaderboard/hero_podium.png';
   static const String menuIcon = 'assets/menu_icon.png';
 
   // ── Ring Menu ───────────────────────────────────────────────────────────────

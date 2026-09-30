@@ -27,6 +27,7 @@ import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/home/cards/home_adventure_hub.dart' show kHubBossesTileKey;
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/rewards/rewards_screen.dart';
@@ -39,6 +40,9 @@ import '../services/world_zone_refresh_notifier.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/modes/modes_screen.dart';
+import '../../features/modes/burn_chain/burn_chain_provider.dart';
+import '../../features/modes/treasure_delve/delve_provider.dart';
 import '../../features/titles/titles_ranks_screen.dart';
 import '../../features/season/season_track_screen.dart';
 import '../../features/talents/talents_screen.dart';
@@ -56,7 +60,6 @@ import '../widgets/app_toast.dart';
 import 'shell_constants.dart';
 import 'widgets/journey_popover.dart';
 import 'widgets/map_orb_button.dart';
-import 'widgets/menu_sheet.dart';
 import 'widgets/shell_tab_bar.dart';
 import '../../features/activity/log_activity_screen.dart';
 import '../../features/map/screens/region_chests_screen.dart';
@@ -80,7 +83,6 @@ class _MainShellState extends ConsumerState<MainShell>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   int _tabIndex = 0;
   bool _journeyOpen = false;
-  bool _menuOpen = false;
   bool _worldOpen = false;
   ValueChanged<ZonePick>? _pendingOnZoneSelected;
   bool _titlesOpen = false;
@@ -113,9 +115,9 @@ class _MainShellState extends ConsumerState<MainShell>
 
   final _guildRealtime = GuildRealtimeService();
 
-  /// Tabs in the IndexedStack. Map and Menu are not tabs: the Map button
-  /// opens the journey card, Menu opens a sheet.
-  static const _navIds = ['home', 'gear', 'profile'];
+  /// Tabs in the IndexedStack. Map is not a tab: the Map button opens the
+  /// journey card.
+  static const _navIds = ['home', 'gear', 'profile', 'modes'];
   Timer? _guildVictoryPollTimer;
   Timer? _guildExpiryPollTimer;
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
@@ -135,7 +137,6 @@ class _MainShellState extends ConsumerState<MainShell>
   final Set<String> _shownLevelUpReceipts = {};
   bool _checkingLevelUps = false;
 
-  final _menuKey = GlobalKey();
   final _mapNavKey = GlobalKey();
 
   // LL-035 tutorial integration: hooked once, consumed every rebuild.
@@ -804,14 +805,6 @@ class _MainShellState extends ConsumerState<MainShell>
     setState(() => _journeyOpen = false);
   }
 
-  Future<void> _openMenu() async {
-    _closeJourney();
-    setState(() => _menuOpen = true);
-    final id = await showMenuSheet(context);
-    if (!mounted) return;
-    setState(() => _menuOpen = false);
-    if (id != null) _onRingItemTap(id);
-  }
 
   /// Sync from the journey card: jump to Home so the rewards land on the
   /// hero, then run the same flow as a pull.
@@ -848,6 +841,8 @@ class _MainShellState extends ConsumerState<MainShell>
         return const SizedBox.shrink();
       case 'profile':
         return const ProfileScreen();
+      case 'modes':
+        return const ModesScreen();
       case 'titles':
         return const TitlesRanksScreen();
       case 'season':
@@ -949,13 +944,13 @@ class _MainShellState extends ConsumerState<MainShell>
     });
 
     // Register shell-level tutorial targets once after the first frame paints
-    // (needs _menuKey / _mapNavKey in the tree before the controller can read rects).
+    // (needs the hub's Bosses tile / _mapNavKey in the tree before the controller can read rects).
     if (!_tutorialKeysRegistered) {
       _tutorialKeysRegistered = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final c = ref.read(tutorialControllerProvider);
-        c.registerKey('bossFab', _menuKey);
+        c.registerKey('bossFab', kHubBossesTileKey);
         c.registerKey('mapTab', _mapNavKey);
         _syncTutorialWithProfile();
       });
@@ -1031,7 +1026,7 @@ class _MainShellState extends ConsumerState<MainShell>
                 ),
               ),
 
-              // ── tab bar: Home · Gear · [Map] · Profile · Menu ───────────
+              // ── tab bar: Home · Gear · [Map] · Mode · Profile ───────────
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -1039,9 +1034,6 @@ class _MainShellState extends ConsumerState<MainShell>
                 child: ShellTabBar(
                   currentIndex: _tabIndex.clamp(0, _navIds.length - 1),
                   mapOpen: _journeyOpen || _worldOpen,
-                  menuOpen: _menuOpen,
-                  menuKey: _menuKey,
-                  onMenu: _openMenu,
                   onTab: (i) {
                     setState(() {
                       _journeyOpen = false;
@@ -1058,6 +1050,10 @@ class _MainShellState extends ConsumerState<MainShell>
                     if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                       ref.read(characterProfileProvider.notifier).refresh();
                       invalidateUserScopedProviders(ref);
+                    }
+                    if (_navIds[i] == 'modes') {
+                      ref.invalidate(burnChainProvider);
+                      ref.invalidate(delveStatusProvider);
                     }
                   },
                 ),
@@ -1090,6 +1086,11 @@ class _MainShellState extends ConsumerState<MainShell>
 
   void _onRingItemTap(String id) {
     _closeJourney();
+    if (id == 'burn_chain') {
+      setState(() => _tabIndex = _navIds.indexOf('modes'));
+      ModesScreen.openBurnChain(context);
+      return;
+    }
     if (id == 'quests' || id == 'rewards') {
       _openRewardsDialog();
       return;

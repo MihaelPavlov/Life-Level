@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LifeLevel.Api\LifeLevel.Api.csproj" />
+    <ProjectReference Include="..\..\src\modules\LifeLevel.Modules.Modes\LifeLevel.Modules.Modes.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_icons.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/character/models/level_up_receipt.dart';
 import '../../features/items/models/item_models.dart' show rarityColor;
@@ -38,6 +39,14 @@ Future<void> showLevelUpScreen(BuildContext context, int level,
         description: 'Added to your wallet',
         badge: 'RECEIVED',
         color: AppColors.orange,
+      ),
+    if (receipt != null && receipt.talentCrystalsGranted > 0)
+      RewardUnlock(
+        icon: Image.asset(AppIcons.talentCrystalIcon, width: 28, height: 28),
+        name: '+${receipt.talentCrystalsGranted} Talent Crystals',
+        description: 'Added to your talent wallet',
+        badge: 'RECEIVED',
+        color: AppColors.purple,
       ),
     if (receipt != null &&
         receipt.newInventorySlots > receipt.previousInventorySlots)

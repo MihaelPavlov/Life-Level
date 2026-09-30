@@ -5295,8 +5295,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/app_icons.dart": {
-    "mtime": 1790534085.3115065,
-    "ast_hash": "755eead5bd27fc123eb0f4440f0bbb96",
+    "mtime": 1790711291.5549471,
+    "ast_hash": "165ba238d8e77c5cdc81ee174a175102",
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/avatar_icons.dart": {
@@ -5385,8 +5385,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/main_shell.dart": {
-    "mtime": 1790674285.1394186,
-    "ast_hash": "721479ce9936bdde3ec2280efd012877",
+    "mtime": 1790711726.6663392,
+    "ast_hash": "94d31292c72ce61cf1683659902c307d",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/shell_constants.dart": {
@@ -6240,8 +6240,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/tutorial/models/tutorial_step.dart": {
-    "mtime": 1788511416.579307,
-    "ast_hash": "40070edbb7a416399fcb0d1a698c107a",
+    "mtime": 1790707465.8164454,
+    "ast_hash": "b0b1c18bfe8b74987b3f87ce512b4525",
     "semantic_hash": ""
   },
   "mobile/lib/features/tutorial/models/tutorial_topic.dart": {
@@ -6300,8 +6300,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/tutorial/widgets/tutorial_overlay.dart": {
-    "mtime": 1790238239.6333668,
-    "ast_hash": "48f22c80de447c062739ff64a069e10b",
+    "mtime": 1790707465.8164454,
+    "ast_hash": "6f4287469dfdeb098bbbfb3e8f2e636f",
     "semantic_hash": ""
   },
   "mobile/lib/features/tutorial/widgets/tutorial_progress_dots.dart": {
@@ -6720,8 +6720,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790672030.916966,
-    "ast_hash": "4453296623469c2b9772a802939fc5f6",
+    "mtime": 1790712347.65476,
+    "ast_hash": "655fd7798c88e659933d286c699dccfc",
     "semantic_hash": ""
   },
   "INTEGRATION_PLAN.txt": {
@@ -7805,8 +7805,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1790580748.3225758,
-    "ast_hash": "66c61b8bc8da1c790e8aae66c105d573",
+    "mtime": 1790711291.5543156,
+    "ast_hash": "1140a0ecc985d17c86d4c4c13c95d785",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -10955,8 +10955,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_adventure_hub.dart": {
-    "mtime": 1790533403.546461,
-    "ast_hash": "fae424e3191ba7765fdfa8ac4cb1f78b",
+    "mtime": 1790707465.8154454,
+    "ast_hash": "ba4894315d56b7fc312be046d852a3f4",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_hero_stage.dart": {
@@ -10965,8 +10965,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/providers/adventure_hub_status_provider.dart": {
-    "mtime": 1790542460.3928275,
-    "ast_hash": "bbd2d5abe8cac6ffb3d38e7da4d6cb44",
+    "mtime": 1790707465.8163302,
+    "ast_hash": "1cd7558d7c7be79d7883898f1881481d",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_chests_screen.dart": {
@@ -11055,8 +11055,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/home/home_adventure_hub_test.dart": {
-    "mtime": 1790542455.4458776,
-    "ast_hash": "65f67dd9caf2aa2a86bd81f3a87f7d0a",
+    "mtime": 1790707465.8174453,
+    "ast_hash": "7ec71de38cf927a79071ecec3bcdac6d",
     "semantic_hash": ""
   },
   "mobile/test/features/rewards/rewards_models_test.dart": {
@@ -11910,42 +11910,42 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_isolatedDiff.png": {
-    "mtime": 1790673121.6352403,
+    "mtime": 1790712257.8429859,
     "ast_hash": "e614d64d7566dc1f1b276d74c49058da",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_maskedDiff.png": {
-    "mtime": 1790673121.1762433,
+    "mtime": 1790712257.5619888,
     "ast_hash": "2e18c8343fb15f7e3dd9fbadea801443",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_masterImage.png": {
-    "mtime": 1790673120.7162461,
+    "mtime": 1790712256.8661363,
     "ast_hash": "7af3f4873ec79c177221896914e3c775",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_testImage.png": {
-    "mtime": 1790673120.9522448,
+    "mtime": 1790712257.155993,
     "ast_hash": "4dc90293d1190c1f9b29a703d950b16d",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_isolatedDiff.png": {
-    "mtime": 1790673124.2212236,
+    "mtime": 1790712260.3289604,
     "ast_hash": "cdf7e65332694ffb7b95daf8cb346c83",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_maskedDiff.png": {
-    "mtime": 1790673123.666227,
+    "mtime": 1790712260.0299635,
     "ast_hash": "397bf285b14085c67b1f2530487de9ae",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_masterImage.png": {
-    "mtime": 1790673123.1262305,
+    "mtime": 1790712259.3739703,
     "ast_hash": "967aa99859177f33a15045a8ab7f21c2",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_testImage.png": {
-    "mtime": 1790673123.391229,
+    "mtime": 1790712259.7169666,
     "ast_hash": "8b41d6783c480851277e1e352a84f1ec",
     "semantic_hash": ""
   },
@@ -12379,19 +12379,14 @@
     "ast_hash": "e172005190311a7a4dace96a1e21857f",
     "semantic_hash": ""
   },
-  "mobile/lib/core/shell/widgets/menu_sheet.dart": {
-    "mtime": 1790671503.1916888,
-    "ast_hash": "252a228af3ef9d4470f833a118dc7b5d",
-    "semantic_hash": ""
-  },
   "mobile/lib/core/shell/widgets/shell_tab_bar.dart": {
-    "mtime": 1790670531.0946689,
-    "ast_hash": "2421a3fb4a46cc85eb56fa312d6a2a75",
+    "mtime": 1790711735.1184423,
+    "ast_hash": "017800d7ffd4f4eb1f04de56c4c21c87",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_happening_now.dart": {
-    "mtime": 1790671667.4876804,
-    "ast_hash": "8e941fd326724bfb7968b32766170e8e",
+    "mtime": 1790711744.9344394,
+    "ast_hash": "8670c2b29470850b5b35fbe543a90a68",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/journey/journey_state.dart": {
@@ -12435,8 +12430,8 @@
     "semantic_hash": ""
   },
   "mobile/test/core/shell/map_orb_and_tab_bar_test.dart": {
-    "mtime": 1790671667.58068,
-    "ast_hash": "b5eb6dbced7d623f212ccf7d3f972fd3",
+    "mtime": 1790711735.1187007,
+    "ast_hash": "a30d10568a10f27c29f9eed61332a443",
     "semantic_hash": ""
   },
   "mobile/test/features/integrations/strava_service_test.dart": {
@@ -12455,8 +12450,8 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/pull_import_showcase_test.dart": {
-    "mtime": 1790671667.6696794,
-    "ast_hash": "e0a3e9b79f326d87fcbc3bc494ce9834",
+    "mtime": 1790711735.1189036,
+    "ast_hash": "65384b6cc330fc8a7de90a36d111b835",
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Map Orb, Pull-to-Import, Happening Now.md": {
@@ -12472,6 +12467,101 @@
   "mobile/test/core/shell/journey_popover_test.dart": {
     "mtime": 1790673088.0254583,
     "ast_hash": "6bfc20870a3fa6c75257d9be0416752e",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260929_174325_do_we_have_something_on_the_bottom_nav_menu_that_i.md": {
+    "mtime": 1790703805.3811698,
+    "ast_hash": "e28e949fddfa9cb9a6088053036c44e3",
+    "semantic_hash": ""
+  },
+  "mobile/assets/icons/nav_mode.png": {
+    "mtime": 1790706967.0612798,
+    "ast_hash": "272c47051c767c33f8b083b891f9597b",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/burn_chain/burn_chain_provider.dart": {
+    "mtime": 1790711798.6716292,
+    "ast_hash": "31356d2d1412d1123767e477f3b495ed",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/burn_chain/burn_chain_rules.dart": {
+    "mtime": 1790711310.7792609,
+    "ast_hash": "b19b17d1ba993b3cc10e387ade4b7680",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/burn_chain/burn_chain_screen.dart": {
+    "mtime": 1790712147.5228655,
+    "ast_hash": "f385cb5c6b99c33e51a4459d9cb46dea",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/modes_screen.dart": {
+    "mtime": 1790711798.9416265,
+    "ast_hash": "ca1e797293818fc08bea271e34b4aeb8",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/services/modes_local_store.dart": {
+    "mtime": 1790711798.9706264,
+    "ast_hash": "c0d879bd6ac807770247caf3ac6ddf29",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/treasure_delve/delve_engine.dart": {
+    "mtime": 1790711799.0416255,
+    "ast_hash": "57b74bfd4e0e5105747721165627f539",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/treasure_delve/delve_provider.dart": {
+    "mtime": 1790711813.3602011,
+    "ast_hash": "498e689579bc2e76d961d2e34df47150",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/treasure_delve/delve_run_screen.dart": {
+    "mtime": 1790712207.3595462,
+    "ast_hash": "79f965cf18b122aac4e6908d4415f3fd",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/treasure_delve/treasure_delve_screen.dart": {
+    "mtime": 1790712147.52368,
+    "ast_hash": "d3a672e5b09fe8085182f6dc859b5903",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/widgets/mode_banner.dart": {
+    "mtime": 1790711490.8126085,
+    "ast_hash": "6c76fce3b3b969338c0597f600a632f1",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/widgets/mode_ui.dart": {
+    "mtime": 1790712159.4141517,
+    "ast_hash": "50d0bb59db166eced0d030e901cf7a06",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/modes/burn_chain_rules_test.dart": {
+    "mtime": 1790712160.973978,
+    "ast_hash": "658047ee88ca78feb80bcd7194c88979",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/modes/delve_engine_test.dart": {
+    "mtime": 1790711861.0250094,
+    "ast_hash": "043b592d8894dcfc698b42a72d20e3df",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/modes/modes_screens_test.dart": {
+    "mtime": 1790712207.3599436,
+    "ast_hash": "cca2a04173316e6e1d9d4919ae1d50e3",
+    "semantic_hash": ""
+  },
+  "docs/obsidian/07 - Development/Plan - Game Modes (Burn Chain, Treasure Delve).md": {
+    "mtime": 1790712347.3400652,
+    "ast_hash": "7139bef10d6872697054be31e19b1cc8",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Modes/banner_burn_chain.jpg": {
+    "mtime": 1790711285.5018857,
+    "ast_hash": "f6905deb2e2b23a28115c46baf9f5c33",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Modes/banner_treasure_delve.jpg": {
+    "mtime": 1790711285.5051699,
+    "ast_hash": "47be42d7e7f762e7dd7e55c0cab5832e",
     "semantic_hash": ""
   }
 }

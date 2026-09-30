@@ -14,6 +14,7 @@ public record LevelUpReceiptDto(
     int BonusStatPointsGranted,
     int PowerGained,
     int CoinsGranted,
+    int TalentCrystalsGranted,
     int PreviousInventorySlots,
     int NewInventorySlots,
     IReadOnlyList<GrantedItemInfo> GrantedItems,

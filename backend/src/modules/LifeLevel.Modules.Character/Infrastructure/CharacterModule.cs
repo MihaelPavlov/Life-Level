@@ -22,6 +22,7 @@ public static class CharacterModule
         services.AddScoped<ILevelUpReceiptPort>(sp => sp.GetRequiredService<CharacterService>());
         services.AddScoped<ICharacterClassBonusReadPort>(sp => sp.GetRequiredService<CharacterService>());
         services.AddScoped<ClassRecommendationService>();
+        services.AddScoped<UnlockService>();
         services.AddScoped<IEventHandler<UserRegisteredEvent>, CharacterCreatedHandler>();
         services.AddScoped<TitleService>();
         services.AddScoped<TitleUnlockAdapter>();

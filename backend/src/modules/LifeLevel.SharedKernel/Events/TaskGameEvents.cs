@@ -1,6 +1,10 @@
 namespace LifeLevel.SharedKernel.Events;
 
-public record ChestOpenedEvent(Guid UserId, Guid ChestId) : IDomainEvent;
+public record ChestOpenedEvent(
+    Guid UserId,
+    Guid ChestId,
+    string Source = "Unknown",
+    string? Rarity = null) : IDomainEvent;
 public record BossContributionEvent(Guid UserId, Guid ActivityId) : IDomainEvent;
 public record GuildRaidContributionEvent(Guid UserId, Guid RaidId, Guid ActivityId) : IDomainEvent;
 public record GuildRaidWonEvent(Guid UserId, Guid RaidId) : IDomainEvent;

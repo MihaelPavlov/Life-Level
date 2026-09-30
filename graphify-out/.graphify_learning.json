@@ -1,8 +1,24 @@
 {
-  "generated_at": "2026-09-27T18:19:54.266662+00:00",
+  "generated_at": "2026-09-29T20:24:20.743909+00:00",
   "nodes": {
+    "backend_src_lifelevel_api_controllers_activitycontroller": {
+      "code_fingerprint": "b94adbb1517e299c85dc41b4721aaa49524ffcbd64ef9dee940f570d61b72663",
+      "label": "ActivityController.cs",
+      "last": "2026-09-27T19:12:11.603325+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        }
+      ],
+      "score": 0.953736833,
+      "source_file": "backend/src/LifeLevel.Api/Controllers/ActivityController.cs",
+      "status": "tentative",
+      "uses": 1
+    },
     "backend_src_modules_lifelevel_modules_achievements_application_usecases_achievementservice": {
-      "code_fingerprint": "931aac570a66293e3779b5659dd99e9089b428dc590357565b7322b73c7768f7",
+      "code_fingerprint": "455c68a6a91a6b754862f0389048ba7f54d2c10606698ea64daa507dbdca0437",
       "label": "AchievementService.cs",
       "last": "2026-09-25T21:52:25.362072+00:00",
       "provenance": [
@@ -12,10 +28,47 @@
           "q": "What do you think about Life-Level that we are currently building? Check the project."
         }
       ],
-      "score": 0.958103048,
+      "score": 0.913011847,
       "source_file": "backend/src/modules/LifeLevel.Modules.Achievements/Application/UseCases/AchievementService.cs",
       "status": "tentative",
       "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_activity_application_dtos_activitydtos": {
+      "code_fingerprint": "8b8b8dab7c748f2a4bb658cedc357af2f419a3a3b9aa501cc1eeae0c5c6dacff",
+      "label": "ActivityDtos.cs",
+      "last": "2026-09-27T19:12:11.603325+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        }
+      ],
+      "score": 0.953736833,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Activity/Application/DTOs/ActivityDtos.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_activity_application_usecases_activityservice": {
+      "code_fingerprint": "b4fd5e3d8a839dc29d568bee54b0f49bfd87ea7f6a362ef96778e15401460b72",
+      "label": "ActivityService.cs",
+      "last": "2026-09-27T19:52:15.440234+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:52:15.440234+00:00",
+          "outcome": "useful",
+          "q": "Does the level-up thing show unlocks that are 100% real?"
+        },
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        }
+      ],
+      "score": 1.908086953,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Activity/Application/UseCases/ActivityService.cs",
+      "status": "preferred",
+      "uses": 2
     },
     "backend_src_modules_lifelevel_modules_adventure_encounters_domain_enums_chestrarity_lifelevel_modules_adventure_encounters_domain_enums_chestrarity": {
       "code_fingerprint": "916c9d0e37ae6263f99c0b5f9c8855b7d21c28e27873a7252ccafebffbb8163a",
@@ -28,8 +81,24 @@
           "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
         }
       ],
-      "score": 0.956091801,
+      "score": 0.911095256,
       "source_file": "backend/src/modules/LifeLevel.Modules.Adventure.Encounters/Domain/Enums/ChestRarity.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_character_application_usecases_characterservice": {
+      "code_fingerprint": "2d6ce88fa2aba88d4dfb40d7b06a01590a1467e37b21412f855f7a83ca13c5ed",
+      "label": "CharacterService.cs",
+      "last": "2026-09-27T19:52:15.440234+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:52:15.440234+00:00",
+          "outcome": "useful",
+          "q": "Does the level-up thing show unlocks that are 100% real?"
+        }
+      ],
+      "score": 0.95435012,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Character/Application/UseCases/CharacterService.cs",
       "status": "tentative",
       "uses": 1
     },
@@ -44,13 +113,29 @@
           "q": "currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
         }
       ],
-      "score": 0.999796827,
+      "score": 0.952743391,
       "source_file": "backend/src/modules/LifeLevel.Modules.Items/Application/Ports/ChestItemRewardPortAdapter.cs",
       "status": "tentative",
       "uses": 1
     },
+    "backend_src_modules_lifelevel_modules_items_application_usecases_itemgrantservice": {
+      "code_fingerprint": "1d4b37c564fb14bc0f35aec611e0ad77e086f96c8e9f007138c37d139f139216",
+      "label": "ItemGrantService.cs",
+      "last": "2026-09-27T19:52:15.440234+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:52:15.440234+00:00",
+          "outcome": "useful",
+          "q": "Does the level-up thing show unlocks that are 100% real?"
+        }
+      ],
+      "score": 0.95435012,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Items/Application/UseCases/ItemGrantService.cs",
+      "status": "tentative",
+      "uses": 1
+    },
     "backend_src_modules_lifelevel_modules_quest_application_usecases_questservice": {
-      "code_fingerprint": "82ac6b6c505138dc5bb3625191b9bcedec99d4b1bcbd29189794a305b8d8a15d",
+      "code_fingerprint": "59b4cca54cf3901fdbd43ed23bc768bdf26f17f8713f57d6c66098fa9e30fe67",
       "label": "QuestService.cs",
       "last": "2026-09-25T21:52:25.362072+00:00",
       "provenance": [
@@ -65,7 +150,7 @@
           "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
         }
       ],
-      "score": 1.872427853,
+      "score": 1.784305786,
       "source_file": "backend/src/modules/LifeLevel.Modules.Quest/Application/UseCases/QuestService.cs",
       "status": "preferred",
       "uses": 2
@@ -81,8 +166,56 @@
           "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
         }
       ],
-      "score": 0.914324805,
+      "score": 0.871293939,
       "source_file": "backend/src/modules/LifeLevel.Modules.Quest/Domain/Data/QuestSeedData.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_talents_application_usecases_talentservice_lifelevel_modules_talents_application_usecases_talentservice": {
+      "code_fingerprint": "95b9f776843c574414e67acf902f97ed2186ff223ea8b5a788c2c3b99f4fd00b",
+      "label": "TalentService",
+      "last": "2026-09-29T20:22:00.492150+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-29T20:22:00.492150+00:00",
+          "outcome": "useful",
+          "q": "DId we split the telants crystals and the gems"
+        }
+      ],
+      "score": 0.999962495,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Talents/Application/UseCases/TalentService.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_talents_domain_entities_usertalentwallet_lifelevel_modules_talents_domain_entities_usertalentwallet": {
+      "code_fingerprint": "4e7e865db71fc79d79f574432f1005e89047b2d4c2bc3b3e2ce2e4bfb91398e7",
+      "label": "UserTalentWallet",
+      "last": "2026-09-29T20:22:00.492150+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-29T20:22:00.492150+00:00",
+          "outcome": "useful",
+          "q": "DId we split the telants crystals and the gems"
+        }
+      ],
+      "score": 0.999962495,
+      "source_file": "backend/src/modules/LifeLevel.Modules.Talents/Domain/Entities/UserTalentWallet.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_src_modules_lifelevel_modules_worldzone_application_ports_zoneunlockreadportadapter": {
+      "code_fingerprint": "e5d7e3ec8f0f70584ae4f7b7f0c4d54434c9bdbc73ccc481c832f6908c2b4752",
+      "label": "ZoneUnlockReadPortAdapter.cs",
+      "last": "2026-09-27T19:52:15.440234+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:52:15.440234+00:00",
+          "outcome": "useful",
+          "q": "Does the level-up thing show unlocks that are 100% real?"
+        }
+      ],
+      "score": 0.95435012,
+      "source_file": "backend/src/modules/LifeLevel.Modules.WorldZone/Application/Ports/ZoneUnlockReadPortAdapter.cs",
       "status": "tentative",
       "uses": 1
     },
@@ -97,13 +230,29 @@
           "q": "What do you think about Life-Level that we are currently building? Check the project."
         }
       ],
-      "score": 0.958103048,
+      "score": 0.913011847,
       "source_file": "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/WorldZoneService.cs",
       "status": "tentative",
       "uses": 1
     },
+    "backend_src_modules_lifelevel_sharedkernel_ports_ishopwalletport_lifelevel_sharedkernel_ports_ishopwalletport": {
+      "code_fingerprint": "0d73f9337bad2c914d727f942314beeba4d72128b91e7833c24e2224211844b3",
+      "label": "IShopWalletPort",
+      "last": "2026-09-29T20:22:00.492150+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-29T20:22:00.492150+00:00",
+          "outcome": "useful",
+          "q": "DId we split the telants crystals and the gems"
+        }
+      ],
+      "score": 0.999962495,
+      "source_file": "backend/src/modules/LifeLevel.SharedKernel/Ports/IShopWalletPort.cs",
+      "status": "tentative",
+      "uses": 1
+    },
     "backend_tests_lifelevel_api_tests_achievementroadstests_lifelevel_api_tests_achievementroadstests": {
-      "code_fingerprint": "e607fbb92bbb25e79212d180b2f9ebf5e7c5069fb1669036d288623fc3348674",
+      "code_fingerprint": "b96be4b96e32a6c09d1fccbd8064413a35f088e790b60e8eca6586247858fd5e",
       "label": "AchievementRoadsTests",
       "last": "2026-09-27T18:07:14.430201+00:00",
       "provenance": [
@@ -113,8 +262,24 @@
           "q": "currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
         }
       ],
-      "score": 0.999796827,
+      "score": 0.952743391,
       "source_file": "backend/tests/LifeLevel.Api.Tests/AchievementRoadsTests.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_tests_lifelevel_api_tests_activityserviceexternalitemgranttests": {
+      "code_fingerprint": "f15c484adf66384218d04cb562d4e581f41575c4858777c92a7c60ffba996953",
+      "label": "ActivityServiceExternalItemGrantTests.cs",
+      "last": "2026-09-27T19:12:11.603325+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        }
+      ],
+      "score": 0.953736833,
+      "source_file": "backend/tests/LifeLevel.Api.Tests/ActivityServiceExternalItemGrantTests.cs",
       "status": "tentative",
       "uses": 1
     },
@@ -129,7 +294,7 @@
           "q": "What do you think about Life-Level that we are currently building? Check the project."
         }
       ],
-      "score": 0.958103048,
+      "score": 0.913011847,
       "source_file": "backend/tests/LifeLevel.Api.Tests/GuildServiceTests.cs",
       "status": "tentative",
       "uses": 1
@@ -145,7 +310,7 @@
           "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
         }
       ],
-      "score": 0.956091801,
+      "score": 0.911095256,
       "source_file": "design-mockup/generated-icons/icon-prompts-hand-drawn-sticker.md",
       "status": "tentative",
       "uses": 1
@@ -161,7 +326,7 @@
           "q": "give me prompts to generate 3 chest valuts images based on our assets styles that we have right now. FOr wayfarer CHest Adept CHest AND cHAMPION CHEST"
         }
       ],
-      "score": 0.956091801,
+      "score": 0.911095256,
       "source_file": "docs/equipment-icon-prompts.md",
       "status": "tentative",
       "uses": 1
@@ -177,16 +342,90 @@
           "q": "What do you think about Life-Level that we are currently building? Check the project."
         }
       ],
-      "score": 0.958103048,
+      "score": 0.913011847,
       "source_file": "docs/obsidian/07 - Development/Plan - Achievement Reward Roads.md",
       "status": "tentative",
       "uses": 1
     },
-    "mobile_lib_core_shell_main_shell": {
-      "code_fingerprint": "7605cff4cd9bdf71f413f51598c0ec5526126a2bd79ce1fcc67ceacf48d73f87",
-      "label": "shell/main_shell.dart",
-      "last": "2026-09-27T18:18:21.310933+00:00",
+    "main_shell_dart": {
+      "code_fingerprint": "",
+      "label": "main_shell.dart",
+      "last": "2026-09-27T19:18:59.247115+00:00",
       "provenance": [
+        {
+          "date": "2026-09-27T19:18:59.247115+00:00",
+          "outcome": "useful",
+          "q": "also right now the map that we did on the home map section currently if we click on the map from the bottom nav we do not want to be navigate to the opened current zone just to the current zone position"
+        },
+        {
+          "date": "2026-09-27T18:56:13.000713+00:00",
+          "outcome": "useful",
+          "q": "ON clickig on the home section map enter dungeon on all of them we are navigated to the world , not to the zone. So if we have selected zone we want on click enter dungeon and the other types of home section map to be naviate to the particular place region zone"
+        }
+      ],
+      "score": 1.907333184,
+      "source_file": "",
+      "status": "preferred",
+      "uses": 2
+    },
+    "mobile_lib_core_services_level_up_notifier": {
+      "code_fingerprint": "b788929704ca55c4730c888a4ac4d00572a415c08041ebc2a0c46d4d48521565",
+      "label": "level_up_notifier.dart",
+      "last": "2026-09-27T19:52:15.440234+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:52:15.440234+00:00",
+          "outcome": "useful",
+          "q": "Does the level-up thing show unlocks that are 100% real?"
+        }
+      ],
+      "score": 0.95435012,
+      "source_file": "mobile/lib/core/services/level_up_notifier.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_core_services_world_map_notifier": {
+      "code_fingerprint": "d84fd459575843bfb90dc97ccdfc2d349550a894d1b72851aa6c4f006595269e",
+      "label": "world_map_notifier.dart",
+      "last": "2026-09-27T18:56:13.000713+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:56:13.000713+00:00",
+          "outcome": "useful",
+          "q": "ON clickig on the home section map enter dungeon on all of them we are navigated to the world , not to the zone. So if we have selected zone we want on click enter dungeon and the other types of home section map to be naviate to the particular place region zone"
+        }
+      ],
+      "score": 0.953492377,
+      "source_file": "mobile/lib/core/services/world_map_notifier.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_core_session_invalidate_user_providers": {
+      "code_fingerprint": "066ffc324139fa674c9e3e970460ab2e51ab8739611ca272af67e637aa665c1e",
+      "label": "invalidate_user_providers.dart",
+      "last": "2026-09-27T19:12:11.603325+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        }
+      ],
+      "score": 0.953736833,
+      "source_file": "mobile/lib/core/session/invalidate_user_providers.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_core_shell_main_shell": {
+      "code_fingerprint": "3e0d5c90fa1878d40bb30e421e47a793fa5b6cc8b345a5299f4b4c129b59ebcb",
+      "label": "shell/main_shell.dart",
+      "last": "2026-09-29T17:43:25.320411+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-29T17:43:25.320411+00:00",
+          "outcome": "useful",
+          "q": "do we have something on the bottom nav menu that its not on the adventure hub section on the home page ?"
+        },
         {
           "date": "2026-09-27T18:18:21.310933+00:00",
           "outcome": "useful",
@@ -198,10 +437,10 @@
           "q": "Audit the center expandable menu in the bottom navigation and determine what happens if it is removed."
         }
       ],
-      "score": 1.958137549,
+      "score": 2.863403024,
       "source_file": "mobile/lib/core/shell/main_shell.dart",
       "status": "preferred",
-      "uses": 2
+      "uses": 3
     },
     "mobile_lib_core_shell_widgets_bottom_nav_bar": {
       "code_fingerprint": "e5d68e440e939d7771005a7901ab56e74d99a6ae0f73d43a1676c1e7ec33f888",
@@ -214,10 +453,68 @@
           "q": "Audit the center expandable menu in the bottom navigation and determine what happens if it is removed."
         }
       ],
-      "score": 0.958162407,
+      "score": 0.913068412,
       "source_file": "mobile/lib/core/shell/widgets/bottom_nav_bar.dart",
       "status": "tentative",
       "uses": 1
+    },
+    "mobile_lib_core_widgets_currency_chip": {
+      "code_fingerprint": "efd65f1fc1d654aa29b862629b7af0c177f5929234906b5b103281e12db8e3b9",
+      "label": "currency_chip.dart",
+      "last": "2026-09-27T18:52:23.470851+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:52:23.470851+00:00",
+          "outcome": "useful",
+          "q": "and for the steps on the top middle the same resource INfo data. Also are these steps caunt real ?"
+        }
+      ],
+      "score": 0.953433853,
+      "source_file": "mobile/lib/core/widgets/currency_chip.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_core_widgets_level_up_overlay": {
+      "code_fingerprint": "2b6301502ac1468842d36b09455ef37f73caaa93329957241934fe20166427f9",
+      "label": "level_up_overlay.dart",
+      "last": "2026-09-27T19:52:15.440234+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:52:15.440234+00:00",
+          "outcome": "useful",
+          "q": "Does the level-up thing show unlocks that are 100% real?"
+        }
+      ],
+      "score": 0.95435012,
+      "source_file": "mobile/lib/core/widgets/level_up_overlay.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_core_widgets_resource_info_dialog": {
+      "code_fingerprint": "e6acc04d9d77a2fcbc963a5f892f6be22fc9785e83a4ba2ee97075a60db316fa",
+      "label": "resource_info_dialog.dart",
+      "last": "2026-09-27T19:15:59.612648+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:15:59.612648+00:00",
+          "outcome": "useful",
+          "q": "LETs add again resourceINfoDAta for the gear , power str, health,shield and coins"
+        },
+        {
+          "date": "2026-09-27T18:49:15.638306+00:00",
+          "outcome": "useful",
+          "q": "ADd to power also on the home screen such REsourceInfoData + Dont should the actual count on the info banked shield and power"
+        },
+        {
+          "date": "2026-09-27T18:45:07.965766+00:00",
+          "outcome": "useful",
+          "q": "agree let do it"
+        }
+      ],
+      "score": 2.860503771,
+      "source_file": "mobile/lib/core/widgets/resource_info_dialog.dart",
+      "status": "preferred",
+      "uses": 3
     },
     "mobile_lib_features_achievements_providers_achievements_provider_achievementroadsprovider": {
       "code_fingerprint": "ae3ad68c303212ba230f27b6a06bb1c6ea7bf60ded202ae1e8a73718f328b524",
@@ -230,29 +527,161 @@
           "q": "currenthly we have new redesign over the achivments, so can we check if the implemented there is full and working with the new chests ?"
         }
       ],
-      "score": 0.999796827,
+      "score": 0.952743391,
       "source_file": "mobile/lib/features/achievements/providers/achievements_provider.dart",
       "status": "tentative",
       "uses": 1
     },
-    "mobile_lib_features_home_cards_home_hero_stage": {
-      "code_fingerprint": "cb7af5b71c5c510e6417ec8d3ffea7e55f4dc3a3a9c14bbd2dc65c2761f394bc",
-      "label": "home_hero_stage.dart",
-      "last": "2026-09-27T18:18:21.310933+00:00",
+    "mobile_lib_features_activity_providers_activity_provider": {
+      "code_fingerprint": "7eca467443fb903615364569b6fe140a06df5545cb4669be05dcd30b8aab7c58",
+      "label": "activity_provider.dart",
+      "last": "2026-09-27T19:12:11.603325+00:00",
       "provenance": [
         {
-          "date": "2026-09-27T18:18:21.310933+00:00",
+          "date": "2026-09-27T19:12:11.603325+00:00",
           "outcome": "useful",
-          "q": "on the home page where is the top left circle name and lv when we click on the icon of the user lets get navigated to the profile page, and also on the home page if we click on the mount and sword lets get navigate to gear page"
+          "q": "let's make functionality for aggregating the total steps for the user"
         }
       ],
-      "score": 0.999975142,
+      "score": 0.953736833,
+      "source_file": "mobile/lib/features/activity/providers/activity_provider.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_activity_services_activity_service": {
+      "code_fingerprint": "808c2c8c8dcf735663f1ec592e10d6b131baffd4f4c97c3d9b87c3e6f4ef9411",
+      "label": "activity_service.dart",
+      "last": "2026-09-27T19:12:11.603325+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        }
+      ],
+      "score": 0.953736833,
+      "source_file": "mobile/lib/features/activity/services/activity_service.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_gear_gear_screen": {
+      "code_fingerprint": "7cae35656246144760e02f09729e7f370f3df09ebf2c12e5644e5a73d54b9d35",
+      "label": "gear_screen.dart",
+      "last": "2026-09-27T19:15:59.612648+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:15:59.612648+00:00",
+          "outcome": "useful",
+          "q": "LETs add again resourceINfoDAta for the gear , power str, health,shield and coins"
+        }
+      ],
+      "score": 0.953794988,
+      "source_file": "mobile/lib/features/gear/gear_screen.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_gear_widgets_gear_paperdoll": {
+      "code_fingerprint": "a10accd2afd9749fda33a3693f0b72e27b8f5ef12045ba4d7e99016de7afbb8a",
+      "label": "gear_paperdoll.dart",
+      "last": "2026-09-27T18:35:49.614521+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:35:49.614521+00:00",
+          "outcome": "useful",
+          "q": "let's make the actual hero on the gear to be visualized the same way on the home page, SO with the equipred items if they are visible"
+        }
+      ],
+      "score": 0.953180487,
+      "source_file": "mobile/lib/features/gear/widgets/gear_paperdoll.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_gear_widgets_gear_stats_row": {
+      "code_fingerprint": "a8a22b4785a9afa12d425d2d844660f891f2be65cce4d436aa5743959e5fa487",
+      "label": "gear_stats_row.dart",
+      "last": "2026-09-27T19:15:59.612648+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:15:59.612648+00:00",
+          "outcome": "useful",
+          "q": "LETs add again resourceINfoDAta for the gear , power str, health,shield and coins"
+        }
+      ],
+      "score": 0.953794988,
+      "source_file": "mobile/lib/features/gear/widgets/gear_stats_row.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_home_cards_home_adventure_hub_homeadventurehub": {
+      "code_fingerprint": "e27e1956b662bae810b208be287afa713946f46d338bf15ccd0d6f9c7a155a60",
+      "label": "HomeAdventureHub",
+      "last": "2026-09-29T17:43:25.320411+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-29T17:43:25.320411+00:00",
+          "outcome": "useful",
+          "q": "do we have something on the bottom nav menu that its not on the adventure hub section on the home page ?"
+        }
+      ],
+      "score": 0.997421298,
+      "source_file": "mobile/lib/features/home/cards/home_adventure_hub.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_home_cards_home_hero_stage": {
+      "code_fingerprint": "00d7628bb1e4c2b5b6d2372f78922b7c826d5a00b3ac24ddfd6449af3caf3714",
+      "label": "home_hero_stage.dart",
+      "last": "2026-09-27T19:12:11.603325+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:12:11.603325+00:00",
+          "outcome": "useful",
+          "q": "let's make functionality for aggregating the total steps for the user"
+        },
+        {
+          "date": "2026-09-27T18:52:23.470851+00:00",
+          "outcome": "useful",
+          "q": "and for the steps on the top middle the same resource INfo data. Also are these steps caunt real ?"
+        },
+        {
+          "date": "2026-09-27T18:49:15.638306+00:00",
+          "outcome": "useful",
+          "q": "ADd to power also on the home screen such REsourceInfoData + Dont should the actual count on the info banked shield and power"
+        },
+        {
+          "date": "2026-09-27T18:45:07.965766+00:00",
+          "outcome": "useful",
+          "q": "agree let do it"
+        },
+        {
+          "date": "2026-09-27T18:41:29.528887+00:00",
+          "outcome": "useful",
+          "q": "wait whichi pop up animation you make generic for the banked and shields i was talking about when i click on the task coin or gem we see pop up with coins rewards type description"
+        }
+      ],
+      "score": 7.626269915,
       "source_file": "mobile/lib/features/home/cards/home_hero_stage.dart",
+      "status": "preferred",
+      "uses": 8
+    },
+    "mobile_lib_features_home_cards_home_portal_card": {
+      "code_fingerprint": "d73770687b2ece63175933375c12e7cf1cd4fd7e7ea052a3453fd2ce81d764dd",
+      "label": "home_portal_card.dart",
+      "last": "2026-09-27T18:56:13.000713+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:56:13.000713+00:00",
+          "outcome": "useful",
+          "q": "ON clickig on the home section map enter dungeon on all of them we are navigated to the world , not to the zone. So if we have selected zone we want on click enter dungeon and the other types of home section map to be naviate to the particular place region zone"
+        }
+      ],
+      "score": 0.953492377,
+      "source_file": "mobile/lib/features/home/cards/home_portal_card.dart",
       "status": "tentative",
       "uses": 1
     },
     "mobile_lib_features_home_cards_home_portal_card_homeportalcard": {
-      "code_fingerprint": "e6b8d1d0c2b71f31cd6c974f4757a32537a53126781edeabae4d8a9714f6b639",
+      "code_fingerprint": "d73770687b2ece63175933375c12e7cf1cd4fd7e7ea052a3453fd2ce81d764dd",
       "label": "HomePortalCard",
       "last": "2026-09-27T17:44:47.860968+00:00",
       "provenance": [
@@ -262,7 +691,7 @@
           "q": "currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?"
         }
       ],
-      "score": 0.999436868,
+      "score": 0.952400373,
       "source_file": "mobile/lib/features/home/cards/home_portal_card.dart",
       "status": "tentative",
       "uses": 1
@@ -278,10 +707,47 @@
           "q": "currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?"
         }
       ],
-      "score": 0.999436868,
+      "score": 0.952400373,
       "source_file": "mobile/lib/features/home/widgets/home_progress_bar.dart",
       "status": "tentative",
       "uses": 1
+    },
+    "mobile_lib_features_items_providers_items_provider": {
+      "code_fingerprint": "36940a55265203be1464aadfe37f62f62b7957bf189e4202e8a1a4f4ae0bb3a0",
+      "label": "items_provider.dart",
+      "last": "2026-09-27T18:35:49.614521+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:35:49.614521+00:00",
+          "outcome": "useful",
+          "q": "let's make the actual hero on the gear to be visualized the same way on the home page, SO with the equipred items if they are visible"
+        }
+      ],
+      "score": 0.953180487,
+      "source_file": "mobile/lib/features/items/providers/items_provider.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_map_screens_world_hub_screen": {
+      "code_fingerprint": "a8a0816e6b8cd0c991dbf64f719d26d25be4c1c1285ef2dcc8e7003b065b2db4",
+      "label": "world_hub_screen.dart",
+      "last": "2026-09-27T19:18:59.247115+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:18:59.247115+00:00",
+          "outcome": "useful",
+          "q": "also right now the map that we did on the home map section currently if we click on the map from the bottom nav we do not want to be navigate to the opened current zone just to the current zone position"
+        },
+        {
+          "date": "2026-09-27T18:56:13.000713+00:00",
+          "outcome": "useful",
+          "q": "ON clickig on the home section map enter dungeon on all of them we are navigated to the world , not to the zone. So if we have selected zone we want on click enter dungeon and the other types of home section map to be naviate to the particular place region zone"
+        }
+      ],
+      "score": 1.907333184,
+      "source_file": "mobile/lib/features/map/screens/world_hub_screen.dart",
+      "status": "preferred",
+      "uses": 2
     },
     "mobile_lib_features_map_widgets_encounter_blocker_sheet_blockersheet": {
       "code_fingerprint": "46a73bcdbcf8ded43437c2f787d04074327dfc6803254a5981c7e29e09c4f5ef",
@@ -294,7 +760,7 @@
           "q": "currenthly if a boss or enocunter take hit do we have animations on the home map section boss for reducing the health ?"
         }
       ],
-      "score": 0.999436868,
+      "score": 0.952400373,
       "source_file": "mobile/lib/features/map/widgets/encounter_blocker_sheet.dart",
       "status": "tentative",
       "uses": 1
@@ -310,8 +776,155 @@
           "q": "How much the weekly tasks and daily tasks are actually undertandble ?"
         }
       ],
-      "score": 0.914324805,
+      "score": 0.871293939,
       "source_file": "mobile/lib/features/quests/tabs/weekly_quests_tab.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_rewards_rewards_screen": {
+      "code_fingerprint": "aad2c990bc3c646a2d3e7ec457c460128563ff67f7ff0c3c1f8c4e5aa247f7b2",
+      "label": "rewards_screen.dart",
+      "last": "2026-09-27T19:32:46.516259+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:32:46.516259+00:00",
+          "outcome": "useful",
+          "q": "Where is the coins collected snackbar shown, including claim daily streak reward?"
+        },
+        {
+          "date": "2026-09-27T18:45:07.965766+00:00",
+          "outcome": "useful",
+          "q": "agree let do it"
+        },
+        {
+          "date": "2026-09-27T18:41:29.528887+00:00",
+          "outcome": "useful",
+          "q": "wait whichi pop up animation you make generic for the banked and shields i was talking about when i click on the task coin or gem we see pop up with coins rewards type description"
+        },
+        {
+          "date": "2026-09-27T18:25:57.254416+00:00",
+          "outcome": "useful",
+          "q": "lets make it generic , because we want to use it also for banked km on home page on click, shiels,"
+        },
+        {
+          "date": "2026-09-27T18:20:17.281820+00:00",
+          "outcome": "useful",
+          "q": "does the pop up on rewards tab on click coins gems and other rewards, are generic can we use it for other things?"
+        }
+      ],
+      "score": 4.766614176,
+      "source_file": "mobile/lib/features/rewards/rewards_screen.dart",
+      "status": "preferred",
+      "uses": 5
+    },
+    "mobile_lib_features_rewards_widgets_task_reward_popup": {
+      "code_fingerprint": "32698a7e87cfac23af885c08de2f83b1a55e35fe94865c74adc5e71ff98fa7d2",
+      "label": "task_reward_popup.dart",
+      "last": "2026-09-27T18:25:57.254416+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:25:57.254416+00:00",
+          "outcome": "useful",
+          "q": "lets make it generic , because we want to use it also for banked km on home page on click, shiels,"
+        },
+        {
+          "date": "2026-09-27T18:20:17.281820+00:00",
+          "outcome": "useful",
+          "q": "does the pop up on rewards tab on click coins gems and other rewards, are generic can we use it for other things?"
+        }
+      ],
+      "score": 1.905972376,
+      "source_file": "mobile/lib/features/rewards/widgets/task_reward_popup.dart",
+      "status": "preferred",
+      "uses": 2
+    },
+    "mobile_lib_features_streak_widgets_streak_detail_sheet": {
+      "code_fingerprint": "2821f4cebfff5c3b942b042c61a53fb62e5d0585015b45b37034e2b31aa1fb3a",
+      "label": "streak_detail_sheet.dart",
+      "last": "2026-09-27T19:32:46.516259+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:32:46.516259+00:00",
+          "outcome": "useful",
+          "q": "Where is the coins collected snackbar shown, including claim daily streak reward?"
+        }
+      ],
+      "score": 0.954051845,
+      "source_file": "mobile/lib/features/streak/widgets/streak_detail_sheet.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_lib_features_talents_models_talent_models_talentwallet": {
+      "code_fingerprint": "bc977a7262131ae4adeb7affb1a0a006568a805f68bf05905019e44867bf16a6",
+      "label": "TalentWallet",
+      "last": "2026-09-29T20:22:00.492150+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-29T20:22:00.492150+00:00",
+          "outcome": "useful",
+          "q": "DId we split the telants crystals and the gems"
+        }
+      ],
+      "score": 0.999962495,
+      "source_file": "mobile/lib/features/talents/models/talent_models.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_test_features_gear_gear_stats_resource_info_test": {
+      "code_fingerprint": "c9292dff5b7c81477477e9b9a847c55796ee23036264549f3f735a68c25d7b1b",
+      "label": "gear_stats_resource_info_test.dart",
+      "last": "2026-09-27T19:15:59.612648+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T19:15:59.612648+00:00",
+          "outcome": "useful",
+          "q": "LETs add again resourceINfoDAta for the gear , power str, health,shield and coins"
+        }
+      ],
+      "score": 0.953794988,
+      "source_file": "mobile/test/features/gear/gear_stats_resource_info_test.dart",
+      "status": "tentative",
+      "uses": 1
+    },
+    "mobile_test_features_home_home_hero_stage_navigation_test": {
+      "code_fingerprint": "8e6afcf9d0058bb7172480cddde57d3da15432fd6ef210f35441165589a15476",
+      "label": "home_hero_stage_navigation_test.dart",
+      "last": "2026-09-27T18:49:15.638306+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:49:15.638306+00:00",
+          "outcome": "useful",
+          "q": "ADd to power also on the home screen such REsourceInfoData + Dont should the actual count on the info banked shield and power"
+        },
+        {
+          "date": "2026-09-27T18:41:29.528887+00:00",
+          "outcome": "useful",
+          "q": "wait whichi pop up animation you make generic for the banked and shields i was talking about when i click on the task coin or gem we see pop up with coins rewards type description"
+        },
+        {
+          "date": "2026-09-27T18:35:49.614521+00:00",
+          "outcome": "useful",
+          "q": "let's make the actual hero on the gear to be visualized the same way on the home page, SO with the equipred items if they are visible"
+        }
+      ],
+      "score": 2.859833585,
+      "source_file": "mobile/test/features/home/home_hero_stage_navigation_test.dart",
+      "status": "preferred",
+      "uses": 3
+    },
+    "mobile_test_features_home_home_portal_card_test": {
+      "code_fingerprint": "e84887340e5240c70b53d53420b06b071e406211d8aa7b4ea4b4e74ba77591dc",
+      "label": "home_portal_card_test.dart",
+      "last": "2026-09-27T18:56:13.000713+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-27T18:56:13.000713+00:00",
+          "outcome": "useful",
+          "q": "ON clickig on the home section map enter dungeon on all of them we are navigated to the world , not to the zone. So if we have selected zone we want on click enter dungeon and the other types of home section map to be naviate to the particular place region zone"
+        }
+      ],
+      "score": 0.953492377,
+      "source_file": "mobile/test/features/home/home_portal_card_test.dart",
       "status": "tentative",
       "uses": 1
     },
@@ -326,7 +939,7 @@
           "q": "Audit the center expandable menu in the bottom navigation and determine what happens if it is removed."
         }
       ],
-      "score": 0.958162407,
+      "score": 0.913068412,
       "source_file": "",
       "status": "tentative",
       "uses": 1

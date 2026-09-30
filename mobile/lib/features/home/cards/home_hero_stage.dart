@@ -377,8 +377,7 @@ class _HeaderRow extends StatelessWidget {
                                   .withValues(alpha: .5)),
                         ),
                         alignment: Alignment.center,
-                        child: AppIconImage(
-                            classIconAssetForName(p.className)!,
+                        child: AppIconImage(classIconAssetForName(p.className)!,
                             size: 16),
                       ),
                     ),
@@ -405,7 +404,7 @@ class _HeaderRow extends StatelessWidget {
         const SizedBox(width: 6),
         CurrencyChip(
           iconAsset: AppIcons.homeGemIcon,
-          value: '${p?.talents?.crystals ?? 0}',
+          value: '${p?.talents?.gems ?? 0}',
           onTapAdd: () => _openShop(context),
         ),
       ],

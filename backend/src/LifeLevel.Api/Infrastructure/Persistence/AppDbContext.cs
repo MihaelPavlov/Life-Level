@@ -30,6 +30,10 @@ using LifeLevel.Modules.Seasons.Domain.Entities;
 using LifeLevel.Modules.Seasons.Infrastructure;
 using LifeLevel.Modules.Talents.Domain.Entities;
 using LifeLevel.Modules.Talents.Infrastructure;
+using LifeLevel.Modules.Modes.Domain.Entities;
+using LifeLevel.Modules.Modes.Infrastructure;
+using LifeLevel.Modules.Leaderboard.Domain.Entities;
+using LifeLevel.Modules.Leaderboard.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -50,6 +54,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<XpHistoryEntry> XpHistoryEntries => Set<XpHistoryEntry>();
     public DbSet<Title> Titles => Set<Title>();
     public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
+    public DbSet<CharacterUnlock> CharacterUnlocks => Set<CharacterUnlock>();
     public DbSet<LevelTitleGrant> LevelTitleGrants => Set<LevelTitleGrant>();
     public DbSet<LevelStatBonus> LevelStatBonuses => Set<LevelStatBonus>();
     public DbSet<RankThreshold> RankThresholds => Set<RankThreshold>();
@@ -148,6 +153,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserTalentWallet> UserTalentWallets => Set<UserTalentWallet>();
     public DbSet<TalentDrawEntry> TalentDrawEntries => Set<TalentDrawEntry>();
 
+    // Leaderboard
+    public DbSet<LeaderboardPass> LeaderboardPasses => Set<LeaderboardPass>();
+    public DbSet<LeaderboardWatch> LeaderboardWatches => Set<LeaderboardWatch>();
+
+    // Modes
+    public DbSet<BurnChainRun> BurnChainRuns => Set<BurnChainRun>();
+    public DbSet<TreasureDelveRun> TreasureDelveRuns => Set<TreasureDelveRun>();
+    public DbSet<ModeRewardSettlement> ModeRewardSettlements => Set<ModeRewardSettlement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ── Per-module EF configurations ──────────────────────────────────────────
@@ -167,6 +181,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SeasonsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TalentsModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ModesModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LeaderboardModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 
@@ -232,6 +248,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<BurnChainRun>()
+            .HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<TreasureDelveRun>()
+            .HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ModeRewardSettlement>()
+            .HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
 
         // UserQuestProgress → User
         modelBuilder.Entity<UserQuestProgress>()

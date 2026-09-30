@@ -34,7 +34,7 @@ class RewardCenterNotifier extends AsyncNotifier<RewardCenterData> {
     } else {
       final updatedWallet = RewardWallet(
         coins: previous.wallet.coins + result.coins,
-        crystals: previous.wallet.crystals + result.crystals,
+        gems: previous.wallet.gems + result.crystals,
       );
       state = AsyncData(RewardCenterData(
         wallet: updatedWallet,

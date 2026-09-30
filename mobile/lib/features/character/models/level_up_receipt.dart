@@ -50,6 +50,7 @@ class LevelUpReceipt {
   final int bonusStatPointsGranted;
   final int powerGained;
   final int coinsGranted;
+  final int talentCrystalsGranted;
   final int previousInventorySlots;
   final int newInventorySlots;
   final List<GrantedItemInfo> grantedItems;
@@ -67,6 +68,7 @@ class LevelUpReceipt {
     required this.bonusStatPointsGranted,
     required this.powerGained,
     required this.coinsGranted,
+    this.talentCrystalsGranted = 0,
     required this.previousInventorySlots,
     required this.newInventorySlots,
     required this.grantedItems,
@@ -90,6 +92,8 @@ class LevelUpReceipt {
             (j['bonusStatPointsGranted'] as num? ?? 0).toInt(),
         powerGained: (j['powerGained'] as num? ?? 0).toInt(),
         coinsGranted: (j['coinsGranted'] as num? ?? 0).toInt(),
+        talentCrystalsGranted:
+            (j['talentCrystalsGranted'] as num? ?? 0).toInt(),
         previousInventorySlots:
             (j['previousInventorySlots'] as num? ?? 0).toInt(),
         newInventorySlots: (j['newInventorySlots'] as num? ?? 0).toInt(),

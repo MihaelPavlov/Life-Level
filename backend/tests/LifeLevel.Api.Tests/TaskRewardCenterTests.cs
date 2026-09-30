@@ -255,11 +255,13 @@ public class TaskRewardCenterTests
             Coins += amount;
             return Task.CompletedTask;
         }
-        public Task AddCrystalsAsync(Guid userId, int amount, CancellationToken ct = default)
+        public Task AddGemsAsync(Guid userId, int amount, CancellationToken ct = default)
         {
             Crystals += amount;
             return Task.CompletedTask;
         }
+        public Task AddTalentCrystalsAsync(Guid userId, int amount, CancellationToken ct = default) =>
+            Task.CompletedTask;
     }
 
     private sealed class StubXpPort : ICharacterXpPort

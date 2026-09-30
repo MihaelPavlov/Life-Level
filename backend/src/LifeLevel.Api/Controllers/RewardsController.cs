@@ -24,7 +24,7 @@ public class RewardsController(
         var wallet = await talentProfile.GetSummaryAsync(userId);
         return Ok(new
         {
-            wallet = new { wallet.Coins, wallet.Crystals },
+            wallet = new { wallet.Coins, wallet.Gems },
             daily,
             weekly,
         });

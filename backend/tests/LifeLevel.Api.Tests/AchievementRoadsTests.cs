@@ -234,7 +234,8 @@ public class AchievementRoadsTests
         public long Coins { get; private set; }
         public int Gems { get; private set; }
         public Task AddCoinsAsync(Guid userId, int amount, CancellationToken ct = default) { Coins += amount; return Task.CompletedTask; }
-        public Task AddCrystalsAsync(Guid userId, int amount, CancellationToken ct = default) { Gems += amount; return Task.CompletedTask; }
+        public Task AddGemsAsync(Guid userId, int amount, CancellationToken ct = default) { Gems += amount; return Task.CompletedTask; }
+        public Task AddTalentCrystalsAsync(Guid userId, int amount, CancellationToken ct = default) => Task.CompletedTask;
         public Task<ShopWalletBalance> GetBalanceAsync(Guid userId, CancellationToken ct = default) => Task.FromResult(new ShopWalletBalance(Coins, Gems));
         public Task<bool> TrySpendAsync(Guid userId, ShopCurrency currency, int amount, CancellationToken ct = default) => Task.FromResult(false);
     }

@@ -4,13 +4,13 @@ import 'package:life_level/features/rewards/models/rewards_models.dart';
 void main() {
   test('parses task-only reward center payload with wallet balances', () {
     final data = RewardCenterData.fromJson({
-      'wallet': {'coins': 425, 'crystals': 7},
+      'wallet': {'coins': 425, 'gems': 7},
       'daily': _period('Daily', 40, 100),
       'weekly': _period('Weekly', 80, 200),
     });
 
     expect(data.wallet.coins, 425);
-    expect(data.wallet.crystals, 7);
+    expect(data.wallet.gems, 7);
     expect(data.daily.period, 'Daily');
     expect(data.daily.pointsEarned, 40);
     expect(data.daily.milestones.single.isUnlocked, isTrue);

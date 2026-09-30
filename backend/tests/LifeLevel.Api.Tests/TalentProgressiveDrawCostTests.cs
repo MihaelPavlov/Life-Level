@@ -76,7 +76,7 @@ public class TalentProgressiveDrawCostTests
         Assert.False(result.IsNew);
         Assert.Equal(2, result.Talent.Level);
         Assert.Equal(1630, wallet.Coins);
-        Assert.Equal(9, wallet.Crystals);
+        Assert.Equal(9, wallet.TalentCrystals);
         Assert.Equal(2, audit.DrawNumber);
         Assert.Equal(370, audit.CoinsSpent);
         Assert.Equal(1, audit.CrystalsSpent);
@@ -116,7 +116,7 @@ public class TalentProgressiveDrawCostTests
 
         Assert.Equal("Your talent collection is complete.", error.Message);
         Assert.Equal(1_000, wallet.Coins);
-        Assert.Equal(10, wallet.Crystals);
+        Assert.Equal(10, wallet.TalentCrystals);
         Assert.Empty(await db.Set<TalentDrawEntry>().ToListAsync());
     }
 
@@ -134,7 +134,7 @@ public class TalentProgressiveDrawCostTests
         { UserId = userId, TalentId = talentId, Level = level };
 
     private static UserTalentWallet Wallet(Guid userId, long coins, int crystals) => new()
-        { UserId = userId, Coins = coins, Crystals = crystals };
+        { UserId = userId, Coins = coins, TalentCrystals = crystals };
 
     private static TalentDrawEntry DrawEntry(Guid userId, Guid talentId, int drawNumber) => new()
     {

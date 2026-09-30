@@ -11,6 +11,7 @@ public class LevelUpReceipt
     public int BonusStatPointsGranted { get; set; }
     public int PowerGained { get; set; }
     public int CoinsGranted { get; set; }
+    public int TalentCrystalsGranted { get; set; }
     public int PreviousInventorySlots { get; set; }
     public int NewInventorySlots { get; set; }
     public string GrantedItemsJson { get; set; } = "[]";

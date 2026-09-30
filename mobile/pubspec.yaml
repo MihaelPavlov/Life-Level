@@ -73,5 +73,7 @@ flutter:
     - assets/Talents/
     - assets/Items/
     - assets/Titles&Ranks/
+    - assets/Modes/
+    - assets/Leaderboard/
     - assets/Classes/
     - assets/fonts/

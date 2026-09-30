@@ -992,6 +992,37 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("CharacterTitles");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.CharacterUnlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("SeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("TouredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("CharacterUnlocks");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Character.Domain.Entities.LevelStatBonus", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1097,6 +1128,9 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<int>("TalentCrystalsGranted")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1910,6 +1944,79 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserShopDailyStates");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Leaderboard.Domain.Entities.LeaderboardPass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ClaimedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Coins")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Gems")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PassedAvatarEmoji")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("PassedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PassedUsername")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("WeekStartUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ClaimedAtUtc");
+
+                    b.HasIndex("UserId", "PassedUserId", "WeekStartUtc")
+                        .IsUnique();
+
+                    b.ToTable("LeaderboardPasses");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Leaderboard.Domain.Entities.LeaderboardWatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AheadJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("WeekStartUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("LeaderboardWatches");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Map.Domain.Entities.MapEdge", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2051,6 +2158,181 @@ namespace LifeLevel.Api.Migrations
                     b.HasIndex("UserMapProgressId");
 
                     b.ToTable("UserNodeUnlocks");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Modes.Domain.Entities.BurnChainRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AcknowledgedLinks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CoinsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CollectedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("EndedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("EndsAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LinksJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TalentCrystalsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "StartedAtUtc");
+
+                    b.ToTable("BurnChainRuns");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Modes.Domain.Entities.ModeRewardSettlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Coins")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TalentCrystals")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Mode", "RunId")
+                        .IsUnique();
+
+                    b.ToTable("ModeRewardSettlements");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Modes.Domain.Entities.TreasureDelveRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcknowledgedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Agility")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AtRiskCoins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Chamber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ChosenPath")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("CoinsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Endurance")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EntryDateUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FeaturedStat")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("Flexibility")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("HistoryJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ItemsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("OptionsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("RoomsCleared")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SecuredCoins")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("SettledAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Stamina")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Strength")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TalentCrystalsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "EntryDateUtc");
+
+                    b.ToTable("TreasureDelveRuns");
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Notifications.Domain.Entities.DeviceToken", b =>
@@ -3553,7 +3835,7 @@ namespace LifeLevel.Api.Migrations
                     b.Property<long>("Coins")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("Crystals")
+                    b.Property<int>("Gems")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastStreakBrokenAt")
@@ -3565,6 +3847,9 @@ namespace LifeLevel.Api.Migrations
                     b.Property<string>("SecondWindWeekKey")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
+
+                    b.Property<int>("TalentCrystals")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -4616,6 +4901,33 @@ namespace LifeLevel.Api.Migrations
                     b.Navigation("MapNode");
 
                     b.Navigation("UserMapProgress");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Modes.Domain.Entities.BurnChainRun", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Modes.Domain.Entities.ModeRewardSettlement", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Modes.Domain.Entities.TreasureDelveRun", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Notifications.Domain.Entities.DeviceToken", b =>

@@ -207,11 +207,10 @@ Owns the navigation container, the tab bar with the raised Map button, and globa
 
 | File | Description |
 |------|-------------|
-| `main_shell.dart` | Root scaffold. Hosts the `IndexedStack` of tabs (Home, Gear, Profile), shell feature overlays, the journey popover, the tab bar and the Map button. Listens to `LevelUpNotifier` to trigger the level-up overlay from anywhere in the app. On resume it refreshes the pending-workout queue. |
-| `widgets/shell_tab_bar.dart` | Bottom bar: Home · Gear · [Map caption] · Profile · Menu. |
+| `main_shell.dart` | Root scaffold. Hosts the `IndexedStack` of tabs (Home, Gear, Profile, Modes), shell feature overlays, the journey popover, the tab bar and the Map button. Listens to `LevelUpNotifier` to trigger the level-up overlay from anywhere in the app. On resume it refreshes the pending-workout queue. |
+| `widgets/shell_tab_bar.dart` | Bottom bar: Home · Gear · [Map caption] · Mode · Profile. Mode is tab index 3 and opens the Modes page (`features/modes/`: Burn Chain, Treasure Delve; front end only, see `Plan - Game Modes`). |
 | `widgets/map_orb_button.dart` | Raised Map button. Ring, colour, icon, label and "act now" dot come from `journeyOrbStateProvider` (`features/map/journey/journey_state.dart`), which mirrors every journey-card state. |
 | `widgets/journey_popover.dart` | The journey card (`HomePortalCard`) shown above the Map button when it is tapped. |
-| `widgets/menu_sheet.dart` | "Everything else" sheet (World map, Bosses, Guild, Achievements, Talents, Titles, Season, Region Chests, Rewards, Log workout). Replaced the radial ring. |
 | `shell_anchors.dart` | Shared `FxAnchor`s (hero, avatar, Map button) that reward effects fly between. |
 | `shell_constants.dart` | Layout constants (`kNavBarH = 82`) and nav colour tokens. |
 

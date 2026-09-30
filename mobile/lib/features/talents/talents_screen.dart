@@ -429,8 +429,8 @@ class _CurrencyBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _iconPill(AppIcons.homeCoinIcon, '${wallet.coins}', AppColors.orange),
-        _iconPill(
-            AppIcons.talentCrystalIcon, '${wallet.crystals}', AppColors.purple),
+        _iconPill(AppIcons.talentCrystalIcon, '${wallet.talentCrystals}',
+            AppColors.purple),
       ],
     );
   }

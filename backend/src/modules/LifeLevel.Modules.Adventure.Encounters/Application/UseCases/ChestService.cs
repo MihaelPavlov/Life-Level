@@ -46,7 +46,8 @@ public class ChestService(DbContext db, ICharacterXpPort characterXp, IEventPubl
         await db.SaveChangesAsync();
 
         await events.PublishAsync(new RewardClaimedEvent(userId, "LocalChest"), CancellationToken.None);
-        await events.PublishAsync(new ChestOpenedEvent(userId, chestId), CancellationToken.None);
+        await events.PublishAsync(new ChestOpenedEvent(
+            userId, chestId, "GameplayChest", chest.Rarity.ToString()), CancellationToken.None);
 
         var emoji = chest.Rarity switch
         {

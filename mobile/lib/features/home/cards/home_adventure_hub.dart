@@ -9,6 +9,7 @@ import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/shell_overlay_notifier.dart';
 import '../../achievements/providers/achievements_provider.dart';
 import '../../character/providers/character_provider.dart';
+import '../../leaderboard/leaderboard_screen.dart';
 import '../../rewards/rewards_screen.dart';
 import '../../map/screens/region_chests_screen.dart';
 import '../../streak/widgets/streak_detail_sheet.dart';
@@ -16,8 +17,11 @@ import '../../titles/providers/titles_provider.dart';
 import '../providers/adventure_hub_status_provider.dart';
 import 'home_recent_activities_card.dart' show showActivityJournalSheet;
 
+/// The Bosses tile; the tutorial's boss step points at it.
+final kHubBossesTileKey = GlobalKey(debugLabel: 'hubBossesTile');
+
 /// Horizontally-scrollable row of quick entry points into the game's
-/// systems — daily rewards, streak, workout journal, guild,
+/// systems — daily rewards, bosses, streak, workout journal, guild,
 /// titles/ranks, and talents — matching the "Adventure Hub" reference
 /// layout. Sits right under the hero-stage card.
 class HomeAdventureHub extends ConsumerWidget {
@@ -71,7 +75,7 @@ class HomeAdventureHub extends ConsumerWidget {
                 for (var i = 0; i < tiles.length; i++) ...[
                   if (i > 0) const SizedBox(width: 10),
                   _HubTile(
-                    key: ValueKey(tiles[i].label),
+                    key: tiles[i].tileKey ?? ValueKey(tiles[i].label),
                     icon: AppIconImage(tiles[i].iconAsset, size: 30),
                     label: tiles[i].label,
                     showBadge: tiles[i].hasUpdate,
@@ -98,6 +102,21 @@ class HomeAdventureHub extends ConsumerWidget {
         hasUpdate: signals.rewards,
         priority: 0,
         onTap: () => _openRewards(context),
+      ),
+      _HubTileModel(
+        tileKey: kHubBossesTileKey,
+        iconAsset: AppIcons.ringBoss,
+        label: 'Bosses',
+        hasUpdate: signals.bosses,
+        priority: 0,
+        onTap: _openBosses,
+      ),
+      _HubTileModel(
+        iconAsset: AppIcons.ringLeaderboard,
+        label: 'Leaderboard',
+        hasUpdate: signals.leaderboard,
+        priority: 1,
+        onTap: () => LeaderboardScreen.open(context),
       ),
       _HubTileModel(
         iconAsset: AppIcons.rewardStreakFire,
@@ -183,6 +202,8 @@ class HomeAdventureHub extends ConsumerWidget {
     ShellOverlayNotifier.open('achievements');
   }
 
+  void _openBosses() => ShellOverlayNotifier.open('boss');
+
   void _openGuild() => ShellOverlayNotifier.open('guild');
 
   void _openTitles(WidgetRef ref) {
@@ -233,6 +254,7 @@ class HomeAdventureHub extends ConsumerWidget {
 }
 
 class _HubTileModel {
+  final Key? tileKey;
   final String iconAsset;
   final String label;
   final bool hasUpdate;
@@ -240,6 +262,7 @@ class _HubTileModel {
   final VoidCallback onTap;
 
   const _HubTileModel({
+    this.tileKey,
     required this.iconAsset,
     required this.label,
     required this.hasUpdate,

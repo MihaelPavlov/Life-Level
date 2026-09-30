@@ -15,7 +15,8 @@ public record TalentSummaryDto(
     int CatalogCount,
     int TotalLevels,
     long Coins,
-    int Crystals,
+    int Gems,
+    int TalentCrystals,
     int StrBonus,
     int EndBonus,
     int AgiBonus,
@@ -24,5 +25,5 @@ public record TalentSummaryDto(
     IReadOnlyList<string> EffectLines)
 {
     public static readonly TalentSummaryDto Empty =
-        new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Array.Empty<string>());
+        new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Array.Empty<string>());
 }

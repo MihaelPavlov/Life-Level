@@ -1,12 +1,13 @@
 import '../../items/models/item_models.dart';
 
-/// Always-active talent bonuses + wallet, enriched onto `GET /character/me`.
+/// Always-active talent bonuses + the three independent balances.
 class TalentSummary {
   final int ownedCount;
   final int catalogCount;
   final int totalLevels;
   final int coins;
-  final int crystals;
+  final int gems;
+  final int talentCrystals;
   final int strBonus;
   final int endBonus;
   final int agiBonus;
@@ -19,7 +20,8 @@ class TalentSummary {
     required this.catalogCount,
     required this.totalLevels,
     required this.coins,
-    required this.crystals,
+    required this.gems,
+    required this.talentCrystals,
     required this.strBonus,
     required this.endBonus,
     required this.agiBonus,
@@ -33,7 +35,8 @@ class TalentSummary {
         catalogCount: (j['catalogCount'] as num?)?.toInt() ?? 0,
         totalLevels: (j['totalLevels'] as num?)?.toInt() ?? 0,
         coins: (j['coins'] as num?)?.toInt() ?? 0,
-        crystals: (j['crystals'] as num?)?.toInt() ?? 0,
+        gems: (j['gems'] as num?)?.toInt() ?? 0,
+        talentCrystals: (j['talentCrystals'] as num?)?.toInt() ?? 0,
         strBonus: (j['strBonus'] as num?)?.toInt() ?? 0,
         endBonus: (j['endBonus'] as num?)?.toInt() ?? 0,
         agiBonus: (j['agiBonus'] as num?)?.toInt() ?? 0,

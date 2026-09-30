@@ -16,20 +16,20 @@ TalentTileState _tileStateFrom(String? s) {
 
 class TalentWallet {
   final int coins;
-  final int crystals;
+  final int talentCrystals;
   final int ownedCount;
   final int catalogCount;
 
   const TalentWallet({
     required this.coins,
-    required this.crystals,
+    required this.talentCrystals,
     required this.ownedCount,
     required this.catalogCount,
   });
 
   factory TalentWallet.fromJson(Map<String, dynamic> j) => TalentWallet(
         coins: (j['coins'] as num?)?.toInt() ?? 0,
-        crystals: (j['crystals'] as num?)?.toInt() ?? 0,
+        talentCrystals: (j['talentCrystals'] as num?)?.toInt() ?? 0,
         ownedCount: (j['ownedCount'] as num?)?.toInt() ?? 0,
         catalogCount: (j['catalogCount'] as num?)?.toInt() ?? 0,
       );
