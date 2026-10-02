@@ -7,8 +7,6 @@ import '../sync/providers/pending_workouts_provider.dart';
 import '../sync/pull_import_flow.dart';
 import '../sync/widgets/pull_to_import.dart';
 import '../sync/widgets/sync_status_pill.dart';
-import '../tutorial/providers/tutorial_provider.dart';
-import '../tutorial/tutorial_controller.dart';
 import 'cards/home_adventure_hub.dart';
 import 'cards/home_happening_now.dart';
 import 'cards/home_hero_stage.dart';
@@ -33,30 +31,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  // LL-035: GlobalKeys attached to the Home coach-mark targets. The
-  // tutorial controller reads their global rects to place floating bubbles.
-  final _xpCardKey = GlobalKey();
-  bool _tutorialKeysRegistered = false;
   bool _flowRunning = false;
-
-  late final TutorialController _tutorial;
 
   @override
   void initState() {
     super.initState();
-    _tutorial = ref.read(tutorialControllerProvider);
     // Show the pending pill as soon as Home opens.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(pendingWorkoutsProvider.notifier).checkQuietly();
     });
-  }
-
-  @override
-  void dispose() {
-    // `ref` is gone by now; use the controller read in initState.
-    _tutorial.unregisterKey('xpCard');
-    super.dispose();
   }
 
   Future<void> _runFlow() async {
@@ -79,15 +63,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         integrations.isGarminConnected;
     final showLogWorkout = kAlwaysShowLogWorkout || !hasIntegration;
     final topPad = MediaQuery.of(context).padding.top;
-
-    if (!_tutorialKeysRegistered) {
-      _tutorialKeysRegistered = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final c = ref.read(tutorialControllerProvider);
-        c.registerKey('xpCard', _xpCardKey);
-      });
-    }
 
     // XP Storm & Seasonal event are scaffold-only — they render nothing
     // until LL-001 / LL-012 land a real feed and start returning non-null
@@ -114,10 +89,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Stack(
                     children: [
-                      KeyedSubtree(
-                        key: _xpCardKey,
-                        child: HomeHeroStage(profile: profile),
-                      ),
+                      HomeHeroStage(profile: profile),
                       // Under the header row, between the mount and weapon
                       // cards: "2 new workouts · pull down" / "Synced 2m ago".
                       Positioned(

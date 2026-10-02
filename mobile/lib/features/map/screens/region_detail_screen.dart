@@ -12,8 +12,6 @@ import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../character/providers/character_provider.dart';
 import '../../home/providers/world_progress_provider.dart';
-import '../../tutorial/models/tutorial_step.dart';
-import '../../tutorial/providers/tutorial_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
@@ -60,8 +58,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   final GlobalKey _activeNodeKey = GlobalKey();
   final GlobalKey _initialNodeKey = GlobalKey();
   final GlobalKey _backButtonKey = GlobalKey();
-  final GlobalKey _trailKey = GlobalKey();
-  final Map<String, GlobalKey> _tutorialZoneKeys = {};
 
   RegionDetail? _region;
   // Kept locally so the sheet can render "traveling" layouts without another
@@ -83,7 +79,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   bool _loading = true;
   bool _destinationRequestInFlight = false;
   String? _error;
-  TutorialStep? _lastTutorialStep;
   bool _initialZoneHandled = false;
 
   @override
@@ -96,14 +91,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   @override
   void dispose() {
     _refreshSub.cancel();
-    final c = ref.read(tutorialControllerProvider);
-    c.unregisterKey('mapWorldBack');
-    c.unregisterKey('mapZoneTrail');
-    c.unregisterKey('mapNormalZone');
-    c.unregisterKey('mapChestZone');
-    c.unregisterKey('mapSpecialZone');
-    c.unregisterKey('mapDungeonZone');
-    c.unregisterKey('mapBossZone');
     super.dispose();
   }
 
@@ -135,13 +122,10 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         _userLevel = world.user.level;
         _loading = false;
       });
-      _syncTutorialTargets(_buildVisibleRegionForTutorial(region));
       // Once the trail has laid out, snap the viewport to the active zone so
       // the user always lands on their current position.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_openInitialZone(region)) {
-          _scrollToCurrentTutorialTarget();
-        }
+        if (!_openInitialZone(region)) _scrollToActiveZone();
       });
     } catch (e) {
       if (!mounted) return;
@@ -189,52 +173,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     _showNodeSheet(node);
     return true;
   }
-
-  void _scrollToCurrentTutorialTarget() {
-    if (!mounted) return;
-    final tutorial = ref.read(tutorialControllerProvider);
-    if (tutorial.isMapTutorial && tutorial.step != null) {
-      final keyId = tutorial.step!.targetKeyId;
-      if (keyId != null && keyId != 'mapWorldBack') {
-        final key = _tutorialKeyForTarget(keyId);
-        final ctx = key?.currentContext;
-        if (ctx != null) {
-          Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 520),
-            curve: Curves.easeOutCubic,
-            alignment: 0.36,
-          );
-          return;
-        }
-      }
-    }
-    _scrollToActiveZone();
-  }
-
-  GlobalKey? _tutorialKeyForTarget(String targetId) {
-    switch (targetId) {
-      case 'mapZoneTrail':
-        return _trailKey;
-      case 'mapNormalZone':
-        return _tutorialZoneKeyByTarget('mapNormalZone');
-      case 'mapChestZone':
-        return _tutorialZoneKeyByTarget('mapChestZone');
-      case 'mapSpecialZone':
-        return _tutorialZoneKeyByTarget('mapSpecialZone');
-      case 'mapDungeonZone':
-        return _tutorialZoneKeyByTarget('mapDungeonZone');
-      case 'mapBossZone':
-        return _tutorialZoneKeyByTarget('mapBossZone');
-      default:
-        return null;
-    }
-  }
-
-  final Map<String, GlobalKey> _tutorialTargetKeys = {};
-
-  GlobalKey? _tutorialZoneKeyByTarget(String targetId) =>
-      _tutorialTargetKeys[targetId];
 
   String? _findDestinationZoneId(RegionDetail region, WorldMapData world) {
     final journey = world.activeJourney;
@@ -842,25 +780,12 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
 
   Widget _buildContent(RegionDetail region) {
     final theme = RegionThemeColors.of(region.theme);
-    final hasTrailBackground = region.trailBackgroundImageUrl != null ||
-        theme.trailBackgroundAsset != null;
+    final fallbackBackground =
+        RegionArtwork.backgroundFor(region.name) ?? theme.trailBackgroundAsset;
+    final hasTrailBackground =
+        region.trailBackgroundImageUrl != null || fallbackBackground != null;
     final avatar = ref.watch(characterProfileProvider).valueOrNull?.avatarEmoji;
-    final tutorial = ref.watch(tutorialControllerProvider);
-    final filteredRegion = _buildVisibleRegionForTutorial(region);
-
-    if (tutorial.isMapTutorial && _tutorialTargetKeys.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _syncTutorialTargets(filteredRegion);
-      });
-    }
-
-    if (tutorial.isMapTutorial && tutorial.step != _lastTutorialStep) {
-      _lastTutorialStep = tutorial.step;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToCurrentTutorialTarget();
-      });
-    }
+    final filteredRegion = _buildProgressiveRevealRegion(region);
 
     return Stack(
       children: [
@@ -873,7 +798,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
               ),
               child: _RegionImage(
                 url: region.trailBackgroundImageUrl,
-                fallbackAsset: theme.trailBackgroundAsset,
+                fallbackAsset: fallbackBackground,
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
               ),
@@ -940,7 +865,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                           ),
                         ),
                         ZoneTrail(
-                          key: _trailKey,
                           nodes: filteredRegion.nodes,
                           edges: filteredRegion.edges,
                           journey: _activeJourney,
@@ -951,7 +875,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
                           onTap: _showNodeSheet,
                           activeNodeKey: _activeNodeKey,
                           keysByNodeId: {
-                            ..._tutorialZoneKeys,
                             if (widget.initialZoneId case final zoneId?)
                               zoneId: _initialNodeKey,
                           },
@@ -1051,70 +974,6 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     final chosenBranchId = region.pathChoices[crossroadsId];
     return chosenBranchId != null && chosenBranchId != node.id;
   }
-
-  RegionDetail _buildVisibleRegionForTutorial(RegionDetail region) {
-    final visible = _buildProgressiveRevealRegion(region);
-    return visible;
-  }
-
-  void _syncTutorialTargets(RegionDetail region) {
-    final c = ref.read(tutorialControllerProvider);
-    c.registerKey('mapWorldBack', _backButtonKey);
-    c.registerKey('mapZoneTrail', _trailKey);
-
-    ZoneNode? normal;
-    ZoneNode? chest;
-    ZoneNode? special;
-    ZoneNode? dungeon;
-    ZoneNode? boss;
-
-    for (final node in region.nodes) {
-      normal ??= (!node.isBoss &&
-              !node.isChest &&
-              !node.isDungeon &&
-              !node.isCrossroads &&
-              node.branchOf == null)
-          ? node
-          : null;
-      chest ??= node.isChest ? node : null;
-      special ??= node.isCrossroads ? node : null;
-      dungeon ??= node.isDungeon ? node : null;
-      boss ??= node.isBoss ? node : null;
-    }
-
-    _tutorialZoneKeys.clear();
-    _tutorialTargetKeys.clear();
-
-    void bind(String targetId, ZoneNode? node) {
-      if (node == null) {
-        c.unregisterKey(targetId);
-        return;
-      }
-      final key = GlobalKey();
-      _tutorialZoneKeys[node.id] = key;
-      _tutorialTargetKeys[targetId] = key;
-      c.registerKey(targetId, key);
-    }
-
-    bind('mapNormalZone', normal);
-    bind('mapChestZone', chest);
-    bind('mapSpecialZone', special);
-    bind('mapDungeonZone', dungeon);
-    bind('mapBossZone', boss);
-
-    c.refreshMapTargets(
-      hasNormalZone: normal != null,
-      hasChestZone: chest != null,
-      hasSpecialZone: special != null,
-      hasDungeonZone: dungeon != null,
-      hasBossZone: boss != null,
-    );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _scrollToCurrentTutorialTarget();
-    });
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1133,8 +992,9 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasBanner =
-        region.bannerImageUrl != null || theme.bannerAsset != null;
+    final fallbackBanner =
+        RegionArtwork.bannerFor(region.name) ?? theme.bannerAsset;
+    final hasBanner = region.bannerImageUrl != null || fallbackBanner != null;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1159,7 +1019,7 @@ class _Banner extends StatelessWidget {
               bottom: -28,
               child: _RegionImage(
                 url: region.bannerImageUrl,
-                fallbackAsset: theme.bannerAsset,
+                fallbackAsset: fallbackBanner,
                 fit: BoxFit.cover,
                 alignment: Alignment.center,
               ),

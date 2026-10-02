@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/core/widgets/app_toast.dart';
 
 /// App with a button that runs [fire]; tapping it shows the toast(s).
-Future<void> _pump(WidgetTester tester, void Function(BuildContext) fire) async {
+Future<void> _pump(
+    WidgetTester tester, void Function(BuildContext) fire) async {
   tester.view.physicalSize = const Size(390, 844) * 3;
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
@@ -37,6 +38,16 @@ void main() {
     final style = rich.text.style!;
     expect(style.decoration, isNot(TextDecoration.underline));
     expect(style.fontFamily, isNot('monospace'));
+  });
+
+  testWidgets('toast stack clears the raised center Map button',
+      (tester) async {
+    await _pump(tester, (c) => AppToast.info(c, 'Workout logged'));
+
+    final layer = tester.widget<Positioned>(
+      find.byKey(const ValueKey('app-toast-layer')),
+    );
+    expect(layer.bottom, 126);
   });
 
   testWidgets('shows a title, detail line and action', (tester) async {
@@ -108,8 +119,8 @@ void main() {
 
   testWidgets('a progress toast turns into its result', (tester) async {
     late AppToastHandle handle;
-    await _pump(tester,
-        (c) => handle = AppToast.progress(c, 'Syncing activities'));
+    await _pump(
+        tester, (c) => handle = AppToast.progress(c, 'Syncing activities'));
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     // No countdown while loading.
@@ -146,7 +157,8 @@ void main() {
     });
 
     test('developer notes are stripped', () {
-      expect(clean('No branches found for Twin Oaks. (0 matched - check logs.)'),
+      expect(
+          clean('No branches found for Twin Oaks. (0 matched - check logs.)'),
           ('No branches found for Twin Oaks.', null));
       expect(clean("Region chest rewards aren't live yet — no backend for it."),
           ("Region chest rewards aren't live yet", null));

@@ -20,6 +20,10 @@ class ModeBanner extends StatelessWidget {
   final bool alert;
   final VoidCallback onTap;
 
+  /// Set while the mode is locked ("Unlocks at Level 15"): the art dims and
+  /// the banner shows a padlock, this line and the mode's name.
+  final String? lockedLabel;
+
   const ModeBanner({
     super.key,
     required this.art,
@@ -33,13 +37,14 @@ class ModeBanner extends StatelessWidget {
     required this.footer,
     required this.alert,
     required this.onTap,
+    this.lockedLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: title,
+      label: lockedLabel == null ? title : '$title, locked',
       child: AppPressable(
         onTap: onTap,
         pressedScale: .97,
@@ -61,76 +66,121 @@ class ModeBanner extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(art,
-                    fit: BoxFit.cover, alignment: Alignment.centerLeft),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.black.withValues(alpha: 0),
-                        Colors.black.withValues(alpha: .82),
-                      ],
-                      stops: const [.2, .62],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 14,
-                  top: 10,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                if (lockedLabel != null)
+                  ColorFiltered(
+                    colorFilter: const ColorFilter.matrix([
+                      .07, .14, .02, 0, 0, //
+                      .07, .14, .02, 0, 0,
+                      .07, .14, .02, 0, 0,
+                      0, 0, 0, 1, 0,
+                    ]),
+                    child: Image.asset(art,
+                        fit: BoxFit.cover, alignment: Alignment.centerLeft),
+                  )
+                else
+                  Image.asset(art,
+                      fit: BoxFit.cover, alignment: Alignment.centerLeft),
+                if (lockedLabel != null)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(kicker,
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w900,
-                            color: kickerColor,
-                            shadows: _shadow,
-                          )),
-                      Text(title,
+                      const Icon(Icons.lock_rounded,
+                          size: 24, color: Color(0xD9FFFFFF)),
+                      const SizedBox(height: 8),
+                      Text(lockedLabel!,
                           style: const TextStyle(
-                            fontSize: 23,
+                            fontSize: 18,
                             fontWeight: FontWeight.w900,
                             color: AppColors.textPrimary,
                             shadows: _shadow,
                           )),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1F4F99),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.blue),
+                        ),
+                        child: Text(title,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary)),
+                      ),
                     ],
                   ),
-                ),
-                Positioned(
-                  right: 14,
-                  top: 70,
-                  child: Row(
-                    children: [
-                      for (var i = 0; i < rewards.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 6),
-                        rewards[i],
-                      ],
-                    ],
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(18, 5, 14, 6),
+                if (lockedLabel == null) ...[
+                  DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: .72),
-                      borderRadius:
-                          const BorderRadius.only(topLeft: Radius.circular(12)),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withValues(alpha: 0),
+                          Colors.black.withValues(alpha: .82),
+                        ],
+                        stops: const [.2, .62],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                  Positioned(
+                    right: 14,
+                    top: 10,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        AppIconImage(footerIcon, size: 16),
-                        const SizedBox(width: 6),
-                        footer,
+                        Text(kicker,
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: kickerColor,
+                              shadows: _shadow,
+                            )),
+                        Text(title,
+                            style: const TextStyle(
+                              fontSize: 23,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                              shadows: _shadow,
+                            )),
                       ],
                     ),
                   ),
-                ),
-                if (alert)
-                  const Positioned(right: 6, top: 6, child: _AlertBadge()),
+                  Positioned(
+                    right: 14,
+                    top: 70,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < rewards.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 6),
+                          rewards[i],
+                        ],
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(18, 5, 14, 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: .72),
+                        borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppIconImage(footerIcon, size: 16),
+                          const SizedBox(width: 6),
+                          footer,
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (alert)
+                    const Positioned(right: 6, top: 6, child: _AlertBadge()),
+                ],
               ],
             ),
           ),

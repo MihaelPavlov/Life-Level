@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/unlock_models.dart';
 import '../services/unlocks_service.dart';
 
-final unlocksServiceProvider = Provider<UnlocksService>((_) => UnlocksService());
+final unlocksServiceProvider =
+    Provider<UnlocksService>((_) => UnlocksService());
 
 class UnlocksNotifier extends AsyncNotifier<UnlocksSnapshot> {
   @override
@@ -43,9 +44,8 @@ class UnlocksNotifier extends AsyncNotifier<UnlocksSnapshot> {
   }
 }
 
-final unlocksProvider =
-    AsyncNotifierProvider<UnlocksNotifier, UnlocksSnapshot>(
-        UnlocksNotifier.new);
+final unlocksProvider = AsyncNotifierProvider<UnlocksNotifier, UnlocksSnapshot>(
+    UnlocksNotifier.new);
 
 /// The chain, or "everything open" while it loads or if it fails.
 final unlocksSnapshotProvider = Provider<UnlocksSnapshot>(

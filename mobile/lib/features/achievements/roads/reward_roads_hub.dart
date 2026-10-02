@@ -1,3 +1,5 @@
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -163,6 +165,7 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
                       where: readyOn.join(' and '),
                       busy: _busy,
                       onClaimAll: () => _claimAll(data),
+                      claimTarget: TourIds.achClaimAll,
                     ),
                   ),
                 )
@@ -171,24 +174,30 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
         if (continueRoad != null) ...[
           const RoadSectionTitle('CONTINUE'),
           const SizedBox(height: 8),
-          _ContinueCard(
-              road: continueRoad,
-              onTap: () => _openRoad(continueRoad.category)),
+          TourTarget(
+            id: TourIds.achContinue,
+            child: _ContinueCard(
+                road: continueRoad,
+                onTap: () => _openRoad(continueRoad.category)),
+          ),
           const SizedBox(height: 18),
         ],
         const RoadSectionTitle('ALL ROADS'),
         const SizedBox(height: 8),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 1.45,
-          children: [
-            for (final r in roads)
-              _RoadTile(road: r, onTap: () => _openRoad(r.category)),
-          ],
+        TourTarget(
+          id: TourIds.achRoads,
+          child: GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 1.45,
+            children: [
+              for (final r in roads)
+                _RoadTile(road: r, onTap: () => _openRoad(r.category)),
+            ],
+          ),
         ),
       ],
     );
@@ -216,11 +225,13 @@ class _ReadyBar extends StatelessWidget {
   final String where;
   final bool busy;
   final VoidCallback onClaimAll;
+  final String claimTarget;
   const _ReadyBar({
     required this.count,
     required this.where,
     required this.busy,
     required this.onClaimAll,
+    required this.claimTarget,
   });
 
   @override
@@ -281,20 +292,24 @@ class _ReadyBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          SizedBox(
-            height: 38,
-            child: FilledButton(
-              onPressed: busy ? null : onClaimAll,
-              style: FilledButton.styleFrom(
-                backgroundColor: kRoadReady,
-                foregroundColor: const Color(0xFF1A1004),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                textStyle: const TextStyle(
-                    fontSize: 12.5, fontWeight: FontWeight.w800),
+          TourTarget(
+            id: claimTarget,
+            enabled: !busy,
+            child: SizedBox(
+              height: 38,
+              child: FilledButton(
+                onPressed: busy ? null : onClaimAll,
+                style: FilledButton.styleFrom(
+                  backgroundColor: kRoadReady,
+                  foregroundColor: const Color(0xFF1A1004),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  textStyle: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w800),
+                ),
+                child: const Text('Claim all'),
               ),
-              child: const Text('Claim all'),
             ),
           ),
         ],

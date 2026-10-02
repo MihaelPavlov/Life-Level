@@ -17,6 +17,13 @@ class BossDamageHistoryItem {
   final String? skipReason;
   final DateTime loggedAt;
 
+  /// Replay fields; null/0 for history rebuilt from pre-V2 activities.
+  final String? turnId;
+  final int bossHpAfter;
+  final int bossMaxHp;
+  final int damageBlocked;
+  final bool bossDefeated;
+
   const BossDamageHistoryItem({
     required this.activityId,
     required this.activityType,
@@ -32,6 +39,11 @@ class BossDamageHistoryItem {
     this.playerDefeated = false,
     this.skipReason,
     required this.loggedAt,
+    this.turnId,
+    this.bossHpAfter = 0,
+    this.bossMaxHp = 0,
+    this.damageBlocked = 0,
+    this.bossDefeated = false,
   });
 
   factory BossDamageHistoryItem.fromJson(Map<String, dynamic> json) =>
@@ -50,6 +62,11 @@ class BossDamageHistoryItem {
         playerDefeated: json['playerDefeated'] as bool? ?? false,
         skipReason: json['skipReason'] as String?,
         loggedAt: DateTime.parse(json['loggedAt'] as String).toLocal(),
+        turnId: json['turnId'] as String?,
+        bossHpAfter: (json['bossHpAfter'] as num?)?.toInt() ?? 0,
+        bossMaxHp: (json['bossMaxHp'] as num?)?.toInt() ?? 0,
+        damageBlocked: (json['damageBlocked'] as num?)?.toInt() ?? 0,
+        bossDefeated: json['bossDefeated'] as bool? ?? false,
       );
 
   /// Emoji for the activity type, matching the palette used elsewhere.

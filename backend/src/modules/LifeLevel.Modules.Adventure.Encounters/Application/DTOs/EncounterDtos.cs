@@ -73,4 +73,12 @@ public class BossDamageHistoryItemDto
     public bool PlayerDefeated { get; set; }
     public string? SkipReason { get; set; }
     public DateTime LoggedAt { get; set; }
+
+    // Replay fields (null/0 for pre-V2 history rebuilt from activities).
+    public Guid? TurnId { get; set; }
+    public int BossHpAfter { get; set; }
+    public int BossMaxHp { get; set; }
+    /// <summary>Counterattack damage the player's Defense absorbed on this turn.</summary>
+    public int DamageBlocked { get; set; }
+    public bool BossDefeated { get; set; }
 }

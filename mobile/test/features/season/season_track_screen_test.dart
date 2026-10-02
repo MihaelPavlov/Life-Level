@@ -35,6 +35,53 @@ class _DelayedClaimSeasonNotifier extends SeasonNotifier {
   }
 }
 
+class _RefreshingClaimSeasonNotifier extends SeasonNotifier {
+  _RefreshingClaimSeasonNotifier(this.initial, this.fresh);
+
+  final SeasonTrack initial;
+  final SeasonTrack fresh;
+
+  @override
+  Future<SeasonTrack> build() async => initial;
+
+  @override
+  Future<List<SeasonClaimResult>> claimAvailable() async {
+    state = AsyncValue.data(fresh);
+    return const [
+      SeasonClaimResult(
+        tier: 1,
+        track: 'Free',
+        label: '+250 XP',
+        xpAwarded: 250,
+        leveledUp: false,
+        newLevel: null,
+        grantedItemName: null,
+        grantedTitleKey: null,
+      ),
+      SeasonClaimResult(
+        tier: 2,
+        track: 'Free',
+        label: '+250 XP',
+        xpAwarded: 250,
+        leveledUp: false,
+        newLevel: null,
+        grantedItemName: null,
+        grantedTitleKey: null,
+      ),
+      SeasonClaimResult(
+        tier: 3,
+        track: 'Free',
+        label: '+250 XP',
+        xpAwarded: 250,
+        leveledUp: false,
+        newLevel: null,
+        grantedItemName: null,
+        grantedTitleKey: null,
+      ),
+    ];
+  }
+}
+
 SeasonRewardView _rv(String state,
         {String type = 'Xp', String label = '+250 XP'}) =>
     SeasonRewardView(
@@ -84,9 +131,18 @@ Widget _host(SeasonTrack data) => ProviderScope(
       child: const MaterialApp(home: SeasonTrackScreen()),
     );
 
-Widget _hostWithNotifier(SeasonNotifier notifier) => ProviderScope(
+Widget _hostWithNotifier(
+  SeasonNotifier notifier, {
+  bool disableAnimations = true,
+}) =>
+    ProviderScope(
       overrides: [seasonProvider.overrideWith(() => notifier)],
-      child: const MaterialApp(home: SeasonTrackScreen()),
+      child: MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: disableAnimations),
+          child: const SeasonTrackScreen(),
+        ),
+      ),
     );
 
 void main() {
@@ -123,7 +179,7 @@ void main() {
   });
 
   testWidgets('no active season shows the empty state', (tester) async {
-    final none = SeasonTrack(
+    const none = SeasonTrack(
       hasActiveSeason: false,
       season: null,
       xpPerTier: 0,
@@ -135,7 +191,7 @@ void main() {
       xpToNextTier: 0,
       hasFounderPass: false,
       nextReward: null,
-      tiers: const [],
+      tiers: [],
     );
     await tester.pumpWidget(_host(none));
     await tester.pumpAndSettle();
@@ -185,5 +241,57 @@ void main() {
     ]);
     await tester.pump();
     await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('multi-claim animations do not update the viewport reentrantly',
+      (tester) async {
+    SeasonTrack withState(String claimedState) => _track(
+          currentTier: 3,
+          tiers: [
+            SeasonTier(
+              tier: 1,
+              isMilestone: false,
+              free: _rv(claimedState),
+              founder: _rv('locked'),
+            ),
+            SeasonTier(
+              tier: 2,
+              isMilestone: false,
+              free: _rv(claimedState),
+              founder: _rv('locked'),
+            ),
+            SeasonTier(
+              tier: 3,
+              isMilestone: false,
+              free: _rv(claimedState),
+              founder: _rv('locked'),
+            ),
+            SeasonTier(
+              tier: 4,
+              isMilestone: true,
+              free: _rv('pending'),
+              founder: _rv('locked'),
+            ),
+          ],
+        );
+    final notifier = _RefreshingClaimSeasonNotifier(
+      withState('ready'),
+      withState('received'),
+    );
+
+    await tester.pumpWidget(
+      _hostWithNotifier(notifier, disableAnimations: false),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ready · tap to collect').first);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const ValueKey('season-tier-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('season-tier-2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('season-tier-3')), findsOneWidget);
+    expect(find.byKey(const ValueKey('season-tier-4')), findsOneWidget);
   });
 }

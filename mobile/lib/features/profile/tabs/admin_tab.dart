@@ -9,6 +9,25 @@ const _kTextSec = Color(0xFF8b949e);
 const _kBlue = Color(0xFF4f9eff);
 const _kPurple = Color(0xFFa371f7);
 
+/// Admin tools, opened from Settings (admins only).
+class AdminScreen extends StatelessWidget {
+  const AdminScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF040810),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF040810),
+        foregroundColor: _kTextPri,
+        title: const Text('Admin',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+      ),
+      body: const AdminTab(),
+    );
+  }
+}
+
 class AdminTab extends StatelessWidget {
   const AdminTab({super.key});
 

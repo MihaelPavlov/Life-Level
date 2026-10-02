@@ -54,6 +54,8 @@ public class UnlockServiceTests
     [InlineData(3, "talents", true)]
     [InlineData(4, "guild", false)]
     [InlineData(5, "guild", true)]
+    [InlineData(5, "leaderboard", false)]
+    [InlineData(6, "leaderboard", true)]
     [InlineData(9, "modes", false)]
     [InlineData(10, "modes", true)]
     [InlineData(14, "delve", false)]
@@ -64,6 +66,16 @@ public class UnlockServiceTests
         Assert.Equal(unlocked, def.IsMet(NewPlayer with { Level = level }));
     }
 
+    [Theory]
+    [InlineData(false, 0, false)]
+    [InlineData(true, 0, true)]
+    [InlineData(false, 1, true)]
+    public void Ranks_OpenOnFirstRankOrTitle(bool rankReached, int titles, bool unlocked)
+    {
+        var def = UnlockService.Catalog.Single(d => d.Key == "ranks");
+        Assert.Equal(unlocked, def.IsMet(NewPlayer with { RankReached = rankReached, TitlesEarned = titles }));
+    }
+
     [Fact]
     public async Task ExistingPlayer_IsBackFilledSilently()
     {
@@ -71,7 +83,7 @@ public class UnlockServiceTests
         var veteran = NewPlayer with
         {
             ActivityCount = 40, HasDistance = true, ItemCount = 6, ZonesReached = 9,
-            Level = 12, LongestStreak = 8, BossSeen = true,
+            Level = 12, LongestStreak = 8, BossSeen = true, RankReached = true,
         };
         var service = new UnlockService(db, new FixedFacts(veteran), new RecordingXp());
 
@@ -83,6 +95,27 @@ public class UnlockServiceTests
             Assert.True(u.Seen && u.Toured, u.Key);
         });
         Assert.False(list.Single(u => u.Key == "delve").Unlocked);
+    }
+
+    [Fact]
+    public async Task NewPlayerWithImportedHistory_GetsEveryCeremony()
+    {
+        await using var db = CreateDb();
+        var imported = NewPlayer with
+        {
+            ActivityCount = 12, HasDistance = true, Level = 4,
+            CharacterCreatedAt = UnlockService.BackFillBefore.AddDays(1),
+        };
+        var service = new UnlockService(db, new FixedFacts(imported), new RecordingXp());
+
+        var list = (await service.GetAsync(Guid.NewGuid())).Unlocks;
+
+        foreach (var key in new[] { "home", "achievements", "map", "talents" })
+        {
+            var u = list.Single(x => x.Key == key);
+            Assert.True(u.Unlocked, key);
+            Assert.False(u.Seen || u.Toured, key);
+        }
     }
 
     [Fact]

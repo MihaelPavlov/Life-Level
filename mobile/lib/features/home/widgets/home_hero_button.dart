@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import 'home_palette.dart';
+import '../../unlocks/tour/tour_target.dart';
 
 enum HomeHeroButtonStyle {
   ghost,
@@ -29,6 +30,9 @@ class HomeHeroButton extends StatelessWidget {
   /// nudges right late in each loop.
   final Animation<double>? nudge;
 
+  /// Marks the button for a guided tour.
+  final String? tourTargetId;
+
   const HomeHeroButton({
     super.key,
     required this.label,
@@ -36,6 +40,7 @@ class HomeHeroButton extends StatelessWidget {
     required this.onTap,
     this.shine,
     this.nudge,
+    this.tourTargetId,
   });
 
   @override
@@ -120,32 +125,35 @@ class HomeHeroButton extends StatelessWidget {
         ];
     }
 
+    final button = GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [bgStart, bgEnd],
+          ),
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: shadows,
+        ),
+        alignment: Alignment.center,
+        child: _withShine(_label(TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ))),
+      ),
+    );
     return Flexible(
       flex: flex,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [bgStart, bgEnd],
-            ),
-            border: Border.all(color: borderColor),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: shadows,
-          ),
-          alignment: Alignment.center,
-          child: _withShine(_label(TextStyle(
-            color: textColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
-          ))),
-        ),
-      ),
+      child: tourTargetId == null
+          ? button
+          : TourTarget(id: tourTargetId!, child: button),
     );
   }
 

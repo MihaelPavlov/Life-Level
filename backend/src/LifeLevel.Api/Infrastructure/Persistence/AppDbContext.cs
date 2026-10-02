@@ -79,6 +79,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserWorldProgress> UserWorldProgresses => Set<UserWorldProgress>();
     public DbSet<UserZoneUnlock> UserZoneUnlocks => Set<UserZoneUnlock>();
     public DbSet<UserPathChoice> UserPathChoices => Set<UserPathChoice>();
+    public DbSet<UserRegionChestClaim> UserRegionChestClaims => Set<UserRegionChestClaim>();
 
     // WorldZone — Chest + Dungeon (v3 inline on WorldZone)
     public DbSet<UserWorldChestState> UserWorldChestStates => Set<UserWorldChestState>();
@@ -209,6 +210,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne<User>()
             .WithOne()
             .HasForeignKey<Streak>(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserRegionChestClaim>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Seasons module cross-module: per-user rows → User

@@ -6,6 +6,7 @@ import '../../core/motion/reward_fx.dart';
 import '../../core/shell/shell_anchors.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../../core/widgets/app_toast.dart';
+import '../boss/replay/home_boss_replay.dart';
 import '../onboarding/widgets/activity_visuals.dart';
 import 'models/pending_models.dart';
 import 'providers/pending_workouts_provider.dart';
@@ -77,7 +78,17 @@ Future<void> runPullImportFlow(BuildContext context, WidgetRef ref) async {
     return;
   }
   if (!context.mounted) return;
-  await playImportCelebration(context, result, from: choice.from);
+  await playImportCelebration(context, result,
+      from: choice.from, showToast: false);
+  if (!context.mounted || result.imported.isEmpty) return;
+  // Imported workouts hit the boss too. When there is an exchange to play,
+  // its recap carries the import summary; otherwise the usual toast shows.
+  requestBossReplay(
+    summary: importSummary(result),
+    orElse: () {
+      if (context.mounted) showImportToast(context, result);
+    },
+  );
 }
 
 /// Workout icons fly into the hero, XP and stat gains float up, the avatar's
@@ -86,6 +97,7 @@ Future<void> playImportCelebration(
   BuildContext context,
   ImportPendingResult result, {
   Offset? from,
+  bool showToast = true,
 }) async {
   if (result.imported.isEmpty) {
     if (result.errors.isNotEmpty) {
@@ -157,16 +169,23 @@ Future<void> playImportCelebration(
     if (!context.mounted) return;
   }
 
+  if (showToast) showImportToast(context, result);
+}
+
+/// "+120 XP · STR +2 · 6.2 km on the map".
+String importSummary(ImportPendingResult result) => <String>[
+      '+${result.totalXp} XP',
+      for (final g in result.statGains) '${g.key} +${g.value}',
+      if (result.totalDistanceKm > 0)
+        '${result.totalDistanceKm.toStringAsFixed(1)} km on the map',
+    ].join(' · ');
+
+/// The recap toast for an import with no boss exchange to show.
+void showImportToast(BuildContext context, ImportPendingResult result) {
   final n = result.imported.length;
-  final parts = <String>[
-    '+${result.totalXp} XP',
-    for (final g in result.statGains) '${g.key} +${g.value}',
-    if (result.totalDistanceKm > 0)
-      '${result.totalDistanceKm.toStringAsFixed(1)} km on the map',
-  ];
   AppToast.success(
     context,
     'Imported $n workout${n == 1 ? '' : 's'}',
-    detail: parts.join(' · '),
+    detail: importSummary(result),
   );
 }

@@ -1,3 +1,7 @@
+import '../../unlocks/models/unlock_catalog.dart';
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
+import '../../unlocks/tour/unlock_tour_runner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,20 +15,17 @@ import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../../core/widgets/currency_chip.dart';
 import '../../character/providers/character_provider.dart';
+import '../../rewards/widgets/task_reward_popup.dart';
 import '../../shop/shop_screen.dart';
+import '../models/region_chest_models.dart';
 import '../models/world_map_models.dart';
+import '../providers/region_chest_provider.dart';
 import '../services/world_zone_service.dart';
 
 /// "Region Chests" — a chest reward for every region fully cleared.
 ///
-/// There is no backend concept of a region-completion reward yet (only
-/// per-zone XP chests exist, see `WorldChestService`), so this screen reads
-/// REAL region data (name, theme, zone progress, status) from the same
-/// `WorldZoneService().getWorldMap()` call `WorldHubScreen` uses — there is
-/// no Riverpod provider for it to share — and shows an **illustrative**
-/// reward preview per chest tier. Tapping a claim affordance explains that
-/// the reward system isn't live yet, the same way Shop's Daily Shop / Chest
-/// Vault sections do.
+/// Region progress comes from the world map while reward eligibility, values,
+/// claims and wallet balances are server-authoritative.
 ///
 /// All 15 chapters have real painted banner art (`AppIcons.regionBanners`,
 /// generated from the prompts on the design artifact's Art Direction sheet)
@@ -33,22 +34,34 @@ import '../services/world_zone_service.dart';
 ///
 /// Reached from the Home screen's Adventure Hub ("Chests" tile).
 class RegionChestsScreen extends ConsumerStatefulWidget {
-  const RegionChestsScreen({super.key});
+  /// Loads the region list; tests pass a fake.
+  final WorldZoneService? worldService;
+
+  const RegionChestsScreen({super.key, this.worldService});
 
   @override
   ConsumerState<RegionChestsScreen> createState() => _RegionChestsScreenState();
 }
 
 class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
-  final _service = WorldZoneService();
+  late final _service = widget.worldService ?? WorldZoneService();
   WorldMapData? _data;
   bool _loading = true;
   String? _error;
+  int? _focusedIndex;
+
+  /// The region on screen in the last build, so a claim can pin it.
+  int _shownIndex = 0;
+  String? _claimingRegionId;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    // _load reads Riverpod state. Wait until the ConsumerState is attached to
+    // its ProviderScope before touching inherited provider dependencies.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
   }
 
   Future<void> _load() async {
@@ -58,10 +71,14 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
       _error = null;
     });
     try {
-      final data = await _service.getWorldMap();
+      ref.invalidate(regionChestsProvider);
+      final results = await Future.wait([
+        _service.getWorldMap(),
+        ref.read(regionChestsProvider.future),
+      ]);
       if (!mounted) return;
       setState(() {
-        _data = data;
+        _data = results.first as WorldMapData;
         _loading = false;
       });
     } catch (e) {
@@ -73,72 +90,118 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
     }
   }
 
-  void _notImplemented() {
-    AppToast.info(
-        context, 'Region chest rewards aren\'t live yet — no backend for it.');
+  Future<RegionChestClaimResult?> _claim(RegionChestEntry chest) async {
+    if (_claimingRegionId != null || chest.status != RegionChestStatus.ready) {
+      return null;
+    }
+    setState(() {
+      _claimingRegionId = chest.regionId;
+      // The default focus follows the first *ready* chest. Once this one is
+      // claimed it would jump to another region and tear down the panel that
+      // plays the opening, so keep the claimed region on screen.
+      _focusedIndex ??= _shownIndex;
+    });
+    try {
+      final result =
+          await ref.read(regionChestsProvider.notifier).claim(chest.regionId);
+      ref.invalidate(characterProfileProvider);
+      return result;
+    } catch (_) {
+      if (mounted) {
+        AppToast.error(context, 'Could not claim the chest. Try again.');
+      }
+      return null;
+    } finally {
+      if (mounted) setState(() => _claimingRegionId = null);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final coins =
-        ref.watch(characterProfileProvider).valueOrNull?.talents?.coins ?? 0;
+    final chestsAsync = ref.watch(regionChestsProvider);
+    final overview = chestsAsync.valueOrNull;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0e1c34),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: _SceneBackground()),
-          SafeArea(
-            child: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.blue))
-                : _error != null
-                    ? ApiErrorState(message: _error!, onRetry: _load)
-                    : _buildContent(_data!),
-          ),
-          // Back arrow and currency chips share one row so they're always
-          // vertically centered against each other, back-left / chips-right.
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_rounded,
-                        color: Colors.white, size: 26),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _currencyChip(context,
-                          iconAsset: AppIcons.homeGemIcon, value: '17'),
-                      const SizedBox(width: 10),
-                      _currencyChip(context,
-                          iconAsset: AppIcons.homeCoinIcon, value: _fmt(coins)),
-                    ],
-                  ),
-                ],
+    return TourOnFirstVisit(
+      unlockKey: UnlockKeys.chests,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0e1c34),
+        body: Stack(
+          children: [
+            const Positioned.fill(child: _SceneBackground()),
+            SafeArea(
+              child: _loading || overview == null
+                  ? const Center(
+                      child: CircularProgressIndicator(color: AppColors.blue))
+                  : _error != null || chestsAsync.hasError
+                      ? ApiErrorState(
+                          message: _error ?? chestsAsync.error.toString(),
+                          onRetry: _load)
+                      : _buildContent(_data!, overview),
+            ),
+            // Back arrow and currency chips share one row so they're always
+            // vertically centered against each other, back-left / chips-right.
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          color: Colors.white, size: 26),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _currencyChip(context,
+                            iconAsset: AppIcons.homeGemIcon,
+                            value: _fmt(overview?.wallet.gems ?? 0)),
+                        const SizedBox(width: 10),
+                        _currencyChip(context,
+                            iconAsset: AppIcons.homeCoinIcon,
+                            value: _fmt(overview?.wallet.coins ?? 0)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildContent(WorldMapData data) {
+  Widget _buildContent(WorldMapData data, RegionChestsOverview overview) {
     final regions = [...data.regions]
       ..sort((a, b) => a.chapterIndex.compareTo(b.chapterIndex));
-    final focused = regions.firstWhere(
-      (r) => r.status == RegionStatus.active,
-      orElse: () => regions.firstWhere(
-        (r) => r.status != RegionStatus.completed,
-        orElse: () => regions.first,
-      ),
-    );
-    final focusedIndex = regions.indexOf(focused);
+    final chestsByRegion = {
+      for (final entry in overview.regions) entry.regionId: entry,
+    };
+    final defaultFocused = regions.indexWhere((region) {
+      final chest = chestsByRegion[region.id];
+      return chest?.status == RegionChestStatus.ready;
+    });
+    final activeFocused =
+        regions.indexWhere((r) => r.status == RegionStatus.active);
+    final focusedIndex = (_focusedIndex ??
+            (defaultFocused >= 0
+                ? defaultFocused
+                : activeFocused >= 0
+                    ? activeFocused
+                    : 0))
+        .clamp(0, regions.length - 1);
+    _shownIndex = focusedIndex;
+    final focused = regions[focusedIndex];
+    final chest = chestsByRegion[focused.id] ??
+        RegionChestEntry(
+          regionId: focused.id,
+          chapterIndex: focused.chapterIndex,
+          coins: 0,
+          gems: 0,
+          status: RegionChestStatus.locked,
+        );
     final left = focusedIndex > 0 ? regions[focusedIndex - 1] : null;
     final right =
         focusedIndex < regions.length - 1 ? regions[focusedIndex + 1] : null;
@@ -238,22 +301,39 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                                 top: sideTopOffset,
                                 child: _RegionBanner(
                                     region: left,
+                                    chestStatus:
+                                        chestsByRegion[left.id]?.status ??
+                                            RegionChestStatus.locked,
                                     width: sideWidth,
-                                    emphasize: false),
+                                    emphasize: false,
+                                    onTap: () => setState(() =>
+                                        _focusedIndex = focusedIndex - 1)),
                               ),
                             if (right != null)
                               Positioned(
                                 right: offset,
                                 top: sideTopOffset,
-                                child: _RegionBanner(
-                                    region: right,
-                                    width: sideWidth,
-                                    emphasize: false),
+                                child: TourTarget(
+                                  id: TourIds.chestsNext,
+                                  child: _RegionBanner(
+                                      region: right,
+                                      chestStatus:
+                                          chestsByRegion[right.id]?.status ??
+                                              RegionChestStatus.locked,
+                                      width: sideWidth,
+                                      emphasize: false,
+                                      onTap: () => setState(() =>
+                                          _focusedIndex = focusedIndex + 1)),
+                                ),
                               ),
-                            _RegionBanner(
-                                region: focused,
-                                width: centerWidth,
-                                emphasize: true),
+                            TourTarget(
+                              id: TourIds.chestsCurrent,
+                              child: _RegionBanner(
+                                  region: focused,
+                                  chestStatus: chest.status,
+                                  width: centerWidth,
+                                  emphasize: true),
+                            ),
                           ],
                         );
                       },
@@ -273,19 +353,22 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                   Padding(
                     padding:
                         const EdgeInsets.fromLTRB(28, rewardsTopPad, 28, 0),
-                    child: _RewardsPanel(
-                      key: ValueKey(focused.name),
-                      region: focused,
-                      ready: focused.status == RegionStatus.completed ||
-                          focused.totalZones - focused.completedZones <= 0,
-                      onTap: _notImplemented,
+                    child: TourTarget(
+                      id: TourIds.chestsRewards,
+                      child: _RewardsPanel(
+                        key: ValueKey(focused.name),
+                        region: focused,
+                        chest: chest,
+                        claiming: _claimingRegionId == chest.regionId,
+                        onClaim: () => _claim(chest),
+                      ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                         28, captionTopPad, 28, captionBottomPad),
                     child: Text(
-                      _claimCaption(focused),
+                      _claimCaption(focused, chest),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                           fontSize: 12.5,
@@ -302,12 +385,13 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
     );
   }
 
-  String _claimCaption(RegionCard r) {
-    if (r.status == RegionStatus.completed)
-      return 'All zones cleared — chest ready';
-    final remaining = r.totalZones - r.completedZones;
-    if (remaining <= 0) return 'All zones cleared — chest ready';
-    return 'Clear ${r.name} to claim';
+  String _claimCaption(RegionCard region, RegionChestEntry chest) {
+    return switch (chest.status) {
+      RegionChestStatus.ready => 'Region boss resolved — chest ready',
+      RegionChestStatus.claimed => 'Region chest claimed',
+      RegionChestStatus.locked => 'Reach ${region.name} to unlock',
+      RegionChestStatus.inProgress => 'Resolve ${region.bossName} to claim',
+    };
   }
 }
 
@@ -414,100 +498,114 @@ const double _regionBannerAspect = 1024 / 1536;
 
 class _RegionBanner extends StatelessWidget {
   final RegionCard region;
+  final RegionChestStatus chestStatus;
   final double width;
   final bool emphasize;
+  final VoidCallback? onTap;
   const _RegionBanner(
-      {required this.region, required this.width, required this.emphasize});
+      {required this.region,
+      required this.chestStatus,
+      required this.width,
+      required this.emphasize,
+      this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final art = AppIcons.regionBanners[region.name];
     final locked = region.status == RegionStatus.locked;
 
-    return SizedBox(
-      width: width,
-      child: AspectRatio(
-        aspectRatio: _regionBannerAspect,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (art != null)
-                  // Quality forced to `low` (plain bilinear, no mip chain):
-                  // the source art (~900-1000px) is shown far smaller here
-                  // (185-264px). `medium`/`high` build a mipmap for that
-                  // downscale, and mipmapping a large mostly-transparent
-                  // RGBA canvas blends the whole texture's average color
-                  // across its full bounding box — visible as a soft
-                  // rectangular tint bleeding into the transparent margins
-                  // above/below the banner's painted shape.
-                  Image.asset(art,
-                      fit: BoxFit.cover, filterQuality: FilterQuality.low)
-                else
-                  ColoredBox(
-                    color: const Color(0xFF1a2536),
-                    child: Center(
-                        child: Text(region.emoji.isEmpty ? '🗺️' : region.emoji,
-                            style: TextStyle(fontSize: width * 0.2))),
-                  ),
-                Align(
-                  // Measured against the real banner art: the diamond
-                  // slot centers at 54% of the banner's height; nudged a
-                  // bit further down from there.
-                  alignment: const Alignment(0, 0.12),
-                  child: Text(
-                    '${region.chapterIndex}',
-                    style: TextStyle(
-                      // The diamond slot is ~23% of the banner's width —
-                      // 0.26 fit single digits but overflowed two-digit
-                      // chapters (10-15); 0.19 fit both but read large.
-                      fontSize: width * 0.15,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                      color: Colors.white,
-                      shadows: const [
-                        Shadow(
-                            color: Colors.black54,
-                            blurRadius: 6,
-                            offset: Offset(0, 2))
-                      ],
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: width,
+        child: AspectRatio(
+          aspectRatio: _regionBannerAspect,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (art != null)
+                    // Quality forced to `low` (plain bilinear, no mip chain):
+                    // the source art (~900-1000px) is shown far smaller here
+                    // (185-264px). `medium`/`high` build a mipmap for that
+                    // downscale, and mipmapping a large mostly-transparent
+                    // RGBA canvas blends the whole texture's average color
+                    // across its full bounding box — visible as a soft
+                    // rectangular tint bleeding into the transparent margins
+                    // above/below the banner's painted shape.
+                    Image.asset(art,
+                        fit: BoxFit.cover, filterQuality: FilterQuality.low)
+                  else
+                    ColoredBox(
+                      color: const Color(0xFF1a2536),
+                      child: Center(
+                          child: Text(
+                              region.emoji.isEmpty ? '🗺️' : region.emoji,
+                              style: TextStyle(fontSize: width * 0.2))),
+                    ),
+                  Align(
+                    // Measured against the real banner art: the diamond
+                    // slot centers at 54% of the banner's height; nudged a
+                    // bit further down from there.
+                    alignment: const Alignment(0, 0.12),
+                    child: Text(
+                      '${region.chapterIndex}',
+                      style: TextStyle(
+                        // The diamond slot is ~23% of the banner's width —
+                        // 0.26 fit single digits but overflowed two-digit
+                        // chapters (10-15); 0.19 fit both but read large.
+                        fontSize: width * 0.15,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
+                        color: Colors.white,
+                        shadows: const [
+                          Shadow(
+                              color: Colors.black54,
+                              blurRadius: 6,
+                              offset: Offset(0, 2))
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Align(
-                  // Pill slot centers at 64.4% of the banner's height
-                  // (0.288); nudged further down from there.
-                  alignment: const Alignment(0, 0.41),
-                  child: Text(
-                    '${region.completedZones} / ${region.totalZones} ZONES',
-                    style: TextStyle(
-                      fontSize: width * 0.052,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.4,
-                      color: Colors.white,
-                      shadows: const [
-                        Shadow(color: Colors.black54, blurRadius: 4)
-                      ],
+                  Align(
+                    // Pill slot centers at 64.4% of the banner's height
+                    // (0.288); nudged further down from there.
+                    alignment: const Alignment(0, 0.41),
+                    child: Text(
+                      regionChestProgressLabel(
+                        chestStatus,
+                        region.completedZones,
+                        region.totalZones,
+                      ),
+                      style: TextStyle(
+                        fontSize: width * 0.052,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                        color: Colors.white,
+                        shadows: const [
+                          Shadow(color: Colors.black54, blurRadius: 4)
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Lock badge only makes sense on the dimmed side neighbors —
-                // the focused/center banner is always the player's current
-                // or next-up region, so it never shows the lock icon.
-                if (locked && !emphasize)
-                  Positioned(
-                    top: width * 0.06,
-                    right: width * 0.08,
-                    child: Icon(Icons.lock_rounded,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        size: width * 0.14),
-                  ),
-              ],
+                  // Lock badge only makes sense on the dimmed side neighbors —
+                  // the focused/center banner is always the player's current
+                  // or next-up region, so it never shows the lock icon.
+                  if (locked && !emphasize)
+                    Positioned(
+                      top: width * 0.06,
+                      right: width * 0.08,
+                      child: Icon(Icons.lock_rounded,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          size: width * 0.14),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -521,17 +619,18 @@ class _RegionBanner extends StatelessWidget {
 /// Reward tiles for the focused region. When the chest is ready, tapping
 /// plays "lid pop + light beam": the tiles shake, each tile's lid flips
 /// open over a warm glow, and a beam with sparkles rises out of it.
-// Region chest claims have no backend yet ([onTap] shows that), so this is
-// the reveal to wire to the real claim once it exists.
+/// The backend claim completes before the success animation begins.
 class _RewardsPanel extends StatefulWidget {
   final RegionCard region;
-  final bool ready;
-  final VoidCallback onTap;
+  final RegionChestEntry chest;
+  final bool claiming;
+  final Future<RegionChestClaimResult?> Function() onClaim;
   const _RewardsPanel(
       {super.key,
       required this.region,
-      required this.ready,
-      required this.onTap});
+      required this.chest,
+      required this.claiming,
+      required this.onClaim});
 
   @override
   State<_RewardsPanel> createState() => _RewardsPanelState();
@@ -547,8 +646,15 @@ class _RewardsPanelState extends State<_RewardsPanel>
   RegionCard get region => widget.region;
 
   Future<void> _tap() async {
-    if (!widget.ready || _open.isAnimating || !RewardFx.enabled(context)) {
-      widget.onTap();
+    if (widget.chest.status != RegionChestStatus.ready ||
+        widget.claiming ||
+        _open.isAnimating) {
+      return;
+    }
+    final result = await widget.onClaim();
+    if (result == null || !mounted) return;
+    if (!RewardFx.enabled(context)) {
+      await _showReward(result);
       return;
     }
     _open.forward(from: 0);
@@ -566,8 +672,25 @@ class _RewardsPanelState extends State<_RewardsPanel>
       });
     }
     await Future.delayed(const Duration(milliseconds: 900));
-    if (mounted) widget.onTap();
+    if (mounted) await _showReward(result);
   }
+
+  Future<void> _showReward(RegionChestClaimResult result) =>
+      showRewardRevealPopup(
+        context,
+        items: [
+          RewardRevealItem(
+              asset: AppIcons.homeCoinIcon,
+              label: '×${result.coins}',
+              color: AppColors.orange),
+          RewardRevealItem(
+              asset: AppIcons.homeGemIcon,
+              label: '×${result.gems}',
+              color: AppColors.purple),
+        ],
+        subtitle: 'Region chest claimed',
+        heroAsset: AppIcons.rewardChestBurst,
+      );
 
   @override
   void dispose() {
@@ -588,8 +711,8 @@ class _RewardsPanelState extends State<_RewardsPanel>
             .transform(((ms - 450 - i * 200) / 380).clamp(0.0, 1.0))
         : 0;
     final tier = _tierIndexFor(region.chapterIndex);
-    final coins = [150, 300, 500, 800, 1200][tier];
-    final gems = [20, 35, 50, 80, 120][tier];
+    final coins = widget.chest.coins;
+    final gems = widget.chest.gems;
     final tierColor = _tierColors[tier];
 
     return GestureDetector(
@@ -603,8 +726,13 @@ class _RewardsPanelState extends State<_RewardsPanel>
         ),
         child: Column(
           children: [
-            const Text('Rewards',
-                style: TextStyle(
+            Text(
+                widget.chest.status == RegionChestStatus.claimed
+                    ? 'Claimed'
+                    : widget.claiming
+                        ? 'Opening…'
+                        : 'Rewards',
+                style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                     color: Colors.white)),
@@ -685,7 +813,7 @@ class _RewardSlot extends StatelessWidget {
           ),
           // Bottom of the tile stays put, a little brighter.
           ClipRect(
-            clipper: _BandClipper(top: 30),
+            clipper: const _BandClipper(top: 30),
             child: ColorFiltered(
               colorFilter: ColorFilter.mode(
                   Colors.white.withValues(alpha: .25 * lidOpen),
@@ -700,7 +828,8 @@ class _RewardSlot extends StatelessWidget {
               ..setEntry(3, 2, .004)
               ..rotateX(-1.9 * lidOpen)
               ..translate(0.0, -4 * lidOpen),
-            child: ClipRect(clipper: _BandClipper(bottom: 30), child: tile),
+            child:
+                ClipRect(clipper: const _BandClipper(bottom: 30), child: tile),
           ),
         ],
       ),

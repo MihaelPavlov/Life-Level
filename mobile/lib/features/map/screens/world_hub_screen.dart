@@ -5,8 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
-import '../../tutorial/models/tutorial_step.dart';
-import '../../tutorial/providers/tutorial_provider.dart';
 import '../models/world_map_models.dart';
 import '../services/world_zone_service.dart';
 import '../widgets/active_journey_banner.dart';
@@ -45,13 +43,11 @@ class WorldHubScreen extends ConsumerStatefulWidget {
 class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   final _service = WorldZoneService();
   late final StreamSubscription<void> _refreshSub;
-  final GlobalKey _regionsKey = GlobalKey();
   final Map<String, GlobalKey> _regionKeys = {};
 
   WorldMapData? _data;
   bool _loading = true;
   String? _error;
-  TutorialStep? _lastTutorialStep;
   bool _hasScrolledToCurrentRegion = false;
 
   // Inline region navigation so the shell's bottom nav bar stays visible.
@@ -64,18 +60,11 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
     _openRegionId = widget.initialRegionId;
     _refreshSub = WorldZoneRefreshNotifier.stream.listen((_) => _load());
     _load();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final c = ref.read(tutorialControllerProvider);
-      c.registerKey('mapRegions', _regionsKey);
-      _maybeStartMapTutorial();
-    });
   }
 
   @override
   void dispose() {
     _refreshSub.cancel();
-    ref.read(tutorialControllerProvider).unregisterKey('mapRegions');
     super.dispose();
   }
 
@@ -94,19 +83,10 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
       setState(() {
         _data = data;
         _loading = false;
-        final tutorial = ref.read(tutorialControllerProvider);
         if (widget.autoOpenActiveRegion && _openRegionId == null) {
           for (final region in data.regions) {
             if (region.status == RegionStatus.active) {
               _openRegionId = region.id;
-              break;
-            }
-          }
-        } else if (tutorial.isMapTutorial && tutorial.mapTutorialStep == 1) {
-          _openRegionId = null;
-          for (final r in data.regions) {
-            if (r.status == RegionStatus.active) {
-              _openRegionId = r.id;
               break;
             }
           }
@@ -176,55 +156,8 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
     setState(() => _openRegionId = null);
   }
 
-  void _maybeStartMapTutorial() {
-    if (!mounted) return;
-    final c = ref.read(tutorialControllerProvider);
-    if (!c.isProfileHydrated || c.isMapTutorial) return;
-    if (c.mapTutorialStep == -1 || c.mapTutorialStep >= 99) return;
-    c.ensureMapTutorialStarted();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final tutorial = ref.watch(tutorialControllerProvider);
-    if (tutorial.isProfileHydrated &&
-        !tutorial.isMapTutorial &&
-        tutorial.mapTutorialStep != -1 &&
-        tutorial.mapTutorialStep < 99) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _maybeStartMapTutorial();
-      });
-    }
-    final tutorialStep = tutorial.step;
-    final needsRegionOpen = tutorial.isMapTutorial &&
-        tutorialStep != null &&
-        tutorialStep != TutorialStep.mapRegions;
-    final tutorialStepChanged = tutorialStep != _lastTutorialStep;
-    _lastTutorialStep = tutorialStep;
-
-    if (tutorial.isMapTutorial &&
-        tutorialStep == TutorialStep.mapRegions &&
-        _openRegionId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _openRegionId != null) {
-          _closeRegion();
-        }
-      });
-    }
-    if (needsRegionOpen &&
-        (_openRegionId == null || tutorialStepChanged) &&
-        _data != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _data == null) return;
-        for (final region in _data!.regions) {
-          if (region.status == RegionStatus.active) {
-            _openRegion(region);
-            break;
-          }
-        }
-      });
-    }
-
     return Container(
       color: AppColors.shellBackground,
       child: Stack(
@@ -276,7 +209,6 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
             const SizedBox(height: 14),
           ],
           _SectionTitle(
-            key: _regionsKey,
             label: 'REGIONS',
             count: '${visibleRegions.length} SHOWN',
           ),
@@ -386,7 +318,7 @@ class _HubHeader extends StatelessWidget {
 class _SectionTitle extends StatelessWidget {
   final String label;
   final String count;
-  const _SectionTitle({super.key, required this.label, required this.count});
+  const _SectionTitle({required this.label, required this.count});
 
   @override
   Widget build(BuildContext context) {

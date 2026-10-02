@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/core/constants/app_colors.dart';
 import 'package:life_level/features/boss/models/boss_list_item.dart';
+import 'package:life_level/features/boss/replay/boss_seen_store.dart';
 import 'package:life_level/features/map/journey/journey_state.dart';
 import 'package:life_level/features/map/models/world_map_models.dart';
 import 'package:life_level/features/map/models/world_zone_models.dart';
@@ -321,6 +322,115 @@ void main() {
     );
     expect(s.kind, JourneyKind.bossRaid);
     expect(s.progress, closeTo(.62, .001));
-    expect(s.label, startsWith('62% · '));
+    expect(s.label, isNot(contains('%')));
+    expect(s.label, isNotEmpty);
+    expect(s.alert, isFalse);
+  });
+
+  test('boss zone does not put an alert on the center Map button', () {
+    final s = _resolve(
+      _world(zones: [_zone('boss', 'boss')], currentZoneId: 'boss'),
+    );
+    expect(s.kind, JourneyKind.bossZone);
+    expect(s.label, 'Boss');
+    expect(s.alert, isFalse);
+  });
+
+  test('ready boss Map button shows full player HP and ignores stale zero', () {
+    final boss = BossListItem.fromJson({
+      'id': 'ready-boss',
+      'name': 'Forest Warden',
+      'icon': '',
+      'maxHp': 6000,
+      'rewardXp': 600,
+      'timerDays': 0,
+      'canFight': true,
+      'activated': false,
+      'hpDealt': 0,
+      'currentPlayerHp': 80,
+      'playerMaxHp': 80,
+    });
+    final s = resolveJourneyOrb(
+      activeBoss: boss,
+      bossSeen: BossSeenRecord(
+        turnAt: DateTime(2026),
+        bossHp: 0,
+        youHp: 0,
+      ),
+      worldAsync: AsyncData(
+        _world(zones: [_zone('boss', 'boss')], currentZoneId: 'boss'),
+      ),
+      region: null,
+      dungeonState: null,
+      xpProgress: 0,
+    );
+
+    expect(s.kind, JourneyKind.bossRaid);
+    expect(s.progress, 1);
+    expect(s.secondaryProgress, 1);
+    expect(s.secondaryColor, AppColors.green);
+    expect(s.semantics, contains('you at 100%'));
+  });
+
+  test('a blocker fight splits the ring with the player HP', () {
+    final linked = BossListItem.fromJson({
+      'id': 'brute-boss',
+      'name': 'Bramble Brute',
+      'icon': '',
+      'maxHp': 600,
+      'rewardXp': 100,
+      'timerDays': 0,
+      'canFight': true,
+      'activated': true,
+      'hpDealt': 180,
+      'currentPlayerHp': 60,
+      'playerMaxHp': 240,
+    });
+    final s = resolveJourneyOrb(
+      activeBoss: null,
+      bosses: [linked],
+      seenOf: (_) => null,
+      worldAsync: AsyncValue.data(_world(
+        zones: [_zone('a', 'standard'), _zone('b', 'boss', tier: 2)],
+        edges: [
+          {
+            'id': 'e1',
+            'fromZoneId': 'a',
+            'toZoneId': 'b',
+            'distanceKm': 6.4,
+            'isBidirectional': true
+          },
+        ],
+        currentZoneId: 'a',
+        destinationZoneId: 'b',
+        currentEdgeId: 'e1',
+        travelled: 3,
+      )),
+      region: _region(encounters: [
+        {
+          'id': 'enc1',
+          'fromZoneId': 'a',
+          'toZoneId': 'b',
+          't': .5,
+          'type': 'blocker',
+          'blocker': {
+            'name': 'Bramble Brute',
+            'blockedZoneName': 'Zone b',
+            'maxHp': 600,
+            'currentHp': 420,
+            'retreatsInSeconds': 3600,
+            'rewards': <String>[],
+            'bossId': 'brute-boss',
+          },
+        },
+      ]),
+      dungeonState: null,
+      xpProgress: 0,
+    );
+
+    expect(s.kind, JourneyKind.blocker);
+    expect(s.progress, closeTo(.7, .001));
+    expect(s.secondaryProgress, closeTo(.25, .001));
+    expect(s.secondaryColor, AppColors.red, reason: 'a quarter HP reads red');
   });
 }

@@ -17,6 +17,11 @@ import '../../items/models/item_models.dart';
 import '../../items/providers/items_provider.dart';
 import '../../shop/shop_screen.dart';
 import '../../streak/providers/streak_provider.dart';
+import '../../unlocks/models/unlock_catalog.dart';
+import '../../unlocks/providers/unlocks_provider.dart';
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
+import '../../unlocks/widgets/unlock_badges.dart';
 import '../providers/world_progress_provider.dart';
 import '../widgets/home_avatar_ring.dart';
 
@@ -57,6 +62,10 @@ class HomeHeroStage extends ConsumerWidget {
         0.0;
     final shields =
         ref.watch(streakProvider).valueOrNull?.shieldsAvailable ?? 0;
+    // Mount and weapon stay "?" until the first item (Gear unlock); the
+    // Shields chip stays dim until a 3-day streak (Shields unlock).
+    final gearOpen = ref.watch(isUnlockedProvider(UnlockKeys.gear));
+    final shieldsOpen = ref.watch(isUnlockedProvider(UnlockKeys.shields));
     final equipment = ref.watch(equipmentProvider).valueOrNull;
     final totalSteps =
         ref.watch(activitySummaryProvider).valueOrNull?.totalSteps;
@@ -145,132 +154,158 @@ class HomeHeroStage extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                    child: AspectRatio(
-                      aspectRatio: _refW / _bodyRefH,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final w = constraints.maxWidth;
-                          final h = constraints.maxHeight;
-                          double px(double v) => v / _refW * w;
-                          double py(double v) => v / _bodyRefH * h;
+                    child: TourTarget(
+                      id: TourIds.homeHero,
+                      child: AspectRatio(
+                        aspectRatio: _refW / _bodyRefH,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final w = constraints.maxWidth;
+                            final h = constraints.maxHeight;
+                            double px(double v) => v / _refW * w;
+                            double py(double v) => v / _bodyRefH * h;
 
-                          return Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              // ── MOUNT mini-card (left) ──────────────────
-                              Positioned(
-                                left: px(4),
-                                top: py(46),
-                                child: _MiniCard(
-                                  key: const ValueKey('home-mount-button'),
-                                  size: px(72),
-                                  semanticsLabel: 'Open gear from mount',
-                                  onTap: () => NavTabNotifier.switchTo('gear'),
-                                  icon: Image.asset(AppIcons.homeMountIcon,
-                                      fit: BoxFit.contain),
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // ── MOUNT mini-card (left) ──────────────────
+                                Positioned(
+                                  left: px(4),
+                                  top: py(46),
+                                  child: _MiniCard(
+                                    key: const ValueKey('home-mount-button'),
+                                    size: px(72),
+                                    semanticsLabel: gearOpen
+                                        ? 'Open gear from mount'
+                                        : 'Mount, locked',
+                                    unknown: !gearOpen,
+                                    onTap: gearOpen
+                                        ? () => NavTabNotifier.switchTo('gear')
+                                        : () => showLockedHint(
+                                            context, UnlockKeys.gear),
+                                    icon: Image.asset(AppIcons.homeMountIcon,
+                                        fit: BoxFit.contain),
+                                  ),
                                 ),
-                              ),
 
-                              // ── WEAPON mini-card (right) ────────────────
-                              Positioned(
-                                right: px(4),
-                                top: py(46),
-                                child: _MiniCard(
-                                  key: const ValueKey('home-weapon-button'),
-                                  size: px(72),
-                                  semanticsLabel: 'Open gear from weapon',
-                                  onTap: () => NavTabNotifier.switchTo('gear'),
-                                  icon: Image.asset(AppIcons.homeSwordIcon,
-                                      fit: BoxFit.contain),
+                                // ── WEAPON mini-card (right) ────────────────
+                                Positioned(
+                                  right: px(4),
+                                  top: py(46),
+                                  child: _MiniCard(
+                                    key: const ValueKey('home-weapon-button'),
+                                    size: px(72),
+                                    semanticsLabel: gearOpen
+                                        ? 'Open gear from weapon'
+                                        : 'Weapon, locked',
+                                    unknown: !gearOpen,
+                                    onTap: gearOpen
+                                        ? () => NavTabNotifier.switchTo('gear')
+                                        : () => showLockedHint(
+                                            context, UnlockKeys.gear),
+                                    icon: Image.asset(AppIcons.homeSwordIcon,
+                                        fit: BoxFit.contain),
+                                  ),
                                 ),
-                              ),
 
-                              // ── equipped character (floating+breathing) ──
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: py(20),
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: FxAnchorTarget(
-                                    anchor: ShellAnchors.hero,
-                                    child: _FloatingCharacter(
-                                      equipment: equipment,
-                                      height: py(258),
+                                // ── equipped character (floating+breathing) ──
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: py(20),
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: FxAnchorTarget(
+                                      anchor: ShellAnchors.hero,
+                                      child: _FloatingCharacter(
+                                        equipment: equipment,
+                                        height: py(258),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
 
-                              // ── POWER (icon + score) ────────────────────
-                              // Server-computed (CombatStatsCalculator, from
-                              // core stats + equipped gear + talents).
-                              Positioned(
-                                left: px(4),
-                                bottom: py(12),
-                                child: Semantics(
-                                  button: true,
-                                  label: 'Power information',
-                                  child: GestureDetector(
-                                    key: const ValueKey('home-power-button'),
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => _showPower(context),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Image.asset(AppIcons.homePowerIcon,
-                                            width: px(32),
-                                            height: px(32),
-                                            fit: BoxFit.contain),
-                                        SizedBox(width: px(6)),
-                                        Text(
-                                          _fmtPower(p?.power ?? 0),
-                                          style: TextStyle(
-                                            fontSize: px(22),
-                                            fontWeight: FontWeight.w900,
-                                            height: 1.0,
-                                            color: AppColors.orange,
+                                // ── POWER (icon + score) ────────────────────
+                                // Server-computed (CombatStatsCalculator, from
+                                // core stats + equipped gear + talents).
+                                Positioned(
+                                  left: px(4),
+                                  bottom: py(12),
+                                  child: Semantics(
+                                    button: true,
+                                    label: 'Power information',
+                                    child: GestureDetector(
+                                      key: const ValueKey('home-power-button'),
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () => _showPower(context),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Image.asset(AppIcons.homePowerIcon,
+                                              width: px(32),
+                                              height: px(32),
+                                              fit: BoxFit.contain),
+                                          SizedBox(width: px(6)),
+                                          Text(
+                                            _fmtPower(p?.power ?? 0),
+                                            style: TextStyle(
+                                              fontSize: px(22),
+                                              fontWeight: FontWeight.w900,
+                                              height: 1.0,
+                                              color: AppColors.orange,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // ── Run / Shields chips (real data) ─────────
+                                Positioned(
+                                  right: px(4),
+                                  bottom: py(12),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      _StatChip(
+                                        key: const ValueKey(
+                                            'home-banked-distance-button'),
+                                        iconAsset: AppIcons.mapCurrentLocation,
+                                        label: bankedDim ? 'RUN' : 'BANKED',
+                                        value: bankedDim
+                                            ? '—'
+                                            : '${pendingKm.toStringAsFixed(1)} km',
+                                        onTap: () =>
+                                            _showBankedDistance(context),
+                                      ),
+                                      SizedBox(width: px(7)),
+                                      TourTarget(
+                                        id: 'slot.${UnlockKeys.shields}',
+                                        child: Opacity(
+                                          opacity: shieldsOpen ? 1 : .35,
+                                          child: _StatChip(
+                                            key: const ValueKey(
+                                                'home-shields-button'),
+                                            iconAsset:
+                                                AppIcons.rewardStreakShield,
+                                            label: 'SHIELDS',
+                                            value: '$shields',
+                                            onTap: shieldsOpen
+                                                ? () => _showShields(context)
+                                                : () => showLockedHint(context,
+                                                    UnlockKeys.shields),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-
-                              // ── Run / Shields chips (real data) ─────────
-                              Positioned(
-                                right: px(4),
-                                bottom: py(12),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    _StatChip(
-                                      key: const ValueKey(
-                                          'home-banked-distance-button'),
-                                      iconAsset: AppIcons.mapCurrentLocation,
-                                      label: bankedDim ? 'RUN' : 'BANKED',
-                                      value: bankedDim
-                                          ? '—'
-                                          : '${pendingKm.toStringAsFixed(1)} km',
-                                      onTap: () => _showBankedDistance(context),
-                                    ),
-                                    SizedBox(width: px(7)),
-                                    _StatChip(
-                                      key:
-                                          const ValueKey('home-shields-button'),
-                                      iconAsset: AppIcons.rewardStreakShield,
-                                      label: 'SHIELDS',
-                                      value: '$shields',
-                                      onTap: () => _showShields(context),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -473,12 +508,16 @@ class _MiniCard extends StatelessWidget {
   final String semanticsLabel;
   final VoidCallback onTap;
 
+  /// Shows a "?" instead of [icon] until the slot unlocks.
+  final bool unknown;
+
   const _MiniCard({
     super.key,
     required this.size,
     required this.icon,
     required this.semanticsLabel,
     required this.onTap,
+    this.unknown = false,
   });
 
   @override
@@ -501,26 +540,50 @@ class _MiniCard extends StatelessWidget {
                 border: Border.all(color: const Color(0xFF7DB6FF), width: 1.2),
                 borderRadius: BorderRadius.circular(size * 0.16),
               ),
-              child: icon,
-            ),
-            // Decorative swap affordance — matches the reference art; no
-            // render-swap feature exists yet, so it's non-interactive.
-            Positioned(
-              top: -size * 0.14,
-              right: -size * 0.14,
-              child: Container(
-                width: size * 0.32,
-                height: size * 0.32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF0c1420),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                ),
-                child: Icon(Icons.autorenew,
-                    size: size * 0.18, color: Colors.white70),
+              child: AnimatedSwitcher(
+                duration: AppMotion.duration(
+                    context, const Duration(milliseconds: 450)),
+                switchInCurve: Curves.easeOutBack,
+                transitionBuilder: (child, a) =>
+                    ScaleTransition(scale: a, child: child),
+                child: unknown
+                    ? Center(
+                        key: const ValueKey('unknown'),
+                        child: Text(
+                          '?',
+                          style: TextStyle(
+                            fontSize: size * .44,
+                            fontWeight: FontWeight.w900,
+                            height: 1,
+                            color: const Color(0xFF7DB6FF),
+                            shadows: const [
+                              Shadow(color: Color(0x737DB6FF), blurRadius: 12),
+                            ],
+                          ),
+                        ),
+                      )
+                    : KeyedSubtree(key: const ValueKey('icon'), child: icon),
               ),
             ),
+            if (!unknown)
+              // Decorative swap affordance — matches the reference art; no
+              // render-swap feature exists yet, so it's non-interactive.
+              Positioned(
+                top: -size * 0.14,
+                right: -size * 0.14,
+                child: Container(
+                  width: size * 0.32,
+                  height: size * 0.32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0c1420),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                  ),
+                  child: Icon(Icons.autorenew,
+                      size: size * 0.18, color: Colors.white70),
+                ),
+              ),
           ],
         ),
       ),

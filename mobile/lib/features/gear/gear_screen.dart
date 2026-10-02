@@ -1,3 +1,5 @@
+import '../unlocks/tour/tour_target.dart';
+import '../unlocks/tour/tours/unlock_tours.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
@@ -94,13 +96,16 @@ class GearScreen extends ConsumerWidget {
                           right: 14,
                           top: heroH * 0.08,
                           child: equipmentAsync.when(
-                            data: (equipment) => GearHexSlots(
-                              equipment: equipment,
-                              characterLevel: profile?.level ?? 1,
-                              onSlotTap: (slotType, item) =>
-                                  showGearItemDetailSheet(
-                                context,
-                                item: item,
+                            data: (equipment) => TourTarget(
+                              id: TourIds.gearSlots,
+                              child: GearHexSlots(
+                                equipment: equipment,
+                                characterLevel: profile?.level ?? 1,
+                                onSlotTap: (slotType, item) =>
+                                    showGearItemDetailSheet(
+                                  context,
+                                  item: item,
+                                ),
                               ),
                             ),
                             loading: () => const SizedBox(
@@ -135,7 +140,11 @@ class GearScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (profile != null) GearStatsRow(profile: profile),
+                      if (profile != null)
+                        TourTarget(
+                          id: TourIds.gearStats,
+                          child: GearStatsRow(profile: profile),
+                        ),
                       const SizedBox(height: 12),
                       const GearOutfitMountRow(),
                     ],

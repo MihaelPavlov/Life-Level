@@ -27,7 +27,6 @@ import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
 import '../../features/home/home_screen.dart';
-import '../../features/home/cards/home_adventure_hub.dart' show kHubBossesTileKey;
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/rewards/rewards_screen.dart';
@@ -40,6 +39,7 @@ import '../services/world_zone_refresh_notifier.dart';
 import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/leaderboard/leaderboard_screen.dart';
 import '../../features/modes/modes_screen.dart';
 import '../../features/modes/burn_chain/burn_chain_provider.dart';
 import '../../features/modes/treasure_delve/delve_provider.dart';
@@ -53,7 +53,9 @@ import '../../features/guild/screens/guild_screen.dart';
 import '../../features/guild/services/guild_realtime_service.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/boss/providers/boss_provider.dart';
-import '../../features/character/models/character_profile.dart';
+import '../../features/boss/replay/boss_replay.dart';
+import '../../features/boss/replay/boss_seen_store.dart';
+import '../../features/boss/replay/home_boss_replay.dart';
 import '../../features/items/models/item_models.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../widgets/app_toast.dart';
@@ -65,10 +67,13 @@ import '../../features/activity/log_activity_screen.dart';
 import '../../features/map/screens/region_chests_screen.dart';
 import '../../features/sync/providers/pending_workouts_provider.dart';
 import '../../features/sync/pull_import_flow.dart';
-import '../../features/tutorial/providers/tutorial_provider.dart';
-import '../../features/tutorial/widgets/tutorial_overlay.dart';
-import '../../features/tutorial/screens/tutorial_intro_screen.dart';
-import '../../features/tutorial/screens/tutorial_outro_screen.dart';
+import '../../features/streak/widgets/streak_detail_sheet.dart';
+import '../../features/unlocks/models/unlock_catalog.dart';
+import '../../features/unlocks/providers/unlocks_provider.dart';
+import '../../features/unlocks/tour/feature_tour.dart';
+import '../../features/unlocks/tour/unlock_tour_runner.dart';
+import '../../features/unlocks/unlock_coordinator.dart';
+import '../../features/unlocks/widgets/unlock_badges.dart';
 
 // ── shell ─────────────────────────────────────────────────────────────────────
 class MainShell extends ConsumerStatefulWidget {
@@ -124,7 +129,9 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
   late final StreamSubscription<String> _shellOverlaySub;
+  late final StreamSubscription<String> _tourReplaySub;
   late final StreamSubscription<WorldMapOpenRequest> _worldMapSub;
+  late final StreamSubscription<void> _worldRefreshSub;
   late final StreamSubscription<BlockedItemInfo> _inventoryFullSub;
   late final StreamSubscription<DungeonFloorClearedEvent> _dungeonFloorSub;
   late final StreamSubscription<GuildRaidVictoryInfo> _guildRaidVictorySub;
@@ -136,105 +143,15 @@ class _MainShellState extends ConsumerState<MainShell>
   final _characterService = CharacterService();
   final Set<String> _shownLevelUpReceipts = {};
   bool _checkingLevelUps = false;
+  StreamSubscription<void>? _bossReplaySub;
+  bool _bossReplayFetching = false;
+  bool _bossReplayWaiting = false;
 
   final _mapNavKey = GlobalKey();
-
-  // LL-035 tutorial integration: hooked once, consumed every rebuild.
-  bool _tutorialKeysRegistered = false;
-  bool _introModalShown = false;
-  bool _outroModalShown = false;
-  VoidCallback? _tutorialListener;
-  int? _lastTutorialServerStep;
-  int? _lastTutorialTopicsSeen;
-  int? _lastMapTutorialStep;
 
   void _openRewardsDialog() {
     if (!mounted) return;
     showRewardsSheet(context);
-  }
-
-  void _syncTutorialWithProfile([CharacterProfile? profile]) {
-    if (!mounted) return;
-    profile ??= ref.read(characterProfileProvider).valueOrNull;
-    if (profile == null) return;
-    final serverStep = profile.tutorialStep;
-    final serverTopicsSeen = profile.tutorialTopicsSeen;
-    final mapTutorialStep = profile.mapTutorialStep;
-    if (_lastTutorialServerStep == serverStep &&
-        _lastTutorialTopicsSeen == serverTopicsSeen &&
-        _lastMapTutorialStep == mapTutorialStep) {
-      return;
-    }
-    _lastTutorialServerStep = serverStep;
-    _lastTutorialTopicsSeen = serverTopicsSeen;
-    _lastMapTutorialStep = mapTutorialStep;
-    final c = ref.read(tutorialControllerProvider);
-    c.hydrateFromProfile(
-      serverStep: serverStep,
-      serverTopicsSeen: serverTopicsSeen,
-      mapTutorialStep: mapTutorialStep,
-    );
-  }
-
-  void _onTutorialStateChanged() {
-    if (!mounted) return;
-    final c = ref.read(tutorialControllerProvider);
-
-    if (c.isMapTutorial && c.step != null && !_worldOpen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final navIndex = _navIds.indexOf('world');
-        setState(() {
-          if (navIndex != -1) _tabIndex = navIndex;
-          _pendingOnZoneSelected = null;
-          _worldOpen = true;
-          _worldAutoOpenActive = false;
-          _worldTargetRegionId = null;
-          _worldTargetZoneId = null;
-          _titlesOpen = false;
-          _bossOpen = false;
-          _guildOpen = false;
-          _questsOpen = false;
-          _seasonOpen = false;
-          _talentsOpen = false;
-        });
-        WorldZoneRefreshNotifier.notify();
-      });
-    }
-
-    if (c.shouldShowIntroModal && !_introModalShown) {
-      _introModalShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        await Navigator.of(context).push(
-          AppRoute(
-            builder: (_) => const TutorialIntroScreen(),
-            fullscreenDialog: true,
-          ),
-        );
-        _introModalShown = false;
-        // Dismiss in the controller if the user pressed back without tapping
-        // BEGIN — prevents a stale shouldShowIntroModal == true from causing
-        // a premature re-push the next time replayAll() notifies.
-        if (mounted) {
-          final ctrl = ref.read(tutorialControllerProvider);
-          if (ctrl.shouldShowIntroModal) ctrl.dismissIntroModal();
-        }
-      });
-    }
-    if (c.shouldShowOutroModal && !_outroModalShown) {
-      _outroModalShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        await Navigator.of(context).push(
-          AppRoute(
-            builder: (_) => const TutorialOutroScreen(),
-            fullscreenDialog: true,
-          ),
-        );
-        _outroModalShown = false;
-      });
-    }
   }
 
   @override
@@ -255,10 +172,16 @@ class _MainShellState extends ConsumerState<MainShell>
       _wasOffline = !isOnline;
     });
     _levelUpSub = LevelUpNotifier.stream.listen((_) => _checkPendingLevelUps());
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _checkPendingLevelUps());
+    _bossReplaySub =
+        bossReplayRequests.listen((r) => unawaited(_maybePlayBossReplay(r)));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_maybePlayBossReplay());
+      _checkPendingLevelUps();
+    });
     _itemObtainedSub = ItemObtainedNotifier.stream.listen((item) {
-      if (mounted) showItemObtainedOverlay(context, item);
+      if (!mounted) return;
+      showItemObtainedOverlay(context, item);
+      ref.read(unlocksProvider.notifier).refresh();
     });
     _navTabSub = NavTabNotifier.stream.listen((tabId) {
       if (!mounted) return;
@@ -300,6 +223,9 @@ class _MainShellState extends ConsumerState<MainShell>
       if (!mounted) return;
       _onRingItemTap(id);
     });
+    _tourReplaySub = UnlockReplay.stream.listen((key) {
+      if (mounted) unawaited(_openUnlockedFeature(key, replay: true));
+    });
     _worldMapSub = WorldMapNotifier.stream.listen((event) {
       if (!mounted) return;
       WorldZoneRefreshNotifier.notify();
@@ -320,6 +246,17 @@ class _MainShellState extends ConsumerState<MainShell>
         _seasonOpen = false;
         _talentsOpen = false;
       });
+    });
+    // Keep the always-visible Map orb in sync with every world mutation.
+    // Individual map/home screens also consume this signal for their own
+    // local reloads, but the orb must not depend on any of those screens
+    // being mounted when travel reaches a new zone.
+    _worldRefreshSub = WorldZoneRefreshNotifier.stream.listen((_) {
+      if (!mounted) return;
+      ref.invalidate(worldProgressProvider);
+      ref.invalidate(currentRegionDetailProvider);
+      ref.invalidate(dungeonStateProvider);
+      ref.invalidate(bossListProvider);
     });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
       if (mounted) {
@@ -386,16 +323,6 @@ class _MainShellState extends ConsumerState<MainShell>
         icon: Icons.notifications_active_rounded,
         duration: const Duration(seconds: 4),
       );
-    });
-
-    // LL-035: attach once to the tutorial controller so intro/outro modals
-    // are pushed as routes whenever the controller state requests them.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final c = ref.read(tutorialControllerProvider);
-      _tutorialListener = _onTutorialStateChanged;
-      c.addListener(_tutorialListener!);
-      _onTutorialStateChanged();
     });
 
     // Greeting handed over by onboarding (first landing on Home).
@@ -591,6 +518,7 @@ class _MainShellState extends ConsumerState<MainShell>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _levelUpSub.cancel();
+    _bossReplaySub?.cancel();
     _itemObtainedSub.cancel();
     _dungeonFloorSub.cancel();
     _guildRaidVictorySub.cancel();
@@ -598,7 +526,9 @@ class _MainShellState extends ConsumerState<MainShell>
     _bossDefeatedSub.cancel();
     _navTabSub.cancel();
     _shellOverlaySub.cancel();
+    _tourReplaySub.cancel();
     _worldMapSub.cancel();
+    _worldRefreshSub.cancel();
     _inventoryFullSub.cancel();
     _connectivitySub.cancel();
     _deepLinkSub?.cancel();
@@ -607,9 +537,6 @@ class _MainShellState extends ConsumerState<MainShell>
     unawaited(_guildRealtime.stop());
     _guildVictoryPollTimer?.cancel();
     _guildExpiryPollTimer?.cancel();
-    if (_tutorialListener != null) {
-      ref.read(tutorialControllerProvider).removeListener(_tutorialListener!);
-    }
     super.dispose();
   }
 
@@ -621,12 +548,87 @@ class _MainShellState extends ConsumerState<MainShell>
       unawaited(_startGuildRealtime());
       _checkPendingGuildRaidVictories();
       _checkPendingGuildRaidExpiries();
+      unawaited(_maybePlayBossReplay());
       _checkPendingLevelUps();
     }
   }
 
+  // ── boss replay ─────────────────────────────────────────────────────────
+  /// Home is on screen with nothing covering it.
+  bool _canPlayBossReplay() =>
+      mounted &&
+      (ModalRoute.of(context)?.isCurrent ?? true) &&
+      !_checkingLevelUps &&
+      !_journeyOpen &&
+      !unlockCeremonyShowing &&
+      !FeatureTour.isRunning &&
+      _activeShellOverlay() == null &&
+      _navIds[_tabIndex.clamp(0, _navIds.length - 1)] == 'home';
+
+  /// Looks for boss exchanges the player hasn't seen and plays them on the
+  /// Map button once Home is free. Level-ups and unlock ceremonies wait.
+  Future<void> _maybePlayBossReplay([BossReplayRequest? request]) async {
+    if (!mounted ||
+        _bossReplayFetching ||
+        _bossReplayWaiting ||
+        homeBossReplayRunning) {
+      // Already on it; whatever this request carried is shown the usual way.
+      request?.orElse?.call();
+      return;
+    }
+    _bossReplayFetching = true;
+    BossReplay? replay;
+    try {
+      replay = await BossReplayFinder.find(ref.read(bossPageServiceProvider));
+    } catch (_) {
+      // Offline: try again on the next request.
+    } finally {
+      _bossReplayFetching = false;
+    }
+    if (replay == null || !mounted) {
+      request?.orElse?.call();
+      return;
+    }
+
+    _bossReplayWaiting = true;
+    try {
+      while (mounted && !_canPlayBossReplay()) {
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+      }
+    } finally {
+      _bossReplayWaiting = false;
+    }
+    if (!mounted) return;
+    // Watched meanwhile (Bosses page, journey card): nothing left to play.
+    final seen = BossSeenStore.instance[replay.boss.id];
+    if (seen != null && !seen.turnAt.isBefore(replay.last.at)) {
+      // Bring the rings up to the live values.
+      unawaited(BossReplayFinder.find(ref.read(bossPageServiceProvider),
+              onlyBossId: replay.boss.id)
+          .catchError((_) => null));
+      request?.orElse?.call();
+      return;
+    }
+    await playHomeBossReplay(context, replay, summary: request?.summary);
+    if (!mounted) return;
+    ref.invalidate(bossListProvider);
+    setState(() {});
+    // Another boss may have news too; then the queued celebrations.
+    unawaited(_maybePlayBossReplay());
+    _checkPendingLevelUps();
+  }
+
   Future<void> _checkPendingLevelUps() async {
     if (!mounted || _checkingLevelUps) return;
+    final onHome = _navIds[_tabIndex.clamp(0, _navIds.length - 1)] == 'home';
+    if (_bossReplayFetching ||
+        homeBossReplayRunning ||
+        (_bossReplayWaiting && onHome)) {
+      // The boss exchange plays first; level-ups follow it.
+      Future<void>.delayed(
+          const Duration(milliseconds: 900), _checkPendingLevelUps);
+      return;
+    }
     _checkingLevelUps = true;
     try {
       final pending = await _characterService.getPendingLevelUps();
@@ -647,6 +649,7 @@ class _MainShellState extends ConsumerState<MainShell>
       }
       ref.invalidate(inventoryProvider);
       ref.invalidate(characterProfileProvider);
+      if (pending.isNotEmpty) ref.read(unlocksProvider.notifier).refresh();
     } catch (_) {
       // Pending celebrations are durable on the server and retry on resume.
     } finally {
@@ -796,15 +799,119 @@ class _MainShellState extends ConsumerState<MainShell>
 
   // ── journey card + menu ─────────────────────────────────────────────────
   void _toggleJourney() {
+    final unlocks = ref.read(unlocksSnapshotProvider);
+    if (!unlocks.isUnlocked(UnlockKeys.map)) {
+      showLockedHint(context, UnlockKeys.map);
+      return;
+    }
+    // First tap on a fresh Map button starts its tour; taps during the tour
+    // open the journey card as usual.
+    if (!_journeyOpen &&
+        !FeatureTour.isRunning &&
+        unlocks.isFresh(UnlockKeys.map)) {
+      unawaited(_openUnlockedFeature(UnlockKeys.map));
+      return;
+    }
     setState(() => _journeyOpen = !_journeyOpen);
     if (_journeyOpen) WorldZoneRefreshNotifier.notify();
+  }
+
+  // ── guided unlocks ──────────────────────────────────────────────────────
+  /// Nothing is on screen that an unlock ceremony would cover.
+  bool _canShowUnlock() =>
+      mounted &&
+      (ModalRoute.of(context)?.isCurrent ?? true) &&
+      !_checkingLevelUps &&
+      !_journeyOpen &&
+      !homeBossReplayRunning &&
+      !_bossReplayFetching &&
+      _activeShellOverlay() == null;
+
+  void _closeShellOverlays() {
+    _journeyOpen = false;
+    _worldOpen = false;
+    _worldAutoOpenActive = false;
+    _titlesOpen = false;
+    _bossOpen = false;
+    _guildOpen = false;
+    _questsOpen = false;
+    _seasonOpen = false;
+    _talentsOpen = false;
+    _achievementsOpen = false;
+  }
+
+  /// Opens an unlocked feature (Show me, or its first visit). Screens that
+  /// open on their own run their tour through `TourOnFirstVisit`; features
+  /// that live in the shell (Home, the Map button, the Gear and Mode tabs)
+  /// run it here.
+  Future<void> _openUnlockedFeature(String key, {bool replay = false}) async {
+    if (!mounted) return;
+    if (replay) UnlockReplay.pendingKey = key;
+    switch (key) {
+      case UnlockKeys.home:
+      case UnlockKeys.map:
+      case UnlockKeys.gear:
+      case UnlockKeys.modes:
+      case UnlockKeys.delve:
+        final tab = switch (key) {
+          UnlockKeys.gear => 'gear',
+          UnlockKeys.modes || UnlockKeys.delve => 'modes',
+          _ => 'home',
+        };
+        final changed =
+            _navIds[_tabIndex] != tab || _activeShellOverlay() != null;
+        setState(() {
+          _closeShellOverlays();
+          _tabIndex = _navIds.indexOf(tab);
+        });
+        if (changed) {
+          await Future<void>.delayed(const Duration(milliseconds: 450));
+        }
+        UnlockReplay.pendingKey = null;
+        if (mounted) await runUnlockTour(context, ref, key, replay: replay);
+      case UnlockKeys.shields:
+        await showStreakDetailSheet(context);
+      case UnlockKeys.bosses:
+        _onRingItemTap('boss');
+      case UnlockKeys.ranks:
+        _onRingItemTap('titles');
+      case UnlockKeys.leaderboard:
+        LeaderboardScreen.open(context);
+      default:
+        _onRingItemTap(key);
+    }
+  }
+
+  /// A tab tap: locked tabs explain what opens them, and the first visit to
+  /// a newly unlocked tab runs its tour.
+  bool _guardTab(String tabId) {
+    final unlocks = ref.read(unlocksSnapshotProvider);
+    final key = switch (tabId) {
+      'gear' => UnlockKeys.gear,
+      'modes' => UnlockKeys.modes,
+      _ => null,
+    };
+    if (key == null) return true;
+    if (!unlocks.isUnlocked(key)) {
+      showLockedHint(context, key);
+      return false;
+    }
+    final tourKey = unlocks.isFresh(key)
+        ? key
+        : key == UnlockKeys.modes && unlocks.isFresh(UnlockKeys.delve)
+            ? UnlockKeys.delve
+            : null;
+    if (tourKey != null) {
+      unawaited(_openUnlockedFeature(tourKey));
+      return false;
+    }
+    return true;
   }
 
   void _closeJourney() {
     if (!_journeyOpen) return;
     setState(() => _journeyOpen = false);
   }
-
 
   /// Sync from the journey card: jump to Home so the rewards land on the
   /// hero, then run the same flow as a pull.
@@ -880,25 +987,34 @@ class _MainShellState extends ConsumerState<MainShell>
       );
     }
     if (_titlesOpen) {
-      return TitlesRanksScreen(
+      return TourOnFirstVisit(
         key: const ValueKey('titles'),
-        onClose: () => setState(() => _titlesOpen = false),
+        unlockKey: UnlockKeys.ranks,
+        child: TitlesRanksScreen(
+          onClose: () => setState(() => _titlesOpen = false),
+        ),
       );
     }
     if (_bossOpen) {
-      return BossScreen(
+      return TourOnFirstVisit(
         key: const ValueKey('boss'),
-        initialBossId: _pendingBossId,
-        onClose: () => setState(() {
-          _bossOpen = false;
-          _pendingBossId = null;
-        }),
+        unlockKey: UnlockKeys.bosses,
+        child: BossScreen(
+          initialBossId: _pendingBossId,
+          onClose: () => setState(() {
+            _bossOpen = false;
+            _pendingBossId = null;
+          }),
+        ),
       );
     }
     if (_guildOpen) {
-      return GuildScreen(
+      return TourOnFirstVisit(
         key: const ValueKey('guild'),
-        onClose: () => setState(() => _guildOpen = false),
+        unlockKey: UnlockKeys.guild,
+        child: GuildScreen(
+          onClose: () => setState(() => _guildOpen = false),
+        ),
       );
     }
     if (_seasonOpen) {
@@ -908,15 +1024,21 @@ class _MainShellState extends ConsumerState<MainShell>
       );
     }
     if (_talentsOpen) {
-      return TalentsScreen(
+      return TourOnFirstVisit(
         key: const ValueKey('talents'),
-        onClose: () => setState(() => _talentsOpen = false),
+        unlockKey: UnlockKeys.talents,
+        child: TalentsScreen(
+          onClose: () => setState(() => _talentsOpen = false),
+        ),
       );
     }
     if (_achievementsOpen) {
-      return AchievementsScreen(
+      return TourOnFirstVisit(
         key: const ValueKey('achievements'),
-        onClose: () => setState(() => _achievementsOpen = false),
+        unlockKey: UnlockKeys.achievements,
+        child: AchievementsScreen(
+          onClose: () => setState(() => _achievementsOpen = false),
+        ),
       );
     }
     return null;
@@ -925,12 +1047,6 @@ class _MainShellState extends ConsumerState<MainShell>
   // ── build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    // Listen for profile updates to keep tutorial state in sync.
-    ref.listen(characterProfileProvider, (_, next) {
-      if (!mounted) return;
-      final profile = next.valueOrNull;
-      _syncTutorialWithProfile(profile);
-    });
     ref.listen(guildProvider, (previous, next) {
       if (!mounted) return;
       final guildId = next.valueOrNull?.id;
@@ -943,144 +1059,145 @@ class _MainShellState extends ConsumerState<MainShell>
       }
     });
 
-    // Register shell-level tutorial targets once after the first frame paints
-    // (needs the hub's Bosses tile / _mapNavKey in the tree before the controller can read rects).
-    if (!_tutorialKeysRegistered) {
-      _tutorialKeysRegistered = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final c = ref.read(tutorialControllerProvider);
-        c.registerKey('bossFab', kHubBossesTileKey);
-        c.registerKey('mapTab', _mapNavKey);
-        _syncTutorialWithProfile();
-      });
-    }
+    final unlocks = ref.watch(unlocksSnapshotProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.shellBackground,
-      body: LayoutBuilder(builder: (_, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
-        final shellOverlay = _activeShellOverlay();
+    return UnlockCoordinator(
+      canInterrupt: _canShowUnlock,
+      openFeature: _openUnlockedFeature,
+      child: Scaffold(
+        backgroundColor: AppColors.shellBackground,
+        body: LayoutBuilder(builder: (_, constraints) {
+          final w = constraints.maxWidth;
+          final h = constraints.maxHeight;
+          final shellOverlay = _activeShellOverlay();
 
-        return SizedBox(
-          width: w,
-          height: h,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // ── tab content ─────────────────────────────────────────────
-              Positioned.fill(
-                bottom: kNavBarH,
-                // Tabs covered by a shell overlay stop ticking, so idle
-                // motion pauses and boss-hit effects wait until the tab is
-                // visible again.
-                child: TickerMode(
-                  enabled: shellOverlay == null,
-                  child: AppAnimatedIndexedStack(
-                    index: _tabIndex.clamp(0, _navIds.length - 1),
-                    children: _navIds.map(_screenFor).toList(),
+          return SizedBox(
+            width: w,
+            height: h,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // ── tab content ─────────────────────────────────────────────
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  // Tabs covered by a shell overlay stop ticking, so idle
+                  // motion pauses and boss-hit effects wait until the tab is
+                  // visible again.
+                  child: TickerMode(
+                    enabled: shellOverlay == null,
+                    child: ShellShake(
+                      child: AppAnimatedIndexedStack(
+                        index: _tabIndex.clamp(0, _navIds.length - 1),
+                        children: _navIds.map(_screenFor).toList(),
+                      ),
+                    ),
                   ),
                 ),
-              ),
 
-              // ── shell feature overlays ──────────────────────────────────
-              Positioned.fill(
-                bottom: kNavBarH,
-                child: AnimatedSwitcher(
-                  duration: AppMotion.duration(
-                    context,
-                    AppMotionTokens.sheetEnter,
+                // ── shell feature overlays ──────────────────────────────────
+                Positioned.fill(
+                  bottom: kNavBarH,
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.duration(
+                      context,
+                      AppMotionTokens.sheetEnter,
+                    ),
+                    reverseDuration: AppMotion.duration(
+                      context,
+                      AppMotionTokens.sheetExit,
+                    ),
+                    switchInCurve: AppMotionTokens.enterCurve,
+                    switchOutCurve: AppMotionTokens.exitCurve,
+                    transitionBuilder: (child, animation) {
+                      final faded = FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      );
+                      if (!AppMotion.isFull(context)) return faded;
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(.08, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: faded,
+                      );
+                    },
+                    child: shellOverlay ??
+                        const SizedBox.shrink(key: ValueKey('no-overlay')),
                   ),
-                  reverseDuration: AppMotion.duration(
-                    context,
-                    AppMotionTokens.sheetExit,
+                ),
+
+                // ── journey card (from the Map button) ──────────────────────
+                Positioned.fill(
+                  child: JourneyPopover(
+                    open: _journeyOpen,
+                    onClose: _closeJourney,
+                    onSync: _syncFromJourney,
                   ),
-                  switchInCurve: AppMotionTokens.enterCurve,
-                  switchOutCurve: AppMotionTokens.exitCurve,
-                  transitionBuilder: (child, animation) {
-                    final faded = FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
-                    if (!AppMotion.isFull(context)) return faded;
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(.08, 0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: faded,
-                    );
-                  },
-                  child: shellOverlay ??
-                      const SizedBox.shrink(key: ValueKey('no-overlay')),
                 ),
-              ),
 
-              // ── journey card (from the Map button) ──────────────────────
-              Positioned.fill(
-                child: JourneyPopover(
-                  open: _journeyOpen,
-                  onClose: _closeJourney,
-                  onSync: _syncFromJourney,
+                // ── tab bar: Home · Gear · [Map] · Mode · Profile ───────────
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: ShellTabBar(
+                    currentIndex: _tabIndex.clamp(0, _navIds.length - 1),
+                    mapOpen: _journeyOpen || _worldOpen,
+                    locked: {
+                      if (!unlocks.isUnlocked(UnlockKeys.gear))
+                        _navIds.indexOf('gear'),
+                      if (!unlocks.isUnlocked(UnlockKeys.modes))
+                        _navIds.indexOf('modes'),
+                    },
+                    fresh: {
+                      if (unlocks.isFresh(UnlockKeys.gear))
+                        _navIds.indexOf('gear'),
+                      if (unlocks.isFresh(UnlockKeys.modes) ||
+                          unlocks.isFresh(UnlockKeys.delve))
+                        _navIds.indexOf('modes'),
+                    },
+                    onTab: (i) {
+                      if (!_guardTab(_navIds[i])) return;
+                      setState(() {
+                        _journeyOpen = false;
+                        _tabIndex = i;
+                        _worldOpen = false;
+                        _titlesOpen = false;
+                        _bossOpen = false;
+                        _guildOpen = false;
+                        _questsOpen = false;
+                        _seasonOpen = false;
+                        _talentsOpen = false;
+                        _achievementsOpen = false;
+                      });
+                      if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
+                        ref.read(characterProfileProvider.notifier).refresh();
+                        invalidateUserScopedProviders(ref);
+                      }
+                      if (_navIds[i] == 'modes') {
+                        ref.invalidate(burnChainProvider);
+                        ref.invalidate(delveStatusProvider);
+                      }
+                    },
+                  ),
                 ),
-              ),
 
-              // ── tab bar: Home · Gear · [Map] · Mode · Profile ───────────
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: ShellTabBar(
-                  currentIndex: _tabIndex.clamp(0, _navIds.length - 1),
-                  mapOpen: _journeyOpen || _worldOpen,
-                  onTab: (i) {
-                    setState(() {
-                      _journeyOpen = false;
-                      _tabIndex = i;
-                      _worldOpen = false;
-                      _titlesOpen = false;
-                      _bossOpen = false;
-                      _guildOpen = false;
-                      _questsOpen = false;
-                      _seasonOpen = false;
-                      _talentsOpen = false;
-                      _achievementsOpen = false;
-                    });
-                    if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
-                      ref.read(characterProfileProvider.notifier).refresh();
-                      invalidateUserScopedProviders(ref);
-                    }
-                    if (_navIds[i] == 'modes') {
-                      ref.invalidate(burnChainProvider);
-                      ref.invalidate(delveStatusProvider);
-                    }
-                  },
+                // ── Map button (raised, mirrors the journey) ────────────────
+                Positioned(
+                  bottom: 34,
+                  left: w / 2 - kMapOrbSize / 2,
+                  child: MapOrbButton(
+                    key: _mapNavKey,
+                    open: _journeyOpen,
+                    onTap: _toggleJourney,
+                  ),
                 ),
-              ),
-
-              // ── Map button (raised, mirrors the journey) ────────────────
-              Positioned(
-                bottom: 34,
-                left: w / 2 - kMapOrbSize / 2,
-                child: MapOrbButton(
-                  key: _mapNavKey,
-                  open: _journeyOpen,
-                  onTap: _toggleJourney,
-                ),
-              ),
-
-              // ── LL-035 tutorial overlay (topmost) ────────────────────────
-              const Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: false,
-                  child: TutorialOverlay(),
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
+              ],
+            ),
+          );
+        }),
+      ),
     );
   }
 

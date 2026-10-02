@@ -5,6 +5,8 @@ import '../../../core/constants/app_icons.dart';
 import '../models/guild_models.dart';
 import '../providers/guild_provider.dart';
 import '../widgets/guild_widgets.dart';
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
 
 /// Landing state for players without a guild.
 class GuildNoGuildView extends StatelessWidget {
@@ -110,23 +112,33 @@ class GuildNoGuildView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
           child: Column(
             children: [
-              GuildButton(
-                label: 'Find a guild',
-                icon: Icons.search_rounded,
-                onTap: onSearch,
+              TourTarget(
+                id: TourIds.guildFind,
+                child: GuildButton(
+                  label: 'Find a guild',
+                  icon: Icons.search_rounded,
+                  onTap: onSearch,
+                ),
               ),
               const SizedBox(height: 10),
-              GuildButton(
-                label: 'Create a guild',
-                icon: Icons.add_rounded,
-                onTap: onCreate,
-                style: GuildButtonStyle.gold,
+              TourTarget(
+                id: TourIds.guildCreate,
+                child: GuildButton(
+                  label: 'Create a guild',
+                  icon: Icons.add_rounded,
+                  onTap: onCreate,
+                  style: GuildButtonStyle.gold,
+                ),
               ),
               const SizedBox(height: 16),
-              const GuildInfoStrip(
-                icon: Icons.groups_rounded,
-                label: 'Up to 5 members',
-                value: 'A leader or officer starts one active raid at a time.',
+              const TourTarget(
+                id: TourIds.guildInfo,
+                child: GuildInfoStrip(
+                  icon: Icons.groups_rounded,
+                  label: 'Up to 5 members',
+                  value:
+                      'A leader or officer starts one active raid at a time.',
+                ),
               ),
             ],
           ),

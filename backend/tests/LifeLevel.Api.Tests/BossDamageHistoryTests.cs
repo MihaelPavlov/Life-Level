@@ -328,4 +328,39 @@ public class BossDamageHistoryTests
         Assert.Equal(inside.Id, history[0].ActivityId);
         Assert.DoesNotContain(history, h => h.ActivityId == after.Id);
     }
+
+    [Fact]
+    public async Task GetDamageHistory_PersistedTurns_CarryReplayFields()
+    {
+        var db = CreateDb(nameof(GetDamageHistory_PersistedTurns_CarryReplayFields));
+        var fx = await SeedAsync(db, "replay_fields", startedAt: DateTime.UtcNow.AddHours(-2));
+        fx.State.MaxHpSnapshot = 1200;
+        var hit = new BossCombatTurn
+        {
+            UserBossStateId = fx.State.Id, ActivityId = Guid.NewGuid(), ActivityType = "Running",
+            DamageDealt = 320, BossHpAfter = 880, BossCounterattackRaw = 57, DamageTaken = 45,
+            PlayerHpAfter = 195, OccurredAt = DateTime.UtcNow.AddMinutes(-30),
+        };
+        var finisher = new BossCombatTurn
+        {
+            UserBossStateId = fx.State.Id, ActivityId = Guid.NewGuid(), ActivityType = "Running",
+            DamageDealt = 900, BossHpAfter = 0, BossCounterattackRaw = 57, DamageTaken = 0,
+            PlayerHpAfter = 195, BossDefeated = true, OccurredAt = DateTime.UtcNow.AddMinutes(-5),
+        };
+        db.Set<BossCombatTurn>().AddRange(hit, finisher);
+        await db.SaveChangesAsync();
+
+        var history = await CreateService(db).GetDamageHistoryAsync(fx.UserId, fx.Boss.Id);
+
+        Assert.Equal(2, history.Count);
+        var last = history[0];
+        Assert.Equal(finisher.Id, last.TurnId);
+        Assert.True(last.BossDefeated);
+        Assert.Equal(0, last.BossHpAfter);
+        Assert.Equal(0, last.DamageBlocked);
+        var first = history[1];
+        Assert.Equal(880, first.BossHpAfter);
+        Assert.Equal(1200, first.BossMaxHp);
+        Assert.Equal(12, first.DamageBlocked);
+    }
 }

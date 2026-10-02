@@ -14,11 +14,14 @@ import '../../rewards/rewards_screen.dart';
 import '../../map/screens/region_chests_screen.dart';
 import '../../streak/widgets/streak_detail_sheet.dart';
 import '../../titles/providers/titles_provider.dart';
+import '../../unlocks/models/unlock_catalog.dart';
+import '../../unlocks/models/unlock_models.dart';
+import '../../unlocks/providers/unlocks_provider.dart';
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
+import '../../unlocks/widgets/unlock_badges.dart';
 import '../providers/adventure_hub_status_provider.dart';
 import 'home_recent_activities_card.dart' show showActivityJournalSheet;
-
-/// The Bosses tile; the tutorial's boss step points at it.
-final kHubBossesTileKey = GlobalKey(debugLabel: 'hubBossesTile');
 
 /// Horizontally-scrollable row of quick entry points into the game's
 /// systems — daily rewards, bosses, streak, workout journal, guild,
@@ -31,62 +34,80 @@ class HomeAdventureHub extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final signals = ref.watch(adventureHubSignalsProvider).valueOrNull ??
         AdventureHubSignals.empty;
-    final tiles = _orderedTiles(context, ref, signals);
+    final unlocks = ref.watch(unlocksSnapshotProvider);
+    final tiles = _orderedTiles(context, ref, signals, unlocks);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'ADVENTURE HUB',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2.2,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Swipe for more',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  Icon(Icons.chevron_right_rounded,
-                      size: 16, color: AppColors.textMuted),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+    return TourTarget(
+      id: TourIds.homeHub,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                for (var i = 0; i < tiles.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 10),
-                  _HubTile(
-                    key: tiles[i].tileKey ?? ValueKey(tiles[i].label),
-                    icon: AppIconImage(tiles[i].iconAsset, size: 30),
-                    label: tiles[i].label,
-                    showBadge: tiles[i].hasUpdate,
-                    onTap: tiles[i].onTap,
+                Text(
+                  'ADVENTURE HUB',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2.2,
+                    color: AppColors.textSecondary,
                   ),
-                ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Swipe for more',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded,
+                        size: 16, color: AppColors.textMuted),
+                  ],
+                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var i = 0; i < tiles.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    _slot(context, tiles[i], unlocks),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _slot(
+      BuildContext context, _HubTileModel tile, UnlocksSnapshot unlocks) {
+    final key = tile.unlockKey;
+    final locked = key != null && !unlocks.isUnlocked(key);
+    final fresh = key != null && unlocks.isFresh(key);
+    final hubTile = _HubTile(
+      icon: AppIconImage(tile.iconAsset, size: 30),
+      label: tile.label,
+      showBadge: tile.hasUpdate && !locked,
+      locked: locked,
+      fresh: fresh,
+      onTap: locked ? () => showLockedHint(context, key) : tile.onTap,
+    );
+    return KeyedSubtree(
+      key: ValueKey(tile.label),
+      child:
+          key == null ? hubTile : TourTarget(id: 'slot.$key', child: hubTile),
     );
   }
 
@@ -94,6 +115,7 @@ class HomeAdventureHub extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AdventureHubSignals signals,
+    UnlocksSnapshot unlocks,
   ) {
     final tiles = [
       _HubTileModel(
@@ -104,7 +126,7 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: () => _openRewards(context),
       ),
       _HubTileModel(
-        tileKey: kHubBossesTileKey,
+        unlockKey: UnlockKeys.bosses,
         iconAsset: AppIcons.ringBoss,
         label: 'Bosses',
         hasUpdate: signals.bosses,
@@ -112,6 +134,7 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: _openBosses,
       ),
       _HubTileModel(
+        unlockKey: UnlockKeys.leaderboard,
         iconAsset: AppIcons.ringLeaderboard,
         label: 'Leaderboard',
         hasUpdate: signals.leaderboard,
@@ -133,6 +156,7 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: () => showActivityJournalSheet(context),
       ),
       _HubTileModel(
+        unlockKey: UnlockKeys.achievements,
         iconAsset: AppIcons.rankChampion,
         label: 'Achievements',
         hasUpdate: signals.achievements,
@@ -140,6 +164,7 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: () => _openAchievements(ref),
       ),
       _HubTileModel(
+        unlockKey: UnlockKeys.guild,
         iconAsset: AppIcons.ringGuild,
         label: 'Guild',
         hasUpdate: false,
@@ -147,6 +172,7 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: _openGuild,
       ),
       _HubTileModel(
+        unlockKey: UnlockKeys.ranks,
         iconAsset: AppIcons.ringTitles,
         label: 'Ranks',
         hasUpdate: signals.titles,
@@ -154,6 +180,7 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: () => _openTitles(ref),
       ),
       _HubTileModel(
+        unlockKey: UnlockKeys.talents,
         iconAsset: AppIcons.talentCrystalIcon,
         label: 'Talents',
         hasUpdate: signals.talents,
@@ -168,9 +195,10 @@ class HomeAdventureHub extends ConsumerWidget {
         onTap: _openSeason,
       ),
       _HubTileModel(
+        unlockKey: UnlockKeys.chests,
         iconAsset: AppIcons.regionChestsHubIcon,
         label: 'Region Chests',
-        hasUpdate: false,
+        hasUpdate: signals.chests,
         priority: 8,
         onTap: () => _openRegionChests(context),
       ),
@@ -179,7 +207,19 @@ class HomeAdventureHub extends ConsumerWidget {
     final indexed = [
       for (var i = 0; i < tiles.length; i++) (index: i, tile: tiles[i]),
     ];
+    bool isLocked(_HubTileModel t) =>
+        t.unlockKey != null && !unlocks.isUnlocked(t.unlockKey!);
+    bool isFresh(_HubTileModel t) =>
+        t.unlockKey != null && unlocks.isFresh(t.unlockKey!);
     indexed.sort((a, b) {
+      // Open tiles first, locked ones at the end so the player sees what's
+      // coming; a feature that just unlocked leads the row.
+      if (isLocked(a.tile) != isLocked(b.tile)) {
+        return isLocked(a.tile) ? 1 : -1;
+      }
+      if (isFresh(a.tile) != isFresh(b.tile)) {
+        return isFresh(a.tile) ? -1 : 1;
+      }
       if (a.tile.hasUpdate != b.tile.hasUpdate) {
         return a.tile.hasUpdate ? -1 : 1;
       }
@@ -254,7 +294,8 @@ class HomeAdventureHub extends ConsumerWidget {
 }
 
 class _HubTileModel {
-  final Key? tileKey;
+  /// The guided-unlock key that opens this tile, or null if it's always open.
+  final String? unlockKey;
   final String iconAsset;
   final String label;
   final bool hasUpdate;
@@ -262,7 +303,7 @@ class _HubTileModel {
   final VoidCallback onTap;
 
   const _HubTileModel({
-    this.tileKey,
+    this.unlockKey,
     required this.iconAsset,
     required this.label,
     required this.hasUpdate,
@@ -275,13 +316,16 @@ class _HubTile extends StatelessWidget {
   final Widget icon;
   final String label;
   final bool showBadge;
+  final bool locked;
+  final bool fresh;
   final VoidCallback onTap;
 
   const _HubTile({
-    super.key,
     required this.icon,
     required this.label,
     this.showBadge = false,
+    this.locked = false,
+    this.fresh = false,
     required this.onTap,
   });
 
@@ -301,16 +345,54 @@ class _HubTile extends StatelessWidget {
                 clipBehavior: Clip.none,
                 alignment: Alignment.bottomCenter,
                 children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated,
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(14),
+                  if (locked)
+                    SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: CustomPaint(
+                        painter: _DashedSquarePainter(),
+                        child: Center(
+                          child: Opacity(
+                            opacity: .35,
+                            child: ColorFiltered(
+                              colorFilter: const ColorFilter.matrix([
+                                0, 0, 0, 0, 89, //
+                                0, 0, 0, 0, 89,
+                                0, 0, 0, 0, 89,
+                                0, 0, 0, 1, 0,
+                              ]),
+                              child: icon,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        border: Border.all(
+                            color: fresh
+                                ? AppColors.orange.withValues(alpha: .7)
+                                : AppColors.border),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: fresh
+                            ? [
+                                BoxShadow(
+                                    color:
+                                        AppColors.orange.withValues(alpha: .35),
+                                    blurRadius: 16),
+                              ]
+                            : null,
+                      ),
+                      child: Center(child: icon),
                     ),
-                    child: Center(child: icon),
-                  ),
+                  if (locked)
+                    const Positioned(top: 6, right: 4, child: LockBadge()),
+                  if (fresh && !locked)
+                    const Positioned(top: 2, right: -2, child: NewPill()),
                   Positioned(
                     top: 4,
                     right: 2,
@@ -342,11 +424,13 @@ class _HubTile extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10.5,
                         height: 1.15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: locked
+                            ? AppColors.textMuted
+                            : AppColors.textSecondary,
                       ),
                     )
                   : FittedBox(
@@ -354,10 +438,12 @@ class _HubTile extends StatelessWidget {
                       child: Text(
                         label,
                         maxLines: 1,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          color: locked
+                              ? AppColors.textMuted
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -432,4 +518,26 @@ class _HubAlertBadgeState extends State<_HubAlertBadge>
       ),
     );
   }
+}
+
+/// Dashed rounded square: the outline of a slot that hasn't unlocked yet.
+class _DashedSquarePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF2A3340)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          (Offset.zero & size).deflate(.6), const Radius.circular(14)));
+    for (final metric in path.computeMetrics()) {
+      for (double d = 0; d < metric.length; d += 7) {
+        canvas.drawPath(metric.extractPath(d, d + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedSquarePainter old) => false;
 }

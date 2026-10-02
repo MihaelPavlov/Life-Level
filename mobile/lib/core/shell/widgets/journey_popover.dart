@@ -1,3 +1,5 @@
+import '../../../features/unlocks/tour/tour_target.dart';
+import '../../../features/unlocks/tour/tours/unlock_tours.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -107,7 +109,10 @@ class _JourneyPopoverState extends State<JourneyPopover> {
                           ConstrainedBox(
                             constraints: BoxConstraints(maxHeight: maxH),
                             child: SingleChildScrollView(
-                              child: HomePortalCard(onSync: onSync),
+                              child: TourTarget(
+                                id: TourIds.journeyCard,
+                                child: HomePortalCard(onSync: onSync),
+                              ),
                             ),
                           ),
                           const _Tail(),

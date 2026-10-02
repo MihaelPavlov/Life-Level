@@ -9,9 +9,11 @@ import 'package:life_level/core/shell/widgets/shell_tab_bar.dart';
 import 'package:life_level/features/home/cards/home_happening_now.dart';
 import 'package:life_level/features/map/journey/journey_state.dart';
 
+import '../../helpers/unlocks_overrides.dart';
+
 Widget _app(Widget child, {List<Override> overrides = const []}) =>
     ProviderScope(
-      overrides: overrides,
+      overrides: [allUnlockedOverride, ...overrides],
       child: MaterialApp(home: Scaffold(body: Center(child: child))),
     );
 

@@ -1,6 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/motion/app_motion.dart';
+import '../../../core/motion/reward_fx.dart';
+import '../../../core/widgets/app_icon_image.dart';
+import '../../../core/widgets/app_toast.dart';
+import '../../character/providers/character_provider.dart';
+import '../../onboarding/widgets/activity_visuals.dart';
+import '../replay/boss_replay.dart';
+import '../widgets/boss_hit_fx.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../models/boss_list_item.dart';
 import '../providers/boss_provider.dart';
@@ -25,10 +35,169 @@ class BossScreen extends ConsumerStatefulWidget {
 class BossScreenState extends ConsumerState<BossScreen> {
   BossListItem? _selectedBoss;
   bool _autoOpenAttempted = false;
+  String? _activatingBossId;
+
+  // ── duel replay on open ────────────────────────────────────────────────
+  final _portraitKey = GlobalKey();
+  final _avatarKey = GlobalKey();
+  bool _replayChecked = false;
+  String? _replayBossId;
+  int? _shownBossHp;
+  int? _shownYouHp;
+  int? _emberBossHp;
+  String? _badge;
+  final List<BossReplayTurn> _sinceLastVisit = [];
+
+  /// Plays exchanges the player hasn't seen on the first active card, once
+  /// per visit, then marks them seen so Home doesn't replay them.
+  void _maybeReplay(List<BossListItem> bosses) {
+    if (_replayChecked) return;
+    final first = bosses.where((b) => b.isActive).firstOrNull;
+    if (first == null) return;
+    _replayChecked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      BossReplay? replay;
+      try {
+        replay = await BossReplayFinder.find(ref.read(bossPageServiceProvider),
+            onlyBossId: first.id);
+      } catch (_) {}
+      if (replay == null || !mounted) return;
+      await _playReplay(replay);
+    });
+  }
+
+  Future<void> _playReplay(BossReplay r) async {
+    setState(() {
+      _replayBossId = r.boss.id;
+      _shownBossHp = r.startBossHp;
+      _shownYouHp = r.startYouHp;
+    });
+    final motion = RewardFx.enabled(context);
+    if (motion) await Future<void>.delayed(const Duration(milliseconds: 450));
+    final turns = r.playable;
+    for (final (i, t) in turns.indexed) {
+      if (!mounted) return;
+      if (!motion) break;
+      final combo = turns.length > 1 && i > 0
+          ? '×${turns.sublist(0, i + 1).fold(0, (a, x) => a + x.count)} COMBO'
+          : t.count > 1
+              ? '×${t.count}'
+              : null;
+      // The workout's hit.
+      final portrait = RewardFx.centerOf(_portraitKey);
+      AppMotion.haptic(AppHaptic.medium);
+      if (portrait != null) {
+        BossSlash.play(context, portrait, width: 150);
+        RewardFx.burst(context, portrait, AppColors.red,
+            count: 12, distance: 60);
+        RewardFx.floatText(context, portrait + const Offset(36, -56),
+            '−${t.dealt}', const Color(0xFFFFD27A),
+            fontSize: 24,
+            rise: 30,
+            popScale: 1.2,
+            duration: const Duration(milliseconds: 1200));
+      }
+      setState(() {
+        _badge = combo;
+        _emberBossHp = _shownBossHp;
+        _shownBossHp = t.bossHpAfter;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 520));
+      if (!mounted) return;
+      setState(() => _emberBossHp = null);
+
+      if (t.finisher) {
+        if (portrait != null) {
+          RewardFx.floatText(context, portrait + const Offset(70, 0),
+              'DEFEATED', AppColors.orange,
+              pill: true, fontSize: 16, duration: const Duration(seconds: 2));
+          RewardFx.confetti(context, portrait);
+        }
+        setState(() => _sinceLastVisit.add(t));
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
+        break;
+      }
+      if (t.recovering) {
+        final avatar = RewardFx.centerOf(_avatarKey);
+        if (avatar != null) {
+          RewardFx.floatText(context, avatar + const Offset(60, -20),
+              'Recovering · no attack', AppColors.textSecondary,
+              pill: true, fontSize: 11);
+        }
+        setState(() => _sinceLastVisit.add(t));
+        await Future<void>.delayed(const Duration(milliseconds: 900));
+        continue;
+      }
+
+      // The boss hits back.
+      await Future<void>.delayed(const Duration(milliseconds: 260));
+      if (!mounted) return;
+      final avatar = RewardFx.centerOf(_avatarKey);
+      AppMotion.haptic(AppHaptic.medium);
+      if (avatar != null) {
+        BossClaw.play(context, avatar);
+        RewardFx.floatText(context, avatar + const Offset(0, -34),
+            '−${t.taken}', const Color(0xFFFF6B6B),
+            fontSize: 20, rise: 26, popScale: 1.2);
+        if (t.blocked > 0) {
+          RewardFx.floatText(context, avatar + const Offset(70, -6),
+              '${t.blocked} blocked', const Color(0xFF9CCAFF),
+              pill: true,
+              fontSize: 11,
+              delay: const Duration(milliseconds: 120));
+        }
+        if (t.ko) {
+          RewardFx.floatText(
+              context, avatar + const Offset(56, -4), 'K.O.', AppColors.red,
+              fontSize: 30,
+              rise: 10,
+              popScale: 1.6,
+              duration: const Duration(milliseconds: 1800));
+        }
+      }
+      setState(() {
+        _shownYouHp = t.youHpAfter;
+        _sinceLastVisit.add(t);
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 950));
+    }
+    if (!mounted) return;
+    BossReplayFinder.markSeen(r);
+    setState(() {
+      _badge = null;
+      _shownBossHp = null;
+      _shownYouHp = null;
+      if (!motion) _sinceLastVisit.addAll(r.turns);
+    });
+    if (r.finished) unawaited(ref.read(bossListProvider.notifier).refresh());
+  }
 
   void refresh() => ref.read(bossListProvider.notifier).refresh();
 
-  void _openBattle(BossListItem boss) => setState(() => _selectedBoss = boss);
+  Future<void> _openBattle(BossListItem boss) async {
+    if (_activatingBossId != null) return;
+    var selected = boss;
+    if (!boss.activated) {
+      setState(() => _activatingBossId = boss.id);
+      try {
+        await ref.read(bossPageServiceProvider).activateFight(boss.id);
+        await ref.read(bossListProvider.notifier).refresh();
+        selected = ref
+                .read(bossListProvider)
+                .valueOrNull
+                ?.where((item) => item.id == boss.id)
+                .firstOrNull ??
+            boss;
+      } catch (e) {
+        if (mounted) AppToast.error(context, 'Could not start boss fight: $e');
+        return;
+      } finally {
+        if (mounted) setState(() => _activatingBossId = null);
+      }
+    }
+    if (mounted) setState(() => _selectedBoss = selected);
+  }
+
   void _closeBattle() {
     setState(() => _selectedBoss = null);
     refresh();
@@ -45,7 +214,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
     if (boss == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _openBattle(boss);
+      unawaited(_openBattle(boss));
     });
   }
 
@@ -94,6 +263,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
     }
 
     bossAsync.whenData(_maybeAutoOpen);
+    bossAsync.whenData(_maybeReplay);
 
     return Material(
       color: AppColors.backgroundAlt,
@@ -118,7 +288,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
                   bossAsync.whenOrNull(
                         data: (bosses) {
                           final activeCount =
-                              bosses.where((b) => b.isActive).length;
+                              bosses.where((b) => b.needsAttention).length;
                           if (activeCount == 0) return const SizedBox.shrink();
                           return Container(
                             padding: const EdgeInsets.symmetric(
@@ -282,7 +452,9 @@ class BossScreenState extends ConsumerState<BossScreen> {
       );
     }
 
-    final active = bosses.where((b) => b.isActive).toList();
+    // Include a newly reached/spawned boss before its first battle activation.
+    // Previously it was neither active, expired nor defeated and vanished.
+    final active = bosses.where((b) => b.needsAttention).toList();
     final defeated = bosses.where((b) => b.isDefeated).toList();
     final expired = bosses.where((b) => b.isExpired && !b.isDefeated).toList();
 
@@ -305,8 +477,22 @@ class BossScreenState extends ConsumerState<BossScreen> {
             for (final boss in active)
               BossActiveCard(
                 boss: boss,
-                onEnterBattle: boss.canFight ? () => _openBattle(boss) : null,
+                onEnterBattle:
+                    boss.canFight ? () => unawaited(_openBattle(boss)) : null,
+                tourTargets: identical(boss, active.first),
+                avatarEmoji: ref
+                    .watch(characterProfileProvider)
+                    .valueOrNull
+                    ?.avatarEmoji,
+                portraitKey:
+                    identical(boss, active.first) ? _portraitKey : null,
+                avatarKey: identical(boss, active.first) ? _avatarKey : null,
+                shownBossHp: boss.id == _replayBossId ? _shownBossHp : null,
+                shownYouHp: boss.id == _replayBossId ? _shownYouHp : null,
+                emberBossHp: boss.id == _replayBossId ? _emberBossHp : null,
+                badge: boss.id == _replayBossId ? _badge : null,
               ),
+            if (_sinceLastVisit.isNotEmpty) _sinceLastVisitSection(),
           ],
           if (expired.isNotEmpty) ...[
             _sectionLabel('EXPIRED'),
@@ -316,6 +502,55 @@ class BossScreenState extends ConsumerState<BossScreen> {
             _sectionLabel('DEFEATED'),
             for (final boss in defeated) BossDefeatedCard(boss: boss),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// One row per exchange the page just replayed.
+  Widget _sinceLastVisitSection() {
+    final dealt = _sinceLastVisit.fold(0, (a, t) => a + t.dealt);
+    final taken = _sinceLastVisit.fold(0, (a, t) => a + t.taken);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'SINCE YOUR LAST VISIT',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: .7,
+                ),
+              ),
+              Text(
+                '$dealt dealt · $taken HP taken',
+                style: const TextStyle(
+                  color: Color(0xFFFFD27A),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(children: [
+              for (final (i, t) in _sinceLastVisit.indexed)
+                _ExchangeRow(key: ValueKey(i), turn: t, first: i == 0),
+            ]),
+          ),
         ],
       ),
     );
@@ -399,6 +634,81 @@ class BossScreenState extends ConsumerState<BossScreen> {
           fontWeight: FontWeight.w600,
           letterSpacing: 0.7,
         ),
+      ),
+    );
+  }
+}
+
+class _ExchangeRow extends StatelessWidget {
+  final BossReplayTurn turn;
+  final bool first;
+  const _ExchangeRow({super.key, required this.turn, required this.first});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = turn;
+    final taken = t.finisher
+        ? 'Finished it'
+        : t.recovering
+            ? 'Recovering'
+            : '−${t.taken} HP';
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.duration(context, const Duration(milliseconds: 380)),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, child) => Opacity(
+        opacity: v,
+        child:
+            Transform.translate(offset: Offset(-14 * (1 - v), 0), child: child),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          border: first
+              ? null
+              : const Border(top: BorderSide(color: Color(0xFF1E2632))),
+        ),
+        child: Row(children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: AppIconImage(activityIcon(t.activityType), size: 24),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              t.count > 1 ? '${t.count} workouts' : t.activityType,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(
+              '−${t.dealt}',
+              style: const TextStyle(
+                color: Color(0xFFFFD27A),
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              taken,
+              style: TextStyle(
+                color: t.finisher ? AppColors.orange : const Color(0xFFFF8A80),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ]),
+        ]),
       ),
     );
   }

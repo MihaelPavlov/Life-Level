@@ -4,6 +4,8 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_icons.dart';
 import '../../motion/app_motion.dart';
 import '../../widgets/app_icon_image.dart';
+import '../../../features/unlocks/tour/tour_target.dart';
+import '../../../features/unlocks/widgets/unlock_badges.dart';
 import '../shell_constants.dart';
 
 /// Width of the gap in the middle of the bar that the Map button sits in.
@@ -19,11 +21,17 @@ class ShellTabBar extends StatelessWidget {
   final bool mapOpen;
   final ValueChanged<int> onTab;
 
+  /// Tab indexes that haven't unlocked yet, and ones whose tour is waiting.
+  final Set<int> locked;
+  final Set<int> fresh;
+
   const ShellTabBar({
     super.key,
     required this.currentIndex,
     required this.mapOpen,
     required this.onTab,
+    this.locked = const {},
+    this.fresh = const {},
   });
 
   @override
@@ -46,6 +54,9 @@ class ShellTabBar extends StatelessWidget {
             label: 'Gear',
             iconAsset: AppIcons.navGear,
             active: currentIndex == 1,
+            locked: locked.contains(1),
+            fresh: fresh.contains(1),
+            targetId: 'slot.gear',
             onTap: () => onTab(1),
           ),
           SizedBox(
@@ -69,6 +80,9 @@ class ShellTabBar extends StatelessWidget {
             label: 'Mode',
             iconAsset: AppIcons.navMode,
             active: currentIndex == 3,
+            locked: locked.contains(3),
+            fresh: fresh.contains(3),
+            targetId: 'slot.modes',
             onTap: () => onTab(3),
           ),
           _Tab(
@@ -87,45 +101,68 @@ class _Tab extends StatelessWidget {
   final String label;
   final String iconAsset;
   final bool active;
+  final bool locked;
+  final bool fresh;
+  final String? targetId;
   final VoidCallback onTap;
   const _Tab({
     required this.label,
     required this.iconAsset,
     required this.active,
     required this.onTap,
+    this.locked = false,
+    this.fresh = false,
+    this.targetId,
   });
 
   @override
   Widget build(BuildContext context) {
     const activeColor = AppColors.blue;
     const inactiveColor = Color(0xFF6E84B0);
+    final icon = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        AppIconImage(iconAsset, size: 24, opacity: active ? 1 : .55),
+        if (locked)
+          const Positioned(top: -6, right: -14, child: LockBadge(size: 16)),
+        if (fresh && !locked)
+          const Positioned(top: -8, right: -22, child: NewPill()),
+      ],
+    );
+    Widget tab = AppPressable(
+      haptic: AppHaptic.selection,
+      onTap: onTap,
+      child: Opacity(
+        opacity: locked ? .35 : 1,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (targetId != null)
+                TourTarget(id: targetId!, child: icon)
+              else
+                icon,
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                  color: active ? activeColor : inactiveColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
     return Expanded(
       child: Semantics(
         button: true,
         selected: active,
-        label: label,
-        child: AppPressable(
-          haptic: AppHaptic.selection,
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppIconImage(iconAsset, size: 24, opacity: active ? 1 : .55),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                    color: active ? activeColor : inactiveColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        label: locked ? '$label, locked' : label,
+        child: tab,
       ),
     );
   }

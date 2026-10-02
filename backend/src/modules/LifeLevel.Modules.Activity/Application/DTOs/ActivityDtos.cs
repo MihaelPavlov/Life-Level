@@ -18,6 +18,12 @@ public record BlockedItemInfo(Guid ItemId, string ItemName, string ItemIcon);
 
 public record ActivitySummaryDto(long TotalSteps);
 
+/// <summary>One day with at least one workout (UTC date).</summary>
+public record ActivityCalendarDayDto(DateOnly Date, int Workouts, double DistanceKm, long Xp);
+
+/// <summary>Daily workout totals for the profile's history grid, plus the all-time longest run.</summary>
+public record ActivityCalendarDto(double LongestRunKm, List<ActivityCalendarDayDto> Days);
+
 public class LogActivityResult
 {
     public Guid ActivityId { get; set; }

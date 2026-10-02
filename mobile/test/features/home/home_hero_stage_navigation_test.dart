@@ -15,6 +15,8 @@ import 'package:life_level/features/map/models/world_zone_models.dart';
 import 'package:life_level/features/streak/models/streak_models.dart';
 import 'package:life_level/features/streak/providers/streak_provider.dart';
 
+import '../../helpers/unlocks_overrides.dart';
+
 class _PendingStreak extends StreakNotifier {
   @override
   Future<StreakData> build() => Completer<StreakData>().future;
@@ -71,6 +73,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          allUnlockedOverride,
           worldProgressProvider.overrideWith((ref) => world.future),
           streakProvider.overrideWith(_PendingStreak.new),
           equipmentProvider.overrideWith(_EquippedChest.new),

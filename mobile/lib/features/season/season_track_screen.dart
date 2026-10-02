@@ -301,12 +301,17 @@ class _BodyState extends ConsumerState<_Body> {
             children: [
               for (final tier in track.tiers)
                 SeasonTierRow(
+                  key: ValueKey('season-tier-${tier.tier}'),
                   tier: tier,
                   claiming: _claiming,
                   onClaim: (_, __) => _claim(context),
                 ),
-              const SeasonLegend(),
-              if (milestone != null) SeasonMilestoneCard(tier: milestone),
+              const SeasonLegend(key: ValueKey('season-legend')),
+              if (milestone != null)
+                SeasonMilestoneCard(
+                  key: ValueKey('season-milestone-${milestone.tier}'),
+                  tier: milestone,
+                ),
             ],
           ),
         ),

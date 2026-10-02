@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../boss/models/boss_list_item.dart';
 import '../../boss/providers/boss_provider.dart';
+import '../../boss/replay/boss_seen_store.dart';
 import '../../character/providers/character_provider.dart';
 import '../../home/providers/world_progress_provider.dart';
 import '../models/encounter_models.dart';
@@ -212,6 +213,13 @@ class JourneyOrbState {
   final String label;
   final bool alert;
 
+  /// Outer ring (the player's HP during a boss fight), 0..1; null = none.
+  final double? secondaryProgress;
+  final Color? secondaryColor;
+
+  /// The label counts down to this moment (boss-fight recovery).
+  final DateTime? countdownTo;
+
   /// Screen-reader description, e.g. "Traveling, 1.4 km to Whispering Fork".
   final String semantics;
 
@@ -226,6 +234,9 @@ class JourneyOrbState {
     this.icon,
     required this.label,
     this.alert = false,
+    this.secondaryProgress,
+    this.secondaryColor,
+    this.countdownTo,
     required this.semantics,
   });
 
@@ -250,14 +261,36 @@ class JourneyOrbState {
       other.iconAsset == iconAsset &&
       other.icon == icon &&
       other.label == label &&
-      other.alert == alert;
+      other.alert == alert &&
+      other.secondaryProgress == secondaryProgress &&
+      other.secondaryColor == secondaryColor &&
+      other.countdownTo == countdownTo;
 
   @override
-  int get hashCode => Object.hash(kind, color, ring, progress, segments,
-      segmentsDone, iconAsset, icon, label, alert);
+  int get hashCode => Object.hash(
+      kind,
+      color,
+      ring,
+      progress,
+      segments,
+      segmentsDone,
+      iconAsset,
+      icon,
+      label,
+      alert,
+      secondaryProgress,
+      secondaryColor,
+      countdownTo);
 }
 
 const _teal = Color(0xFF38D9C8);
+
+/// Player HP colour: green, amber under half, red under a quarter.
+Color playerHpColor(double frac) => frac > .5
+    ? AppColors.green
+    : frac > .25
+        ? AppColors.orange
+        : AppColors.red;
 const _grey = Color(0xFF8B949E);
 const _ringBattle = 'assets/icons/ring_battle.png';
 
@@ -268,6 +301,10 @@ String _km(double v) => '${v.toStringAsFixed(1)} km';
 /// state (first step → next-zone hint → traveling/encounter → zone type).
 JourneyOrbState resolveJourneyOrb({
   required BossListItem? activeBoss,
+  BossSeenRecord? bossSeen,
+  DateTime? now,
+  List<BossListItem> bosses = const [],
+  BossSeenRecord? Function(String bossId)? seenOf,
   required AsyncValue<WorldFullData> worldAsync,
   required RegionDetail? region,
   required DungeonState? dungeonState,
@@ -275,20 +312,56 @@ JourneyOrbState resolveJourneyOrb({
 }) {
   final boss = activeBoss;
   if (boss != null) {
-    final frac = boss.maxHp > 0 ? boss.hpRemaining / boss.maxHp : 0.0;
+    // The rings show what the player has seen; a replay walks them to the
+    // live values exchange by exchange.
+    // A ready-but-unstarted boss has no combat replay yet. Ignore any stale
+    // seen record (including the old pre-activation 0-HP bug) and render the
+    // live full-health values from the API.
+    final seen = boss.activated ? bossSeen : null;
+    final bossHp = seen?.bossHp ?? boss.hpRemaining;
+    final youMax = boss.playerMaxHp;
+    final youHp =
+        seen != null && seen.youHp >= 0 ? seen.youHp : boss.currentPlayerHp;
+    final frac = boss.maxHp > 0 ? bossHp / boss.maxHp : 0.0;
+    final youFrac = youMax > 0 ? (youHp / youMax).clamp(0.0, 1.0) : null;
+    final recovery = boss.recoveryEndsAt?.toLocal();
+    final recovering = youHp <= 0 &&
+        recovery != null &&
+        recovery.isAfter(now ?? DateTime.now());
     final left = boss.timeRemaining;
     final timer = left != null
         ? formatJourneyDuration(left).split(' ').first
-        : '${boss.timerDays}d';
+        : boss.timerDays > 0
+            ? '${boss.timerDays}d'
+            : 'Fight';
     final pct = (frac * 100).round();
+    if (recovering) {
+      return JourneyOrbState(
+        kind: JourneyKind.bossRaid,
+        color: _grey,
+        ring: JourneyRing.progress,
+        progress: frac.clamp(0.0, 1.0),
+        iconAsset: AppIcons.ringBoss,
+        label: 'Recovering',
+        secondaryProgress: 0,
+        secondaryColor: _grey,
+        countdownTo: recovery,
+        semantics:
+            'Knocked out by ${boss.name}. Your attacks resume after recovery',
+      );
+    }
     return JourneyOrbState(
       kind: JourneyKind.bossRaid,
       color: AppColors.red,
       ring: JourneyRing.progress,
       progress: frac.clamp(0.0, 1.0),
       iconAsset: AppIcons.ringBoss,
-      label: '$pct% · $timer',
-      semantics: 'Boss fight, ${boss.name} at $pct% health',
+      label: timer,
+      secondaryProgress: youFrac,
+      secondaryColor: youFrac == null ? null : playerHpColor(youFrac),
+      semantics: youFrac == null
+          ? 'Boss fight, ${boss.name} at $pct% health'
+          : 'Boss fight, ${boss.name} at $pct% health, you at ${(youFrac * 100).round()}%',
     );
   }
 
@@ -362,6 +435,16 @@ JourneyOrbState resolveJourneyOrb({
         case TrailEncounterType.blocker:
           final b = enc.blocker;
           final hp = b == null || b.maxHp <= 0 ? 1.0 : b.currentHp / b.maxHp;
+          // A blocker is fought like a boss: show the player's HP too.
+          final linked = b?.bossId == null
+              ? null
+              : bosses.where((x) => x.id == b!.bossId).firstOrNull;
+          double? you;
+          if (linked != null && linked.playerMaxHp > 0) {
+            final seenYou = seenOf?.call(linked.id)?.youHp ?? -1;
+            final youHp = seenYou >= 0 ? seenYou : linked.currentPlayerHp;
+            you = (youHp / linked.playerMaxHp).clamp(0.0, 1.0);
+          }
           return JourneyOrbState(
             kind: JourneyKind.blocker,
             color: AppColors.red,
@@ -370,6 +453,8 @@ JourneyOrbState resolveJourneyOrb({
             iconAsset: _ringBattle,
             label: 'Blocked',
             alert: true,
+            secondaryProgress: you,
+            secondaryColor: you == null ? null : playerHpColor(you),
             semantics: 'Path blocked on the way to ${picked.name}',
           );
         case TrailEncounterType.merchant:
@@ -419,7 +504,6 @@ JourneyOrbState resolveJourneyOrb({
         progress: 1,
         iconAsset: AppIcons.ringBoss,
         label: 'Boss',
-        alert: true,
         semantics: 'Boss zone ${picked.name}, ready for the raid',
       );
     case 'chest':
@@ -480,10 +564,18 @@ JourneyOrbState resolveJourneyOrb({
 
 /// The Map button's look, live from the same providers the journey card uses.
 final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
-  final activeBoss = ref
-      .watch(bossListProvider)
-      .valueOrNull
-      ?.where((b) => b.isActive)
+  final seen = ref.watch(bossSeenStoreProvider);
+  // A kill the player hasn't watched yet keeps the fight on the button until
+  // the replay plays it.
+  final bosses = ref.watch(bossListProvider).valueOrNull ?? const [];
+  final activeBoss = bosses
+      .where((b) =>
+          b.needsAttention ||
+          (b.isDefeated &&
+              (seen[b.id]?.bossHp ?? 0) > 0 &&
+              b.defeatedAt != null &&
+              DateTime.now().difference(b.defeatedAt!.toLocal()) <
+                  const Duration(hours: 24)))
       .firstOrNull;
   final worldAsync = ref.watch(worldProgressProvider);
   final region = ref.watch(currentRegionDetailProvider).valueOrNull;
@@ -496,6 +588,9 @@ final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
       ref.watch(characterProfileProvider).valueOrNull?.xpProgress ?? 0.0;
   return resolveJourneyOrb(
     activeBoss: activeBoss,
+    bossSeen: activeBoss == null ? null : seen[activeBoss.id],
+    bosses: bosses,
+    seenOf: (id) => seen[id],
     worldAsync: worldAsync,
     region: region,
     dungeonState: dungeonState,

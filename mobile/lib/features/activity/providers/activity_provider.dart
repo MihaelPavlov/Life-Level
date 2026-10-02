@@ -12,3 +12,8 @@ final activityHistoryProvider = FutureProvider<List<ActivityHistoryDto>>(
 final activitySummaryProvider = FutureProvider<ActivitySummary>(
   (ref) => ref.read(activityServiceProvider).getSummary(),
 );
+
+/// The last year of workouts by day (profile weeks grid and history sheet).
+final activityCalendarProvider = FutureProvider<ActivityCalendar>(
+  (ref) => ref.read(activityServiceProvider).getCalendar(),
+);

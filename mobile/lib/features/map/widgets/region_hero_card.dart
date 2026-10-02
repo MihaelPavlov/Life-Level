@@ -80,8 +80,9 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasBanner =
-        region.bannerImageUrl != null || theme.bannerAsset != null;
+    final fallbackBanner =
+        RegionArtwork.bannerFor(region.name) ?? theme.bannerAsset;
+    final hasBanner = region.bannerImageUrl != null || fallbackBanner != null;
     return Container(
       height: 124,
       decoration: BoxDecoration(
@@ -97,7 +98,7 @@ class _Banner extends StatelessWidget {
             Positioned.fill(
               child: _RegionBannerImage(
                 url: region.bannerImageUrl,
-                fallbackAsset: theme.bannerAsset,
+                fallbackAsset: fallbackBanner,
               ),
             ),
           if (hasBanner)

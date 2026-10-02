@@ -5,6 +5,7 @@ import '../../achievements/providers/achievements_provider.dart';
 import '../../boss/providers/boss_provider.dart';
 import '../../character/providers/character_provider.dart';
 import '../../leaderboard/providers/leaderboard_provider.dart';
+import '../../map/providers/region_chest_provider.dart';
 import '../../rewards/providers/rewards_provider.dart';
 import '../../season/providers/season_provider.dart';
 import '../../streak/providers/streak_provider.dart';
@@ -19,6 +20,7 @@ class AdventureHubSignals {
   final bool season;
   final bool titles;
   final bool achievements;
+  final bool chests;
 
   /// The rank-up chest holds rewards for players you passed.
   final bool leaderboard;
@@ -31,6 +33,7 @@ class AdventureHubSignals {
     required this.season,
     required this.titles,
     required this.achievements,
+    this.chests = false,
     this.leaderboard = false,
   });
 
@@ -61,6 +64,7 @@ final adventureHubSignalsProvider =
   final streak = ref.watch(streakProvider).valueOrNull;
   final bosses = ref.watch(bossListProvider).valueOrNull;
   final leaderboardChest = ref.watch(leaderboardChestProvider).valueOrNull;
+  final regionChests = ref.watch(regionChestsProvider).valueOrNull;
 
   final store = ref.watch(adventureHubSeenStoreProvider);
   final earnedTitleIds =
@@ -86,8 +90,8 @@ final adventureHubSignalsProvider =
 
   return AdventureHubSignals(
     rewards: rewards?.hasClaimableReward ?? false,
-    // A boss fight is running.
-    bosses: bosses?.any((b) => b.isActive) ?? false,
+    // A boss is ready to enter or a fight is already running.
+    bosses: bosses?.any((b) => b.needsAttention) ?? false,
     streak: streak?.canClaimDailyReward ?? false,
     talents: talents?.canDraw ?? false,
     season: season?.hasClaimableReward ?? false,
@@ -97,6 +101,7 @@ final adventureHubSignalsProvider =
       readyCount: achievementRoads?.readyCount ?? 0,
       chestsReady: achievementRoads?.chestsReady ?? 0,
     ),
+    chests: regionChests?.hasReady ?? false,
     leaderboard: (leaderboardChest?.stack ?? 0) > 0,
   );
 });

@@ -1,3 +1,7 @@
+import '../../unlocks/models/unlock_catalog.dart';
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
+import '../../unlocks/tour/unlock_tour_runner.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +26,10 @@ Future<void> showStreakDetailSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => const StreakDetailSheet(),
+    builder: (_) => const TourOnFirstVisit(
+      unlockKey: UnlockKeys.shields,
+      child: StreakDetailSheet(),
+    ),
   );
 }
 
@@ -199,7 +206,10 @@ class _Body extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Header(current: streak.current, longest: streak.longest),
+        TourTarget(
+          id: TourIds.streakHeader,
+          child: _Header(current: streak.current, longest: streak.longest),
+        ),
         const SizedBox(height: 16),
         AnimatedSwitcher(
           duration:
@@ -224,10 +234,13 @@ class _Body extends StatelessWidget {
         const SizedBox(height: 14),
         _MilestoneRow(current: streak.current),
         const SizedBox(height: 14),
-        _ShieldsCard(
-          streak: streak,
-          busy: shieldBusy,
-          onUseShield: onUseShield,
+        TourTarget(
+          id: TourIds.streakShields,
+          child: _ShieldsCard(
+            streak: streak,
+            busy: shieldBusy,
+            onUseShield: onUseShield,
+          ),
         ),
         const SizedBox(height: 18),
         _FooterStats(
@@ -295,30 +308,34 @@ class _DailyRewardCard extends StatelessWidget {
           ),
           if (ready) ...[
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: busy ? null : onClaim,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.orange,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            TourTarget(
+              id: TourIds.streakClaim,
+              enabled: !busy,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: busy ? null : onClaim,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.orange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ),
-                child: busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                  child: busy
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Claim Reward',
+                          style: TextStyle(fontWeight: FontWeight.w800),
                         ),
-                      )
-                    : const Text(
-                        'Claim Reward',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
+                ),
               ),
             ),
           ],

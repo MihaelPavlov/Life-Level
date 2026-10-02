@@ -492,6 +492,37 @@ public class ActivityService(
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Days with workouts over the last <paramref name="days"/> days (only active days are
+    /// returned) and the longest run ever logged. Feeds the profile's weeks and months views.
+    /// </summary>
+    public async Task<ActivityCalendarDto> GetCalendarAsync(Guid userId, int days = 364, CancellationToken ct = default)
+    {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
+        if (characterId == null) return new ActivityCalendarDto(0, []);
+
+        days = Math.Clamp(days, 7, 731);
+        var since = DateTime.UtcNow.Date.AddDays(-(days - 1));
+        var mine = db.Set<ActivityEntity>().Where(a => a.CharacterId == characterId);
+
+        var rows = await mine
+            .Where(a => a.LoggedAt >= since)
+            .Select(a => new { a.LoggedAt, a.DistanceKm, a.XpGained })
+            .ToListAsync(ct);
+        var calendar = rows
+            .GroupBy(a => DateOnly.FromDateTime(a.LoggedAt))
+            .OrderBy(g => g.Key)
+            .Select(g => new ActivityCalendarDayDto(
+                g.Key, g.Count(), Math.Round(g.Sum(a => a.DistanceKm), 2), g.Sum(a => a.XpGained)))
+            .ToList();
+
+        var longestRun = await mine
+            .Where(a => a.Type == ActivityType.Running)
+            .MaxAsync(a => (double?)a.DistanceKm, ct) ?? 0;
+
+        return new ActivityCalendarDto(Math.Round(longestRun, 2), calendar);
+    }
+
     public async Task<ActivitySummaryDto> GetSummaryAsync(
         Guid userId,
         CancellationToken ct = default)

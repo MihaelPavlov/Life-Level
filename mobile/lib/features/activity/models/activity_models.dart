@@ -535,3 +535,43 @@ class ActivitySummary {
   factory ActivitySummary.fromJson(Map<String, dynamic> json) =>
       ActivitySummary(totalSteps: (json['totalSteps'] as num?)?.toInt() ?? 0);
 }
+
+/// Totals for one day with workouts (the server's UTC date).
+class ActivityCalendarDay {
+  final DateTime date;
+  final int workouts;
+  final double distanceKm;
+  final int xp;
+
+  const ActivityCalendarDay({
+    required this.date,
+    required this.workouts,
+    required this.distanceKm,
+    required this.xp,
+  });
+
+  factory ActivityCalendarDay.fromJson(Map<String, dynamic> j) =>
+      ActivityCalendarDay(
+        date: DateTime.parse(j['date'] as String),
+        workouts: (j['workouts'] as num?)?.toInt() ?? 0,
+        distanceKm: (j['distanceKm'] as num?)?.toDouble() ?? 0,
+        xp: (j['xp'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// Daily workout totals for the last year and the longest run ever.
+class ActivityCalendar {
+  final double longestRunKm;
+  final List<ActivityCalendarDay> days;
+
+  const ActivityCalendar({required this.longestRunKm, required this.days});
+
+  static const empty = ActivityCalendar(longestRunKm: 0, days: []);
+
+  factory ActivityCalendar.fromJson(Map<String, dynamic> j) => ActivityCalendar(
+        longestRunKm: (j['longestRunKm'] as num?)?.toDouble() ?? 0,
+        days: (j['days'] as List? ?? const [])
+            .map((e) => ActivityCalendarDay.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}

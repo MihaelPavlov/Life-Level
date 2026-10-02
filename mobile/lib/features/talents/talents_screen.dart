@@ -1,3 +1,5 @@
+import '../unlocks/tour/tour_target.dart';
+import '../unlocks/tour/tours/unlock_tours.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -390,27 +392,37 @@ class _Body extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
       children: [
-        _CurrencyBar(wallet: screen.wallet),
+        TourTarget(
+          id: TourIds.talentsCurrency,
+          child: _CurrencyBar(wallet: screen.wallet),
+        ),
         const SizedBox(height: 16),
-        _TalentGrid(
-          talents: screen.talents,
-          busy: busy,
-          onSelect: onSelect,
-          sweepAnim: sweepAnim,
-          sweepPath: sweepPath,
+        TourTarget(
+          id: TourIds.talentsGrid,
+          child: _TalentGrid(
+            talents: screen.talents,
+            busy: busy,
+            onSelect: onSelect,
+            sweepAnim: sweepAnim,
+            sweepPath: sweepPath,
+          ),
         ),
         const SizedBox(height: 16),
         Center(
           child: FractionallySizedBox(
             widthFactor: 0.5,
-            child: _DrawButton(
-              crystalCost: screen.drawCrystalCost,
-              coinCost: screen.drawCoinCost,
-              // Also disabled while a talent is popped up — drawing while
-              // looking at one would fight the reveal for attention.
+            child: TourTarget(
+              id: TourIds.talentsDraw,
               enabled: screen.canDraw && !busy && !hasSelection,
-              collectionComplete: screen.collectionComplete,
-              onTap: onDraw,
+              child: _DrawButton(
+                crystalCost: screen.drawCrystalCost,
+                coinCost: screen.drawCoinCost,
+                // Also disabled while a talent is popped up — drawing while
+                // looking at one would fight the reveal for attention.
+                enabled: screen.canDraw && !busy && !hasSelection,
+                collectionComplete: screen.collectionComplete,
+                onTap: onDraw,
+              ),
             ),
           ),
         ),

@@ -34,6 +34,34 @@ public class ActivityServiceExternalItemGrantTests
     }
 
     [Fact]
+    public async Task GetCalendarAsync_GroupsRecentDaysAndFindsTheLongestRun()
+    {
+        var characterId = Guid.NewGuid();
+        await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options);
+        var today = DateTime.UtcNow.Date;
+        db.Set<ActivityEntity>().AddRange(
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = characterId, Type = ActivityType.Running, DistanceKm = 5, XpGained = 100, LoggedAt = today.AddHours(7) },
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = characterId, Type = ActivityType.Gym, DistanceKm = 0, XpGained = 80, LoggedAt = today.AddHours(18) },
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = characterId, Type = ActivityType.Cycling, DistanceKm = 20, XpGained = 150, LoggedAt = today.AddDays(-3) },
+            // Outside the window, but still the longest run ever.
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = characterId, Type = ActivityType.Running, DistanceKm = 12.4, XpGained = 300, LoggedAt = today.AddDays(-400) },
+            new ActivityEntity { Id = Guid.NewGuid(), CharacterId = Guid.NewGuid(), Type = ActivityType.Running, DistanceKm = 42, LoggedAt = today });
+        await db.SaveChangesAsync();
+        var service = CreateService(db, characterId, new CapturingLevelUpItemGrantPort());
+
+        var calendar = await service.GetCalendarAsync(Guid.NewGuid(), days: 84);
+
+        Assert.Equal(12.4, calendar.LongestRunKm);
+        Assert.Equal(2, calendar.Days.Count);
+        var todayRow = calendar.Days.Single(d => d.Date == DateOnly.FromDateTime(today));
+        Assert.Equal(2, todayRow.Workouts);
+        Assert.Equal(5, todayRow.DistanceKm);
+        Assert.Equal(180, todayRow.Xp);
+    }
+
+    [Fact]
     public async Task LogExternalActivityAsync_WhenLevelingUp_DefersItemsToLevelUpEvent()
     {
         var userId = Guid.NewGuid();

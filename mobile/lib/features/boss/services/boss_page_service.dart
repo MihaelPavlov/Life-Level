@@ -4,6 +4,10 @@ import '../models/boss_damage_history.dart';
 import '../models/boss_list_item.dart';
 
 class BossPageService {
+  Future<void> activateFight(String bossId) async {
+    await ApiClient.instance.post('/boss/$bossId/activate');
+  }
+
   Future<List<BossListItem>> getAllBosses() async {
     final response = await ApiClient.instance.get('/boss');
     final list = response.data as List;

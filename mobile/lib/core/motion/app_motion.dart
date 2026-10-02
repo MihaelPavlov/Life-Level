@@ -8,7 +8,7 @@ enum AppMotionPreference { system, full, reduced, off }
 
 enum AppRouteStyle { standard, fade, fullscreen }
 
-enum AppHaptic { none, selection, light }
+enum AppHaptic { none, selection, light, medium, heavy }
 
 class AppMotionTokens {
   AppMotionTokens._();
@@ -126,6 +126,10 @@ class AppMotion {
         await HapticFeedback.selectionClick();
       case AppHaptic.light:
         await HapticFeedback.lightImpact();
+      case AppHaptic.medium:
+        await HapticFeedback.mediumImpact();
+      case AppHaptic.heavy:
+        await HapticFeedback.heavyImpact();
       case AppHaptic.none:
         return;
     }

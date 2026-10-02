@@ -1,5 +1,8 @@
 using LifeLevel.Modules.Activity.Domain.Entities;
 using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
+using LifeLevel.Modules.Character.Domain;
+using LifeLevel.Modules.Character.Domain.Data;
+using LifeLevel.Modules.Character.Domain.Entities;
 using LifeLevel.Modules.Items.Domain.Entities;
 using LifeLevel.Modules.Streak.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
@@ -17,7 +20,7 @@ public sealed class UnlockFactsReadAdapter(AppDbContext db) : IUnlockFactsReadPo
     {
         var character = await db.Set<CharacterEntity>().AsNoTracking()
             .Where(c => c.UserId == userId)
-            .Select(c => new { c.Id, c.Level, c.IsSetupComplete })
+            .Select(c => new { c.Id, c.Level, c.IsSetupComplete, c.CreatedAt, c.Rank })
             .FirstOrDefaultAsync(ct);
         if (character == null) return new UnlockFacts(false, 0, false, 0, 0, 1, 0, false);
 
@@ -32,9 +35,15 @@ public sealed class UnlockFactsReadAdapter(AppDbContext db) : IUnlockFactsReadPo
             .Where(s => s.UserId == userId).Select(s => (int?)s.Longest).FirstOrDefaultAsync(ct) ?? 0;
         var bossSeen = await db.Set<UserBossState>().AsNoTracking()
             .AnyAsync(b => b.UserId == userId, ct);
+        // The tutorial's Novice Adventurer title is handed out, not reached, so it doesn't count.
+        var tutorialTitleId = TitleCatalog.KeyToId[TutorialStepRewards.NoviceTitleKey];
+        var titlesEarned = await db.Set<CharacterTitle>().AsNoTracking()
+            .CountAsync(t => t.CharacterId == character.Id && t.TitleId != tutorialTitleId, ct);
+        var rankReached = !string.IsNullOrEmpty(character.Rank) && character.Rank != "Novice";
 
         return new UnlockFacts(
             character.IsSetupComplete, activityCount, hasDistance, itemCount,
-            zonesReached, character.Level, longestStreak, bossSeen);
+            zonesReached, character.Level, longestStreak, bossSeen, character.CreatedAt,
+            titlesEarned, rankReached);
     }
 }

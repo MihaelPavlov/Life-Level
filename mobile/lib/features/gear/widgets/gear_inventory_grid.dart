@@ -1,3 +1,5 @@
+import '../../unlocks/tour/tour_target.dart';
+import '../../unlocks/tour/tours/unlock_tours.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
@@ -59,8 +61,12 @@ class GearInventoryGrid extends ConsumerWidget {
                       childAspectRatio: 0.82,
                     ),
                     itemCount: inventory.items.length,
-                    itemBuilder: (_, i) =>
-                        _InventoryTile(item: inventory.items[i]),
+                    itemBuilder: (_, i) => i == 0
+                        ? TourTarget(
+                            id: TourIds.gearFirstItem,
+                            child: _InventoryTile(item: inventory.items[i]),
+                          )
+                        : _InventoryTile(item: inventory.items[i]),
                   ),
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),

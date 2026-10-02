@@ -108,7 +108,17 @@ public class BossService(
                     : state?.StartedAt?.AddDays(boss.TimerDays),
                 DefeatedAt = state?.DefeatedAt,
                 IsTargeted = state?.IsTargeted ?? false,
-                CurrentPlayerHp = state?.CurrentPlayerHp ?? currentCombat.Health,
+                // World-zone spawning creates an unstarted UserBossState before
+                // the player enters battle. Its persisted HP is still the
+                // integer default (0), which is initialization state rather
+                // than a knockout. Show full HP until activation initializes
+                // the combat state. Preserve a real zero while recovering.
+                CurrentPlayerHp = state == null
+                    || (state.CurrentPlayerHp <= 0
+                        && !state.StartedAt.HasValue
+                        && !state.RecoveryEndsAt.HasValue)
+                    ? currentCombat.Health
+                    : state.CurrentPlayerHp,
                 PlayerMaxHp = currentCombat.Health,
                 PlayerDefense = currentCombat.Defense,
                 PlayerMitigation = BossCombatCalculator.Mitigation(currentCombat.Defense),
@@ -308,6 +318,10 @@ public class BossService(
             .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId, ct)
             ?? throw new InvalidOperationException("You haven't engaged this boss.");
 
+        var maxHp = state.MaxHpSnapshot > 0
+            ? state.MaxHpSnapshot
+            : await db.Set<Boss>().Where(b => b.Id == bossId).Select(b => b.MaxHp).FirstOrDefaultAsync(ct);
+
         var persisted = await db.Set<BossCombatTurn>()
             .Where(x => x.UserBossStateId == state.Id)
             .OrderByDescending(x => x.OccurredAt)
@@ -327,6 +341,13 @@ public class BossService(
                 PlayerDefeated = x.PlayerDefeated,
                 SkipReason = x.SkipReason,
                 LoggedAt = x.OccurredAt,
+                TurnId = x.Id,
+                BossHpAfter = x.BossHpAfter,
+                BossMaxHp = maxHp,
+                DamageBlocked = x.SkipReason == null && !x.BossDefeated
+                    ? Math.Max(0, x.BossCounterattackRaw - x.DamageTaken)
+                    : 0,
+                BossDefeated = x.BossDefeated,
             })
             .ToListAsync(ct);
 

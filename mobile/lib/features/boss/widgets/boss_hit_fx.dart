@@ -5,20 +5,27 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/motion/reward_fx.dart';
+import '../replay/boss_seen_store.dart';
 
 /// Last HP the player actually saw for each boss / blocker, keyed by id.
 ///
 /// A hit plays once, wherever the player first sees the drop: the home
 /// card, the map's blocker sheet or the battle view. Screens that show HP
 /// without a [BossHitScope] call [markSeen] so the drop isn't replayed.
+///
+/// Backed by [BossSeenStore], so it survives restarts and stays in step
+/// with the Home replay on the Map button.
 class BossHitMemory {
   BossHitMemory._();
 
-  static final _seen = <String, int>{};
+  static int? seen(String id) => BossSeenStore.instance[id]?.bossHp;
 
-  static int? seen(String id) => _seen[id];
-
-  static void markSeen(String id, int hp) => _seen[id] = hp;
+  static void markSeen(String id, int hp) {
+    final old = BossSeenStore.instance[id];
+    if (old != null && old.bossHp == hp) return;
+    // A drop the player just watched counts every turn up to now as seen.
+    BossSeenStore.instance.update(id, bossHp: hp, turnAt: DateTime.now());
+  }
 }
 
 /// The slash that cuts across a boss portrait on a hit.
@@ -75,6 +82,55 @@ class BossSlash {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Three claw marks raking across the player's avatar (the counterattack).
+class BossClaw {
+  BossClaw._();
+
+  static void play(BuildContext context, Offset center, {double width = 70}) {
+    RewardFx.run(
+      context,
+      duration: const Duration(milliseconds: 420),
+      builder: (t, origin) {
+        final c = center - origin;
+        final grow = (t / .45).clamp(0.0, 1.0);
+        final fade = t < .45 ? 1.0 : 1 - (t - .45) / .55;
+        return Positioned(
+          left: c.dx - width / 2,
+          top: c.dy - 18,
+          child: Opacity(
+            opacity: fade,
+            child: Transform.rotate(
+              angle: 24 * math.pi / 180,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      width: width * grow,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        gradient: const LinearGradient(colors: [
+                          Colors.transparent,
+                          Color(0xFFFF6B6B),
+                          Colors.transparent,
+                        ]),
+                        boxShadow: const [
+                          BoxShadow(color: AppColors.red, blurRadius: 10),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -269,9 +325,7 @@ class _BossHitScopeState extends State<BossHitScope>
       emberHp: _lerp(_phase(320, 900, const Cubic(.5, 0, .6, 1))),
       shakeDx: shake <= 0 || shake >= 1
           ? 0
-          : math.sin(shake * math.pi * 6) *
-              widget.shakeAmplitude *
-              (1 - shake),
+          : math.sin(shake * math.pi * 6) * widget.shakeAmplitude * (1 - shake),
       portraitDx: -widget.recoil * math.sin(recoil * math.pi) * (1 - recoil),
       flash: _t >= 120 ? .45 * (1 - _phase(120, 300)) : 0,
     );

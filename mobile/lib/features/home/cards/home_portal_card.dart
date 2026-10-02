@@ -1,3 +1,4 @@
+import '../../unlocks/tour/tours/unlock_tours.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -174,7 +175,14 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
         .toList()
         .firstOrNull;
     if (activeBoss != null) {
-      return _BossRaidPortal(boss: activeBoss, onSync: onSync);
+      // The fight leads, but the route stays one tap away.
+      final world = ref.watch(worldProgressProvider).valueOrNull;
+      final region = ref.watch(currentRegionDetailProvider).valueOrNull;
+      return _BossRaidPortal(
+        boss: activeBoss,
+        onSync: onSync,
+        journey: world == null ? null : _BossJourney.from(world, region),
+      );
     }
 
     final worldAsync = ref.watch(worldProgressProvider);
@@ -338,10 +346,134 @@ void _openWorldDestination(String? regionId, [String? zoneId]) {
 
 // ── Variants ─────────────────────────────────────────────────────────────────
 
+/// Where the player is in the world while a boss fight takes the card.
+class _BossJourney {
+  final String regionName;
+  final String line;
+  final String? regionId;
+  final String? zoneId;
+
+  const _BossJourney({
+    required this.regionName,
+    required this.line,
+    required this.regionId,
+    required this.zoneId,
+  });
+
+  static _BossJourney? from(WorldFullData world, RegionDetail? region) {
+    final p = world.userProgress;
+    String? nameOf(String? id) => id == null || id.isEmpty
+        ? null
+        : world.zones.where((z) => z.id == id).firstOrNull?.name;
+    final here = nameOf(p.currentZoneId);
+    final dest = nameOf(p.destinationZoneId);
+    if (here == null) return null;
+    final edgeId = p.currentEdgeId ?? '';
+    final edge = edgeId.isEmpty
+        ? null
+        : world.edges.where((e) => e.id == edgeId).firstOrNull;
+    final left = edge == null
+        ? null
+        : (edge.distanceKm - p.distanceTraveledOnEdge)
+            .clamp(0.0, double.infinity);
+    final heading = dest != null && dest != here;
+    final line = !heading
+        ? 'At $here'
+        : left == null
+            ? '$here → $dest'
+            : '$here → $dest · ${left.toStringAsFixed(1)} km left';
+    final name = region?.name ?? '';
+    return _BossJourney(
+      regionName: name.isEmpty ? 'Your journey' : name,
+      line: line,
+      regionId: p.currentRegionId ?? region?.id,
+      zoneId: heading ? p.destinationZoneId : p.currentZoneId,
+    );
+  }
+}
+
+/// "Forest of Endurance · Dawn Camp → Whispering Fork · 1.4 km left · Map ›"
+/// under the boss, so the region map is one tap away during a fight.
+class _BossJourneyRow extends StatelessWidget {
+  final _BossJourney journey;
+  const _BossJourneyRow({required this.journey});
+
+  static const _teal = Color(0xFF38D9C8);
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Open the map of ${journey.regionName}',
+      child: AppPressable(
+        haptic: AppHaptic.selection,
+        onTap: () => _openWorldDestination(journey.regionId, journey.zoneId),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(10, 9, 12, 9),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D131B),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF1E2632)),
+          ),
+          child: Row(children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: _teal.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: const Icon(Icons.map_outlined, size: 17, color: _teal),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    journey.regionName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    journey.line,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Map ›',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: _teal,
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 class _BossRaidPortal extends StatelessWidget {
   final BossListItem boss;
   final VoidCallback? onSync;
-  const _BossRaidPortal({required this.boss, required this.onSync});
+  final _BossJourney? journey;
+  const _BossRaidPortal(
+      {required this.boss, required this.onSync, this.journey});
 
   @override
   Widget build(BuildContext context) {
@@ -375,6 +507,7 @@ class _BossRaidPortal extends StatelessWidget {
         barBurnProgress: hit.emberHp == null ? null : frac(hit.emberHp!),
         barColors: const [AppColors.red, AppColors.redDark],
         hitShakeDx: hit.shakeDx,
+        footer: journey == null ? null : _BossJourneyRow(journey: journey!),
         primaryLabel: 'Fight →',
         primaryStyle: HomeHeroButtonStyle.solidRed,
         onPrimary: () => BossOverlayNotifier.notifyForBoss(boss.id),
@@ -1752,6 +1885,9 @@ class _HeroShell extends StatelessWidget {
   final List<Color> barColors;
   final bool showProgressBar;
   final String? branchPreview;
+
+  /// Extra row between the progress bar and the buttons.
+  final Widget? footer;
   final String primaryLabel;
   final HomeHeroButtonStyle primaryStyle;
   final VoidCallback? onPrimary;
@@ -1791,6 +1927,7 @@ class _HeroShell extends StatelessWidget {
     required this.barColors,
     this.showProgressBar = true,
     this.branchPreview,
+    this.footer,
     required this.primaryLabel,
     required this.primaryStyle,
     required this.onPrimary,
@@ -2111,6 +2248,10 @@ class _HeroShell extends StatelessWidget {
                 ),
             ],
           ),
+        if (footer != null) ...[
+          const SizedBox(height: 12),
+          footer!,
+        ],
         const SizedBox(height: 14),
         Row(
           children: [
@@ -2126,6 +2267,7 @@ class _HeroShell extends StatelessWidget {
               onTap: onPrimary,
               shine: fx?.buttonShine,
               nudge: fx?.buttonNudge,
+              tourTargetId: TourIds.journeyViewMap,
             ),
           ],
         ),

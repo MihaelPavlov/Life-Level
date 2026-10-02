@@ -68,6 +68,15 @@ class BossListItem {
 
   bool get isActive => activated && !isDefeated && !isExpired;
 
+  /// The boss encounter is available now but its fight timer/state has not
+  /// been started yet. These bosses belong in the Bosses page's ACTIVE
+  /// section too; otherwise a newly reached world boss disappears until the
+  /// player somehow enters its battle for the first time.
+  bool get isReadyToFight =>
+      canFight && !activated && !isDefeated && !isExpired;
+
+  bool get needsAttention => isActive || isReadyToFight;
+
   int get hpRemaining => maxHp - hpDealt;
 
   double get hpPercent => maxHp > 0 ? hpDealt / maxHp : 0;

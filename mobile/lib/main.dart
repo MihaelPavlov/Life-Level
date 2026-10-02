@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'features/boss/replay/boss_seen_store.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/api/api_client.dart';
 import 'core/theme/app_theme.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
   if (!kIsWeb) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
+  await BossSeenStore.instance.load();
   runApp(const ProviderScope(child: LifeLevelApp()));
 }
 
@@ -70,9 +72,8 @@ class _AuthGateState extends State<_AuthGate> {
       debugPrint('[AuthGate] token=${token != null ? "present" : "null"}');
       final resumeState =
           token != null ? await SetupResumeService.instance.load() : null;
-      final resumeScreen = resumeState == null
-          ? null
-          : OnboardingFlow(initial: resumeState);
+      final resumeScreen =
+          resumeState == null ? null : OnboardingFlow(initial: resumeState);
       if (!mounted) return;
       setState(() {
         _home = token == null

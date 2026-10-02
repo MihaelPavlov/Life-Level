@@ -16,6 +16,11 @@ import 'treasure_delve/delve_provider.dart';
 import 'treasure_delve/treasure_delve_screen.dart';
 import 'widgets/mode_banner.dart';
 import 'widgets/mode_ui.dart';
+import '../unlocks/models/unlock_catalog.dart';
+import '../unlocks/providers/unlocks_provider.dart';
+import '../unlocks/tour/tour_target.dart';
+import '../unlocks/tour/tours/unlock_tours.dart';
+import '../unlocks/widgets/unlock_badges.dart';
 
 /// The Mode tab: one painted banner per game mode.
 class ModesScreen extends ConsumerWidget {
@@ -32,6 +37,7 @@ class ModesScreen extends ConsumerWidget {
     final wallet = ref.watch(characterProfileProvider).valueOrNull?.talents;
     final chain = ref.watch(burnChainProvider).valueOrNull?.chain;
     final delve = ref.watch(delveStatusProvider).valueOrNull;
+    final delveOpen = ref.watch(isUnlockedProvider(UnlockKeys.delve));
 
     return Scaffold(
       backgroundColor: const Color(0xFF0e1c34),
@@ -57,47 +63,61 @@ class ModesScreen extends ConsumerWidget {
                 children: [
                   const _TitleRibbon('Modes'),
                   const SizedBox(height: 16),
-                  ModeBanner(
-                    art: AppIcons.modeBurnChainBanner,
-                    accent: kBurnOrange,
-                    border: const Color(0xFFFFC27A),
-                    kicker: 'Coins ×2',
-                    kickerColor: kBurnOrangeLight,
-                    title: 'Burn Chain',
-                    rewards: const [
-                      ModeRewardTile(
-                          icon: AppIcons.homeCoinIcon, color: AppColors.orange),
-                    ],
-                    footerIcon: AppIcons.rewardStreakFire,
-                    footer: _burnFooter(chain),
-                    alert: chain != null && chain.phase == BurnChainPhase.ended,
-                    onTap: () => openBurnChain(context),
+                  TourTarget(
+                    id: TourIds.modesBurn,
+                    child: ModeBanner(
+                      art: AppIcons.modeBurnChainBanner,
+                      accent: kBurnOrange,
+                      border: const Color(0xFFFFC27A),
+                      kicker: 'Coins ×2',
+                      kickerColor: kBurnOrangeLight,
+                      title: 'Burn Chain',
+                      rewards: const [
+                        ModeRewardTile(
+                            icon: AppIcons.homeCoinIcon,
+                            color: AppColors.orange),
+                      ],
+                      footerIcon: AppIcons.rewardStreakFire,
+                      footer: _burnFooter(chain),
+                      alert:
+                          chain != null && chain.phase == BurnChainPhase.ended,
+                      onTap: () => openBurnChain(context),
+                    ),
                   ),
                   const SizedBox(height: 18),
-                  ModeBanner(
-                    art: AppIcons.modeTreasureDelveBanner,
-                    accent: AppColors.blue,
-                    border: const Color(0xFF8CC0FF),
-                    kicker: 'Gold',
-                    kickerColor: kGoldLight,
-                    title: 'Treasure Delve',
-                    rewards: const [
-                      ModeRewardTile(
-                          icon: AppIcons.homeCoinIcon, color: AppColors.orange),
-                      ModeRewardTile(
-                          icon: AppIcons.shopChestRare,
-                          color: AppColors.purple),
-                    ],
-                    footerIcon: AppIcons.itemEnergyGel,
-                    footer: delve == null
-                        ? const ModeFooterText('Runs left: …')
-                        : ModeFooterText('Runs left: ',
-                            value: '${delve.runsLeft}',
-                            valueColor: delve.runsLeft > 0
-                                ? AppColors.green
-                                : AppColors.textSecondary),
-                    alert: (delve?.runsLeft ?? 0) > 0,
-                    onTap: () => openTreasureDelve(context),
+                  TourTarget(
+                    id: TourIds.modesDelve,
+                    child: ModeBanner(
+                      art: AppIcons.modeTreasureDelveBanner,
+                      lockedLabel: delveOpen
+                          ? null
+                          : kUnlockCatalog[UnlockKeys.delve]!.lockedHint,
+                      accent: AppColors.blue,
+                      border: const Color(0xFF8CC0FF),
+                      kicker: 'Gold',
+                      kickerColor: kGoldLight,
+                      title: 'Treasure Delve',
+                      rewards: const [
+                        ModeRewardTile(
+                            icon: AppIcons.homeCoinIcon,
+                            color: AppColors.orange),
+                        ModeRewardTile(
+                            icon: AppIcons.shopChestRare,
+                            color: AppColors.purple),
+                      ],
+                      footerIcon: AppIcons.itemEnergyGel,
+                      footer: delve == null
+                          ? const ModeFooterText('Runs left: …')
+                          : ModeFooterText('Runs left: ',
+                              value: '${delve.runsLeft}',
+                              valueColor: delve.runsLeft > 0
+                                  ? AppColors.green
+                                  : AppColors.textSecondary),
+                      alert: (delve?.runsLeft ?? 0) > 0,
+                      onTap: delveOpen
+                          ? () => openTreasureDelve(context)
+                          : () => showLockedHint(context, UnlockKeys.delve),
+                    ),
                   ),
                   const SizedBox(height: 18),
                   const ModeComingSoonCard(),

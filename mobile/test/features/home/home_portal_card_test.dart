@@ -206,6 +206,45 @@ void main() {
     expect(find.text('Open map →'), findsNothing);
   });
 
+  testWidgets('boss raid card keeps the route one tap away', (tester) async {
+    final here = _zone(id: 'z1', type: 'entry', name: 'Dawn Camp');
+    final next = _zone(id: 'z2', type: 'zone', name: 'Whispering Fork');
+    final request = Completer<WorldMapOpenRequest>();
+    final subscription = WorldMapNotifier.stream.listen(request.complete);
+    addTearDown(subscription.cancel);
+
+    await tester.pumpWidget(_harness(
+      world: _world(
+        zones: [here, next],
+        currentZoneId: 'z1',
+        destinationZoneId: 'z2',
+        currentEdgeId: 'e1',
+        edges: const [
+          WorldZoneEdgeModel(
+              id: 'e1',
+              fromZoneId: 'z1',
+              toZoneId: 'z2',
+              distanceKm: 2.4,
+              isBidirectional: true),
+        ],
+        currentRegionId: 'region-1',
+      ),
+      region: _region(),
+      bosses: [_activeBoss()],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fight →'), findsOneWidget);
+    expect(find.text('Whispering Woods'), findsOneWidget);
+    expect(find.text('Dawn Camp → Whispering Fork · 1.4 km left'),
+        findsOneWidget);
+    await tester.tap(find.text('Map ›'));
+
+    final target = await request.future;
+    expect(target.regionId, 'region-1');
+    expect(target.zoneId, 'z2');
+  });
+
   testWidgets('chest portal shows reward XP from region detail node',
       (tester) async {
     final zone = _zone(id: 'z1', type: 'chest', name: 'Hidden Shrine');

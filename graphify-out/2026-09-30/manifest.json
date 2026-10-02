@@ -2485,8 +2485,8 @@
     "semantic_hash": ""
   },
   "backend/LifeLevel.slnx": {
-    "mtime": 1790194187.5993073,
-    "ast_hash": "122d3c498fdd3ab03ad9979e150e5bee",
+    "mtime": 1790755396.184073,
+    "ast_hash": "856c938cb70bf16bcc849e95261073ca",
     "semantic_hash": ""
   },
   "backend/deploy.ps1": {
@@ -2745,8 +2745,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/AppDbContext.cs": {
-    "mtime": 1790669312.280809,
-    "ast_hash": "6d6f7477fa1abfb47054c4867f9af101",
+    "mtime": 1790755396.1859622,
+    "ast_hash": "3e43ae9a0f8d71f2d489460d9f5e316f",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/RankThresholdSeeder.cs": {
@@ -2770,8 +2770,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/LifeLevel.Api.csproj": {
-    "mtime": 1790194187.368309,
-    "ast_hash": "204ffdc800acc2a70ceed82bcfdfc18f",
+    "mtime": 1790755396.1838589,
+    "ast_hash": "a2cb6401714b66f6fa501a5c2efb380b",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Migrations/20260327201827_InitialCreate.Designer.cs": {
@@ -3280,13 +3280,13 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Migrations/AppDbContextModelSnapshot.cs": {
-    "mtime": 1790669715.6793947,
-    "ast_hash": "ed729bb990b1e95a5e994dd38170f593",
+    "mtime": 1790755451.922307,
+    "ast_hash": "35121d6f19d74b87743a8eeabea69571",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Program.cs": {
-    "mtime": 1790234408.6783445,
-    "ast_hash": "f605bd637b7a7026938220c67defde89",
+    "mtime": 1790755396.1869278,
+    "ast_hash": "f58e09f3e94a80c123cd7eedb118d8e2",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Properties/launchSettings.json": {
@@ -3350,8 +3350,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Application/UseCases/AchievementService.cs": {
-    "mtime": 1790545215.5243797,
-    "ast_hash": "61da4aff8923aa3440e68bfd1dd7d929",
+    "mtime": 1790714502.092996,
+    "ast_hash": "79c1ee14941248d0f1c9c85e18b21ca3",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/Domain/Entities/Achievement.cs": {
@@ -3545,8 +3545,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Adventure.Encounters/Application/UseCases/ChestService.cs": {
-    "mtime": 1790229187.4237413,
-    "ast_hash": "9bace99bfd2422aab8a69c6075dabb3a",
+    "mtime": 1790714501.6019971,
+    "ast_hash": "6f6da4d9183d404e885e9839222253c4",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Adventure.Encounters/Domain/Entities/Boss.cs": {
@@ -3685,8 +3685,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Application/UseCases/CharacterService.cs": {
-    "mtime": 1790619275.4145799,
-    "ast_hash": "4fb48d05693b0419ae452764f77f55d5",
+    "mtime": 1790714733.6242056,
+    "ast_hash": "a2b7bc79761e40b7dda7787b6c6d94e3",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Application/UseCases/TitleGrantHandler.cs": {
@@ -3770,8 +3770,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Infrastructure/CharacterModule.cs": {
-    "mtime": 1790619275.432223,
-    "ast_hash": "38403271b0698bc852c095647dccb3b5",
+    "mtime": 1790748230.6732347,
+    "ast_hash": "a066d57a0fbe7c4416dbd93e29da4f8a",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Infrastructure/Persistence/Configurations/CharacterClassConfiguration.cs": {
@@ -4375,8 +4375,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Quest/Application/UseCases/QuestService.cs": {
-    "mtime": 1790541239.9884384,
-    "ast_hash": "c6ccf0c2464f3547232ed311180de521",
+    "mtime": 1790714501.9869962,
+    "ast_hash": "42daf9523473673b202749cb141b7e0f",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Quest/Domain/Data/QuestSeedData.cs": {
@@ -4600,8 +4600,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/WorldChestService.cs": {
-    "mtime": 1790229187.2117448,
-    "ast_hash": "4fc7ab7bbc01d31c23f542f44552a152",
+    "mtime": 1790714501.673997,
+    "ast_hash": "9aa7cdfa8781133e8950fe2c9a9df68a",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/WorldDungeonService.cs": {
@@ -5115,8 +5115,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/LifeLevel.Api.Tests.csproj": {
-    "mtime": 1788511408.6689143,
-    "ast_hash": "7d794e8b3d2760e48f65915eaa414b29",
+    "mtime": 1790750025.4925356,
+    "ast_hash": "648057a2bfeb57fb63bfdf05c4014010",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/NotificationServiceTests.cs": {
@@ -5295,8 +5295,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/app_icons.dart": {
-    "mtime": 1790711291.5549471,
-    "ast_hash": "165ba238d8e77c5cdc81ee174a175102",
+    "mtime": 1790755661.9248798,
+    "ast_hash": "1292b53dd507283d095434501bb0a957",
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/avatar_icons.dart": {
@@ -5380,13 +5380,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/session/invalidate_user_providers.dart": {
-    "mtime": 1790535919.931304,
-    "ast_hash": "5859930da0e2c2bad94a516c78b8de39",
+    "mtime": 1790755818.7871263,
+    "ast_hash": "3694f9cdddd910188ef63d4c88790b72",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/main_shell.dart": {
-    "mtime": 1790711726.6663392,
-    "ast_hash": "94d31292c72ce61cf1683659902c307d",
+    "mtime": 1790750225.2557795,
+    "ast_hash": "0b1ce86f24e40b9be2cf7c6b31f89de9",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/shell_constants.dart": {
@@ -5480,8 +5480,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/level_up_overlay.dart": {
-    "mtime": 1790541507.390111,
-    "ast_hash": "669905cbf0545748a6724cc082ca114e",
+    "mtime": 1790714877.9005852,
+    "ast_hash": "32a1ea6f3e23572c8a64cc1886cd31bb",
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/main_shell.dart": {
@@ -5635,8 +5635,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/character_profile.dart": {
-    "mtime": 1790194294.065517,
-    "ast_hash": "2b9109810ee80bd5857a4a98d1b22365",
+    "mtime": 1790714641.9305537,
+    "ast_hash": "9f2c0053df4a040270569f0c9076bc2a",
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/character_setup_result.dart": {
@@ -6340,8 +6340,8 @@
     "semantic_hash": ""
   },
   "skills-lock.json": {
-    "mtime": 1789159720.1537912,
-    "ast_hash": "a3c1e3efc9d2fd85639c4ac5bf2b7214",
+    "mtime": 1790749083.0695205,
+    "ast_hash": "91dc292320564fe694d85f4eb1219625",
     "semantic_hash": ""
   },
   "skills/run-board/scripts/run-board.ps1": {
@@ -7805,8 +7805,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1790711291.5543156,
-    "ast_hash": "1140a0ecc985d17c86d4c4c13c95d785",
+    "mtime": 1790755633.4103563,
+    "ast_hash": "5592010bcaa198a840854a438b0eaf15",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -10505,13 +10505,13 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/Admin/AdminTalentsController.cs": {
-    "mtime": 1789413477.9303732,
-    "ast_hash": "b048d2147efef977fa58b0fc26aadd1a",
+    "mtime": 1790714990.183053,
+    "ast_hash": "62ce20ce885f1a0e7a5c673d76a6cad8",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/RewardsController.cs": {
-    "mtime": 1790236844.7269757,
-    "ast_hash": "b55968910a887ad44ed0eedc846dd6f4",
+    "mtime": 1790714464.0420942,
+    "ast_hash": "1a6c0ad11181f1ba00f5b6f53cae30f0",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/ShopController.cs": {
@@ -10710,18 +10710,18 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Application/DTOs/TalentDtos.cs": {
-    "mtime": 1790340430.015531,
-    "ast_hash": "b03bdfb40dc43704563d008dbacb4aa8",
+    "mtime": 1790714463.8860946,
+    "ast_hash": "72a1f8dabfe85fc96f2b90c765f1921b",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Application/EventHandlers/TalentCurrencyHandlers.cs": {
-    "mtime": 1790541293.6884208,
-    "ast_hash": "d0a28a4c3f032bc7ea06c78d71ad0ba8",
+    "mtime": 1790714733.6992054,
+    "ast_hash": "6527505c97b78c51ee29c13ca5f0d694",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Application/UseCases/TalentService.cs": {
-    "mtime": 1790340430.0955307,
-    "ast_hash": "b9eb6950a0e1bc58b0727b466b71a348",
+    "mtime": 1790714463.9670944,
+    "ast_hash": "4157017e9f66e1ef0b47ec5fff32f6cd",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/Entities/Talent.cs": {
@@ -10740,8 +10740,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/Entities/UserTalentWallet.cs": {
-    "mtime": 1789413477.9473732,
-    "ast_hash": "9e0d7406b75f5eccbd379fd7348af14a",
+    "mtime": 1790714463.609095,
+    "ast_hash": "48f0a79b9e7b65ffea87db867501652f",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/Enums/TalentEnums.cs": {
@@ -10755,8 +10755,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Domain/TalentEconomy.cs": {
-    "mtime": 1790340429.8535316,
-    "ast_hash": "5108cb2fc75ee87054b4238319dfe71b",
+    "mtime": 1790714501.7459967,
+    "ast_hash": "41ecb3fe524e80aa2d6e12b6c7f483f7",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Infrastructure/Persistence/Configurations/TalentConfigurations.cs": {
@@ -10765,8 +10765,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/Infrastructure/TalentsModule.cs": {
-    "mtime": 1790086471.1226108,
-    "ast_hash": "abf9355c9710095d956454778a8763de",
+    "mtime": 1790714501.9109964,
+    "ast_hash": "c3be81ead66fe52f491291f70327d58f",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Talents/LifeLevel.Modules.Talents.csproj": {
@@ -10795,8 +10795,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Events/TaskGameEvents.cs": {
-    "mtime": 1790229163.3161526,
-    "ast_hash": "de7cc8259bbab048543d98b058a6ef0c",
+    "mtime": 1790714501.5239973,
+    "ast_hash": "44a8c069e063391e0e1a61e5379c0aef",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Events/ZoneCompletedEvent.cs": {
@@ -10815,8 +10815,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IRewardCurrencyPort.cs": {
-    "mtime": 1790055738.8491886,
-    "ast_hash": "9ee353f96c230758b8dd5b870696eba0",
+    "mtime": 1790714463.686095,
+    "ast_hash": "a7f7d674da530b536c5bb276672670c2",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IShopWalletPort.cs": {
@@ -10830,8 +10830,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/ITalentProfileReadPort.cs": {
-    "mtime": 1789413477.965373,
-    "ast_hash": "cfb9deac485db565bf4dbe23353691d0",
+    "mtime": 1790714463.7610948,
+    "ast_hash": "c897ed43db87f353cd59feaf8b98b860",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/ITalentStreakAssistPort.cs": {
@@ -10860,13 +10860,13 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/StreakDailyRewardTests.cs": {
-    "mtime": 1790241925.1075296,
-    "ast_hash": "354cdc32e5aafc9c9301043340086d5b",
+    "mtime": 1790715056.3147233,
+    "ast_hash": "591aedb8dc1570d92b7ae8f2da7770a7",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/TaskRewardCenterTests.cs": {
-    "mtime": 1790236859.6209648,
-    "ast_hash": "947fd690eefee18fe7368e8b34a29c64",
+    "mtime": 1790715056.388723,
+    "ast_hash": "a8f72b2cd8bbf660df394181b1c39e7e",
     "semantic_hash": ""
   },
   "mobile/lib/core/motion/app_motion.dart": {
@@ -10955,18 +10955,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_adventure_hub.dart": {
-    "mtime": 1790707465.8154454,
-    "ast_hash": "ba4894315d56b7fc312be046d852a3f4",
+    "mtime": 1790755802.482783,
+    "ast_hash": "452479c7a1f8a9388f3e07e6faab6436",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_hero_stage.dart": {
-    "mtime": 1790670402.5646455,
-    "ast_hash": "1c62b5a5e5a2f113c8e15d2894adf472",
+    "mtime": 1790714669.1524546,
+    "ast_hash": "75f527104e282bb9f6f3e67ba5dd43ba",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/providers/adventure_hub_status_provider.dart": {
-    "mtime": 1790707465.8163302,
-    "ast_hash": "1cd7558d7c7be79d7883898f1881481d",
+    "mtime": 1790755802.4817429,
+    "ast_hash": "79f2f88cca12c65ff9aafaf03b2cf9d1",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_chests_screen.dart": {
@@ -10975,18 +10975,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/models/rewards_models.dart": {
-    "mtime": 1790239707.4636307,
-    "ast_hash": "1a903a15e2be5ab785f14e9a48b6903f",
+    "mtime": 1790714642.386552,
+    "ast_hash": "c37d87230ff3cffe5cd60fd0b6316cff",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/providers/rewards_provider.dart": {
-    "mtime": 1790237194.3672504,
-    "ast_hash": "a2fa5c3ddd83e6d18abb5eb8a5af1a55",
+    "mtime": 1790714642.4885516,
+    "ast_hash": "11de0c246e515a0b4acde3420748dc38",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/rewards_screen.dart": {
-    "mtime": 1790534644.9002373,
-    "ast_hash": "801306fb7700286643a31d3e483f5365",
+    "mtime": 1790714924.7363677,
+    "ast_hash": "1663c8544ca549132edf2723cfb4d1e9",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/services/rewards_service.dart": {
@@ -11020,8 +11020,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/models/talent_models.dart": {
-    "mtime": 1790340676.5844872,
-    "ast_hash": "7434f00671fd8e49491ca4fc3cc78509",
+    "mtime": 1790714642.0185533,
+    "ast_hash": "79c690945779621a5593def47ca3a6f4",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/providers/talents_provider.dart": {
@@ -11035,8 +11035,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/talents_screen.dart": {
-    "mtime": 1790340430.2555304,
-    "ast_hash": "b906759e65286b31fdb34a2026d2dde5",
+    "mtime": 1790714669.0764549,
+    "ast_hash": "ae097f3f028567390dd8989f3a68d22a",
     "semantic_hash": ""
   },
   "mobile/lib/features/talents/widgets/talent_info_sheet.dart": {
@@ -11060,8 +11060,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/rewards/rewards_models_test.dart": {
-    "mtime": 1790239699.8247106,
-    "ast_hash": "81bd402e0a8a6ae824a86c02d4521e79",
+    "mtime": 1790714673.9494367,
+    "ast_hash": "d5d50415c888deaa8133ce978550c16c",
     "semantic_hash": ""
   },
   "mobile/test/features/rewards/rewards_screen_test.dart": {
@@ -11765,8 +11765,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/TalentProgressiveDrawCostTests.cs": {
-    "mtime": 1790340533.991167,
-    "ast_hash": "f1411319d1b1b1f29ab93c7577388e25",
+    "mtime": 1790715088.850557,
+    "ast_hash": "0b2b9c0cf3e9296a281a259859c7e342",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/portal_idle.dart": {
@@ -11830,8 +11830,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/AchievementRoadsTests.cs": {
-    "mtime": 1790544785.270789,
-    "ast_hash": "575295b38dd100f6ec19bc9312084e6f",
+    "mtime": 1790715056.2437236,
+    "ast_hash": "3e39bde207a9c2ffeeddbb617e630279",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/reward_road_screen.dart": {
@@ -11910,42 +11910,42 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_isolatedDiff.png": {
-    "mtime": 1790712257.8429859,
+    "mtime": 1790756026.3813264,
     "ast_hash": "e614d64d7566dc1f1b276d74c49058da",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_maskedDiff.png": {
-    "mtime": 1790712257.5619888,
+    "mtime": 1790756025.6873324,
     "ast_hash": "2e18c8343fb15f7e3dd9fbadea801443",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_masterImage.png": {
-    "mtime": 1790712256.8661363,
+    "mtime": 1790756024.7863402,
     "ast_hash": "7af3f4873ec79c177221896914e3c775",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_testImage.png": {
-    "mtime": 1790712257.155993,
+    "mtime": 1790756025.476334,
     "ast_hash": "4dc90293d1190c1f9b29a703d950b16d",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_isolatedDiff.png": {
-    "mtime": 1790712260.3289604,
+    "mtime": 1790756029.1653023,
     "ast_hash": "cdf7e65332694ffb7b95daf8cb346c83",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_maskedDiff.png": {
-    "mtime": 1790712260.0299635,
+    "mtime": 1790756028.3663092,
     "ast_hash": "397bf285b14085c67b1f2530487de9ae",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_masterImage.png": {
-    "mtime": 1790712259.3739703,
+    "mtime": 1790756027.6053157,
     "ast_hash": "967aa99859177f33a15045a8ab7f21c2",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_testImage.png": {
-    "mtime": 1790712259.7169666,
+    "mtime": 1790756028.136311,
     "ast_hash": "8b41d6783c480851277e1e352a84f1ec",
     "semantic_hash": ""
   },
@@ -12035,8 +12035,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Domain/Entities/LevelUpReceipt.cs": {
-    "mtime": 1790541144.9921877,
-    "ast_hash": "13da25b94bfb845121171549b20380eb",
+    "mtime": 1790714733.550206,
+    "ast_hash": "8241e054ab0eddec17ff9aecc547ea7a",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Infrastructure/Persistence/Configurations/LevelUpReceiptConfiguration.cs": {
@@ -12065,8 +12065,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/DTOs/LevelUpReceiptDto.cs": {
-    "mtime": 1790541156.9110928,
-    "ast_hash": "7a4b4c83b1088aef31bb387b60883fe4",
+    "mtime": 1790714733.479206,
+    "ast_hash": "a9b65e762338650a44ff915572369a57",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IActivityMixReadPort.cs": {
@@ -12080,8 +12080,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/ILevelUpReceiptPort.cs": {
-    "mtime": 1790541156.9820921,
-    "ast_hash": "d172dce6ba7c3fbe3d8fd9f7ca463c0d",
+    "mtime": 1790714733.4072065,
+    "ast_hash": "35e7649022d858b03906d54bf70f8e55",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/ImportFirstOnboardingTests.cs": {
@@ -12115,8 +12115,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/level_up_receipt.dart": {
-    "mtime": 1790541507.4341102,
-    "ast_hash": "74a9da8fe856d4e5f03d2681a126a976",
+    "mtime": 1790714939.3122988,
+    "ast_hash": "12d964e1a62eacda3276d089e028d7b6",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/models/onboarding_models.dart": {
@@ -12480,48 +12480,43 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/burn_chain/burn_chain_provider.dart": {
-    "mtime": 1790711798.6716292,
-    "ast_hash": "31356d2d1412d1123767e477f3b495ed",
+    "mtime": 1790750278.4113567,
+    "ast_hash": "47f060470e4e18c124438f3edc5ba836",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/burn_chain/burn_chain_rules.dart": {
-    "mtime": 1790711310.7792609,
-    "ast_hash": "b19b17d1ba993b3cc10e387ade4b7680",
+    "mtime": 1790749480.4602606,
+    "ast_hash": "fdca512226547d861a40fb550658bca5",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/burn_chain/burn_chain_screen.dart": {
-    "mtime": 1790712147.5228655,
-    "ast_hash": "f385cb5c6b99c33e51a4459d9cb46dea",
+    "mtime": 1790749683.80552,
+    "ast_hash": "66523b3e9493bca376d0402f7ede054a",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/modes_screen.dart": {
-    "mtime": 1790711798.9416265,
-    "ast_hash": "ca1e797293818fc08bea271e34b4aeb8",
-    "semantic_hash": ""
-  },
-  "mobile/lib/features/modes/services/modes_local_store.dart": {
-    "mtime": 1790711798.9706264,
-    "ast_hash": "c0d879bd6ac807770247caf3ac6ddf29",
+    "mtime": 1790750225.18178,
+    "ast_hash": "40f45bca29c2ad90e6b9ba570b1fd7f8",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/treasure_delve/delve_engine.dart": {
-    "mtime": 1790711799.0416255,
-    "ast_hash": "57b74bfd4e0e5105747721165627f539",
+    "mtime": 1790749733.125093,
+    "ast_hash": "59e4c0a40ee2dba63da26de6b4157de3",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/treasure_delve/delve_provider.dart": {
-    "mtime": 1790711813.3602011,
-    "ast_hash": "498e689579bc2e76d961d2e34df47150",
+    "mtime": 1790751214.8104248,
+    "ast_hash": "60383d432a214bc0294fb059f6a42417",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/treasure_delve/delve_run_screen.dart": {
-    "mtime": 1790712207.3595462,
-    "ast_hash": "79f965cf18b122aac4e6908d4415f3fd",
+    "mtime": 1790749683.8835194,
+    "ast_hash": "3e664fcf902c588048956f0fd42c3607",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/treasure_delve/treasure_delve_screen.dart": {
-    "mtime": 1790712147.52368,
-    "ast_hash": "d3a672e5b09fe8085182f6dc859b5903",
+    "mtime": 1790749834.5842102,
+    "ast_hash": "3fd839952cd074854e36b4359c9172f0",
     "semantic_hash": ""
   },
   "mobile/lib/features/modes/widgets/mode_banner.dart": {
@@ -12535,8 +12530,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/modes/burn_chain_rules_test.dart": {
-    "mtime": 1790712160.973978,
-    "ast_hash": "658047ee88ca78feb80bcd7194c88979",
+    "mtime": 1790714733.9082046,
+    "ast_hash": "0ae197ffce12c1d9db236dfc1fb55532",
     "semantic_hash": ""
   },
   "mobile/test/features/modes/delve_engine_test.dart": {
@@ -12545,13 +12540,13 @@
     "semantic_hash": ""
   },
   "mobile/test/features/modes/modes_screens_test.dart": {
-    "mtime": 1790712207.3599436,
-    "ast_hash": "cca2a04173316e6e1d9d4919ae1d50e3",
+    "mtime": 1790714915.0274134,
+    "ast_hash": "d121cdc0150fc8352dd53c1d07db4413",
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Game Modes (Burn Chain, Treasure Delve).md": {
-    "mtime": 1790712347.3400652,
-    "ast_hash": "7139bef10d6872697054be31e19b1cc8",
+    "mtime": 1790750147.7044566,
+    "ast_hash": "8a62451065b56b4cd406906dd9b1d56b",
     "semantic_hash": ""
   },
   "mobile/assets/Modes/banner_burn_chain.jpg": {
@@ -12562,6 +12557,316 @@
   "mobile/assets/Modes/banner_treasure_delve.jpg": {
     "mtime": 1790711285.5051699,
     "ast_hash": "47be42d7e7f762e7dd7e55c0cab5832e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/diagnosing-bugs/scripts/hitl-loop.template.sh": {
+    "mtime": 1790749082.9889493,
+    "ast_hash": "4e3e2b4d5dc8101655dd6ad33fb5ce41",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Application/BackgroundJobs/ModesExpiryJob.cs": {
+    "mtime": 1790749162.0598931,
+    "ast_hash": "882c38aae7058a0dac081806c55f8e91",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Controllers/LeaderboardController.cs": {
+    "mtime": 1790755383.6978984,
+    "ast_hash": "1e986e73e7ee7f8d2a3f1b64d4a05c0e",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Controllers/ModesController.cs": {
+    "mtime": 1790749161.9838939,
+    "ast_hash": "484aa06bcabe9339584398cf110d1def",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Controllers/UnlocksController.cs": {
+    "mtime": 1790748230.299702,
+    "ast_hash": "eef41aed148a4b78748d83578cabfefb",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Infrastructure/ModeRuleExceptionFilter.cs": {
+    "mtime": 1790749162.1278927,
+    "ast_hash": "a4b672606ec486b268701f906a8f398c",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Infrastructure/Persistence/LeaderboardReadAdapter.cs": {
+    "mtime": 1790755569.7452855,
+    "ast_hash": "8237a3dae77a0f496e39e905d1067d8f",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Infrastructure/Persistence/UnlockFactsReadAdapter.cs": {
+    "mtime": 1790748230.1427023,
+    "ast_hash": "ba71c2906fc7edce5e1cf5a048816dcb",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260929204728_SplitGemsAndTalentCrystals.Designer.cs": {
+    "mtime": 1790714849.1751533,
+    "ast_hash": "37d41444aa58994497ae601503bf8c99",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260929204728_SplitGemsAndTalentCrystals.cs": {
+    "mtime": 1790714864.6236453,
+    "ast_hash": "f81d1efacec44bb25d67c95df2a4487d",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260930060540_AddCharacterUnlocks.Designer.cs": {
+    "mtime": 1790748340.7632873,
+    "ast_hash": "b5eddc8477600cbad2d758343ae15228",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260930060540_AddCharacterUnlocks.cs": {
+    "mtime": 1790748340.7623036,
+    "ast_hash": "0298d5ce35164056148859e01452772a",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260930062135_AddServerAuthoritativeModes.Designer.cs": {
+    "mtime": 1790749296.0860298,
+    "ast_hash": "9fce77bf685620cbee437ba79ae34cef",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260930062135_AddServerAuthoritativeModes.cs": {
+    "mtime": 1790749296.0838027,
+    "ast_hash": "37a77ec57ce07a154a6a4bc879788575",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260930080411_AddLeaderboardPasses.Designer.cs": {
+    "mtime": 1790755451.921307,
+    "ast_hash": "cf267c7873d420997bf11636621c8d47",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20260930080411_AddLeaderboardPasses.cs": {
+    "mtime": 1790755451.9203072,
+    "ast_hash": "a0cd2bd801571b71669ce1dd4bdb72d4",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Character/Application/DTOs/UnlockDtos.cs": {
+    "mtime": 1790748176.2468464,
+    "ast_hash": "95bc3ab256113fd4463efa55f71352d9",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Character/Application/UseCases/UnlockService.cs": {
+    "mtime": 1790748207.572767,
+    "ast_hash": "376fc3a816507a4dd1644d1251594322",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Character/Domain/Entities/CharacterUnlock.cs": {
+    "mtime": 1790748183.547829,
+    "ast_hash": "25811539f95e50c3b6313ab72804a8a9",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Character/Infrastructure/Persistence/Configurations/CharacterUnlockConfiguration.cs": {
+    "mtime": 1790748176.1178467,
+    "ast_hash": "44dfa84d6cee49084653034ca7917caa",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/Application/DTOs/LeaderboardDtos.cs": {
+    "mtime": 1790755314.0495021,
+    "ast_hash": "b01d46c342263f10bfc930c6a21e857b",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/Application/UseCases/LeaderboardService.cs": {
+    "mtime": 1790755346.6352198,
+    "ast_hash": "139babc48bc7d665bc5b2fe379a3fd2e",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/Domain/Entities/LeaderboardEntities.cs": {
+    "mtime": 1790755314.0425022,
+    "ast_hash": "b3abfa96fc4aaebbc3b209ef8c94f713",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/Domain/LeaderboardRules.cs": {
+    "mtime": 1790755314.046502,
+    "ast_hash": "827aebf472a3dee693397c0e6db2955b",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/Infrastructure/LeaderboardModule.cs": {
+    "mtime": 1790755314.0545022,
+    "ast_hash": "7e23e2a7e1efee961d11bbe7fa83a8b8",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/Infrastructure/Persistence/Configurations/LeaderboardConfigurations.cs": {
+    "mtime": 1790755314.0525022,
+    "ast_hash": "516ddc062bad0853c5c5d4c0337e0490",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Leaderboard/LifeLevel.Modules.Leaderboard.csproj": {
+    "mtime": 1790755314.0350258,
+    "ast_hash": "b1ece6c6f006ce0e7de8e5bec123d3e6",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Modes/Application/DTOs/ModeDtos.cs": {
+    "mtime": 1790748783.093756,
+    "ast_hash": "5138a4a565313d4d966dc8cfa3ccabdc",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Modes/Application/UseCases/ModesService.cs": {
+    "mtime": 1790750381.5555227,
+    "ast_hash": "ee8a418de994c85ddf68da59d08091ff",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Modes/Domain/Entities/ModeEntities.cs": {
+    "mtime": 1790748782.8627574,
+    "ast_hash": "dcf48bd99ef9f15e8a5fd31958971a9f",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Modes/Infrastructure/ModesModule.cs": {
+    "mtime": 1790748783.4117537,
+    "ast_hash": "a85a34dada811b90c10212c48a31164c",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Modes/Infrastructure/Persistence/Configurations/ModeConfigurations.cs": {
+    "mtime": 1790748783.3377542,
+    "ast_hash": "9aed140d58b8d4021c9157f603b276fe",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Modes/LifeLevel.Modules.Modes.csproj": {
+    "mtime": 1790748782.6317592,
+    "ast_hash": "b1ece6c6f006ce0e7de8e5bec123d3e6",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.SharedKernel/Ports/ILeaderboardReadPort.cs": {
+    "mtime": 1790755314.0385022,
+    "ast_hash": "38bee84eb537e5a450280ce588f1ee3b",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.SharedKernel/Ports/IUnlockFactsReadPort.cs": {
+    "mtime": 1790748175.3488486,
+    "ast_hash": "5578d18ccef43f836380a6e587f194c0",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/LeaderboardReadAdapterTests.cs": {
+    "mtime": 1790755543.7175112,
+    "ast_hash": "1448f82a540a539fb9fc79f6491a0bd1",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/LeaderboardServiceTests.cs": {
+    "mtime": 1790755480.1240625,
+    "ast_hash": "bad7694642b1633c1dd7ce0c9077beb9",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/ModesServiceTests.cs": {
+    "mtime": 1790749922.498441,
+    "ast_hash": "5aa1a9ee87f5c7ad9c9bb278a96c9fe5",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/UnlockServiceTests.cs": {
+    "mtime": 1790748376.065151,
+    "ast_hash": "43d3f4118ff9a4e04745195d780db04c",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/leaderboard/leaderboard_screen.dart": {
+    "mtime": 1790755861.9694707,
+    "ast_hash": "087e12ee9f49aa58fd402ec98be96861",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/leaderboard/models/leaderboard_models.dart": {
+    "mtime": 1790755839.9089432,
+    "ast_hash": "a52faf3d5ae41b8b3766d915f79cd9c7",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/leaderboard/providers/leaderboard_provider.dart": {
+    "mtime": 1790755661.9404862,
+    "ast_hash": "5818238d9a67f93e9c38eb2cfd7b3aa2",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/leaderboard/services/leaderboard_service.dart": {
+    "mtime": 1790755661.9374864,
+    "ast_hash": "326036c6a9e70f04449aa383be993438",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/leaderboard/widgets/leaderboard_widgets.dart": {
+    "mtime": 1790756194.1665173,
+    "ast_hash": "ef0e8bfe6f206b2084e18df41ff73142",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/modes/services/modes_api_service.dart": {
+    "mtime": 1790749733.0420938,
+    "ast_hash": "e31580eaced3d6e363ce0bbb44fbd978",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/unlocks/providers/unlocks_provider.dart": {
+    "mtime": 1790748486.2606068,
+    "ast_hash": "539ce11251ae0ec0782f1f77820d0ca9",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/leaderboard/leaderboard_screen_test.dart": {
+    "mtime": 1790756162.6861444,
+    "ast_hash": "345e46a884d307180004ef8aaec42bd1",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/leaderboard_showcase_test.dart": {
+    "mtime": 1790756229.730563,
+    "ast_hash": "90071ac69ae0b900b1e68432c96710ba",
+    "semantic_hash": ""
+  },
+  ".claude/skills/diagnosing-bugs/SKILL.md": {
+    "mtime": 1790749082.988462,
+    "ast_hash": "01f54cb1a7036c192450d249c82744d2",
+    "semantic_hash": ""
+  },
+  ".claude/skills/diagnosing-bugs/agents/openai.yaml": {
+    "mtime": 1790749082.9888692,
+    "ast_hash": "52e474f87cddee193c6d9f0bca1fcdb4",
+    "semantic_hash": ""
+  },
+  ".claude/skills/grill-me/SKILL.md": {
+    "mtime": 1790749082.996872,
+    "ast_hash": "51ba9306293963bb76680d5e41525aea",
+    "semantic_hash": ""
+  },
+  ".claude/skills/grill-me/agents/openai.yaml": {
+    "mtime": 1790749082.9972582,
+    "ast_hash": "aff7b6f7b10220e3b4537c42a2d08917",
+    "semantic_hash": ""
+  },
+  ".claude/skills/grilling/SKILL.md": {
+    "mtime": 1790749083.001368,
+    "ast_hash": "284efe9cf334900d08230e572fc6db90",
+    "semantic_hash": ""
+  },
+  ".claude/skills/grilling/agents/openai.yaml": {
+    "mtime": 1790749083.0017152,
+    "ast_hash": "d419e97c73f1073f678e284cfdd904dc",
+    "semantic_hash": ""
+  },
+  ".claude/skills/handoff/SKILL.md": {
+    "mtime": 1790749114.9711123,
+    "ast_hash": "dfca389a3bf0d2f168c129879b914c49",
+    "semantic_hash": ""
+  },
+  ".claude/skills/handoff/agents/openai.yaml": {
+    "mtime": 1790749083.0060563,
+    "ast_hash": "4be8ae2848843907cb2c73c3abed107c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/to-tickets/SKILL.md": {
+    "mtime": 1790749114.9708648,
+    "ast_hash": "4a8711ded00c7b10fb6baf97e6d1f287",
+    "semantic_hash": ""
+  },
+  ".claude/skills/to-tickets/agents/openai.yaml": {
+    "mtime": 1790749082.993088,
+    "ast_hash": "6c4d19c426617a41441e84aacf2786d6",
+    "semantic_hash": ""
+  },
+  "docs/obsidian/07 - Development/Plan - Guided Unlocks.md": {
+    "mtime": 1790748124.356295,
+    "ast_hash": "53d6f12afbbd0622b80e00049ea1eab6",
+    "semantic_hash": ""
+  },
+  "docs/obsidian/07 - Development/Plan - Leaderboard.md": {
+    "mtime": 1790756275.8181634,
+    "ast_hash": "c236988a5b7635a7c99fc4f989ae5d50",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260929_202200_did_we_split_the_telants_crystals_and_the_gems.md": {
+    "mtime": 1790713320.5789216,
+    "ast_hash": "7961e3c83bee597ecf4cdd75648a42e5",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Leaderboard/hero_podium.png": {
+    "mtime": 1790755633.3027346,
+    "ast_hash": "f01a7db03f8050985f7c862b5fce0c02",
     "semantic_hash": ""
   }
 }

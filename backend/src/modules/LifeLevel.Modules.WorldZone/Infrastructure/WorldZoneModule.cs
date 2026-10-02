@@ -14,6 +14,7 @@ public static class WorldZoneModule
         services.AddScoped<WorldZoneService>();
         services.AddScoped<MapReadService>();
         services.AddScoped<WorldChestService>();
+        services.AddScoped<RegionChestService>();
         services.AddScoped<WorldDungeonService>();
         services.AddScoped<WorldBossBridgeService>();
         services.AddScoped<IZoneUnlockReadPort, ZoneUnlockReadPortAdapter>();

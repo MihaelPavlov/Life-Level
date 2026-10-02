@@ -3,23 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_icons.dart';
 import '../../core/constants/avatar_icons.dart';
 import '../../core/constants/class_icons.dart';
+import '../../core/constants/title_rank_icons.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/services/shell_overlay_notifier.dart';
 import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/app_icon_image.dart';
+import '../activity/providers/activity_provider.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/screens/integrations_screen.dart';
-import '../tutorial/screens/tutorials_hub_screen.dart';
+import '../titles/providers/titles_provider.dart';
+import '../unlocks/screens/explored_features_screen.dart';
 import 'account_settings_screen.dart';
 import 'edit_avatar_screen.dart';
 import 'notification_preferences_screen.dart';
-import 'profile_overview_tab.dart';
+import 'profile_sections.dart';
 import 'profile_stat_metadata.dart';
-import 'profile_widgets.dart';
 import 'tabs/admin_tab.dart';
+import 'xp_history_sheet.dart';
 
+/// Profile: one scrolling page. A compact header (avatar, name, class,
+/// title, rank, Power, XP) over stats, personal records, talent bonuses and
+/// the last 12 weeks. Settings (and Admin, for admins) sit behind the cog.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -27,34 +35,21 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen>
-    with SingleTickerProviderStateMixin {
-  TabController? _tab;
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isAdmin = false;
-  bool _adminChecked = false;
 
   @override
   void initState() {
     super.initState();
-    _initAdmin();
-  }
-
-  Future<void> _initAdmin() async {
-    final isAdmin = await ApiClient.isAdmin();
-    if (!mounted) return;
-    final count = kProfileTabs.length + (isAdmin ? 1 : 0);
-    setState(() {
-      _isAdmin = isAdmin;
-      _adminChecked = true;
-      _tab = TabController(length: count, vsync: this)
-        ..addListener(() => setState(() {}));
+    ApiClient.isAdmin().then((v) {
+      if (mounted && v) setState(() => _isAdmin = true);
     });
   }
 
-  @override
-  void dispose() {
-    _tab?.dispose();
-    super.dispose();
+  Future<void> _refresh() async {
+    ref.invalidate(activityCalendarProvider);
+    invalidateUserScopedProviders(ref);
+    await ref.read(characterProfileProvider.notifier).refresh();
   }
 
   @override
@@ -62,7 +57,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final profileAsync = ref.watch(characterProfileProvider);
     final profile = profileAsync.valueOrNull;
 
-    if (!_adminChecked || profile == null) {
+    if (profile == null) {
       if (profileAsync.hasError) {
         return Scaffold(
           backgroundColor: kPBg,
@@ -110,20 +105,272 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       );
     }
 
-    final tabs = [...kProfileTabs, if (_isAdmin) 'Admin'];
-
     return Scaffold(
       backgroundColor: kPBg,
-      body: Column(
+      body: RefreshIndicator(
+        color: AppColors.blue,
+        backgroundColor: kPSurface,
+        onRefresh: _refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 120),
+          children: [
+            ProfileHeader(profile: profile, isAdmin: _isAdmin),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ProfileRise(
+                    delay: const Duration(milliseconds: 300),
+                    child: ProfileStatsSection(profile: profile),
+                  ),
+                  const SizedBox(height: 22),
+                  const ProfileRise(
+                    delay: Duration(milliseconds: 400),
+                    child: ProfileRecordsSection(),
+                  ),
+                  if (profile.talents?.hasAny ?? false) ...[
+                    const SizedBox(height: 22),
+                    ProfileRise(
+                      delay: const Duration(milliseconds: 500),
+                      child: ProfileTalentBonusesSection(
+                          talents: profile.talents!),
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  const ProfileRise(
+                    delay: Duration(milliseconds: 600),
+                    child: ProfileWeeksSection(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact identity header: Power and settings on top, then the avatar ring
+/// with the level, name, class, equipped title and rank, then the XP bar.
+class ProfileHeader extends ConsumerWidget {
+  final CharacterProfile profile;
+  final bool isAdmin;
+
+  const ProfileHeader({
+    super.key,
+    required this.profile,
+    this.isAdmin = false,
+  });
+
+  void _showSettings(BuildContext context) {
+    showAppBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF161b22),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SettingsSheet(parentContext: context, isAdmin: isAdmin),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final top = MediaQuery.of(context).padding.top;
+    final titles = ref.watch(titlesProvider).valueOrNull;
+    final classAsset = classIconAsset(
+      className: profile.className,
+      classEmoji: profile.classEmoji,
+    );
+    final avatarAsset = avatarIconAsset(profile.avatarEmoji);
+    final rankAsset = rankIconAsset(profile.rank);
+    final titleName = titles?.activeTitleName ?? '';
+    final titleAsset =
+        titleName.isEmpty ? null : titleIconAsset(name: titleName);
+
+    return SizedBox(
+      height: top + 206,
+      child: Stack(
         children: [
-          ProfileHeader(tabController: _tab!, tabs: tabs, profile: profile),
-          Expanded(
-            child: TabBarView(
-              controller: _tab,
-              children: [
-                ProfileOverviewTab(profile: profile),
-                if (_isAdmin) const AdminTab(),
-              ],
+          const Positioned.fill(
+            child: Opacity(
+              opacity: .55,
+              child: Image(
+                image: AssetImage(AppIcons.homeSceneBg),
+                fit: BoxFit.cover,
+                alignment: Alignment(0, -.4),
+              ),
+            ),
+          ),
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x8C040810),
+                    Color(0x59040810),
+                    Color(0xFF040810),
+                  ],
+                  stops: [0, .45, 1],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: top + 12,
+            child: ProfileRise(
+              delay: const Duration(milliseconds: 60),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(6, 5, 10, 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: .5),
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: .16)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const AppIconImage(AppIcons.homePowerIcon, size: 20),
+                        const SizedBox(width: 6),
+                        Text('${profile.power}',
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.orange)),
+                        const SizedBox(width: 5),
+                        const Text('POWER',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                                color: kPTextSec)),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Semantics(
+                    button: true,
+                    label: 'Settings',
+                    child: GestureDetector(
+                      onTap: () => _showSettings(context),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: .5),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: .16)),
+                        ),
+                        child: const Icon(Icons.settings_outlined,
+                            size: 20, color: kPTextPri),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: top + 70,
+            child: ProfileRise(
+              delay: const Duration(milliseconds: 120),
+              child: Row(
+                children: [
+                  _AvatarRing(
+                    level: profile.level,
+                    avatarAsset: avatarAsset,
+                    avatarEmoji: profile.avatarEmoji,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                profile.username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: kPTextPri,
+                                  shadows: [
+                                    Shadow(
+                                        color: Color(0xB3000000),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _Chip(
+                              color: AppColors.orange,
+                              icon: classAsset,
+                              label: profile.className ?? 'Hero',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            if (titleName.isNotEmpty)
+                              Semantics(
+                                button: true,
+                                label: 'Title $titleName. Change title',
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      ShellOverlayNotifier.open('titles'),
+                                  child: _Chip(
+                                    color: AppColors.purple,
+                                    icon: titleAsset,
+                                    label: titleName,
+                                    pill: true,
+                                    chevron: true,
+                                  ),
+                                ),
+                              ),
+                            _Chip(
+                              color: AppColors.orange,
+                              icon: rankAsset,
+                              label: profile.rank.toUpperCase(),
+                              pill: true,
+                              spaced: true,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 10,
+            child: ProfileRise(
+              delay: const Duration(milliseconds: 200),
+              child: _XpBar(profile: profile),
             ),
           ),
         ],
@@ -132,205 +379,188 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 }
 
-class ProfileHeader extends StatelessWidget {
-  final TabController tabController;
-  final List<String> tabs;
-  final CharacterProfile profile;
-
-  const ProfileHeader({
-    super.key,
-    required this.tabController,
-    required this.tabs,
-    required this.profile,
-  });
-
-  void _showSettings(BuildContext context) {
-    showAppBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF161b22),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _SettingsSheet(parentContext: context),
-    );
-  }
+class _AvatarRing extends StatelessWidget {
+  final int level;
+  final String? avatarAsset;
+  final String? avatarEmoji;
+  const _AvatarRing({required this.level, this.avatarAsset, this.avatarEmoji});
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.of(context).padding.top;
-    final rankAccent = profileRankColor(profile.rank);
-    final classAsset = classIconAsset(
-      className: profile.className,
-      classEmoji: profile.classEmoji,
-    );
-    final avatarAsset = avatarIconAsset(profile.avatarEmoji);
-    final classText = profile.className ?? 'Hero';
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF080e14),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0x104f9eff), Color(0x00040810)],
-          stops: [0.0, 1.0],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      width: 76,
+      height: 84,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
         children: [
-          SizedBox(height: top + 12),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [kPBlue, kPPurple],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: kPBlue.withOpacity(0.35),
-                        blurRadius: 20,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: avatarAsset != null
-                        ? AppIconImage(
-                            avatarAsset,
-                            size: 42,
-                            visualScale: 1.45,
-                          )
-                        : Text(
-                            profile.avatarEmoji ?? '🧙',
-                            style: const TextStyle(fontSize: 30),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.username,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: kPTextPri,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: kPGold.withOpacity(0.10),
-                          border: Border.all(color: kPGold.withOpacity(0.40)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (classAsset != null) ...[
-                              AppIconImage(classAsset, size: 16),
-                              const SizedBox(width: 8),
-                            ] else if ((profile.classEmoji ?? '')
-                                .isNotEmpty) ...[
-                              Text(
-                                profile.classEmoji!,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            Text(
-                              classText,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: kPGold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          ProfileRankBadge(
-                            rank: profile.rank,
-                            color: rankAccent,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Level ${profile.level}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: kPTextSec,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => _showSettings(context),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: kPSurface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: kPBorder2),
-                    ),
-                    child: const Icon(
-                      Icons.settings_outlined,
-                      size: 18,
-                      color: kPTextSec,
-                    ),
-                  ),
-                ),
+          Container(
+            width: 76,
+            height: 76,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [kPBlue, kPPurple],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(color: kPBlue.withValues(alpha: .35), blurRadius: 18),
               ],
             ),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: kPBorder)),
+            child: Container(
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: kPSurface2),
+              alignment: Alignment.center,
+              child: avatarAsset != null
+                  ? AppIconImage(avatarAsset!, size: 48, visualScale: 1.45)
+                  : Text(avatarEmoji ?? '🧙',
+                      style: const TextStyle(fontSize: 34)),
             ),
-            child: TabBar(
-              controller: tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              labelColor: kPBlue,
-              unselectedLabelColor: kPTextSec,
-              labelStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+          ),
+          Positioned(
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [kPBlue, kPPurple]),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: kPBg, width: 2),
               ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              indicatorColor: kPBlue,
-              indicatorWeight: 2,
-              dividerColor: Colors.transparent,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              tabs: tabs.map((t) => Tab(text: t, height: 36)).toList(),
+              child: Text('LV $level',
+                  style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white)),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final Color color;
+  final String? icon;
+  final String label;
+  final bool pill;
+  final bool chevron;
+  final bool spaced;
+
+  const _Chip({
+    required this.color,
+    required this.label,
+    this.icon,
+    this.pill = false,
+    this.chevron = false,
+    this.spaced = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = color == AppColors.purple ? const Color(0xFFC9A7FF) : color;
+    return Container(
+      padding: EdgeInsets.fromLTRB(icon != null ? 5 : 9, 3, 9, 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(pill ? 999 : 8),
+        border: Border.all(color: color.withValues(alpha: .45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            AppIconImage(icon!, size: 16),
+            const SizedBox(width: 5),
+          ],
+          Flexible(
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: spaced ? 1 : 0,
+                    color: text)),
+          ),
+          if (chevron) ...[
+            const SizedBox(width: 3),
+            Icon(Icons.chevron_right_rounded, size: 14, color: text),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Level and XP bar; tapping it opens the XP history.
+class _XpBar extends StatelessWidget {
+  final CharacterProfile profile;
+  const _XpBar({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Level ${profile.level}, ${profile.xp} of '
+          '${profile.xpForNextLevel} XP. Open XP history',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showAppBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (_) => const XpHistorySheet(),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Text('LEVEL ${profile.level}',
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: kPBlue)),
+                const Spacer(),
+                Text(
+                    '${fmtXp(profile.xp)} / ${fmtXp(profile.xpForNextLevel)} XP',
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: kPTextSec)),
+              ],
+            ),
+            const SizedBox(height: 5),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Stack(
+                children: [
+                  Container(height: 8, color: kPSurface2),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(
+                        begin: 0,
+                        end: profile.xpProgress.clamp(0.0, 1.0).toDouble()),
+                    duration: AppMotion.duration(
+                        context, const Duration(milliseconds: 1000)),
+                    curve: Curves.easeOutCubic,
+                    builder: (_, v, __) => FractionallySizedBox(
+                      widthFactor: v,
+                      child: Container(
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(colors: [kPBlue, kPPurple]),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -338,8 +568,9 @@ class ProfileHeader extends StatelessWidget {
 
 class _SettingsSheet extends ConsumerWidget {
   final BuildContext parentContext;
+  final bool isAdmin;
 
-  const _SettingsSheet({required this.parentContext});
+  const _SettingsSheet({required this.parentContext, this.isAdmin = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -454,7 +685,7 @@ class _SettingsSheet extends ConsumerWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     parentContext,
-                    AppRoute(builder: (_) => const TutorialsHubScreen()),
+                    AppRoute(builder: (_) => const ExploredFeaturesScreen()),
                   );
                 },
               ),
@@ -489,6 +720,25 @@ class _SettingsSheet extends ConsumerWidget {
                 endIndent: 20,
                 color: kPBorder,
               ),
+              if (isAdmin) ...[
+                _SettingsTile(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: 'Admin',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      parentContext,
+                      AppRoute(builder: (_) => const AdminScreen()),
+                    );
+                  },
+                ),
+                const Divider(
+                  height: 1,
+                  indent: 20,
+                  endIndent: 20,
+                  color: kPBorder,
+                ),
+              ],
               _SettingsTile(
                 icon: Icons.logout,
                 label: 'Logout',

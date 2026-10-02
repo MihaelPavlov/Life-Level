@@ -17,4 +17,7 @@ public record UnlockFacts(
     int ZonesReached,
     int Level,
     int LongestStreak,
-    bool BossSeen);
+    bool BossSeen,
+    DateTime? CharacterCreatedAt = null,
+    int TitlesEarned = 0,
+    bool RankReached = false);

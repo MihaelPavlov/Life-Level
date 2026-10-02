@@ -10,6 +10,10 @@ import '../../core/widgets/currency_chip.dart';
 import '../character/providers/character_provider.dart';
 import '../rewards/widgets/task_reward_popup.dart';
 import '../shop/shop_screen.dart';
+import '../unlocks/models/unlock_catalog.dart';
+import '../unlocks/tour/tour_target.dart';
+import '../unlocks/tour/tours/unlock_tours.dart';
+import '../unlocks/tour/unlock_tour_runner.dart';
 import 'models/leaderboard_models.dart';
 import 'providers/leaderboard_provider.dart';
 import 'widgets/leaderboard_widgets.dart';
@@ -21,7 +25,10 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
 
   static void open(BuildContext context) => Navigator.push(
-      context, AppRoute(builder: (_) => const LeaderboardScreen()));
+      context,
+      AppRoute(
+          builder: (_) => const TourOnFirstVisit(
+              unlockKey: UnlockKeys.leaderboard, child: LeaderboardScreen())));
 
   @override
   ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -140,14 +147,20 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 const SizedBox(height: 4),
                 _PeriodPill(text: periodLabel(_metric, data)),
                 const SizedBox(height: 10),
-                _ScopeTabs(
-                  value: _scope,
-                  onChanged: (s) => setState(() => _scope = s),
+                TourTarget(
+                  id: TourIds.leaderboardScopes,
+                  child: _ScopeTabs(
+                    value: _scope,
+                    onChanged: (s) => setState(() => _scope = s),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                _MetricChips(
-                  value: _metric,
-                  onChanged: (m) => setState(() => _metric = m),
+                TourTarget(
+                  id: TourIds.leaderboardMetrics,
+                  child: _MetricChips(
+                    value: _metric,
+                    onChanged: (m) => setState(() => _metric = m),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
@@ -185,11 +198,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               left: 12,
               right: 12,
               bottom: 16 + bottomInset,
-              child: _YouRow(
-                board: data,
-                avatarEmoji: profile?.avatarEmoji,
-                opening: _opening,
-                onOpenChest: _openChest,
+              child: TourTarget(
+                id: TourIds.leaderboardYou,
+                child: _YouRow(
+                  board: data,
+                  avatarEmoji: profile?.avatarEmoji,
+                  opening: _opening,
+                  onOpenChest: _openChest,
+                ),
               ),
             ),
         ],

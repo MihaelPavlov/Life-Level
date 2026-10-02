@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../features/boss/replay/boss_seen_store.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../motion/app_motion.dart';
 import '../api/api_client.dart';
@@ -21,6 +22,8 @@ import '../../features/talents/providers/talents_provider.dart';
 import '../../features/titles/providers/titles_provider.dart';
 import '../../features/modes/burn_chain/burn_chain_provider.dart';
 import '../../features/modes/treasure_delve/delve_provider.dart';
+import '../../features/map/providers/region_chest_provider.dart';
+import '../../features/unlocks/providers/unlocks_provider.dart';
 
 /// Refreshes progress-backed state after mutations initiated inside a
 /// Riverpod notifier, such as a Health Connect import.
@@ -28,16 +31,19 @@ void invalidateProgressProviders(Ref ref) {
   ref.invalidate(characterProfileProvider);
   ref.invalidate(worldProgressProvider);
   ref.invalidate(currentRegionDetailProvider);
+  ref.invalidate(dungeonStateProvider);
   ref.invalidate(dailyQuestsProvider);
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
   ref.invalidate(activityHistoryProvider);
   ref.invalidate(activitySummaryProvider);
+  ref.invalidate(activityCalendarProvider);
   ref.invalidate(streakProvider);
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
   ref.invalidate(leaderboardChestProvider);
+  ref.invalidate(regionChestsProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
   ref.invalidate(talentsProvider);
@@ -47,6 +53,8 @@ void invalidateProgressProviders(Ref ref) {
   ref.invalidate(burnChainProvider);
   ref.invalidate(delveStatusProvider);
   ref.invalidate(delveRunProvider);
+  // Refreshed rather than invalidated so locked slots don't flash open.
+  ref.read(unlocksProvider.notifier).refresh();
 }
 
 // Call on logout, app resume, and offline→online transitions so we never
@@ -54,16 +62,20 @@ void invalidateProgressProviders(Ref ref) {
 void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(characterProfileProvider);
   ref.invalidate(worldProgressProvider);
+  ref.invalidate(currentRegionDetailProvider);
+  ref.invalidate(dungeonStateProvider);
   ref.invalidate(dailyQuestsProvider);
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
   ref.invalidate(activityHistoryProvider);
   ref.invalidate(activitySummaryProvider);
+  ref.invalidate(activityCalendarProvider);
   ref.invalidate(streakProvider);
   ref.invalidate(equipmentProvider);
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
   ref.invalidate(leaderboardChestProvider);
+  ref.invalidate(regionChestsProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
   ref.invalidate(talentsProvider);
@@ -73,6 +85,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(burnChainProvider);
   ref.invalidate(delveStatusProvider);
   ref.invalidate(delveRunProvider);
+  ref.read(unlocksProvider.notifier).refresh();
 }
 
 // Container-scoped variant for call sites where the calling widget may be
@@ -83,21 +96,26 @@ void invalidateUserScopedProviders(WidgetRef ref) {
 void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(characterProfileProvider);
   container.invalidate(worldProgressProvider);
+  container.invalidate(currentRegionDetailProvider);
+  container.invalidate(dungeonStateProvider);
   container.invalidate(dailyQuestsProvider);
   container.invalidate(weeklyQuestsProvider);
   container.invalidate(rewardCenterProvider);
   container.invalidate(activityHistoryProvider);
   container.invalidate(activitySummaryProvider);
+  container.invalidate(activityCalendarProvider);
   container.invalidate(streakProvider);
   container.invalidate(equipmentProvider);
   container.invalidate(inventoryProvider);
   container.invalidate(bossListProvider);
   container.invalidate(leaderboardChestProvider);
+  container.invalidate(regionChestsProvider);
   container.invalidate(guildProvider);
   container.invalidate(seasonProvider);
   container.invalidate(talentsProvider);
   container.invalidate(titlesProvider);
   container.invalidate(achievementsProvider);
+  container.invalidate(unlocksProvider);
   container.invalidate(adventureHubSignalsProvider);
   container.invalidate(burnChainProvider);
   container.invalidate(delveStatusProvider);
@@ -116,6 +134,7 @@ Future<void> performLogout(BuildContext context) async {
     await NotificationsService.instance.unregister(fcmToken);
   }
   await ApiClient.clearToken();
+  await BossSeenStore.instance.clear();
   navigator.pushAndRemoveUntil(
     AppRoute(builder: (_) => const LoginScreen(), style: AppRouteStyle.fade),
     (_) => false,

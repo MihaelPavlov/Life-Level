@@ -39,6 +39,11 @@ public class ActivityController(
         return Ok(history);
     }
 
+    /// <summary>Daily workout totals for the last <paramref name="days"/> days and the longest run.</summary>
+    [HttpGet("calendar")]
+    public async Task<ActionResult<ActivityCalendarDto>> GetCalendar([FromQuery] int days = 364, CancellationToken ct = default) =>
+        await activityService.GetCalendarAsync(userContext.UserId, days, ct);
+
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary(CancellationToken ct)
     {

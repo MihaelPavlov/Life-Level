@@ -42,39 +42,41 @@ class _SeasonTierRowState extends State<SeasonTierRow>
   void didUpdateWidget(SeasonTierRow old) {
     super.didUpdateWidget(old);
     if (_reached(old.tier) || !_reached(tier)) return;
-    if (!RewardFx.enabled(context)) return;
-    final c = RewardFx.centerOf(_badgeKey);
-    if (c == null) return;
-    final rowH = context.size?.height ?? 86;
-    final from = c - Offset(0, rowH);
-    RewardFx.run(
-      context,
-      duration: const Duration(milliseconds: 600),
-      builder: (t, origin) {
-        final p =
-            Offset.lerp(from, c, const Cubic(.4, 0, .2, 1).transform(t))! -
-                origin;
-        return Positioned(
-          left: p.dx - 18,
-          top: p.dy - 18,
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.orange, width: 2),
-              boxShadow: const [
-                BoxShadow(color: AppColors.orange, blurRadius: 12),
-              ],
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !RewardFx.enabled(context)) return;
+      final c = RewardFx.centerOf(_badgeKey);
+      if (c == null) return;
+      final rowH = context.size?.height ?? 86;
+      final from = c - Offset(0, rowH);
+      RewardFx.run(
+        context,
+        duration: const Duration(milliseconds: 600),
+        builder: (t, origin) {
+          final p =
+              Offset.lerp(from, c, const Cubic(.4, 0, .2, 1).transform(t))! -
+                  origin;
+          return Positioned(
+            left: p.dx - 18,
+            top: p.dy - 18,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.orange, width: 2),
+                boxShadow: const [
+                  BoxShadow(color: AppColors.orange, blurRadius: 12),
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    ).then((_) {
-      if (!mounted) return;
-      _pop.forward(from: 0);
-      RewardFx.ring(context, c, AppColors.orange, maxRadius: 34);
-      RewardFx.burst(context, c, AppColors.green, count: 8, distance: 30);
+          );
+        },
+      ).then((_) {
+        if (!mounted) return;
+        _pop.forward(from: 0);
+        RewardFx.ring(context, c, AppColors.orange, maxRadius: 34);
+        RewardFx.burst(context, c, AppColors.green, count: 8, distance: 30);
+      });
     });
   }
 

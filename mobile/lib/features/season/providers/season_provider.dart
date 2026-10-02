@@ -9,15 +9,21 @@ class SeasonNotifier extends AsyncNotifier<SeasonTrack> {
   Future<SeasonTrack> build() => ref.watch(seasonServiceProvider).getTrack();
 
   Future<SeasonClaimResult> claim(int tier, String track) async {
-    final result = await ref.read(seasonServiceProvider).claimTier(tier, track);
-    // Re-fetch authoritative state (tile → received, XP bar may have moved).
-    ref.invalidateSelf();
+    final service = ref.read(seasonServiceProvider);
+    final result = await service.claimTier(tier, track);
+    // Keep the existing sliver mounted while fetching authoritative state.
+    // Invalidating here briefly replaced the track with a loading spinner
+    // during reward animations, which could corrupt the sliver child order.
+    final fresh = await service.getTrack();
+    state = AsyncValue.data(fresh);
     return result;
   }
 
   Future<List<SeasonClaimResult>> claimAvailable() async {
-    final results = await ref.read(seasonServiceProvider).claimAvailable();
-    ref.invalidateSelf();
+    final service = ref.read(seasonServiceProvider);
+    final results = await service.claimAvailable();
+    final fresh = await service.getTrack();
+    state = AsyncValue.data(fresh);
     return results;
   }
 

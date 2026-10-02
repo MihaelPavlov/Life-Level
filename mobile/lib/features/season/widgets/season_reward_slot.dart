@@ -39,39 +39,48 @@ class _SeasonRewardSlotState extends State<SeasonRewardSlot>
   void didUpdateWidget(SeasonRewardSlot old) {
     super.didUpdateWidget(old);
     final was = old.reward.state, now = widget.reward.state;
-    if (was == now || !RewardFx.enabled(context)) return;
-    if (now == SeasonRewardState.ready) {
-      _pop.forward(from: 0);
-    } else if (was == SeasonRewardState.ready &&
-        now == SeasonRewardState.received) {
-      final c = _icon.center;
-      if (c == null) return;
-      RewardFx.rays(context, c, AppColors.green, radius: 64);
-      RewardFx.burst(context, c, AppColors.green, count: 10, distance: 40);
-      RewardFx.run(
-        context,
-        duration: const Duration(milliseconds: 900),
-        builder: (t, origin) {
-          final p = c - origin + Offset(0, -72 * Curves.easeOut.transform(t));
-          final scale = t < .5 ? 1 + .8 * (t / .5) : 1.8 - .4 * ((t - .5) / .5);
-          return Positioned(
-            left: p.dx - 16,
-            top: p.dy - 16,
-            child: Opacity(
-              opacity: t < .5 ? 1 : 1 - (t - .5) / .5,
-              child: Transform.scale(
-                scale: scale,
-                child: Image.asset(seasonIconAsset(widget.reward.iconKey),
+    if (was == now) return;
+    // Overlay insertion during didUpdateWidget can re-enter a Viewport update
+    // when several rewards are claimed in one refresh. Run all visual effects
+    // after the sliver has finished updating its children.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !RewardFx.enabled(context)) return;
+      if (now == SeasonRewardState.ready) {
+        _pop.forward(from: 0);
+      } else if (was == SeasonRewardState.ready &&
+          now == SeasonRewardState.received) {
+        final c = _icon.center;
+        if (c == null) return;
+        RewardFx.rays(context, c, AppColors.green, radius: 64);
+        RewardFx.burst(context, c, AppColors.green, count: 10, distance: 40);
+        RewardFx.run(
+          context,
+          duration: const Duration(milliseconds: 900),
+          builder: (t, origin) {
+            final p = c - origin + Offset(0, -72 * Curves.easeOut.transform(t));
+            final scale =
+                t < .5 ? 1 + .8 * (t / .5) : 1.8 - .4 * ((t - .5) / .5);
+            return Positioned(
+              left: p.dx - 16,
+              top: p.dy - 16,
+              child: Opacity(
+                opacity: t < .5 ? 1 : 1 - (t - .5) / .5,
+                child: Transform.scale(
+                  scale: scale,
+                  child: Image.asset(
+                    seasonIconAsset(widget.reward.iconKey),
                     width: 32,
                     height: 32,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const SizedBox()),
+                    errorBuilder: (_, __, ___) => const SizedBox(),
+                  ),
+                ),
               ),
-            ),
-          );
-        },
-      );
-    }
+            );
+          },
+        );
+      }
+    });
   }
 
   @override

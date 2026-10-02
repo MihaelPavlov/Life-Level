@@ -4014,6 +4014,37 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("UserPathChoices");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserRegionChestClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ClaimedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Coins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Gems")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegionId");
+
+                    b.HasIndex("UserId", "RegionId")
+                        .IsUnique();
+
+                    b.ToTable("UserRegionChestClaims");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldChestState", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5083,6 +5114,21 @@ namespace LifeLevel.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Region");
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserRegionChestClaim", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.WorldZone.Domain.Entities.Region", null)
+                        .WithMany()
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LifeLevel.Modules.Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.WorldZone.Domain.Entities.UserWorldProgress", b =>

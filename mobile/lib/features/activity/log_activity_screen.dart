@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/widgets/app_toast.dart';
-import '../../core/services/boss_defeated_notifier.dart';
 import '../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../core/services/guild_raid_victory_notifier.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/services/inventory_full_notifier.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
 import '../../core/session/invalidate_user_providers.dart';
+import '../boss/replay/home_boss_replay.dart';
 import '../../core/widgets/app_icon_image.dart';
 import 'activity_result_sheet.dart';
 import 'models/activity_models.dart';
@@ -183,11 +183,9 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
         InventoryFullNotifier.notify(blocked);
       }
 
-      // Each boss the activity finished off → celebration overlay (one per
-      // boss, in the order the backend killed them).
-      for (final boss in result.bossDefeats) {
-        BossDefeatedNotifier.notify(boss);
-      }
+      // The boss exchange (hit, counterattack, kill or knock-out) replays on
+      // the Map button once Home is back on screen.
+      requestBossReplay();
 
       for (final raid in result.guildRaidDefeats) {
         GuildRaidVictoryNotifier.notify(raid);

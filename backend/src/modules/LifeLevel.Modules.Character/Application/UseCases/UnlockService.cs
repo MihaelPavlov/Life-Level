@@ -14,6 +14,13 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, ICharacterX
 {
     public const long TourXp = 25;
 
+    /// <summary>
+    /// Characters created before guided unlocks shipped are back-filled silently. Anyone newer
+    /// (including a player whose onboarding import already met several conditions) gets every
+    /// ceremony and tour.
+    /// </summary>
+    public static readonly DateTime BackFillBefore = new(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc);
+
     public sealed record Definition(string Key, Func<UnlockFacts, bool> IsMet);
 
     /// <summary>The chain, in the order the player meets it.</summary>
@@ -27,7 +34,9 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, ICharacterX
         new("talents", f => f.Level >= 3),
         new("shields", f => f.LongestStreak >= 3),
         new("bosses", f => f.BossSeen),
+        new("ranks", f => f.RankReached || f.TitlesEarned >= 1),
         new("guild", f => f.Level >= 5),
+        new("leaderboard", f => f.Level >= 6),
         new("modes", f => f.Level >= 10),
         new("delve", f => f.Level >= 15),
     ];
@@ -36,22 +45,23 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, ICharacterX
 
     /// <summary>
     /// Unlocks anything newly earned and returns the whole chain.
-    /// The first time a player is evaluated, everything they already qualify for is back-filled
-    /// silently (seen and toured), so existing players aren't hit with a wall of ceremonies.
+    /// The first time an existing player is evaluated, everything they already qualify for is
+    /// back-filled silently (seen and toured), so they aren't hit with a wall of ceremonies.
     /// The Home tour is the exception for a player who hasn't logged a workout yet: they are new.
+    /// Characters created after <see cref="BackFillBefore"/> are never back-filled.
     /// </summary>
     public async Task<UnlocksResponse> GetAsync(Guid userId, CancellationToken ct = default)
     {
         var f = await facts.GetAsync(userId, ct);
         var rows = await db.Set<CharacterUnlock>().Where(u => u.UserId == userId).ToListAsync(ct);
-        var firstEvaluation = rows.Count == 0;
+        var backFill = rows.Count == 0 && (f.CharacterCreatedAt ?? DateTime.MinValue) < BackFillBefore;
         var now = DateTime.UtcNow;
 
         var added = false;
         foreach (var def in Catalog)
         {
             if (rows.Any(r => r.Key == def.Key) || !def.IsMet(f)) continue;
-            var silent = firstEvaluation && !(def.Key == "home" && f.ActivityCount == 0);
+            var silent = backFill && !(def.Key == "home" && f.ActivityCount == 0);
             var row = new CharacterUnlock
             {
                 Id = Guid.NewGuid(),

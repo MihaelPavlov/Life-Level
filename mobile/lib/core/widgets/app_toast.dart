@@ -411,10 +411,13 @@ class _ToastLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The center Map orb rises above the navigation bar to about 112 px from
+    // the safe-area bottom. Keep the toast stack above it with a small gap.
     final bottom = MediaQuery.paddingOf(context).bottom +
-        86 +
+        126 +
         MediaQuery.viewInsetsOf(context).bottom;
     return Positioned(
+      key: const ValueKey('app-toast-layer'),
       left: 12,
       right: 12,
       bottom: bottom,

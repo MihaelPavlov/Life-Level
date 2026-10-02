@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../boss/replay/home_boss_replay.dart';
 import '../../../core/session/invalidate_user_providers.dart';
 import '../models/integration_models.dart';
 import '../services/health_sync_service.dart';
@@ -85,6 +86,8 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
     );
     if (result.imported > 0) {
       invalidateProgressProviders(ref);
+      // The synced workouts may have hit a boss; it replays on Home.
+      requestBossReplay();
     }
   }
 

@@ -236,11 +236,12 @@ Owns the navigation container, the tab bar with the raised Map button, and globa
 
 | File | Description |
 |------|-------------|
-| `profile_screen.dart` | Tabbed screen with four tabs: Overview, Equipment, Inventory, Achievements. Fetches `CharacterProfile` and exposes `ProfileScreenState.refresh()`. |
-| `profile_overview_tab.dart` | Overview tab content: `ProfileXpSection` (XP bar, tappable to open XP history), `ProfileStatsSection` (stat cards with optional +point button), `ProfileActivitySummary` (horizontal scroll of weekly mini-cards: runs, distance, streak, XP earned). |
+| `profile_screen.dart` | One scrolling page (design: Profile Redesign canvas, option D). `ProfileHeader` is compact: Power chip, settings cog, avatar ring with level, name, class, equipped title (opens Titles), rank, and the XP bar (opens XP history). The settings sheet holds Admin for admins. |
+| `profile_sections.dart` | Page sections: `ProfileStatsSection` (5 stat tiles; "+" only while points are available), `ProfileRecordsSection` (longest run, best streak, bosses defeated, zones reached), `ProfileTalentBonusesSection` (first 4 bonuses + "See all" sheet), `ProfileWeeksSection` (12-week grid from `GET /api/activity/calendar`; the workout count opens a history sheet with All weeks / By month tabs). |
 | `profile_stat_metadata.dart` | Static metadata for all five stats (`StatMeta`: key, label, emoji, colour, description, boosting activities, perks). Constants: `kStrMeta`, `kEndMeta`, `kAgiMeta`, `kFlxMeta`, `kStaMeta`. `buildProfileStats()` maps a `CharacterProfile` → `List<StatData>`. Also holds profile-wide colour aliases and `profileRankColor()` helper. |
-| `profile_widgets.dart` | Shared profile widgets: `ProfileRankBadge`, `ProfileMiniCard` (emoji + label + value + sub), `ProfilePlaceholderTab` (coming-soon stub), `ProfileSheetSection` (bulleted section used inside bottom sheets). |
+| `profile_widgets.dart` | Shared profile widgets: `ProfileRankBadge`, `ProfileMiniCard`, `ProfilePlaceholderTab`, `ProfileSheetSection`. |
 | `stat_detail_sheet.dart` | Bottom sheet for a single stat. Shows description, boosting activities, and perks; includes the spend-stat-point button when points are available. |
+| `tabs/admin_tab.dart` | `AdminScreen` (opened from Settings) wrapping the admin tools. |
 | `xp_history_sheet.dart` | Bottom sheet listing recent XP gain events (activity type, amount, timestamp). |
 
 ---

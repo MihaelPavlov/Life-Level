@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/features/home/cards/home_adventure_hub.dart';
 import 'package:life_level/features/home/providers/adventure_hub_status_provider.dart';
 
+import '../../helpers/unlocks_overrides.dart';
+
 final _rewardsReadyProvider = StateProvider<bool>((ref) => false);
 
 void main() {
@@ -49,6 +51,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          allUnlockedOverride,
           adventureHubSignalsProvider.overrideWith((ref) async {
             final rewardsReady = ref.watch(_rewardsReadyProvider);
             return AdventureHubSignals(
@@ -84,6 +87,67 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
 
+    expect(find.text('!'), findsOneWidget);
+  });
+
+  testWidgets('shows an alert on Bosses when a boss is active', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allUnlockedOverride,
+          adventureHubSignalsProvider.overrideWith(
+            (ref) async => const AdventureHubSignals(
+              rewards: false,
+              bosses: true,
+              streak: false,
+              talents: false,
+              season: false,
+              titles: false,
+              achievements: false,
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: HomeAdventureHub()),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('Bosses'), findsOneWidget);
+    expect(find.text('!'), findsOneWidget);
+  });
+
+  testWidgets('shows an alert when a region chest is ready', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allUnlockedOverride,
+          adventureHubSignalsProvider.overrideWith(
+            (ref) async => const AdventureHubSignals(
+              rewards: false,
+              bosses: false,
+              streak: false,
+              talents: false,
+              season: false,
+              titles: false,
+              achievements: false,
+              chests: true,
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: HomeAdventureHub()),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('Region Chests'), findsOneWidget);
     expect(find.text('!'), findsOneWidget);
   });
 }

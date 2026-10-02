@@ -65,6 +65,12 @@ file sealed class BridgeEventPublisher : IEventPublisher
         => Task.CompletedTask;
 }
 
+file sealed class BridgeCombatStatsPort(int health) : ICharacterCombatStatsReadPort
+{
+    public Task<CombatStatsSnapshot> GetCombatStatsAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(new CombatStatsSnapshot(0, 0, health, 0, 1.0));
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Fixture helpers
 // ──────────────────────────────────────────────────────────────────────────
@@ -242,6 +248,28 @@ public class WorldBossBridgeServiceTests
         Assert.Equal(firstId, secondId);
         Assert.Equal(1, await db.Bosses.CountAsync(b => b.WorldZoneId == fx.ForestBoss.Id));
         Assert.Equal(1, await db.UserBossStates.CountAsync(s => s.UserId == fx.UserId && s.BossId == firstId));
+    }
+
+    [Fact]
+    public async Task GetBosses_UnstartedSpawnedBoss_ShowsFullPlayerHp()
+    {
+        var db = CreateDb(nameof(GetBosses_UnstartedSpawnedBoss_ShowsFullPlayerHp));
+        var fx = await SeedBossWorldAsync(db, "spawned_full_hp");
+        var bridge = CreateBridge(db);
+        await bridge.EnsureSpawnedAsync(fx.UserId, fx.ForestBoss.Id, CancellationToken.None);
+
+        var bossService = new BossService(
+            db,
+            new BridgeXpPort(),
+            new BridgeEventPublisher(),
+            EmptyServiceProvider.Instance,
+            combatStats: new BridgeCombatStatsPort(87));
+
+        var listed = Assert.Single(await bossService.GetAllBossesForUserAsync(fx.UserId));
+
+        Assert.False(listed.Activated);
+        Assert.Equal(87, listed.PlayerMaxHp);
+        Assert.Equal(87, listed.CurrentPlayerHp);
     }
 
     // ──────────────────────────────────────────────────────────────────────

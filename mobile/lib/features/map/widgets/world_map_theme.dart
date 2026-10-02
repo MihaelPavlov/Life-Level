@@ -2,6 +2,41 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/world_map_models.dart';
 
+/// Bundled artwork for every world region. Server-provided URLs remain the
+/// primary source so admin overrides still work; these assets are the complete
+/// offline/default set used by the world hub and each region trail.
+class RegionArtwork {
+  static const _root = 'assets/Regions/world';
+
+  static const Map<String, String> _slugs = {
+    'Forest of Endurance': 'forest_of_endurance',
+    'Ocean of Balance': 'ocean_of_balance',
+    'Mountains of Strength': 'mountains_of_strength',
+    'Ashen Caldera': 'ashen_caldera',
+    'Frostspire Tundra': 'frostspire_tundra',
+    'Sunscorch Dunes': 'sunscorch_dunes',
+    'Shadewood Deep': 'shadewood_deep',
+    'Moonlit Reef': 'moonlit_reef',
+    'Thunderpeak Range': 'thunderpeak_range',
+    'Emberfall Crater': 'emberfall_crater',
+    'Glacier Abyss': 'glacier_abyss',
+    'Mirage Wastes': 'mirage_wastes',
+    'Verdant Spine': 'verdant_spine',
+    'Abyssal Trench': 'abyssal_trench',
+    'Apex Caldera': 'apex_caldera',
+  };
+
+  static String? bannerFor(String regionName) {
+    final slug = _slugs[regionName];
+    return slug == null ? null : '$_root/${slug}_banner.png';
+  }
+
+  static String? backgroundFor(String regionName) {
+    final slug = _slugs[regionName];
+    return slug == null ? null : '$_root/${slug}_background.png';
+  }
+}
+
 /// Per-region palette + gradient helpers. Mirrors the CSS `.wv3-region--forest`,
 /// `--ocean`, etc. themes from `design-mockup/map/WORLD-MAP-FINAL-MOCKUP.html`.
 class RegionThemeColors {
@@ -23,9 +58,9 @@ class RegionThemeColors {
         return const RegionThemeColors(
           accent: AppColors.green,
           bannerGradient: [Color(0x473fb950), Color(0x1a4f9eff)],
-          bannerAsset: 'assets/images/forest_region_banner.png',
+          bannerAsset: 'assets/Regions/world/forest_of_endurance_banner.png',
           trailBackgroundAsset:
-              'assets/images/forest_region_trail_background.png',
+              'assets/Regions/world/forest_of_endurance_background.png',
         );
       case RegionTheme.ocean:
         return const RegionThemeColors(

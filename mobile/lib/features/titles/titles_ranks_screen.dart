@@ -5,6 +5,8 @@ import '../../core/motion/app_motion.dart';
 import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_toast.dart';
 import '../character/providers/character_provider.dart';
+import '../unlocks/tour/tour_target.dart';
+import '../unlocks/tour/tours/unlock_tours.dart';
 import 'models/title_models.dart';
 import 'providers/titles_provider.dart';
 import 'widgets/rank_ladder_widget.dart';
@@ -154,6 +156,8 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                 ),
                 data: (data) {
                   final profile = profileAsync.valueOrNull;
+                  final firstToEquip =
+                      data.earnedTitles.where((t) => !t.isEquipped).firstOrNull;
 
                   return CustomScrollView(
                     slivers: [
@@ -172,15 +176,18 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: RankLadderWidget(
-                              progression: data.rankProgression,
+                          child: TourTarget(
+                            id: TourIds.titlesRank,
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: RankLadderWidget(
+                                progression: data.rankProgression,
+                              ),
                             ),
                           ),
                         ),
@@ -198,13 +205,19 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                               listenable: _flight,
                               builder: (_, __) {
                                 final t = data.earnedTitles[i];
-                                return TitleListItem(
+                                final item = TitleListItem(
                                   key: ValueKey(t.id),
                                   title: t,
                                   nameKey: _flight.nameKeyFor(t.id),
                                   equipDisabled: _flight.inFlight,
                                   onEquip: () => _equip(t),
                                 );
+                                // The tour ends on equipping the first title
+                                // that isn't worn yet.
+                                return t == firstToEquip
+                                    ? TourTarget(
+                                        id: TourIds.titlesEquip, child: item)
+                                    : item;
                               },
                             ),
                           ),
@@ -218,10 +231,18 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                         delegate: SliverChildBuilderDelegate(
                           (_, i) => Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                            child: TitleListItem(
-                              title: data.lockedTitles[i],
-                              isLocked: true,
-                            ),
+                            child: i == 0
+                                ? TourTarget(
+                                    id: TourIds.titlesLocked,
+                                    child: TitleListItem(
+                                      title: data.lockedTitles[i],
+                                      isLocked: true,
+                                    ),
+                                  )
+                                : TitleListItem(
+                                    title: data.lockedTitles[i],
+                                    isLocked: true,
+                                  ),
                           ),
                           childCount: data.lockedTitles.length,
                         ),

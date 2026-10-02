@@ -20,4 +20,10 @@ class ActivityService {
     final res = await _dio.get('/activity/summary');
     return ActivitySummary.fromJson(res.data as Map<String, dynamic>);
   }
+
+  Future<ActivityCalendar> getCalendar({int days = 364}) async {
+    final res = await _dio
+        .get('/activity/calendar', queryParameters: {'days': days});
+    return ActivityCalendar.fromJson(res.data as Map<String, dynamic>);
+  }
 }
