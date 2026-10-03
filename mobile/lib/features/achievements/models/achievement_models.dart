@@ -20,6 +20,7 @@ class AchievementDto {
   final double currentValue;
   final bool isUnlocked;
   final DateTime? unlockedAt;
+  final DateTime? seenAt;
   final int coinReward;
   final int gemReward;
   final bool isClaimed;
@@ -38,6 +39,7 @@ class AchievementDto {
     required this.currentValue,
     required this.isUnlocked,
     this.unlockedAt,
+    this.seenAt,
     this.coinReward = 0,
     this.gemReward = 0,
     this.isClaimed = false,
@@ -68,6 +70,9 @@ class AchievementDto {
       isUnlocked: json['isUnlocked'] as bool? ?? false,
       unlockedAt: json['unlockedAt'] != null
           ? DateTime.tryParse(json['unlockedAt'] as String)
+          : null,
+      seenAt: json['seenAt'] != null
+          ? DateTime.tryParse(json['seenAt'] as String)
           : null,
       coinReward: (json['coinReward'] as num?)?.toInt() ?? 0,
       gemReward: (json['gemReward'] as num?)?.toInt() ?? 0,

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
@@ -7,13 +5,10 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/shell_overlay_notifier.dart';
-import '../../achievements/providers/achievements_provider.dart';
-import '../../character/providers/character_provider.dart';
 import '../../leaderboard/leaderboard_screen.dart';
 import '../../rewards/rewards_screen.dart';
 import '../../map/screens/region_chests_screen.dart';
 import '../../streak/widgets/streak_detail_sheet.dart';
-import '../../titles/providers/titles_provider.dart';
 import '../../unlocks/models/unlock_catalog.dart';
 import '../../unlocks/models/unlock_models.dart';
 import '../../unlocks/providers/unlocks_provider.dart';
@@ -161,7 +156,7 @@ class HomeAdventureHub extends ConsumerWidget {
         label: 'Achievements',
         hasUpdate: signals.achievements,
         priority: 3,
-        onTap: () => _openAchievements(ref),
+        onTap: _openAchievements,
       ),
       _HubTileModel(
         unlockKey: UnlockKeys.guild,
@@ -177,7 +172,7 @@ class HomeAdventureHub extends ConsumerWidget {
         label: 'Ranks',
         hasUpdate: signals.titles,
         priority: 5,
-        onTap: () => _openTitles(ref),
+        onTap: _openTitles,
       ),
       _HubTileModel(
         unlockKey: UnlockKeys.talents,
@@ -237,8 +232,7 @@ class HomeAdventureHub extends ConsumerWidget {
     showRewardsSheet(context);
   }
 
-  void _openAchievements(WidgetRef ref) {
-    _markAchievementsSeen(ref);
+  void _openAchievements() {
     ShellOverlayNotifier.open('achievements');
   }
 
@@ -246,8 +240,7 @@ class HomeAdventureHub extends ConsumerWidget {
 
   void _openGuild() => ShellOverlayNotifier.open('guild');
 
-  void _openTitles(WidgetRef ref) {
-    _markTitlesSeen(ref);
+  void _openTitles() {
     ShellOverlayNotifier.open('titles');
   }
 
@@ -260,37 +253,6 @@ class HomeAdventureHub extends ConsumerWidget {
 
   void _openTalents() => ShellOverlayNotifier.open('talents');
 
-  void _markTitlesSeen(WidgetRef ref) {
-    final username = ref.read(characterProfileProvider).valueOrNull?.username;
-    final titles = ref.read(titlesProvider).valueOrNull;
-    if (username == null || titles == null) return;
-    final ids = titles.earnedTitles.map((title) => title.id).toList();
-    unawaited(
-      ref
-          .read(adventureHubSeenStoreProvider)
-          .markTitlesSeen(username: username, earnedTitleIds: ids)
-          .then((_) => ref.invalidate(adventureHubSignalsProvider)),
-    );
-  }
-
-  void _markAchievementsSeen(WidgetRef ref) {
-    final username = ref.read(characterProfileProvider).valueOrNull?.username;
-    final achievements = ref.read(achievementsProvider).valueOrNull;
-    if (username == null || achievements == null) return;
-    final ids = achievements
-        .where((achievement) => achievement.isUnlocked)
-        .map((achievement) => achievement.id)
-        .toList();
-    unawaited(
-      ref
-          .read(adventureHubSeenStoreProvider)
-          .markAchievementsSeen(
-            username: username,
-            unlockedAchievementIds: ids,
-          )
-          .then((_) => ref.invalidate(adventureHubSignalsProvider)),
-    );
-  }
 }
 
 class _HubTileModel {

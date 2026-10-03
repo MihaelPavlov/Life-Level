@@ -1,7 +1,6 @@
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.Modules.Activity.Application.DTOs;
 using LifeLevel.Modules.Activity.Application.UseCases;
-using LifeLevel.Modules.Achievements.Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +11,6 @@ namespace LifeLevel.Api.Controllers;
 [Authorize]
 public class ActivityController(
     ActivityService activityService,
-    AchievementService achievementService,
     IUserContext userContext) : ControllerBase
 {
     [HttpPost("log")]
@@ -22,7 +20,6 @@ public class ActivityController(
         try
         {
             var result = await activityService.LogActivityAsync(userId, req);
-            await achievementService.CheckUnlocksAsync(userId, ct);
             return Ok(result);
         }
         catch (InvalidOperationException ex)

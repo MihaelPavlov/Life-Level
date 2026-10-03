@@ -68,10 +68,9 @@ class _GearItemDetailDialogState extends State<_GearItemDetailDialog> {
         container.read(inventoryProvider.notifier).refresh(),
         container.read(characterProfileProvider.notifier).refresh(),
       ]);
-    } catch (_) {
+    } catch (error) {
       if (toastContext.mounted) {
-        AppToast.error(toastContext, 'Something went wrong',
-            detail: 'Please try again.');
+        AppToast.error(toastContext, _friendlyError(error));
       }
     }
   }

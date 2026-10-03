@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/item_models.dart';
 import '../services/items_service.dart';
 
-final _service = ItemsService();
+final itemsServiceProvider = Provider<ItemsService>((_) => ItemsService());
 
 final equipmentProvider =
     AsyncNotifierProvider<EquipmentNotifier, CharacterEquipmentResponse>(
@@ -11,22 +11,24 @@ final equipmentProvider =
 
 class EquipmentNotifier extends AsyncNotifier<CharacterEquipmentResponse> {
   @override
-  Future<CharacterEquipmentResponse> build() => _service.getEquipment();
+  Future<CharacterEquipmentResponse> build() =>
+      ref.read(itemsServiceProvider).getEquipment();
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_service.getEquipment);
+    try {
+      state = AsyncData(await ref.read(itemsServiceProvider).getEquipment());
+    } catch (_) {
+      // Keep the last valid outfit while a passive refresh is unavailable.
+    }
   }
 
   Future<void> unequip(String slotType) async {
-    state = await AsyncValue.guard(() => _service.unequip(slotType));
+    state = AsyncData(await ref.read(itemsServiceProvider).unequip(slotType));
   }
 
   Future<void> equip(String characterItemId, String slotType) async {
-    state = await AsyncValue.guard(
-      () => _service.equipItem(
-          characterItemId: characterItemId, slotType: slotType),
-    );
+    state = AsyncData(await ref.read(itemsServiceProvider).equipItem(
+        characterItemId: characterItemId, slotType: slotType));
   }
 }
 
@@ -37,10 +39,14 @@ final inventoryProvider =
 
 class InventoryNotifier extends AsyncNotifier<InventoryResponse> {
   @override
-  Future<InventoryResponse> build() => _service.getInventory();
+  Future<InventoryResponse> build() =>
+      ref.read(itemsServiceProvider).getInventory();
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_service.getInventory);
+    try {
+      state = AsyncData(await ref.read(itemsServiceProvider).getInventory());
+    } catch (_) {
+      // Preserve the visible inventory until the next successful refresh.
+    }
   }
 }

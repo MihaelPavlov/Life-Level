@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/services/seen_state_client.dart';
 
 import '../../achievements/providers/achievements_provider.dart';
 import '../../boss/providers/boss_provider.dart';
-import '../../character/providers/character_provider.dart';
 import '../../leaderboard/providers/leaderboard_provider.dart';
 import '../../map/providers/region_chest_provider.dart';
 import '../../rewards/providers/rewards_provider.dart';
@@ -53,8 +53,6 @@ final adventureHubSeenStoreProvider =
 
 final adventureHubSignalsProvider =
     FutureProvider<AdventureHubSignals>((ref) async {
-  final profile = ref.watch(characterProfileProvider).valueOrNull;
-  final username = profile?.username;
   final talents = ref.watch(talentsProvider).valueOrNull;
   final season = ref.watch(seasonProvider).valueOrNull;
   final titles = ref.watch(titlesProvider).valueOrNull;
@@ -66,27 +64,10 @@ final adventureHubSignalsProvider =
   final leaderboardChest = ref.watch(leaderboardChestProvider).valueOrNull;
   final regionChests = ref.watch(regionChestsProvider).valueOrNull;
 
-  final store = ref.watch(adventureHubSeenStoreProvider);
-  final earnedTitleIds =
-      titles?.earnedTitles.map((title) => title.id).toSet() ?? const <String>{};
-  final unlockedAchievementIds = achievements
-          ?.where((achievement) => achievement.isUnlocked)
-          .map((achievement) => achievement.id)
-          .toSet() ??
-      const <String>{};
-
-  final titlesUpdated = username == null
-      ? false
-      : await store.hasNewEarnedTitles(
-          username: username,
-          earnedTitleIds: earnedTitleIds,
-        );
-  final achievementsUpdated = username == null
-      ? false
-      : await store.hasUnseenAchievements(
-          username: username,
-          unlockedAchievementIds: unlockedAchievementIds,
-        );
+  final titlesUpdated = titles?.earnedTitles.any((title) => title.seenAt == null) ?? false;
+  final achievementsUpdated = achievements?.any(
+        (achievement) => achievement.isUnlocked && achievement.seenAt == null,
+      ) ?? false;
 
   return AdventureHubSignals(
     rewards: rewards?.hasClaimableReward ?? false,
@@ -115,6 +96,17 @@ bool achievementHubNeedsAttention({
 
 class AdventureHubSeenStore {
   static const _prefix = 'home_adventure_hub';
+
+  Future<void> migrateOnce(String username) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_prefix.$username.server_seen_migrated';
+    if (prefs.getBool(key) == true) return;
+    final client = SeenStateClient();
+    await client.markTitles(prefs.getStringList(_titlesKey(username)) ?? const []);
+    await client.markAchievements(
+        prefs.getStringList(_achievementsKey(username)) ?? const []);
+    await prefs.setBool(key, true);
+  }
 
   Future<bool> hasNewEarnedTitles({
     required String username,

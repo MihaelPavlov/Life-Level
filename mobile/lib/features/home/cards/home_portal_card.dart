@@ -178,6 +178,20 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
       // The fight leads, but the route stays one tap away.
       final world = ref.watch(worldProgressProvider).valueOrNull;
       final region = ref.watch(currentRegionDetailProvider).valueOrNull;
+      // A crossroads sitting underneath the raid doesn't get erased — it
+      // gets its own tab, and the Map button follows whichever one is open.
+      if (world != null && hasPendingCrossroads(world)) {
+        return _DualFocusPortal(
+          boss: activeBoss,
+          zone: pickPortalZone(world)!,
+          world: world,
+          region: region,
+          onSync: onSync,
+          bossJourney: _BossJourney.from(world, region),
+          onPickBranch: _pickCrossroadsBranch,
+          busyBranchId: _pickingBranchId,
+        );
+      }
       return _BossRaidPortal(
         boss: activeBoss,
         onSync: onSync,
@@ -515,6 +529,135 @@ class _BossRaidPortal extends StatelessWidget {
         motion: PortalMotion.full,
         heartbeat: true,
         signature: _Sig.raidEmber,
+      ),
+    );
+  }
+}
+
+/// Shown instead of [_BossRaidPortal] when the player is also standing on an
+/// unresolved crossroads. A small tab row picks which of the two the card
+/// (and the Map button, via [journeyFocusProvider]) currently shows; neither
+/// [_BossRaidPortal] nor [_CrossroadsPortal] is touched to get there.
+class _DualFocusPortal extends ConsumerWidget {
+  final BossListItem boss;
+  final WorldZoneModel zone;
+  final WorldFullData world;
+  final RegionDetail? region;
+  final VoidCallback? onSync;
+  final _BossJourney? bossJourney;
+  final Future<void> Function(WorldZoneModel branch)? onPickBranch;
+  final String? busyBranchId;
+
+  const _DualFocusPortal({
+    required this.boss,
+    required this.zone,
+    required this.world,
+    required this.region,
+    required this.onSync,
+    required this.bossJourney,
+    this.onPickBranch,
+    this.busyBranchId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final focus = ref.watch(journeyFocusProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FocusTabs(
+          focus: focus,
+          onChange: (f) => ref.read(journeyFocusProvider.notifier).state = f,
+        ),
+        const SizedBox(height: 10),
+        if (focus == JourneyFocus.boss)
+          _BossRaidPortal(boss: boss, onSync: onSync, journey: bossJourney)
+        else
+          _CrossroadsPortal(
+            zone: zone,
+            world: world,
+            region: region,
+            regionChip: _buildRegionChip(region),
+            regionId: world.userProgress.currentRegionId ?? region?.id,
+            onPickBranch: onPickBranch,
+            busyBranchId: busyBranchId,
+            onSync: onSync,
+          ),
+      ],
+    );
+  }
+}
+
+/// "⚔️ Boss" / "🔀 Crossroads" — switches [_DualFocusPortal] and, through
+/// [journeyFocusProvider], the Map button too.
+class _FocusTabs extends StatelessWidget {
+  final JourneyFocus focus;
+  final ValueChanged<JourneyFocus> onChange;
+  const _FocusTabs({required this.focus, required this.onChange});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D131B),
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _tab(
+              context,
+              label: '⚔️ Boss',
+              value: JourneyFocus.boss,
+              activeColor: AppColors.red,
+            ),
+          ),
+          Expanded(
+            child: _tab(
+              context,
+              label: '🔀 Crossroads',
+              value: JourneyFocus.crossroads,
+              activeColor: AppColors.blue,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tab(
+    BuildContext context, {
+    required String label,
+    required JourneyFocus value,
+    required Color activeColor,
+  }) {
+    final active = focus == value;
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      child: AppPressable(
+        haptic: AppHaptic.selection,
+        onTap: () => onChange(value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          height: 32,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active ? AppColors.surfaceElevated : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: active ? activeColor : AppColors.textSecondary,
+            ),
+          ),
+        ),
       ),
     );
   }

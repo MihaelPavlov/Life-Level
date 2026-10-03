@@ -158,8 +158,17 @@ public class StreakService(
         Guid userId,
         CancellationToken ct = default)
     {
-        var streak = await GetOrCreateAsync(userId, ct);
-        if (streak.PendingRewardCoins <= 0)
+        // Lock the streak until the wallet credit and claim state commit. Two
+        // requests from different devices must not read the same pending coins.
+        await using var transaction = db.Database.IsRelational()
+            ? await db.Database.BeginTransactionAsync(ct)
+            : null;
+        var streak = db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL"
+            ? (await db.Set<StreakEntity>()
+                .FromSqlInterpolated($"SELECT * FROM \"Streaks\" WHERE \"UserId\" = {userId} FOR UPDATE")
+                .ToListAsync(ct)).SingleOrDefault()
+            : await db.Set<StreakEntity>().FirstOrDefaultAsync(s => s.UserId == userId, ct);
+        if (streak is null || streak.PendingRewardCoins <= 0)
         {
             return new ClaimStreakRewardResult
             {
@@ -171,6 +180,8 @@ public class StreakService(
         var coins = streak.PendingRewardCoins;
         streak.PendingRewardCoins = 0;
         await rewardCurrency.AddCoinsAsync(userId, coins, ct);
+        await db.SaveChangesAsync(ct);
+        if (transaction is not null) await transaction.CommitAsync(ct);
 
         return new ClaimStreakRewardResult
         {

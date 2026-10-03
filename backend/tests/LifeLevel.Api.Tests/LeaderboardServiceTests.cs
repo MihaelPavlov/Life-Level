@@ -1,6 +1,7 @@
 using LifeLevel.Api.Infrastructure.Persistence;
 using LifeLevel.Modules.Leaderboard.Application.UseCases;
 using LifeLevel.Modules.Leaderboard.Domain;
+using LifeLevel.Modules.Leaderboard.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,6 +72,25 @@ public class LeaderboardServiceTests
         var (coins, gems) = LeaderboardRules.PassReward(2);
         Assert.Equal(coins * 2, chest.Coins);
         Assert.Equal(gems * 2, chest.Gems);
+    }
+
+    [Fact]
+    public async Task ReadingAnUnchangedChest_DoesNotRewriteTheWatch()
+    {
+        await using var db = CreateDb();
+        var service = new LeaderboardService(db,
+            new FakeBoard(("Vex", Vex, 700), ("Me", Me, 500)), new RecordingCurrency());
+
+        await service.GetChestStatusAsync(Me);
+        var first = await db.Set<LeaderboardWatch>().AsNoTracking()
+            .SingleAsync(w => w.UserId == Me);
+        db.ChangeTracker.Clear();
+
+        await service.GetChestStatusAsync(Me);
+        var second = await db.Set<LeaderboardWatch>().AsNoTracking()
+            .SingleAsync(w => w.UserId == Me);
+
+        Assert.Equal(first.UpdatedAtUtc, second.UpdatedAtUtc);
     }
 
     [Fact]

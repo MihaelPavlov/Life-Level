@@ -162,7 +162,7 @@ class BossScreenState extends ConsumerState<BossScreen> {
       await Future<void>.delayed(const Duration(milliseconds: 950));
     }
     if (!mounted) return;
-    BossReplayFinder.markSeen(r);
+    await BossReplayFinder.markSeen(r);
     setState(() {
       _badge = null;
       _shownBossHp = null;

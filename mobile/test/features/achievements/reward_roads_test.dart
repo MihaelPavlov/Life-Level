@@ -195,9 +195,9 @@ void main() {
     expect(find.text('CONTINUE'), findsOneWidget);
     expect(find.text('Claim 1 to open the Wayfarer Chest'), findsOneWidget);
     expect(find.text('Running'), findsOneWidget);
-    // Claimable achievements stay in the action surfaces; the road tile is
-    // reserved for a genuinely openable chest.
+    // The road tile distinguishes an achievement reward from an openable chest.
     expect(find.text('1 ready'), findsOneWidget);
+    expect(find.text('1 to claim'), findsOneWidget);
     expect(find.text('Chest ready'), findsNothing);
   });
 

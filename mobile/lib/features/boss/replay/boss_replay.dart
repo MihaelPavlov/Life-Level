@@ -6,11 +6,13 @@ import '../models/boss_damage_history.dart';
 import '../models/boss_list_item.dart';
 import '../services/boss_page_service.dart';
 import 'boss_seen_store.dart';
+import '../../../core/services/seen_state_client.dart';
 
 /// One exchange to replay: the player's workout hits the boss, then the
 /// boss hits back (unless the hit finished it or the player was recovering).
 @immutable
 class BossReplayTurn {
+  final String? turnId;
   final String activityType;
   final int dealt;
   final int taken;
@@ -28,6 +30,7 @@ class BossReplayTurn {
   final int count;
 
   const BossReplayTurn({
+    this.turnId,
     required this.activityType,
     required this.dealt,
     required this.taken,
@@ -42,6 +45,7 @@ class BossReplayTurn {
   });
 
   factory BossReplayTurn.fromHistory(BossDamageHistoryItem h) => BossReplayTurn(
+        turnId: h.turnId,
         activityType: h.activityType,
         dealt: h.damage,
         taken: h.damageTaken,
@@ -122,7 +126,10 @@ class BossReplayFinder {
     BossSeenStore? store,
     DateTime? now,
   }) async {
-    final seenStore = store ?? BossSeenStore.instance;
+  final seenStore = store ?? BossSeenStore.instance;
+    final serverCursors = store == null
+        ? await SeenStateClient().bossCursors()
+        : const <String, DateTime>{};
     final clock = now ?? DateTime.now();
     final bosses = await service.getAllBosses();
     for (final boss in bosses) {
@@ -133,7 +140,29 @@ class BossReplayFinder {
       if (!boss.isActive && !recentKill) continue;
 
       final history = await service.getDamageHistory(boss.id);
-      final replay = build(boss, history, seenStore[boss.id], clock);
+      BossSeenRecord? authoritative;
+      final serverAt = serverCursors[boss.id];
+      if (serverAt != null) {
+        final turn = history.where((h) => h.turnId != null &&
+            h.loggedAt.toUtc().isAtSameMomentAs(serverAt)).firstOrNull;
+        if (turn != null) {
+          authoritative = BossSeenRecord(turnAt: turn.loggedAt,
+              bossHp: turn.bossHpAfter, youHp: turn.playerHpAfter);
+        }
+      } else if (store == null) {
+        final old = seenStore[boss.id];
+        final matching = old == null ? null : history.where((h) =>
+            h.turnId != null && h.loggedAt.isAtSameMomentAs(old.turnAt) &&
+            h.bossHpAfter == old.bossHp && h.playerHpAfter == old.youHp).firstOrNull;
+        if (matching != null) {
+          await SeenStateClient().markBossTurn(boss.id, matching.turnId!);
+          authoritative = old;
+        }
+      } else {
+        authoritative = seenStore[boss.id];
+      }
+      if (authoritative != null) seenStore.put(boss.id, authoritative);
+      final replay = build(boss, history, authoritative, clock);
       if (replay != null) return replay;
       // Nothing new: show the live values.
       final rec = seenStore[boss.id];
@@ -189,7 +218,7 @@ class BossReplayFinder {
   }
 
   /// Everything in [replay] has been shown.
-  static void markSeen(BossReplay replay, {BossSeenStore? store}) {
+  static Future<void> markSeen(BossReplay replay, {BossSeenStore? store}) async {
     (store ?? BossSeenStore.instance).put(
       replay.boss.id,
       BossSeenRecord(
@@ -198,5 +227,13 @@ class BossReplayFinder {
         youHp: replay.last.youHpAfter,
       ),
     );
+    final turnId = replay.last.turnId;
+    if (store == null && turnId != null) {
+      try {
+        await SeenStateClient().markBossTurn(replay.boss.id, turnId);
+      } catch (_) {
+        // The next reconciliation retries from server-authoritative history.
+      }
+    }
   }
 }

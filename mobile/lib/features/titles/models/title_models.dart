@@ -5,6 +5,7 @@ class TitleDto {
   final String unlockCondition;
   final bool isEarned;
   final bool isEquipped;
+  final DateTime? seenAt;
 
   const TitleDto({
     required this.id,
@@ -13,6 +14,7 @@ class TitleDto {
     required this.unlockCondition,
     required this.isEarned,
     required this.isEquipped,
+    this.seenAt,
   });
 
   factory TitleDto.fromJson(Map<String, dynamic> json) => TitleDto(
@@ -22,6 +24,9 @@ class TitleDto {
         unlockCondition: json['unlockCondition'] as String,
         isEarned: json['isEarned'] as bool,
         isEquipped: json['isEquipped'] as bool,
+        seenAt: json['seenAt'] == null
+            ? null
+            : DateTime.tryParse(json['seenAt'] as String),
       );
 
   TitleDto copyWith({
@@ -31,6 +36,7 @@ class TitleDto {
     String? unlockCondition,
     bool? isEarned,
     bool? isEquipped,
+    DateTime? seenAt,
   }) =>
       TitleDto(
         id: id ?? this.id,
@@ -39,6 +45,7 @@ class TitleDto {
         unlockCondition: unlockCondition ?? this.unlockCondition,
         isEarned: isEarned ?? this.isEarned,
         isEquipped: isEquipped ?? this.isEquipped,
+        seenAt: seenAt ?? this.seenAt,
       );
 }
 

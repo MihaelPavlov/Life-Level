@@ -6,7 +6,8 @@ public record TitleDto(
     string Name,
     string UnlockCondition,
     bool IsEarned,
-    bool IsEquipped);
+    bool IsEquipped,
+    DateTime? SeenAt = null);
 
 public record RankProgressionDto(
     string CurrentRank,

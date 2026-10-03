@@ -769,6 +769,41 @@ public class WorldZoneServiceTests
         Assert.Equal(setup.BranchA.Id, updated.DestinationZoneId);
     }
 
+    [Fact]
+    public async Task SetDestination_BeyondUnchosenFork_RequiresBranchChoice()
+    {
+        var db = CreateDb(nameof(SetDestination_BeyondUnchosenFork_RequiresBranchChoice));
+        var setup = await SeedForkAsync(db, "fork_rejoin_requires_choice");
+        // Even a mistakenly authored shortcut must not skip the branch.
+        db.WorldZoneEdges.Add(new WorldZoneEdge
+        {
+            Id = Guid.NewGuid(),
+            FromZoneId = setup.Crossroads.Id,
+            ToZoneId = setup.Rejoin.Id,
+            DistanceKm = 1,
+            IsBidirectional = false,
+        });
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.SetDestinationAsync(setup.UserId, setup.Rejoin.Id));
+
+        Assert.Empty(await db.UserPathChoices.Where(c => c.UserId == setup.UserId).ToListAsync());
+        Assert.Null((await db.UserWorldProgresses.FirstAsync(p => p.UserId == setup.UserId)).DestinationZoneId);
+
+        await service.SetDestinationAsync(setup.UserId, setup.BranchA.Id);
+        await service.SetDestinationAsync(setup.UserId, setup.Rejoin.Id);
+
+        var progress = await db.UserWorldProgresses.FirstAsync(p => p.UserId == setup.UserId);
+        Assert.Equal(setup.Rejoin.Id, progress.DestinationZoneId);
+        var chosenEdgeId = await db.WorldZoneEdges
+            .Where(e => e.FromZoneId == setup.Crossroads.Id && e.ToZoneId == setup.BranchA.Id)
+            .Select(e => e.Id)
+            .SingleAsync();
+        Assert.Equal(chosenEdgeId, progress.CurrentEdgeId);
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Test 13: Attempting to pick the sibling after a choice exists throws
     // PathAlreadyChosenException.

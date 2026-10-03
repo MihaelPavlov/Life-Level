@@ -93,7 +93,7 @@ void main() {
 
     await tester.pump();
     expect(find.byType(GearPaperDoll), findsOneWidget);
-    expect(find.text('12,345'), findsOneWidget);
+    expect(find.text('12.3K'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('home-profile-button')));
     await tester.pump();

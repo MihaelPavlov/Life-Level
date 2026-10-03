@@ -39,9 +39,11 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddScoped<StateChangeTransactionInterceptor>();
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .AddInterceptors(sp.GetRequiredService<StateChangeTransactionInterceptor>())
         .ConfigureWarnings(warnings =>
             warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
@@ -87,7 +89,31 @@ builder.Services.AddControllers(options => options.Filters.Add<ModeRuleException
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
-builder.Services.AddSignalR();
+var signalR = builder.Services.AddSignalR();
+var redisUrl = builder.Configuration["REDIS_URL"];
+if (!string.IsNullOrWhiteSpace(redisUrl))
+{
+    var uri = new Uri(redisUrl);
+    signalR.AddStackExchangeRedis(options =>
+    {
+        options.Configuration.EndPoints.Add(uri.Host, uri.Port > 0 ? uri.Port : 6379);
+        options.Configuration.Ssl = uri.Scheme.Equals("rediss", StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+        {
+            var credentials = uri.UserInfo.Split(':', 2);
+            if (credentials.Length == 2)
+            {
+                options.Configuration.User = Uri.UnescapeDataString(credentials[0]);
+                options.Configuration.Password = Uri.UnescapeDataString(credentials[1]);
+            }
+        }
+        options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal(
+            builder.Configuration["SignalR:ChannelPrefix"] ?? "lifelevel");
+    });
+}
+builder.Services.AddScoped<StateChangePublisher>();
+builder.Services.AddScoped<IUserStateChangePort>(sp => sp.GetRequiredService<StateChangePublisher>());
+builder.Services.AddScoped<SeenStateService>();
 
 // Shared kernel (registers IEventPublisher)
 builder.Services.AddSharedKernel();
@@ -140,6 +166,10 @@ builder.Services.AddScoped<IActivityHistoryReadPort, TaskActivityHistoryReadAdap
 
 // Achievements module
 builder.Services.AddAchievementsModule();
+builder.Services.AddScoped<IEventHandler<ActivityLoggedEvent>, AchievementProgressHandler>();
+builder.Services.AddScoped<IEventHandler<BossDefeatedEvent>, AchievementProgressHandler>();
+builder.Services.AddScoped<IEventHandler<LifeLevel.Modules.Streak.Domain.Events.StreakBrokenEvent>, AchievementProgressHandler>();
+builder.Services.AddScoped<IEventHandler<LifeLevel.Modules.Quest.Domain.Events.QuestCompletedEvent>, QuestTitleGrantHandler>();
 
 // Notifications module (FCM push, device tokens, cadence policy)
 builder.Services.AddNotificationsModule();
@@ -183,6 +213,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 
 // Background jobs
+builder.Services.AddSingleton<PostgresJobLock>();
 builder.Services.AddHostedService<DailyResetJob>();
 builder.Services.AddHostedService<GuildRaidExpiryJob>();
 builder.Services.AddHostedService<SeasonRolloverJob>();
@@ -192,7 +223,8 @@ builder.Services.AddHostedService<ModesExpiryJob>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+        policy.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader()
+            .WithExposedHeaders(StateChangePublisher.Header).AllowCredentials());
 });
 
 // Swagger
@@ -262,8 +294,9 @@ app.MapGet("/admin-map", (IWebHostEnvironment env) =>
         : Results.NotFound("admin-map.html not found");
 });
 
-using (var scope = app.Services.CreateScope())
+await app.Services.GetRequiredService<PostgresJobLock>().RunExclusiveAsync(81000, async () =>
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     try
     {
@@ -299,6 +332,6 @@ using (var scope = app.Services.CreateScope())
 
     var talentSeeder = scope.ServiceProvider.GetRequiredService<TalentSeeder>();
     await talentSeeder.SeedAsync();
-}
+}, CancellationToken.None);
 
 app.Run();

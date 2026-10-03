@@ -28,4 +28,6 @@ public class UserBossState
     public int CounterattackDamageSnapshot { get; set; }
     public int CombatVersion { get; set; } = 1;
     public ICollection<BossCombatTurn> CombatTurns { get; set; } = [];
+    public Guid? LastSeenTurnId { get; set; }
+    public DateTime? LastSeenTurnAt { get; set; }
 }

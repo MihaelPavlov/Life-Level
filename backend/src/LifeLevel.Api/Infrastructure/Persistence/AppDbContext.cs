@@ -42,8 +42,12 @@ using CrossroadsEntity = LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Cr
 
 namespace LifeLevel.Api.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public partial class AppDbContext(
+    DbContextOptions<AppDbContext> options,
+    LifeLevel.Api.Application.Realtime.StateChangePublisher? stateChanges = null,
+    ILogger<AppDbContext>? stateChangeLogger = null) : DbContext(options)
 {
+    public DbSet<MaintenanceRun> MaintenanceRuns => Set<MaintenanceRun>();
     // Identity
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRingItem> UserRingItems => Set<UserRingItem>();
@@ -165,6 +169,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<MaintenanceRun>(entity =>
+        {
+            entity.HasKey(x => new { x.Name, x.CompletedForUtcDate });
+            entity.Property(x => x.Name).HasMaxLength(80);
+        });
         // ── Per-module EF configurations ──────────────────────────────────────────
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CharacterModule).Assembly);

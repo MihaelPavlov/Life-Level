@@ -199,7 +199,8 @@ public class WorldZoneService(
         // active edge. As the user logs distance, `AddDistanceAsync`
         // auto-advances through intermediate edges until arrival.
         var firstEdge = await FindNextEdgeAsync(
-            progress.CurrentZoneId, destinationZoneId, userId, CancellationToken.None);
+            progress.CurrentZoneId, destinationZoneId, userId, CancellationToken.None,
+            destinationZone.BranchOfId.HasValue ? destinationZoneId : null);
         if (firstEdge == null)
             throw new InvalidOperationException(
                 "No route available to that destination. Progress further or pick a different branch.");
@@ -252,31 +253,36 @@ public class WorldZoneService(
     /// exists. The edges used to compute the traversal may be non-adjacent
     /// to the user's current zone — this is the whole point of the fix.
     private async Task<WorldZoneEdgeEntity?> FindNextEdgeAsync(
-        Guid fromZoneId, Guid toZoneId, Guid userId, CancellationToken ct)
+        Guid fromZoneId, Guid toZoneId, Guid userId, CancellationToken ct,
+        Guid? branchBeingChosen = null)
     {
         if (fromZoneId == toZoneId) return null;
 
         var edges = await db.Set<WorldZoneEdgeEntity>().ToListAsync(ct);
 
-        // Zones that are permanently locked for this user because the user
-        // chose the sibling branch at the parent crossroads. BFS should
-        // never traverse through or into those zones.
+        // A route cannot pass through an unchosen fork. Selecting a branch at
+        // the crossroads is the only operation that may open one of its exits.
         var choices = await db.Set<UserPathChoice>()
             .Where(c => c.UserId == userId)
             .ToListAsync(ct);
+        var branchesByCrossroads = await db.Set<WorldZoneEntity>()
+            .Where(z => z.BranchOfId != null)
+            .Select(z => new { z.Id, CrossroadsId = z.BranchOfId!.Value })
+            .ToListAsync(ct);
+        var chosenByCrossroads = choices.ToDictionary(c => c.CrossroadsZoneId, c => c.ChosenBranchZoneId);
+        var crossroadsWithBranches = branchesByCrossroads
+            .Select(b => b.CrossroadsId)
+            .ToHashSet();
         var blockedZoneIds = new HashSet<Guid>();
-        if (choices.Count > 0)
+        foreach (var branch in branchesByCrossroads)
         {
-            var branchesByCrossroads = await db.Set<WorldZoneEntity>()
-                .Where(z => z.BranchOfId != null)
-                .Select(z => new { z.Id, CrossroadsId = z.BranchOfId!.Value })
-                .ToListAsync(ct);
-            foreach (var choice in choices)
+            if (chosenByCrossroads.TryGetValue(branch.CrossroadsId, out var chosenId))
             {
-                var siblings = branchesByCrossroads
-                    .Where(b => b.CrossroadsId == choice.CrossroadsZoneId &&
-                                b.Id != choice.ChosenBranchZoneId);
-                foreach (var s in siblings) blockedZoneIds.Add(s.Id);
+                if (branch.Id != chosenId) blockedZoneIds.Add(branch.Id);
+            }
+            else if (branch.Id != branchBeingChosen || fromZoneId != branch.CrossroadsId)
+            {
+                blockedZoneIds.Add(branch.Id);
             }
         }
 
@@ -285,6 +291,16 @@ public class WorldZoneService(
         void AddEdge(Guid a, Guid b, WorldZoneEdgeEntity e)
         {
             if (blockedZoneIds.Contains(a) || blockedZoneIds.Contains(b)) return;
+            // A misconfigured direct edge out of a fork must not bypass the
+            // choice either. The reverse side of an incoming edge remains
+            // usable for backtracking.
+            if (crossroadsWithBranches.Contains(a) && e.FromZoneId == a)
+            {
+                var selectedExit = chosenByCrossroads.GetValueOrDefault(a);
+                if (selectedExit == Guid.Empty && fromZoneId == a)
+                    selectedExit = branchBeingChosen ?? Guid.Empty;
+                if (b != selectedExit) return;
+            }
             if (!adj.TryGetValue(a, out var list)) adj[a] = list = new();
             list.Add((b, e));
         }

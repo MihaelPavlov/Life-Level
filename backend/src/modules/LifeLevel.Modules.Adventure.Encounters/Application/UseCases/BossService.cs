@@ -41,7 +41,8 @@ public class BossService(
             .ToDictionaryAsync(s => s.BossId);
 
         bosses = bosses
-            .Where(b => !b.TrailEncounterTemplateId.HasValue || userStates.ContainsKey(b.Id))
+            .Where(b => (!b.WorldZoneId.HasValue && !b.TrailEncounterTemplateId.HasValue)
+                || userStates.ContainsKey(b.Id))
             .ToList();
 
         var blockerTimerChanged = false;
@@ -76,8 +77,8 @@ public class BossService(
             // World-zone bosses: canFight is governed by WorldZone state, which
             // the bridge already enforces by only spawning the Boss row on
             // arrival. Once spawned, the user is always eligible to fight.
-            var canFight = boss.WorldZoneId.HasValue
-                || boss.TrailEncounterTemplateId.HasValue
+            var canFight = ((boss.WorldZoneId.HasValue || boss.TrailEncounterTemplateId.HasValue)
+                    && state != null)
                 || boss.IsMini
                 || (boss.NodeId.HasValue && currentNodeId == boss.NodeId.Value);
 
@@ -153,6 +154,9 @@ public class BossService(
 
         var existing = await db.Set<UserBossState>()
             .FirstOrDefaultAsync(s => s.UserId == userId && s.BossId == bossId);
+
+        if ((boss.WorldZoneId.HasValue || boss.TrailEncounterTemplateId.HasValue) && existing == null)
+            throw new InvalidOperationException("Encounter is not available for this player.");
 
         if (existing != null)
         {

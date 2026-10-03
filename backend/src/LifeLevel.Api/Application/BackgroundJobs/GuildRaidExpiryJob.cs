@@ -4,6 +4,7 @@ namespace LifeLevel.Api.Application.BackgroundJobs;
 
 public class GuildRaidExpiryJob(
     IServiceScopeFactory scopeFactory,
+    PostgresJobLock jobLock,
     ILogger<GuildRaidExpiryJob> logger) : BackgroundService
 {
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(5);
@@ -16,9 +17,13 @@ public class GuildRaidExpiryJob(
         {
             try
             {
-                using var scope = scopeFactory.CreateScope();
-                var maintenance = scope.ServiceProvider.GetRequiredService<IGuildRaidMaintenancePort>();
-                var expired = await maintenance.ExpireOverdueRaidsAsync(stoppingToken);
+                var expired = 0;
+                await jobLock.TryRunAsync(81002, async () =>
+                {
+                    using var scope = scopeFactory.CreateScope();
+                    var maintenance = scope.ServiceProvider.GetRequiredService<IGuildRaidMaintenancePort>();
+                    expired = await maintenance.ExpireOverdueRaidsAsync(stoppingToken);
+                }, stoppingToken);
                 if (expired > 0)
                 {
                     logger.LogInformation("Expired {Count} overdue guild raids.", expired);

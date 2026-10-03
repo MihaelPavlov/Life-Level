@@ -23,12 +23,14 @@ public class ChestItemRewardPortAdapter(
         var characterId = await characterIds.GetCharacterIdAsync(userId, ct);
         if (characterId is null) return null;
 
-        var owned = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
-            .Select(x => x.ItemId).ToHashSetAsync(ct);
+        var ownedItems = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
+            .Select(x => new { x.ItemId, x.Item.Name }).ToListAsync(ct);
+        var ownedIds = ownedItems.Select(x => x.ItemId).ToHashSet();
+        var ownedNames = ownedItems.Select(x => x.Name.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var candidates = await db.Set<Item>()
             .Where(x => ShopService.ChestPool.Contains(x.Id) && x.Rarity == wanted)
             .ToListAsync(ct);
-        candidates = candidates.Where(x => !owned.Contains(x.Id)).ToList();
+        candidates = candidates.Where(x => !ownedIds.Contains(x.Id) && !ownedNames.Contains(x.Name.Trim())).ToList();
         if (candidates.Count == 0) return null;
 
         var item = candidates[RandomNumberGenerator.GetInt32(candidates.Count)];

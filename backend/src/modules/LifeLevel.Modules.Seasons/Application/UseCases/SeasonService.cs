@@ -3,6 +3,8 @@ using LifeLevel.Modules.Seasons.Domain.Entities;
 using LifeLevel.Modules.Seasons.Domain.Enums;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
 
 namespace LifeLevel.Modules.Seasons.Application.UseCases;
 
@@ -167,6 +169,14 @@ public class SeasonService(
                 throw new UnauthorizedAccessException("Founder Pass required for this reward.");
         }
 
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await using var transactionScope = transaction;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({$"{userId}:{season.Id}:{tier}:{track}"}, 81006))", ct);
+
         var progress = await GetOrCreateProgressAsync(userId, season.Id, ct);
         if (tier > progress.CurrentTier)
             throw new InvalidOperationException("Tier not reached.");
@@ -235,6 +245,7 @@ public class SeasonService(
             WasAutoGranted = auto,
         });
         await db.SaveChangesAsync(ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
 
         return new SeasonClaimResult(tier, track.ToString(), reward.Label,
             xpAwarded, leveledUp, newLevel, grantedItem, grantedTitleKey);

@@ -14,8 +14,6 @@ final achievementsProvider =
 class AchievementsNotifier extends AsyncNotifier<List<AchievementDto>> {
   @override
   Future<List<AchievementDto>> build() async {
-    ref.watch(characterProfileProvider);
-    await _achievementsService.checkUnlocks();
     return _achievementsService.getAchievements();
   }
 

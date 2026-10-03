@@ -23,13 +23,17 @@ public class ItemGrantService(DbContext db, ICharacterIdReadPort characterIdRead
 
         // Idempotency must be checked before capacity. An already-owned item is
         // neither a new reward nor blocked just because the inventory is full.
-        var existing = await db.Set<CharacterItem>()
-            .FirstOrDefaultAsync(ci => ci.CharacterId == characterId && ci.ItemId == itemId, ct);
+        var owned = await db.Set<CharacterItem>()
+            .Where(ci => ci.CharacterId == characterId)
+            .Include(ci => ci.Item)
+            .ToListAsync(ct);
+        var existing = owned.FirstOrDefault(ci => ci.ItemId == itemId ||
+            string.Equals(ci.Item.Name.Trim(), item.Name.Trim(), StringComparison.OrdinalIgnoreCase));
         if (existing != null)
             return new GrantItemResult(existing, InventoryFull: false, WasNew: false);
 
         var maxSlots = await inventorySlotRead.GetMaxInventorySlotsAsync(userId, ct);
-        var currentCount = await db.Set<CharacterItem>().CountAsync(ci => ci.CharacterId == characterId, ct);
+        var currentCount = owned.Count;
         if (currentCount >= maxSlots)
             return new GrantItemResult(null, InventoryFull: true, WasNew: false);
 

@@ -25,10 +25,9 @@ public class TitleService(
             .FirstOrDefaultAsync(c => c.UserId == userId, ct)
             ?? throw new InvalidOperationException("Character not found.");
 
-        var earnedTitleIds = await db.Set<CharacterTitle>()
+        var earnedTitleRows = await db.Set<CharacterTitle>()
             .Where(ct2 => ct2.CharacterId == character.Id)
-            .Select(ct2 => ct2.TitleId)
-            .ToHashSetAsync(ct);
+            .ToDictionaryAsync(ct2 => ct2.TitleId, ct2 => ct2.SeenAt, ct);
 
         var allTitles = await db.Set<Title>()
             .OrderBy(t => t.SortOrder)
@@ -44,9 +43,10 @@ public class TitleService(
 
         foreach (var title in allTitles)
         {
-            var isEarned = earnedTitleIds.Contains(title.Id);
+            var isEarned = earnedTitleRows.ContainsKey(title.Id);
             var isEquipped = character.EquippedTitleId == title.Id;
-            var dto = new TitleDto(title.Id, title.Emoji, title.Name, title.UnlockCondition, isEarned, isEquipped);
+            var dto = new TitleDto(title.Id, title.Emoji, title.Name, title.UnlockCondition,
+                isEarned, isEquipped, earnedTitleRows.GetValueOrDefault(title.Id));
 
             if (isEarned)
                 earnedTitles.Add(dto);

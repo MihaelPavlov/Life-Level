@@ -8,6 +8,8 @@ import '../motion/app_motion.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../../features/character/services/character_service.dart';
 import '../session/invalidate_user_providers.dart';
+import '../session/invalidate_changed_areas.dart';
+import '../services/state_change_notifier.dart';
 import '../services/pending_welcome.dart';
 import '../services/oauth_code_guard.dart';
 import '../services/boss_defeated_notifier.dart';
@@ -27,6 +29,7 @@ import '../widgets/level_up_overlay.dart';
 import '../widgets/item_obtained_overlay.dart';
 import '../widgets/inventory_full_overlay.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/home/providers/adventure_hub_status_provider.dart';
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/rewards/rewards_screen.dart';
@@ -44,6 +47,8 @@ import '../../features/modes/modes_screen.dart';
 import '../../features/modes/burn_chain/burn_chain_provider.dart';
 import '../../features/modes/treasure_delve/delve_provider.dart';
 import '../../features/titles/titles_ranks_screen.dart';
+import '../../features/titles/providers/titles_provider.dart';
+import '../../features/achievements/providers/achievements_provider.dart';
 import '../../features/season/season_track_screen.dart';
 import '../../features/talents/talents_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
@@ -123,9 +128,10 @@ class _MainShellState extends ConsumerState<MainShell>
   /// Tabs in the IndexedStack. Map is not a tab: the Map button opens the
   /// journey card.
   static const _navIds = ['home', 'gear', 'profile', 'modes'];
-  Timer? _guildVictoryPollTimer;
-  Timer? _guildExpiryPollTimer;
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
+  late final StreamSubscription<Set<String>> _stateChangeSub;
+  Timer? _stateChangeDebounce;
+  final Set<String> _queuedAreas = {};
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
   late final StreamSubscription<String> _shellOverlaySub;
@@ -172,6 +178,25 @@ class _MainShellState extends ConsumerState<MainShell>
       _wasOffline = !isOnline;
     });
     _levelUpSub = LevelUpNotifier.stream.listen((_) => _checkPendingLevelUps());
+    _stateChangeSub = StateChangeNotifier.stream.listen((areas) {
+      _queuedAreas.addAll(areas);
+      _stateChangeDebounce?.cancel();
+      _stateChangeDebounce = Timer(const Duration(milliseconds: 350), () {
+        if (!mounted) return;
+        final changed = {..._queuedAreas};
+        _queuedAreas.clear();
+        invalidateChangedAreas(ref, changed);
+        if (changed.contains('levelUps')) _checkPendingLevelUps();
+        if (changed.contains('pendingWorkouts')) {
+          ref.read(pendingWorkoutsProvider.notifier).checkQuietly();
+        }
+        if (changed.contains('bosses')) unawaited(_maybePlayBossReplay());
+        if (changed.contains('guild')) {
+          _checkPendingGuildRaidVictories();
+          _checkPendingGuildRaidExpiries();
+        }
+      });
+    });
     _bossReplaySub =
         bossReplayRequests.listen((r) => unawaited(_maybePlayBossReplay(r)));
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -343,15 +368,8 @@ class _MainShellState extends ConsumerState<MainShell>
       unawaited(_startGuildRealtime());
       _checkPendingGuildRaidVictories();
       _checkPendingGuildRaidExpiries();
+      unawaited(_migrateSeenState());
     });
-    _guildVictoryPollTimer = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) => _checkPendingGuildRaidVictories(),
-    );
-    _guildExpiryPollTimer = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) => _checkPendingGuildRaidExpiries(),
-    );
   }
 
   void _handleDeepLink(Uri uri) {
@@ -518,6 +536,8 @@ class _MainShellState extends ConsumerState<MainShell>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _levelUpSub.cancel();
+    _stateChangeSub.cancel();
+    _stateChangeDebounce?.cancel();
     _bossReplaySub?.cancel();
     _itemObtainedSub.cancel();
     _dungeonFloorSub.cancel();
@@ -535,8 +555,6 @@ class _MainShellState extends ConsumerState<MainShell>
     _deepLinkNotifierSub.cancel();
     _notificationBannerSub.cancel();
     unawaited(_guildRealtime.stop());
-    _guildVictoryPollTimer?.cancel();
-    _guildExpiryPollTimer?.cancel();
     super.dispose();
   }
 
@@ -647,9 +665,11 @@ class _MainShellState extends ConsumerState<MainShell>
           // and will be retried in a later app session.
         }
       }
-      ref.invalidate(inventoryProvider);
-      ref.invalidate(characterProfileProvider);
-      if (pending.isNotEmpty) ref.read(unlocksProvider.notifier).refresh();
+      if (pending.isNotEmpty) {
+        ref.invalidate(inventoryProvider);
+        ref.invalidate(characterProfileProvider);
+        ref.read(unlocksProvider.notifier).refresh();
+      }
     } catch (_) {
       // Pending celebrations are durable on the server and retry on resume.
     } finally {
@@ -663,6 +683,18 @@ class _MainShellState extends ConsumerState<MainShell>
     await ref.read(pendingWorkoutsProvider.notifier).checkQuietly();
   }
 
+  Future<void> _migrateSeenState() async {
+    try {
+      final profile = await ref.read(characterProfileProvider.future);
+      await ref.read(adventureHubSeenStoreProvider).migrateOnce(profile.username);
+      if (!mounted) return;
+      ref.invalidate(titlesProvider);
+      ref.invalidate(achievementsProvider);
+    } catch (_) {
+      // Retry next launch if the server or profile is unavailable.
+    }
+  }
+
   void _invalidateAllProviders() {
     if (!mounted) return;
     invalidateUserScopedProviders(ref);
@@ -670,6 +702,15 @@ class _MainShellState extends ConsumerState<MainShell>
 
   Future<void> _startGuildRealtime() async {
     await _guildRealtime.start(
+      onReconnected: () {
+        if (!mounted) return;
+        _invalidateAllProviders();
+        ref.read(pendingWorkoutsProvider.notifier).checkQuietly();
+        _checkPendingLevelUps();
+        _checkPendingGuildRaidVictories();
+        _checkPendingGuildRaidExpiries();
+        unawaited(_maybePlayBossReplay());
+      },
       onStarted: (info) {
         if (!mounted) return;
         ref.invalidate(guildProvider);

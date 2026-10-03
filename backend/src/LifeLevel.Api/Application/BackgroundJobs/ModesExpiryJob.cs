@@ -2,7 +2,8 @@ using LifeLevel.Modules.Modes.Application.UseCases;
 
 namespace LifeLevel.Api.Application.BackgroundJobs;
 
-public class ModesExpiryJob(IServiceScopeFactory scopes, ILogger<ModesExpiryJob> logger) : BackgroundService
+public class ModesExpiryJob(IServiceScopeFactory scopes, PostgresJobLock jobLock,
+    ILogger<ModesExpiryJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -10,9 +11,12 @@ public class ModesExpiryJob(IServiceScopeFactory scopes, ILogger<ModesExpiryJob>
         {
             try
             {
-                using var scope = scopes.CreateScope();
-                await scope.ServiceProvider.GetRequiredService<ModesService>()
-                    .ReconcileExpiredAsync(stoppingToken);
+                await jobLock.TryRunAsync(81004, async () =>
+                {
+                    using var scope = scopes.CreateScope();
+                    await scope.ServiceProvider.GetRequiredService<ModesService>()
+                        .ReconcileExpiredAsync(stoppingToken);
+                }, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
             catch (Exception ex) { logger.LogError(ex, "Failed to reconcile expired mode runs."); }

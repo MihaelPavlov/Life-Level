@@ -24,9 +24,13 @@ class StreakNotifier extends AsyncNotifier<StreakData> {
   }
 
   Future<ClaimStreakRewardResult> claimReward() async {
-    final result = await ref.read(streakServiceProvider).claimReward();
-    await refresh();
-    return result;
+    try {
+      return await ref.read(streakServiceProvider).claimReward();
+    } finally {
+      // A second device may have claimed first. Refresh even when the API
+      // rejects this request so its stale Claim button disappears.
+      await refresh();
+    }
   }
 }
 

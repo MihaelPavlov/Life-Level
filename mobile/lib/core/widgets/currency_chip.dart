@@ -21,6 +21,9 @@ import 'reward_moment/reward_hud.dart';
 class CurrencyChip extends StatefulWidget {
   final String iconAsset;
   final String value;
+
+  /// Exact amount when [value] is abbreviated for display.
+  final int? numericValue;
   final bool showAdd;
   final VoidCallback? onTapAdd;
   final EdgeInsetsGeometry padding;
@@ -37,6 +40,7 @@ class CurrencyChip extends StatefulWidget {
     super.key,
     required this.iconAsset,
     required this.value,
+    this.numericValue,
     this.showAdd = true,
     this.onTapAdd,
     this.padding = const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
@@ -70,7 +74,8 @@ class _CurrencyChipState extends State<CurrencyChip>
   @override
   void didUpdateWidget(CurrencyChip old) {
     super.didUpdateWidget(old);
-    final a = _num(old.value), b = _num(widget.value);
+    final a = old.numericValue ?? _num(old.value);
+    final b = widget.numericValue ?? _num(widget.value);
     if (a == null || b == null || a == b) return;
     if (!AppMotion.isFull(context)) return;
     // Ignore the initial load (placeholder → real balance).

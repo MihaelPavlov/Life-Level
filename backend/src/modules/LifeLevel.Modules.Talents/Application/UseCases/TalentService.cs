@@ -5,7 +5,6 @@ using LifeLevel.Modules.Talents.Domain.Enums;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using System.Collections.Concurrent;
 using System.Data;
 
 namespace LifeLevel.Modules.Talents.Application.UseCases;
@@ -21,11 +20,10 @@ namespace LifeLevel.Modules.Talents.Application.UseCases;
 /// any of their ports here would create a DI cycle. Streak-shield grants (Shield Craft) are handed
 /// back to <c>TalentsController</c> to apply via <c>IStreakShieldPort</c>.
 /// </remarks>
-public class TalentService(DbContext db)
+public class TalentService(DbContext db, IUserStateChangePort? stateChanges = null)
     : ITalentBonusReadPort, ITalentProfileReadPort, ITalentStreakAssistPort, IRewardCurrencyPort, IShopWalletPort
 {
     private static readonly Random Rng = Random.Shared;
-    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> DrawLocks = new();
 
     // ── ITalentBonusReadPort ───────────────────────────────────────────────
 
@@ -135,7 +133,17 @@ public class TalentService(DbContext db)
         var charges = (await GetBonusesAsync(userId, ct)).SecondWindChargesPerWeek;
         if (charges <= 0) return false;
 
+        IDbContextTransaction? transaction = null;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await using var transactionScope = transaction;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
+        if (transaction != null)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"UserTalentWallets\" WHERE \"UserId\" = {userId} FOR UPDATE", ct);
+            await db.Entry(wallet).ReloadAsync(ct);
+        }
         var weekKey = TalentEconomy.WeekKey(dayUtc);
         if (wallet.SecondWindWeekKey != weekKey)
         {
@@ -147,6 +155,7 @@ public class TalentService(DbContext db)
         wallet.SecondWindUsedThisWeek++;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
         return true;
     }
 
@@ -156,6 +165,17 @@ public class TalentService(DbContext db)
     {
         if (amount <= 0) return;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
+        if (db.Database.IsRelational())
+        {
+            await db.Set<UserTalentWallet>().Where(x => x.UserId == userId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.Coins, x => x.Coins + amount)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+            await db.Entry(wallet).ReloadAsync(ct);
+            if (stateChanges != null && db.Database.CurrentTransaction == null)
+                await stateChanges.PublishUserAsync(userId, ["talents", "character"], ct);
+            return;
+        }
         wallet.Coins += amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -165,6 +185,17 @@ public class TalentService(DbContext db)
     {
         if (amount <= 0) return;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
+        if (db.Database.IsRelational())
+        {
+            await db.Set<UserTalentWallet>().Where(x => x.UserId == userId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.Gems, x => x.Gems + amount)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+            await db.Entry(wallet).ReloadAsync(ct);
+            if (stateChanges != null && db.Database.CurrentTransaction == null)
+                await stateChanges.PublishUserAsync(userId, ["talents", "character"], ct);
+            return;
+        }
         wallet.Gems += amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -174,6 +205,17 @@ public class TalentService(DbContext db)
     {
         if (amount <= 0) return;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
+        if (db.Database.IsRelational())
+        {
+            await db.Set<UserTalentWallet>().Where(x => x.UserId == userId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.TalentCrystals, x => x.TalentCrystals + amount)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+            await db.Entry(wallet).ReloadAsync(ct);
+            if (stateChanges != null && db.Database.CurrentTransaction == null)
+                await stateChanges.PublishUserAsync(userId, ["talents", "character"], ct);
+            return;
+        }
         wallet.TalentCrystals += amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -203,7 +245,12 @@ public class TalentService(DbContext db)
                     .ExecuteUpdateAsync(setters => setters
                         .SetProperty(x => x.Gems, x => x.Gems - amount)
                         .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
-            if (updated == 1) await db.Entry(wallet).ReloadAsync(ct);
+            if (updated == 1)
+            {
+                await db.Entry(wallet).ReloadAsync(ct);
+                if (stateChanges != null && db.Database.CurrentTransaction == null)
+                    await stateChanges.PublishUserAsync(userId, ["talents", "character", "shop"], ct);
+            }
             return updated == 1;
         }
         if (currency == ShopCurrency.Coins)
@@ -266,26 +313,27 @@ public class TalentService(DbContext db)
     /// <exception cref="InvalidOperationException">Not enough currency.</exception>
     public async Task<TalentDrawResult> DrawAsync(Guid userId, CancellationToken ct = default)
     {
-        var drawLock = DrawLocks.GetOrAdd(userId, static _ => new SemaphoreSlim(1, 1));
-        await drawLock.WaitAsync(ct);
-        try
-        {
-            return await DrawInternalAsync(userId, ct);
-        }
-        finally
-        {
-            drawLock.Release();
-        }
+        return await DrawInternalAsync(userId, ct);
     }
 
     private async Task<TalentDrawResult> DrawInternalAsync(Guid userId, CancellationToken ct)
     {
         IDbContextTransaction? transaction = null;
         if (db.Database.IsRelational())
-            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
         await using var transactionScope = transaction;
 
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({userId.ToString()}, 81005))", ct);
+
         var wallet = await GetOrCreateWalletAsync(userId, ct);
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"UserTalentWallets\" WHERE \"UserId\" = {userId} FOR UPDATE", ct);
+            await db.Entry(wallet).ReloadAsync(ct);
+        }
         var catalog = await db.Set<Talent>().Where(t => t.IsActive).ToListAsync(ct);
         var catalogById = catalog.ToDictionary(t => t.Id);
         var owned = (await db.Set<UserTalent>().Where(x => x.UserId == userId).ToListAsync(ct))
@@ -381,6 +429,7 @@ public class TalentService(DbContext db)
 
         await db.SaveChangesAsync(ct);
         if (transaction != null) await transaction.CommitAsync(ct);
+        if (stateChanges != null) await stateChanges.PublishUserAsync(userId, ["talents", "character", "inventory"], ct);
 
         var walletView = new TalentWalletView(wallet.Coins, wallet.TalentCrystals,
             ownedIds.Count + (giveNew ? 1 : 0), catalog.Count);
@@ -402,6 +451,12 @@ public class TalentService(DbContext db)
         var wallet = await db.Set<UserTalentWallet>().FirstOrDefaultAsync(w => w.UserId == userId, ct);
         if (wallet != null) return wallet;
 
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO \"UserTalentWallets\" (\"Id\", \"UserId\", \"Coins\", \"Gems\", \"TalentCrystals\", \"SecondWindUsedThisWeek\", \"UpdatedAt\") VALUES ({Guid.NewGuid()}, {userId}, 0, 0, 0, 0, {DateTime.UtcNow}) ON CONFLICT (\"UserId\") DO NOTHING", ct);
+            return await db.Set<UserTalentWallet>().FirstAsync(w => w.UserId == userId, ct);
+        }
         wallet = new UserTalentWallet { Id = Guid.NewGuid(), UserId = userId, UpdatedAt = DateTime.UtcNow };
         db.Set<UserTalentWallet>().Add(wallet);
         await db.SaveChangesAsync(ct);

@@ -49,21 +49,23 @@ public class ShopService(
         var characterId = await characterIds.GetCharacterIdAsync(userId, ct)
             ?? throw new ShopException("character_not_found", "Create a character before using the shop.");
         var maxSlots = await inventorySlots.GetMaxInventorySlotsAsync(userId, ct);
-        var ownedIds = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
-            .Select(x => x.ItemId).ToHashSetAsync(ct);
+        var ownedItems = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
+            .Select(x => new { x.ItemId, x.Item.Name }).ToListAsync(ct);
+        var ownedIds = ownedItems.Select(x => x.ItemId).ToHashSet();
+        var ownedNames = ownedItems.Select(x => x.Name.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var catalog = await db.Set<Item>().Where(x => Pool.Contains(x.Id)).ToListAsync(ct);
         var balance = await wallet.GetBalanceAsync(userId, ct);
         var state = await db.Set<UserShopDailyState>()
             .FirstOrDefaultAsync(x => x.UserId == userId && x.RotationDateUtc == day, ct);
         var offerIds = state is null ? GlobalRotation(catalog, day) : ParseIds(state.ItemIdsJson);
-        var inventoryCount = ownedIds.Count;
+        var inventoryCount = ownedItems.Count;
         var full = inventoryCount >= maxSlots;
 
         var offers = offerIds.Select(id => catalog.FirstOrDefault(x => x.Id == id)).Where(x => x != null)
             .Select(item =>
             {
-                var owned = ownedIds.Contains(item!.Id);
-                var price = Prices[item.Rarity];
+                var owned = IsOwned(item!, ownedIds, ownedNames);
+                var price = Prices[item!.Rarity];
                 var enough = price.Currency == ShopCurrency.Coins ? balance.Coins >= price.Price : balance.Gems >= price.Price;
                 var reason = owned ? "Owned" : full ? "Inventory full" : !enough ? $"Not enough {Label(price.Currency)}" : null;
                 return new ShopOfferDto(ToDto(item), price.Currency, price.Price, owned, reason is null, reason);
@@ -71,7 +73,7 @@ public class ShopService(
 
         var chestViews = Chests.Select(chest =>
         {
-            var remaining = catalog.Count(x => x.Rarity == chest.Rarity && !ownedIds.Contains(x.Id));
+            var remaining = catalog.Count(x => x.Rarity == chest.Rarity && !IsOwned(x, ownedIds, ownedNames));
             var enough = chest.Currency == ShopCurrency.Coins ? balance.Coins >= chest.Price : balance.Gems >= chest.Price;
             var reason = remaining == 0 ? "All rewards owned" : full ? "Inventory full" : !enough ? $"Not enough {Label(chest.Currency)}" : null;
             return new ShopChestDto(chest.Key, chest.Name, chest.Rarity.ToString(), chest.Currency,
@@ -79,10 +81,10 @@ public class ShopService(
         }).ToList();
 
         var canRefresh = state is null && balance.Coins >= RefreshCostCoins &&
-            CanBuildRefresh(catalog, ownedIds, offerIds);
+            CanBuildRefresh(catalog, ownedIds, ownedNames, offerIds);
         var refreshReason = state is not null ? "Already refreshed today"
             : balance.Coins < RefreshCostCoins ? "Not enough Coins"
-            : !CanBuildRefresh(catalog, ownedIds, offerIds) ? "Not enough replacement gear" : null;
+            : !CanBuildRefresh(catalog, ownedIds, ownedNames, offerIds) ? "Not enough replacement gear" : null;
 
         return new ShopResponse(new ShopWalletDto(balance.Coins, balance.Gems), day.AddDays(1),
             new ShopRefreshDto(RefreshCostCoins, canRefresh, state is not null, refreshReason), offers,
@@ -97,11 +99,13 @@ public class ShopService(
             throw new ShopException("already_refreshed", "The Daily Shop has already been refreshed today.");
 
         var characterId = await RequireCharacterAsync(userId, ct);
-        var owned = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
-            .Select(x => x.ItemId).ToHashSetAsync(ct);
+        var ownedItems = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
+            .Select(x => new { x.ItemId, x.Item.Name }).ToListAsync(ct);
+        var owned = ownedItems.Select(x => x.ItemId).ToHashSet();
+        var ownedNames = ownedItems.Select(x => x.Name.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var catalog = await db.Set<Item>().Where(x => Pool.Contains(x.Id)).ToListAsync(ct);
         var current = GlobalRotation(catalog, day);
-        var replacement = BuildRefresh(catalog, owned, current, userId, day);
+        var replacement = BuildRefresh(catalog, owned, ownedNames, current, userId, day);
         if (replacement.Count != 6)
             throw new ShopException("refresh_unavailable", "There is not enough unowned replacement gear to refresh the shop.");
         if (!await wallet.TrySpendAsync(userId, ShopCurrency.Coins, RefreshCostCoins, ct))
@@ -120,7 +124,7 @@ public class ShopService(
     public async Task<ShopPurchaseResult> PurchaseItemAsync(
         Guid userId, Guid itemId, Guid clientPurchaseId, CancellationToken ct = default)
     {
-        return await PurchaseAsync(userId, clientPurchaseId, $"item:{itemId}", async (characterId, owned, catalog) =>
+        return await PurchaseAsync(userId, clientPurchaseId, $"item:{itemId}", async (characterId, owned, ownedNames, catalog) =>
         {
             var day = DateTime.UtcNow.Date;
             var state = await db.Set<UserShopDailyState>()
@@ -139,9 +143,9 @@ public class ShopService(
     {
         var chest = Chests.FirstOrDefault(x => x.Key.Equals(tier, StringComparison.OrdinalIgnoreCase));
         if (chest == default) throw new ShopException("chest_not_found", "That chest does not exist.");
-        return await PurchaseAsync(userId, clientPurchaseId, $"chest:{chest.Key}", (_, owned, catalog) =>
+        return await PurchaseAsync(userId, clientPurchaseId, $"chest:{chest.Key}", (_, owned, ownedNames, catalog) =>
         {
-            var candidates = catalog.Where(x => x.Rarity == chest.Rarity && !owned.Contains(x.Id)).ToList();
+            var candidates = catalog.Where(x => x.Rarity == chest.Rarity && !IsOwned(x, owned, ownedNames)).ToList();
             if (candidates.Count == 0) throw new ShopException("chest_exhausted", "You already own every reward in this chest.");
             var item = candidates[RandomNumberGenerator.GetInt32(candidates.Count)];
             return Task.FromResult((item, chest.Currency, chest.Price));
@@ -149,7 +153,7 @@ public class ShopService(
     }
 
     private async Task<ShopPurchaseResult> PurchaseAsync(Guid userId, Guid clientPurchaseId, string offerKey,
-        Func<Guid, HashSet<Guid>, List<Item>, Task<(Item Item, ShopCurrency Currency, int Price)>> resolve,
+        Func<Guid, HashSet<Guid>, HashSet<string>, List<Item>, Task<(Item Item, ShopCurrency Currency, int Price)>> resolve,
         CancellationToken ct)
     {
         if (clientPurchaseId == Guid.Empty) throw new ShopException("invalid_request", "A purchase id is required.");
@@ -165,12 +169,14 @@ public class ShopService(
 
         var characterId = await RequireCharacterAsync(userId, ct);
         var max = await inventorySlots.GetMaxInventorySlotsAsync(userId, ct);
-        var inventory = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId).ToListAsync(ct);
+        var inventory = await db.Set<CharacterItem>().Where(x => x.CharacterId == characterId)
+            .Include(x => x.Item).ToListAsync(ct);
         if (inventory.Count >= max) throw new ShopException("inventory_full", "Your inventory is full.");
         var owned = inventory.Select(x => x.ItemId).ToHashSet();
+        var ownedNames = inventory.Select(x => x.Item.Name.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var catalog = await db.Set<Item>().Where(x => Pool.Contains(x.Id)).ToListAsync(ct);
-        var selected = await resolve(characterId, owned, catalog);
-        if (owned.Contains(selected.Item.Id)) throw new ShopException("already_owned", "You already own this item.");
+        var selected = await resolve(characterId, owned, ownedNames, catalog);
+        if (IsOwned(selected.Item, owned, ownedNames)) throw new ShopException("already_owned", "You already own this item.");
         if (!await wallet.TrySpendAsync(userId, selected.Currency, selected.Price, ct))
             throw new ShopException("insufficient_currency", $"You do not have enough {Label(selected.Currency)}.");
 
@@ -214,13 +220,13 @@ public class ShopService(
         return result;
     }
 
-    private static bool CanBuildRefresh(List<Item> catalog, HashSet<Guid> owned, List<Guid> current) =>
-        catalog.Count(x => Prices[x.Rarity].Currency == ShopCurrency.Coins && !owned.Contains(x.Id) && !current.Contains(x.Id)) >= 3 &&
-        catalog.Count(x => Prices[x.Rarity].Currency == ShopCurrency.Gems && !owned.Contains(x.Id) && !current.Contains(x.Id)) >= 3;
+    private static bool CanBuildRefresh(List<Item> catalog, HashSet<Guid> owned, HashSet<string> ownedNames, List<Guid> current) =>
+        catalog.Count(x => Prices[x.Rarity].Currency == ShopCurrency.Coins && !IsOwned(x, owned, ownedNames) && !current.Contains(x.Id)) >= 3 &&
+        catalog.Count(x => Prices[x.Rarity].Currency == ShopCurrency.Gems && !IsOwned(x, owned, ownedNames) && !current.Contains(x.Id)) >= 3;
 
-    private static List<Guid> BuildRefresh(List<Item> catalog, HashSet<Guid> owned, List<Guid> current, Guid userId, DateTime day)
+    private static List<Guid> BuildRefresh(List<Item> catalog, HashSet<Guid> owned, HashSet<string> ownedNames, List<Guid> current, Guid userId, DateTime day)
     {
-        var eligible = catalog.Where(x => !owned.Contains(x.Id) && !current.Contains(x.Id)).ToList();
+        var eligible = catalog.Where(x => !IsOwned(x, owned, ownedNames) && !current.Contains(x.Id)).ToList();
         var coins = Shuffle(eligible.Where(x => Prices[x.Rarity].Currency == ShopCurrency.Coins).Select(x => x.Id), $"{day:O}:{userId}:coins");
         var gems = Shuffle(eligible.Where(x => Prices[x.Rarity].Currency == ShopCurrency.Gems).Select(x => x.Id), $"{day:O}:{userId}:gems");
         return coins.Take(3).Concat(gems.Take(3)).ToList();
@@ -236,6 +242,8 @@ public class ShopService(
     }
 
     private static List<Guid> ParseIds(string json) => JsonSerializer.Deserialize<List<Guid>>(json) ?? [];
+    private static bool IsOwned(Item item, HashSet<Guid> ownedIds, HashSet<string> ownedNames) =>
+        ownedIds.Contains(item.Id) || ownedNames.Contains(item.Name.Trim());
     private static Guid Id(int suffix) => Guid.Parse($"10000000-0000-0000-0000-{suffix:000000000000}");
     private static string Label(ShopCurrency currency) => currency == ShopCurrency.Coins ? "Coins" : "Gems";
 

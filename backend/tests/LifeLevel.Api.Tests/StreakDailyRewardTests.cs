@@ -51,9 +51,33 @@ public class StreakDailyRewardTests
         Assert.Equal(20, streak.NextRewardCoins);
     }
 
-    private static AppDbContext CreateDb() => new(
+    [Fact]
+    public async Task ClaimedReward_StaysClaimedAcrossRequests()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
+        var wallet = new RecordingCurrency();
+        await using (var firstDb = CreateDb(databaseName))
+        {
+            var service = new StreakService(firstDb, new NoopEvents(), wallet);
+            await service.RecordActivityDayAsync(userId, DateTime.UtcNow.Date);
+            var claim = await service.ClaimDailyRewardAsync(userId);
+            Assert.True(claim.Success);
+            Assert.Equal(10, claim.CoinsClaimed);
+        }
+
+        await using (var secondDb = CreateDb(databaseName))
+        {
+            var service = new StreakService(secondDb, new NoopEvents(), wallet);
+            Assert.False((await service.GetDtoAsync(userId)).CanClaimDailyReward);
+            Assert.False((await service.ClaimDailyRewardAsync(userId)).Success);
+        }
+        Assert.Equal(10, wallet.Coins);
+    }
+
+    private static AppDbContext CreateDb(string? databaseName = null) => new(
         new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
             .Options);
 
     private sealed class RecordingCurrency : IRewardCurrencyPort

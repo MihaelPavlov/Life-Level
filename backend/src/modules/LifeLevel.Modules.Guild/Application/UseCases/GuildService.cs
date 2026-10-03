@@ -9,6 +9,8 @@ using LifeLevel.SharedKernel.Calculators;
 using LifeLevel.SharedKernel.Ports;
 using LifeLevel.SharedKernel.Events;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
 using CharacterEntity = LifeLevel.Modules.Character.Domain.Entities.Character;
 using XpHistoryEntryEntity = LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry;
 
@@ -333,6 +335,14 @@ public class GuildService(
         if (!CanManageRaid(member.Role))
             throw new InvalidOperationException("Only guild leaders and officers can start raids.");
 
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await using var transactionScope = transaction;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"Guilds\" WHERE \"Id\" = {member.GuildId} FOR UPDATE", ct);
+
         var hasActive = await db.Set<GuildRaid>()
             .AnyAsync(r => r.GuildId == member.GuildId && !r.IsDefeated && !r.IsExpired && r.ExpiresAt > DateTime.UtcNow, ct);
         if (hasActive)
@@ -365,6 +375,7 @@ public class GuildService(
 
         db.Set<GuildRaid>().Add(raid);
         await db.SaveChangesAsync(ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
 
         await realtime.RaidStartedAsync(new GuildRaidStartedInfo(
             raid.GuildId,
@@ -635,13 +646,27 @@ public class GuildService(
         DateTime activityLoggedAt,
         CancellationToken ct)
     {
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await using var transactionScope = transaction;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"GuildRaids\" WHERE \"Id\" = {raid.Id} FOR UPDATE", ct);
+            await db.Entry(raid).ReloadAsync(ct);
+        }
+        if (raid.IsDefeated || raid.IsExpired) return [];
+
         var boss = await db.Set<Boss>().FindAsync([raid.BossId], ct)
             ?? throw new InvalidOperationException("Raid boss not found.");
         var maxHp = RaidMaxHp(raid, boss);
 
         if (raid.ExpiresAt <= DateTime.UtcNow)
         {
-            await ExpireRaidAsync(raid, raid.ExpiresAt, ct);
+            var expired = await ExpireRaidAsync(raid, raid.ExpiresAt, ct, notify: false);
+            if (transaction != null) await transaction.CommitAsync(ct);
+            if (expired != null) await NotifyRaidExpiredAsync(raid, expired, ct);
             return [];
         }
 
@@ -679,7 +704,7 @@ public class GuildService(
         if (events != null && activityId.HasValue)
             await events.PublishAsync(new GuildRaidContributionEvent(userId, raid.Id, activityId.Value), ct);
 
-        await realtime.RaidHpUpdatedAsync(new GuildRaidHpUpdatedInfo(
+        var hpUpdate = new GuildRaidHpUpdatedInfo(
             raid.GuildId,
             raid.Id,
             boss.Name,
@@ -689,9 +714,14 @@ public class GuildService(
             Math.Max(0, maxHp - raid.TotalDamage),
             userId,
             effectiveDamage,
-            contribution.DamageDealt), ct);
+            contribution.DamageDealt);
 
-        if (!defeated) return [];
+        if (!defeated)
+        {
+            if (transaction != null) await transaction.CommitAsync(ct);
+            await realtime.RaidHpUpdatedAsync(hpUpdate, ct);
+            return [];
+        }
 
         if (events != null)
         {
@@ -702,7 +732,7 @@ public class GuildService(
                 await events.PublishAsync(new GuildRaidWonEvent(contributorId, raid.Id), ct);
         }
 
-        await GrantScaledRaidRewardsAsync(raid, boss, ct);
+        var rewardsGranted = await GrantScaledRaidRewardsAsync(raid, boss, ct);
         var victory = await BuildVictoryInfoAsync(raid.Id, userId, ct)
             ?? new GuildRaidDefeatedInfo(
                 raid.GuildId,
@@ -715,6 +745,9 @@ public class GuildService(
                 0,
                 contribution.DamageDealt,
                 raid.TotalDamage);
+        if (transaction != null) await transaction.CommitAsync(ct);
+        if (rewardsGranted) await NotifyRaidDefeatedAsync(raid, boss, ct);
+        await realtime.RaidHpUpdatedAsync(hpUpdate, ct);
         await realtime.RaidDefeatedAsync(victory, ct);
         return [victory];
     }
@@ -759,10 +792,20 @@ public class GuildService(
 
     private static int MvpBonusXp(int rewardXp) => Math.Max(1, (int)Math.Round(rewardXp * 0.25));
 
-    private async Task GrantScaledRaidRewardsAsync(GuildRaid raid, Boss boss, CancellationToken ct)
+    private async Task<bool> GrantScaledRaidRewardsAsync(GuildRaid raid, Boss boss, CancellationToken ct)
     {
-        if (!raid.IsDefeated || raid.IsExpired) return;
-        if (raid.RewardClaimedAt != null) return;
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await using var transactionScope = transaction;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"GuildRaids\" WHERE \"Id\" = {raid.Id} FOR UPDATE", ct);
+            await db.Entry(raid).ReloadAsync(ct);
+        }
+        if (!raid.IsDefeated || raid.IsExpired) return false;
+        if (raid.RewardClaimedAt != null) return false;
 
         var contributors = await db.Set<GuildRaidContribution>()
             .AsNoTracking()
@@ -799,7 +842,15 @@ public class GuildService(
 
         raid.RewardClaimedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
 
+        if (transaction != null) await NotifyRaidDefeatedAsync(raid, boss, ct);
+        return true;
+    }
+
+    private async Task NotifyRaidDefeatedAsync(GuildRaid raid, Boss boss, CancellationToken ct)
+    {
+        var rewardXp = RaidRewardXp(raid, boss);
         await NotifyGuildMembersAsync(
             raid.GuildId,
             "guild-raid-defeated",
@@ -924,16 +975,34 @@ public class GuildService(
     private async Task<GuildRaidExpiredInfo?> ExpireRaidAsync(
         GuildRaid raid,
         DateTime expiresAt,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool notify = true)
     {
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
+            transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await using var transactionScope = transaction;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"GuildRaids\" WHERE \"Id\" = {raid.Id} FOR UPDATE", ct);
+            await db.Entry(raid).ReloadAsync(ct);
+        }
         if (raid.IsExpired || raid.IsDefeated) return await BuildExpiredInfoAsync(raid.Id, ct);
 
         raid.IsExpired = true;
         raid.ExpiresAt = expiresAt;
         await db.SaveChangesAsync(ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
 
         var expired = await BuildExpiredInfoAsync(raid.Id, ct);
-        if (expired != null) await realtime.RaidExpiredAsync(expired, ct);
+        if (notify && expired != null) await NotifyRaidExpiredAsync(raid, expired, ct);
+        return expired;
+    }
+
+    private async Task NotifyRaidExpiredAsync(GuildRaid raid, GuildRaidExpiredInfo expired, CancellationToken ct)
+    {
+        await realtime.RaidExpiredAsync(expired, ct);
         var boss = await db.Set<Boss>().AsNoTracking().FirstOrDefaultAsync(b => b.Id == raid.BossId, ct);
         if (boss != null)
         {
@@ -951,7 +1020,6 @@ public class GuildService(
                 isCritical: true,
                 ct: ct);
         }
-        return expired;
     }
 
     private async Task<GuildRaid?> GetActiveRaidEntityAsync(Guid guildId, CancellationToken ct)

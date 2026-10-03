@@ -38,6 +38,27 @@ WorldZoneModel? pickPortalZone(WorldFullData world) {
   return null;
 }
 
+/// True when the player is standing on (or heading to) an unresolved
+/// crossroads — no destination chosen yet. Checked independently of the
+/// normal zone switch so it still applies while a boss raid is active and
+/// would otherwise hide the crossroads entirely.
+bool hasPendingCrossroads(WorldFullData? world) {
+  if (world == null) return false;
+  final zone = pickPortalZone(world);
+  if (zone == null || zone.type != 'crossroads') return false;
+  final dest = world.userProgress.destinationZoneId;
+  return dest == null || dest.isEmpty;
+}
+
+/// Which of two simultaneously-active things the journey card and the Map
+/// button are currently showing. Only meaningful while both a boss raid and
+/// a crossroads are pending at once — see [hasPendingCrossroads].
+enum JourneyFocus { boss, crossroads }
+
+/// Shared between the home journey card and the Map button so switching
+/// tabs on one updates the other.
+final journeyFocusProvider = StateProvider<JourneyFocus>((ref) => JourneyFocus.boss);
+
 /// Pick a reasonable "next" zone reachable from `from` — used when the
 /// current zone is consumed (e.g. opened chest) and the journey should nudge
 /// forward instead of showing a spent CTA.
@@ -309,9 +330,25 @@ JourneyOrbState resolveJourneyOrb({
   required RegionDetail? region,
   required DungeonState? dungeonState,
   required double xpProgress,
+  JourneyFocus focus = JourneyFocus.boss,
 }) {
   final boss = activeBoss;
   if (boss != null) {
+    // A crossroads sitting underneath the raid gets its own tab on the
+    // journey card; the orb mirrors whichever tab is open so it never tells
+    // a different story than the card the player just closed.
+    if (focus == JourneyFocus.crossroads &&
+        hasPendingCrossroads(worldAsync.valueOrNull)) {
+      final zone = pickPortalZone(worldAsync.valueOrNull!)!;
+      return JourneyOrbState(
+        kind: JourneyKind.crossroads,
+        color: AppColors.blue,
+        ring: JourneyRing.split,
+        iconAsset: AppIcons.zoneFirstFork,
+        label: 'Choose',
+        semantics: 'Crossroads at ${zone.name}, choose your path',
+      );
+    }
     // The rings show what the player has seen; a replay walks them to the
     // live values exchange by exchange.
     // A ready-but-unstarted boss has no combat replay yet. Ignore any stale
@@ -565,27 +602,18 @@ JourneyOrbState resolveJourneyOrb({
 /// The Map button's look, live from the same providers the journey card uses.
 final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
   final seen = ref.watch(bossSeenStoreProvider);
-  // A kill the player hasn't watched yet keeps the fight on the button until
-  // the replay plays it.
   final bosses = ref.watch(bossListProvider).valueOrNull ?? const [];
-  final activeBoss = bosses
-      .where((b) =>
-          b.needsAttention ||
-          (b.isDefeated &&
-              (seen[b.id]?.bossHp ?? 0) > 0 &&
-              b.defeatedAt != null &&
-              DateTime.now().difference(b.defeatedAt!.toLocal()) <
-                  const Duration(hours: 24)))
-      .firstOrNull;
   final worldAsync = ref.watch(worldProgressProvider);
   final region = ref.watch(currentRegionDetailProvider).valueOrNull;
   final world = worldAsync.valueOrNull;
   final zone = world == null ? null : pickPortalZone(world);
+  final activeBoss = selectJourneyBoss(bosses, world);
   final dungeonState = zone != null && zone.type == 'dungeon'
       ? ref.watch(dungeonStateProvider(zone.id)).valueOrNull
       : null;
   final xpProgress =
       ref.watch(characterProfileProvider).valueOrNull?.xpProgress ?? 0.0;
+  final focus = ref.watch(journeyFocusProvider);
   return resolveJourneyOrb(
     activeBoss: activeBoss,
     bossSeen: activeBoss == null ? null : seen[activeBoss.id],
@@ -595,5 +623,28 @@ final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
     region: region,
     dungeonState: dungeonState,
     xpProgress: xpProgress,
+    focus: focus,
   );
 });
+
+/// A live fight takes priority. An unstarted boss only takes over the orb
+/// when the player is actually standing at that boss's zone. Defeated fights
+/// are handled by the replay effect, not by the current-journey indicator.
+BossListItem? selectJourneyBoss(
+    List<BossListItem> bosses, WorldFullData? world) {
+  final active = bosses.where((boss) => boss.isActive).firstOrNull;
+  if (active != null || world == null) return active;
+
+  final currentZoneId = world.userProgress.currentZoneId;
+  final standingZone = world.zones
+      .where((zone) => zone.id == currentZoneId)
+      .firstOrNull;
+  if (standingZone?.type != 'boss' ||
+      (world.userProgress.currentEdgeId ?? '').isNotEmpty) {
+    return null;
+  }
+  return bosses
+      .where((boss) =>
+          boss.isReadyToFight && boss.worldZoneId == currentZoneId)
+      .firstOrNull;
+}

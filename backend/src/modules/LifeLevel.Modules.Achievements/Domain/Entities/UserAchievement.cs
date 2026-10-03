@@ -8,6 +8,7 @@ public class UserAchievement
     public Achievement Achievement { get; set; } = null!;
     public double CurrentValue { get; set; }
     public DateTime? UnlockedAt { get; set; }
+    public DateTime? SeenAt { get; set; }
     public bool IsUnlocked => UnlockedAt.HasValue;
 
     /// <summary>Set when the player claims the reward. Unlocking alone pays nothing.</summary>

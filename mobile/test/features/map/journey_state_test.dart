@@ -259,6 +259,54 @@ void main() {
     expect(s.label, '2 / 4');
   });
 
+  test('a defeated or distant ready boss cannot replace the current dungeon',
+      () {
+    final world = _world(
+      zones: [_zone('old-boss', 'boss'), _zone('ruins', 'dungeon')],
+      currentZoneId: 'ruins',
+    );
+    final defeated = BossListItem.fromJson({
+      'id': 'forest-sentinel',
+      'name': 'Forest Sentinel',
+      'icon': '',
+      'maxHp': 800,
+      'rewardXp': 100,
+      'timerDays': 0,
+      'activated': true,
+      'isDefeated': true,
+      'hpDealt': 800,
+      'worldZoneId': 'old-boss',
+    });
+    final distant = BossListItem.fromJson({
+      'id': 'distant-boss',
+      'name': 'Distant Boss',
+      'icon': '',
+      'maxHp': 1000,
+      'rewardXp': 100,
+      'timerDays': 0,
+      'canFight': true,
+      'worldZoneId': 'old-boss',
+    });
+
+    final selected = selectJourneyBoss([defeated, distant], world);
+    expect(selected, isNull);
+    expect(_resolve(world, boss: selected).kind, JourneyKind.dungeon);
+    expect(selectJourneyBoss([defeated, distant],
+        _world(zones: [_zone('old-boss', 'boss')], currentZoneId: 'old-boss')),
+        distant);
+
+    final active = BossListItem.fromJson({
+      'id': 'active-raid',
+      'name': 'Active Raid',
+      'icon': '',
+      'maxHp': 1000,
+      'rewardXp': 100,
+      'timerDays': 1,
+      'activated': true,
+    });
+    expect(selectJourneyBoss([defeated, distant, active], world), active);
+  });
+
   test('standing on a finished zone suggests the next one', () {
     final world = _world(
       zones: [_zone('camp', 'standard'), _zone('next', 'standard', tier: 2)],

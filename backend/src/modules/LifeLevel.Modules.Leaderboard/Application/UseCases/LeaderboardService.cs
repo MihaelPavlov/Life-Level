@@ -94,6 +94,7 @@ public class LeaderboardService(DbContext db, ILeaderboardReadPort scores, IRewa
         var myScore = ranked[mine].Score;
 
         var watch = await db.Set<LeaderboardWatch>().FirstOrDefaultAsync(w => w.UserId == userId, ct);
+        var passCreated = false;
         if (watch != null && watch.WeekStartUtc == weekStart)
         {
             var wasAhead = JsonSerializer.Deserialize<List<Guid>>(watch.AheadJson) ?? [];
@@ -123,20 +124,27 @@ public class LeaderboardService(DbContext db, ILeaderboardReadPort scores, IRewa
                         Gems = gems,
                         CreatedAtUtc = now,
                     });
+                    passCreated = true;
                 }
             }
         }
 
         var ahead = ranked.Take(mine).Where(e => e.Score > myScore)
             .TakeLast(LeaderboardRules.WatchDepth).Select(e => e.UserId).ToList();
+        var aheadJson = JsonSerializer.Serialize(ahead);
+        var watchChanged = watch == null || watch.WeekStartUtc != weekStart || watch.AheadJson != aheadJson;
         if (watch == null)
         {
             watch = new LeaderboardWatch { UserId = userId };
             db.Set<LeaderboardWatch>().Add(watch);
         }
-        watch.WeekStartUtc = weekStart;
-        watch.AheadJson = JsonSerializer.Serialize(ahead);
-        watch.UpdatedAtUtc = now;
+        if (watchChanged)
+        {
+            watch.WeekStartUtc = weekStart;
+            watch.AheadJson = aheadJson;
+            watch.UpdatedAtUtc = now;
+        }
+        if (!watchChanged && !passCreated) return;
 
         try
         {

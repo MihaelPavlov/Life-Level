@@ -16,7 +16,8 @@ public record AchievementDto(
     int CoinReward,
     int GemReward,
     bool IsClaimed,
-    DateTime? ClaimedAt
+    DateTime? ClaimedAt,
+    DateTime? SeenAt
 );
 
 public record CheckUnlocksResult(List<Guid> NewlyUnlockedIds);

@@ -272,6 +272,36 @@ public class WorldBossBridgeServiceTests
         Assert.Equal(87, listed.CurrentPlayerHp);
     }
 
+    [Fact]
+    public async Task GetBosses_OtherPlayersWorldBoss_IsNotAvailable()
+    {
+        var db = CreateDb(nameof(GetBosses_OtherPlayersWorldBoss_IsNotAvailable));
+        var fx = await SeedBossWorldAsync(db, "other_player_boss");
+        var otherUserId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            Id = otherUserId,
+            Username = "other_player",
+            Email = "other_player@test.com",
+            PasswordHash = "x"
+        });
+        await db.SaveChangesAsync();
+
+        var bossId = await CreateBridge(db).EnsureSpawnedAsync(otherUserId, fx.ForestBoss.Id);
+        var bossService = new BossService(
+            db, new BridgeXpPort(), new BridgeEventPublisher(), EmptyServiceProvider.Instance);
+
+        Assert.Empty(await bossService.GetAllBossesForUserAsync(fx.UserId));
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => bossService.ActivateFightAsync(fx.UserId, bossId));
+        Assert.False(await db.UserBossStates.AnyAsync(s => s.UserId == fx.UserId && s.BossId == bossId));
+
+        await CreateBridge(db).EnsureSpawnedAsync(fx.UserId, fx.ForestBoss.Id);
+        var listed = Assert.Single(await bossService.GetAllBossesForUserAsync(fx.UserId));
+        Assert.Equal(bossId, listed.Id);
+        Assert.True(listed.CanFight);
+    }
+
     // ──────────────────────────────────────────────────────────────────────
     // Test 3: AddDistanceAsync arrival at a boss zone triggers the bridge
     // ──────────────────────────────────────────────────────────────────────

@@ -5,7 +5,6 @@ using LifeLevel.Modules.Guild.Domain.Entities;
 using LifeLevel.Modules.Identity.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
 using GuildEntity = LifeLevel.Modules.Guild.Domain.Entities.Guild;
 
@@ -94,7 +93,7 @@ public class LeaderboardReadAdapterTests
     }
 
     private static LeaderboardReadAdapter Adapter(AppDbContext db, int power = 0) =>
-        new(db, new FixedPower(power), new MemoryCache(new MemoryCacheOptions()));
+        new(db, new FixedPower(power));
 
     private static AppDbContext CreateDb() => new(
         new DbContextOptionsBuilder<AppDbContext>()

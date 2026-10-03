@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/services/seen_state_client.dart';
 import '../character/providers/character_provider.dart';
 import '../unlocks/tour/tour_target.dart';
 import '../unlocks/tour/tours/unlock_tours.dart';
@@ -25,6 +27,7 @@ class TitlesRanksScreen extends ConsumerStatefulWidget {
 
 class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
   final _flight = TitleEquipFlight();
+  final Set<String> _seenInFlight = {};
 
   VoidCallback? get onClose => widget.onClose;
 
@@ -79,6 +82,17 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
   @override
   Widget build(BuildContext context) {
     final titlesAsync = ref.watch(titlesProvider);
+    final unseenIds = titlesAsync.valueOrNull?.earnedTitles
+            .where((title) => title.seenAt == null)
+            .map((title) => title.id)
+            .where((id) => !_seenInFlight.contains(id))
+            .toList() ?? const <String>[];
+    if (unseenIds.isNotEmpty) {
+      _seenInFlight.addAll(unseenIds);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_markSeen(unseenIds));
+      });
+    }
     final profileAsync = ref.watch(characterProfileProvider);
 
     return Scaffold(
@@ -259,6 +273,15 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _markSeen(List<String> ids) async {
+    try {
+      await SeenStateClient().markTitles(ids);
+      if (mounted) ref.invalidate(titlesProvider);
+    } catch (_) {
+      _seenInFlight.removeAll(ids);
+    }
   }
 }
 

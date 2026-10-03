@@ -9,6 +9,7 @@ import '../../../core/motion/reward_fx.dart';
 import '../../../core/shell/shell_anchors.dart';
 import '../../../core/services/nav_tab_notifier.dart';
 import '../../../core/widgets/currency_chip.dart';
+import '../../../core/utils/compact_count.dart';
 import '../../../core/widgets/resource_info_dialog.dart';
 import '../../character/models/character_profile.dart';
 import '../../activity/providers/activity_provider.dart';
@@ -426,7 +427,8 @@ class _HeaderRow extends StatelessWidget {
         CurrencyChip(
           key: const ValueKey('home-steps-button'),
           iconAsset: AppIcons.homeStepsIcon,
-          value: totalSteps == null ? '—' : _fmtPower(totalSteps!),
+          value: totalSteps == null ? '—' : compactCount(totalSteps!),
+          numericValue: totalSteps,
           showAdd: false,
           onTapAdd: () => _showSteps(context),
         ),

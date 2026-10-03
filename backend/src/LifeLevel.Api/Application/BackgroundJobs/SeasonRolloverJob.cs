@@ -8,6 +8,7 @@ namespace LifeLevel.Api.Application.BackgroundJobs;
 /// </summary>
 public class SeasonRolloverJob(
     IServiceScopeFactory scopeFactory,
+    PostgresJobLock jobLock,
     ILogger<SeasonRolloverJob> logger) : BackgroundService
 {
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(10);
@@ -20,9 +21,13 @@ public class SeasonRolloverJob(
         {
             try
             {
-                using var scope = scopeFactory.CreateScope();
-                var rollover = scope.ServiceProvider.GetRequiredService<ISeasonRolloverPort>();
-                var closed = await rollover.RolloverDueSeasonsAsync(stoppingToken);
+                var closed = 0;
+                await jobLock.TryRunAsync(81003, async () =>
+                {
+                    using var scope = scopeFactory.CreateScope();
+                    var rollover = scope.ServiceProvider.GetRequiredService<ISeasonRolloverPort>();
+                    closed = await rollover.RolloverDueSeasonsAsync(stoppingToken);
+                }, stoppingToken);
                 if (closed > 0)
                     logger.LogInformation("Rolled over {Count} season(s).", closed);
             }

@@ -18,10 +18,14 @@ void main() {
             () => _FakeRewardCenterNotifier(_rewardCenter()),
           ),
         ],
-        child: const MaterialApp(home: Scaffold(body: RewardsScreen())),
+        child: const MaterialApp(home: MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Scaffold(body: RewardsScreen()),
+        )),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('425'), findsNothing);
     expect(find.text('7'), findsNothing);
@@ -48,10 +52,14 @@ void main() {
             () => _FakeRewardCenterNotifier(_rewardCenter()),
           ),
         ],
-        child: const MaterialApp(home: Scaffold(body: RewardsScreen())),
+        child: const MaterialApp(home: MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Scaffold(body: RewardsScreen()),
+        )),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(tester.takeException(), isNull);
   });
 
@@ -66,18 +74,23 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [rewardCenterProvider.overrideWith(() => notifier)],
-        child: const MaterialApp(home: Scaffold(body: RewardsScreen())),
+        child: const MaterialApp(home: MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Scaffold(body: RewardsScreen()),
+        )),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    final taskClaimButton = find.widgetWithText(FilledButton, 'CLAIM');
+    final taskClaimButton = find.text('TAP TO CLAIM');
     expect(taskClaimButton, findsOneWidget);
     await tester.tap(taskClaimButton);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(notifier.taskClaims, 1);
-    expect(find.widgetWithText(FilledButton, 'CLAIM'), findsNothing);
+    expect(find.text('TAP TO CLAIM'), findsNothing);
     expect(notifier.current.daily.pointsEarned, 20);
     expect(notifier.current.daily.tasks.single.rewardClaimed, isTrue);
     await tester.pump(const Duration(seconds: 4));

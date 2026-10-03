@@ -8,4 +8,5 @@ public class CharacterTitle
     public Guid TitleId { get; set; }
     public Title Title { get; set; } = null!;
     public DateTime EarnedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? SeenAt { get; set; }
 }

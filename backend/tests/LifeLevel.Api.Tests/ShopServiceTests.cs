@@ -47,6 +47,39 @@ public class ShopServiceTests
     }
 
     [Fact]
+    public async Task EquippedCatalogAlias_IsOwned_AndCannotBePurchasedAgain()
+    {
+        await using var db = Db();
+        SeedCatalog(db);
+        await db.SaveChangesAsync();
+        var wallet = new Wallet();
+        var service = Service(db, wallet);
+        var user = Guid.NewGuid();
+        var offer = (await service.GetAsync(user)).DailyOffers.First(x => x.Currency == ShopCurrency.Coins);
+        var alias = new Item
+        {
+            Id = Guid.NewGuid(), Name = offer.Item.Name, Description = "Older catalog entry",
+            Icon = "x", Rarity = Enum.Parse<ItemRarity>(offer.Item.Rarity),
+            Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest
+        };
+        db.Items.Add(alias);
+        db.CharacterItems.Add(new CharacterItem
+        {
+            Id = Guid.NewGuid(), CharacterId = CharacterId, ItemId = alias.Id, IsEquipped = true
+        });
+        await db.SaveChangesAsync();
+
+        var ownedOffer = (await service.GetAsync(user)).DailyOffers.Single(x => x.Item.Id == offer.Item.Id);
+        Assert.True(ownedOffer.Owned);
+        Assert.False(ownedOffer.CanPurchase);
+        var error = await Assert.ThrowsAsync<ShopException>(() =>
+            service.PurchaseItemAsync(user, offer.Item.Id, Guid.NewGuid()));
+        Assert.Equal("already_owned", error.Code);
+        Assert.Equal(10_000, wallet.Coins);
+        Assert.Single(await db.CharacterItems.ToListAsync());
+    }
+
+    [Fact]
     public async Task Chest_NeverReturnsOwnedItemOfRequestedRarity()
     {
         await using var db = Db();
@@ -59,6 +92,33 @@ public class ShopServiceTests
 
         Assert.NotEqual(Id(10), result.GrantedItem.Id);
         Assert.Equal("Common", result.GrantedItem.Rarity);
+    }
+
+    [Fact]
+    public async Task RewardGrant_DoesNotAddAnOwnedCatalogAlias()
+    {
+        await using var db = Db();
+        SeedCatalog(db);
+        var alias = new Item
+        {
+            Id = Guid.NewGuid(), Name = "Item 33", Description = "Older catalog entry",
+            Icon = "x", Rarity = ItemRarity.Uncommon,
+            Category = ItemCategory.Clothing, SlotType = EquipmentSlotType.Chest
+        };
+        db.Items.Add(alias);
+        db.CharacterItems.Add(new CharacterItem
+        {
+            Id = Guid.NewGuid(), CharacterId = CharacterId, ItemId = alias.Id, IsEquipped = true
+        });
+        await db.SaveChangesAsync();
+
+        var grant = new ItemGrantService(db, new StubCharacterIdReadPort(CharacterId), new Slots());
+        var result = await grant.GrantItemAsync(Guid.NewGuid(), Id(33));
+
+        Assert.False(result.WasNew);
+        Assert.False(result.InventoryFull);
+        Assert.Equal(alias.Id, result.Item?.ItemId);
+        Assert.Single(await db.CharacterItems.ToListAsync());
     }
 
     private static readonly Guid CharacterId = Guid.NewGuid();

@@ -6,7 +6,6 @@ using LifeLevel.Modules.Streak.Domain.Entities;
 using LifeLevel.Modules.WorldZone.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
 using CharacterEntity = LifeLevel.Modules.Character.Domain.Entities.Character;
 using XpHistoryEntry = LifeLevel.Modules.Character.Domain.Entities.XpHistoryEntry;
@@ -18,9 +17,8 @@ namespace LifeLevel.Api.Infrastructure.Persistence;
 /// boss damage, current streak, and power (all-time, from combat stats).
 /// </summary>
 public sealed class LeaderboardReadAdapter(
-    AppDbContext db, ICharacterCombatStatsReadPort combat, IMemoryCache cache) : ILeaderboardReadPort
+    AppDbContext db, ICharacterCombatStatsReadPort combat) : ILeaderboardReadPort
 {
-    private static readonly TimeSpan PowerCacheTtl = TimeSpan.FromMinutes(5);
 
     public async Task<LeaderboardPool> GetPoolAsync(
         Guid viewerId, LeaderboardScope scope, LeaderboardMetric metric,
@@ -116,11 +114,6 @@ public sealed class LeaderboardReadAdapter(
         return new LeaderboardPool(true, context, entries);
     }
 
-    // Power needs gear, talents and bosses per player, so it is cached briefly.
     private async Task<double> PowerAsync(Guid userId, CancellationToken ct) =>
-        await cache.GetOrCreateAsync($"leaderboard:power:{userId}", async entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = PowerCacheTtl;
-            return (double)(await combat.GetCombatStatsAsync(userId, ct)).Power;
-        });
+        (double)(await combat.GetCombatStatsAsync(userId, ct)).Power;
 }

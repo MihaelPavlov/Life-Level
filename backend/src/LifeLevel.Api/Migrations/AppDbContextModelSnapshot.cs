@@ -22,6 +22,23 @@ namespace LifeLevel.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LifeLevel.Api.Infrastructure.Persistence.MaintenanceRun", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CompletedForUtcDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Name", "CompletedForUtcDate");
+
+                    b.ToTable("MaintenanceRuns");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Achievements.Domain.Entities.Achievement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -91,6 +108,9 @@ namespace LifeLevel.Api.Migrations
 
                     b.Property<double>("CurrentValue")
                         .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("SeenAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("UnlockedAt")
                         .HasColumnType("timestamp with time zone");
@@ -600,6 +620,12 @@ namespace LifeLevel.Api.Migrations
                     b.Property<bool>("IsTargeted")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastSeenTurnAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LastSeenTurnId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("MaxHpSnapshot")
                         .HasColumnType("integer");
 
@@ -977,6 +1003,9 @@ namespace LifeLevel.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("EarnedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("SeenAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("TitleId")

@@ -1,3 +1,5 @@
+import 'dart:async';
+import '../../../core/services/seen_state_client.dart';
 import '../../unlocks/tour/tour_target.dart';
 import '../../unlocks/tour/tours/unlock_tours.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +28,7 @@ class RewardRoadsHub extends ConsumerStatefulWidget {
 }
 
 class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
+  final Set<String> _seenInFlight = {};
   final _coinAnchor = FxAnchor();
   final _gemAnchor = FxAnchor();
   final _barAnchor = FxAnchor();
@@ -77,6 +80,21 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
 
   @override
   Widget build(BuildContext context) {
+    final unseenIds = ref
+            .watch(achievementsProvider)
+            .valueOrNull
+            ?.where((a) => a.isUnlocked && a.seenAt == null)
+            .map((a) => a.id)
+            .where((id) => !_seenInFlight.contains(id))
+            .toList() ??
+        const <String>[];
+    if (unseenIds.isNotEmpty) {
+      _seenInFlight.addAll(unseenIds);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        unawaited(_markSeen(unseenIds));
+      });
+    }
     final async = ref.watch(achievementRoadsProvider);
     final data = async.valueOrNull;
     return Scaffold(
@@ -135,6 +153,15 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
         ),
       ),
     );
+  }
+
+  Future<void> _markSeen(List<String> ids) async {
+    try {
+      await SeenStateClient().markAchievements(ids);
+      if (mounted) ref.invalidate(achievementsProvider);
+    } catch (_) {
+      _seenInFlight.removeAll(ids);
+    }
   }
 
   Widget _body(AchievementRoadsData data) {
@@ -410,9 +437,15 @@ class _RoadTile extends StatelessWidget {
     final meta = RoadMeta.of(road.category);
     final (String? badge, Color badgeBg, Color badgeFg) = road.hasChestReady
         ? ('Chest ready', kRoadReady, const Color(0xFF1A1004))
-        : road.isComplete
-            ? ('Complete', kRoadDone.withValues(alpha: .2), kRoadDone)
-            : (null, Colors.transparent, Colors.transparent);
+        : road.ready > 0
+            ? (
+                '${road.ready} to claim',
+                kRoadReady.withValues(alpha: .18),
+                kRoadReady
+              )
+            : road.isComplete
+                ? ('Complete', kRoadDone.withValues(alpha: .2), kRoadDone)
+                : (null, Colors.transparent, Colors.transparent);
     final pct = road.total == 0 ? 0.0 : road.claimed / road.total;
     return Material(
       color: AppColors.surface,

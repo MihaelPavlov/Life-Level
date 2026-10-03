@@ -6,6 +6,7 @@ using LifeLevel.Modules.Adventure.Encounters.Domain.Entities;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 using ActivityEntity = LifeLevel.Modules.Activity.Domain.Entities.Activity;
 using StreakEntity = LifeLevel.Modules.Streak.Domain.Entities.Streak;
@@ -203,6 +204,10 @@ public class AchievementService(
         // Record the opening before paying out; the unique (user, category, tier) index
         // rejects a second, concurrent open.
         var chest = AchievementRewardTable.Chest(t);
+        IDbContextTransaction? transaction = null;
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
+            transaction = await db.Database.BeginTransactionAsync(ct);
+        await using var transactionScope = transaction;
         var row = new UserAchievementStageChest
         {
             UserId = userId, Category = cat, Tier = t, OpenedAt = DateTime.UtcNow,
@@ -223,12 +228,14 @@ public class AchievementService(
         if (chest.Coins > 0) await currency.AddCoinsAsync(userId, chest.Coins, ct);
         if (chest.Gems > 0) await currency.AddGemsAsync(userId, chest.Gems, ct);
         await db.SaveChangesAsync(ct);
+        var walletAfterReward = await WalletAsync(userId, ct);
+        if (transaction != null) await transaction.CommitAsync(ct);
 
         return new StageChestOpenResult(
             cat.ToString(), t.ToString(), chest.Key, chest.Name,
             item == null ? null : new StageChestItemDto(item.ItemId, item.Name, item.Icon, item.Rarity, item.InventoryIconUrl),
             chest.Coins, chest.Gems,
-            await WalletAsync(userId, ct));
+            walletAfterReward);
     }
 
     private async Task<AchievementClaimResult> ClaimRowsAsync(
@@ -371,7 +378,8 @@ public class AchievementService(
         a.CoinReward,
         a.GemReward,
         ua?.IsClaimed ?? false,
-        ua?.ClaimedAt);
+        ua?.ClaimedAt,
+        ua?.SeenAt);
 
     private async Task<double> ComputeConditionValueAsync(
         Guid userId, Guid characterId, ConditionType conditionType, CancellationToken ct)

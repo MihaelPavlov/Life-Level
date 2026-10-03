@@ -162,7 +162,7 @@ Future<void> playHomeBossReplay(BuildContext context, BossReplay replay,
       }
     }
 
-    BossReplayFinder.markSeen(replay);
+    await BossReplayFinder.markSeen(replay);
     if (!context.mounted) return;
     if (replay.finished) {
       // The Boss slain screen is the recap of a kill.

@@ -351,6 +351,8 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
         {
             var branchValid = await db.WorldZones.AnyAsync(z => z.Id == branchId && z.RegionId == regionId && z.Type == WorldZoneType.Crossroads);
             if (!branchValid) return BadRequest(new { error = "branchOfId must reference a Crossroads zone in the same region" });
+            var branchCount = await db.WorldZones.CountAsync(z => z.BranchOfId == branchId);
+            if (branchCount >= 2) return BadRequest(new { error = "crossroads already has two branches" });
         }
 
         var zone = new WorldZoneEntity
@@ -399,6 +401,8 @@ public class AdminMapController(AppDbContext db, IWebHostEnvironment? environmen
             if (branchId == id) return BadRequest(new { error = "zone cannot branch from itself" });
             var branchValid = await db.WorldZones.AnyAsync(z => z.Id == branchId && z.RegionId == zone.RegionId && z.Type == WorldZoneType.Crossroads);
             if (!branchValid) return BadRequest(new { error = "branchOfId must reference a Crossroads zone in the same region" });
+            var otherBranchCount = await db.WorldZones.CountAsync(z => z.BranchOfId == branchId && z.Id != id);
+            if (otherBranchCount >= 2) return BadRequest(new { error = "crossroads already has two branches" });
         }
 
         zone.Name = req.Name.Trim();

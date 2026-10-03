@@ -14,6 +14,7 @@ import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/leaderboard/providers/leaderboard_provider.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
+import '../../features/notifications/providers/notification_list_provider.dart';
 import '../../features/quests/providers/quest_provider.dart';
 import '../../features/rewards/providers/rewards_provider.dart';
 import '../../features/season/providers/season_provider.dart';
@@ -43,6 +44,8 @@ void invalidateProgressProviders(Ref ref) {
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
   ref.invalidate(leaderboardChestProvider);
+  ref.invalidate(leaderboardProvider);
+  ref.invalidate(notificationListProvider);
   ref.invalidate(regionChestsProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
@@ -75,6 +78,8 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(inventoryProvider);
   ref.invalidate(bossListProvider);
   ref.invalidate(leaderboardChestProvider);
+  ref.invalidate(leaderboardProvider);
+  ref.invalidate(notificationListProvider);
   ref.invalidate(regionChestsProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
@@ -109,6 +114,8 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(inventoryProvider);
   container.invalidate(bossListProvider);
   container.invalidate(leaderboardChestProvider);
+  container.invalidate(leaderboardProvider);
+  container.invalidate(notificationListProvider);
   container.invalidate(regionChestsProvider);
   container.invalidate(guildProvider);
   container.invalidate(seasonProvider);
