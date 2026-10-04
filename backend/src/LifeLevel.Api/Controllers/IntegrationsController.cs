@@ -116,6 +116,24 @@ public class IntegrationsController(
         return Ok(result);
     }
 
+    /// <summary>POST /api/integrations/strava/stage — fetch recent Strava workouts for review.</summary>
+    [HttpPost("strava/stage")]
+    public async Task<IActionResult> StravaStageRecent(CancellationToken ct)
+    {
+        try
+        {
+            return Ok(await stravaWebhook.StageRecentAsync(userContext.UserId, ct));
+        }
+        catch (HttpRequestException)
+        {
+            return StatusCode(502, new { error = "Could not reach Strava. Try again shortly." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(502, new { error = ex.Message });
+        }
+    }
+
     /// <summary>POST /api/integrations/sync-all — sync all connected server-side integrations</summary>
     [HttpPost("sync-all")]
     public async Task<IActionResult> SyncAll(CancellationToken ct)

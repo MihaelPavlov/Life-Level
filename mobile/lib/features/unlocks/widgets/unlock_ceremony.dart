@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -234,63 +235,66 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: const Color(0xE602050A),
-          gradient: RadialGradient(
-            center: const Alignment(0, -.16),
-            radius: .75,
-            colors: [m.color.withValues(alpha: .24), const Color(0x0002050A)],
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 9, sigmaY: 9),
+      child: Material(
+        type: MaterialType.transparency,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xB802050A),
+            gradient: RadialGradient(
+              center: const Alignment(0, -.16),
+              radius: .75,
+              colors: [m.color.withValues(alpha: .24), const Color(0x0002050A)],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_seq, _spin]),
-              builder: (context, _) => Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.queue.length > 1) ...[
-                    _queueCounter(),
-                    const SizedBox(height: 28),
-                  ],
-                  const Text('NEW FEATURE UNLOCKED',
-                      style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2.4,
-                          color: AppColors.orange)),
-                  const SizedBox(height: 14),
-                  _orb(),
-                  const SizedBox(height: 6),
-                  _reveal(
-                      0,
-                      Text(m.name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary))),
-                  const SizedBox(height: 8),
-                  _reveal(
-                      1,
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: Text(m.line,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_seq, _spin]),
+                builder: (context, _) => Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (widget.queue.length > 1) ...[
+                      _queueCounter(),
+                      const SizedBox(height: 28),
+                    ],
+                    const Text('NEW FEATURE UNLOCKED',
+                        style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.4,
+                            color: AppColors.orange)),
+                    const SizedBox(height: 14),
+                    _orb(),
+                    const SizedBox(height: 6),
+                    _reveal(
+                        0,
+                        Text(m.name,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                                fontSize: 13,
-                                height: 1.5,
-                                color: AppColors.textSecondary)),
-                      )),
-                  const SizedBox(height: 12),
-                  _reveal(2, _perk()),
-                  const SizedBox(height: 22),
-                  _reveal(3, _buttons()),
-                ],
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textPrimary))),
+                    const SizedBox(height: 8),
+                    _reveal(
+                        1,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: Text(m.line,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  height: 1.5,
+                                  color: AppColors.textSecondary)),
+                        )),
+                    const SizedBox(height: 12),
+                    _reveal(2, _perk()),
+                    const SizedBox(height: 22),
+                    _reveal(3, _buttons()),
+                  ],
+                ),
               ),
             ),
           ),

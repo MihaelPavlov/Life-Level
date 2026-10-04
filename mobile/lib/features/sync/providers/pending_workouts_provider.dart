@@ -68,8 +68,8 @@ class PendingWorkoutsState {
 /// The pending-workout queue as the app sees it.
 ///
 /// [check] is what a pull on Home does: read the phone's health store,
-/// queue anything new on our server, then read the queue back. It never
-/// calls Strava or Garmin; their workouts arrive through webhooks.
+/// queue anything new on our server, then read the queue back. Manual checks
+/// also fetch recent Strava workouts; quiet checks use the existing queue.
 final pendingWorkoutsProvider =
     NotifierProvider<PendingWorkoutsNotifier, PendingWorkoutsState>(
   PendingWorkoutsNotifier.new,
@@ -95,10 +95,10 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
     } catch (_) {}
   }
 
-  /// Reads the phone's health store, queues anything new, then returns the
-  /// queue. Throws when the server can't be reached; nothing is lost then,
-  /// because provider workouts already sit in the queue on the server.
-  Future<PendingWorkoutList> check() async {
+  /// Reads the phone's health store and the queue. A player-initiated check
+  /// also asks Strava for the last 30 days, including pre-connection workouts.
+  /// Quiet background checks remain database-only for server integrations.
+  Future<PendingWorkoutList> check({bool refreshStrava = true}) async {
     state = state.copyWith(checking: true);
     try {
       final service = ref.read(pendingWorkoutsServiceProvider);
@@ -109,7 +109,7 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
       } catch (_) {
         local = null; // The health store failing must not block the queue.
       }
-      final PendingWorkoutList list;
+      PendingWorkoutList list;
       if (local != null && local.isNotEmpty) {
         list = await service.stage(local);
         await reader.markStaged();
@@ -117,6 +117,7 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
         list = await service.list();
         if (local != null) await reader.markStaged();
       }
+      if (refreshStrava) list = await service.stageStrava();
       final now = DateTime.now();
       state = state.copyWith(list: list, lastCheckedAt: now, checking: false);
       _saveLastChecked(now);
@@ -132,7 +133,7 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
   Future<void> checkQuietly() async {
     if (state.checking || state.importing) return;
     try {
-      await check();
+      await check(refreshStrava: false);
     } catch (_) {}
   }
 

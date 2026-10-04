@@ -7,6 +7,7 @@ import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/services/seen_state_client.dart';
 import '../character/providers/character_provider.dart';
+import '../home/providers/adventure_hub_status_provider.dart';
 import '../unlocks/tour/tour_target.dart';
 import '../unlocks/tour/tours/unlock_tours.dart';
 import 'models/title_models.dart';
@@ -28,6 +29,7 @@ class TitlesRanksScreen extends ConsumerStatefulWidget {
 class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
   final _flight = TitleEquipFlight();
   final Set<String> _seenInFlight = {};
+  final Set<String> _newTitleIds = {};
 
   VoidCallback? get onClose => widget.onClose;
 
@@ -82,12 +84,16 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
   @override
   Widget build(BuildContext context) {
     final titlesAsync = ref.watch(titlesProvider);
-    final unseenIds = titlesAsync.valueOrNull?.earnedTitles
+    final seenReady =
+        ref.watch(adventureHubSeenMigrationProvider) is AsyncData<void> &&
+            titlesAsync is AsyncData<TitlesAndRanksResponse>;
+    final unseenIds = (seenReady ? titlesAsync.valueOrNull : null)?.earnedTitles
             .where((title) => title.seenAt == null)
             .map((title) => title.id)
             .where((id) => !_seenInFlight.contains(id))
             .toList() ?? const <String>[];
     if (unseenIds.isNotEmpty) {
+      _newTitleIds.addAll(unseenIds);
       _seenInFlight.addAll(unseenIds);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_markSeen(unseenIds));
@@ -170,8 +176,12 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                 ),
                 data: (data) {
                   final profile = profileAsync.valueOrNull;
+                  final earnedTitles = [...data.earnedTitles]
+                    ..sort((a, b) =>
+                        (_newTitleIds.contains(b.id) ? 1 : 0) -
+                        (_newTitleIds.contains(a.id) ? 1 : 0));
                   final firstToEquip =
-                      data.earnedTitles.where((t) => !t.isEquipped).firstOrNull;
+                      earnedTitles.where((t) => !t.isEquipped).firstOrNull;
 
                   return CustomScrollView(
                     slivers: [
@@ -218,10 +228,11 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                             child: ListenableBuilder(
                               listenable: _flight,
                               builder: (_, __) {
-                                final t = data.earnedTitles[i];
+                                final t = earnedTitles[i];
                                 final item = TitleListItem(
                                   key: ValueKey(t.id),
                                   title: t,
+                                  isNew: _newTitleIds.contains(t.id),
                                   nameKey: _flight.nameKeyFor(t.id),
                                   equipDisabled: _flight.inFlight,
                                   onEquip: () => _equip(t),
@@ -235,7 +246,7 @@ class _TitlesRanksScreenState extends ConsumerState<TitlesRanksScreen> {
                               },
                             ),
                           ),
-                          childCount: data.earnedTitles.length,
+                          childCount: earnedTitles.length,
                         ),
                       ),
                       const SliverToBoxAdapter(

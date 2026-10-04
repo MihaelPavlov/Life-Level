@@ -72,7 +72,7 @@ public class StravaWebhookService(
             Provider = IntegrationProviders.Strava,
             ExternalId = $"strava:{evt.ObjectId}",
             ActivityType = ActivityTypeMapper.FromStrava(activity.SportType),
-            DurationMinutes = (int)Math.Round(activity.MovingTime / 60.0),
+            DurationMinutes = DurationMinutes(activity),
             DistanceKm = activity.Distance > 0 ? activity.Distance / 1000.0 : null,
             Calories = activity.Calories > 0 ? (int?)activity.Calories : null,
             PerformedAt = activity.StartDateLocal.ToUniversalTime(),
@@ -104,6 +104,27 @@ public class StravaWebhookService(
         }
 
         return new SyncResult { Imported = imported, Skipped = skipped, Errors = errors };
+    }
+
+    /// <summary>
+    /// Explicit player sync: fetch recent Strava activities into the review
+    /// queue. Webhooks only cover new events, so this also finds workouts
+    /// recorded before the athlete connected Life-Level.
+    /// </summary>
+    public async Task<PendingActivityListDto> StageRecentAsync(Guid userId, CancellationToken ct = default)
+    {
+        var status = await oAuth.GetStatusAsync(userId, ct);
+        if (!status.IsConnected)
+            return await pending.ListAsync(userId, ct);
+
+        var (activities, error) = await FetchRecentAsync(userId, days: 30, ct);
+        if (error is not null)
+            throw new InvalidOperationException(error);
+
+        foreach (var activity in activities)
+            await pending.EnqueueAsync(userId, activity, ct);
+
+        return await pending.ListAsync(userId, ct);
     }
 
     /// <summary>
@@ -140,11 +161,17 @@ public class StravaWebhookService(
             Provider = IntegrationProviders.Strava,
             ExternalId = $"strava:{activity.Id}",
             ActivityType = ActivityTypeMapper.FromStrava(activity.SportType),
-            DurationMinutes = (int)Math.Round(activity.MovingTime / 60.0),
+            DurationMinutes = DurationMinutes(activity),
             DistanceKm = activity.Distance > 0 ? activity.Distance / 1000.0 : null,
             Calories = activity.Calories > 0 ? (int?)activity.Calories : null,
             PerformedAt = activity.StartDateLocal.ToUniversalTime(),
         }).ToList(), null);
+    }
+
+    private static int DurationMinutes(StravaActivityDto activity)
+    {
+        var seconds = activity.MovingTime > 0 ? activity.MovingTime : activity.ElapsedTime;
+        return seconds <= 0 ? 0 : Math.Max(1, (int)Math.Round(seconds / 60.0));
     }
 
 }
@@ -163,4 +190,5 @@ internal record StravaActivityDto(
     [property: JsonPropertyName("moving_time")]      int      MovingTime,
     [property: JsonPropertyName("distance")]         double   Distance,
     [property: JsonPropertyName("calories")]         double   Calories,
-    [property: JsonPropertyName("start_date_local")] DateTime StartDateLocal);
+    [property: JsonPropertyName("start_date_local")] DateTime StartDateLocal,
+    [property: JsonPropertyName("elapsed_time")]     int      ElapsedTime = 0);

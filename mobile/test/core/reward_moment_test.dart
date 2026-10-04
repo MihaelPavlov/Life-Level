@@ -227,13 +227,17 @@ void main() {
       expect(find.text('Sunken Crypt cleared'), findsNothing);
     });
 
-    testWidgets('chest opened → card', (tester) async {
+    testWidgets('map chest uses the task reward opening', (tester) async {
       await _open(
           tester,
           (c) =>
               showChestOpenedOverlay(c, zoneName: 'Thornwood Cache', xp: 250));
-      expect(find.text('+250'), findsOneWidget);
-      await claimAndClose(tester, 'Claim');
+      expect(find.text('You got loot!'), findsWidgets);
+      expect(find.text('Thornwood Cache'), findsOneWidget);
+      expect(find.text('+250 XP'), findsWidgets);
+      await tester.tap(find.text('Tap to close'));
+      await tester.pumpAndSettle();
+      expect(find.text('You got loot!'), findsNothing);
     });
 
     testWidgets('boss slain → takeover', (tester) async {
@@ -385,8 +389,7 @@ void main() {
         availableAvatars: [LevelUpAvatarInfo('Star', '🌟', 10)],
         availableRegions: [],
       );
-      await _open(
-          tester, (c) => showLevelUpScreen(c, 10, receipt: receipt));
+      await _open(tester, (c) => showLevelUpScreen(c, 10, receipt: receipt));
       expect(find.text('+3 Stat Points'), findsOneWidget);
       expect(find.text('1 from levels + 2 bonus'), findsOneWidget);
       expect(find.text('+20 Power'), findsOneWidget);

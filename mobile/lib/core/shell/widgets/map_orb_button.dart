@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../features/boss/replay/home_boss_replay.dart';
+import '../../../features/boss/providers/boss_provider.dart';
+import '../../../features/home/providers/world_progress_provider.dart';
 import '../../constants/app_colors.dart';
 import '../../../features/map/journey/journey_state.dart';
 import '../../../features/unlocks/models/unlock_catalog.dart';
@@ -102,6 +104,17 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
   @override
   Widget build(BuildContext context) {
     final live = ref.watch(journeyOrbStateProvider);
+    final world = ref.watch(worldProgressProvider).valueOrNull;
+    final activeBoss = ref
+        .watch(bossListProvider)
+        .valueOrNull
+        ?.where((boss) => boss.isActive)
+        .firstOrNull;
+    final secondZone =
+        activeBoss != null && hasSeparateMapAction(activeBoss, world)
+            ? pickPortalZone(world!)
+            : null;
+    final routeFocused = ref.watch(journeyFocusProvider) == JourneyFocus.route;
     final fx = bossOrbFx.value;
     final victory = fx == BossOrbFxMode.victory;
     final charging = fx == BossOrbFxMode.charge;
@@ -160,7 +173,9 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
 
     return Semantics(
       button: true,
-      label: locked ? 'Map, locked' : 'Map. ${s.semantics}',
+      label: locked
+          ? 'Map, locked'
+          : 'Map. ${s.semantics}${secondZone == null ? '' : routeFocused ? '. Also boss raid' : '. Also ${secondZone.name}'}',
       child: FxAnchorTarget(
         anchor: ShellAnchors.mapOrb,
         child: TourTarget(
@@ -360,6 +375,37 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
                                     color: Colors.white,
                                     height: 1,
                                   ),
+                                ),
+                              ),
+                            ),
+                          if (secondZone != null && !locked)
+                            Positioned(
+                              right: -2,
+                              bottom: 1,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: routeFocused
+                                      ? AppColors.red
+                                      : AppColors.blue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF040810),
+                                    width: 2,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  routeFocused
+                                      ? Icons.sports_martial_arts_rounded
+                                      : secondZone.type == 'crossroads'
+                                          ? Icons.alt_route_rounded
+                                          : secondZone.type == 'chest'
+                                              ? Icons.inventory_2_rounded
+                                              : Icons.map_rounded,
+                                  size: 13,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),

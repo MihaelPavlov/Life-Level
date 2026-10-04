@@ -3,7 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/seen_state_client.dart';
 
 import '../../achievements/providers/achievements_provider.dart';
+import '../../achievements/models/achievement_models.dart';
 import '../../boss/providers/boss_provider.dart';
+import '../../character/providers/character_provider.dart';
 import '../../leaderboard/providers/leaderboard_provider.dart';
 import '../../map/providers/region_chest_provider.dart';
 import '../../rewards/providers/rewards_provider.dart';
@@ -11,6 +13,7 @@ import '../../season/providers/season_provider.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../../talents/providers/talents_provider.dart';
 import '../../titles/providers/titles_provider.dart';
+import '../../titles/models/title_models.dart';
 
 class AdventureHubSignals {
   final bool rewards;
@@ -51,23 +54,32 @@ class AdventureHubSignals {
 final adventureHubSeenStoreProvider =
     Provider<AdventureHubSeenStore>((_) => AdventureHubSeenStore());
 
+/// Legacy local seen IDs must reach the server before its unseen flags can
+/// drive Home badges. Otherwise old items briefly look new on sign-in.
+final adventureHubSeenMigrationProvider = FutureProvider<void>((ref) async {
+  final profile = await ref.watch(characterProfileProvider.future);
+  await ref.read(adventureHubSeenStoreProvider).migrateOnce(profile.username);
+  ref.invalidate(titlesProvider);
+  ref.invalidate(achievementsProvider);
+});
+
 final adventureHubSignalsProvider =
     FutureProvider<AdventureHubSignals>((ref) async {
-  final talents = ref.watch(talentsProvider).valueOrNull;
-  final season = ref.watch(seasonProvider).valueOrNull;
-  final titles = ref.watch(titlesProvider).valueOrNull;
-  final achievements = ref.watch(achievementsProvider).valueOrNull;
-  final achievementRoads = ref.watch(achievementRoadsProvider).valueOrNull;
-  final rewards = ref.watch(rewardCenterProvider).valueOrNull;
-  final streak = ref.watch(streakProvider).valueOrNull;
-  final bosses = ref.watch(bossListProvider).valueOrNull;
-  final leaderboardChest = ref.watch(leaderboardChestProvider).valueOrNull;
-  final regionChests = ref.watch(regionChestsProvider).valueOrNull;
+  final seenMigration = ref.watch(adventureHubSeenMigrationProvider);
+  final talents = ref.watch(talentsProvider).asData?.value;
+  final season = ref.watch(seasonProvider).asData?.value;
+  final titlesAsync = ref.watch(titlesProvider);
+  final achievementsAsync = ref.watch(achievementsProvider);
+  final achievementRoads = ref.watch(achievementRoadsProvider).asData?.value;
+  final rewards = ref.watch(rewardCenterProvider).asData?.value;
+  final streak = ref.watch(streakProvider).asData?.value;
+  final bosses = ref.watch(bossListProvider).asData?.value;
+  final leaderboardChest = ref.watch(leaderboardChestProvider).asData?.value;
+  final regionChests = ref.watch(regionChestsProvider).asData?.value;
 
-  final titlesUpdated = titles?.earnedTitles.any((title) => title.seenAt == null) ?? false;
-  final achievementsUpdated = achievements?.any(
-        (achievement) => achievement.isUnlocked && achievement.seenAt == null,
-      ) ?? false;
+  final titlesUpdated = hasVerifiedUnseenTitles(seenMigration, titlesAsync);
+  final achievementsUpdated =
+      hasVerifiedUnseenAchievements(seenMigration, achievementsAsync);
 
   return AdventureHubSignals(
     rewards: rewards?.hasClaimableReward ?? false,
@@ -86,6 +98,25 @@ final adventureHubSignalsProvider =
     leaderboard: (leaderboardChest?.stack ?? 0) > 0,
   );
 });
+
+bool hasVerifiedUnseenTitles(
+  AsyncValue<void> migration,
+  AsyncValue<TitlesAndRanksResponse> titles,
+) {
+  if (migration is! AsyncData<void> ||
+      titles is! AsyncData<TitlesAndRanksResponse>) return false;
+  return titles.value.earnedTitles.any((title) => title.seenAt == null);
+}
+
+bool hasVerifiedUnseenAchievements(
+  AsyncValue<void> migration,
+  AsyncValue<List<AchievementDto>> achievements,
+) {
+  if (migration is! AsyncData<void> ||
+      achievements is! AsyncData<List<AchievementDto>>) return false;
+  return achievements.value.any(
+      (achievement) => achievement.isUnlocked && achievement.seenAt == null);
+}
 
 bool achievementHubNeedsAttention({
   required bool hasUnseenAchievements,

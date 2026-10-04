@@ -6,6 +6,7 @@ import 'package:life_level/features/achievements/models/achievement_models.dart'
 import 'package:life_level/features/achievements/achievements_screen.dart';
 import 'package:life_level/features/achievements/providers/achievements_provider.dart';
 import 'package:life_level/features/achievements/roads/reward_roads_hub.dart';
+import 'package:life_level/features/home/providers/adventure_hub_status_provider.dart';
 
 // ── Fixture: Running road, Stage 1 (Common) chest opened, Stage 2
 // (Uncommon) with one claimed and one ready — claiming it finishes the stage.
@@ -141,8 +142,26 @@ class _FakeRoads extends AchievementRoadsNotifier {
   void refreshCharacter() {}
 }
 
-Widget _app(_FakeRoads fake, {bool motion = false}) => ProviderScope(
-      overrides: [achievementRoadsProvider.overrideWith(() => fake)],
+class _FakeAchievements extends AchievementsNotifier {
+  @override
+  Future<List<AchievementDto>> build() async => [
+        AchievementDto.fromJson(
+          _a('u2', 'Weekend Long Run', 'Uncommon',
+              unlocked: true, claimed: true),
+        ),
+      ];
+}
+
+Widget _app(_FakeRoads fake,
+        {bool motion = false, bool newAchievement = false}) =>
+    ProviderScope(
+      overrides: [
+        achievementRoadsProvider.overrideWith(() => fake),
+        if (newAchievement) ...[
+          achievementsProvider.overrideWith(_FakeAchievements.new),
+          adventureHubSeenMigrationProvider.overrideWith((ref) async {}),
+        ],
+      ],
       // Motion off app-wide (pushed routes and the popup too): effects are
       // skipped and the chest popup opens settled.
       child: MaterialApp(
@@ -155,6 +174,13 @@ Widget _app(_FakeRoads fake, {bool motion = false}) => ProviderScope(
     );
 
 void main() {
+  testWidgets('new achievement stays visible on the hub', (tester) async {
+    await tester.pumpWidget(_app(_FakeRoads(), newAchievement: true));
+    await tester.pumpAndSettle();
+    expect(find.text('NEW ACHIEVEMENT'), findsOneWidget);
+    expect(find.text('Weekend Long Run'), findsOneWidget);
+  });
+
   testWidgets('road detail stays inside achievements navigation',
       (tester) async {
     final fake = _FakeRoads();

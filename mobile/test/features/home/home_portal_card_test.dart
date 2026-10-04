@@ -151,6 +151,7 @@ BossListItem _activeBoss() => BossListItem(
 
 Widget _harness({
   required WorldFullData world,
+  Future<WorldFullData>? worldFuture,
   RegionDetail? region,
   List<BossListItem> bosses = const [],
   bool animate = false,
@@ -158,7 +159,8 @@ Widget _harness({
   return ProviderScope(
     overrides: [
       bossListProvider.overrideWith(() => _FakeBossListNotifier(bosses)),
-      worldProgressProvider.overrideWith((ref) async => world),
+      worldProgressProvider.overrideWith(
+          (ref) async => worldFuture == null ? world : await worldFuture),
       currentRegionDetailProvider.overrideWith((ref) async => region),
       characterProfileProvider.overrideWith(_FakeCharacterNotifier.new),
     ],
@@ -206,6 +208,35 @@ void main() {
     expect(find.text('Open map →'), findsNothing);
   });
 
+  testWidgets('shows a simultaneous chest action when world loads after boss',
+      (tester) async {
+    final chest = _zone(id: 'graveyard', type: 'chest', name: 'The Graveyard');
+    final world = _world(
+      zones: [chest],
+      currentZoneId: chest.id,
+      currentRegionId: 'region-1',
+    );
+    final worldReady = Completer<WorldFullData>();
+    await tester.pumpWidget(_harness(
+      world: world,
+      worldFuture: worldReady.future,
+      region: _region(nodes: [
+        _zoneNode(id: chest.id, isChest: true, chestRewardXp: 250),
+      ]),
+      bosses: [_activeBoss()],
+    ));
+    await tester.pump();
+    expect(find.text('Forest Warden'), findsOneWidget);
+
+    worldReady.complete(world);
+    await tester.pumpAndSettle();
+    expect(find.text('Chest'), findsOneWidget);
+    await tester.tap(find.text('Chest'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('The Graveyard'), findsWidgets);
+    expect(find.text('Open chest →'), findsOneWidget);
+  });
+
   testWidgets('boss raid card keeps the route one tap away', (tester) async {
     final here = _zone(id: 'z1', type: 'entry', name: 'Dawn Camp');
     final next = _zone(id: 'z2', type: 'zone', name: 'Whispering Fork');
@@ -236,8 +267,8 @@ void main() {
 
     expect(find.text('Fight →'), findsOneWidget);
     expect(find.text('Whispering Woods'), findsOneWidget);
-    expect(find.text('Dawn Camp → Whispering Fork · 1.4 km left'),
-        findsOneWidget);
+    expect(
+        find.text('Dawn Camp → Whispering Fork · 1.4 km left'), findsOneWidget);
     await tester.tap(find.text('Map ›'));
 
     final target = await request.future;

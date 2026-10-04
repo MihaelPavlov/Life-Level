@@ -78,6 +78,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   int _userLevel = 1;
   bool _loading = true;
   bool _destinationRequestInFlight = false;
+  bool _chestRequestInFlight = false;
   String? _error;
   bool _initialZoneHandled = false;
 
@@ -509,19 +510,18 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   }
 
   Future<void> _handleOpenChest(ZoneNode node) async {
+    if (_chestRequestInFlight) return;
+    _chestRequestInFlight = true;
     try {
       final result = await _service.openChest(node.id);
       if (!mounted) return;
       Navigator.of(context).pop(); // close the zone sheet
-      await _load();
       WorldZoneRefreshNotifier.notify();
       if (!mounted) return;
-      // Celebration modal — mirrors the level-up / item-obtained overlays.
       showChestOpenedOverlay(
         context,
         zoneName: result.zoneName,
         xp: result.xp,
-        emoji: node.emoji.isEmpty ? '🎁' : node.emoji,
       );
     } on ChestAlreadyOpenedException catch (e) {
       if (!mounted) return;
@@ -530,6 +530,8 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       AppToast.error(context, 'Failed to open chest: $e');
+    } finally {
+      _chestRequestInFlight = false;
     }
   }
 

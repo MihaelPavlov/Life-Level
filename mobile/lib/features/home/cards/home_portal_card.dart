@@ -43,7 +43,8 @@ import 'portal_idle.dart';
 /// hub overlay is visible above the bottom nav.
 class HomePortalCard extends ConsumerStatefulWidget {
   final VoidCallback? onSync;
-  const HomePortalCard({super.key, this.onSync});
+  final bool showBoss;
+  const HomePortalCard({super.key, this.onSync, this.showBoss = true});
 
   @override
   ConsumerState<HomePortalCard> createState() => _HomePortalCardState();
@@ -168,22 +169,26 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     final ref = this.ref;
     final onSync = widget.onSync;
     // Active boss raid from bossListProvider still wins over anything else.
-    final activeBoss = ref
-        .watch(bossListProvider)
-        .valueOrNull
-        ?.where((b) => b.isActive)
-        .toList()
-        .firstOrNull;
+    final activeBoss = widget.showBoss
+        ? ref
+            .watch(bossListProvider)
+            .valueOrNull
+            ?.where((b) => b.isActive)
+            .firstOrNull
+        : null;
     if (activeBoss != null) {
       // The fight leads, but the route stays one tap away.
       final world = ref.watch(worldProgressProvider).valueOrNull;
       final region = ref.watch(currentRegionDetailProvider).valueOrNull;
-      // A crossroads sitting underneath the raid doesn't get erased — it
-      // gets its own tab, and the Map button follows whichever one is open.
-      if (world != null && hasPendingCrossroads(world)) {
+      // Keep the current map action available alongside an active raid.
+      // Bosses can belong to another region, as with the Graveyard chest.
+      final zone = world == null ? null : pickPortalZone(world);
+      if (world != null &&
+          zone != null &&
+          hasSeparateMapAction(activeBoss, world)) {
         return _DualFocusPortal(
           boss: activeBoss,
-          zone: pickPortalZone(world)!,
+          zone: zone,
           world: world,
           region: region,
           onSync: onSync,
@@ -534,10 +539,7 @@ class _BossRaidPortal extends StatelessWidget {
   }
 }
 
-/// Shown instead of [_BossRaidPortal] when the player is also standing on an
-/// unresolved crossroads. A small tab row picks which of the two the card
-/// (and the Map button, via [journeyFocusProvider]) currently shows; neither
-/// [_BossRaidPortal] nor [_CrossroadsPortal] is touched to get there.
+/// Shows both the active raid and the player's current map action.
 class _DualFocusPortal extends ConsumerWidget {
   final BossListItem boss;
   final WorldZoneModel zone;
@@ -567,12 +569,17 @@ class _DualFocusPortal extends ConsumerWidget {
       children: [
         _FocusTabs(
           focus: focus,
+          zoneLabel: zone.type == 'crossroads'
+              ? 'Crossroads'
+              : zone.type == 'chest'
+                  ? 'Chest'
+                  : 'Map',
           onChange: (f) => ref.read(journeyFocusProvider.notifier).state = f,
         ),
         const SizedBox(height: 10),
         if (focus == JourneyFocus.boss)
           _BossRaidPortal(boss: boss, onSync: onSync, journey: bossJourney)
-        else
+        else if (hasPendingCrossroads(world))
           _CrossroadsPortal(
             zone: zone,
             world: world,
@@ -582,18 +589,22 @@ class _DualFocusPortal extends ConsumerWidget {
             onPickBranch: onPickBranch,
             busyBranchId: busyBranchId,
             onSync: onSync,
-          ),
+          )
+        else
+          HomePortalCard(showBoss: false, onSync: onSync),
       ],
     );
   }
 }
 
-/// "⚔️ Boss" / "🔀 Crossroads" — switches [_DualFocusPortal] and, through
-/// [journeyFocusProvider], the Map button too.
+/// Switches between the raid and the current map action. The Map button
+/// follows the same focus through [journeyFocusProvider].
 class _FocusTabs extends StatelessWidget {
   final JourneyFocus focus;
+  final String zoneLabel;
   final ValueChanged<JourneyFocus> onChange;
-  const _FocusTabs({required this.focus, required this.onChange});
+  const _FocusTabs(
+      {required this.focus, required this.zoneLabel, required this.onChange});
 
   @override
   Widget build(BuildContext context) {
@@ -617,8 +628,8 @@ class _FocusTabs extends StatelessWidget {
           Expanded(
             child: _tab(
               context,
-              label: '🔀 Crossroads',
-              value: JourneyFocus.crossroads,
+              label: zoneLabel == 'Crossroads' ? '🔀 Crossroads' : zoneLabel,
+              value: JourneyFocus.route,
               activeColor: AppColors.blue,
             ),
           ),

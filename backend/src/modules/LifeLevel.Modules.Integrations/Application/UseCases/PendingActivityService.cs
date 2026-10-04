@@ -12,7 +12,8 @@ namespace LifeLevel.Modules.Integrations.Application.UseCases;
 ///
 /// Webhook → fetch the activity once → <see cref="EnqueueAsync"/>.
 /// Phone reads Health Connect / Apple Health locally → <see cref="StageAsync"/>.
-/// Player pulls Home → <see cref="ListAsync"/> (our database only, no provider call).
+/// Background checks read <see cref="ListAsync"/>; manual checks may first
+/// fetch recent Strava workouts into this queue.
 /// Player taps Import → <see cref="ImportAsync"/> (stored payload, no provider call).
 /// </summary>
 public class PendingActivityService(

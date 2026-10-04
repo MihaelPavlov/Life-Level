@@ -10,6 +10,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/motion/reward_fx.dart';
 import '../../../core/widgets/app_toast.dart';
+import '../../home/providers/adventure_hub_status_provider.dart';
 import '../models/achievement_models.dart';
 import '../providers/achievements_provider.dart';
 import 'reward_road_screen.dart';
@@ -29,6 +30,7 @@ class RewardRoadsHub extends ConsumerStatefulWidget {
 
 class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
   final Set<String> _seenInFlight = {};
+  final Map<String, AchievementDto> _newAchievements = {};
   final _coinAnchor = FxAnchor();
   final _gemAnchor = FxAnchor();
   final _barAnchor = FxAnchor();
@@ -80,15 +82,20 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
 
   @override
   Widget build(BuildContext context) {
-    final unseenIds = ref
-            .watch(achievementsProvider)
-            .valueOrNull
-            ?.where((a) => a.isUnlocked && a.seenAt == null)
-            .map((a) => a.id)
-            .where((id) => !_seenInFlight.contains(id))
+    final achievementsAsync = ref.watch(achievementsProvider);
+    final seenReady =
+        ref.watch(adventureHubSeenMigrationProvider) is AsyncData<void> &&
+            achievementsAsync is AsyncData<List<AchievementDto>>;
+    final unseen = (seenReady ? achievementsAsync.valueOrNull : null)
+            ?.where((a) => a.isUnlocked && a.seenAt == null &&
+                !_seenInFlight.contains(a.id))
             .toList() ??
-        const <String>[];
+        const <AchievementDto>[];
+    final unseenIds = unseen.map((a) => a.id).toList();
     if (unseenIds.isNotEmpty) {
+      for (final achievement in unseen) {
+        _newAchievements[achievement.id] = achievement;
+      }
       _seenInFlight.addAll(unseenIds);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -178,6 +185,13 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 32),
       children: [
+        if (_newAchievements.isNotEmpty) ...[
+          _NewAchievementsCard(
+            achievements: _newAchievements.values.toList(),
+            onOpen: (category) => _openRoad(category),
+          ),
+          const SizedBox(height: 14),
+        ],
         AnimatedSize(
           duration:
               AppMotion.duration(context, const Duration(milliseconds: 350)),
@@ -244,6 +258,58 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
 
     open.sort((a, b) => score(b).compareTo(score(a)));
     return open.first;
+  }
+}
+
+class _NewAchievementsCard extends StatelessWidget {
+  final List<AchievementDto> achievements;
+  final ValueChanged<String> onOpen;
+
+  const _NewAchievementsCard({
+    required this.achievements,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final first = achievements.first;
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () => onOpen(first.category),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.orange),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(achievements.length == 1
+                  ? 'NEW ACHIEVEMENT'
+                  : '${achievements.length} NEW ACHIEVEMENTS',
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.orange)),
+              const SizedBox(height: 5),
+              Text(first.title,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary)),
+              if (achievements.length > 1)
+                Text('and ${achievements.length - 1} more',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

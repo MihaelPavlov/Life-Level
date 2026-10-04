@@ -9,6 +9,7 @@ class TitleListItem extends StatefulWidget {
   final TitleDto title;
   final VoidCallback? onEquip;
   final bool isLocked;
+  final bool isNew;
 
   /// On the title name — where the equip flight lifts off from.
   final GlobalKey? nameKey;
@@ -21,6 +22,7 @@ class TitleListItem extends StatefulWidget {
     required this.title,
     this.onEquip,
     this.isLocked = false,
+    this.isNew = false,
     this.nameKey,
     this.equipDisabled = false,
   });
@@ -180,6 +182,15 @@ class _TitleListItemState extends State<TitleListItem>
                             )
                           : const SizedBox.shrink(key: ValueKey('none')),
                     ),
+                    if (widget.isNew)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 6),
+                        child: Text('NEW',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.orange)),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 4),

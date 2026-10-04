@@ -1,23 +1,31 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import 'reward_moment/reward_moment.dart';
+import '../constants/app_icons.dart';
+import 'app_icon_image.dart';
+import '../../features/rewards/widgets/task_reward_popup.dart';
 
-/// Opening a chest zone on the region map: a card with the zone's emoji and
-/// the XP it held, which flies into the XP ring on claim.
+/// Opens a map zone chest with the same burst reveal as task rewards.
 void showChestOpenedOverlay(
   BuildContext context, {
   required String zoneName,
   required int xp,
-  String emoji = '🎁',
 }) {
-  RewardMoment.show(
+  unawaited(showRewardRevealPopup(
     context,
-    size: RewardMomentSize.card,
-    accent: AppColors.orange,
-    hero: RewardEmoji(emoji),
-    label: 'Chest opened',
-    title: zoneName,
-    subtitle: 'The chest is empty now. Its rewards are yours.',
-    rewards: [RewardLine.xp(xp)],
-  );
+    items: [
+      RewardRevealItem(
+        asset: AppIcons.rewardXpCrystals,
+        icon: const AppIconImage(
+          AppIcons.rewardXpCrystals,
+          size: 50,
+          visualScale: 2.5,
+        ),
+        label: '+$xp XP',
+        color: AppColors.blue,
+      ),
+    ],
+    subtitle: zoneName,
+  ));
 }

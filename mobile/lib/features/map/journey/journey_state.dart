@@ -50,14 +50,22 @@ bool hasPendingCrossroads(WorldFullData? world) {
   return dest == null || dest.isEmpty;
 }
 
-/// Which of two simultaneously-active things the journey card and the Map
-/// button are currently showing. Only meaningful while both a boss raid and
-/// a crossroads are pending at once — see [hasPendingCrossroads].
-enum JourneyFocus { boss, crossroads }
+/// A boss tied to the current zone is already represented by the raid card.
+/// A different zone still needs its own action, even when it is a chest or
+/// destination rather than a crossroads.
+bool hasSeparateMapAction(BossListItem boss, WorldFullData? world) {
+  if (world == null) return false;
+  final zone = pickPortalZone(world);
+  return zone != null && !(zone.type == 'boss' && boss.worldZoneId == zone.id);
+}
+
+/// Which of the raid and map action the journey card currently shows.
+enum JourneyFocus { boss, route }
 
 /// Shared between the home journey card and the Map button so switching
 /// tabs on one updates the other.
-final journeyFocusProvider = StateProvider<JourneyFocus>((ref) => JourneyFocus.boss);
+final journeyFocusProvider =
+    StateProvider<JourneyFocus>((ref) => JourneyFocus.boss);
 
 /// Pick a reasonable "next" zone reachable from `from` — used when the
 /// current zone is consumed (e.g. opened chest) and the journey should nudge
@@ -334,19 +342,17 @@ JourneyOrbState resolveJourneyOrb({
 }) {
   final boss = activeBoss;
   if (boss != null) {
-    // A crossroads sitting underneath the raid gets its own tab on the
-    // journey card; the orb mirrors whichever tab is open so it never tells
-    // a different story than the card the player just closed.
-    if (focus == JourneyFocus.crossroads &&
-        hasPendingCrossroads(worldAsync.valueOrNull)) {
-      final zone = pickPortalZone(worldAsync.valueOrNull!)!;
-      return JourneyOrbState(
-        kind: JourneyKind.crossroads,
-        color: AppColors.blue,
-        ring: JourneyRing.split,
-        iconAsset: AppIcons.zoneFirstFork,
-        label: 'Choose',
-        semantics: 'Crossroads at ${zone.name}, choose your path',
+    // The orb follows the map tab even while a separate boss is active.
+    if (focus == JourneyFocus.route &&
+        hasSeparateMapAction(boss, worldAsync.valueOrNull)) {
+      return resolveJourneyOrb(
+        activeBoss: null,
+        bosses: bosses,
+        seenOf: seenOf,
+        worldAsync: worldAsync,
+        region: region,
+        dungeonState: dungeonState,
+        xpProgress: xpProgress,
       );
     }
     // The rings show what the player has seen; a replay walks them to the
@@ -636,15 +642,13 @@ BossListItem? selectJourneyBoss(
   if (active != null || world == null) return active;
 
   final currentZoneId = world.userProgress.currentZoneId;
-  final standingZone = world.zones
-      .where((zone) => zone.id == currentZoneId)
-      .firstOrNull;
+  final standingZone =
+      world.zones.where((zone) => zone.id == currentZoneId).firstOrNull;
   if (standingZone?.type != 'boss' ||
       (world.userProgress.currentEdgeId ?? '').isNotEmpty) {
     return null;
   }
   return bosses
-      .where((boss) =>
-          boss.isReadyToFight && boss.worldZoneId == currentZoneId)
+      .where((boss) => boss.isReadyToFight && boss.worldZoneId == currentZoneId)
       .firstOrNull;
 }

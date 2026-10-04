@@ -87,6 +87,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(titlesProvider);
   ref.invalidate(achievementsProvider);
   ref.invalidate(adventureHubSignalsProvider);
+  ref.invalidate(adventureHubSeenMigrationProvider);
   ref.invalidate(burnChainProvider);
   ref.invalidate(delveStatusProvider);
   ref.invalidate(delveRunProvider);
@@ -124,6 +125,7 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(achievementsProvider);
   container.invalidate(unlocksProvider);
   container.invalidate(adventureHubSignalsProvider);
+  container.invalidate(adventureHubSeenMigrationProvider);
   container.invalidate(burnChainProvider);
   container.invalidate(delveStatusProvider);
   container.invalidate(delveRunProvider);

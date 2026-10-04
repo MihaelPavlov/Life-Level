@@ -36,6 +36,8 @@ class _FakeService extends PendingWorkoutsService {
   List<ExternalActivityDto>? staged;
   List<String>? importedIds;
   bool fail = false;
+  bool failStrava = false;
+  int stravaRefreshes = 0;
   _FakeService(this.next);
 
   @override
@@ -48,6 +50,13 @@ class _FakeService extends PendingWorkoutsService {
   Future<PendingWorkoutList> stage(List<ExternalActivityDto> activities) async {
     if (fail) throw Exception('offline');
     staged = activities;
+    return next;
+  }
+
+  @override
+  Future<PendingWorkoutList> stageStrava() async {
+    stravaRefreshes++;
+    if (failStrava) throw const StravaStageException('Strava unavailable');
     return next;
   }
 
@@ -108,6 +117,7 @@ void main() {
       final list = await c.read(pendingWorkoutsProvider.notifier).check();
 
       expect(service.staged, hasLength(1));
+      expect(service.stravaRefreshes, 1);
       expect(reader.staged, 1);
       expect(list.pending, hasLength(1));
       final state = c.read(pendingWorkoutsProvider);
@@ -127,7 +137,21 @@ void main() {
       await c.read(pendingWorkoutsProvider.notifier).check();
 
       expect(service.staged, isNull);
+      expect(service.stravaRefreshes, 1);
       expect(c.read(pendingWorkoutsProvider).pendingCount, 0);
+    });
+
+    test('quiet check does not fetch Strava history', () async {
+      final service = _FakeService(PendingWorkoutList.empty);
+      final c = ProviderContainer(overrides: [
+        pendingWorkoutsServiceProvider.overrideWithValue(service),
+        localWorkoutReaderProvider.overrideWithValue(_FakeReader(const [])),
+      ]);
+      addTearDown(c.dispose);
+
+      await c.read(pendingWorkoutsProvider.notifier).checkQuietly();
+
+      expect(service.stravaRefreshes, 0);
     });
 
     test('check rethrows when offline, checkQuietly does not', () async {
@@ -390,6 +414,16 @@ void main() {
       await tester.tap(find.text('pull'));
       await toastFrames(tester);
       expect(find.text('You’re offline'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('Strava failure shows the provider error', (tester) async {
+      final (_, service, _) = await host(tester, PendingWorkoutList.empty);
+      service.failStrava = true;
+      await tester.tap(find.text('pull'));
+      await toastFrames(tester);
+      expect(find.text('Strava sync failed'), findsOneWidget);
+      expect(find.text('Strava unavailable'), findsOneWidget);
       await tester.pump(const Duration(seconds: 5));
     });
 

@@ -10,6 +10,7 @@ import '../boss/replay/home_boss_replay.dart';
 import '../onboarding/widgets/activity_visuals.dart';
 import 'models/pending_models.dart';
 import 'providers/pending_workouts_provider.dart';
+import 'services/pending_workouts_service.dart';
 import 'widgets/import_review_sheet.dart';
 
 /// What a pull on Home (or a tap on the pending pill) does:
@@ -26,6 +27,10 @@ Future<void> runPullImportFlow(BuildContext context, WidgetRef ref) async {
   final PendingWorkoutList list;
   try {
     list = await notifier.check();
+  } on StravaStageException catch (e) {
+    if (!context.mounted) return;
+    AppToast.error(context, 'Strava sync failed', detail: e.message);
+    return;
   } catch (_) {
     if (!context.mounted) return;
     final waiting = ref.read(pendingWorkoutsProvider).pendingCount;

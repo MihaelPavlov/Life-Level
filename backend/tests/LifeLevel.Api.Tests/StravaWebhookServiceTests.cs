@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Net;
+using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.Api.Infrastructure.Persistence;
 using LifeLevel.Modules.Integrations.Application;
 using LifeLevel.Modules.Integrations.Application.UseCases;
@@ -32,18 +34,19 @@ public class StravaWebhookServiceTests
         AppDbContext db,
         HttpClient? http = null,
         StravaOAuthService? oAuth = null,
-        HealthSyncService? healthSync = null)
+        HealthSyncService? healthSync = null,
+        Guid? characterId = null)
     {
         http ??= new HttpClient();
         oAuth ??= new StravaOAuthService(db, http, Options.Create(TestOptions));
         healthSync ??= new HealthSyncService(
             db,
-            new StubCharacterIdReadPort(),
+            new StubCharacterIdReadPort(characterId),
             new StubActivityLogPort(),
             new StubActivityExternalIdReadPort());
 
         var pending = new PendingActivityService(
-            db, new StubCharacterIdReadPort(), healthSync,
+            db, new StubCharacterIdReadPort(characterId), healthSync,
             new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort());
         return new StravaWebhookService(db, http, oAuth, healthSync, pending, Options.Create(TestOptions));
     }
@@ -179,5 +182,48 @@ public class StravaWebhookServiceTests
         // Valid event but no StravaConnection in DB for this owner
         var evt = new StravaWebhookEvent("activity", 123, "create", 999);
         await service.ProcessEventAsync(evt);
+    }
+
+    [Fact]
+    public async Task StageRecentAsync_QueuesPastWorkoutsAndDoesNotDuplicateOnRetry()
+    {
+        var db = CreateDb(nameof(StageRecentAsync_QueuesPastWorkoutsAndDoesNotDuplicateOnRetry));
+        var userId = Guid.NewGuid();
+        var characterId = Guid.NewGuid();
+        db.Set<StravaConnection>().Add(new StravaConnection
+        {
+            Id = Guid.NewGuid(), UserId = userId, StravaAthleteId = 123,
+            AccessToken = "test-token", RefreshToken = "test-refresh",
+            ExpiresAt = DateTime.UtcNow.AddHours(1), IsActive = true,
+        });
+        await db.SaveChangesAsync();
+
+        var started = DateTime.UtcNow.AddDays(-2).ToString("O");
+        var json = $$"""
+            [{"id":101,"sport_type":"Ride","moving_time":1800,"distance":12000,"calories":250,"start_date_local":"{{started}}"},
+             {"id":102,"sport_type":"Workout","moving_time":0,"elapsed_time":2400,"distance":0,"calories":180,"start_date_local":"{{started}}"}]
+            """;
+        using var http = new HttpClient(new JsonHandler(json));
+        var service = CreateService(db, http, characterId: characterId);
+
+        var first = await service.StageRecentAsync(userId);
+        var second = await service.StageRecentAsync(userId);
+
+        Assert.Equal(2, first.PendingCount);
+        Assert.Equal(2, second.PendingCount);
+        Assert.Contains(first.Items, item => item.ActivityType == "Cycling");
+        Assert.Contains(first.Items, item => item.ActivityType == "Gym");
+        Assert.Contains(first.Items, item => item.ActivityType == "Gym" && item.DurationMinutes == 40);
+        Assert.Equal(2, await db.Set<PendingActivity>().CountAsync());
+    }
+
+    private sealed class JsonHandler(string json) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
+            });
     }
 }

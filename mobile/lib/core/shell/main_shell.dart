@@ -47,8 +47,6 @@ import '../../features/modes/modes_screen.dart';
 import '../../features/modes/burn_chain/burn_chain_provider.dart';
 import '../../features/modes/treasure_delve/delve_provider.dart';
 import '../../features/titles/titles_ranks_screen.dart';
-import '../../features/titles/providers/titles_provider.dart';
-import '../../features/achievements/providers/achievements_provider.dart';
 import '../../features/season/season_track_screen.dart';
 import '../../features/talents/talents_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
@@ -689,11 +687,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
   Future<void> _migrateSeenState() async {
     try {
-      final profile = await ref.read(characterProfileProvider.future);
-      await ref.read(adventureHubSeenStoreProvider).migrateOnce(profile.username);
-      if (!mounted) return;
-      ref.invalidate(titlesProvider);
-      ref.invalidate(achievementsProvider);
+      await ref.read(adventureHubSeenMigrationProvider.future);
     } catch (_) {
       // Retry next launch if the server or profile is unavailable.
     }
@@ -871,6 +865,17 @@ class _MainShellState extends ConsumerState<MainShell>
       !homeBossReplayRunning &&
       !_bossReplayFetching &&
       _activeShellOverlay() == null;
+
+  Future<void> _prepareUnlockCeremony(String key) async {
+    if (!mounted) return;
+    final switchingToHome = _tabIndex != 0;
+    if (switchingToHome) setState(() => _tabIndex = 0);
+    await WidgetsBinding.instance.endOfFrame;
+    if (switchingToHome && mounted) {
+      await Future<void>.delayed(
+          AppMotion.duration(context, AppMotionTokens.micro));
+    }
+  }
 
   void _closeShellOverlays() {
     _journeyOpen = false;
@@ -1108,6 +1113,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
     return UnlockCoordinator(
       canInterrupt: _canShowUnlock,
+      prepareCeremony: _prepareUnlockCeremony,
       openFeature: _openUnlockedFeature,
       child: Scaffold(
         backgroundColor: AppColors.shellBackground,

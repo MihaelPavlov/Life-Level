@@ -8,6 +8,7 @@ import 'package:life_level/features/titles/models/title_models.dart';
 import 'package:life_level/features/titles/providers/titles_provider.dart';
 import 'package:life_level/features/titles/services/titles_service.dart';
 import 'package:life_level/features/titles/titles_ranks_screen.dart';
+import 'package:life_level/features/home/providers/adventure_hub_status_provider.dart';
 import 'package:life_level/features/titles/widgets/title_equip_flight.dart';
 
 Map<String, dynamic> _title(String id, String name, {bool equipped = false}) =>
@@ -87,10 +88,12 @@ class _FakeCharacterNotifier extends CharacterNotifier {
       });
 }
 
-Widget _harness(_FakeTitlesService service) => ProviderScope(
+Widget _harness(_FakeTitlesService service, {bool migrated = false}) => ProviderScope(
       overrides: [
         titlesServiceProvider.overrideWithValue(service),
         characterProfileProvider.overrideWith(_FakeCharacterNotifier.new),
+        if (migrated)
+          adventureHubSeenMigrationProvider.overrideWith((ref) async {}),
       ],
       child: const MaterialApp(home: TitlesRanksScreen()),
     );
@@ -108,6 +111,16 @@ Future<void> _pumpScreen(WidgetTester tester, _FakeTitlesService service) async 
 }
 
 void main() {
+  testWidgets('unseen earned titles stay labeled during the visit',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844) * 3;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_harness(_FakeTitlesService(), migrated: true));
+    await tester.pumpAndSettle();
+    expect(find.text('NEW'), findsWidgets);
+  });
+
   testWidgets('equip flies the title into the nameplate, then commits',
       (tester) async {
     final service = _FakeTitlesService();

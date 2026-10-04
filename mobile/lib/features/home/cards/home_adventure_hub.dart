@@ -27,8 +27,10 @@ class HomeAdventureHub extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final signals = ref.watch(adventureHubSignalsProvider).valueOrNull ??
-        AdventureHubSignals.empty;
+    final signalsAsync = ref.watch(adventureHubSignalsProvider);
+    final signals = signalsAsync.isLoading
+        ? AdventureHubSignals.empty
+        : signalsAsync.valueOrNull ?? AdventureHubSignals.empty;
     final unlocks = ref.watch(unlocksSnapshotProvider);
     final tiles = _orderedTiles(context, ref, signals, unlocks);
 
@@ -93,6 +95,7 @@ class HomeAdventureHub extends ConsumerWidget {
     final fresh = key != null && unlocks.isFresh(key);
     final hubTile = _HubTile(
       icon: AppIconImage(tile.iconAsset, size: 30),
+      iconTargetId: key == null ? null : 'icon.$key',
       label: tile.label,
       showBadge: tile.hasUpdate && !locked,
       locked: locked,
@@ -252,7 +255,6 @@ class HomeAdventureHub extends ConsumerWidget {
       );
 
   void _openTalents() => ShellOverlayNotifier.open('talents');
-
 }
 
 class _HubTileModel {
@@ -276,6 +278,7 @@ class _HubTileModel {
 
 class _HubTile extends StatelessWidget {
   final Widget icon;
+  final String? iconTargetId;
   final String label;
   final bool showBadge;
   final bool locked;
@@ -284,6 +287,7 @@ class _HubTile extends StatelessWidget {
 
   const _HubTile({
     required this.icon,
+    this.iconTargetId,
     required this.label,
     this.showBadge = false,
     this.locked = false,
@@ -293,6 +297,9 @@ class _HubTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget iconTarget(Widget child) => iconTargetId == null
+        ? child
+        : TourTarget(id: iconTargetId!, child: child);
     return AppPressable(
       onTap: onTap,
       haptic: AppHaptic.selection,
@@ -308,7 +315,7 @@ class _HubTile extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
                 children: [
                   if (locked)
-                    SizedBox(
+                    iconTarget(SizedBox(
                       width: 56,
                       height: 56,
                       child: CustomPaint(
@@ -328,9 +335,9 @@ class _HubTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                    )
+                    ))
                   else
-                    Container(
+                    iconTarget(Container(
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
@@ -350,7 +357,7 @@ class _HubTile extends StatelessWidget {
                             : null,
                       ),
                       child: Center(child: icon),
-                    ),
+                    )),
                   if (locked)
                     const Positioned(top: 6, right: 4, child: LockBadge()),
                   if (fresh && !locked)

@@ -21,7 +21,7 @@ String unlockSlotTargetId(String key) => switch (key) {
       UnlockKeys.map => 'shell.mapOrb',
       UnlockKeys.gear => 'slot.gear',
       UnlockKeys.modes || UnlockKeys.delve => 'slot.modes',
-      _ => 'slot.$key',
+      _ => 'icon.$key',
     };
 
 /// Plays unlock ceremonies one at a time and starts the Home tour after
@@ -30,6 +30,9 @@ String unlockSlotTargetId(String key) => switch (key) {
 class UnlockCoordinator extends ConsumerStatefulWidget {
   /// True when nothing else is on screen that a ceremony would cover.
   final bool Function() canInterrupt;
+
+  /// Brings Home into view before the ceremony covers the current screen.
+  final Future<void> Function(String key) prepareCeremony;
 
   /// Opens the feature's screen. For Home, Map, Gear and Modes (which live in
   /// the shell rather than on a screen of their own) it also runs the tour.
@@ -40,6 +43,7 @@ class UnlockCoordinator extends ConsumerStatefulWidget {
   const UnlockCoordinator({
     super.key,
     required this.canInterrupt,
+    required this.prepareCeremony,
     required this.openFeature,
     required this.child,
   });
@@ -131,6 +135,12 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
         // A Show me tour (or the screen it opened) has to be over first.
         await _waitUntilFree();
         if (!mounted) return;
+      }
+      await widget.prepareCeremony(queue[i].key);
+      if (!mounted) return;
+      await _revealTarget(queue[i].key);
+      if (!mounted) return;
+      if (i > 0) {
         await showUnlockBridge(context, queue[i],
             remaining: queue.length - i);
         if (!mounted) return;
@@ -159,6 +169,9 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
     }
     await notifier.markSeen(meta.key);
     if (!mounted) return;
+    await Future<void>.delayed(
+        AppMotion.duration(context, const Duration(milliseconds: 300)));
+    if (!mounted) return;
     await _flyToSlot(meta);
     if (!mounted || !showMe) return;
     await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -166,15 +179,35 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
   }
 
   /// The feature's icon arcs from the middle of the screen into its slot.
-  Future<void> _flyToSlot(UnlockMeta meta) async {
-    final id = unlockSlotTargetId(meta.key);
+  Future<void> _revealTarget(String key) async {
+    final id = unlockSlotTargetId(key);
     final ctx = TourTargets.contextOf(id);
-    if (ctx != null && ctx.mounted && Scrollable.maybeOf(ctx) != null) {
+    final rect = TourTargets.rectOf(id);
+    if (ctx == null ||
+        !ctx.mounted ||
+        rect == null ||
+        Scrollable.maybeOf(ctx) == null) {
+      return;
+    }
+    final size = MediaQuery.sizeOf(context);
+    final safeTop = MediaQuery.paddingOf(context).top + 12;
+    final safeBottom = size.height - MediaQuery.paddingOf(context).bottom - 104;
+    if (rect.left < 12 ||
+        rect.right > size.width - 12 ||
+        rect.top < safeTop ||
+        rect.bottom > safeBottom) {
       await Scrollable.ensureVisible(ctx,
           alignment: .5,
           duration:
               AppMotion.duration(context, const Duration(milliseconds: 250)));
+      if (mounted) await WidgetsBinding.instance.endOfFrame;
     }
+  }
+
+  Future<void> _flyToSlot(UnlockMeta meta) async {
+    await _revealTarget(meta.key);
+    if (!mounted) return;
+    final id = unlockSlotTargetId(meta.key);
     final to = TourTargets.rectOf(id);
     if (to == null || !mounted) return;
     final size = MediaQuery.sizeOf(context);

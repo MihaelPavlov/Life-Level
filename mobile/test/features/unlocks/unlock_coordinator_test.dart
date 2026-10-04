@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/features/unlocks/models/unlock_models.dart';
 import 'package:life_level/features/unlocks/providers/unlocks_provider.dart';
 import 'package:life_level/features/unlocks/unlock_coordinator.dart';
+import 'package:life_level/features/unlocks/tour/tour_target.dart';
 
 /// Serves a fixed chain and records what the coordinator marks.
 class _FakeUnlocks extends UnlocksNotifier {
@@ -56,6 +57,7 @@ Future<({List<String> seen, List<String> opened})> _mount(
       child: MaterialApp(
         home: UnlockCoordinator(
           canInterrupt: () => true,
+          prepareCeremony: (_) async {},
           openFeature: (key) async => opened.add(key),
           child: const Scaffold(body: SizedBox.expand()),
         ),
@@ -66,6 +68,68 @@ Future<({List<String> seen, List<String> opened})> _mount(
 }
 
 void main() {
+  testWidgets(
+      'reveals an offscreen Hub icon before showing the blurred ceremony',
+      (tester) async {
+    final vertical = ScrollController();
+    final horizontal = ScrollController();
+    final prepared = <String>[];
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        unlocksProvider.overrideWith(() => _FakeUnlocks(
+            UnlocksSnapshot([
+              _u('home', 0),
+              _u('achievements', 1, seen: false, toured: false),
+            ]),
+            [])),
+      ],
+      child: MaterialApp(
+        home: UnlockCoordinator(
+          canInterrupt: () => true,
+          prepareCeremony: (key) async => prepared.add(key),
+          openFeature: (_) async {},
+          child: Scaffold(
+            body: SingleChildScrollView(
+              controller: vertical,
+              child: Column(children: [
+                const SizedBox(height: 900),
+                SingleChildScrollView(
+                  controller: horizontal,
+                  scrollDirection: Axis.horizontal,
+                  child: const Row(children: [
+                    SizedBox(width: 1000),
+                    TourTarget(
+                      id: 'icon.achievements',
+                      child: SizedBox(width: 56, height: 56),
+                    ),
+                    SizedBox(width: 500),
+                  ]),
+                ),
+                const SizedBox(height: 500),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    ));
+
+    await _pumpFor(tester, 1600);
+    expect(prepared, ['achievements']);
+    expect(vertical.offset, greaterThan(0));
+    expect(horizontal.offset, greaterThan(0));
+    expect(find.text('NEW FEATURE UNLOCKED'), findsOneWidget);
+    expect(find.byType(BackdropFilter), findsWidgets);
+    final icon = TourTargets.rectOf('icon.achievements')!;
+    expect(icon.left, greaterThanOrEqualTo(0));
+    expect(
+        icon.right,
+        lessThanOrEqualTo(
+            tester.view.physicalSize.width / tester.view.devicePixelRatio));
+    await tester.pumpWidget(const SizedBox.shrink());
+    vertical.dispose();
+    horizontal.dispose();
+  });
+
   testWidgets('Later marks the unlock seen and opens nothing', (tester) async {
     final r = await _mount(
         tester,
@@ -143,6 +207,7 @@ void main() {
         child: MaterialApp(
           home: UnlockCoordinator(
             canInterrupt: () => free,
+            prepareCeremony: (_) async {},
             openFeature: (_) async {},
             child: const Scaffold(body: SizedBox.expand()),
           ),
