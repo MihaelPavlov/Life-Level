@@ -28,9 +28,10 @@ class HomeAdventureHub extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final signalsAsync = ref.watch(adventureHubSignalsProvider);
-    final signals = signalsAsync.isLoading
-        ? AdventureHubSignals.empty
-        : signalsAsync.valueOrNull ?? AdventureHubSignals.empty;
+    // Riverpod retains the last resolved value while dependencies refresh.
+    // Keep rendering it until the replacement arrives so attention badges are
+    // not removed and recreated for every provider that resolves on startup.
+    final signals = signalsAsync.valueOrNull ?? AdventureHubSignals.empty;
     final unlocks = ref.watch(unlocksSnapshotProvider);
     final tiles = _orderedTiles(context, signals, unlocks);
 

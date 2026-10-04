@@ -556,7 +556,8 @@ JourneyOrbState resolveJourneyOrb({
         color: AppColors.orange,
         ring: JourneyRing.progress,
         progress: 1,
-        iconAsset: AppIcons.rewardTreasureChest,
+        iconAsset:
+            opened ? AppIcons.rewardChestBurst : AppIcons.rewardTreasureChest,
         label: opened ? 'Opened' : 'Open',
         alert: !opened,
         semantics: opened

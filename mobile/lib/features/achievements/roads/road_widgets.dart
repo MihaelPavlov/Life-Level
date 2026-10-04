@@ -649,8 +649,11 @@ class _StageCardState extends State<StageCard> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(StageCard old) {
     super.didUpdateWidget(old);
-    if (old.completing != widget.completing ||
-        old.stage.chestReady != widget.stage.chestReady) {
+    // Only restart the loop when the ready state really changes. A refresh
+    // mid-open (chestReady → false while still completing) must not replay
+    // the hop just as the chest dims for the popup.
+    final wasReady = old.stage.chestReady || old.completing;
+    if (old.completing != widget.completing || wasReady != _ready) {
       _sync();
     }
     if (old.nudge != widget.nudge && _motion) _nudge.forward(from: 0);

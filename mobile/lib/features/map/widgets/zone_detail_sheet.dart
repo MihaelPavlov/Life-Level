@@ -24,7 +24,7 @@ class ZoneDetailSheet extends StatelessWidget {
   /// taps without seeded branches (CTA falls back to disabled).
   final VoidCallback? onChooseCrossroadsPath;
 
-  /// Callback for the chest `🎁 Open chest` CTA (fires only when `isChest &&
+  /// Callback for the chest `Open chest` CTA (fires only when `isChest &&
   /// status == active && !chestIsOpened`).
   final VoidCallback? onOpenChest;
 
@@ -561,7 +561,7 @@ class _Cta extends StatelessWidget {
       }
       if (node.status == ZoneNodeStatus.active) {
         return _CtaButton(
-          label: '🎁 Open chest · +$reward XP',
+          label: 'Open chest · +$reward XP',
           color: AppColors.orange,
           onTap: onOpenChest,
           disabled: onOpenChest == null,

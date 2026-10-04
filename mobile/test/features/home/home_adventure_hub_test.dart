@@ -86,11 +86,13 @@ void main() {
 
     container.read(_attentionModeProvider.notifier).state = 1;
     await tester.pump();
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect([x('Rewards'), x('Season'), x('Streak'), x('Journal')], positions);
     expect(find.text('!'), findsOneWidget);
 
     container.read(_attentionModeProvider.notifier).state = 2;
+    await tester.pump();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect([x('Rewards'), x('Season'), x('Streak'), x('Journal')], positions);
@@ -125,7 +127,8 @@ void main() {
     );
   });
 
-  testWidgets('hides stale alert while its signal refreshes', (tester) async {
+  testWidgets('keeps the alert stable while its signal refreshes',
+      (tester) async {
     final refresh = Completer<AdventureHubSignals>();
     late ProviderContainer container;
     await tester.pumpWidget(ProviderScope(
@@ -156,10 +159,12 @@ void main() {
     container.read(_signalsRefreshingProvider.notifier).state = true;
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
-    expect(find.text('!'), findsNothing);
+    expect(find.text('!'), findsOneWidget);
 
     refresh.complete(AdventureHubSignals.empty);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('!'), findsNothing);
   });
 
   group('achievement hub alert', () {

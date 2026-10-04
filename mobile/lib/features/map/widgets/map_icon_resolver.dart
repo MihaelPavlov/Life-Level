@@ -55,7 +55,10 @@ String? zoneNodeIconAsset(
   final key = _normalize(node.name);
 
   if (node.isChest || _hasAny(key, ['chest', 'hoard', 'vault'])) {
-    return AppIcons.rewardTreasureChest;
+    // Opened chests drop the padlock.
+    return node.chestIsOpened == true
+        ? AppIcons.rewardChestBurst
+        : AppIcons.rewardTreasureChest;
   }
   if (node.isBoss && _hasAny(key, ['forest warden'])) {
     return AppIcons.bossForestWarden;
