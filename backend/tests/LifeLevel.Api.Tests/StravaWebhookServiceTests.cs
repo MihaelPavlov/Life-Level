@@ -48,7 +48,8 @@ public class StravaWebhookServiceTests
 
         var pending = new PendingActivityService(
             db, new StubCharacterIdReadPort(characterId), healthSync,
-            new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort());
+            new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort(),
+            new StubActivityExternalIdReadPort());
         return new StravaWebhookService(db, http, oAuth, healthSync, pending, Options.Create(TestOptions), NullLogger<StravaWebhookService>.Instance);
     }
 

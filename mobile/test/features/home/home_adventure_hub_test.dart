@@ -12,6 +12,7 @@ import '../../helpers/unlocks_overrides.dart';
 
 final _rewardsReadyProvider = StateProvider<bool>((ref) => false);
 final _signalsRefreshingProvider = StateProvider<bool>((ref) => false);
+final _attentionModeProvider = StateProvider<int>((ref) => 0);
 
 const _title = TitleDto(
   id: 'title-1',
@@ -52,6 +53,50 @@ const _achievement = AchievementDto(
 );
 
 void main() {
+  testWidgets('shortcuts stay in place as live attention changes',
+      (tester) async {
+    late ProviderContainer container;
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        allUnlockedOverride,
+        adventureHubSignalsProvider.overrideWith((ref) async {
+          final mode = ref.watch(_attentionModeProvider);
+          return AdventureHubSignals(
+            rewards: mode == 0,
+            bosses: false,
+            streak: mode != 2,
+            talents: false,
+            season: mode != 1,
+            titles: false,
+            achievements: false,
+          );
+        }),
+      ],
+      child: Consumer(builder: (context, ref, _) {
+        container = ProviderScope.containerOf(context);
+        return const MaterialApp(home: Scaffold(body: HomeAdventureHub()));
+      }),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    double x(String label) => tester.getTopLeft(find.text(label)).dx;
+    final positions = [x('Rewards'), x('Season'), x('Streak'), x('Journal')];
+    expect(positions, orderedEquals(positions.toList()..sort()));
+
+    container.read(_attentionModeProvider.notifier).state = 1;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect([x('Rewards'), x('Season'), x('Streak'), x('Journal')], positions);
+    expect(find.text('!'), findsOneWidget);
+
+    container.read(_attentionModeProvider.notifier).state = 2;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect([x('Rewards'), x('Season'), x('Streak'), x('Journal')], positions);
+    expect(find.text('!'), findsOneWidget);
+  });
+
   test('unseen badges wait for migration and fresh server responses', () {
     expect(
       hasVerifiedUnseenTitles(

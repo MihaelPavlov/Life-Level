@@ -21,7 +21,8 @@ public class PendingActivityService(
     ICharacterIdReadPort characterIdRead,
     HealthSyncService healthSync,
     IActivityGainPreviewPort gainPreview,
-    INotificationPort notifications)
+    INotificationPort notifications,
+    IActivityExternalIdReadPort activityExternalIdRead)
 {
     /// <summary>Two workouts from different providers starting this close are the same workout.</summary>
     public static readonly TimeSpan DuplicateWindow = TimeSpan.FromMinutes(10);
@@ -41,12 +42,25 @@ public class PendingActivityService(
         var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
         if (characterId is null) return false;
 
-        var alreadyImported = await db.Set<ExternalActivityRecord>().AnyAsync(r =>
-            r.CharacterId == characterId &&
-            r.Provider == dto.Provider &&
-            r.ExternalId == dto.ExternalId &&
-            r.WasImported, ct);
-        if (alreadyImported) return false;
+        var importedActivityId = await activityExternalIdRead
+            .FindActivityIdByExternalIdAsync(characterId.Value, dto.ExternalId, ct);
+        var alreadyImported = importedActivityId is not null || await db.Set<ExternalActivityRecord>().AnyAsync(r =>
+            r.CharacterId == characterId && r.Provider == dto.Provider &&
+            r.ExternalId == dto.ExternalId && r.WasImported, ct);
+        if (alreadyImported)
+        {
+            var stale = await db.Set<PendingActivity>().FirstOrDefaultAsync(p =>
+                p.UserId == userId && p.Provider == dto.Provider &&
+                p.ExternalId == dto.ExternalId && p.Status == PendingActivityStatus.Pending, ct);
+            if (stale is not null)
+            {
+                stale.Status = PendingActivityStatus.Imported;
+                stale.ImportedAt = DateTime.UtcNow;
+                stale.ImportedActivityId = importedActivityId;
+                await db.SaveChangesAsync(ct);
+            }
+            return false;
+        }
 
         var existing = await db.Set<PendingActivity>().FirstOrDefaultAsync(p =>
             p.UserId == userId && p.Provider == dto.Provider && p.ExternalId == dto.ExternalId, ct);
@@ -111,6 +125,7 @@ public class PendingActivityService(
 
     public async Task<PendingActivityListDto> ListAsync(Guid userId, CancellationToken ct = default)
     {
+        var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct);
         var dupSince = DateTime.UtcNow - DuplicateVisibleFor;
         var rows = await db.Set<PendingActivity>()
             .Where(p => p.UserId == userId &&
@@ -118,6 +133,32 @@ public class PendingActivityService(
                  (p.Status == PendingActivityStatus.Duplicate && p.CreatedAt >= dupSince)))
             .OrderByDescending(p => p.PerformedAt)
             .ToListAsync(ct);
+
+        // A workout may have been imported by another path, or the final sync
+        // flag may have failed after Activities was saved. Clear those stale
+        // queue rows before presenting the review sheet.
+        if (characterId is not null)
+        {
+            var changed = false;
+            foreach (var row in rows.Where(r => r.Status == PendingActivityStatus.Pending))
+            {
+                var activityId = await activityExternalIdRead
+                    .FindActivityIdByExternalIdAsync(characterId.Value, row.ExternalId, ct);
+                var imported = activityId is not null || await db.Set<ExternalActivityRecord>().AnyAsync(r =>
+                    r.CharacterId == characterId && r.Provider == row.Provider &&
+                    r.ExternalId == row.ExternalId && r.WasImported, ct);
+                if (!imported) continue;
+                row.Status = PendingActivityStatus.Imported;
+                row.ImportedAt = DateTime.UtcNow;
+                row.ImportedActivityId = activityId;
+                changed = true;
+            }
+            if (changed)
+            {
+                await db.SaveChangesAsync(ct);
+                rows.RemoveAll(r => r.Status == PendingActivityStatus.Imported);
+            }
+        }
 
         var originalIds = rows.Where(r => r.DuplicateOfId != null).Select(r => r.DuplicateOfId!.Value).ToList();
         var originals = originalIds.Count == 0

@@ -210,6 +210,49 @@ public class HealthSyncServiceTests
         Assert.True(record.WasImported);
     }
 
+    [Fact]
+    public async Task ImportSingleAsync_ActivitySavedBeforeFlag_RepairsRecordWithoutLoggingAgain()
+    {
+        var db = CreateDb(nameof(ImportSingleAsync_ActivitySavedBeforeFlag_RepairsRecordWithoutLoggingAgain));
+        var (userId, characterId) = await SeedUserAndCharacter(db);
+        var activityId = Guid.NewGuid();
+        db.ExternalActivityRecords.Add(new ExternalActivityRecord
+        {
+            Id = Guid.NewGuid(), CharacterId = characterId, Provider = IntegrationProviders.Strava,
+            ExternalId = "strava:saved", ActivityStartTime = DateTime.UtcNow,
+            WasImported = false, SyncedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var service = CreateService(db, new FailingActivityLogPort(),
+            new StubActivityExternalIdReadPort(new() { ["strava:saved"] = activityId }));
+        var result = await service.ImportSingleAsync(userId, MakeDto("strava:saved"));
+
+        Assert.Equal(1, result.Skipped);
+        Assert.Empty(result.Errors);
+        var record = await db.ExternalActivityRecords.SingleAsync();
+        Assert.True(record.WasImported);
+        Assert.Equal(activityId, record.ImportedActivityId);
+    }
+
+    [Fact]
+    public async Task ImportSingleAsync_ActivitySavedWithoutRecord_DoesNotLogAgain()
+    {
+        var db = CreateDb(nameof(ImportSingleAsync_ActivitySavedWithoutRecord_DoesNotLogAgain));
+        var (userId, _) = await SeedUserAndCharacter(db);
+        var activityId = Guid.NewGuid();
+        var service = CreateService(db, new FailingActivityLogPort(),
+            new StubActivityExternalIdReadPort(new() { ["strava:saved"] = activityId }));
+
+        var result = await service.ImportSingleAsync(userId, MakeDto("strava:saved"));
+
+        Assert.Equal(1, result.Skipped);
+        Assert.Empty(result.Errors);
+        var record = await db.ExternalActivityRecords.SingleAsync();
+        Assert.True(record.WasImported);
+        Assert.Equal(activityId, record.ImportedActivityId);
+    }
+
     // ── ReprocessStuckAsync ──────────────────────────────────────────────────
 
     [Fact]

@@ -55,6 +55,29 @@ public class HealthSyncService(
             if (existing?.WasImported == true)
                 return (null, null);
 
+            // The activity can have been saved before the final dedup flag was
+            // written. Retrying the log in that state violates Activities' unique
+            // external-ID index and leaves the pending workout claimable forever.
+            var savedActivityId = await activityExternalIdRead
+                .FindActivityIdByExternalIdAsync(characterId, dto.ExternalId, ct);
+            if (savedActivityId is not null)
+            {
+                var recordToRepair = existing ?? new ExternalActivityRecord
+                {
+                    Id = Guid.NewGuid(),
+                    CharacterId = characterId,
+                    Provider = dto.Provider,
+                    ExternalId = dto.ExternalId,
+                    ActivityStartTime = dto.PerformedAt,
+                };
+                if (existing is null) db.Set<ExternalActivityRecord>().Add(recordToRepair);
+                recordToRepair.WasImported = true;
+                recordToRepair.ImportedActivityId = savedActivityId;
+                recordToRepair.SyncedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+                return (null, null);
+            }
+
             if (!Enum.TryParse<ActivityType>(dto.ActivityType, ignoreCase: true, out var activityType))
                 activityType = ActivityType.Gym;
 

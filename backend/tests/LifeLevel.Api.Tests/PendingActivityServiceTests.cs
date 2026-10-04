@@ -17,12 +17,15 @@ public class PendingActivityServiceTests
     private static AppDbContext CreateDb(string name) =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(name).Options);
 
-    private static PendingActivityService CreateService(AppDbContext db, INotificationPort? notifications = null)
+    private static PendingActivityService CreateService(
+        AppDbContext db, INotificationPort? notifications = null,
+        IActivityExternalIdReadPort? externalIdRead = null)
     {
         var characterId = new StubCharacterIdReadPort(CharacterId);
-        var health = new HealthSyncService(db, characterId, new StubActivityLogPort(), new StubActivityExternalIdReadPort());
+        externalIdRead ??= new StubActivityExternalIdReadPort();
+        var health = new HealthSyncService(db, characterId, new StubActivityLogPort(), externalIdRead);
         return new PendingActivityService(db, characterId, health, new StubActivityGainPreviewPort(),
-            notifications ?? new NoOpNotificationPort());
+            notifications ?? new NoOpNotificationPort(), externalIdRead);
     }
 
     private static ExternalActivityDto Run(string id, DateTime at, string provider = IntegrationProviders.Strava, int minutes = 38) => new()
@@ -83,6 +86,43 @@ public class PendingActivityServiceTests
 
         Assert.False(added);
         Assert.Empty(await db.Set<PendingActivity>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task List_ActivityAlreadySaved_ClearsStalePendingWorkout()
+    {
+        var db = CreateDb(nameof(List_ActivityAlreadySaved_ClearsStalePendingWorkout));
+        var svc = CreateService(db);
+        await svc.EnqueueAsync(UserId, Run("strava:saved", DateTime.UtcNow.AddHours(-1)));
+        var activityId = Guid.NewGuid();
+        svc = CreateService(db, externalIdRead: new StubActivityExternalIdReadPort(
+            new() { ["strava:saved"] = activityId }));
+
+        var list = await svc.ListAsync(UserId);
+
+        Assert.Empty(list.Items);
+        Assert.Equal(0, list.PendingCount);
+        var row = await db.Set<PendingActivity>().SingleAsync();
+        Assert.Equal(PendingActivityStatus.Imported, row.Status);
+        Assert.Equal(activityId, row.ImportedActivityId);
+    }
+
+    [Fact]
+    public async Task Import_ActivityAlreadySaved_SkipsAndClearsPendingWorkout()
+    {
+        var db = CreateDb(nameof(Import_ActivityAlreadySaved_SkipsAndClearsPendingWorkout));
+        var svc = CreateService(db);
+        await svc.EnqueueAsync(UserId, Run("strava:saved", DateTime.UtcNow.AddHours(-1)));
+        var id = (await svc.ListAsync(UserId)).Items.Single().Id;
+        svc = CreateService(db, externalIdRead: new StubActivityExternalIdReadPort(
+            new() { ["strava:saved"] = Guid.NewGuid() }));
+
+        var result = await svc.ImportAsync(UserId, new ImportPendingRequest { Ids = [id] });
+
+        Assert.Empty(result.Errors);
+        Assert.Equal(1, result.Skipped);
+        Assert.Equal(0, result.RemainingPending);
+        Assert.Equal(PendingActivityStatus.Imported, (await db.Set<PendingActivity>().SingleAsync()).Status);
     }
 
     [Fact]

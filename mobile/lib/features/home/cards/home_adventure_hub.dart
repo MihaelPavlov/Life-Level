@@ -32,7 +32,7 @@ class HomeAdventureHub extends ConsumerWidget {
         ? AdventureHubSignals.empty
         : signalsAsync.valueOrNull ?? AdventureHubSignals.empty;
     final unlocks = ref.watch(unlocksSnapshotProvider);
-    final tiles = _orderedTiles(context, ref, signals, unlocks);
+    final tiles = _orderedTiles(context, signals, unlocks);
 
     return TourTarget(
       id: TourIds.homeHub,
@@ -111,7 +111,6 @@ class HomeAdventureHub extends ConsumerWidget {
 
   List<_HubTileModel> _orderedTiles(
     BuildContext context,
-    WidgetRef ref,
     AdventureHubSignals signals,
     UnlocksSnapshot unlocks,
   ) {
@@ -120,7 +119,6 @@ class HomeAdventureHub extends ConsumerWidget {
         iconAsset: AppIcons.rewardDailyBonus,
         label: 'Rewards',
         hasUpdate: signals.rewards,
-        priority: 0,
         onTap: () => _openRewards(context),
       ),
       _HubTileModel(
@@ -128,37 +126,38 @@ class HomeAdventureHub extends ConsumerWidget {
         iconAsset: AppIcons.ringBoss,
         label: 'Bosses',
         hasUpdate: signals.bosses,
-        priority: 0,
         onTap: _openBosses,
       ),
       _HubTileModel(
-        unlockKey: UnlockKeys.leaderboard,
-        iconAsset: AppIcons.ringLeaderboard,
-        label: 'Leaderboard',
-        hasUpdate: signals.leaderboard,
-        priority: 1,
-        onTap: () => LeaderboardScreen.open(context),
+        iconAsset: AppIcons.seasonAdventureHub,
+        label: 'Season',
+        hasUpdate: signals.season,
+        onTap: _openSeason,
       ),
       _HubTileModel(
         iconAsset: AppIcons.rewardStreakFire,
         label: 'Streak',
         hasUpdate: signals.streak,
-        priority: 5,
         onTap: () => showStreakDetailSheet(context),
       ),
       _HubTileModel(
         iconAsset: AppIcons.homeJournalIcon,
         label: 'Journal',
         hasUpdate: false,
-        priority: 6,
         onTap: () => showActivityJournalSheet(context),
+      ),
+      _HubTileModel(
+        unlockKey: UnlockKeys.leaderboard,
+        iconAsset: AppIcons.ringLeaderboard,
+        label: 'Leaderboard',
+        hasUpdate: signals.leaderboard,
+        onTap: () => LeaderboardScreen.open(context),
       ),
       _HubTileModel(
         unlockKey: UnlockKeys.achievements,
         iconAsset: AppIcons.rankChampion,
         label: 'Achievements',
         hasUpdate: signals.achievements,
-        priority: 3,
         onTap: _openAchievements,
       ),
       _HubTileModel(
@@ -166,7 +165,6 @@ class HomeAdventureHub extends ConsumerWidget {
         iconAsset: AppIcons.ringGuild,
         label: 'Guild',
         hasUpdate: false,
-        priority: 7,
         onTap: _openGuild,
       ),
       _HubTileModel(
@@ -174,7 +172,6 @@ class HomeAdventureHub extends ConsumerWidget {
         iconAsset: AppIcons.ringTitles,
         label: 'Ranks',
         hasUpdate: signals.titles,
-        priority: 5,
         onTap: _openTitles,
       ),
       _HubTileModel(
@@ -182,22 +179,13 @@ class HomeAdventureHub extends ConsumerWidget {
         iconAsset: AppIcons.talentCrystalIcon,
         label: 'Talents',
         hasUpdate: signals.talents,
-        priority: 1,
         onTap: _openTalents,
-      ),
-      _HubTileModel(
-        iconAsset: AppIcons.seasonAdventureHub,
-        label: 'Season',
-        hasUpdate: signals.season,
-        priority: 2,
-        onTap: _openSeason,
       ),
       _HubTileModel(
         unlockKey: UnlockKeys.chests,
         iconAsset: AppIcons.regionChestsHubIcon,
         label: 'Region Chests',
         hasUpdate: signals.chests,
-        priority: 8,
         onTap: () => _openRegionChests(context),
       ),
     ];
@@ -207,23 +195,11 @@ class HomeAdventureHub extends ConsumerWidget {
     ];
     bool isLocked(_HubTileModel t) =>
         t.unlockKey != null && !unlocks.isUnlocked(t.unlockKey!);
-    bool isFresh(_HubTileModel t) =>
-        t.unlockKey != null && unlocks.isFresh(t.unlockKey!);
     indexed.sort((a, b) {
-      // Open tiles first, locked ones at the end so the player sees what's
-      // coming; a feature that just unlocked leads the row.
+      // Keep each usable shortcut in a familiar position while live badges
+      // refresh. Locked previews stay at the end until their feature opens.
       if (isLocked(a.tile) != isLocked(b.tile)) {
         return isLocked(a.tile) ? 1 : -1;
-      }
-      if (isFresh(a.tile) != isFresh(b.tile)) {
-        return isFresh(a.tile) ? -1 : 1;
-      }
-      if (a.tile.hasUpdate != b.tile.hasUpdate) {
-        return a.tile.hasUpdate ? -1 : 1;
-      }
-      if (a.tile.hasUpdate) {
-        final priorityCompare = a.tile.priority.compareTo(b.tile.priority);
-        if (priorityCompare != 0) return priorityCompare;
       }
       return a.index.compareTo(b.index);
     });
@@ -263,7 +239,6 @@ class _HubTileModel {
   final String iconAsset;
   final String label;
   final bool hasUpdate;
-  final int priority;
   final VoidCallback onTap;
 
   const _HubTileModel({
@@ -271,7 +246,6 @@ class _HubTileModel {
     required this.iconAsset,
     required this.label,
     required this.hasUpdate,
-    required this.priority,
     required this.onTap,
   });
 }

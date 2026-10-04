@@ -320,7 +320,8 @@ public class ImportFirstOnboardingTests
         var options = Options.Create(new StravaOptions());
         http ??= new HttpClient();
         var pending = new PendingActivityService(db, new DbCharacterIdReadPort(db), health,
-            new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort());
+            new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort(),
+            new StubActivityExternalIdReadPort());
         var strava = new StravaWebhookService(db, http, new StravaOAuthService(db, http, options), health, pending, options, NullLogger<StravaWebhookService>.Instance);
         return new OnboardingImportService(health, strava, new DbCharacterInfo(db), xp);
     }
