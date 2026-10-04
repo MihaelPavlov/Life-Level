@@ -327,7 +327,18 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
                                   width: 30,
                                   height: 30,
                                   child: s.iconAsset != null
-                                      ? AppIconImage(s.iconAsset!, size: 30)
+                                      ? Center(
+                                          child: AppIconImage(s.iconAsset!,
+                                              // The Wayfarer chest art fills
+                                              // its frame; keep it a touch
+                                              // smaller than other icons.
+                                              size:
+                                                  s.kind == JourneyKind.chest ||
+                                                          s.kind ==
+                                                              JourneyKind
+                                                                  .chestOpened
+                                                      ? 25
+                                                      : 30))
                                       : Icon(s.icon,
                                           size: 24, color: Colors.white),
                                 ),

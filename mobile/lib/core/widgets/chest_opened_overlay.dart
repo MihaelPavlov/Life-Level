@@ -27,5 +27,7 @@ void showChestOpenedOverlay(
       ),
     ],
     subtitle: zoneName,
+    // The basic Wayfarer chest, same art as a Reward Road's first stage.
+    heroAsset: AppIcons.shopChestCommon,
   ));
 }

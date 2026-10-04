@@ -572,8 +572,8 @@ class _StepDot extends StatelessWidget {
 
 /// The stage's chest goal: headline, chest art, pieces bar and legend.
 ///
-/// * chest ready → the card pulses gold, the chest hops, "Open …" appears.
-/// * [completing] (the claim that just finished the stage) → "Stage N
+/// * chest ready → the chest waits still, "Open …" appears.
+/// * [completing] (the claim that finished the stage, or "Open …") → "Stage N
 ///   complete!" in green, "X of X done · chest unlocked", gold pulse ×2 and
 ///   two chest hops, no button — the chest popup follows.
 /// * [nudge] changes → the chest wiggles and the headline flashes green.
@@ -622,12 +622,10 @@ class _StageCardState extends State<StageCard> with TickerProviderStateMixin {
   bool get _ready => widget.stage.chestReady || widget.completing;
 
   void _sync() {
-    if (_ready && _motion) {
-      if (widget.completing) {
-        _loop.repeat(count: 2); // scGold 1s × 2, scHop × 2
-      } else if (!_loop.isAnimating) {
-        _loop.repeat();
-      }
+    // A ready chest waits still; the gold pulse and hops play only once the
+    // stage is completing (after the tap), right before the popup.
+    if (widget.completing && _motion) {
+      _loop.repeat(count: 2); // scGold 1s × 2, scHop × 2
     } else {
       _loop.stop();
       _loop.value = 0;

@@ -132,12 +132,8 @@ Future<void> showStageChestPopup(
   final landed = await showRewardRevealPopup(
     context,
     items: items,
-    subtitle: item == null
-        ? 'Stage $stageNumber complete · ${result.chestName}'
-        : '${item.name} · Stage $stageNumber complete',
+    subtitle: 'Stage $stageNumber complete · ${result.chestName}',
     heroAsset: AppIcons.shopChestForKey(result.chestKey),
-    title: null,
-    showCloseHint: false,
   );
   if (!context.mounted || landed.isEmpty) return;
   final flights = <Future<void>>[];

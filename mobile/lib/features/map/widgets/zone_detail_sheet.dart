@@ -549,11 +549,10 @@ class _Cta extends StatelessWidget {
 
     // Chest-specific CTA wins over the generic paths when we're at the chest.
     if (node.isChest) {
-      final reward = node.chestRewardXp ?? 0;
       if (node.chestIsOpened == true ||
           node.status == ZoneNodeStatus.completed) {
         return _CtaButton(
-          label: '✓ Opened · +$reward XP',
+          label: '✓ Opened',
           color: AppColors.green,
           onTap: null,
           disabled: true,
@@ -561,7 +560,7 @@ class _Cta extends StatelessWidget {
       }
       if (node.status == ZoneNodeStatus.active) {
         return _CtaButton(
-          label: 'Open chest · +$reward XP',
+          label: 'Open',
           color: AppColors.orange,
           onTap: onOpenChest,
           disabled: onOpenChest == null,

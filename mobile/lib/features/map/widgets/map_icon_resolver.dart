@@ -55,10 +55,8 @@ String? zoneNodeIconAsset(
   final key = _normalize(node.name);
 
   if (node.isChest || _hasAny(key, ['chest', 'hoard', 'vault'])) {
-    // Opened chests drop the padlock.
-    return node.chestIsOpened == true
-        ? AppIcons.rewardChestBurst
-        : AppIcons.rewardTreasureChest;
+    // The basic Wayfarer chest, same art as a Reward Road's first stage.
+    return AppIcons.shopChestCommon;
   }
   if (node.isBoss && _hasAny(key, ['forest warden'])) {
     return AppIcons.bossForestWarden;

@@ -167,7 +167,9 @@ class _Circle extends StatelessWidget {
           ? 1.7
           : node.isCrossroads
               ? 1.25
-              : 1.45,
+              : node.isChest
+                  ? 1.3
+                  : 1.45,
       visualOffset: node.isBoss ? const Offset(-0.75, -1.5) : Offset.zero,
     );
 
@@ -326,10 +328,10 @@ String _subLabel(ZoneNode n, ActiveJourney? journey, String? nextRegionName) {
   if (n.isCrossroads) return 'Crossroads';
   if (n.isChest) {
     if (n.chestIsOpened == true) {
-      return 'Chest · +${n.chestRewardXp ?? 0} XP · Opened';
+      return 'Chest · Opened';
     }
     if (n.status == ZoneNodeStatus.active) return 'Chest · tap to open';
-    return 'Chest · +${n.chestRewardXp ?? 0} XP';
+    return 'Chest';
   }
   if (n.isDungeon) {
     final total = n.dungeonFloorsTotal ?? 0;
