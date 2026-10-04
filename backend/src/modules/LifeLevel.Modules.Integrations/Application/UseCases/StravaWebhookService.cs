@@ -2,11 +2,13 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Application.Mappers;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LifeLevel.Modules.Integrations.Application.UseCases;
@@ -17,7 +19,8 @@ public class StravaWebhookService(
     StravaOAuthService oAuth,
     HealthSyncService healthSync,
     PendingActivityService pending,
-    IOptions<StravaOptions> opts)
+    IOptions<StravaOptions> opts,
+    ILogger<StravaWebhookService> logger)
 {
     private readonly StravaOptions _opts = opts.Value;
 
@@ -148,9 +151,36 @@ public class StravaWebhookService(
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", conn.AccessToken);
 
-        var response = await http.SendAsync(request, ct);
+        using var response = await http.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
-            return ([], $"Strava API error: {response.StatusCode}");
+        {
+            // Strava's JSON message explains permission and app-capacity failures.
+            // Never log the response body: it can contain data we did not expect.
+            string? reason = null;
+            try
+            {
+                using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+                if (payload.RootElement.TryGetProperty("message", out var message) &&
+                    message.ValueKind == JsonValueKind.String)
+                    reason = message.GetString();
+                if (payload.RootElement.TryGetProperty("errors", out var errors) &&
+                    errors.ValueKind == JsonValueKind.Array && errors.GetArrayLength() > 0)
+                {
+                    var first = errors[0];
+                    if (first.ValueKind == JsonValueKind.Object &&
+                        first.TryGetProperty("field", out var field) && field.ValueKind == JsonValueKind.String &&
+                        first.TryGetProperty("code", out var code) && code.ValueKind == JsonValueKind.String)
+                        reason = $"{reason}: {field.GetString()} {code.GetString()}";
+                }
+            }
+            catch (JsonException) { /* Strava occasionally returns non-JSON errors. */ }
+
+            reason = reason is { Length: > 160 } ? reason[..160] : reason;
+            logger.LogWarning("Strava activity fetch failed for user {UserId}: HTTP {StatusCode}, message {StravaMessage}",
+                userId, (int)response.StatusCode, reason ?? "unavailable");
+            var detail = string.IsNullOrWhiteSpace(reason) ? "" : $" ({reason})";
+            return ([], $"Strava API error: {(int)response.StatusCode}{detail}. Try reconnecting Strava if this continues.");
+        }
 
         var activities = await response.Content.ReadFromJsonAsync<List<StravaActivityDto>>(cancellationToken: ct);
         if (activities is null || activities.Count == 0)

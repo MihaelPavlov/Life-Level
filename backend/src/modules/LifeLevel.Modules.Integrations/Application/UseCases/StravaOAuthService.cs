@@ -53,6 +53,11 @@ public class StravaOAuthService(
         var token = await response.Content.ReadFromJsonAsync<StravaTokenResponseDto>(cancellationToken: ct)
             ?? throw new InvalidOperationException("Empty token response from Strava");
 
+        if (string.IsNullOrWhiteSpace(token.Scope) ||
+            !token.Scope.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries)
+                .Contains("activity:read_all", StringComparer.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Strava workout access was not granted. Reconnect and allow activity access.");
+
         // Look up by Strava athlete ID first so that if this athlete was previously
         // linked to a different LifeLevel account, we take ownership rather than
         // hitting the unique-index constraint.
@@ -143,7 +148,8 @@ internal record StravaTokenResponseDto(
     [property: JsonPropertyName("access_token")]  string AccessToken,
     [property: JsonPropertyName("refresh_token")] string RefreshToken,
     [property: JsonPropertyName("expires_at")]    long ExpiresAt,
-    [property: JsonPropertyName("athlete")]       StravaAthleteDto Athlete);
+    [property: JsonPropertyName("athlete")]       StravaAthleteDto Athlete,
+    [property: JsonPropertyName("scope")]         string? Scope);
 
 internal record StravaAthleteDto(
     [property: JsonPropertyName("id")]        long Id,

@@ -16,8 +16,14 @@ public class OnboardingController(OnboardingImportService onboardingImport, IUse
     [HttpGet("preview")]
     public async Task<IActionResult> Preview([FromQuery] string source, CancellationToken ct)
     {
-        var result = await onboardingImport.PreviewAsync(userContext.UserId, source, ct);
-        return Ok(result);
+        try
+        {
+            return Ok(await onboardingImport.PreviewAsync(userContext.UserId, source, ct));
+        }
+        catch (OnboardingImportService.StravaFetchException ex)
+        {
+            return StatusCode(502, new { error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -35,6 +41,10 @@ public class OnboardingController(OnboardingImportService onboardingImport, IUse
         catch (OnboardingImportService.SetupAlreadyCompleteException ex)
         {
             return Conflict(new { error = ex.Message });
+        }
+        catch (OnboardingImportService.StravaFetchException ex)
+        {
+            return StatusCode(502, new { error = ex.Message });
         }
         catch (InvalidOperationException ex)
         {

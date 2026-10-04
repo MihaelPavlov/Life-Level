@@ -22,6 +22,7 @@ public class OnboardingImportService(
     public const string SourceHealth = "health";
 
     public class SetupAlreadyCompleteException() : InvalidOperationException("History import is only available during onboarding.");
+    public class StravaFetchException(string message) : InvalidOperationException(message);
 
     public async Task<OnboardingPreviewResult> PreviewAsync(Guid userId, string source, CancellationToken ct = default)
     {
@@ -29,10 +30,11 @@ public class OnboardingImportService(
             return new OnboardingPreviewResult(source, 0, ["Preview is only needed for server-side sources."]);
 
         var (activities, error) = await strava.FetchRecentAsync(userId, WindowDays, ct);
+        if (error is not null) throw new StravaFetchException(error);
         return new OnboardingPreviewResult(
             SourceStrava,
             activities.Count(a => a.DurationMinutes > 0),
-            error is null ? [] : [error]);
+            []);
     }
 
     public async Task<OnboardingImportResult> ImportAsync(Guid userId, OnboardingImportRequest request, CancellationToken ct = default)
@@ -51,7 +53,7 @@ public class OnboardingImportService(
         {
             source = SourceStrava;
             var (fetched, error) = await strava.FetchRecentAsync(userId, WindowDays, ct);
-            if (error != null) errors.Add(error);
+            if (error is not null) throw new StravaFetchException(error);
             activities = fetched;
         }
         else

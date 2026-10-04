@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../boss/replay/home_boss_replay.dart';
 import '../../../core/session/invalidate_user_providers.dart';
@@ -100,6 +101,11 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
         stravaAthleteName: status.athleteName,
       );
       return null;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is String && data.isNotEmpty) return data;
+      if (data is Map && data['error'] is String) return data['error'] as String;
+      return 'Could not connect to Strava. Try again.';
     } catch (e) {
       return e.toString();
     }

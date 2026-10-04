@@ -7,6 +7,7 @@ using LifeLevel.Modules.Integrations.Application;
 using LifeLevel.Modules.Integrations.Application.UseCases;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LifeLevel.Api.Tests;
 
@@ -48,7 +49,7 @@ public class StravaWebhookServiceTests
         var pending = new PendingActivityService(
             db, new StubCharacterIdReadPort(characterId), healthSync,
             new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort());
-        return new StravaWebhookService(db, http, oAuth, healthSync, pending, Options.Create(TestOptions));
+        return new StravaWebhookService(db, http, oAuth, healthSync, pending, Options.Create(TestOptions), NullLogger<StravaWebhookService>.Instance);
     }
 
     // ── VerifyChallenge ──────────────────────────────────────────────────────

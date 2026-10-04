@@ -5,6 +5,7 @@ using LifeLevel.Modules.Integrations.Application.UseCases;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Net;
 
 namespace LifeLevel.Api.Tests;
 
@@ -28,6 +29,40 @@ public class StravaOAuthServiceTests
     private static StravaOAuthService CreateService(AppDbContext db, HttpClient? http = null)
     {
         return new StravaOAuthService(db, http ?? new HttpClient(), Options.Create(TestOptions));
+    }
+
+    [Theory]
+    [InlineData("read", false)]
+    [InlineData("activity:read_all", true)]
+    public async Task ConnectAsync_RequiresWorkoutScope(string scope, bool shouldConnect)
+    {
+        await using var db = CreateDb(Guid.NewGuid().ToString());
+        using var http = new HttpClient(new TokenHandler(scope));
+        var service = CreateService(db, http);
+        var userId = Guid.NewGuid();
+        var request = new LifeLevel.Modules.Integrations.Application.DTOs.StravaConnectRequest("code", "lifelevel://oauth/strava");
+
+        if (shouldConnect)
+        {
+            Assert.True((await service.ConnectAsync(userId, request)).IsConnected);
+            Assert.Single(db.StravaConnections);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.ConnectAsync(userId, request));
+            Assert.Empty(db.StravaConnections);
+        }
+    }
+
+    private sealed class TokenHandler(string scope) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent($$"""
+                    {"access_token":"token","refresh_token":"refresh","expires_at":1791017821,"athlete":{"id":123,"firstname":"Test","lastname":"Athlete"},"scope":"{{scope}}"}
+                    """),
+            });
     }
 
     // ── GetStatusAsync ───────────────────────────────────────────────────────

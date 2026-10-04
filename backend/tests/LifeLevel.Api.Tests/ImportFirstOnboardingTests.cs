@@ -218,6 +218,33 @@ public class ImportFirstOnboardingTests
             service.ImportAsync(userId, new OnboardingImportRequest { Source = "health" }));
     }
 
+    [Fact]
+    public async Task StravaFetchFailure_IsNotReportedAsZeroWorkoutsOrSuccessfulImport()
+    {
+        await using var db = NewDb();
+        var (userId, _) = await SeedCharacter(db, setupComplete: false);
+        db.StravaConnections.Add(new LifeLevel.Modules.Integrations.Domain.Entities.StravaConnection
+        {
+            Id = Guid.NewGuid(), UserId = userId, StravaAthleteId = 123,
+            AccessToken = "token", RefreshToken = "refresh",
+            ExpiresAt = DateTime.UtcNow.AddHours(1), IsActive = true,
+        });
+        await db.SaveChangesAsync();
+
+        using var http = new HttpClient(new ForbiddenStravaHandler());
+        var xp = new CapturingXp();
+        var service = NewOnboardingImport(db, xp, http);
+
+        var preview = await Assert.ThrowsAsync<OnboardingImportService.StravaFetchException>(
+            () => service.PreviewAsync(userId, "strava"));
+        Assert.Contains("403", preview.Message);
+        Assert.Contains("activity:read_all missing", preview.Message);
+        var import = await Assert.ThrowsAsync<OnboardingImportService.StravaFetchException>(
+            () => service.ImportAsync(userId, new OnboardingImportRequest { Source = "strava" }));
+        Assert.Contains("403", import.Message);
+        Assert.Equal(0, xp.Calls);
+    }
+
     // ── Setup (Character) ────────────────────────────────────────────────────
 
     [Fact]
@@ -287,15 +314,24 @@ public class ImportFirstOnboardingTests
         PerformedAt = DateTime.UtcNow.AddDays(-daysAgo),
     };
 
-    private static OnboardingImportService NewOnboardingImport(AppDbContext db, CapturingXp xp)
+    private static OnboardingImportService NewOnboardingImport(AppDbContext db, CapturingXp xp, HttpClient? http = null)
     {
         var health = new HealthSyncService(db, new DbCharacterIdReadPort(db), new StubActivityLogPort(), new StubActivityExternalIdReadPort());
         var options = Options.Create(new StravaOptions());
-        var http = new HttpClient();
+        http ??= new HttpClient();
         var pending = new PendingActivityService(db, new DbCharacterIdReadPort(db), health,
             new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort());
-        var strava = new StravaWebhookService(db, http, new StravaOAuthService(db, http, options), health, pending, options);
+        var strava = new StravaWebhookService(db, http, new StravaOAuthService(db, http, options), health, pending, options, NullLogger<StravaWebhookService>.Instance);
         return new OnboardingImportService(health, strava, new DbCharacterInfo(db), xp);
+    }
+
+    private sealed class ForbiddenStravaHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.Forbidden)
+            {
+                Content = new StringContent("{\"message\":\"Authorization Error\",\"errors\":[{\"resource\":\"AccessToken\",\"field\":\"activity:read_all\",\"code\":\"missing\"}]}"),
+            });
     }
 
     private static ActivityService NewActivityService(AppDbContext db, Ports p) => new(

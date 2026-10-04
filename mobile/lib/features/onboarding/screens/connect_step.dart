@@ -14,6 +14,7 @@ import '../../integrations/providers/integrations_provider.dart';
 import '../../integrations/services/health_sync_service.dart';
 import '../../integrations/services/strava_service.dart';
 import '../onboarding_controller.dart';
+import '../services/onboarding_service.dart';
 import '../widgets/onboarding_ui.dart';
 
 enum _SourceState { idle, connecting, done }
@@ -36,6 +37,8 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
   };
   StreamSubscription<Uri>? _links;
   bool _awaitingStrava = false;
+  String? _sourceError;
+  String? _errorSource;
 
   @override
   void initState() {
@@ -87,19 +90,24 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
 
   Future<void> _connectStrava() async {
     final ctrl = OnboardingScope.read(context);
+    final retryAuthorization = _errorSource == OnboardingSource.strava;
     ctrl.chooseSource(OnboardingSource.strava);
     _markOthersIdle(OnboardingSource.strava);
-    setState(() => _state[OnboardingSource.strava] = _SourceState.connecting);
+    setState(() {
+      _sourceError = null;
+      _errorSource = null;
+      _state[OnboardingSource.strava] = _SourceState.connecting;
+    });
 
     // Already linked (e.g. resumed onboarding) → just count workouts.
     final sync = ref.read(integrationSyncProvider);
-    if (sync.isStravaConnected) {
+    if (sync.isStravaConnected && !retryAuthorization) {
       await _countStrava();
       return;
     }
     _awaitingStrava = true;
     try {
-      final result = await StravaService().authorize();
+      final result = await StravaService().authorize(forceApproval: retryAuthorization);
       if (result != null && OAuthCodeGuard.claim(result.code)) {
         await _finishStrava(result.code, redirectUri: result.redirectUri);
       }
@@ -120,7 +128,9 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
     if (error != null) {
       final message = error.contains('credentials are not configured')
           ? 'Local Strava credentials are not configured.'
-          : 'Strava didn\'t connect. Try again.';
+          : error.contains('workout access was not granted')
+              ? 'Allow workout access in Strava, then connect again.'
+              : 'Strava didn\'t connect. Try again.';
       _fail(OnboardingSource.strava, message);
       return;
     }
@@ -132,8 +142,11 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
     try {
       await ctrl.previewStrava();
       _done(OnboardingSource.strava);
+    } on OnboardingSyncException catch (e) {
+      _fail(OnboardingSource.strava, e.message);
     } catch (_) {
-      _fail(OnboardingSource.strava, 'Couldn\'t read your Strava workouts.');
+      _fail(OnboardingSource.strava,
+          'Couldn\'t read your Strava workouts. Try again.');
     }
   }
 
@@ -141,7 +154,11 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
     final ctrl = OnboardingScope.read(context);
     ctrl.chooseSource(OnboardingSource.health);
     _markOthersIdle(OnboardingSource.health);
-    setState(() => _state[OnboardingSource.health] = _SourceState.connecting);
+    setState(() {
+      _sourceError = null;
+      _errorSource = null;
+      _state[OnboardingSource.health] = _SourceState.connecting;
+    });
     final health = HealthSyncService();
     final granted = await health.requestPermissions();
     if (!mounted) return;
@@ -165,7 +182,11 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
 
   void _done(String source) {
     if (!mounted) return;
-    setState(() => _state[source] = _SourceState.done);
+    setState(() {
+      _state[source] = _SourceState.done;
+      _sourceError = null;
+      _errorSource = null;
+    });
     AppMotion.haptic(AppHaptic.light);
     final c = RewardFx.centerOf(_logoKeys[source]!);
     if (c != null) {
@@ -176,7 +197,11 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
 
   void _fail(String source, String message) {
     if (!mounted) return;
-    setState(() => _state[source] = _SourceState.idle);
+    setState(() {
+      _state[source] = _SourceState.idle;
+      _sourceError = message;
+      _errorSource = source;
+    });
     AppToast.error(context, message);
   }
 
@@ -241,6 +266,11 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
             const SizedBox(height: 10),
             row(2, 'garmin', 'Garmin Connect', 'Coming soon',
                 const Color(0xFF007CC3), 'G', null),
+            if (_sourceError != null) ...[
+              const SizedBox(height: 8),
+              Text(_sourceError!,
+                  style: const TextStyle(color: AppColors.red, fontSize: 12)),
+            ],
             const SizedBox(height: 12),
             Entrance(
               delay: const Duration(milliseconds: 520),

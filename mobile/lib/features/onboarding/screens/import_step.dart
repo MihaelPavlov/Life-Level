@@ -11,6 +11,7 @@ import '../../../core/motion/reward_fx.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../models/onboarding_models.dart';
 import '../onboarding_controller.dart';
+import '../services/onboarding_service.dart';
 import '../widgets/activity_visuals.dart';
 import '../widgets/onboarding_ui.dart';
 
@@ -52,9 +53,12 @@ class _ImportStepState extends State<ImportStep> {
       if (!mounted) return;
       setState(() => _result = result);
       await _play(result);
+    } on OnboardingSyncException catch (e) {
+      if (mounted) setState(() => _error = e.message);
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'We couldn\'t import your history. Check your connection and try again.');
+        setState(() => _error =
+            'We couldn\'t import your history. Check your connection and try again.');
       }
     }
   }
@@ -70,8 +74,8 @@ class _ImportStepState extends State<ImportStep> {
       if (!mounted) return;
       _rowXpKeys[w] = GlobalKey();
       _rows.insert(0, w);
-      _listKey.currentState?.insertItem(0,
-          duration: Duration(milliseconds: motion ? 300 : 0));
+      _listKey.currentState
+          ?.insertItem(0, duration: Duration(milliseconds: motion ? 300 : 0));
       setState(() {});
       if (motion) await Future.delayed(const Duration(milliseconds: 320));
       if (!mounted) return;

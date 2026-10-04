@@ -17,20 +17,20 @@ class StravaService {
       .replace(path: '/auth.html', query: null, fragment: null)
       .toString();
 
-  String authorizationUrlFor(String redirectUri) =>
+  String authorizationUrlFor(String redirectUri, {bool forceApproval = false}) =>
       '$_authBase?client_id=$_clientId'
       '&redirect_uri=${Uri.encodeComponent(redirectUri)}'
       '&response_type=code'
-      '&approval_prompt=auto'
+      '&approval_prompt=${forceApproval ? 'force' : 'auto'}'
       '&scope=$_scope';
 
   /// Starts OAuth and returns the authorization result on web. Native apps
   /// resume through their `lifelevel://` deep link, so they return null here.
-  Future<StravaAuthorizationResult?> authorize() async {
+  Future<StravaAuthorizationResult?> authorize({bool forceApproval = false}) async {
     if (kIsWeb) {
       final redirectUri = webRedirectUri;
       final callback = await FlutterWebAuth2.authenticate(
-        url: authorizationUrlFor(redirectUri),
+        url: authorizationUrlFor(redirectUri, forceApproval: forceApproval),
         callbackUrlScheme: Uri.parse(redirectUri).scheme,
       );
       final callbackUri = Uri.parse(callback);
@@ -46,7 +46,7 @@ class StravaService {
     }
 
     await launchUrl(
-      Uri.parse(authorizationUrl),
+      Uri.parse(authorizationUrlFor(_redirectUri, forceApproval: forceApproval)),
       mode: LaunchMode.externalApplication,
     );
     return null;
