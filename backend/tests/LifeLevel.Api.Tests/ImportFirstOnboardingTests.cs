@@ -188,6 +188,26 @@ public class ImportFirstOnboardingTests
     }
 
     [Fact]
+    public async Task OnboardingImport_CapsTheHeadStartAtLevelThree()
+    {
+        await using var db = NewDb();
+        var (userId, _) = await SeedCharacter(db, setupComplete: false);
+        var xp = new CapturingXp();
+        var service = NewOnboardingImport(db, xp);
+        var request = new OnboardingImportRequest
+        {
+            Source = "health",
+            Activities = [.. Enumerable.Range(0, 25).Select(i => Dto($"healthconnect:cap{i}", "Running", daysAgo: 1 + i % 28))],
+        };
+
+        var result = await service.ImportAsync(userId, request);
+
+        Assert.Equal(25, result.Imported);
+        Assert.Equal(OnboardingImportService.HistoryXpCap, result.TotalXp); // 25 × 50 = 1,250 before the cap
+        Assert.Equal(OnboardingImportService.HistoryXpCap, xp.Total);
+    }
+
+    [Fact]
     public async Task OnboardingImport_AfterSetup_IsRejected()
     {
         await using var db = NewDb();
@@ -213,7 +233,7 @@ public class ImportFirstOnboardingTests
     }
 
     [Fact]
-    public async Task Setup_KeepingDevotedClass_GrantsTrait_AndStarterXpOnce()
+    public async Task Setup_KeepingDevotedClass_GrantsTrait_AndNoStarterXp()
     {
         await using var db = NewDb();
         db.CharacterClasses.AddRange(CharacterClasses.SeedData);
@@ -225,7 +245,8 @@ public class ImportFirstOnboardingTests
 
         var character = await db.Characters.SingleAsync(c => c.Id == characterId);
         Assert.Equal("devoted:Running", character.TraitKey);
-        Assert.Equal(500, character.Xp);
+        Assert.Equal(0, character.Xp);
+        Assert.Equal(1, character.Level);
     }
 
     [Fact]
@@ -296,9 +317,11 @@ public class ImportFirstOnboardingTests
     private sealed class CapturingXp : ICharacterXpPort
     {
         public int Calls { get; private set; }
+        public long Total { get; private set; }
         public Task<XpAwardResult> AwardXpAsync(Guid userId, string source, string sourceEmoji, string description, long xp, CancellationToken ct = default)
         {
             Calls++;
+            Total += xp;
             return Task.FromResult(new XpAwardResult(false, 1, 1));
         }
     }

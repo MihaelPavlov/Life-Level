@@ -15,6 +15,9 @@ public class OnboardingImportService(
     ICharacterXpPort characterXp)
 {
     public const int WindowDays = 30;
+
+    /// <summary>XP at the start of Level 3 (L(L−1)/2 × 300). Imports happen before setup, from 0 XP.</summary>
+    public const long HistoryXpCap = 900;
     public const string SourceStrava = "strava";
     public const string SourceHealth = "health";
 
@@ -65,7 +68,8 @@ public class OnboardingImportService(
         var (result, workouts) = await healthSync.ImportHistoryAsync(userId, inWindow, ct);
         errors.AddRange(result.Errors);
 
-        var totalXp = workouts.Sum(w => w.XpGained);
+        // The head start stops at Level 3; later features open one tier per workout after setup.
+        var totalXp = Math.Min(workouts.Sum(w => w.XpGained), HistoryXpCap);
         var xp = XpAwardResult.None;
         if (totalXp > 0)
         {

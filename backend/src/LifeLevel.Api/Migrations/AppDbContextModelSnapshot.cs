@@ -1027,6 +1027,9 @@ namespace LifeLevel.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ActivityCountAtUnlock")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(32)

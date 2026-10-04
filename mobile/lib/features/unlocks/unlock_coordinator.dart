@@ -85,7 +85,7 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
     final homeTour = !_homeTried && snapshot.isFresh(UnlockKeys.home);
     final pending = snapshot.pendingCeremonies;
     if (!homeTour && pending.isEmpty) return;
-    if (FeatureTour.isRunning || !widget.canInterrupt()) {
+    if (!_free()) {
       _schedule();
       return;
     }
@@ -96,7 +96,12 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
         _homeTried = true;
         await widget.openFeature(UnlockKeys.home);
       } else {
-        await _ceremony(pending.first);
+        unlockMomentRunning = true;
+        try {
+          await _moment(pending);
+        } finally {
+          unlockMomentRunning = false;
+        }
       }
     } finally {
       _busy = false;
@@ -104,26 +109,60 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
     if (mounted) _schedule(const Duration(milliseconds: 900));
   }
 
-  Future<void> _ceremony(UnlockState u) async {
-    final meta = kUnlockCatalog[u.key];
+  /// Nothing else on screen: no level-up, overlay, sheet or running tour.
+  bool _free() => !FeatureTour.isRunning && widget.canInterrupt();
+
+  /// One moment's unlocks (the server releases at most one level's worth),
+  /// strictly one after the other: ceremony 1 of 2, its tour if Show me was
+  /// picked, the "1 more unlock" bridge, then ceremony 2 of 2. Nothing starts
+  /// before the step before it has finished.
+  Future<void> _moment(List<UnlockState> pending) async {
+    final queue = [
+      for (final u in pending)
+        if (kUnlockCatalog[u.key] != null) kUnlockCatalog[u.key]!,
+    ];
     final notifier = ref.read(unlocksProvider.notifier);
-    if (meta == null) {
-      await notifier.markSeen(u.key);
-      return;
+    for (final u in pending) {
+      if (kUnlockCatalog[u.key] == null) await notifier.markSeen(u.key);
     }
+    for (var i = 0; i < queue.length; i++) {
+      if (!mounted) return;
+      if (i > 0) {
+        // A Show me tour (or the screen it opened) has to be over first.
+        await _waitUntilFree();
+        if (!mounted) return;
+        await showUnlockBridge(context, queue[i],
+            remaining: queue.length - i);
+        if (!mounted) return;
+      }
+      await _ceremony(queue[i], queue, i);
+    }
+  }
+
+  Future<void> _waitUntilFree() async {
+    // The feature's first-visit tour starts a moment after its screen opens.
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    while (mounted && !_free()) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+  }
+
+  Future<void> _ceremony(UnlockMeta meta, List<UnlockMeta> queue, int index) async {
+    final notifier = ref.read(unlocksProvider.notifier);
     unlockCeremonyShowing = true;
     bool showMe;
     try {
-      showMe = await showUnlockCeremony(context, meta);
+      showMe = await showUnlockCeremony(context, meta,
+          queue: queue, index: index);
     } finally {
       unlockCeremonyShowing = false;
     }
-    await notifier.markSeen(u.key);
+    await notifier.markSeen(meta.key);
     if (!mounted) return;
     await _flyToSlot(meta);
     if (!mounted || !showMe) return;
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (mounted) await widget.openFeature(u.key);
+    if (mounted) await widget.openFeature(meta.key);
   }
 
   /// The feature's icon arcs from the middle of the screen into its slot.
@@ -156,7 +195,10 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<UnlocksSnapshot>(unlocksSnapshotProvider, (_, __) => _pump());
+    // A short wait lets a level-up from the same workout claim the screen
+    // first: workout → level up → unlocks.
+    ref.listen<UnlocksSnapshot>(unlocksSnapshotProvider,
+        (_, __) => _schedule(const Duration(milliseconds: 1200)));
     return widget.child;
   }
 }

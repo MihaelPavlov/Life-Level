@@ -12,6 +12,10 @@ import 'tours/unlock_tours.dart';
 /// While true, first-visit tours wait (an unlock ceremony is on screen).
 bool unlockCeremonyShowing = false;
 
+/// While true, a moment's unlocks are playing (ceremonies, their tours and
+/// the bridge between them). Level-ups wait so they never cut into the queue.
+bool unlockMomentRunning = false;
+
 /// Replays from Profile → Tutorials. The shell opens the feature; a screen
 /// that opens on its own picks up [pendingKey] and runs the tour again.
 abstract final class UnlockReplay {
@@ -25,7 +29,7 @@ abstract final class UnlockReplay {
 }
 
 /// Runs the tour for [key]. The first time it's finished (or skipped) the
-/// feature is marked toured, which pays the tour XP once. A [replay] from
+/// feature is marked toured, which pays the tour coins once. A [replay] from
 /// Profile → Tutorials pays nothing and changes nothing.
 Future<TourOutcome> runUnlockTour(
   BuildContext context,
@@ -42,11 +46,11 @@ Future<TourOutcome> runUnlockTour(
     steps: tourStepsFor(key),
     onComplete: (_) async {
       if (replay) return 0;
-      final xp = await ref.read(unlocksProvider.notifier).markToured(key);
-      if (xp > 0) {
+      final coins = await ref.read(unlocksProvider.notifier).markToured(key);
+      if (coins > 0) {
         unawaited(ref.read(characterProfileProvider.notifier).refresh());
       }
-      return xp;
+      return coins;
     },
   );
 }

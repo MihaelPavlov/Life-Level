@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/features/unlocks/models/unlock_catalog.dart';
+import 'package:life_level/features/home/cards/home_next_unlock_card.dart';
 import 'package:life_level/features/unlocks/models/unlock_models.dart';
 
 UnlocksSnapshot _parse(List<Map<String, dynamic>> rows) =>
@@ -69,5 +70,32 @@ void main() {
       expect(m.name, isNotEmpty);
       expect(m.lockedHint, isNotEmpty);
     }
+  });
+
+  test('levels match the server path, at most two features each', () {
+    // Server: UnlockService.Catalog.
+    const tiers = {
+      'home': 1, 'map': 1, 'achievements': 2, 'gear': 2, 'talents': 3,
+      'shields': 3, 'chests': 4, 'bosses': 4, 'ranks': 5, 'leaderboard': 6,
+      'guild': 8, 'modes': 10, 'delve': 15,
+    };
+    expect({for (final m in kUnlockCatalog.values) m.key: m.tier}, tiers);
+    for (final t in tiers.values.toSet()) {
+      expect(unlocksAtLevel(t).length, lessThanOrEqualTo(2), reason: 'level $t');
+    }
+    expect(unlocksBetweenLevels(6, 10).map((m) => m.key), ['guild', 'modes']);
+  });
+
+  test('the next unlock is the lowest level with a locked feature', () {
+    final s = _parse([
+      _row('home', 0),
+      _row('map', 1),
+      _row('achievements', 2),
+      _row('gear', 3, unlocked: false),
+      _row('talents', 4, unlocked: false),
+    ]);
+    expect(nextUnlockTier(s)!.map((m) => m.key), ['gear']);
+    expect(xpAtLevelStart(2), 300);
+    expect(xpAtLevelStart(3), 900);
   });
 }

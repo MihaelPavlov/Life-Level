@@ -7,8 +7,9 @@ public record UnlockDto(
     bool Unlocked,
     DateTime? UnlockedAt,
     bool Seen,
-    bool Toured);
+    bool Toured,
+    int Tier);
 
 public record UnlocksResponse(List<UnlockDto> Unlocks);
 
-public record UnlockTouredResponse(string Key, long XpAwarded);
+public record UnlockTouredResponse(string Key, long XpAwarded, int CoinsAwarded);

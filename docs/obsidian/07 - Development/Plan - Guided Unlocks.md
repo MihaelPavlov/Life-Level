@@ -1,6 +1,6 @@
 # Plan - Guided Unlocks
 
-Status: implemented 2026-09-30 (backend + mobile), not yet committed.
+Status: implemented 2026-09-30 (backend + mobile). Pacing replaced on 2026-10-03 by [[Plan - Unlock Path]] (levels per feature, at most two per level, tours pay coins).
 
 Design source: https://claude.ai/artifact/KFGW2gUGBsogt1zpKjXu3h ("Unlock it, then learn it right there").
 

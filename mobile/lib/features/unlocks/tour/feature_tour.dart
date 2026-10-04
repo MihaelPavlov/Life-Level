@@ -35,7 +35,7 @@ abstract final class FeatureTour {
   static bool get isRunning => _running;
 
   /// Runs [steps]. [onComplete] is called once the tour is over, whatever
-  /// the outcome, and returns the XP it paid (shown on the "explored" card,
+  /// the outcome, and returns the coins it paid (shown on the "explored" card,
   /// which only appears when the tour was [TourOutcome.finished]).
   static Future<TourOutcome> run(
     BuildContext context, {
@@ -87,14 +87,14 @@ abstract final class FeatureTour {
     if (!c.started) outcome = TourOutcome.aborted;
 
     c.hide();
-    var xp = 0;
+    var coins = 0;
     try {
-      xp = await (onComplete?.call(outcome) ?? Future.value(0));
+      coins = await (onComplete?.call(outcome) ?? Future.value(0));
     } catch (_) {
-      xp = 0;
+      coins = 0;
     }
     if (outcome == TourOutcome.finished && entry.mounted) {
-      c.explore(name, xp);
+      c.explore(name, coins);
       if (context.mounted) {
         final size = MediaQuery.sizeOf(context);
         RewardFx.confetti(context, Offset(size.width / 2, size.height * .46),
@@ -152,7 +152,7 @@ class _TourController extends ChangeNotifier {
   bool started = false;
   bool tapMode = false;
   String? exploredName;
-  int exploredXp = 0;
+  int exploredCoins = 0;
   Completer<_Answer>? _pending;
 
   Color get stepColor => step?.color ?? color;
@@ -181,9 +181,9 @@ class _TourController extends ChangeNotifier {
     if (tapMode && step?.targetId == id) answer(_Answer.tap);
   }
 
-  void explore(String name, int xp) {
+  void explore(String name, int coins) {
     exploredName = name;
-    exploredXp = xp;
+    exploredCoins = coins;
     notifyListeners();
   }
 }
@@ -296,7 +296,7 @@ class _TourLayerState extends State<_TourLayer>
         if (c.exploredName != null)
           Center(
               child: _ExploredCard(
-                  name: c.exploredName!, xp: c.exploredXp, color: c.color)),
+                  name: c.exploredName!, coins: c.exploredCoins, color: c.color)),
       ],
     );
   }
@@ -574,10 +574,10 @@ class _TapHintState extends State<_TapHint>
 
 class _ExploredCard extends StatelessWidget {
   final String name;
-  final int xp;
+  final int coins;
   final Color color;
   const _ExploredCard(
-      {required this.name, required this.xp, required this.color});
+      {required this.name, required this.coins, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -618,7 +618,7 @@ class _ExploredCard extends StatelessWidget {
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary)),
-              if (xp > 0) ...[
+              if (coins > 0) ...[
                 const SizedBox(height: 8),
                 Container(
                   padding:
@@ -629,7 +629,7 @@ class _ExploredCard extends StatelessWidget {
                     border: Border.all(
                         color: AppColors.orange.withValues(alpha: .35)),
                   ),
-                  child: Text('+$xp XP',
+                  child: Text('+$coins coins',
                       style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,

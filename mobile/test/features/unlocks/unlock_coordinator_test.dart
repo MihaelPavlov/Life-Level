@@ -73,9 +73,11 @@ void main() {
           _u('home', 0),
           _u('achievements', 1, seen: false, toured: false),
         ]));
-    await _pumpFor(tester, 2400);
+    await _pumpFor(tester, 3400);
     expect(find.text('NEW FEATURE UNLOCKED'), findsOneWidget);
     expect(find.text('Achievements'), findsOneWidget);
+    // A lone unlock has no "1 of 2" counter.
+    expect(find.textContaining('UNLOCK 1 OF'), findsNothing);
 
     await tester.tap(find.text('Later · tour runs on first visit'));
     await _pumpFor(tester, 1500);
@@ -85,37 +87,43 @@ void main() {
     expect(find.text('NEW FEATURE UNLOCKED'), findsNothing);
   });
 
-  testWidgets('Show me opens the feature; ceremonies play one at a time',
+  testWidgets(
+      'one level\'s two unlocks play as a queue: 1 of 2, Show me, bridge, 2 of 2',
       (tester) async {
     final r = await _mount(
         tester,
         UnlocksSnapshot([
           _u('home', 0),
-          _u('achievements', 1, seen: false, toured: false),
-          _u('talents', 5, seen: false, toured: false),
+          _u('achievements', 2, seen: false, toured: false),
+          _u('gear', 3, seen: false, toured: false),
         ]));
-    await _pumpFor(tester, 2400);
+    await _pumpFor(tester, 3400);
+    expect(find.text('UNLOCK 1 OF 2'), findsOneWidget);
     expect(find.text('Achievements'), findsOneWidget);
-    expect(find.text('Talents'), findsNothing);
+    expect(find.text('Gear'), findsNothing);
+    expect(find.text('Later · 1 more unlock waiting'), findsOneWidget);
 
     await tester.tap(find.text('SHOW ME ACHIEVEMENTS'));
     await _pumpFor(tester, 1500);
     expect(r.seen, ['achievements']);
     expect(r.opened, ['achievements']);
 
-    // The next one follows.
-    await _pumpFor(tester, 3500);
-    expect(find.text('Talents'), findsOneWidget);
+    // The bridge hands over to the second unlock.
+    await _pumpFor(tester, 400);
+    expect(find.text('1 MORE UNLOCK'), findsOneWidget);
+    await _pumpFor(tester, 4000);
+    expect(find.text('UNLOCK 2 OF 2'), findsOneWidget);
+    expect(find.text('Gear'), findsOneWidget);
     await tester.tap(find.text('Later · tour runs on first visit'));
     await _pumpFor(tester, 1500);
-    expect(r.seen, ['achievements', 'talents']);
+    expect(r.seen, ['achievements', 'gear']);
   });
 
   testWidgets('a new player gets the Home tour, with no ceremony',
       (tester) async {
     final r = await _mount(
         tester, UnlocksSnapshot([_u('home', 0, seen: false, toured: false)]));
-    await _pumpFor(tester, 500);
+    await _pumpFor(tester, 1800);
     expect(find.text('NEW FEATURE UNLOCKED'), findsNothing);
     expect(r.opened.first, 'home');
   });

@@ -10,6 +10,7 @@ import '../sync/widgets/sync_status_pill.dart';
 import 'cards/home_adventure_hub.dart';
 import 'cards/home_happening_now.dart';
 import 'cards/home_hero_stage.dart';
+import 'cards/home_next_unlock_card.dart';
 import 'cards/home_log_workout_cta.dart';
 import 'cards/home_seasonal_event_row.dart';
 import 'cards/home_xp_storm_banner.dart';
@@ -108,6 +109,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                   const HomeAdventureHub(),
+                  const HomeNextUnlockCard(),
                   const HomeXpStormBanner(state: xpStormState),
                   const HomeHappeningNow(),
                   const HomeSeasonalEventRow(state: seasonalState),

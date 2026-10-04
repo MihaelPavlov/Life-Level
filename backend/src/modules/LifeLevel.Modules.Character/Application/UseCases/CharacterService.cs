@@ -24,7 +24,6 @@ public class CharacterService(
     ILogger<CharacterService>? logger = null)
     : ICharacterXpPort, ICharacterStatPort, ICharacterLevelReadPort, ICharacterInfoPort, ICharacterIdReadPort, IInventorySlotReadPort, ICharacterTutorialPort, ICharacterStatsSnapshotReadPort, ILevelUpReceiptPort, ICharacterClassBonusReadPort
 {
-    private const int StarterXpReward = 500;
 
     // LL-035: final step of the 7-step onboarding tutorial. Steps are 0..7 inclusive
     // (0 = not started, 7 = finished). -1 = user skipped.
@@ -79,8 +78,8 @@ public class CharacterService(
             userId, characterClass.Name, req.ClassSource ?? "unknown", detection?.RecommendedClass,
             detection?.State, character.TraitKey);
 
+        // No starter XP: a new player opens Home at Level 1 and earns the first level with a workout.
         await db.SaveChangesAsync();
-        await AwardXpAsync(userId, "CharacterSetup", "✨", "Character created · Starter bonus", StarterXpReward);
 
         return new CharacterSetupResponse(
             character.Id,

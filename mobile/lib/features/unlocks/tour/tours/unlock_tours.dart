@@ -7,6 +7,7 @@ import '../tour_step.dart';
 abstract final class TourIds {
   static const homeHero = 'home.hero';
   static const homeHub = 'home.hub';
+  static const homeBanked = 'home.banked';
 
   static const mapOrb = 'shell.mapOrb';
   static const journeyCard = 'journey.card';
@@ -52,17 +53,18 @@ abstract final class TourIds {
   static const modesDelve = 'modes.delve';
 }
 
-/// The 2–3 stops each unlock's tour makes, ending on the feature's main
-/// action (copy from the Guided Unlocks design).
+/// The stops each unlock's tour makes, ending on the feature's main action
+/// (copy from the Guided Unlocks and Unlock Path designs). Home has 3 and
+/// Map 4 (it starts on banked km); every other feature has 3.
 List<TourStep> tourStepsFor(String key) => switch (key) {
       UnlockKeys.home => const [
           TourStep(
             targetId: TourIds.homeHero,
             icon: AppIcons.homePowerIcon,
             eyebrow: 'YOUR HERO',
-            title: 'This is you',
+            title: 'This is you · Level 1',
             body:
-                'Workouts raise your **stats and Power**. **Pull Home down** to import new ones.',
+                'Workouts raise your **XP, stats and Power**. **Pull Home down** to import new ones.',
             color: AppColors.orange,
             pad: 4,
             radius: 22,
@@ -71,21 +73,41 @@ List<TourStep> tourStepsFor(String key) => switch (key) {
             targetId: TourIds.homeHub,
             icon: AppIcons.rankChampion,
             eyebrow: 'WHAT’S NEXT',
-            title: 'Features open as you play',
+            title: 'Features open as you level',
             body:
-                'Locked tiles and buttons unlock by **doing things**. Each one shows its name so you know what’s coming.',
+                'Each level opens **one or two** of these. Locked tiles keep their names so you know what’s coming.',
             color: AppColors.orange,
             pad: 2,
+          ),
+          TourStep(
+            targetId: TourIds.mapOrb,
+            icon: AppIcons.mapDestination,
+            eyebrow: 'YOUR FIRST UNLOCK',
+            title: 'Your first workout opens the Map',
+            body:
+                'Run, ride or walk. The km you log are **banked** and carry you across the world.',
+            circular: true,
+            pad: 4,
           ),
         ],
       UnlockKeys.map => const [
           TourStep(
+            targetId: TourIds.homeBanked,
+            icon: AppIcons.mapCurrentLocation,
+            eyebrow: 'BANKED KM',
+            title: 'Your km land here first',
+            body:
+                'Every km you run, ride or walk is **banked**. Banked km never expire. You spend them to travel.',
+            pad: 6,
+            radius: 14,
+          ),
+          TourStep(
             targetId: TourIds.mapOrb,
             icon: AppIcons.mapDestination,
             eyebrow: 'THE MAP BUTTON',
-            title: 'Your journey lives here',
+            title: 'Spend them on your journey',
             body:
-                'The ring fills as you travel. The label shows what’s next: **km to go, a boss, a chest or a dungeon**. A red dot means act now.',
+                'The ring shows how close your next stop is. The label says what’s next: **km to go, a boss, a chest or a dungeon**.',
             tapLabel: 'TAP THE MAP BUTTON',
             circular: true,
             pad: 4,
@@ -96,17 +118,17 @@ List<TourStep> tourStepsFor(String key) => switch (key) {
             eyebrow: 'YOUR JOURNEY',
             title: 'Where you’re heading',
             body:
-                'The next stop, how far it is and what it pays. **Sync** pulls in new workouts.',
+                'The next stop and how far it is. If your **banked km** cover it, you can go now. **Sync** pulls in new workouts.',
             pad: 4,
             radius: 20,
           ),
           TourStep(
             targetId: TourIds.journeyViewMap,
             icon: AppIcons.ringWorld,
-            eyebrow: 'WHAT’S NEXT',
-            title: 'One tap to act',
+            eyebrow: 'TRAVEL',
+            title: 'Use banked km to move',
             body:
-                'This button does what your journey needs next: **view the map**, fight a boss or open a chest.',
+                'Travel walks your hero down the trail and takes the km out of your bank. Whatever is left stays banked.',
             tapLabel: 'TAP THE BUTTON',
             pad: 4,
             radius: 14,

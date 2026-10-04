@@ -641,8 +641,12 @@ class _MainShellState extends ConsumerState<MainShell>
     final onHome = _navIds[_tabIndex.clamp(0, _navIds.length - 1)] == 'home';
     if (_bossReplayFetching ||
         homeBossReplayRunning ||
-        (_bossReplayWaiting && onHome)) {
-      // The boss exchange plays first; level-ups follow it.
+        (_bossReplayWaiting && onHome) ||
+        unlockCeremonyShowing ||
+        unlockMomentRunning ||
+        FeatureTour.isRunning) {
+      // The boss exchange plays first; level-ups follow it. An unlock
+      // ceremony or tour already on screen finishes before a level-up.
       Future<void>.delayed(
           const Duration(milliseconds: 900), _checkPendingLevelUps);
       return;

@@ -270,16 +270,20 @@ class HomeHeroStage extends ConsumerWidget {
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      _StatChip(
-                                        key: const ValueKey(
-                                            'home-banked-distance-button'),
-                                        iconAsset: AppIcons.mapCurrentLocation,
-                                        label: bankedDim ? 'RUN' : 'BANKED',
-                                        value: bankedDim
-                                            ? '—'
-                                            : '${pendingKm.toStringAsFixed(1)} km',
-                                        onTap: () =>
-                                            _showBankedDistance(context),
+                                      TourTarget(
+                                        id: TourIds.homeBanked,
+                                        child: _StatChip(
+                                          key: const ValueKey(
+                                              'home-banked-distance-button'),
+                                          iconAsset:
+                                              AppIcons.mapCurrentLocation,
+                                          label: bankedDim ? 'RUN' : 'BANKED',
+                                          value: bankedDim
+                                              ? '—'
+                                              : '${pendingKm.toStringAsFixed(1)} km',
+                                          onTap: () =>
+                                              _showBankedDistance(context),
+                                        ),
                                       ),
                                       SizedBox(width: px(7)),
                                       TourTarget(
@@ -486,7 +490,7 @@ void _showBankedDistance(BuildContext context) {
       name: 'Banked Distance',
       icon: AppIcons.mapCurrentLocation,
       description:
-          'Distance saved from your activities and ready to advance your journey.',
+          'Every km you run, ride or walk lands here first. Spend it with Travel on your journey card. Banked km never expire.',
       destination: 'World map',
     ),
   );

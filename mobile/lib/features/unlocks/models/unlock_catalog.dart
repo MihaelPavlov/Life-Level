@@ -39,6 +39,13 @@ class UnlockMeta {
   /// Shown when a locked slot is tapped: what unlocks it.
   final String lockedHint;
 
+  /// The level this feature belongs to (server `UnlockService.Catalog`).
+  /// Each level opens at most two features.
+  final int tier;
+
+  /// The action it needs besides the level, short ("Find an item").
+  final String need;
+
   const UnlockMeta({
     required this.key,
     required this.name,
@@ -49,6 +56,8 @@ class UnlockMeta {
     required this.perkIcon,
     required this.perk,
     required this.lockedHint,
+    required this.tier,
+    required this.need,
   });
 }
 
@@ -63,6 +72,8 @@ const kUnlockCatalog = <String, UnlockMeta>{
     perkIcon: AppIcons.navHome,
     perk: 'Home',
     lockedHint: 'Finish setup',
+    tier: 1,
+    need: 'Finish setup',
   ),
   UnlockKeys.achievements: UnlockMeta(
     key: UnlockKeys.achievements,
@@ -73,19 +84,23 @@ const kUnlockCatalog = <String, UnlockMeta>{
     line: 'Badges for everything you do. Your first one is already waiting.',
     perkIcon: AppIcons.rankChampion,
     perk: 'Your first badge is ready to claim',
-    lockedHint: 'Log or sync your first workout to unlock',
+    lockedHint: 'Reach Level 2 to unlock',
+    tier: 2,
+    need: 'Log a workout',
   ),
   UnlockKeys.map: UnlockMeta(
     key: UnlockKeys.map,
-    name: 'Map Button',
+    name: 'Map & Banked km',
     icon: AppIcons.mapDestination,
     color: AppColors.blue,
     slot: UnlockSlot.orb,
     line:
-        'Your journey lives in the middle button. Its ring fills as you travel.',
-    perkIcon: AppIcons.mapDestination,
-    perk: 'Your first km is on the map',
-    lockedHint: 'Travel your first km to unlock the Map',
+        'Every km you run lands in your bank first. Spend it on the map to travel.',
+    perkIcon: AppIcons.mapCurrentLocation,
+    perk: 'Your first km are banked',
+    lockedHint: 'Log a workout with distance to unlock the Map',
+    tier: 1,
+    need: 'Log your first km',
   ),
   UnlockKeys.gear: UnlockMeta(
     key: UnlockKeys.gear,
@@ -97,7 +112,9 @@ const kUnlockCatalog = <String, UnlockMeta>{
         'Items you find make your hero stronger. Your mount and weapon slots open too.',
     perkIcon: AppIcons.itemCarbonX3,
     perk: 'Your first item is in your bag',
-    lockedHint: 'Find your first item to unlock Gear',
+    lockedHint: 'Reach Level 2 and find an item to unlock Gear',
+    tier: 2,
+    need: 'Find an item',
   ),
   UnlockKeys.chests: UnlockMeta(
     key: UnlockKeys.chests,
@@ -108,7 +125,9 @@ const kUnlockCatalog = <String, UnlockMeta>{
     line: 'Every region hides a chest. Clear its zones to claim it.',
     perkIcon: AppIcons.rewardTreasureChest,
     perk: 'Your first zone counts toward it',
-    lockedHint: 'Reach your first zone to unlock',
+    lockedHint: 'Reach Level 4 and a second zone to unlock',
+    tier: 4,
+    need: 'Reach a second zone',
   ),
   UnlockKeys.talents: UnlockMeta(
     key: UnlockKeys.talents,
@@ -120,6 +139,8 @@ const kUnlockCatalog = <String, UnlockMeta>{
     perkIcon: AppIcons.talentCrystalIcon,
     perk: 'Crystals come with every level',
     lockedHint: 'Reach Level 3 to unlock',
+    tier: 3,
+    need: 'Reach Level 3',
   ),
   UnlockKeys.shields: UnlockMeta(
     key: UnlockKeys.shields,
@@ -130,7 +151,9 @@ const kUnlockCatalog = <String, UnlockMeta>{
     line: 'A shield saves your streak on a day you can’t train.',
     perkIcon: AppIcons.rewardStreakShield,
     perk: 'First shield at day 7',
-    lockedHint: 'Keep a 3-day streak to unlock',
+    lockedHint: 'Reach Level 3 and keep a 3-day streak to unlock',
+    tier: 3,
+    need: 'Keep a 3-day streak',
   ),
   UnlockKeys.bosses: UnlockMeta(
     key: UnlockKeys.bosses,
@@ -142,7 +165,9 @@ const kUnlockCatalog = <String, UnlockMeta>{
         'Your boss fights live in the Adventure Hub. Every workout deals damage.',
     perkIcon: AppIcons.ringBoss,
     perk: 'A boss is waiting for you',
-    lockedHint: 'Reach a boss zone to unlock',
+    lockedHint: 'Reach Level 4 and a boss zone to unlock',
+    tier: 4,
+    need: 'Meet a boss',
   ),
   UnlockKeys.ranks: UnlockMeta(
     key: UnlockKeys.ranks,
@@ -154,7 +179,9 @@ const kUnlockCatalog = <String, UnlockMeta>{
         'Ranks climb as you beat bosses. Titles you earn go next to your name.',
     perkIcon: AppIcons.rankChampion,
     perk: 'Your first rank is in',
-    lockedHint: 'Beat your first boss or earn a title to unlock',
+    lockedHint: 'Reach Level 5 and beat a boss or earn a title to unlock',
+    tier: 5,
+    need: 'Beat a boss or earn a title',
   ),
   UnlockKeys.guild: UnlockMeta(
     key: UnlockKeys.guild,
@@ -165,7 +192,9 @@ const kUnlockCatalog = <String, UnlockMeta>{
     line: 'Team up for guild raids. Everyone’s workouts hit the same boss.',
     perkIcon: AppIcons.ringGuild,
     perk: 'Up to 5 members per guild',
-    lockedHint: 'Reach Level 5 to unlock',
+    lockedHint: 'Reach Level 8 to unlock',
+    tier: 8,
+    need: 'Reach Level 8',
   ),
   UnlockKeys.leaderboard: UnlockMeta(
     key: UnlockKeys.leaderboard,
@@ -178,6 +207,8 @@ const kUnlockCatalog = <String, UnlockMeta>{
     perkIcon: AppIcons.ringLeaderboard,
     perk: 'Global, region and guild boards',
     lockedHint: 'Reach Level 6 to unlock',
+    tier: 6,
+    need: 'Reach Level 6',
   ),
   UnlockKeys.modes: UnlockMeta(
     key: UnlockKeys.modes,
@@ -190,6 +221,8 @@ const kUnlockCatalog = <String, UnlockMeta>{
     perkIcon: AppIcons.rewardStreakFire,
     perk: 'Burn Chain · beat your last burn for ×2',
     lockedHint: 'Reach Level 10 to unlock Modes',
+    tier: 10,
+    need: 'Reach Level 10',
   ),
   UnlockKeys.delve: UnlockMeta(
     key: UnlockKeys.delve,
@@ -202,7 +235,17 @@ const kUnlockCatalog = <String, UnlockMeta>{
     perkIcon: AppIcons.itemEnergyGel,
     perk: 'Workouts earn runs',
     lockedHint: 'Unlocks at Level 15',
+    tier: 15,
+    need: 'Reach Level 15',
   ),
 };
 
 UnlockMeta unlockMeta(String key) => kUnlockCatalog[key]!;
+
+/// Features that belong to [level], in catalog order (at most two).
+List<UnlockMeta> unlocksAtLevel(int level) =>
+    [for (final m in kUnlockCatalog.values) if (m.tier == level) m];
+
+/// Features whose level is in `(from, to]`, for a level-up that may skip levels.
+List<UnlockMeta> unlocksBetweenLevels(int from, int to) =>
+    [for (final m in kUnlockCatalog.values) if (m.tier > from && m.tier <= to) m];

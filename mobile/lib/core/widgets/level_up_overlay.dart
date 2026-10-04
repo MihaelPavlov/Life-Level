@@ -4,6 +4,8 @@ import '../constants/app_icons.dart';
 import '../../features/activity/models/activity_models.dart';
 import '../../features/character/models/level_up_receipt.dart';
 import '../../features/items/models/item_models.dart' show rarityColor;
+import '../../features/unlocks/models/unlock_catalog.dart';
+import 'app_icon_image.dart';
 import 'item_icon_image.dart';
 import 'reward_moment/reward_moment.dart';
 
@@ -13,6 +15,21 @@ import 'reward_moment/reward_moment.dart';
 Future<void> showLevelUpScreen(BuildContext context, int level,
     {LevelUpUnlocks? unlocks, LevelUpReceipt? receipt}) {
   final list = <RewardUnlock>[
+    // The features this level opens come first; their ceremonies follow
+    // the level-up one at a time.
+    for (final f in unlocksBetweenLevels(receipt?.previousLevel ?? level - 1, level))
+      RewardUnlock(
+        icon: AppIconImage(f.icon, size: 26),
+        name: f.name,
+        // Level-only features (and Achievements: a level-up means a workout
+        // was logged) open right away; the rest also need their action.
+        description: f.need.startsWith('Reach Level') ||
+                f.key == UnlockKeys.achievements
+            ? 'Opens now'
+            : 'Opens when you ${f.need[0].toLowerCase()}${f.need.substring(1)}',
+        badge: 'NEW FEATURE',
+        color: f.color,
+      ),
     if (receipt != null && receipt.totalStatPoints > 0)
       RewardUnlock(
         icon: const Icon(Icons.star_rounded, color: AppColors.orange),

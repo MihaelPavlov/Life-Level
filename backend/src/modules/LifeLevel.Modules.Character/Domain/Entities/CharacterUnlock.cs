@@ -12,4 +12,8 @@ public class CharacterUnlock
     public DateTime UnlockedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SeenAt { get; set; }
     public DateTime? TouredAt { get; set; }
+
+    /// <summary>How many workouts the player had logged when this unlock was released. The next
+    /// tier waits for a workout beyond the highest of these (one tier per workout).</summary>
+    public int ActivityCountAtUnlock { get; set; }
 }

@@ -1563,6 +1563,7 @@ class _NextZoneHintPortal extends StatelessWidget {
         );
     final distanceKm = edge?.distanceKm;
     final levelGated = zone.userState?.isLevelMet == false;
+    final banked = world.userProgress.pendingDistanceKm;
 
     final pills = <Widget>[
       if (distanceKm != null && distanceKm > 0)
@@ -1676,7 +1677,10 @@ class _NextZoneHintPortal extends StatelessWidget {
             HomeHeroButton(
               label: levelGated
                   ? '🔒 Level ${zone.levelRequirement} required'
-                  : 'Travel here →',
+                  : banked > 0.05
+                      // Banked km are spent by travelling: say so on the button.
+                      ? 'Travel · ${banked.toStringAsFixed(1)} km banked →'
+                      : 'Travel here →',
               style: levelGated
                   ? HomeHeroButtonStyle.locked
                   : HomeHeroButtonStyle.solidBlue,
@@ -1685,6 +1689,7 @@ class _NextZoneHintPortal extends StatelessWidget {
                   : () => _openWorldDestination(regionId, zone.id),
               shine: fx?.buttonShine,
               nudge: fx?.buttonNudge,
+              tourTargetId: TourIds.journeyViewMap,
             ),
           ],
         ),

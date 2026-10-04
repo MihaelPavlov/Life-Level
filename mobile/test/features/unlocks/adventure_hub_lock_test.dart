@@ -52,7 +52,7 @@ void main() {
     await tester.tap(find.text('Achievements'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(
-        find.text('Log or sync your first workout to unlock'), findsOneWidget);
+        find.text('Reach Level 2 to unlock'), findsOneWidget);
     expect(opened, isEmpty);
 
     // An open tile still opens.

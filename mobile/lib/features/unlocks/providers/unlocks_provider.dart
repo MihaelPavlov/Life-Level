@@ -28,7 +28,7 @@ class UnlocksNotifier extends AsyncNotifier<UnlocksSnapshot> {
     }
   }
 
-  /// Returns the XP awarded for finishing the tour.
+  /// Returns the coins awarded for finishing the tour.
   Future<int> markToured(String key) async {
     _patch(key, (u) => u.copyWith(seen: true, toured: true));
     try {

@@ -10,8 +10,11 @@ import '../models/unlock_catalog.dart';
 
 /// "NEW FEATURE UNLOCKED": the padlock shakes and shatters, the feature's
 /// icon lights up and the player picks Show me or Later.
-/// Resolves to true for Show me.
-Future<bool> showUnlockCeremony(BuildContext context, UnlockMeta meta) async {
+/// [queue] is every feature in this moment (at most two) and [index] which
+/// one this is; with more than one the ceremony shows an "Unlock 1 of 2"
+/// counter. Resolves to true for Show me.
+Future<bool> showUnlockCeremony(BuildContext context, UnlockMeta meta,
+    {List<UnlockMeta> queue = const [], int index = 0}) async {
   final result = await showGeneralDialog<bool>(
     context: context,
     useRootNavigator: true,
@@ -19,16 +22,157 @@ Future<bool> showUnlockCeremony(BuildContext context, UnlockMeta meta) async {
     barrierColor: Colors.transparent,
     transitionDuration:
         AppMotion.duration(context, const Duration(milliseconds: 300)),
-    pageBuilder: (_, __, ___) => UnlockCeremony(meta: meta),
+    pageBuilder: (_, __, ___) =>
+        UnlockCeremony(meta: meta, queue: queue, index: index),
     transitionBuilder: (_, a, __, child) =>
         FadeTransition(opacity: a, child: child),
   );
   return result ?? false;
 }
 
+/// The hand-off between two ceremonies of one moment: "1 MORE UNLOCK", the
+/// next feature's silhouette and a bar that fills, then it closes itself.
+Future<void> showUnlockBridge(BuildContext context, UnlockMeta next,
+    {int remaining = 1}) {
+  return showGeneralDialog<void>(
+    context: context,
+    useRootNavigator: true,
+    barrierDismissible: false,
+    barrierColor: const Color(0x8C02050A),
+    transitionDuration:
+        AppMotion.duration(context, const Duration(milliseconds: 280)),
+    pageBuilder: (_, __, ___) =>
+        _UnlockBridge(next: next, remaining: remaining),
+    transitionBuilder: (_, a, __, child) => FadeTransition(
+      opacity: a,
+      child: ScaleTransition(
+          scale: Tween(begin: .92, end: 1.0)
+              .animate(CurvedAnimation(parent: a, curve: Curves.easeOutBack)),
+          child: child),
+    ),
+  );
+}
+
+class _UnlockBridge extends StatefulWidget {
+  final UnlockMeta next;
+  final int remaining;
+  const _UnlockBridge({required this.next, required this.remaining});
+
+  @override
+  State<_UnlockBridge> createState() => _UnlockBridgeState();
+}
+
+class _UnlockBridgeState extends State<_UnlockBridge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _fill = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1100));
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (AppMotion.isFull(context)) {
+        await _fill.forward();
+      } else {
+        _fill.value = 1;
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+      }
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  @override
+  void dispose() {
+    _fill.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = widget.remaining;
+    return Center(
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          width: 250,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.orange.withValues(alpha: .45)),
+            boxShadow: [
+              BoxShadow(
+                  color: AppColors.orange.withValues(alpha: .18),
+                  blurRadius: 40),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(n == 1 ? '1 MORE UNLOCK' : '$n MORE UNLOCKS',
+                  style: const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.6,
+                      color: AppColors.orange)),
+              const SizedBox(height: 10),
+              _Silhouette(icon: widget.next.icon, size: 56),
+              const SizedBox(height: 6),
+              Text(widget.next.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary)),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: AnimatedBuilder(
+                  animation: _fill,
+                  builder: (_, __) => LinearProgressIndicator(
+                    value: _fill.value,
+                    minHeight: 4,
+                    backgroundColor: AppColors.surfaceElevated,
+                    valueColor: const AlwaysStoppedAnimation(AppColors.orange),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A feature icon drawn as a grey shape (not unlocked yet).
+class _Silhouette extends StatelessWidget {
+  final String icon;
+  final double size;
+  const _Silhouette({required this.icon, required this.size});
+
+  @override
+  Widget build(BuildContext context) => ColorFiltered(
+        colorFilter: const ColorFilter.matrix([
+          0, 0, 0, 0, 89, //
+          0, 0, 0, 0, 89,
+          0, 0, 0, 0, 89,
+          0, 0, 0, .6, 0,
+        ]),
+        child: AppIconImage(icon, size: size),
+      );
+}
+
 class UnlockCeremony extends StatefulWidget {
   final UnlockMeta meta;
-  const UnlockCeremony({super.key, required this.meta});
+
+  /// Every feature opening in this moment, in order; empty for a lone unlock.
+  final List<UnlockMeta> queue;
+  final int index;
+
+  const UnlockCeremony(
+      {super.key, required this.meta, this.queue = const [], this.index = 0});
 
   @override
   State<UnlockCeremony> createState() => _UnlockCeremonyState();
@@ -109,6 +253,10 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
               builder: (context, _) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  if (widget.queue.length > 1) ...[
+                    _queueCounter(),
+                    const SizedBox(height: 28),
+                  ],
                   const Text('NEW FEATURE UNLOCKED',
                       style: TextStyle(
                           fontSize: 10.5,
@@ -239,6 +387,96 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
     );
   }
 
+  /// "UNLOCK 1 OF 2" and one tile per feature: done ones carry a check, the
+  /// current one glows in its colour, later ones are still grey.
+  Widget _queueCounter() {
+    final q = widget.queue;
+    final pop = _span(.57, .75, Curves.elasticOut);
+    return Column(
+      children: [
+        Text('UNLOCK ${widget.index + 1} OF ${q.length}',
+            style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.6,
+                color: AppColors.textSecondary)),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < q.length; i++) ...[
+              if (i > 0)
+                Container(
+                  width: 12,
+                  height: 2,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(1)),
+                ),
+              Transform.scale(
+                scale: i == widget.index ? 1 + .25 * math.sin(pop * math.pi) : 1,
+                child: _queueTile(q[i], i),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _queueTile(UnlockMeta meta, int i) {
+    final done = i < widget.index, current = i == widget.index;
+    return SizedBox(
+      width: 34,
+      height: 34,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B1017),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: current
+                    ? meta.color
+                    : done
+                        ? AppColors.green.withValues(alpha: .6)
+                        : AppColors.border,
+                width: current ? 2 : 1,
+              ),
+              boxShadow: current
+                  ? [
+                      BoxShadow(
+                          color: meta.color.withValues(alpha: .4),
+                          blurRadius: 12)
+                    ]
+                  : null,
+            ),
+            alignment: Alignment.center,
+            child: done || current
+                ? AppIconImage(meta.icon, size: 22)
+                : _Silhouette(icon: meta.icon, size: 22),
+          ),
+          if (done)
+            Positioned(
+              right: -5,
+              bottom: -5,
+              child: Container(
+                width: 14,
+                height: 14,
+                decoration: const BoxDecoration(
+                    color: AppColors.green, shape: BoxShape.circle),
+                alignment: Alignment.center,
+                child: const Icon(Icons.check_rounded,
+                    size: 10, color: Color(0xFF040810)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _perk() => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
@@ -295,11 +533,18 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
             style: TextButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
                 minimumSize: const Size.fromHeight(44)),
-            child: const Text('Later · tour runs on first visit',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            child: Text(_laterLabel,
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           ),
         ],
       );
+
+  String get _laterLabel {
+    final left = widget.queue.length - widget.index - 1;
+    if (left <= 0) return 'Later · tour runs on first visit';
+    return 'Later · $left more unlock${left == 1 ? '' : 's'} waiting';
+  }
 
   /// Staggered fade-up for the text and buttons after the lock breaks.
   Widget _reveal(int i, Widget child) {

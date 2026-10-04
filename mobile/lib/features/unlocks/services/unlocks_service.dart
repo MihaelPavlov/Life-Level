@@ -11,12 +11,13 @@ class UnlocksService {
 
   Future<void> markSeen(String key) => _dio.post('/unlocks/$key/seen');
 
-  /// Returns the XP awarded (0 when the tour was already finished once).
+  /// Returns the coins awarded (0 when the tour was already finished once).
+  /// Tours pay coins, never XP, so they can't trigger a level-up mid-queue.
   Future<int> markToured(String key) async {
     final res = await _dio.post('/unlocks/$key/toured');
     final data = res.data;
     if (data is Map<String, dynamic>) {
-      return (data['xpAwarded'] as num?)?.toInt() ?? 0;
+      return (data['coinsAwarded'] as num?)?.toInt() ?? 0;
     }
     return 0;
   }
