@@ -182,8 +182,8 @@ class HealthSyncService {
     final lastSync = await getLastSyncTime();
     final lastBroadMs = prefs.getInt(_lastBroadScanKey);
     final broadDue = lastBroadMs == null ||
-        now.difference(DateTime.fromMillisecondsSinceEpoch(lastBroadMs,
-                isUtc: true)) >
+        now.difference(
+                DateTime.fromMillisecondsSinceEpoch(lastBroadMs, isUtc: true)) >
             const Duration(hours: 24);
     var days = 30;
     if (!broadDue && lastSync != null) {
@@ -206,7 +206,9 @@ class HealthSyncService {
     ))
         .where((a) => a.performedAt.toLocal().isBefore(today))
         .toList();
-    if (broadDue) await prefs.setInt(_lastBroadScanKey, now.millisecondsSinceEpoch);
+    if (broadDue) {
+      await prefs.setInt(_lastBroadScanKey, now.millisecondsSinceEpoch);
+    }
     return [...read.activities, ...steps];
   }
 
@@ -273,6 +275,7 @@ class HealthSyncService {
             ? workout.totalDistance! / 1000.0
             : null,
         calories: workout.totalEnergyBurned?.toInt(),
+        recordingMethod: _mapRecordingMethod(point.recordingMethod),
         performedAt: point.dateFrom.toUtc(),
       ));
     }
@@ -331,6 +334,8 @@ class HealthSyncService {
         activityType: 'Walking',
         durationMinutes: durationMinutes,
         distanceKm: distanceKm,
+        steps: totalSteps,
+        recordingMethod: ExternalRecordingMethod.automatic,
         performedAt: start.toUtc(),
       ));
     }
@@ -343,6 +348,14 @@ class HealthSyncService {
     final day = date.day.toString().padLeft(2, '0');
     return '${date.year}-$month-$day';
   }
+
+  ExternalRecordingMethod _mapRecordingMethod(RecordingMethod method) =>
+      switch (method) {
+        RecordingMethod.active => ExternalRecordingMethod.active,
+        RecordingMethod.automatic => ExternalRecordingMethod.automatic,
+        RecordingMethod.manual => ExternalRecordingMethod.manual,
+        RecordingMethod.unknown => ExternalRecordingMethod.unknown,
+      };
 
   Future<SyncResult> _postBatch(SyncBatchRequest request) async {
     debugPrint(

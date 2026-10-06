@@ -53,8 +53,7 @@ const _achievement = AchievementDto(
 );
 
 void main() {
-  testWidgets('shortcuts stay in place as live attention changes',
-      (tester) async {
+  testWidgets('shortcuts needing attention move to the front', (tester) async {
     late ProviderContainer container;
     await tester.pumpWidget(ProviderScope(
       overrides: [
@@ -81,21 +80,23 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     double x(String label) => tester.getTopLeft(find.text(label)).dx;
-    final positions = [x('Rewards'), x('Season'), x('Streak'), x('Journal')];
-    expect(positions, orderedEquals(positions.toList()..sort()));
+    expect(x('Rewards'), lessThan(x('Season')));
+    expect(x('Season'), lessThan(x('Streak')));
 
     container.read(_attentionModeProvider.notifier).state = 1;
     await tester.pump();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect([x('Rewards'), x('Season'), x('Streak'), x('Journal')], positions);
+    expect(x('Streak'), lessThan(x('Rewards')));
+    expect(x('Rewards'), lessThan(x('Season')));
     expect(find.text('!'), findsOneWidget);
 
     container.read(_attentionModeProvider.notifier).state = 2;
     await tester.pump();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect([x('Rewards'), x('Season'), x('Streak'), x('Journal')], positions);
+    expect(x('Season'), lessThan(x('Rewards')));
+    expect(x('Rewards'), lessThan(x('Streak')));
     expect(find.text('!'), findsOneWidget);
   });
 

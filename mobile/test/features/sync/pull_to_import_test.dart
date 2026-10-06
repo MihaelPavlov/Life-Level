@@ -16,6 +16,7 @@ PendingWorkout _w(String id,
         String provider = 'strava',
         int xp = 164,
         bool dup = false,
+        bool rejected = false,
         double? km = 6.2}) =>
     PendingWorkout(
       id: id,
@@ -25,6 +26,8 @@ PendingWorkout _w(String id,
       distanceKm: km,
       performedAt: DateTime.now().subtract(const Duration(hours: 1)),
       isDuplicate: dup,
+      isRejected: rejected,
+      rejectionReason: rejected ? 'ManualEntry' : null,
       duplicateOfProvider: dup ? 'strava' : null,
       previewXp: xp,
       previewEndurance: type == 'Running' ? 2 : 0,
@@ -38,6 +41,7 @@ class _FakeService extends PendingWorkoutsService {
   bool fail = false;
   bool failStrava = false;
   int stravaRefreshes = 0;
+  List<String>? acknowledgedIds;
   _FakeService(this.next);
 
   @override
@@ -77,8 +81,14 @@ class _FakeService extends PendingWorkoutsService {
       ],
       totalXp: 164 * ids.length,
       totalDistanceKm: 6.2 * ids.length,
+      totalAdventureDistanceKm: 6.2 * ids.length,
       remainingPending: next.pendingCount - ids.length,
     );
+  }
+
+  @override
+  Future<void> acknowledgeRejected(List<String> ids) async {
+    acknowledgedIds = ids;
   }
 }
 
@@ -258,6 +268,30 @@ void main() {
       await tester.tap(find.text('Later'));
       await tester.pumpAndSettle();
       expect(find.text('1 new workout'), findsNothing);
+    });
+
+    testWidgets('manual workout is visible, disabled, and has no rewards',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await open(
+        tester,
+        PendingWorkoutList(
+          items: [
+            _w('manual', provider: 'healthconnect', rejected: true, xp: 0)
+          ],
+          pendingCount: 0,
+          rejectedCount: 1,
+        ),
+      );
+
+      expect(find.text('Manual entry · rejected'), findsOneWidget);
+      expect(find.text('No rewards'), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+      expect(find.textContaining('Import '), findsNothing);
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
     });
   });
 

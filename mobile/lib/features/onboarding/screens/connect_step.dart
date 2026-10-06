@@ -10,6 +10,7 @@ import '../../../core/motion/reward_fx.dart';
 import '../../../core/services/oauth_code_guard.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../character/setup/setup_resume_service.dart';
+import '../../integrations/models/integration_models.dart';
 import '../../integrations/providers/integrations_provider.dart';
 import '../../integrations/services/health_sync_service.dart';
 import '../../integrations/services/strava_service.dart';
@@ -107,7 +108,8 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
     }
     _awaitingStrava = true;
     try {
-      final result = await StravaService().authorize(forceApproval: retryAuthorization);
+      final result =
+          await StravaService().authorize(forceApproval: retryAuthorization);
       if (result != null && OAuthCodeGuard.claim(result.code)) {
         await _finishStrava(result.code, redirectUri: result.redirectUri);
       }
@@ -170,7 +172,9 @@ class _ConnectStepState extends ConsumerState<ConnectStep>
     final workouts = await health.readRecentWorkouts(days: 30);
     if (!mounted) return;
     ctrl.healthWorkouts = workouts;
-    ctrl.foundWorkouts = workouts.length;
+    ctrl.foundWorkouts = workouts
+        .where((w) => w.recordingMethod != ExternalRecordingMethod.manual)
+        .length;
     _done(OnboardingSource.health);
   }
 

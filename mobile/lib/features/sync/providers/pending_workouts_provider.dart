@@ -148,6 +148,7 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
         list: PendingWorkoutList(
           items: remaining,
           pendingCount: result.remainingPending,
+          rejectedCount: remaining.where((w) => w.isRejected).length,
         ),
         importing: false,
         lastCheckedAt: DateTime.now(),
@@ -158,6 +159,21 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
       state = state.copyWith(importing: false);
       rethrow;
     }
+  }
+
+  Future<void> acknowledgeRejected(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await ref.read(pendingWorkoutsServiceProvider).acknowledgeRejected(ids);
+    final remaining =
+        state.list.items.where((w) => !ids.contains(w.id)).toList();
+    state = state.copyWith(
+      list: PendingWorkoutList(
+        items: remaining,
+        pendingCount:
+            remaining.where((w) => !w.isDuplicate && !w.isRejected).length,
+        rejectedCount: remaining.where((w) => w.isRejected).length,
+      ),
+    );
   }
 
   Future<void> _saveLastChecked(DateTime at) async {

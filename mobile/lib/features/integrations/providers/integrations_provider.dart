@@ -66,10 +66,10 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
     await _loadInitialState();
   }
 
-  Future<void> requestPermissions() async {
+  Future<bool> requestPermissions() async {
     final granted = await _service.requestPermissions();
     state = state.copyWith(isHealthConnected: granted);
-    if (granted) await syncNow();
+    return granted;
   }
 
   Future<void> syncNow() async {
@@ -104,7 +104,9 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
     } on DioException catch (e) {
       final data = e.response?.data;
       if (data is String && data.isNotEmpty) return data;
-      if (data is Map && data['error'] is String) return data['error'] as String;
+      if (data is Map && data['error'] is String) {
+        return data['error'] as String;
+      }
       return 'Could not connect to Strava. Try again.';
     } catch (e) {
       return e.toString();

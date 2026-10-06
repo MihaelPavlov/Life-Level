@@ -932,3 +932,54 @@ class _EmberPainter extends CustomPainter {
   @override
   bool shouldRepaint(_EmberPainter old) => old.t != t || old.color != color;
 }
+
+/// The purple-edged hexagon behind the Level number and the hero name step.
+class OnboardingHexPainter extends CustomPainter {
+  const OnboardingHexPainter();
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    Path hex(double inset) {
+      final w = s.width, h = s.height;
+      return Path()
+        ..moveTo(w / 2, inset)
+        ..lineTo(w - inset, h * .26 + inset * .3)
+        ..lineTo(w - inset, h * .74 - inset * .3)
+        ..lineTo(w / 2, h - inset)
+        ..lineTo(inset, h * .74 - inset * .3)
+        ..lineTo(inset, h * .26 + inset * .3)
+        ..close();
+    }
+
+    final rect = Offset.zero & s;
+    canvas.drawPath(
+      hex(6),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF231A3D), Color(0xFF0D131B)],
+        ).createShader(rect),
+    );
+    canvas.drawPath(
+      hex(6),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeJoin = StrokeJoin.round
+        ..shader = const LinearGradient(
+                colors: [AppColors.blue, AppColors.purple])
+            .createShader(rect),
+    );
+    canvas.drawPath(
+      hex(22),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = AppColors.purple.withValues(alpha: .25),
+    );
+  }
+
+  @override
+  bool shouldRepaint(OnboardingHexPainter old) => false;
+}

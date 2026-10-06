@@ -50,8 +50,7 @@ class OnboardingController extends ChangeNotifier {
   List<LevelUpReceipt> receipts = const [];
   ClassRecommendation? recommendation;
 
-  CharacterClass? get chosenClass =>
-      recommendation?.classById(_resume.classId);
+  CharacterClass? get chosenClass => recommendation?.classById(_resume.classId);
 
   // ── Navigation ─────────────────────────────────────────────────────────────
 
@@ -188,8 +187,10 @@ class OnboardingController extends ChangeNotifier {
         'source': r.source,
         'imported': r.imported,
         'skipped': r.skipped,
+        'rejectedManualCount': r.rejectedManualCount,
         'totalMinutes': r.totalMinutes,
         'totalKm': r.totalKm,
+        'totalAdventureDistanceKm': r.totalAdventureDistanceKm,
         'totalXp': r.totalXp,
         'leveledUp': r.leveledUp,
         'previousLevel': r.previousLevel,
@@ -218,9 +219,8 @@ class OnboardingScope extends InheritedNotifier<OnboardingController> {
     required super.child,
   }) : super(notifier: controller);
 
-  static OnboardingController of(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<OnboardingScope>()!
-      .notifier!;
+  static OnboardingController of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<OnboardingScope>()!.notifier!;
 
   static OnboardingController read(BuildContext context) =>
       context.getInheritedWidgetOfExactType<OnboardingScope>()!.notifier!;

@@ -2630,8 +2630,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/AuthController.cs": {
-    "mtime": 1788511408.5695083,
-    "ast_hash": "bb4f2d3b819cd1ca7e850eeb3a9eb604",
+    "mtime": 1791235163.4276338,
+    "ast_hash": "5e7ba2af811543d5417c49aa5096bc5d",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/BossController.cs": {
@@ -2670,8 +2670,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/IntegrationsController.cs": {
-    "mtime": 1791094685.7355247,
-    "ast_hash": "2d72ec8898648ba3bd147a319fc181f6",
+    "mtime": 1791296773.5578995,
+    "ast_hash": "cd98c98a5bd5b58a12f27b74c2ed686f",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/ItemsController.cs": {
@@ -2740,13 +2740,13 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/AdminUserSeeder.cs": {
-    "mtime": 1788511408.5714514,
-    "ast_hash": "81751a64a6d0ae6178b6993b960dc02f",
+    "mtime": 1791208739.9687722,
+    "ast_hash": "bca9ddbdb2f4e96a58201ba8053fa8b9",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/AppDbContext.cs": {
-    "mtime": 1791003792.7913668,
-    "ast_hash": "d192201e108d9c427ca4504d7e70de3e",
+    "mtime": 1791208408.2779753,
+    "ast_hash": "cf398563de2720ce0fcaa0204186a626",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Infrastructure/Persistence/RankThresholdSeeder.cs": {
@@ -3280,13 +3280,13 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Migrations/AppDbContextModelSnapshot.cs": {
-    "mtime": 1791038125.479087,
-    "ast_hash": "0f21708ced954bfa944f581a56096253",
+    "mtime": 1791297935.7003312,
+    "ast_hash": "114598895b8e2651eb763e78af1c86d1",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Program.cs": {
-    "mtime": 1791003792.794366,
-    "ast_hash": "b4dede5046a57f60e53ea5cd030c8586",
+    "mtime": 1791210140.7679572,
+    "ast_hash": "6740d3defc799c8e4281bf292b7d8f46",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Properties/launchSettings.json": {
@@ -3295,13 +3295,13 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/appsettings.Development.json": {
-    "mtime": 1790279934.7403452,
-    "ast_hash": "38bc38ef15a1be347fea377bb7e0ea23",
+    "mtime": 1791233056.1810727,
+    "ast_hash": "c24b0fced1a51d8ae6ec4a28e7781990",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/appsettings.example.json": {
-    "mtime": 1791003792.7953658,
-    "ast_hash": "b7e105592482ea41d7376fbd49374a3a",
+    "mtime": 1791232999.8888867,
+    "ast_hash": "34bf9991c27b313be817c248bfb1576f",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/js/map/api.js": {
@@ -3405,13 +3405,13 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Activity/Application/DTOs/ActivityDtos.cs": {
-    "mtime": 1790801326.3461194,
-    "ast_hash": "702ebe8d3486b643aabc0bb07f6c042d",
+    "mtime": 1791296758.5090728,
+    "ast_hash": "8b5d32ed8ceafbb661b690f7436db102",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Activity/Application/UseCases/ActivityService.cs": {
-    "mtime": 1790801326.3468351,
-    "ast_hash": "f09862074b9ae7692868c47ca1b1b7cf",
+    "mtime": 1791297806.9032123,
+    "ast_hash": "764751cc52038f80f6ded9fd9e578232",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Activity/Domain/Entities/Activity.cs": {
@@ -3895,13 +3895,13 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Application/DTOs/AccountDtos.cs": {
-    "mtime": 1788511408.6494024,
-    "ast_hash": "c1df433f2972a45e1ac6f56d2baacdbb",
+    "mtime": 1791208739.757774,
+    "ast_hash": "df7a9d3cc5cdc749a2484fca9bf1ff32",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Application/DTOs/AuthResponse.cs": {
-    "mtime": 1788511408.6494951,
-    "ast_hash": "066a71317d5392902e635402db3f9d62",
+    "mtime": 1791235155.6283107,
+    "ast_hash": "a7b704c42c4a1d8be9584f3be86c886b",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Application/DTOs/LoginRequest.cs": {
@@ -3915,13 +3915,13 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Application/UseCases/AccountService.cs": {
-    "mtime": 1788511408.6494951,
-    "ast_hash": "68caae74f4977bab60030c410fd9b1bd",
+    "mtime": 1791235156.0293157,
+    "ast_hash": "a63e2f14b55d9c69c6cff4265be269f9",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Application/UseCases/AuthService.cs": {
-    "mtime": 1788511408.6498299,
-    "ast_hash": "cf19aa68ee68aa9814d4a7481eb6ea6c",
+    "mtime": 1791235155.628878,
+    "ast_hash": "e7f350ed1a913f99b367f7302d78d390",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Application/UseCases/JwtService.cs": {
@@ -3930,8 +3930,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Domain/Entities/User.cs": {
-    "mtime": 1788511408.649993,
-    "ast_hash": "221a18b0e7083467ba3314f963a64f59",
+    "mtime": 1791235155.6025896,
+    "ast_hash": "4a2908fbe787f0a7700d16b693485a66",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Domain/Entities/UserRingItem.cs": {
@@ -3950,13 +3950,13 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/IdentityModule.cs": {
-    "mtime": 1788511408.6502645,
-    "ast_hash": "9e6becbe14f2a701661200f6ebd7fe8f",
+    "mtime": 1791232999.354912,
+    "ast_hash": "4e8003845f9d7c3d3da947c83f1ba113",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/Persistence/Configurations/UserConfiguration.cs": {
-    "mtime": 1788511408.6504102,
-    "ast_hash": "07b77b68e7f60a7fd34b8315f672f0fa",
+    "mtime": 1791208407.6389816,
+    "ast_hash": "d6b938a1f40dc941b19d81a80b525b11",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/Persistence/Configurations/UserRingItemConfiguration.cs": {
@@ -3965,8 +3965,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Identity/LifeLevel.Modules.Identity.csproj": {
-    "mtime": 1788511408.6505277,
-    "ast_hash": "7c844f0434f21d04250a9b880b5b2c09",
+    "mtime": 1791208408.1299767,
+    "ast_hash": "37ccb7ddae81b09581138f835835b72d",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/.codex/tmp/backend-build/LifeLevel.Modules.Integrations.deps.json": {
@@ -3980,8 +3980,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/DTOs/IntegrationDtos.cs": {
-    "mtime": 1788511408.6512337,
-    "ast_hash": "fc9c4e992a34e972d14df599a9ad3302",
+    "mtime": 1791297806.9037747,
+    "ast_hash": "594853422377a548bec21de8224b578a",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/DTOs/StravaDtos.cs": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/UseCases/HealthSyncService.cs": {
-    "mtime": 1791127759.2875412,
-    "ast_hash": "3f206adff9c128c46d9dc35dba5d79a3",
+    "mtime": 1791297806.9035125,
+    "ast_hash": "b2d1cf54276c9b5b52ca5d9efe3d8d90",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/UseCases/StravaOAuthService.cs": {
@@ -4030,8 +4030,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/UseCases/StravaWebhookService.cs": {
-    "mtime": 1791123972.0137053,
-    "ast_hash": "f01044793abafb193505e8cbc4096ccf",
+    "mtime": 1791296773.4809003,
+    "ast_hash": "118255fd2f014f1aeb7a03ecaa80ee7e",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Domain/Entities/ExternalActivityRecord.cs": {
@@ -4905,8 +4905,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IActivityLogPort.cs": {
-    "mtime": 1790619163.2961285,
-    "ast_hash": "75cd65cb198f34074925d05581995ddc",
+    "mtime": 1791297806.9021804,
+    "ast_hash": "aad371c8611fc4ec1a3acfda7a843257",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IActivityStatsReadPort.cs": {
@@ -5065,8 +5065,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IWorldZoneDistancePort.cs": {
-    "mtime": 1788511408.6684868,
-    "ast_hash": "ed6bcc85edd598f9fadbc18bfa16b0d3",
+    "mtime": 1791296758.4010742,
+    "ast_hash": "ee8d257ecf25d5332907c67b846709d6",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.SharedKernel/Ports/IZoneUnlockReadPort.cs": {
@@ -5110,8 +5110,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/HealthSyncServiceTests.cs": {
-    "mtime": 1791127759.2885413,
-    "ast_hash": "d5448abb459759fef74e949da81e394f",
+    "mtime": 1791296997.4213142,
+    "ast_hash": "4ff7ba5281a15818f32efafa873d4a1f",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/LifeLevel.Api.Tests.csproj": {
@@ -5140,8 +5140,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/TestStubs.cs": {
-    "mtime": 1790669541.6033666,
-    "ast_hash": "076f3fe54cd8972759eb746cf6a8970e",
+    "mtime": 1791297981.3114293,
+    "ast_hash": "f191f67c883fc640609d179b9ea3ef01",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/TitleServiceTests.cs": {
@@ -5175,8 +5175,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/WorldZoneServiceTests.cs": {
-    "mtime": 1791003792.8413537,
-    "ast_hash": "98a5793a398ef0659c6e839ce7156708",
+    "mtime": 1791296985.7374494,
+    "ast_hash": "3cf62609d3afad70a7f1fd8a6aa211df",
     "semantic_hash": ""
   },
   "design-mockup/canvas-command-center/canvas.json": {
@@ -5380,8 +5380,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/session/invalidate_user_providers.dart": {
-    "mtime": 1791094685.93446,
-    "ast_hash": "7afeaab2ff2a6fa5b616e171343eae86",
+    "mtime": 1791209649.6955547,
+    "ast_hash": "613dd50b69ae1805244d80b1074207c1",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/main_shell.dart": {
@@ -5440,8 +5440,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/chest_opened_overlay.dart": {
-    "mtime": 1791094686.0574605,
-    "ast_hash": "1eb63c8f38fec4ddd428709ea66e0a4b",
+    "mtime": 1791148370.9740887,
+    "ast_hash": "c16ae3ebc382932d23df75dd1339a091",
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/customize_ring_sheet.dart": {
@@ -5505,18 +5505,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/activity/activity_result_sheet.dart": {
-    "mtime": 1790280038.8566856,
-    "ast_hash": "a319b37a5a7c90ed0114417f336cfc9b",
+    "mtime": 1791296794.843654,
+    "ast_hash": "79e92b9b2e3f39eb332a24d11646b7e5",
     "semantic_hash": ""
   },
   "mobile/lib/features/activity/log_activity_screen.dart": {
-    "mtime": 1790864534.6496346,
-    "ast_hash": "c48e46b3c55247cf7a3271f6d5f6d682",
+    "mtime": 1791296794.7436552,
+    "ast_hash": "23f50c544df3b14faad1db9aef33c563",
     "semantic_hash": ""
   },
   "mobile/lib/features/activity/models/activity_models.dart": {
-    "mtime": 1790801408.735612,
-    "ast_hash": "a63b3eada0b1dfec021fdc7fb3eeceb9",
+    "mtime": 1791296794.6456563,
+    "ast_hash": "15e2575548fbef2d10f1a4532c5e2568",
     "semantic_hash": ""
   },
   "mobile/lib/features/activity/providers/activity_provider.dart": {
@@ -5535,23 +5535,23 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/auth/login_screen.dart": {
-    "mtime": 1790620771.4421978,
-    "ast_hash": "a9312363fb4e61464562ea24e7103716",
+    "mtime": 1791233230.5569763,
+    "ast_hash": "b70a78c7776f76b748e8b82fa5365bb8",
     "semantic_hash": ""
   },
   "mobile/lib/features/auth/models/account_models.dart": {
-    "mtime": 1788511416.564994,
-    "ast_hash": "10f6e49d6ce0ef07d5d533bf6651f450",
+    "mtime": 1791209444.6264422,
+    "ast_hash": "c9daaae2dd89147a320ebf0c98424eb9",
     "semantic_hash": ""
   },
   "mobile/lib/features/auth/register_screen.dart": {
-    "mtime": 1790620771.4424598,
-    "ast_hash": "b4e20eda05691730a0882a01d75b9789",
+    "mtime": 1791233240.4416783,
+    "ast_hash": "41e9266d3d94ffbcc9abc636a4ef872f",
     "semantic_hash": ""
   },
   "mobile/lib/features/auth/services/auth_service.dart": {
-    "mtime": 1788511416.564994,
-    "ast_hash": "cc48ba9cdb39fbff677fce37c3d5a5e3",
+    "mtime": 1791235322.5028963,
+    "ast_hash": "1a61c97926099fc29fbcb049f6b2e4cb",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/models/boss_damage_history.dart": {
@@ -5660,8 +5660,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/character/setup/setup_resume_service.dart": {
-    "mtime": 1790619955.619769,
-    "ast_hash": "de5703ce6abca21ac917d0531b0e79ba",
+    "mtime": 1791235322.5022852,
+    "ast_hash": "15479cc35024b1ddefa9de0c5cbe4b84",
     "semantic_hash": ""
   },
   "mobile/lib/features/guild/models/guild_models.dart": {
@@ -5725,8 +5725,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/widgets/home_avatar_ring.dart": {
-    "mtime": 1790540445.6066675,
-    "ast_hash": "85e42192101ba866427281886fe385be",
+    "mtime": 1791295208.5014362,
+    "ast_hash": "44a5a9b5861a9d66d3cc47bc2c3ed502",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/widgets/home_badge.dart": {
@@ -5770,8 +5770,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/integrations/models/integration_models.dart": {
-    "mtime": 1790238238.2163746,
-    "ast_hash": "7aa8b26598135bc6ad5982bf471e0c87",
+    "mtime": 1791297777.936904,
+    "ast_hash": "438d50155f17bfa4a2c2900b8e05d8b6",
     "semantic_hash": ""
   },
   "mobile/lib/features/integrations/providers/integrations_provider.dart": {
@@ -5790,8 +5790,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/integrations/services/health_sync_service.dart": {
-    "mtime": 1790670064.0230954,
-    "ast_hash": "05b9f18917ce9395fe319b0ad7ec7a9a",
+    "mtime": 1791297777.9372377,
+    "ast_hash": "cbd727f655ffb80fd1a3933e7d237b3d",
     "semantic_hash": ""
   },
   "mobile/lib/features/integrations/services/strava_service.dart": {
@@ -5935,8 +5935,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/map_icon_resolver.dart": {
-    "mtime": 1791133882.1652389,
-    "ast_hash": "7a754c670f1e0c38e0510ec8de79342d",
+    "mtime": 1791149355.9913337,
+    "ast_hash": "48f737c87ede1a008487ee339fc760c1",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/region_hero_card.dart": {
@@ -5955,13 +5955,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_detail_sheet.dart": {
-    "mtime": 1791133918.1631107,
-    "ast_hash": "ac9f72a2a36b5cf2a8340b2784562b0a",
+    "mtime": 1791150515.0252862,
+    "ast_hash": "e9d3218fea4717fdc4716d3c59b39788",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_node_tile.dart": {
-    "mtime": 1788511416.5734954,
-    "ast_hash": "544324afd5c64bfcb61bcdc6631f17bc",
+    "mtime": 1791150515.0256073,
+    "ast_hash": "f26bc9ac1366e3ccb637b28a5b086fee",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_trail.dart": {
@@ -6020,8 +6020,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/account_settings_screen.dart": {
-    "mtime": 1790580761.0736392,
-    "ast_hash": "8bde8ad02762137d7bd198a2be00b6db",
+    "mtime": 1791209649.5685558,
+    "ast_hash": "d1a32e4800eb61a00dd309192be73f93",
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/edit_avatar_screen.dart": {
@@ -6035,8 +6035,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/profile_screen.dart": {
-    "mtime": 1790801598.5704005,
-    "ast_hash": "8a9fbf0f4600d994c357bddda47a2b89",
+    "mtime": 1791300118.5845237,
+    "ast_hash": "2fb087fcf91d55e5e8008d7b7f94a95d",
     "semantic_hash": ""
   },
   "mobile/lib/features/profile/profile_stat_metadata.dart": {
@@ -6240,8 +6240,8 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/app_screen_goldens_test.dart": {
-    "mtime": 1790620813.1923184,
-    "ast_hash": "6b299b798f817c7509dc3a072961be1f",
+    "mtime": 1791235523.2851145,
+    "ast_hash": "14cdaa93db8ba6de9b8cebf7a5eaa0bc",
     "semantic_hash": ""
   },
   "mobile/web/manifest.json": {
@@ -6635,8 +6635,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790801741.0976603,
-    "ast_hash": "2f21296b56a37c8aa1b2a19e08a728c7",
+    "mtime": 1791300132.492278,
+    "ast_hash": "342107bd8c8b8dfb75bc707ac2581b5f",
     "semantic_hash": ""
   },
   "INTEGRATION_PLAN.txt": {
@@ -7280,8 +7280,8 @@
     "semantic_hash": ""
   },
   "docs/obsidian/01 - Product/Feature Catalog.md": {
-    "mtime": 1790230718.1067984,
-    "ast_hash": "ed91fb5562a2c2c90cb7a239c9853501",
+    "mtime": 1791296986.4124417,
+    "ast_hash": "f124cc119537320abb9aaafd9046027b",
     "semantic_hash": ""
   },
   "docs/obsidian/01 - Product/Marketing and Positioning.md": {
@@ -7305,13 +7305,13 @@
     "semantic_hash": ""
   },
   "docs/obsidian/02 - Game Design/Activity System.md": {
-    "mtime": 1788511408.6904747,
-    "ast_hash": "5aadb94007c7208b8baca7540977e2d6",
+    "mtime": 1791296986.128445,
+    "ast_hash": "12d424b8063b761b38845ea1edf8ed07",
     "semantic_hash": ""
   },
   "docs/obsidian/02 - Game Design/Adventure Map and World.md": {
-    "mtime": 1788511408.6904747,
-    "ast_hash": "01f9289b2499bcb662466149c27fa485",
+    "mtime": 1791296986.205444,
+    "ast_hash": "6031b56a88620ad973a63d7f124ff5b7",
     "semantic_hash": ""
   },
   "docs/obsidian/02 - Game Design/Boss System.md": {
@@ -7440,8 +7440,8 @@
     "semantic_hash": ""
   },
   "docs/obsidian/03 - Backend/Modules/Map.md": {
-    "mtime": 1788511408.6919827,
-    "ast_hash": "1b0a781ac06a38e7c0e7dde733f8c5a0",
+    "mtime": 1791296986.294443,
+    "ast_hash": "16e0388d69866ba3b1f9980793b33f58",
     "semantic_hash": ""
   },
   "docs/obsidian/03 - Backend/Modules/Quest.md": {
@@ -7720,8 +7720,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1791127759.2895412,
-    "ast_hash": "0c9e71b619ad8d4228b32f7a51e1b4dc",
+    "mtime": 1791233148.345181,
+    "ast_hash": "3675ee36f85b17c3798b72d6800a877e",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -10370,13 +10370,13 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/goldens/login_screen.png": {
-    "mtime": 1788511416.5843477,
-    "ast_hash": "7af3f4873ec79c177221896914e3c775",
+    "mtime": 1791233891.363328,
+    "ast_hash": "7cd387ab21ec06f306d5fa8608612ea2",
     "semantic_hash": ""
   },
   "mobile/test/visual/goldens/register_screen.png": {
-    "mtime": 1788511416.5843477,
-    "ast_hash": "967aa99859177f33a15045a8ab7f21c2",
+    "mtime": 1791233891.8953128,
+    "ast_hash": "62c997a4718d121073f11905ba3ef475",
     "semantic_hash": ""
   },
   "mobile/web/favicon.png": {
@@ -10870,8 +10870,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_adventure_hub.dart": {
-    "mtime": 1791134150.429943,
-    "ast_hash": "21bd72ff89495fbe6ab571a1649f2e37",
+    "mtime": 1791147002.8177872,
+    "ast_hash": "391fc256115c330fa4e59a2896d36710",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_hero_stage.dart": {
@@ -10970,8 +10970,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/home/home_adventure_hub_test.dart": {
-    "mtime": 1791134185.5517912,
-    "ast_hash": "fe408db16ad7cf67be59a0dffbce3ab8",
+    "mtime": 1791147007.3066487,
+    "ast_hash": "c59586fb71e08440d6a0cb637a0261fe",
     "semantic_hash": ""
   },
   "mobile/test/features/rewards/rewards_models_test.dart": {
@@ -11760,8 +11760,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/road_fx.dart": {
-    "mtime": 1790533343.3792262,
-    "ast_hash": "5e4a47d381a4a9ae9a6658083ce8dbc6",
+    "mtime": 1791146879.9429371,
+    "ast_hash": "60c7ab4362892595b4cc364beed47794",
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/road_meta.dart": {
@@ -11770,8 +11770,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/achievements/roads/road_widgets.dart": {
-    "mtime": 1791132753.9036176,
-    "ast_hash": "08d111aacecdb9c52fe08028d15b4e4e",
+    "mtime": 1791148058.0773396,
+    "ast_hash": "463fc0f349a8c54a7b4a5daa291c4fde",
     "semantic_hash": ""
   },
   "mobile/test/features/achievements/reward_roads_test.dart": {
@@ -11825,43 +11825,43 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_isolatedDiff.png": {
-    "mtime": 1791038122.8909678,
-    "ast_hash": "e614d64d7566dc1f1b276d74c49058da",
+    "mtime": 1791233882.7955723,
+    "ast_hash": "d5acfe04b18b7918904bb7896584abb9",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_maskedDiff.png": {
-    "mtime": 1791038122.6959686,
-    "ast_hash": "2e18c8343fb15f7e3dd9fbadea801443",
+    "mtime": 1791233882.558579,
+    "ast_hash": "86a4cbcd13791431f0f01a631298df44",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_masterImage.png": {
-    "mtime": 1791038122.34197,
-    "ast_hash": "7af3f4873ec79c177221896914e3c775",
+    "mtime": 1791233882.2125888,
+    "ast_hash": "33035783db7e406f417bbab3efc6909a",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/login_screen_testImage.png": {
-    "mtime": 1791038122.5199692,
-    "ast_hash": "4dc90293d1190c1f9b29a703d950b16d",
+    "mtime": 1791233882.3905838,
+    "ast_hash": "7cd387ab21ec06f306d5fa8608612ea2",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_isolatedDiff.png": {
-    "mtime": 1791038124.5049617,
-    "ast_hash": "cdf7e65332694ffb7b95daf8cb346c83",
+    "mtime": 1791233275.7192016,
+    "ast_hash": "8694db765f614914320549e6a6835a2a",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_maskedDiff.png": {
-    "mtime": 1791038124.3139625,
-    "ast_hash": "397bf285b14085c67b1f2530487de9ae",
+    "mtime": 1791233275.5342085,
+    "ast_hash": "ff67d29e44737b243ef5db1aa35d6726",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_masterImage.png": {
-    "mtime": 1791038123.9029639,
-    "ast_hash": "967aa99859177f33a15045a8ab7f21c2",
+    "mtime": 1791233275.1882217,
+    "ast_hash": "b6b262aadfa1413940101eb12b68af40",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/register_screen_testImage.png": {
-    "mtime": 1791038124.1369631,
-    "ast_hash": "8b41d6783c480851277e1e352a84f1ec",
+    "mtime": 1791233275.364215,
+    "ast_hash": "62c997a4718d121073f11905ba3ef475",
     "semantic_hash": ""
   },
   "mobile/test/visual/failures/welcome_setup_screen_isolatedDiff.png": {
@@ -11960,13 +11960,13 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/DTOs/OnboardingImportDtos.cs": {
-    "mtime": 1790619366.3505127,
-    "ast_hash": "ae34e3acbf12e955fbdbda0d4e86a90f",
+    "mtime": 1791296773.3079023,
+    "ast_hash": "b24063a99b6efeab9e58a4127e2e5853",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/UseCases/OnboardingImportService.cs": {
-    "mtime": 1791123972.0127053,
-    "ast_hash": "d8153319498480461dacf3b2a458c5c8",
+    "mtime": 1791296773.748897,
+    "ast_hash": "621bcbf98b9d5a1dcbe50449445fd599",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Items/Application/EventHandlers/LevelUpItemGrantHandler.cs": {
@@ -12000,8 +12000,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/ImportFirstOnboardingTests.cs": {
-    "mtime": 1791127759.2885413,
-    "ast_hash": "01f52c490ffa235fbb49a3139856b479",
+    "mtime": 1791297981.3129983,
+    "ast_hash": "8c9bd74f4b3f35d0d00cb8beaa524a9d",
     "semantic_hash": ""
   },
   "mobile/lib/core/services/oauth_code_guard.dart": {
@@ -12035,18 +12035,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/models/onboarding_models.dart": {
-    "mtime": 1790619901.1311533,
-    "ast_hash": "289051aea2254d15e030df9486b77d0b",
+    "mtime": 1791297015.9571,
+    "ast_hash": "c8a9b81892dcdb843fcd41152e61e7c6",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/onboarding_controller.dart": {
-    "mtime": 1790620080.8624687,
-    "ast_hash": "96d536ec42f824edd52e1d758ebba8ca",
+    "mtime": 1791297016.0080993,
+    "ast_hash": "0e0d6ac7b122c7b30ca814dc2a2f2a16",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/onboarding_flow.dart": {
-    "mtime": 1790620771.1290996,
-    "ast_hash": "257c069cf994e814ee0ad6d83fb14216",
+    "mtime": 1791235371.197064,
+    "ast_hash": "35f8486b1edd60d2f28db44ed428327d",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/analyze_step.dart": {
@@ -12070,13 +12070,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/import_step.dart": {
-    "mtime": 1791123972.0537062,
-    "ast_hash": "5c3e4025f692c4cf07d0d5d3b2eb5804",
+    "mtime": 1791296829.1542583,
+    "ast_hash": "20a85dc995136aee6c2c07ab5c1b81b2",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/level_step.dart": {
-    "mtime": 1790620285.5703115,
-    "ast_hash": "0730da64ecc7903abc8533a1950f2e17",
+    "mtime": 1791235329.7080436,
+    "ast_hash": "15ee37282dde3fc5c1b14cbff98c3956",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/map_step.dart": {
@@ -12100,8 +12100,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/widgets/onboarding_ui.dart": {
-    "mtime": 1790620035.185945,
-    "ast_hash": "d887debe00f20db578309beed3639b79",
+    "mtime": 1791235416.4846396,
+    "ast_hash": "b36344e905655a07a165392b1242f0c2",
     "semantic_hash": ""
   },
   "mobile/lib/features/titles/widgets/title_equip_flight.dart": {
@@ -12235,7 +12235,7 @@
     "semantic_hash": ""
   },
   "mobile/test/visual/goldens/onboarding_welcome.png": {
-    "mtime": 1790620831.2017581,
+    "mtime": 1791233892.5702937,
     "ast_hash": "c8029b4c69d422ee1061337c66ce71e6",
     "semantic_hash": ""
   },
@@ -12250,18 +12250,18 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/DTOs/PendingActivityDtos.cs": {
-    "mtime": 1790669462.134235,
-    "ast_hash": "44ff83fe7006075f322b6e2dc28640cc",
+    "mtime": 1791296773.2099035,
+    "ast_hash": "72e4b79c1d97b847a57c9e345854791b",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Application/UseCases/PendingActivityService.cs": {
-    "mtime": 1791127759.2885413,
-    "ast_hash": "dfb50fe2e8a86d1a8365f5ad5de1a82f",
+    "mtime": 1791297806.9960938,
+    "ast_hash": "08a8cb8a7d7302ee57369c6829bfc882",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Domain/Entities/PendingActivity.cs": {
-    "mtime": 1790669311.4288056,
-    "ast_hash": "5d94a9c4f1fe81c46eb0eb89a8e24935",
+    "mtime": 1791297806.995429,
+    "ast_hash": "8a43640d7cf8b7ad78c940cd8f68c5c7",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Integrations/Infrastructure/Persistence/Configurations/PendingActivityConfiguration.cs": {
@@ -12275,8 +12275,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/PendingActivityServiceTests.cs": {
-    "mtime": 1791127759.2885413,
-    "ast_hash": "b8a95654787b1c3ea0e883a3ec41fb2d",
+    "mtime": 1791297981.3119452,
+    "ast_hash": "40a6f624f4c7ff3176cc2dbbcf82d224",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/shell_anchors.dart": {
@@ -12290,8 +12290,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/widgets/map_orb_button.dart": {
-    "mtime": 1791094686.03031,
-    "ast_hash": "66c8d3c2ee80da5179b29926c6584395",
+    "mtime": 1791150017.7803564,
+    "ast_hash": "aff6a8464bd6bda82e0d7667dfec8552",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/widgets/shell_tab_bar.dart": {
@@ -12305,13 +12305,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/journey/journey_state.dart": {
-    "mtime": 1791133882.1656463,
-    "ast_hash": "058ed1460c47d980572e62a9135295b2",
+    "mtime": 1791149355.991713,
+    "ast_hash": "ae7c80e8411334e5f81d091c9b1f327f",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/models/pending_models.dart": {
-    "mtime": 1790670047.8984456,
-    "ast_hash": "a852fcffbe5921b15f15741b93d25585",
+    "mtime": 1791296807.9765027,
+    "ast_hash": "de0d3bea00408556fda4416ed0552802",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/providers/pending_workouts_provider.dart": {
@@ -12320,8 +12320,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/pull_import_flow.dart": {
-    "mtime": 1791094686.2534611,
-    "ast_hash": "803dc60453df419f13da00386175ce18",
+    "mtime": 1791296808.0755014,
+    "ast_hash": "26ff277ff5d5cccb39fc495f7bad74be",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/services/pending_workouts_service.dart": {
@@ -12360,8 +12360,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/sync/pull_to_import_test.dart": {
-    "mtime": 1791094686.5884626,
-    "ast_hash": "2d108ecca6eae218e6ac15a0b407e016",
+    "mtime": 1791296997.5853124,
+    "ast_hash": "32dd626d6e0a8c4b58d06de4710f2065",
     "semantic_hash": ""
   },
   "mobile/test/visual/pull_import_showcase_test.dart": {
@@ -13287,6 +13287,206 @@
   "backend/deploy.sh": {
     "mtime": 1791095014.8617916,
     "ast_hash": "f8c7e05f8b4a3d19897285da2cb739b8",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20261005140346_AddGoogleSignIn.Designer.cs": {
+    "mtime": 1791209026.8765903,
+    "ast_hash": "704814240d1f6bc2e6bdcdd09db9c997",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20261005140346_AddGoogleSignIn.cs": {
+    "mtime": 1791209063.6308477,
+    "ast_hash": "b0478471919e5d9fd35ebd8583f3da1f",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Application/DTOs/GoogleAuthRequest.cs": {
+    "mtime": 1791208739.6897748,
+    "ast_hash": "58c9cc0294752ec0a7796d8639f4c851",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Application/Ports/Out/IGoogleTokenVerifier.cs": {
+    "mtime": 1791208407.8479795,
+    "ast_hash": "002fb3a7daa00218d34adb8dffcae4de",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Domain/Entities/UserExternalLogin.cs": {
+    "mtime": 1791208407.5059829,
+    "ast_hash": "f3aa5af99c657a3c789abb1079b8d8d1",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/GoogleAuthOptions.cs": {
+    "mtime": 1791208407.9249787,
+    "ast_hash": "37a3bf99d078b97a3aefa370333aa5dc",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/GoogleTokenVerifier.cs": {
+    "mtime": 1791211172.2286038,
+    "ast_hash": "d1768540d2ed219c2698b86b435784ea",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/Persistence/Configurations/UserExternalLoginConfiguration.cs": {
+    "mtime": 1791208407.5709822,
+    "ast_hash": "189ed151cacc06a93c1aaa50f6707cc7",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/auth_flow.dart": {
+    "mtime": 1791235322.5032947,
+    "ast_hash": "bc8f1b8cab5f6a543d95c9b9b5d2f598",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/services/google_sign_in_coordinator.dart": {
+    "mtime": 1791211172.4386022,
+    "ast_hash": "f5455b914af70ed2ed74f250cd029d30",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/widgets/google_sign_in_button.dart": {
+    "mtime": 1791233828.1651907,
+    "ast_hash": "ad11da82f72e8a7331cb0394f7bd4fb9",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/widgets/google_web_button.dart": {
+    "mtime": 1791233205.8300912,
+    "ast_hash": "4b0943f26b796d41b7210018d75236dd",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/widgets/google_web_button_stub.dart": {
+    "mtime": 1791209444.3454447,
+    "ast_hash": "ad0a141b206fa7368d8d05e0d04eef36",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Application/DTOs/AppleAuthRequest.cs": {
+    "mtime": 1791232962.3947055,
+    "ast_hash": "3fe3362886be4dd57bc1269d869499a1",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Application/Ports/Out/IAppleTokenVerifier.cs": {
+    "mtime": 1791232962.0807211,
+    "ast_hash": "8880f3c7605c71426e90cf4c61586bdc",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/AppleAuthOptions.cs": {
+    "mtime": 1791232962.691691,
+    "ast_hash": "06dc7c4922607d6de45b6e32ca730e9e",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Infrastructure/AppleTokenVerifier.cs": {
+    "mtime": 1791232967.821438,
+    "ast_hash": "7e9f8503fc87c44624ffaed6547c5e36",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/AppleAuthServiceTests.cs": {
+    "mtime": 1791233079.8212166,
+    "ast_hash": "6898f85da7b741cce65b7816698a8683",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/GoogleAuthServiceTests.cs": {
+    "mtime": 1791233056.1813684,
+    "ast_hash": "7eb4ac1d023b9de46c100b63052b0bbe",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/services/apple_sign_in_coordinator.dart": {
+    "mtime": 1791233847.8488991,
+    "ast_hash": "e3ff341671b6249a853cab8e74cc8d0c",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/widgets/apple_sign_in_button.dart": {
+    "mtime": 1791233847.849115,
+    "ast_hash": "2c91f13f1b8245b5f9bec81feca70155",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/widgets/sign_in_orb.dart": {
+    "mtime": 1791233196.0053155,
+    "ast_hash": "3840ea3d16a125cfad58626d34a6760a",
+    "semantic_hash": ""
+  },
+  "docs/apple-sign-in-setup.md": {
+    "mtime": 1791233329.7101898,
+    "ast_hash": "1d495f221e7d2560b51bddb786af00c5",
+    "semantic_hash": ""
+  },
+  "docs/google-sign-in-setup.md": {
+    "mtime": 1791210498.9385686,
+    "ast_hash": "fea6653f71de5cc48dc50e34cf5a48e8",
+    "semantic_hash": ""
+  },
+  "mobile/assets/auth/apple_logo.svg": {
+    "mtime": 1791233148.3241923,
+    "ast_hash": "dae49fca931cbd033fc9926a9b5edc3b",
+    "semantic_hash": ""
+  },
+  "mobile/assets/auth/google_g.svg": {
+    "mtime": 1791233141.867541,
+    "ast_hash": "090ecfee6cca9cb965c03f1fb37c28f4",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20261005212014_AddNeedsUsername.Designer.cs": {
+    "mtime": 1791235214.6590214,
+    "ast_hash": "2722ec01486dc776a19dc0d330b52c34",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20261005212014_AddNeedsUsername.cs": {
+    "mtime": 1791235214.6579335,
+    "ast_hash": "6f3921195f84cee5b956d15bac035f34",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Identity/Application/DTOs/UsernameDtos.cs": {
+    "mtime": 1791235155.63459,
+    "ast_hash": "5fb3ccfc80d1097525ed7bc0feea50ad",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/ChooseUsernameTests.cs": {
+    "mtime": 1791235236.8589323,
+    "ast_hash": "ffc406db2fbf170aa97f15426cac04ef",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/auth/widgets/provider_logos.dart": {
+    "mtime": 1791233847.8486066,
+    "ast_hash": "934ccae6f5082e5c58e962eed1d405a5",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/onboarding/screens/username_step.dart": {
+    "mtime": 1791235451.1830916,
+    "ast_hash": "28c3b3ca56ad15d3a8b81d1248b1c576",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/onboarding/username_step_test.dart": {
+    "mtime": 1791235492.509209,
+    "ast_hash": "af18c0b335a8796bca02b1556c5c8ba2",
+    "semantic_hash": ""
+  },
+  "mobile/test/visual/goldens/onboarding_username.png": {
+    "mtime": 1791235537.6004448,
+    "ast_hash": "acace8898d782d6ed2b6a5856dd3ad14",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20261006144535_RealStepCount.Designer.cs": {
+    "mtime": 1791297935.3736749,
+    "ast_hash": "a0cb09a044cbbccfad4dcb28b08f8b82",
+    "semantic_hash": ""
+  },
+  "backend/src/LifeLevel.Api/Migrations/20261006144535_RealStepCount.cs": {
+    "mtime": 1791297952.4754553,
+    "ast_hash": "6825f5485487de5b0e879c1f286a607a",
+    "semantic_hash": ""
+  },
+  "backend/src/modules/LifeLevel.Modules.Activity/Domain/AdventureDistanceCalculator.cs": {
+    "mtime": 1791296758.1580768,
+    "ast_hash": "79e2dc2c98952f30eef61065d23af4e7",
+    "semantic_hash": ""
+  },
+  "backend/tests/LifeLevel.Api.Tests/AdventureDistanceCalculatorTests.cs": {
+    "mtime": 1791297067.8544993,
+    "ast_hash": "4f5d852625f3c8e901564661a2a66be6",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/activity/adventure_distance_test.dart": {
+    "mtime": 1791297260.424268,
+    "ast_hash": "22e2efcdd375fc4946986091a34174fe",
+    "semantic_hash": ""
+  },
+  "docs/obsidian/07 - Development/Plan - Real Step Count.md": {
+    "mtime": 1791297770.819524,
+    "ast_hash": "65521b2de9587d2fd1b655b46fb12c67",
     "semantic_hash": ""
   }
 }

@@ -1,6 +1,10 @@
 namespace LifeLevel.Modules.Identity.Application.DTOs;
 
-public record AccountResponse(string Username, string Email);
+public record AccountResponse(
+    string Username,
+    string Email,
+    bool HasPassword,
+    bool GoogleConnected);
 
 public record UpdateEmailRequest(string Email, string CurrentPassword);
 

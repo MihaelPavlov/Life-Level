@@ -24,6 +24,8 @@ using LifeLevel.Modules.Seasons.Infrastructure;
 using LifeLevel.Modules.Talents.Infrastructure;
 using LifeLevel.Modules.Modes.Infrastructure;
 using LifeLevel.Modules.Leaderboard.Infrastructure;
+using LifeLevel.Modules.Waitlist.Infrastructure;
+using Microsoft.AspNetCore.HttpOverrides;
 using LifeLevel.SharedKernel;
 using LifeLevel.SharedKernel.Contracts;
 using LifeLevel.SharedKernel.Events;
@@ -35,6 +37,8 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +89,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(opts =>
     opts.AddPolicy("Admin", p => p.RequireRole("Admin")));
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
+    // Public landing-page waitlist form.
+    options.AddPolicy("waitlist", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(10),
+            QueueLimit = 0,
+        }));
+});
+// Render terminates TLS in a proxy; take the client IP from X-Forwarded-For
+// so per-IP rate limits apply per visitor, not to the proxy.
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.KnownIPNetworks.Clear();
+    o.KnownProxies.Clear();
+    o.ForwardLimit = 1;
+});
 builder.Services.AddControllers(options => options.Filters.Add<ModeRuleExceptionFilter>())
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
@@ -119,7 +153,7 @@ builder.Services.AddScoped<SeenStateService>();
 builder.Services.AddSharedKernel();
 
 // Identity module (registers JwtService + AuthService)
-builder.Services.AddIdentityModule();
+builder.Services.AddIdentityModule(builder.Configuration);
 
 // Streak module (registers StreakService + port interfaces)
 builder.Services.AddStreakModule();
@@ -183,6 +217,7 @@ builder.Services.AddTalentsModule();
 // Server-authoritative workout game modes.
 builder.Services.AddModesModule();
 builder.Services.AddLeaderboardModule();
+builder.Services.AddWaitlistModule();
 
 // ICharacterCombatStatsReadPort — composition-root adapter over Character +
 // Items + Talents + Encounters ports (see CharacterCombatStatsAdapter for
@@ -259,8 +294,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseForwardedHeaders();
 app.UseRouting();
 app.UseCors("AllowAll");
+app.UseRateLimiter();
 app.UseStaticFiles();
 var itemImageStoragePath = app.Configuration["ItemImages:StoragePath"];
 if (!string.IsNullOrWhiteSpace(itemImageStoragePath))

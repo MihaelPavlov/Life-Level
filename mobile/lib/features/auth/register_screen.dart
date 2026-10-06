@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/motion/app_motion.dart';
-import '../../core/api/api_client.dart';
-import '../character/setup/setup_resume_service.dart';
-import '../onboarding/onboarding_flow.dart';
+import 'auth_flow.dart';
 import 'services/auth_service.dart';
+import 'services/apple_sign_in_coordinator.dart';
+import 'widgets/apple_sign_in_button.dart';
+import 'widgets/google_sign_in_button.dart';
+import 'widgets/sign_in_orb.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -38,22 +39,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordCtrl.text,
         isAdmin: _isAdmin,
       );
-      await ApiClient.saveToken(result.token);
-      await SetupResumeService.instance.saveWelcome(
-        ringItems: result.ringItems,
-      );
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          AppRoute(
-              builder: (_) => OnboardingFlow.start(ringItems: result.ringItems)),
-          (_) => false,
-        );
-      }
+      if (mounted) await finishAuthentication(context, result);
     } on AuthException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
       setState(() => _error = 'Registration failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _googleRegister(String idToken) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await authenticateGoogle(context, _authService, idToken);
+      if (result != null && mounted) await finishAuthentication(context, result);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Google sign-in failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _appleRegister(AppleCredential credential) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await authenticateApple(context, _authService, credential);
+      if (result != null && mounted) await finishAuthentication(context, result);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Apple sign-in failed. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -181,6 +205,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.5)),
+                  ),
+                  const SizedBox(height: 22),
+                  const SignInOrbsDivider('or sign up with'),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppleSignInButton(
+                        enabled: !_loading,
+                        onCredential: _appleRegister,
+                        onError: (message) => setState(() => _error = message),
+                      ),
+                      GoogleSignInButton(
+                        enabled: !_loading,
+                        onToken: _googleRegister,
+                        onError: (message) => setState(() => _error = message),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 40),
                 ],

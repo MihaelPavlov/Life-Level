@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/boss/replay/boss_seen_store.dart';
+import '../../features/auth/services/google_sign_in_coordinator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../motion/app_motion.dart';
 import '../api/api_client.dart';
@@ -143,6 +144,7 @@ Future<void> performLogout(BuildContext context) async {
     await NotificationsService.instance.unregister(fcmToken);
   }
   await ApiClient.clearToken();
+  await GoogleSignInCoordinator.instance.signOut();
   await BossSeenStore.instance.clear();
   navigator.pushAndRemoveUntil(
     AppRoute(builder: (_) => const LoginScreen(), style: AppRouteStyle.fade),

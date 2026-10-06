@@ -1,3 +1,5 @@
+using LifeLevel.Modules.Integrations.Domain.Entities;
+
 namespace LifeLevel.Modules.Integrations.Application.DTOs;
 
 public class PendingActivityDto
@@ -9,8 +11,10 @@ public class PendingActivityDto
     public double? DistanceKm { get; set; }
     public int? Calories { get; set; }
     public DateTime PerformedAt { get; set; }
-    /// <summary>"Pending" or "Duplicate".</summary>
+    /// <summary>"Pending", "Duplicate", or "Rejected".</summary>
     public string Status { get; set; } = "Pending";
+    public ActivityRecordingMethod RecordingMethod { get; set; }
+    public string? RejectionReason { get; set; }
     /// <summary>Provider of the workout this one duplicates (Duplicate only).</summary>
     public string? DuplicateOfProvider { get; set; }
     /// <summary>Base XP before gear / talent / class bonuses.</summary>
@@ -26,6 +30,7 @@ public class PendingActivityListDto
 {
     public List<PendingActivityDto> Items { get; set; } = [];
     public int PendingCount { get; set; }
+    public int RejectedCount { get; set; }
 }
 
 public class StagePendingRequest
@@ -34,6 +39,11 @@ public class StagePendingRequest
 }
 
 public class ImportPendingRequest
+{
+    public List<Guid> Ids { get; set; } = [];
+}
+
+public class AcknowledgeRejectedRequest
 {
     public List<Guid> Ids { get; set; } = [];
 }
@@ -60,5 +70,6 @@ public class ImportPendingResult
     public List<string> Errors { get; set; } = [];
     public long TotalXp { get; set; }
     public double TotalDistanceKm { get; set; }
+    public double TotalAdventureDistanceKm { get; set; }
     public int RemainingPending { get; set; }
 }

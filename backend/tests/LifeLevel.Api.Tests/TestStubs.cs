@@ -1,5 +1,6 @@
 using System.Net;
 using LifeLevel.Api.Infrastructure.Persistence;
+using LifeLevel.Modules.Activity.Domain;
 using LifeLevel.Modules.Character.Domain.Entities;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Ports;
@@ -30,16 +31,19 @@ internal sealed class StubActivityLogPort : IActivityLogPort
     public Task<ActivityLogPortResult> LogExternalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
+        int? steps = null, CancellationToken ct = default)
     {
-        return Task.FromResult(new ActivityLogPortResult(Guid.NewGuid(), 100));
+        return Task.FromResult(new ActivityLogPortResult(
+            Guid.NewGuid(), 100, AdventureDistanceCalculator.Calculate(type, distanceKm)));
     }
 
     public Task<HistoricalActivityResult> ImportHistoricalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
-        => Task.FromResult(new HistoricalActivityResult(Guid.NewGuid(), type, durationMinutes, distanceKm ?? 0, 50, performedAt));
+        int? steps = null, CancellationToken ct = default)
+        => Task.FromResult(new HistoricalActivityResult(
+            Guid.NewGuid(), type, durationMinutes, distanceKm ?? 0,
+            AdventureDistanceCalculator.Calculate(type, distanceKm), 50, performedAt));
 }
 
 /// <summary>Always throws — used to test error handling paths.</summary>
@@ -48,7 +52,7 @@ internal sealed class FailingActivityLogPort : IActivityLogPort
     public Task<ActivityLogPortResult> LogExternalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
+        int? steps = null, CancellationToken ct = default)
     {
         throw new InvalidOperationException("Simulated activity log failure");
     }
@@ -56,7 +60,7 @@ internal sealed class FailingActivityLogPort : IActivityLogPort
     public Task<HistoricalActivityResult> ImportHistoricalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
+        int? steps = null, CancellationToken ct = default)
         => throw new InvalidOperationException("Simulated activity log failure");
 
 }
@@ -65,21 +69,26 @@ internal sealed class FailingActivityLogPort : IActivityLogPort
 internal sealed class CapturingActivityLogPort : IActivityLogPort
 {
     public ActivityType? LastActivityType { get; private set; }
+    public int? LastSteps { get; private set; }
 
     public Task<ActivityLogPortResult> LogExternalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
+        int? steps = null, CancellationToken ct = default)
     {
         LastActivityType = type;
-        return Task.FromResult(new ActivityLogPortResult(Guid.NewGuid(), 100));
+        LastSteps = steps;
+        return Task.FromResult(new ActivityLogPortResult(
+            Guid.NewGuid(), 100, AdventureDistanceCalculator.Calculate(type, distanceKm)));
     }
 
     public Task<HistoricalActivityResult> ImportHistoricalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
-        => Task.FromResult(new HistoricalActivityResult(Guid.NewGuid(), type, durationMinutes, distanceKm ?? 0, 50, performedAt));
+        int? steps = null, CancellationToken ct = default)
+        => Task.FromResult(new HistoricalActivityResult(
+            Guid.NewGuid(), type, durationMinutes, distanceKm ?? 0,
+            AdventureDistanceCalculator.Calculate(type, distanceKm), 50, performedAt));
 }
 
 /// <summary>Returns null by default, or looks up from a provided dictionary.</summary>

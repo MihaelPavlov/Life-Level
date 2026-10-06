@@ -1,5 +1,6 @@
 using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Application.UseCases;
+using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.SharedKernel.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,14 @@ public class IntegrationsController(
         return Ok(await pendingActivities.ImportAsync(userContext.UserId, request, ct));
     }
 
+    [HttpPost("pending/acknowledge")]
+    public async Task<IActionResult> AcknowledgeRejected([FromBody] AcknowledgeRejectedRequest request, CancellationToken ct)
+    {
+        await pendingActivities.AcknowledgeRejectedAsync(
+            userContext.UserId, request ?? new AcknowledgeRejectedRequest(), ct);
+        return NoContent();
+    }
+
     [HttpPost("health/sync")]
     public async Task<IActionResult> SyncHealth(
         [FromBody] SyncBatchRequest request,
@@ -49,6 +58,9 @@ public class IntegrationsController(
             return Ok(new SyncResult());
 
         var userId = userContext.UserId;
+        foreach (var manual in request.Activities.Where(a =>
+                     a.RecordingMethod == ActivityRecordingMethod.Manual))
+            await pendingActivities.EnqueueAsync(userId, manual, ct);
         var result = await healthSync.SyncBatchAsync(userId, request, ct);
         return Ok(result);
     }
@@ -141,6 +153,8 @@ public class IntegrationsController(
         var userId = userContext.UserId;
         var totalImported = 0;
         var totalSkipped = 0;
+        var totalRejectedManual = 0;
+        double totalAdventureDistanceKm = 0;
         var errors = new List<string>();
 
         // Strava
@@ -152,6 +166,8 @@ public class IntegrationsController(
                 var result = await stravaWebhook.SyncRecentAsync(userId, ct);
                 totalImported += result.Imported;
                 totalSkipped += result.Skipped;
+                totalRejectedManual += result.RejectedManual;
+                totalAdventureDistanceKm += result.TotalAdventureDistanceKm;
                 errors.AddRange(result.Errors);
             }
         }
@@ -163,6 +179,8 @@ public class IntegrationsController(
         {
             Imported = totalImported,
             Skipped = totalSkipped,
+            RejectedManual = totalRejectedManual,
+            TotalAdventureDistanceKm = totalAdventureDistanceKm,
             Errors = errors,
         });
     }

@@ -1,5 +1,13 @@
 namespace LifeLevel.Modules.Integrations.Domain.Entities;
 
+public enum ActivityRecordingMethod
+{
+    Unknown = 0,
+    Active = 1,
+    Automatic = 2,
+    Manual = 3,
+}
+
 public enum PendingActivityStatus
 {
     /// <summary>Waiting for the player to import it.</summary>
@@ -8,6 +16,8 @@ public enum PendingActivityStatus
     Imported = 1,
     /// <summary>The same workout already came in from another provider. Never imported.</summary>
     Duplicate = 2,
+    /// <summary>Visible once, but permanently ineligible for game rewards.</summary>
+    Rejected = 3,
 }
 
 /// <summary>
@@ -27,6 +37,8 @@ public class PendingActivity
     public double? DistanceKm { get; set; }
     public int? Calories { get; set; }
     public int? HeartRateAvg { get; set; }
+    public int? Steps { get; set; }
+    public ActivityRecordingMethod RecordingMethod { get; set; }
     public DateTime PerformedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public PendingActivityStatus Status { get; set; }
@@ -35,4 +47,6 @@ public class PendingActivity
     public Guid? ImportedActivityId { get; set; }
     public long XpAwarded { get; set; }
     public DateTime? ImportedAt { get; set; }
+    public string? RejectionReason { get; set; }
+    public DateTime? AcknowledgedAt { get; set; }
 }

@@ -19,11 +19,11 @@ public class PendingActivityServiceTests
 
     private static PendingActivityService CreateService(
         AppDbContext db, INotificationPort? notifications = null,
-        IActivityExternalIdReadPort? externalIdRead = null)
+        IActivityExternalIdReadPort? externalIdRead = null, IActivityLogPort? activityLog = null)
     {
         var characterId = new StubCharacterIdReadPort(CharacterId);
         externalIdRead ??= new StubActivityExternalIdReadPort();
-        var health = new HealthSyncService(db, characterId, new StubActivityLogPort(), externalIdRead);
+        var health = new HealthSyncService(db, characterId, activityLog ?? new StubActivityLogPort(), externalIdRead);
         return new PendingActivityService(db, characterId, health, new StubActivityGainPreviewPort(),
             notifications ?? new NoOpNotificationPort(), externalIdRead);
     }
@@ -53,6 +53,60 @@ public class PendingActivityServiceTests
         Assert.Equal("Pending", item.Status);
         Assert.Equal(38 * 3 + 62, item.PreviewXp);
         Assert.Equal(2, item.PreviewEndurance);
+    }
+
+    [Fact]
+    public async Task Enqueue_ManualWorkout_IsRejectedWithoutRewards()
+    {
+        var db = CreateDb(nameof(Enqueue_ManualWorkout_IsRejectedWithoutRewards));
+        var svc = CreateService(db);
+        var dto = Run("healthconnect:manual", DateTime.UtcNow.AddHours(-1), IntegrationProviders.HealthConnect);
+        dto.RecordingMethod = ActivityRecordingMethod.Manual;
+
+        var added = await svc.EnqueueAsync(UserId, dto);
+        var list = await svc.ListAsync(UserId);
+
+        Assert.False(added);
+        Assert.Equal(0, list.PendingCount);
+        Assert.Equal(1, list.RejectedCount);
+        var rejected = Assert.Single(list.Items);
+        Assert.Equal("Rejected", rejected.Status);
+        Assert.Equal(PendingActivityService.ManualEntryReason, rejected.RejectionReason);
+        Assert.Equal(0, rejected.PreviewXp);
+
+        var result = await svc.ImportAsync(UserId, new ImportPendingRequest { Ids = [rejected.Id] });
+        Assert.Empty(result.Imported);
+        Assert.Equal(1, result.Skipped);
+    }
+
+    [Fact]
+    public async Task AcknowledgeRejected_HidesItAndRediscoveryDoesNotShowItAgain()
+    {
+        var db = CreateDb(nameof(AcknowledgeRejected_HidesItAndRediscoveryDoesNotShowItAgain));
+        var svc = CreateService(db);
+        var dto = Run("healthconnect:manual", DateTime.UtcNow.AddHours(-1), IntegrationProviders.HealthConnect);
+        dto.RecordingMethod = ActivityRecordingMethod.Manual;
+        await svc.EnqueueAsync(UserId, dto);
+        var id = (await svc.ListAsync(UserId)).Items.Single().Id;
+
+        await svc.AcknowledgeRejectedAsync(UserId, new AcknowledgeRejectedRequest { Ids = [id] });
+        await svc.EnqueueAsync(UserId, dto);
+
+        Assert.Empty((await svc.ListAsync(UserId)).Items);
+        var row = await db.Set<PendingActivity>().SingleAsync();
+        Assert.Equal(PendingActivityStatus.Rejected, row.Status);
+        Assert.NotNull(row.AcknowledgedAt);
+    }
+
+    [Fact]
+    public async Task Enqueue_UnknownRecordingMethod_RemainsEligible()
+    {
+        var db = CreateDb(nameof(Enqueue_UnknownRecordingMethod_RemainsEligible));
+        var svc = CreateService(db);
+
+        await svc.EnqueueAsync(UserId, Run("garmin:unknown", DateTime.UtcNow.AddHours(-1), IntegrationProviders.Garmin));
+
+        Assert.Equal(1, (await svc.ListAsync(UserId)).PendingCount);
     }
 
     [Fact]
@@ -163,7 +217,7 @@ public class PendingActivityServiceTests
         ExternalActivityDto Steps(string id, DateTime at) => new()
         {
             Provider = IntegrationProviders.HealthConnect, ExternalId = id, ActivityType = "Walking",
-            DurationMinutes = 60, DistanceKm = 4, PerformedAt = at,
+            DurationMinutes = 60, DistanceKm = 4, Steps = 5000, PerformedAt = at,
         };
 
         var list = await svc.StageAsync(UserId, new StagePendingRequest
@@ -178,6 +232,31 @@ public class PendingActivityServiceTests
         var item = Assert.Single(list.Items);
         Assert.Equal("Walking", item.ActivityType);
         Assert.Equal(DateTime.UtcNow.Date.AddDays(-1), item.PerformedAt);
+    }
+
+    [Fact]
+    public async Task Import_StepWalk_PassesThePhonesRealStepCount()
+    {
+        var db = CreateDb(nameof(Import_StepWalk_PassesThePhonesRealStepCount));
+        var log = new CapturingActivityLogPort();
+        var svc = CreateService(db, activityLog: log);
+        await svc.StageAsync(UserId, new StagePendingRequest
+        {
+            Activities =
+            [
+                new()
+                {
+                    Provider = IntegrationProviders.HealthConnect, ExternalId = "healthconnect:steps:yesterday",
+                    ActivityType = "Walking", DurationMinutes = 84, DistanceKm = 6.7, Steps = 8421,
+                    PerformedAt = DateTime.UtcNow.Date.AddDays(-1),
+                },
+            ],
+        });
+        var id = (await svc.ListAsync(UserId)).Items[0].Id;
+
+        await svc.ImportAsync(UserId, new ImportPendingRequest { Ids = [id] });
+
+        Assert.Equal(8421, log.LastSteps);
     }
 
     [Fact]
@@ -196,6 +275,7 @@ public class PendingActivityServiceTests
         Assert.Equal(2, imported.Endurance);
         Assert.Equal(100, first.TotalXp);
         Assert.Equal(6.2, first.TotalDistanceKm, 3);
+        Assert.Equal(6.2, first.TotalAdventureDistanceKm, 3);
         Assert.Equal(0, first.RemainingPending);
         Assert.Empty(second.Imported);
         Assert.Equal(1, second.Skipped);

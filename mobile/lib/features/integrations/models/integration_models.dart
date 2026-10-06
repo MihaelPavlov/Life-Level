@@ -1,3 +1,14 @@
+enum ExternalRecordingMethod { unknown, active, automatic, manual }
+
+extension ExternalRecordingMethodWire on ExternalRecordingMethod {
+  String get wireName => switch (this) {
+        ExternalRecordingMethod.unknown => 'Unknown',
+        ExternalRecordingMethod.active => 'Active',
+        ExternalRecordingMethod.automatic => 'Automatic',
+        ExternalRecordingMethod.manual => 'Manual',
+      };
+}
+
 class ExternalActivityDto {
   final String provider;
   final String externalId;
@@ -6,6 +17,10 @@ class ExternalActivityDto {
   final double? distanceKm;
   final int? calories;
   final int? heartRateAvg;
+
+  /// Real step count from the phone; only daily step walks carry it.
+  final int? steps;
+  final ExternalRecordingMethod recordingMethod;
   final DateTime performedAt;
 
   const ExternalActivityDto({
@@ -16,6 +31,8 @@ class ExternalActivityDto {
     this.distanceKm,
     this.calories,
     this.heartRateAvg,
+    this.steps,
+    this.recordingMethod = ExternalRecordingMethod.unknown,
     required this.performedAt,
   });
 
@@ -27,6 +44,8 @@ class ExternalActivityDto {
         if (distanceKm != null) 'distanceKm': distanceKm,
         if (calories != null) 'calories': calories,
         if (heartRateAvg != null) 'heartRateAvg': heartRateAvg,
+        if (steps != null) 'steps': steps,
+        'recordingMethod': recordingMethod.wireName,
         'performedAt': performedAt.toIso8601String(),
       };
 }
@@ -43,22 +62,31 @@ class SyncBatchRequest {
 class SyncResult {
   final int imported;
   final int skipped;
+  final int rejectedManual;
+  final double totalAdventureDistanceKm;
   final List<String> errors;
 
   const SyncResult({
     required this.imported,
     required this.skipped,
+    this.rejectedManual = 0,
+    this.totalAdventureDistanceKm = 0,
     required this.errors,
   });
 
   const SyncResult.empty()
       : imported = 0,
         skipped = 0,
+        rejectedManual = 0,
+        totalAdventureDistanceKm = 0,
         errors = const [];
 
   factory SyncResult.fromJson(Map<String, dynamic> json) => SyncResult(
         imported: (json['imported'] as int?) ?? 0,
         skipped: (json['skipped'] as int?) ?? 0,
+        rejectedManual: (json['rejectedManual'] as int?) ?? 0,
+        totalAdventureDistanceKm:
+            (json['totalAdventureDistanceKm'] as num?)?.toDouble() ?? 0,
         errors: (json['errors'] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
@@ -66,16 +94,34 @@ class SyncResult {
       );
 
   bool get hasErrors => errors.isNotEmpty;
-  bool get isEmpty => imported == 0 && skipped == 0 && errors.isEmpty;
+  bool get isEmpty =>
+      imported == 0 && skipped == 0 && rejectedManual == 0 && errors.isEmpty;
 
   String get summary {
-    if (imported == 0 && skipped == 0) return 'No new activities';
-    if (imported > 0 && skipped == 0)
-      return 'Synced $imported ${imported == 1 ? 'activity' : 'activities'}';
-    if (imported > 0) return 'Synced $imported new, $skipped already synced';
+    final travel = totalAdventureDistanceKm > 0
+        ? ' · ${_formatAdventureKm(totalAdventureDistanceKm)} Adventure km'
+        : '';
+    if (imported == 0 && skipped == 0 && rejectedManual == 0) {
+      return 'No new activities';
+    }
+    final rejected = rejectedManual > 0
+        ? ' · $rejectedManual manual ${rejectedManual == 1 ? 'entry' : 'entries'} rejected'
+        : '';
+    if (imported > 0 && skipped == 0) {
+      return 'Synced $imported ${imported == 1 ? 'activity' : 'activities'}$travel$rejected';
+    }
+    if (imported > 0) {
+      return 'Synced $imported new, $skipped already synced$travel$rejected';
+    }
+    if (rejectedManual > 0 && skipped == 0) {
+      return '$rejectedManual manual ${rejectedManual == 1 ? 'entry' : 'entries'} rejected';
+    }
     return '$skipped already synced';
   }
 }
+
+String _formatAdventureKm(double value) =>
+    value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
 
 class IntegrationSyncState {
   final bool isHealthConnected;

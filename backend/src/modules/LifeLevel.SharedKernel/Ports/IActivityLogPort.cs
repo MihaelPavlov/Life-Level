@@ -2,7 +2,7 @@ using LifeLevel.SharedKernel.Enums;
 
 namespace LifeLevel.SharedKernel.Ports;
 
-public record ActivityLogPortResult(Guid ActivityId, long XpGained);
+public record ActivityLogPortResult(Guid ActivityId, long XpGained, double AdventureDistanceKm = 0);
 
 /// <summary>One workout imported from the player's history during onboarding.</summary>
 public record HistoricalActivityResult(
@@ -10,6 +10,7 @@ public record HistoricalActivityResult(
     ActivityType Type,
     int DurationMinutes,
     double DistanceKm,
+    double AdventureDistanceKm,
     long XpGained,
     DateTime PerformedAt);
 
@@ -24,6 +25,7 @@ public interface IActivityLogPort
         int? heartRateAvg,
         string externalId,
         DateTime performedAt,
+        int? steps = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -41,6 +43,7 @@ public interface IActivityLogPort
         int? heartRateAvg,
         string externalId,
         DateTime performedAt,
+        int? steps = null,
         CancellationToken ct = default);
 
     /// <summary>Share of live XP a historical workout is worth.</summary>

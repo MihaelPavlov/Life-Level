@@ -5,6 +5,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Onboarding steps, in order. Values saved by the old Welcome → Class →
 /// Avatar setup flow no longer parse and resume from [welcome].
 enum SetupStep {
+  /// Only for accounts made with Google or Apple, which start with a
+  /// generated name.
+  username,
   welcome,
   connect,
   importing,

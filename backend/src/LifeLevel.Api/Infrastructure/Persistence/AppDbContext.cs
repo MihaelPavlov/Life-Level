@@ -34,6 +34,8 @@ using LifeLevel.Modules.Modes.Domain.Entities;
 using LifeLevel.Modules.Modes.Infrastructure;
 using LifeLevel.Modules.Leaderboard.Domain.Entities;
 using LifeLevel.Modules.Leaderboard.Infrastructure;
+using LifeLevel.Modules.Waitlist.Domain.Entities;
+using LifeLevel.Modules.Waitlist.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 // Type aliases needed to avoid name conflicts between entity types and their module namespace segments
@@ -51,6 +53,7 @@ public partial class AppDbContext(
     // Identity
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRingItem> UserRingItems => Set<UserRingItem>();
+    public DbSet<UserExternalLogin> UserExternalLogins => Set<UserExternalLogin>();
 
     // Character
     public DbSet<Character> Characters => Set<Character>();
@@ -135,6 +138,9 @@ public partial class AppDbContext(
     public DbSet<GarminConnection> GarminConnections => Set<GarminConnection>();
     public DbSet<PendingActivity> PendingActivities => Set<PendingActivity>();
 
+    // Waitlist (pre-launch landing page)
+    public DbSet<WaitlistSignup> WaitlistSignups => Set<WaitlistSignup>();
+
     // Achievements
     public DbSet<Achievement> Achievements => Set<Achievement>();
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
@@ -193,6 +199,7 @@ public partial class AppDbContext(
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TalentsModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ModesModule).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LeaderboardModule).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WaitlistModule).Assembly);
 
         // ── Cross-module FK relationships ─────────────────────────────────────────
 

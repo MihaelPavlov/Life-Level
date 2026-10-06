@@ -1,15 +1,21 @@
 class AccountInfo {
   final String username;
   final String email;
+  final bool hasPassword;
+  final bool googleConnected;
 
   const AccountInfo({
     required this.username,
     required this.email,
+    required this.hasPassword,
+    required this.googleConnected,
   });
 
   factory AccountInfo.fromJson(Map<String, dynamic> json) => AccountInfo(
         username: json['username'] as String? ?? '',
         email: json['email'] as String? ?? '',
+        hasPassword: json['hasPassword'] as bool? ?? true,
+        googleConnected: json['googleConnected'] as bool? ?? false,
       );
 }
 

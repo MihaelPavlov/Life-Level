@@ -5,7 +5,22 @@ import 'package:life_level/features/auth/login_screen.dart';
 import 'package:life_level/features/auth/register_screen.dart';
 import 'package:life_level/features/character/setup/setup_resume_service.dart';
 import 'package:life_level/features/onboarding/onboarding_controller.dart';
+import 'package:life_level/features/onboarding/screens/username_step.dart';
 import 'package:life_level/features/onboarding/screens/welcome_step.dart';
+import 'package:life_level/features/auth/models/account_models.dart';
+import 'package:life_level/features/auth/services/auth_service.dart';
+
+class _GoldenAuth extends AuthService {
+  @override
+  Future<AccountInfo> getAccount() async => const AccountInfo(
+      username: 'PlayerK7QD',
+      email: 'p@example.com',
+      hasPassword: false,
+      googleConnected: true);
+
+  @override
+  Future<String?> usernameProblem(String username) async => null;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +70,27 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/onboarding_welcome.png'),
+    );
+  });
+
+  testWidgets('onboarding username golden', (tester) async {
+    final ctrl = OnboardingController(
+      const SetupResumeState(step: SetupStep.username, ringItems: []),
+    );
+    await pumpScreen(
+      tester,
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: OnboardingScope(
+            controller: ctrl, child: UsernameStep(authService: _GoldenAuth())),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'SwiftFalcon');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/onboarding_username.png'),
     );
   });
 }

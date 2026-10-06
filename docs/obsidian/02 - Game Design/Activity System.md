@@ -4,6 +4,27 @@ aliases: [Activity Types, Workout Types]
 ---
 # Activity System
 
+## Adventure distance
+
+Map travel uses normalized **Adventure km**, while activities, XP, quests,
+bosses, dungeon objectives, achievements, history, and leaderboards retain
+the real recorded distance.
+
+`Adventure km = real distance km × activity multiplier`
+
+| Activity | Adventure multiplier |
+|---|---:|
+| Running | ×1.00 |
+| Walking | ×1.00 |
+| Hiking | ×1.00 |
+| Cycling | ×0.25 |
+| Swimming | ×4.00 |
+| Gym, Yoga, Climbing | ×0 |
+
+Adventure km remain proportional within a sport: a 20 km runner travels four
+times as far as a 5 km runner. Distance earned without an active destination
+is banked and applied when the player chooses a route.
+
 > Activities are the engine of the game: every logged or imported workout converts into XP, stat gains, and map movement.
 
 ## Supported activity types

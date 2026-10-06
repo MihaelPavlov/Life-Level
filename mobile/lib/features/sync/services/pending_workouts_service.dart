@@ -33,9 +33,8 @@ class PendingWorkoutsService {
       return PendingWorkoutList.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       final data = e.response?.data;
-      final message = data is Map<String, dynamic>
-          ? data['error']?.toString()
-          : null;
+      final message =
+          data is Map<String, dynamic> ? data['error']?.toString() : null;
       throw StravaStageException(
           message ?? 'Could not fetch Strava workouts. Try again.');
     }
@@ -47,5 +46,13 @@ class PendingWorkoutsService {
       data: {'ids': ids},
     );
     return ImportPendingResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<void> acknowledgeRejected(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await ApiClient.instance.post(
+      '/integrations/pending/acknowledge',
+      data: {'ids': ids},
+    );
   }
 }

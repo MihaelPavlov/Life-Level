@@ -197,10 +197,14 @@ class HomeAdventureHub extends ConsumerWidget {
     bool isLocked(_HubTileModel t) =>
         t.unlockKey != null && !unlocks.isUnlocked(t.unlockKey!);
     indexed.sort((a, b) {
-      // Keep each usable shortcut in a familiar position while live badges
-      // refresh. Locked previews stay at the end until their feature opens.
+      // Surface actionable shortcuts first. The provider keeps its last
+      // resolved signals while refreshing, so this order does not briefly
+      // reset (and make the alert tile jump) during dependency refreshes.
       if (isLocked(a.tile) != isLocked(b.tile)) {
         return isLocked(a.tile) ? 1 : -1;
+      }
+      if (a.tile.hasUpdate != b.tile.hasUpdate) {
+        return a.tile.hasUpdate ? -1 : 1;
       }
       return a.index.compareTo(b.index);
     });

@@ -17,7 +17,8 @@ import 'widgets/import_review_sheet.dart';
 /// check the queue → review sheet → import → rewards land on the hero.
 ///
 /// Returns once everything, including the celebration, has finished.
-Future<void> runPullImportFlow(BuildContext context, WidgetRef ref) async {
+Future<void> runPullImportFlow(BuildContext context, WidgetRef ref,
+    {bool refreshStrava = true}) async {
   final notifier = ref.read(pendingWorkoutsProvider.notifier);
   if (ref.read(pendingWorkoutsProvider).checking ||
       ref.read(pendingWorkoutsProvider).importing) {
@@ -26,7 +27,7 @@ Future<void> runPullImportFlow(BuildContext context, WidgetRef ref) async {
 
   final PendingWorkoutList list;
   try {
-    list = await notifier.check();
+    list = await notifier.check(refreshStrava: refreshStrava);
   } on StravaStageException catch (e) {
     if (!context.mounted) return;
     AppToast.error(context, 'Strava sync failed', detail: e.message);
@@ -46,7 +47,7 @@ Future<void> runPullImportFlow(BuildContext context, WidgetRef ref) async {
   }
   if (!context.mounted) return;
 
-  if (list.pending.isEmpty) {
+  if (list.items.isEmpty) {
     AppToast.info(
       context,
       'You’re up to date',
@@ -58,7 +59,17 @@ Future<void> runPullImportFlow(BuildContext context, WidgetRef ref) async {
 
   final choice = await showImportReviewSheet(context, list);
   if (!context.mounted) return;
+  final rejectedIds = list.rejected.map((w) => w.id).toList();
+  if (rejectedIds.isNotEmpty) {
+    try {
+      await notifier.acknowledgeRejected(rejectedIds);
+    } catch (_) {
+      // Keep them unacknowledged so the player sees them on the next sync.
+    }
+  }
+  if (!context.mounted) return;
   if (choice == null || choice.ids.isEmpty) {
+    if (list.pending.isEmpty) return;
     final n = ref.read(pendingWorkoutsProvider).pendingCount;
     AppToast.info(
       context,
@@ -159,13 +170,13 @@ Future<void> playImportCelebration(
           maxRadius: 36, delay: const Duration(milliseconds: 250));
     }
     final orb = ShellAnchors.mapOrb.center;
-    if (orb != null && result.totalDistanceKm > 0) {
+    if (orb != null && result.totalAdventureDistanceKm > 0) {
       RewardFx.ring(context, orb, AppColors.green,
           maxRadius: 56, delay: const Duration(milliseconds: 600));
       RewardFx.floatText(
           context,
           orb + const Offset(0, -52),
-          '+${result.totalDistanceKm.toStringAsFixed(1)} km',
+          '+${result.totalAdventureDistanceKm.toStringAsFixed(1)} Adventure km',
           const Color(0xFF8CC0FF),
           pill: true,
           delay: const Duration(milliseconds: 600));
@@ -181,8 +192,8 @@ Future<void> playImportCelebration(
 String importSummary(ImportPendingResult result) => <String>[
       '+${result.totalXp} XP',
       for (final g in result.statGains) '${g.key} +${g.value}',
-      if (result.totalDistanceKm > 0)
-        '${result.totalDistanceKm.toStringAsFixed(1)} km on the map',
+      if (result.totalAdventureDistanceKm > 0)
+        '${result.totalAdventureDistanceKm.toStringAsFixed(1)} Adventure km',
     ].join(' · ');
 
 /// The recap toast for an import with no boss exchange to show.

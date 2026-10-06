@@ -62,17 +62,17 @@ class UserNodeUnlock {
 
 ## Ports implemented
 - `IMapProgressReadPort.GetCurrentNodeIdAsync(userId)` — used by [[Adventure.Encounters]] to gate non-mini boss fights
-- `IMapDistancePort.AddDistanceAsync(userId, km)` — called by [[Activity]] on every activity log
+- `IWorldZoneDistancePort.AddDistanceAsync(userId, adventureKm)` — called by [[Activity]] with normalized Adventure km
 - `IMapNodeCountPort.GetNodeCountsByZoneIdsAsync(zoneIds)` — used by [[WorldZone]] to show "3/10 nodes explored"
 - `IMapNodeCompletedCountPort.GetCompletedNodeCountsByZoneIdsAsync(userId, zoneIds)`
 
 ## Travel mechanic
 
 1. User picks destination → `PUT /api/map/destination` sets `UserMapProgress.DestinationNodeId` and resolves the edge.
-2. Activity logged → `AddDistanceAsync(userId, km)`:
-   - Adds km to `DistanceTraveledOnEdge`.
+2. Activity logged → real distance is converted to Adventure km, then `AddDistanceAsync(userId, adventureKm)`:
+   - Adds Adventure km to `DistanceTraveledOnEdge`.
    - If `DistanceTraveledOnEdge >= edge.DistanceKm`: arrive at `DestinationNodeId`, unlock the node (`UserNodeUnlock`), clear the edge, compute `PendingDistanceKm` (overflow).
-3. User can immediately set a new destination; pending km auto-applies.
+3. If no destination is active, Adventure km are stored in `PendingDistanceKm`; pending Adventure km auto-apply when the user selects a route.
 
 ## Endpoints
 - `GET /api/map/full?worldZoneId={id}` — full graph view for current zone

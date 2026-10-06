@@ -64,6 +64,7 @@ public class GarminWebhookService(
             DurationMinutes = (int)Math.Round(activity.Duration / 60.0),
             DistanceKm   = activity.Distance > 0 ? activity.Distance / 1000.0 : null,
             Calories     = activity.Calories > 0 ? (int?)activity.Calories : null,
+            RecordingMethod = ActivityRecordingMethod.Unknown,
             PerformedAt  = activity.StartTimeLocal.ToUniversalTime(),
         };
 

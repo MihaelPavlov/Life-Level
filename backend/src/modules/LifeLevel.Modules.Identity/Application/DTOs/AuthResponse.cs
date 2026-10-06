@@ -7,5 +7,6 @@ public record AuthResponse(
     string Username,
     Guid? CharacterId,
     IReadOnlyList<RingItemType> RingItems,
-    bool IsSetupComplete
+    bool IsSetupComplete,
+    bool NeedsUsername = false
 );

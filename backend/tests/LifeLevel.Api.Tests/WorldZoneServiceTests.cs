@@ -512,12 +512,12 @@ public class WorldZoneServiceTests
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Test 9: AddDistanceAsync is a silent no-op when no destination is set
+    // Test 9: AddDistanceAsync banks Adventure km when no destination is set
     // ──────────────────────────────────────────────────────────────────────────
     [Fact]
-    public async Task AddDistanceAsync_NoDestination_SilentNoOp()
+    public async Task AddDistanceAsync_NoDestination_BanksDistance()
     {
-        var db = CreateDb(nameof(AddDistanceAsync_NoDestination_SilentNoOp));
+        var db = CreateDb(nameof(AddDistanceAsync_NoDestination_BanksDistance));
         var (world, region) = SeedWorld(db);
 
         var userId = Guid.NewGuid();
@@ -554,6 +554,7 @@ public class WorldZoneServiceTests
         Assert.Null(updated.CurrentEdgeId);
         Assert.Null(updated.DestinationZoneId);
         Assert.Equal(0, updated.DistanceTraveledOnEdge);
+        Assert.Equal(3, updated.PendingDistanceKm);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

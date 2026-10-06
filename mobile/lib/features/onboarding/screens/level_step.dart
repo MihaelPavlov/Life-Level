@@ -143,7 +143,7 @@ class _LevelStepState extends State<LevelStep> with TickerProviderStateMixin {
                     width: 176,
                     height: 196,
                     child: CustomPaint(
-                      painter: _HexPainter(),
+                      painter: const OnboardingHexPainter(),
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -302,7 +302,7 @@ class _LevelStepState extends State<LevelStep> with TickerProviderStateMixin {
                 child: OnboardingTitle(
                   gained > 0
                       ? 'You skip ${gained == 1 ? 'the first level' : 'the first $gained levels'}'
-                      : 'Your first level is almost done',
+                      : _noSkipTitle(profile?.xpProgress ?? 0),
                   align: TextAlign.center,
                   subtitle: (import?.imported ?? 0) > 0
                       ? '${fmtInt(import!.totalXp)} XP from ${import.imported} workouts. '
@@ -340,6 +340,16 @@ class _LevelStepState extends State<LevelStep> with TickerProviderStateMixin {
   }
 }
 
+/// Title when setup didn't skip any levels. It must agree with the
+/// "N% to Level 2" line above it, so a brand-new hero at 0% isn't told the
+/// level is almost done.
+String _noSkipTitle(double xpProgress) {
+  final pct = (xpProgress * 100).round();
+  if (pct >= 50) return 'Your first level is almost done';
+  if (pct > 0) return 'Your first level is underway';
+  return 'Your adventure starts at Level 1';
+}
+
 class _Gain extends StatelessWidget {
   final String? icon;
   final String text;
@@ -374,52 +384,4 @@ class _Gain extends StatelessWidget {
       ),
     );
   }
-}
-
-class _HexPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size s) {
-    Path hex(double inset) {
-      final w = s.width, h = s.height;
-      return Path()
-        ..moveTo(w / 2, inset)
-        ..lineTo(w - inset, h * .26 + inset * .3)
-        ..lineTo(w - inset, h * .74 - inset * .3)
-        ..lineTo(w / 2, h - inset)
-        ..lineTo(inset, h * .74 - inset * .3)
-        ..lineTo(inset, h * .26 + inset * .3)
-        ..close();
-    }
-
-    final rect = Offset.zero & s;
-    canvas.drawPath(
-      hex(6),
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF231A3D), Color(0xFF0D131B)],
-        ).createShader(rect),
-    );
-    canvas.drawPath(
-      hex(6),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeJoin = StrokeJoin.round
-        ..shader = const LinearGradient(
-                colors: [AppColors.blue, AppColors.purple])
-            .createShader(rect),
-    );
-    canvas.drawPath(
-      hex(22),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = AppColors.purple.withValues(alpha: .25),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_HexPainter old) => false;
 }

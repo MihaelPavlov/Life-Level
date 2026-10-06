@@ -33,6 +33,7 @@ public class AdminUserSeeder(AppDbContext db, IConfiguration config)
             Id = userId,
             Username = username,
             Email = email,
+            NormalizedEmail = email.Trim().ToLowerInvariant(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             Role = UserRole.Admin,
         };

@@ -101,6 +101,10 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
 
 `MainShell.didChangeAppLifecycleState(AppLifecycleState.resumed)` calls `_triggerForegroundHealthSync` — fetches workouts since last sync if >15 min elapsed.
 
+## Rejected manual workouts
+
+Health Connect and Apple Health recording metadata is forwarded with every workout. Confirmed manual entries appear once in the shared import review sheet as disabled `Manual entry · rejected` rows with no rewards. Home pull-to-sync and Integrations → Sync Now use the same review behavior; after the sheet closes, the app acknowledges the rejected rows so subsequent syncs do not show them again.
+
 ## Related
 - [[Strava]]
 - [[Health Connect]]

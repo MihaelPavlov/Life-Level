@@ -1,4 +1,6 @@
 using LifeLevel.Modules.Integrations.Application.DTOs;
+using LifeLevel.Modules.Integrations.Application;
+using LifeLevel.Modules.Integrations.Application.Mappers;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Ports;
@@ -24,6 +26,7 @@ public class PendingActivityService(
     INotificationPort notifications,
     IActivityExternalIdReadPort activityExternalIdRead)
 {
+    public const string ManualEntryReason = "ManualEntry";
     /// <summary>Two workouts from different providers starting this close are the same workout.</summary>
     public static readonly TimeSpan DuplicateWindow = TimeSpan.FromMinutes(10);
 
@@ -66,6 +69,18 @@ public class PendingActivityService(
             p.UserId == userId && p.Provider == dto.Provider && p.ExternalId == dto.ExternalId, ct);
         if (existing is not null)
         {
+            if (dto.RecordingMethod == ActivityRecordingMethod.Manual &&
+                existing.Status != PendingActivityStatus.Imported)
+            {
+                var newlyRejected = existing.Status != PendingActivityStatus.Rejected;
+                Apply(existing, dto);
+                existing.Status = PendingActivityStatus.Rejected;
+                existing.RejectionReason = ManualEntryReason;
+                existing.DuplicateOfId = null;
+                if (newlyRejected) existing.AcknowledgedAt = null;
+                await db.SaveChangesAsync(ct);
+                return false;
+            }
             if (existing.Status == PendingActivityStatus.Pending)
             {
                 Apply(existing, dto);
@@ -81,11 +96,18 @@ public class PendingActivityService(
             Provider = dto.Provider,
             ExternalId = dto.ExternalId,
             CreatedAt = DateTime.UtcNow,
-            Status = PendingActivityStatus.Pending,
+            Status = dto.RecordingMethod == ActivityRecordingMethod.Manual
+                ? PendingActivityStatus.Rejected
+                : PendingActivityStatus.Pending,
+            RejectionReason = dto.RecordingMethod == ActivityRecordingMethod.Manual
+                ? ManualEntryReason
+                : null,
         };
         Apply(row, dto);
 
-        var original = await FindOriginalAsync(userId, characterId.Value, row, ct);
+        var original = row.Status == PendingActivityStatus.Pending
+            ? await FindOriginalAsync(userId, characterId.Value, row, ct)
+            : null;
         if (original is not null)
         {
             row.Status = PendingActivityStatus.Duplicate;
@@ -116,6 +138,8 @@ public class PendingActivityService(
         var todayStart = DateTime.UtcNow.Date;
         foreach (var dto in request.Activities)
         {
+            if (dto.Provider != IntegrationProviders.HealthConnect && dto.Provider != IntegrationProviders.HealthKit)
+                continue;
             if (dto.ExternalId.Contains(":steps:", StringComparison.Ordinal) && dto.PerformedAt >= todayStart)
                 continue;
             await EnqueueAsync(userId, dto, ct);
@@ -130,7 +154,8 @@ public class PendingActivityService(
         var rows = await db.Set<PendingActivity>()
             .Where(p => p.UserId == userId &&
                 (p.Status == PendingActivityStatus.Pending ||
-                 (p.Status == PendingActivityStatus.Duplicate && p.CreatedAt >= dupSince)))
+                 (p.Status == PendingActivityStatus.Duplicate && p.CreatedAt >= dupSince) ||
+                 (p.Status == PendingActivityStatus.Rejected && p.AcknowledgedAt == null)))
             .OrderByDescending(p => p.PerformedAt)
             .ToListAsync(ct);
 
@@ -179,7 +204,35 @@ public class PendingActivityService(
         {
             Items = items,
             PendingCount = items.Count(i => i.Status == "Pending"),
+            RejectedCount = items.Count(i => i.Status == "Rejected"),
         };
+    }
+
+    public async Task AcknowledgeRejectedAsync(Guid userId, AcknowledgeRejectedRequest request, CancellationToken ct = default)
+    {
+        if (request.Ids.Count == 0) return;
+        var ids = request.Ids.Distinct().ToList();
+        var rows = await db.Set<PendingActivity>()
+            .Where(p => p.UserId == userId && ids.Contains(p.Id) &&
+                        p.Status == PendingActivityStatus.Rejected && p.AcknowledgedAt == null)
+            .ToListAsync(ct);
+        var now = DateTime.UtcNow;
+        foreach (var row in rows) row.AcknowledgedAt = now;
+        if (rows.Count > 0) await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AcknowledgeRejectedExternalIdsAsync(
+        Guid userId, IEnumerable<string> externalIds, CancellationToken ct = default)
+    {
+        var ids = externalIds.Distinct().ToList();
+        if (ids.Count == 0) return;
+        var rows = await db.Set<PendingActivity>()
+            .Where(p => p.UserId == userId && ids.Contains(p.ExternalId) &&
+                        p.Status == PendingActivityStatus.Rejected && p.AcknowledgedAt == null)
+            .ToListAsync(ct);
+        var now = DateTime.UtcNow;
+        foreach (var row in rows) row.AcknowledgedAt = now;
+        if (rows.Count > 0) await db.SaveChangesAsync(ct);
     }
 
     /// <summary>
@@ -221,6 +274,8 @@ public class PendingActivityService(
                 DistanceKm = row.DistanceKm,
                 Calories = row.Calories,
                 HeartRateAvg = row.HeartRateAvg,
+                Steps = row.Steps,
+                RecordingMethod = row.RecordingMethod,
                 PerformedAt = row.PerformedAt,
             };
             var (logged, error) = await healthSync.ImportOneAsync(userId, characterId.Value, dto, ct);
@@ -261,6 +316,7 @@ public class PendingActivityService(
             });
             result.TotalXp += logged.XpGained;
             result.TotalDistanceKm += row.DistanceKm ?? 0;
+            result.TotalAdventureDistanceKm += logged.AdventureDistanceKm;
         }
 
         result.RemainingPending = await db.Set<PendingActivity>()
@@ -301,6 +357,8 @@ public class PendingActivityService(
         row.DistanceKm = dto.DistanceKm;
         row.Calories = dto.Calories;
         row.HeartRateAvg = dto.HeartRateAvg;
+        row.Steps = dto.Steps;
+        row.RecordingMethod = dto.RecordingMethod;
         row.PerformedAt = DateTime.SpecifyKind(dto.PerformedAt, DateTimeKind.Utc);
     }
 
@@ -349,7 +407,9 @@ public class PendingActivityService(
 
     private PendingActivityDto ToDto(PendingActivity r)
     {
-        var g = Preview(r);
+        var g = r.Status == PendingActivityStatus.Rejected
+            ? new ActivityGainPreview(0, 0, 0, 0, 0, 0)
+            : Preview(r);
         return new PendingActivityDto
         {
             Id = r.Id,
@@ -359,7 +419,9 @@ public class PendingActivityService(
             DistanceKm = r.DistanceKm,
             Calories = r.Calories,
             PerformedAt = r.PerformedAt,
-            Status = r.Status == PendingActivityStatus.Duplicate ? "Duplicate" : "Pending",
+            Status = r.Status.ToString(),
+            RecordingMethod = r.RecordingMethod,
+            RejectionReason = r.RejectionReason,
             PreviewXp = g.Xp,
             PreviewStrength = g.Strength,
             PreviewEndurance = g.Endurance,

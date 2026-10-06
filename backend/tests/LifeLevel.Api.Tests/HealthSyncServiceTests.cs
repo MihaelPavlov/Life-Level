@@ -133,7 +133,26 @@ public class HealthSyncServiceTests
 
         Assert.Equal(3, result.Imported);
         Assert.Equal(0, result.Skipped);
+        // Each fixture is 5 real km: run 5 + cycle 1.25 + swim 20.
+        Assert.Equal(26.25, result.TotalAdventureDistanceKm, precision: 5);
         Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public async Task SyncBatchAsync_ManualActivity_IsRejectedBeforeRewardPipeline()
+    {
+        var db = CreateDb(nameof(SyncBatchAsync_ManualActivity_IsRejectedBeforeRewardPipeline));
+        var (userId, _) = await SeedUserAndCharacter(db);
+        var dto = MakeDto("healthconnect:manual");
+        dto.Provider = IntegrationProviders.HealthConnect;
+        dto.RecordingMethod = ActivityRecordingMethod.Manual;
+
+        var result = await CreateService(db).ImportSingleAsync(userId, dto);
+
+        Assert.Equal(0, result.Imported);
+        Assert.Equal(0, result.Skipped);
+        Assert.Equal(1, result.RejectedManual);
+        Assert.Empty(await db.ExternalActivityRecords.ToListAsync());
     }
 
     [Fact]

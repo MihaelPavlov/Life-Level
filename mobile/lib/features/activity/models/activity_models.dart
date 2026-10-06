@@ -58,6 +58,21 @@ extension ActivityTypeExt on ActivityType {
   }
 
   String get apiValue => name[0].toUpperCase() + name.substring(1);
+
+  double get adventureDistanceMultiplier => switch (this) {
+        ActivityType.running ||
+        ActivityType.walking ||
+        ActivityType.hiking =>
+          1,
+        ActivityType.cycling => 0.25,
+        ActivityType.swimming => 4,
+        ActivityType.gym || ActivityType.yoga || ActivityType.climbing => 0,
+      };
+}
+
+String formatAdventureKm(double value) {
+  final fixed = value.toStringAsFixed(2);
+  return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
 }
 
 class LogActivityRequest {
@@ -358,6 +373,7 @@ class DungeonFloorCreditInfo {
 
 class LogActivityResult {
   final String activityId;
+  final double adventureDistanceKm;
   final int xpGained;
   final int strGained;
   final int endGained;
@@ -393,6 +409,7 @@ class LogActivityResult {
 
   const LogActivityResult({
     required this.activityId,
+    this.adventureDistanceKm = 0,
     required this.xpGained,
     required this.strGained,
     required this.endGained,
@@ -419,6 +436,8 @@ class LogActivityResult {
   factory LogActivityResult.fromJson(Map<String, dynamic> json) =>
       LogActivityResult(
         activityId: json['activityId'] as String,
+        adventureDistanceKm:
+            (json['adventureDistanceKm'] as num?)?.toDouble() ?? 0,
         xpGained: json['xpGained'] as int,
         strGained: json['strGained'] as int? ?? 0,
         endGained: json['endGained'] as int? ?? 0,

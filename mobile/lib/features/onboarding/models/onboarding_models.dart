@@ -30,8 +30,10 @@ class OnboardingImportResult {
   final String source;
   final int imported;
   final int skipped;
+  final int rejectedManualCount;
   final int totalMinutes;
   final double totalKm;
+  final double totalAdventureDistanceKm;
   final int totalXp;
   final bool leveledUp;
   final int previousLevel;
@@ -45,8 +47,10 @@ class OnboardingImportResult {
     required this.source,
     required this.imported,
     required this.skipped,
+    required this.rejectedManualCount,
     required this.totalMinutes,
     required this.totalKm,
+    required this.totalAdventureDistanceKm,
     required this.totalXp,
     required this.leveledUp,
     required this.previousLevel,
@@ -62,8 +66,10 @@ class OnboardingImportResult {
     source: 'none',
     imported: 0,
     skipped: 0,
+    rejectedManualCount: 0,
     totalMinutes: 0,
     totalKm: 0,
+    totalAdventureDistanceKm: 0,
     totalXp: 0,
     leveledUp: false,
     previousLevel: 0,
@@ -79,14 +85,19 @@ class OnboardingImportResult {
         source: j['source'] as String? ?? '',
         imported: j['imported'] as int? ?? 0,
         skipped: j['skipped'] as int? ?? 0,
+        rejectedManualCount: j['rejectedManualCount'] as int? ?? 0,
         totalMinutes: j['totalMinutes'] as int? ?? 0,
         totalKm: (j['totalKm'] as num?)?.toDouble() ?? 0,
+        totalAdventureDistanceKm:
+            (j['totalAdventureDistanceKm'] as num?)?.toDouble() ?? 0,
         totalXp: (j['totalXp'] as num?)?.toInt() ?? 0,
         leveledUp: j['leveledUp'] as bool? ?? false,
         previousLevel: j['previousLevel'] as int? ?? 0,
         newLevel: j['newLevel'] as int? ?? 0,
-        windowStart: DateTime.tryParse(j['windowStart'] as String? ?? '')?.toLocal(),
-        windowEnd: DateTime.tryParse(j['windowEnd'] as String? ?? '')?.toLocal(),
+        windowStart:
+            DateTime.tryParse(j['windowStart'] as String? ?? '')?.toLocal(),
+        windowEnd:
+            DateTime.tryParse(j['windowEnd'] as String? ?? '')?.toLocal(),
         workouts: ((j['workouts'] as List?) ?? const [])
             .map((e) => ImportedWorkout.fromJson(e as Map<String, dynamic>))
             .toList(),

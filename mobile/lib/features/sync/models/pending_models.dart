@@ -10,6 +10,8 @@ class PendingWorkout {
 
   /// True when the same workout already came in from another provider.
   final bool isDuplicate;
+  final bool isRejected;
+  final String? rejectionReason;
   final String? duplicateOfProvider;
 
   /// Base XP and stats before gear, talent and class bonuses.
@@ -29,6 +31,8 @@ class PendingWorkout {
     this.calories,
     required this.performedAt,
     this.isDuplicate = false,
+    this.isRejected = false,
+    this.rejectionReason,
     this.duplicateOfProvider,
     this.previewXp = 0,
     this.previewStrength = 0,
@@ -49,6 +53,8 @@ class PendingWorkout {
             DateTime.tryParse(j['performedAt'] as String? ?? '')?.toLocal() ??
                 DateTime.now(),
         isDuplicate: j['status'] == 'Duplicate',
+        isRejected: j['status'] == 'Rejected',
+        rejectionReason: j['rejectionReason'] as String?,
         duplicateOfProvider: j['duplicateOfProvider'] as String?,
         previewXp: (j['previewXp'] as num?)?.toInt() ?? 0,
         previewStrength: (j['previewStrength'] as num?)?.toInt() ?? 0,
@@ -62,12 +68,20 @@ class PendingWorkout {
 class PendingWorkoutList {
   final List<PendingWorkout> items;
   final int pendingCount;
-  const PendingWorkoutList({required this.items, required this.pendingCount});
+  final int rejectedCount;
+  const PendingWorkoutList(
+      {required this.items,
+      required this.pendingCount,
+      this.rejectedCount = 0});
 
-  static const empty = PendingWorkoutList(items: [], pendingCount: 0);
+  static const empty =
+      PendingWorkoutList(items: [], pendingCount: 0, rejectedCount: 0);
 
   List<PendingWorkout> get pending =>
-      items.where((w) => !w.isDuplicate).toList();
+      items.where((w) => !w.isDuplicate && !w.isRejected).toList();
+
+  List<PendingWorkout> get rejected =>
+      items.where((w) => w.isRejected).toList();
 
   factory PendingWorkoutList.fromJson(Map<String, dynamic> j) {
     final items = (j['items'] as List? ?? const [])
@@ -77,7 +91,9 @@ class PendingWorkoutList {
     return PendingWorkoutList(
       items: items,
       pendingCount: (j['pendingCount'] as num?)?.toInt() ??
-          items.where((w) => !w.isDuplicate).length,
+          items.where((w) => !w.isDuplicate && !w.isRejected).length,
+      rejectedCount: (j['rejectedCount'] as num?)?.toInt() ??
+          items.where((w) => w.isRejected).length,
     );
   }
 }
@@ -130,6 +146,7 @@ class ImportPendingResult {
   final List<String> errors;
   final int totalXp;
   final double totalDistanceKm;
+  final double totalAdventureDistanceKm;
   final int remainingPending;
 
   const ImportPendingResult({
@@ -138,6 +155,7 @@ class ImportPendingResult {
     this.errors = const [],
     this.totalXp = 0,
     this.totalDistanceKm = 0,
+    this.totalAdventureDistanceKm = 0,
     this.remainingPending = 0,
   });
 
@@ -151,6 +169,8 @@ class ImportPendingResult {
         errors: (j['errors'] as List? ?? const []).map((e) => '$e').toList(),
         totalXp: (j['totalXp'] as num?)?.toInt() ?? 0,
         totalDistanceKm: (j['totalDistanceKm'] as num?)?.toDouble() ?? 0,
+        totalAdventureDistanceKm:
+            (j['totalAdventureDistanceKm'] as num?)?.toDouble() ?? 0,
         remainingPending: (j['remainingPending'] as num?)?.toInt() ?? 0,
       );
 

@@ -86,6 +86,10 @@ Every external activity log:
 
 Manual logs have no `ExternalId` — no conflict possible.
 
+## Manual provider workouts
+
+Imported workout payloads carry `RecordingMethod` (`Unknown`, `Active`, `Automatic`, `Manual`). Confirmed manual records from Health Connect, HealthKit, or Strava are persisted in the pending queue with status `Rejected` and reason `ManualEntry`; they never enter the activity/reward pipeline. Unknown recording methods remain eligible, including Garmin until its partner payload exposes a reliable manual-entry flag. Rejected rows are returned until the client acknowledges that it displayed them, then retained only for deduplication and audit history.
+
 ## Credentials
 
 Strava **Client ID 218444**. Secrets live in `backend/src/LifeLevel.Api/appsettings.json` under `Strava:ClientId`, `Strava:ClientSecret`, `Strava:VerifyToken`. See [[Strava]] for details.

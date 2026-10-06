@@ -4,6 +4,8 @@ import '../../core/api/api_client.dart';
 import '../../core/constants/app_colors.dart';
 import '../auth/models/account_models.dart';
 import '../auth/services/auth_service.dart';
+import '../auth/services/google_sign_in_coordinator.dart';
+import '../auth/widgets/google_sign_in_button.dart';
 import 'profile_stat_metadata.dart';
 import '../../core/widgets/app_toast.dart';
 
@@ -83,6 +85,42 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
+  Future<void> _setGooglePassword() async {
+    if (_savingPassword) return;
+    if (_newPasswordController.text.length < 8) {
+      AppToast.error(context, 'New password must be at least 8 characters.');
+      return;
+    }
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      AppToast.error(context, 'New password confirmation does not match.');
+      return;
+    }
+    setState(() => _savingPassword = true);
+    try {
+      await GoogleSignInCoordinator.instance.signOut();
+      if (!mounted) return;
+      final googleToken = await showDialog<String>(
+        context: context,
+        builder: (_) => const _GoogleReauthDialog(),
+      );
+      if (googleToken == null) return;
+      await AuthService().setPasswordWithGoogle(
+        googleIdToken: googleToken,
+        newPassword: _newPasswordController.text,
+        confirmPassword: _confirmPasswordController.text,
+      );
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
+      if (!mounted) return;
+      setState(() => _accountFuture = AuthService().getAccount());
+      AppToast.success(context, 'Password added');
+    } catch (e) {
+      if (mounted) AppToast.error(context, e.toString());
+    } finally {
+      if (mounted) setState(() => _savingPassword = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,6 +142,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             _emailController.text = snapshot.data!.email;
           }
 
+          final account = snapshot.data;
+          final hasPassword = account?.hasPassword ?? true;
+
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -114,30 +155,41 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     controller: _emailController,
                     label: 'Email',
                     keyboardType: TextInputType.emailAddress,
+                    enabled: hasPassword,
                   ),
-                  const SizedBox(height: 10),
-                  _Field(
-                    controller: _emailPasswordController,
-                    label: 'Current password',
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 14),
-                  _ActionButton(
-                    label: _savingEmail ? 'SAVING...' : 'SAVE EMAIL',
-                    onPressed: _savingEmail ? null : _saveEmail,
-                  ),
+                  if (!hasPassword && account?.googleConnected == true) ...[
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Managed by your connected Google account.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 10),
+                    _Field(
+                      controller: _emailPasswordController,
+                      label: 'Current password',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 14),
+                    _ActionButton(
+                      label: _savingEmail ? 'SAVING...' : 'SAVE EMAIL',
+                      onPressed: _savingEmail ? null : _saveEmail,
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 18),
               _Section(
                 title: 'Password',
                 children: [
-                  _Field(
-                    controller: _currentPasswordController,
-                    label: 'Current password',
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 10),
+                  if (hasPassword) ...[
+                    _Field(
+                      controller: _currentPasswordController,
+                      label: 'Current password',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                   _Field(
                     controller: _newPasswordController,
                     label: 'New password',
@@ -151,8 +203,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ),
                   const SizedBox(height: 14),
                   _ActionButton(
-                    label: _savingPassword ? 'SAVING...' : 'SAVE PASSWORD',
-                    onPressed: _savingPassword ? null : _savePassword,
+                    label: _savingPassword
+                        ? 'SAVING...'
+                        : hasPassword
+                            ? 'SAVE PASSWORD'
+                            : 'VERIFY GOOGLE & ADD PASSWORD',
+                    onPressed: _savingPassword
+                        ? null
+                        : hasPassword
+                            ? _savePassword
+                            : _setGooglePassword,
                   ),
                 ],
               ),
@@ -203,12 +263,14 @@ class _Field extends StatelessWidget {
   final String label;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final bool enabled;
 
   const _Field({
     required this.controller,
     required this.label,
     this.obscureText = false,
     this.keyboardType,
+    this.enabled = true,
   });
 
   @override
@@ -217,6 +279,7 @@ class _Field extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -225,6 +288,45 @@ class _Field extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
+    );
+  }
+}
+
+class _GoogleReauthDialog extends StatefulWidget {
+  const _GoogleReauthDialog();
+
+  @override
+  State<_GoogleReauthDialog> createState() => _GoogleReauthDialogState();
+}
+
+class _GoogleReauthDialogState extends State<_GoogleReauthDialog> {
+  String? _error;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Verify with Google'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Sign in again before adding a Life-Level password.'),
+          const SizedBox(height: 18),
+          GoogleSignInButton(
+            onToken: (token) async => Navigator.pop(context, token),
+            onError: (message) => setState(() => _error = message),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!, style: const TextStyle(color: AppColors.red)),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('CANCEL'),
+        ),
+      ],
     );
   }
 }

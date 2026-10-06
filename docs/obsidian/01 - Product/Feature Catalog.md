@@ -22,7 +22,7 @@ Three types: **Daily** (5, refresh at midnight UTC), **Weekly** (10, refresh Mon
 Consecutive activity days. Shields protect against 1 missed day per 7. Broken at midnight for 2+ day gaps without shields. Earned from activity consistency and task milestones. → [[Streak System]]
 
 ## Adventure map
-Two-layer exploration: overworld zones (Forest of Endurance, Mountains of Strength, Ocean of Balance, etc.) and dungeon-layer node graphs inside each zone. Real-world km spent moves you along map edges. → [[Adventure Map and World]]
+Two-layer exploration: overworld zones (Forest of Endurance, Mountains of Strength, Ocean of Balance, etc.) and dungeon-layer node graphs inside each zone. Activity-specific Adventure km normalize real distance for fair map travel while preserving proportional performance within each sport. → [[Adventure Map and World]]
 
 ## Boss system
 Regular bosses (7-day timer, travel required, single-player), mini-bosses (3-day timer, fight anywhere), guild raids (future). Damage formula: `(duration*2 + distance*10 + calories/5)`. → [[Boss System]]

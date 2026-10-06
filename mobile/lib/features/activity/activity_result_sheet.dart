@@ -139,6 +139,16 @@ class _ActivityResultSheetState extends State<ActivityResultSheet>
               ),
               const SizedBox(height: 20),
 
+              if (r.adventureDistanceKm > 0) ...[
+                _ResultBanner(
+                  icon: '🗺️',
+                  text:
+                      '+${formatAdventureKm(r.adventureDistanceKm)} Adventure km',
+                  color: AppColors.green,
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Stat gain chips
               if (statGains.isNotEmpty) ...[
                 const Text(

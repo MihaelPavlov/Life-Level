@@ -6,6 +6,7 @@ using LifeLevel.SharedKernel.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ActivityEntity = LifeLevel.Modules.Activity.Domain.Entities.Activity;
+using LifeLevel.Modules.Activity.Domain;
 
 namespace LifeLevel.Modules.Activity.Application.UseCases;
 
@@ -112,7 +113,7 @@ public class ActivityService(
             AgiGained = agi,
             FlxGained = flx,
             StaGained = sta,
-            Steps = CalculateSteps(request.Type, request.DistanceKm ?? 0),
+            Steps = 0, // only the phone's daily step walks carry real steps
             LoggedAt = DateTime.UtcNow,
         };
         db.Set<ActivityEntity>().Add(activity);
@@ -124,11 +125,13 @@ public class ActivityService(
             $"{request.Type} workout · {request.DurationMinutes} min", xp);
 
         SharedKernel.DTOs.ActiveEncounterPortDto? activeEncounter = null;
-        if (request.DistanceKm > 0)
+        var adventureDistanceKm = AdventureDistanceCalculator.Calculate(request.Type, request.DistanceKm);
+        if (adventureDistanceKm > 0)
         {
-            logger.LogInformation("ActivityService.LogActivity user={UserId} type={Type} incomingDistanceKm={Km}",
-                userId, request.Type, request.DistanceKm);
-            activeEncounter = await worldZoneDistance.AddDistanceAsync(userId, request.DistanceKm ?? 0);
+            logger.LogInformation(
+                "ActivityService.LogActivity user={UserId} type={Type} realDistanceKm={RealKm} multiplier={Multiplier} adventureDistanceKm={AdventureKm}",
+                userId, request.Type, request.DistanceKm, AdventureDistanceCalculator.GetMultiplier(request.Type), adventureDistanceKm);
+            activeEncounter = await worldZoneDistance.AddDistanceAsync(userId, adventureDistanceKm);
         }
 
         // Credit the activity against the user's active dungeon floor (if any).
@@ -221,6 +224,7 @@ public class ActivityService(
         return new LogActivityResult
         {
             ActivityId = activity.Id,
+            AdventureDistanceKm = adventureDistanceKm,
             XpGained = xp,
             StrGained = str,
             EndGained = end,
@@ -247,7 +251,7 @@ public class ActivityService(
     public async Task<ActivityLogPortResult> LogExternalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
+        int? steps = null, CancellationToken ct = default)
     {
         var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct)
             ?? throw new InvalidOperationException("Character not found.");
@@ -292,7 +296,7 @@ public class ActivityService(
             AgiGained = agi,
             FlxGained = flx,
             StaGained = sta,
-            Steps = CalculateSteps(type, distanceKm ?? 0),
+            Steps = Math.Max(0, steps ?? 0),
             ExternalId = externalId,
             LoggedAt = performedAt,
         };
@@ -302,11 +306,13 @@ public class ActivityService(
         await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta));
         var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
             $"{type} workout · {durationMinutes} min", xp);
-        if (distanceKm > 0)
+        var adventureDistanceKm = AdventureDistanceCalculator.Calculate(type, distanceKm);
+        if (adventureDistanceKm > 0)
         {
-            logger.LogInformation("ActivityService.LogExternalActivity user={UserId} type={Type} incomingDistanceKm={Km} externalId={ExternalId}",
-                userId, type, distanceKm, externalId);
-            await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+            logger.LogInformation(
+                "ActivityService.LogExternalActivity user={UserId} type={Type} realDistanceKm={RealKm} multiplier={Multiplier} adventureDistanceKm={AdventureKm} externalId={ExternalId}",
+                userId, type, distanceKm, AdventureDistanceCalculator.GetMultiplier(type), adventureDistanceKm, externalId);
+            await worldZoneDistance.AddDistanceAsync(userId, adventureDistanceKm, ct);
         }
 
         // Synced workouts use the same personal-boss turn pipeline and the
@@ -358,14 +364,14 @@ public class ActivityService(
             userId, activity.Id, type, durationMinutes,
             distanceKm ?? 0, calories ?? 0));
 
-        return new ActivityLogPortResult(activity.Id, xp);
+        return new ActivityLogPortResult(activity.Id, xp, adventureDistanceKm);
     }
 
     /// <summary>Implements IActivityLogPort — onboarding history import (see port docs).</summary>
     public async Task<HistoricalActivityResult> ImportHistoricalActivityAsync(
         Guid userId, ActivityType type, int durationMinutes, double? distanceKm,
         int? calories, int? heartRateAvg, string externalId, DateTime performedAt,
-        CancellationToken ct = default)
+        int? steps = null, CancellationToken ct = default)
     {
         var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct)
             ?? throw new InvalidOperationException("Character not found.");
@@ -395,7 +401,7 @@ public class ActivityService(
             AgiGained = agi,
             FlxGained = flx,
             StaGained = sta,
-            Steps = CalculateSteps(type, distanceKm ?? 0),
+            Steps = Math.Max(0, steps ?? 0),
             ExternalId = externalId,
             LoggedAt = performedAt,
         };
@@ -403,11 +409,17 @@ public class ActivityService(
         await db.SaveChangesAsync(ct);
 
         await characterStats.ApplyStatGainsAsync(userId, new StatGains(str, end, agi, flx, sta), ct);
-        if (distanceKm > 0)
-            await worldZoneDistance.AddDistanceAsync(userId, distanceKm ?? 0, ct);
+        var adventureDistanceKm = AdventureDistanceCalculator.Calculate(type, distanceKm);
+        if (adventureDistanceKm > 0)
+        {
+            logger.LogInformation(
+                "ActivityService.ImportHistoricalActivity user={UserId} type={Type} realDistanceKm={RealKm} multiplier={Multiplier} adventureDistanceKm={AdventureKm} externalId={ExternalId}",
+                userId, type, distanceKm, AdventureDistanceCalculator.GetMultiplier(type), adventureDistanceKm, externalId);
+            await worldZoneDistance.AddDistanceAsync(userId, adventureDistanceKm, ct);
+        }
 
         return new HistoricalActivityResult(
-            activity.Id, type, durationMinutes, distanceKm ?? 0, xp, performedAt);
+            activity.Id, type, durationMinutes, distanceKm ?? 0, adventureDistanceKm, xp, performedAt);
     }
 
     /// <summary>Implements IActivityMixReadPort.</summary>
@@ -612,14 +624,6 @@ public class ActivityService(
 
         return ((int)Math.Round(baseXp), str, end, agi, flx, sta);
     }
-
-    private static int CalculateSteps(ActivityType type, double distanceKm) =>
-        type switch
-        {
-            ActivityType.Running or ActivityType.Hiking or ActivityType.Walking or ActivityType.Cycling
-                => (int)(distanceKm * 1250),
-            _ => 0
-        };
 
     private static string GetActivityEmoji(ActivityType type) => type switch
     {

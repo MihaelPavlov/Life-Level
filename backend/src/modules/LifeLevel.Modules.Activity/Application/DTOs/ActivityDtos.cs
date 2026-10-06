@@ -27,6 +27,7 @@ public record ActivityCalendarDto(double LongestRunKm, List<ActivityCalendarDayD
 public class LogActivityResult
 {
     public Guid ActivityId { get; set; }
+    public double AdventureDistanceKm { get; set; }
     public int XpGained { get; set; }
     public int StrGained { get; set; }
     public int EndGained { get; set; }

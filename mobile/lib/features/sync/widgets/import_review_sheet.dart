@@ -50,11 +50,13 @@ class _ImportReviewSheetState extends State<ImportReviewSheet> {
   Widget build(BuildContext context) {
     final pending = widget.list.pending;
     final dups = widget.list.items.where((w) => w.isDuplicate).toList();
+    final rejected = widget.list.rejected;
     final chosen = _chosen;
     final xp = chosen.fold<int>(0, (a, w) => a + w.previewXp);
     final km = chosen.fold<double>(0, (a, w) => a + (w.distanceKm ?? 0));
     final sources = {
-      for (final w in pending) providerLabel(w.provider),
+      for (final w in pending.isNotEmpty ? pending : widget.list.items)
+        providerLabel(w.provider),
     }.join(' and ');
     final maxH = MediaQuery.of(context).size.height * .82;
 
@@ -83,7 +85,9 @@ class _ImportReviewSheetState extends State<ImportReviewSheet> {
           ),
           const SizedBox(height: 14),
           Text(
-            '${pending.length} new workout${pending.length == 1 ? '' : 's'}',
+            pending.isNotEmpty
+                ? '${pending.length} new workout${pending.length == 1 ? '' : 's'}'
+                : '${widget.list.items.length} workout${widget.list.items.length == 1 ? '' : 's'} found',
             style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
@@ -111,37 +115,50 @@ class _ImportReviewSheetState extends State<ImportReviewSheet> {
                     ),
                   for (final w in dups)
                     _WorkoutRow(workout: w, selected: false),
+                  for (final w in rejected)
+                    _WorkoutRow(workout: w, selected: false),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _Gain(AppIcons.rewardXpCrystals, '+$xp XP'),
-              for (final g in _statTotals(chosen))
-                _Gain(g.$1, '${g.$2} +${g.$3}'),
-              if (km > 0)
-                _Gain(AppIcons.mapDestination, '+${km.toStringAsFixed(1)} km'),
-            ],
-          ),
+          if (pending.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _Gain(AppIcons.rewardXpCrystals, '+$xp XP'),
+                for (final g in _statTotals(chosen))
+                  _Gain(g.$1, '${g.$2} +${g.$3}'),
+                if (km > 0)
+                  _Gain(
+                      AppIcons.mapDestination, '+${km.toStringAsFixed(1)} km'),
+              ],
+            ),
           const SizedBox(height: 14),
-          _ImportButton(
-            key: _buttonKey,
-            label: chosen.isEmpty
-                ? 'Select a workout'
-                : 'Import ${chosen.length} · +$xp XP',
-            enabled: chosen.isNotEmpty,
-            onTap: () {
-              final box =
-                  _buttonKey.currentContext?.findRenderObject() as RenderBox?;
-              final from = box?.localToGlobal(box.size.center(Offset.zero));
-              Navigator.of(context).pop(
-                  ImportReviewChoice(chosen.map((w) => w.id).toList(), from));
-            },
-          ),
+          if (pending.isNotEmpty)
+            _ImportButton(
+              key: _buttonKey,
+              label: chosen.isEmpty
+                  ? 'Select a workout'
+                  : 'Import ${chosen.length} · +$xp XP',
+              enabled: chosen.isNotEmpty,
+              onTap: () {
+                final box =
+                    _buttonKey.currentContext?.findRenderObject() as RenderBox?;
+                final from = box?.localToGlobal(box.size.center(Offset.zero));
+                Navigator.of(context).pop(
+                    ImportReviewChoice(chosen.map((w) => w.id).toList(), from));
+              },
+            )
+          else
+            _ImportButton(
+              key: _buttonKey,
+              label: 'Done',
+              enabled: true,
+              onTap: () =>
+                  Navigator.of(context).pop(const ImportReviewChoice([], null)),
+            ),
           const SizedBox(height: 4),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -229,6 +246,7 @@ class _WorkoutRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = workout;
     final dup = w.isDuplicate;
+    final rejected = w.isRejected;
     final meta = [
       if (w.distanceKm != null && w.distanceKm! > 0)
         '${w.distanceKm!.toStringAsFixed(1)} km',
@@ -299,9 +317,11 @@ class _WorkoutRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      dup
-                          ? 'Same workout as ${providerLabel(w.duplicateOfProvider ?? 'another app')}'
-                          : meta,
+                      rejected
+                          ? 'Manual entry · rejected'
+                          : dup
+                              ? 'Same workout as ${providerLabel(w.duplicateOfProvider ?? 'another app')}'
+                              : meta,
                       style: const TextStyle(
                           fontSize: 11.5, color: AppColors.textSecondary),
                     ),
@@ -311,13 +331,13 @@ class _WorkoutRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (dup)
-            const Text(
-              'Duplicate · skipped',
+          if (dup || rejected)
+            Text(
+              rejected ? 'No rewards' : 'Duplicate · skipped',
               style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary),
+                  color: rejected ? AppColors.red : AppColors.textSecondary),
             )
           else
             Column(
@@ -353,7 +373,7 @@ class _WorkoutRow extends StatelessWidget {
       ),
     );
 
-    if (dup) return Opacity(opacity: .55, child: row);
+    if (dup || rejected) return Opacity(opacity: .55, child: row);
     return Semantics(
       button: true,
       toggled: selected,

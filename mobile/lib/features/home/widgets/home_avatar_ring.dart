@@ -93,6 +93,7 @@ class HomeAvatarRing extends StatelessWidget {
             right: 6,
             bottom: 6,
             child: Container(
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
@@ -106,7 +107,7 @@ class HomeAvatarRing extends StatelessWidget {
                 child: () {
                   final asset = _avatarEmojiToAsset(emoji);
                   return asset != null
-                      ? AppIconImage(asset, size: 52)
+                      ? AppIconImage(asset, size: (size - 12) * 0.8)
                       : Text(emoji, style: const TextStyle(fontSize: 28));
                 }(),
               ),

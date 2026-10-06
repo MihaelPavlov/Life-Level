@@ -12,6 +12,7 @@ public class PendingActivityConfiguration : IEntityTypeConfiguration<PendingActi
         entity.Property(p => p.Provider).HasMaxLength(50).IsRequired();
         entity.Property(p => p.ExternalId).HasMaxLength(200).IsRequired();
         entity.Property(p => p.ActivityType).HasMaxLength(50).IsRequired();
+        entity.Property(p => p.RejectionReason).HasMaxLength(50);
         entity.HasIndex(p => new { p.UserId, p.Provider, p.ExternalId }).IsUnique();
         entity.HasIndex(p => new { p.UserId, p.Status });
         // Cross-module: PendingActivity → User FK configured in AppDbContext

@@ -1,4 +1,5 @@
 using LifeLevel.Modules.Integrations.Application.DTOs;
+using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
 
 namespace LifeLevel.Modules.Integrations.Application.UseCases;
@@ -11,6 +12,7 @@ namespace LifeLevel.Modules.Integrations.Application.UseCases;
 public class OnboardingImportService(
     HealthSyncService healthSync,
     StravaWebhookService strava,
+    PendingActivityService pending,
     ICharacterInfoPort characterInfo,
     ICharacterXpPort characterXp)
 {
@@ -27,13 +29,14 @@ public class OnboardingImportService(
     public async Task<OnboardingPreviewResult> PreviewAsync(Guid userId, string source, CancellationToken ct = default)
     {
         if (!string.Equals(source, SourceStrava, StringComparison.OrdinalIgnoreCase))
-            return new OnboardingPreviewResult(source, 0, ["Preview is only needed for server-side sources."]);
+            return new OnboardingPreviewResult(source, 0, 0, ["Preview is only needed for server-side sources."]);
 
         var (activities, error) = await strava.FetchRecentAsync(userId, WindowDays, ct);
         if (error is not null) throw new StravaFetchException(error);
         return new OnboardingPreviewResult(
             SourceStrava,
-            activities.Count(a => a.DurationMinutes > 0),
+            activities.Count(a => a.DurationMinutes > 0 && a.RecordingMethod != ActivityRecordingMethod.Manual),
+            activities.Count(a => a.DurationMinutes > 0 && a.RecordingMethod == ActivityRecordingMethod.Manual),
             []);
     }
 
@@ -67,6 +70,16 @@ public class OnboardingImportService(
             .OrderBy(a => a.PerformedAt)
             .ToList();
 
+        var rejectedManual = inWindow
+            .Where(a => a.RecordingMethod == ActivityRecordingMethod.Manual)
+            .ToList();
+        foreach (var rejected in rejectedManual)
+            await pending.EnqueueAsync(userId, rejected, ct);
+        // The onboarding result reports this count and is persisted by the client,
+        // so these rows have completed their one-time visibility lifecycle.
+        await pending.AcknowledgeRejectedExternalIdsAsync(
+            userId, rejectedManual.Select(a => a.ExternalId), ct);
+
         var (result, workouts) = await healthSync.ImportHistoryAsync(userId, inWindow, ct);
         errors.AddRange(result.Errors);
 
@@ -87,8 +100,10 @@ public class OnboardingImportService(
             Source: source,
             Imported: result.Imported,
             Skipped: result.Skipped,
+            RejectedManualCount: rejectedManual.Count,
             TotalMinutes: workouts.Sum(w => w.DurationMinutes),
             TotalKm: Math.Round(workouts.Sum(w => w.DistanceKm), 1),
+            TotalAdventureDistanceKm: Math.Round(workouts.Sum(w => w.AdventureDistanceKm), 2),
             TotalXp: totalXp,
             LeveledUp: xp.LeveledUp,
             PreviousLevel: xp.LeveledUp ? xp.PreviousLevel : 0,

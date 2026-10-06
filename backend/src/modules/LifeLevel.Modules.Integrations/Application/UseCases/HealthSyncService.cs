@@ -18,18 +18,35 @@ public class HealthSyncService(
         if (characterId == null)
             return new SyncResult { Errors = ["Character not found for this user."] };
 
-        int imported = 0, skipped = 0;
+        int imported = 0, skipped = 0, rejectedManual = 0;
+        double totalAdventureDistanceKm = 0;
         var errors = new List<string>();
 
         foreach (var dto in request.Activities)
         {
+            if (dto.RecordingMethod == ActivityRecordingMethod.Manual)
+            {
+                rejectedManual++;
+                continue;
+            }
             var one = await ImportOneAsync(userId, characterId.Value, dto, ct);
             if (one.Error is not null) errors.Add(one.Error);
-            else if (one.Result is not null) imported++;
+            else if (one.Result is not null)
+            {
+                imported++;
+                totalAdventureDistanceKm += one.Result.AdventureDistanceKm;
+            }
             else skipped++;
         }
 
-        return new SyncResult { Imported = imported, Skipped = skipped, Errors = errors };
+        return new SyncResult
+        {
+            Imported = imported,
+            Skipped = skipped,
+            RejectedManual = rejectedManual,
+            TotalAdventureDistanceKm = totalAdventureDistanceKm,
+            Errors = errors,
+        };
     }
 
     /// <summary>
@@ -40,6 +57,8 @@ public class HealthSyncService(
     public async Task<(ActivityLogPortResult? Result, string? Error)> ImportOneAsync(
         Guid userId, Guid characterId, ExternalActivityDto dto, CancellationToken ct = default)
     {
+        if (dto.RecordingMethod == ActivityRecordingMethod.Manual)
+            return (null, null);
         try
         {
             // Check whether this external activity was already successfully processed.
@@ -111,7 +130,7 @@ public class HealthSyncService(
             var result = await activityLog.LogExternalActivityAsync(
                 userId, activityType, dto.DurationMinutes,
                 dto.DistanceKm, dto.Calories, dto.HeartRateAvg,
-                dto.ExternalId, dto.PerformedAt, ct);
+                dto.ExternalId, dto.PerformedAt, dto.Steps, ct);
 
             record.WasImported = true;
             record.ImportedActivityId = result.ActivityId;
@@ -138,10 +157,15 @@ public class HealthSyncService(
         if (characterId == null)
             return (new SyncResult { Errors = ["Character not found for this user."] }, workouts);
 
-        int skipped = 0;
+        int skipped = 0, rejectedManual = 0;
         var errors = new List<string>();
         foreach (var dto in activities)
         {
+            if (dto.RecordingMethod == ActivityRecordingMethod.Manual)
+            {
+                rejectedManual++;
+                continue;
+            }
             if (dto.ExternalId.Contains(":steps:", StringComparison.Ordinal) || dto.DurationMinutes <= 0)
             {
                 skipped++;
@@ -179,7 +203,7 @@ public class HealthSyncService(
                 var result = await activityLog.ImportHistoricalActivityAsync(
                     userId, activityType, dto.DurationMinutes,
                     dto.DistanceKm, dto.Calories, dto.HeartRateAvg,
-                    dto.ExternalId, dto.PerformedAt, ct);
+                    dto.ExternalId, dto.PerformedAt, dto.Steps, ct);
 
                 record.WasImported = true;
                 record.ImportedActivityId = result.ActivityId;
@@ -192,7 +216,14 @@ public class HealthSyncService(
             }
         }
 
-        return (new SyncResult { Imported = workouts.Count, Skipped = skipped, Errors = errors }, workouts);
+        return (new SyncResult
+        {
+            Imported = workouts.Count,
+            Skipped = skipped,
+            RejectedManual = rejectedManual,
+            TotalAdventureDistanceKm = workouts.Sum(w => w.AdventureDistanceKm),
+            Errors = errors,
+        }, workouts);
     }
 
     public async Task<SyncResult> ImportSingleAsync(Guid userId, ExternalActivityDto dto, CancellationToken ct = default)

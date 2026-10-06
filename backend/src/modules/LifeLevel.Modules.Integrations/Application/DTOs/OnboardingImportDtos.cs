@@ -18,8 +18,10 @@ public record OnboardingImportResult(
     string Source,
     int Imported,
     int Skipped,
+    int RejectedManualCount,
     int TotalMinutes,
     double TotalKm,
+    double TotalAdventureDistanceKm,
     long TotalXp,
     bool LeveledUp,
     int PreviousLevel,
@@ -29,4 +31,4 @@ public record OnboardingImportResult(
     IReadOnlyList<ImportedWorkoutDto> Workouts,
     IReadOnlyList<string> Errors);
 
-public record OnboardingPreviewResult(string Source, int WorkoutCount, IReadOnlyList<string> Errors);
+public record OnboardingPreviewResult(string Source, int WorkoutCount, int RejectedManualCount, IReadOnlyList<string> Errors);

@@ -12,6 +12,8 @@ import '../services/garmin_service.dart';
 import '../services/strava_service.dart';
 import '../widgets/integration_tile.dart';
 import '../widgets/sync_status_banner.dart';
+import '../../sync/pull_import_flow.dart';
+import '../../sync/providers/pending_workouts_provider.dart';
 
 class IntegrationsScreen extends ConsumerStatefulWidget {
   const IntegrationsScreen({super.key});
@@ -86,6 +88,16 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
 
   void _dismissBanner() {
     if (mounted) setState(() => _bannerResult = null);
+  }
+
+  Future<void> _syncDeviceHealth({bool requestPermission = false}) async {
+    if (requestPermission) {
+      final granted =
+          await ref.read(integrationSyncProvider.notifier).requestPermissions();
+      if (!granted || !mounted) return;
+    }
+    await runPullImportFlow(context, ref, refreshStrava: false);
+    await ref.read(integrationSyncProvider.notifier).refresh();
   }
 
   void _showHealthSyncHelp(BuildContext context) {
@@ -179,6 +191,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
     final state = ref.watch(integrationSyncProvider);
+    final pendingState = ref.watch(pendingWorkoutsProvider);
     final isIos = !kIsWeb && Platform.isIOS;
 
     // Show banner when sync result arrives
@@ -213,13 +226,12 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
                       ? 'Sync Apple Watch and Fitness workouts'
                       : 'Sync workouts from your phone\'s health store',
                   isConnected: state.isHealthConnected,
-                  isSyncing: state.isSyncing,
+                  isSyncing: state.isSyncing ||
+                      pendingState.checking ||
+                      pendingState.importing,
                   lastSyncAt: state.lastSyncAt,
-                  onConnect: () => ref
-                      .read(integrationSyncProvider.notifier)
-                      .requestPermissions(),
-                  onSyncNow: () =>
-                      ref.read(integrationSyncProvider.notifier).syncNow(),
+                  onConnect: () => _syncDeviceHealth(requestPermission: true),
+                  onSyncNow: _syncDeviceHealth,
                 ),
                 const SizedBox(height: 12),
                 const _SectionLabel('CONNECTED APPS'),

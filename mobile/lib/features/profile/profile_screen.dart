@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,6 +13,7 @@ import '../../core/motion/app_motion.dart';
 import '../../core/services/shell_overlay_notifier.dart';
 import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/app_icon_image.dart';
+import '../../core/widgets/resource_info_dialog.dart';
 import '../activity/providers/activity_provider.dart';
 import '../character/models/character_profile.dart';
 import '../character/providers/character_provider.dart';
@@ -153,8 +156,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-/// Compact identity header: Power and settings on top, then the avatar ring
-/// with the level, name, class, equipped title and rank, then the XP bar.
+/// Compact identity header (design: Profile Header Redesign, option D):
+/// avatar with its XP ring, name, class and level, settings; then a strip of
+/// three tiles for Power, Rank and the equipped title.
 class ProfileHeader extends ConsumerWidget {
   final CharacterProfile profile;
   final bool isAdmin;
@@ -165,6 +169,14 @@ class ProfileHeader extends ConsumerWidget {
     this.isAdmin = false,
   });
 
+  static const _powerInfo = ResourceInfoData(
+    name: 'Power',
+    icon: AppIcons.homePowerIcon,
+    description:
+        'Your overall combat rating from stats, equipped gear, and talents.',
+    destination: 'Combat',
+  );
+
   void _showSettings(BuildContext context) {
     showAppBottomSheet(
       context: context,
@@ -174,6 +186,15 @@ class ProfileHeader extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => _SettingsSheet(parentContext: context, isAdmin: isAdmin),
+    );
+  }
+
+  void _showXpHistory(BuildContext context) {
+    showAppBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const XpHistorySheet(),
     );
   }
 
@@ -190,249 +211,156 @@ class ProfileHeader extends ConsumerWidget {
     final titleName = titles?.activeTitleName ?? '';
     final titleAsset =
         titleName.isEmpty ? null : titleIconAsset(name: titleName);
+    final xpLeft = profile.xpRemaining < 0 ? 0 : profile.xpRemaining;
 
-    return SizedBox(
-      height: top + 206,
-      child: Stack(
-        children: [
-          const Positioned.fill(
-            child: Opacity(
-              opacity: .55,
-              child: Image(
-                image: AssetImage(AppIcons.homeSceneBg),
-                fit: BoxFit.cover,
-                alignment: Alignment(0, -.4),
-              ),
-            ),
-          ),
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0x8C040810),
-                    Color(0x59040810),
-                    Color(0xFF040810),
-                  ],
-                  stops: [0, .45, 1],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            top: top + 12,
-            child: ProfileRise(
-              delay: const Duration(milliseconds: 60),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(6, 5, 10, 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: .5),
-                      borderRadius: BorderRadius.circular(11),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: .16)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const AppIconImage(AppIcons.homePowerIcon, size: 20),
-                        const SizedBox(width: 6),
-                        Text('${profile.power}',
-                            style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.orange)),
-                        const SizedBox(width: 5),
-                        const Text('POWER',
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1,
-                                color: kPTextSec)),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Semantics(
-                    button: true,
-                    label: 'Settings',
-                    child: GestureDetector(
-                      onTap: () => _showSettings(context),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: .5),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: .16)),
-                        ),
-                        child: const Icon(Icons.settings_outlined,
-                            size: 20, color: kPTextPri),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            top: top + 70,
-            child: ProfileRise(
-              delay: const Duration(milliseconds: 120),
-              child: Row(
-                children: [
-                  _AvatarRing(
-                    level: profile.level,
-                    avatarAsset: avatarAsset,
-                    avatarEmoji: profile.avatarEmoji,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                profile.username,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color: kPTextPri,
-                                  shadows: [
-                                    Shadow(
-                                        color: Color(0xB3000000),
-                                        blurRadius: 6,
-                                        offset: Offset(0, 2)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            _Chip(
-                              color: AppColors.orange,
-                              icon: classAsset,
-                              label: profile.className ?? 'Hero',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            if (titleName.isNotEmpty)
-                              Semantics(
-                                button: true,
-                                label: 'Title $titleName. Change title',
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      ShellOverlayNotifier.open('titles'),
-                                  child: _Chip(
-                                    color: AppColors.purple,
-                                    icon: titleAsset,
-                                    label: titleName,
-                                    pill: true,
-                                    chevron: true,
-                                  ),
-                                ),
-                              ),
-                            _Chip(
-                              color: AppColors.orange,
-                              icon: rankAsset,
-                              label: profile.rank.toUpperCase(),
-                              pill: true,
-                              spaced: true,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 10,
-            child: ProfileRise(
-              delay: const Duration(milliseconds: 200),
-              child: _XpBar(profile: profile),
-            ),
-          ),
-        ],
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, top + 12, 16, 0),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0b1220), kPBg],
+        ),
       ),
-    );
-  }
-}
-
-class _AvatarRing extends StatelessWidget {
-  final int level;
-  final String? avatarAsset;
-  final String? avatarEmoji;
-  const _AvatarRing({required this.level, this.avatarAsset, this.avatarEmoji});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 76,
-      height: 84,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [kPBlue, kPPurple],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(color: kPBlue.withValues(alpha: .35), blurRadius: 18),
+          ProfileRise(
+            delay: const Duration(milliseconds: 60),
+            child: Row(
+              children: [
+                Semantics(
+                  button: true,
+                  label: 'Level ${profile.level}, ${profile.xp} of '
+                      '${profile.xpForNextLevel} XP. Open XP history',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _showXpHistory(context),
+                    child: _AvatarXpRing(
+                      progress: profile.xpProgress.clamp(0.0, 1.0).toDouble(),
+                      avatarAsset: avatarAsset,
+                      avatarEmoji: profile.avatarEmoji,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.username,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: kPTextPri,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (classAsset != null) ...[
+                            AppIconImage(classAsset, size: 15),
+                            const SizedBox(width: 5),
+                          ],
+                          Flexible(
+                            child: Text(
+                              '${profile.className ?? 'Hero'} · Level ${profile.level}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: kPTextSec),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _showXpHistory(context),
+                        child: Text(
+                          '${fmtXp(xpLeft)} XP to level ${profile.level + 1}',
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: kPTextSec),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Semantics(
+                  button: true,
+                  label: 'Settings',
+                  child: GestureDetector(
+                    onTap: () => _showSettings(context),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: kPSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: kPBorder),
+                      ),
+                      child: const Icon(Icons.settings_outlined,
+                          size: 20, color: kPTextPri),
+                    ),
+                  ),
+                ),
               ],
             ),
-            child: Container(
-              decoration: const BoxDecoration(
-                  shape: BoxShape.circle, color: kPSurface2),
-              alignment: Alignment.center,
-              child: avatarAsset != null
-                  ? AppIconImage(avatarAsset!, size: 48, visualScale: 1.45)
-                  : Text(avatarEmoji ?? '🧙',
-                      style: const TextStyle(fontSize: 34)),
-            ),
           ),
-          Positioned(
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [kPBlue, kPPurple]),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: kPBg, width: 2),
+          const SizedBox(height: 18),
+          ProfileRise(
+            delay: const Duration(milliseconds: 140),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _StatTile(
+                      semanticLabel: 'Power ${profile.power}. What is Power',
+                      icon: AppIcons.homePowerIcon,
+                      value: '${profile.power}',
+                      valueColor: kPGold,
+                      label: 'POWER',
+                      onTap: () => showResourceInfoDialog(context, _powerInfo),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatTile(
+                      semanticLabel: 'Rank ${profile.rank}. Open titles and ranks',
+                      icon: rankAsset,
+                      value: profile.rank,
+                      label: 'RANK',
+                      onTap: () => ShellOverlayNotifier.open('titles'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatTile(
+                      semanticLabel: titleName.isEmpty
+                          ? 'No title equipped. Choose a title'
+                          : 'Title $titleName. Change title',
+                      icon: titleAsset,
+                      fallbackIcon: Icons.workspace_premium_outlined,
+                      value: titleName.isEmpty ? 'Choose' : titleName,
+                      valueColor: const Color(0xFFC9A7FF),
+                      valueSize: 13,
+                      label: 'TITLE',
+                      chevron: true,
+                      onTap: () => ShellOverlayNotifier.open('titles'),
+                    ),
+                  ),
+                ],
               ),
-              child: Text('LV $level',
-                  style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white)),
             ),
           ),
         ],
@@ -441,125 +369,148 @@ class _AvatarRing extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  final Color color;
-  final String? icon;
-  final String label;
-  final bool pill;
-  final bool chevron;
-  final bool spaced;
-
-  const _Chip({
-    required this.color,
-    required this.label,
-    this.icon,
-    this.pill = false,
-    this.chevron = false,
-    this.spaced = false,
-  });
+/// Avatar inside an XP progress ring (blue → purple).
+class _AvatarXpRing extends StatelessWidget {
+  final double progress;
+  final String? avatarAsset;
+  final String? avatarEmoji;
+  const _AvatarXpRing(
+      {required this.progress, this.avatarAsset, this.avatarEmoji});
 
   @override
   Widget build(BuildContext context) {
-    final text = color == AppColors.purple ? const Color(0xFFC9A7FF) : color;
-    return Container(
-      padding: EdgeInsets.fromLTRB(icon != null ? 5 : 9, 3, 9, 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(pill ? 999 : 8),
-        border: Border.all(color: color.withValues(alpha: .45)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    return SizedBox(
+      width: 72,
+      height: 72,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          if (icon != null) ...[
-            AppIconImage(icon!, size: 16),
-            const SizedBox(width: 5),
-          ],
-          Flexible(
-            child: Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: spaced ? 1 : 0,
-                    color: text)),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration:
+                AppMotion.duration(context, const Duration(milliseconds: 1000)),
+            curve: Curves.easeOutCubic,
+            builder: (_, v, __) => CustomPaint(
+              size: const Size(72, 72),
+              painter: _XpRingPainter(v),
+            ),
           ),
-          if (chevron) ...[
-            const SizedBox(width: 3),
-            Icon(Icons.chevron_right_rounded, size: 14, color: text),
-          ],
+          Container(
+            width: 56,
+            height: 56,
+            clipBehavior: Clip.antiAlias,
+            decoration: const BoxDecoration(
+                shape: BoxShape.circle, color: kPSurface2),
+            alignment: Alignment.center,
+            child: avatarAsset != null
+                ? AppIconImage(avatarAsset!, size: 40, visualScale: 1.45)
+                : Text(avatarEmoji ?? '🧙',
+                    style: const TextStyle(fontSize: 28)),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Level and XP bar; tapping it opens the XP history.
-class _XpBar extends StatelessWidget {
-  final CharacterProfile profile;
-  const _XpBar({required this.profile});
+class _XpRingPainter extends CustomPainter {
+  final double progress;
+  _XpRingPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromCircle(
+        center: size.center(Offset.zero), radius: size.shortestSide / 2 - 3);
+    canvas.drawCircle(
+        rect.center,
+        rect.width / 2,
+        Paint()
+          ..color = kPSurface2
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4);
+    if (progress <= 0) return;
+    canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        progress * 2 * math.pi,
+        false,
+        Paint()
+          ..shader =
+              const LinearGradient(colors: [kPBlue, kPPurple]).createShader(rect)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(covariant _XpRingPainter old) => old.progress != progress;
+}
+
+/// One tile of the Power · Rank · Title strip.
+class _StatTile extends StatelessWidget {
+  final String semanticLabel;
+  final String? icon;
+  final IconData fallbackIcon;
+  final String value;
+  final Color valueColor;
+  final double valueSize;
+  final String label;
+  final bool chevron;
+  final VoidCallback onTap;
+
+  const _StatTile({
+    required this.semanticLabel,
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.onTap,
+    this.fallbackIcon = Icons.military_tech_outlined,
+    this.valueColor = kPTextPri,
+    this.valueSize = 15,
+    this.chevron = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Level ${profile.level}, ${profile.xp} of '
-          '${profile.xpForNextLevel} XP. Open XP history',
+      label: semanticLabel,
+      excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => showAppBottomSheet(
-          context: context,
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
-          builder: (_) => const XpHistorySheet(),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Text('LEVEL ${profile.level}',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: kPBlue)),
-                const Spacer(),
-                Text(
-                    '${fmtXp(profile.xp)} / ${fmtXp(profile.xpForNextLevel)} XP',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: kPTextSec)),
-              ],
-            ),
-            const SizedBox(height: 5),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Stack(
-                children: [
-                  Container(height: 8, color: kPSurface2),
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(
-                        begin: 0,
-                        end: profile.xpProgress.clamp(0.0, 1.0).toDouble()),
-                    duration: AppMotion.duration(
-                        context, const Duration(milliseconds: 1000)),
-                    curve: Curves.easeOutCubic,
-                    builder: (_, v, __) => FractionallySizedBox(
-                      widthFactor: v,
-                      child: Container(
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(colors: [kPBlue, kPPurple]),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: kPSurface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: kPBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              icon != null
+                  ? AppIconImage(icon!, size: 28)
+                  : Icon(fallbackIcon, size: 28, color: valueColor),
+              const SizedBox(height: 8),
+              Text(value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: valueSize,
+                      fontWeight: FontWeight.w900,
+                      height: 1.15,
+                      color: valueColor)),
+              const Spacer(),
+              const SizedBox(height: 2),
+              Text(chevron ? '$label ›' : label,
+                  style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: kPTextSec)),
+            ],
+          ),
         ),
       ),
     );

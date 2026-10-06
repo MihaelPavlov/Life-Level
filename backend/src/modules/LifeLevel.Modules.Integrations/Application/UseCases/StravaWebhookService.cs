@@ -78,6 +78,7 @@ public class StravaWebhookService(
             DurationMinutes = DurationMinutes(activity),
             DistanceKm = activity.Distance > 0 ? activity.Distance / 1000.0 : null,
             Calories = activity.Calories > 0 ? (int?)activity.Calories : null,
+            RecordingMethod = activity.Manual ? ActivityRecordingMethod.Manual : ActivityRecordingMethod.Automatic,
             PerformedAt = activity.StartDateLocal.ToUniversalTime(),
         };
 
@@ -96,17 +97,32 @@ public class StravaWebhookService(
         var (activities, error) = await FetchRecentAsync(userId, days: 30, ct);
         if (error != null) return new SyncResult { Errors = [error] };
 
-        int imported = 0, skipped = 0;
+        int imported = 0, skipped = 0, rejectedManual = 0;
+        double totalAdventureDistanceKm = 0;
         var errors = new List<string>();
         foreach (var dto in activities)
         {
+            if (dto.RecordingMethod == ActivityRecordingMethod.Manual)
+            {
+                await pending.EnqueueAsync(userId, dto, ct);
+                rejectedManual++;
+                continue;
+            }
             var result = await healthSync.ImportSingleAsync(userId, dto, ct);
             imported += result.Imported;
             skipped += result.Skipped;
+            totalAdventureDistanceKm += result.TotalAdventureDistanceKm;
             errors.AddRange(result.Errors);
         }
 
-        return new SyncResult { Imported = imported, Skipped = skipped, Errors = errors };
+        return new SyncResult
+        {
+            Imported = imported,
+            Skipped = skipped,
+            RejectedManual = rejectedManual,
+            TotalAdventureDistanceKm = totalAdventureDistanceKm,
+            Errors = errors,
+        };
     }
 
     /// <summary>
@@ -194,6 +210,7 @@ public class StravaWebhookService(
             DurationMinutes = DurationMinutes(activity),
             DistanceKm = activity.Distance > 0 ? activity.Distance / 1000.0 : null,
             Calories = activity.Calories > 0 ? (int?)activity.Calories : null,
+            RecordingMethod = activity.Manual ? ActivityRecordingMethod.Manual : ActivityRecordingMethod.Automatic,
             PerformedAt = activity.StartDateLocal.ToUniversalTime(),
         }).ToList(), null);
     }
@@ -220,5 +237,6 @@ internal record StravaActivityDto(
     [property: JsonPropertyName("moving_time")]      int      MovingTime,
     [property: JsonPropertyName("distance")]         double   Distance,
     [property: JsonPropertyName("calories")]         double   Calories,
+    [property: JsonPropertyName("manual")]           bool     Manual,
     [property: JsonPropertyName("start_date_local")] DateTime StartDateLocal,
     [property: JsonPropertyName("elapsed_time")]     int      ElapsedTime = 0);

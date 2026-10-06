@@ -236,7 +236,7 @@ Owns the navigation container, the tab bar with the raised Map button, and globa
 
 | File | Description |
 |------|-------------|
-| `profile_screen.dart` | One scrolling page (design: Profile Redesign canvas, option D). `ProfileHeader` is compact: Power chip, settings cog, avatar ring with level, name, class, equipped title (opens Titles), rank, and the XP bar (opens XP history). The settings sheet holds Admin for admins. |
+| `profile_screen.dart` | One scrolling page (design: Profile Redesign canvas, option D). `ProfileHeader` (Profile Header Redesign canvas, option D): avatar inside an XP ring (opens XP history), name, class · level, XP to next level, settings cog; then a Power · Rank · Title tile strip (Power opens its info dialog; Rank and Title open Titles). The settings sheet holds Admin for admins. |
 | `profile_sections.dart` | Page sections: `ProfileStatsSection` (5 stat tiles; "+" only while points are available), `ProfileRecordsSection` (longest run, best streak, bosses defeated, zones reached), `ProfileTalentBonusesSection` (first 4 bonuses + "See all" sheet), `ProfileWeeksSection` (12-week grid from `GET /api/activity/calendar`; the workout count opens a history sheet with All weeks / By month tabs). |
 | `profile_stat_metadata.dart` | Static metadata for all five stats (`StatMeta`: key, label, emoji, colour, description, boosting activities, perks). Constants: `kStrMeta`, `kEndMeta`, `kAgiMeta`, `kFlxMeta`, `kStaMeta`. `buildProfileStats()` maps a `CharacterProfile` → `List<StatData>`. Also holds profile-wide colour aliases and `profileRankColor()` helper. |
 | `profile_widgets.dart` | Shared profile widgets: `ProfileRankBadge`, `ProfileMiniCard`, `ProfilePlaceholderTab`, `ProfileSheetSection`. |

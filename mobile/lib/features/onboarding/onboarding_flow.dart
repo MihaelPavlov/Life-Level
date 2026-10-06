@@ -11,9 +11,10 @@ import 'screens/connect_step.dart';
 import 'screens/import_step.dart';
 import 'screens/level_step.dart';
 import 'screens/map_step.dart';
+import 'screens/username_step.dart';
 import 'screens/welcome_step.dart';
 
-/// Import-first onboarding: welcome → connect → import → level → read
+/// Import-first onboarding: (name, for Google/Apple sign-ups) → welcome → connect → import → level → read
 /// training → class → avatar → map → Home. One route; steps slide between
 /// each other and the current step is persisted for resume.
 class OnboardingFlow extends StatefulWidget {
@@ -69,6 +70,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _screen(SetupStep step) => switch (step) {
+        SetupStep.username => const UsernameStep(),
         SetupStep.welcome => const WelcomeStep(),
         SetupStep.connect => const ConnectStep(),
         SetupStep.importing => const ImportStep(),

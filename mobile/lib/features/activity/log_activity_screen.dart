@@ -102,6 +102,18 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
                 allowDecimal: true,
                 onChanged: (v) => setState(() => _distanceKm = v),
               ),
+              const SizedBox(height: 8),
+              Text(
+                _distanceKm != null && _distanceKm! > 0
+                    ? '${formatAdventureKm(_distanceKm!)} real km → '
+                        '${formatAdventureKm(_distanceKm! * _selectedType.adventureDistanceMultiplier)} Adventure km'
+                    : 'Map travel: 1 ${_selectedType.displayName.toLowerCase()} km = '
+                        '${formatAdventureKm(_selectedType.adventureDistanceMultiplier)} Adventure km',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
               const SizedBox(height: 24),
             ],
 

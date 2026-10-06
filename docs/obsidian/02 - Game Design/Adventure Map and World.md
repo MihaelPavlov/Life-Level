@@ -4,7 +4,7 @@ aliases: [World Map, Adventure Map, Zones, Travel]
 ---
 # Adventure Map and World
 
-> Two-tier exploration: the **overworld** (WorldZones) and the **dungeon layer** (Map nodes inside each zone). Real-world distance fuels both.
+> Two-tier exploration: the **overworld** (WorldZones) and the **dungeon layer** (Map nodes inside each zone). Activity-specific Adventure km fuel overworld travel; dungeon objectives retain real workout distance.
 
 ## Two layers, two modules
 
@@ -27,9 +27,11 @@ Users arrive at a zone via the overworld, then explore the zone's internal map v
 ## Travel mechanic
 
 1. User picks a **destination** (adjacent zone or node): `PUT /api/map/destination` or `PUT /api/world/destination`.
-2. Real-world activity accumulates **distance** via `IMapDistancePort.AddDistanceAsync(userId, km)` (called inside `ActivityService.LogActivityAsync`).
+2. The Activity module converts real distance to **Adventure km** (run/walk/hike ×1, cycling ×0.25, swimming ×4) and sends that value through `IWorldZoneDistancePort.AddDistanceAsync`.
 3. When `DistanceTraveledOnEdge >= edge.DistanceKm`: arrive at destination, clear the edge, unlock the node/zone if first visit.
 4. First arrival at a new zone awards `zone.TotalXp`.
+
+Adventure km logged without a destination, or left over after an arrival or encounter, are stored in `PendingDistanceKm` and applied to the next selected route.
 
 ## Crossroads pass-through
 

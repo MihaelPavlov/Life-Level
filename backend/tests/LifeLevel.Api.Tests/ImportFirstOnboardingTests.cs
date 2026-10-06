@@ -109,11 +109,78 @@ public class ImportFirstOnboardingTests
         Assert.Equal(0, ports.Xp.Calls);
         Assert.Equal(1, ports.Stats.Calls);
         Assert.Equal(5, ports.Distance.Km);
+        Assert.Equal(5, result.AdventureDistanceKm);
         Assert.Equal(0, ports.Quests.Calls);
         Assert.Equal(0, ports.Events.Calls);
         var stored = await db.Set<ActivityEntity>().SingleAsync();
         Assert.Equal(79, stored.XpGained);
         Assert.Equal("strava:1", stored.ExternalId);
+    }
+
+    [Fact]
+    public async Task ManualCycling_UsesAdventureDistanceForMap_ButRealDistanceForStoredActivityAndQuests()
+    {
+        var ports = new Ports();
+        await using var db = NewDb();
+        var service = NewActivityService(db, ports);
+
+        var result = await service.LogActivityAsync(Guid.NewGuid(), new()
+        {
+            Type = ActivityType.Cycling,
+            DurationMinutes = 60,
+            DistanceKm = 20,
+        });
+
+        Assert.Equal(5, result.AdventureDistanceKm);
+        Assert.Equal(5, ports.Distance.Km);
+        Assert.Equal(20, ports.Quests.LastDistanceKm);
+        Assert.Equal(20, (await db.Set<ActivityEntity>().SingleAsync()).DistanceKm);
+    }
+
+    [Fact]
+    public async Task ExternalSwimming_UsesFourTimesDistanceForMap()
+    {
+        var ports = new Ports();
+        await using var db = NewDb();
+        var service = NewActivityService(db, ports);
+
+        var result = await service.LogExternalActivityAsync(
+            Guid.NewGuid(), ActivityType.Swimming, 60, 2, null, null, "swim-1", DateTime.UtcNow);
+
+        Assert.Equal(8, result.AdventureDistanceKm);
+        Assert.Equal(8, ports.Distance.Km);
+        Assert.Equal(2, ports.Quests.LastDistanceKm);
+    }
+
+    [Theory]
+    [InlineData(ActivityType.Running)]
+    [InlineData(ActivityType.Cycling)]
+    public async Task DistanceWorkouts_StoreNoEstimatedSteps(ActivityType type)
+    {
+        var ports = new Ports();
+        await using var db = NewDb();
+        var service = NewActivityService(db, ports);
+
+        await service.LogExternalActivityAsync(Guid.NewGuid(), type, 60, 20, null, null, "ext-1", DateTime.UtcNow);
+        await service.ImportHistoricalActivityAsync(Guid.NewGuid(), type, 60, 20, null, null, "ext-2", DateTime.UtcNow.AddDays(-2));
+        await service.LogActivityAsync(Guid.NewGuid(), new() { Type = type, DurationMinutes = 60, DistanceKm = 20 });
+
+        Assert.All(await db.Set<ActivityEntity>().ToListAsync(), a => Assert.Equal(0, a.Steps));
+    }
+
+    [Fact]
+    public async Task StepWalk_StoresThePhonesRealStepCount()
+    {
+        var ports = new Ports();
+        await using var db = NewDb();
+        var service = NewActivityService(db, ports);
+
+        await service.LogExternalActivityAsync(
+            Guid.NewGuid(), ActivityType.Walking, 84, 6.7, null, null, "healthconnect:steps:2026-10-05",
+            DateTime.UtcNow.AddDays(-1), steps: 8421);
+
+        Assert.Equal(8421, (await db.Set<ActivityEntity>().SingleAsync()).Steps);
+        Assert.Equal(8421, (await service.GetSummaryAsync(Guid.NewGuid())).TotalSteps);
     }
 
     [Fact]
@@ -183,6 +250,7 @@ public class ImportFirstOnboardingTests
 
         Assert.Equal(2, first.Imported);
         Assert.Equal(100, first.TotalXp); // stub history XP is 50 per workout
+        Assert.Equal(5, first.TotalAdventureDistanceKm);
         Assert.Equal(0, second.Imported);
         Assert.Equal(1, xp.Calls); // second run had nothing new, so no award
     }
@@ -323,7 +391,7 @@ public class ImportFirstOnboardingTests
             new StubActivityGainPreviewPort(), new LifeLevel.SharedKernel.Ports.NoOpNotificationPort(),
             new StubActivityExternalIdReadPort());
         var strava = new StravaWebhookService(db, http, new StravaOAuthService(db, http, options), health, pending, options, NullLogger<StravaWebhookService>.Instance);
-        return new OnboardingImportService(health, strava, new DbCharacterInfo(db), xp);
+        return new OnboardingImportService(health, strava, pending, new DbCharacterInfo(db), xp);
     }
 
     private sealed class ForbiddenStravaHandler : HttpMessageHandler
@@ -388,10 +456,12 @@ public class ImportFirstOnboardingTests
     private sealed class CapturingQuests : IQuestProgressPort
     {
         public int Calls { get; private set; }
+        public double? LastDistanceKm { get; private set; }
         public Task<QuestActivityResult> UpdateProgressFromActivityAsync(Guid userId, ActivityType activityType,
             int durationMinutes, double? distanceKm, int? calories, CancellationToken ct = default)
         {
             Calls++;
+            LastDistanceKm = distanceKm;
             return Task.FromResult(new QuestActivityResult([], false, 0));
         }
     }

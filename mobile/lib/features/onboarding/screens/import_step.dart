@@ -216,24 +216,42 @@ class _ImportStepState extends State<ImportStep> {
                   color: AppColors.textSecondary),
             ),
           ],
+          if ((r?.rejectedManualCount ?? 0) > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${r!.rejectedManualCount} manual ${r.rejectedManualCount == 1 ? 'entry was' : 'entries were'} found but not eligible for rewards.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 11, color: AppColors.red),
+            ),
+          ],
           const SizedBox(height: 10),
-          Row(
+          Column(
             children: [
-              _Stat(
-                  label: 'WORKOUTS',
-                  value: r?.imported ?? 0,
-                  format: (v) => fmtInt(v)),
-              const SizedBox(width: 8),
-              _Stat(
-                  label: 'DISTANCE',
-                  value: r?.totalKm ?? 0,
-                  format: (v) =>
-                      '${v < 10 ? v.toStringAsFixed(1) : v.round()} km'),
-              const SizedBox(width: 8),
-              _Stat(
-                  label: 'ACTIVE',
-                  value: (r?.totalMinutes ?? 0) / 60,
-                  format: (v) => '${v.toStringAsFixed(v < 10 ? 1 : 0)} h'),
+              Row(children: [
+                _Stat(
+                    label: 'WORKOUTS',
+                    value: r?.imported ?? 0,
+                    format: (v) => fmtInt(v)),
+                const SizedBox(width: 8),
+                _Stat(
+                    label: 'ACTIVE',
+                    value: (r?.totalMinutes ?? 0) / 60,
+                    format: (v) => '${v.toStringAsFixed(v < 10 ? 1 : 0)} h'),
+              ]),
+              const SizedBox(height: 8),
+              Row(children: [
+                _Stat(
+                    label: 'REAL DISTANCE',
+                    value: r?.totalKm ?? 0,
+                    format: (v) =>
+                        '${v < 10 ? v.toStringAsFixed(1) : v.round()} km'),
+                const SizedBox(width: 8),
+                _Stat(
+                    label: 'ADVENTURE',
+                    value: r?.totalAdventureDistanceKm ?? 0,
+                    format: (v) =>
+                        '${v < 10 ? v.toStringAsFixed(1) : v.round()} km'),
+              ]),
             ],
           ),
           const SizedBox(height: 10),
