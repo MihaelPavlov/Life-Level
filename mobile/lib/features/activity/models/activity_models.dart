@@ -75,6 +75,20 @@ String formatAdventureKm(double value) {
   return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
 }
 
+ActivityType? activityTypeFromApiValue(String value) {
+  final normalized = value.trim().toLowerCase();
+  for (final type in ActivityType.values) {
+    if (type.name == normalized) return type;
+  }
+  return null;
+}
+
+double previewAdventureDistanceKm(String activityType, double? realDistanceKm) {
+  if (realDistanceKm == null || realDistanceKm <= 0) return 0;
+  final type = activityTypeFromApiValue(activityType);
+  return realDistanceKm * (type?.adventureDistanceMultiplier ?? 0);
+}
+
 class LogActivityRequest {
   final ActivityType type;
   final int durationMinutes;

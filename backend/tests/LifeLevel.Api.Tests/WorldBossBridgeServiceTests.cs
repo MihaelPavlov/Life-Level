@@ -263,13 +263,17 @@ public class WorldBossBridgeServiceTests
             new BridgeXpPort(),
             new BridgeEventPublisher(),
             EmptyServiceProvider.Instance,
-            combatStats: new BridgeCombatStatsPort(87));
+            combatStats: new BridgeCombatStatsPort(87),
+            worldZoneMetadata: new WorldZoneMetadataReadPortAdapter(db));
 
         var listed = Assert.Single(await bossService.GetAllBossesForUserAsync(fx.UserId));
 
         Assert.False(listed.Activated);
         Assert.Equal(87, listed.PlayerMaxHp);
         Assert.Equal(87, listed.CurrentPlayerHp);
+        Assert.Equal(fx.ForestRegion.Name, listed.Region);
+        Assert.Equal(fx.ForestBoss.Name, listed.NodeName);
+        Assert.Equal(fx.ForestBoss.LevelRequirement, listed.LevelRequirement);
     }
 
     [Fact]

@@ -6,14 +6,38 @@ import 'package:life_level/core/constants/app_colors.dart';
 import 'package:life_level/core/constants/app_icons.dart';
 import 'package:life_level/core/shell/widgets/map_orb_button.dart';
 import 'package:life_level/core/shell/widgets/shell_tab_bar.dart';
+import 'package:life_level/features/boss/models/boss_list_item.dart';
+import 'package:life_level/features/boss/providers/boss_provider.dart';
 import 'package:life_level/features/home/cards/home_happening_now.dart';
+import 'package:life_level/features/home/providers/world_progress_provider.dart';
 import 'package:life_level/features/map/journey/journey_state.dart';
+import 'package:life_level/features/map/models/world_zone_models.dart';
 
 import '../../helpers/unlocks_overrides.dart';
 
+class _EmptyBossListNotifier extends BossListNotifier {
+  @override
+  Future<List<BossListItem>> build() async => const [];
+}
+
+final _emptyWorld = WorldFullData.fromJson({
+  'zones': const [],
+  'edges': const [],
+  'characterLevel': 1,
+  'userProgress': {
+    'currentZoneId': '',
+    'distanceTraveledOnEdge': 0,
+  },
+});
+
 Widget _app(Widget child, {List<Override> overrides = const []}) =>
     ProviderScope(
-      overrides: [allUnlockedOverride, ...overrides],
+      overrides: [
+        allUnlockedOverride,
+        bossListProvider.overrideWith(_EmptyBossListNotifier.new),
+        worldProgressProvider.overrideWith((ref) async => _emptyWorld),
+        ...overrides,
+      ],
       child: MaterialApp(home: Scaffold(body: Center(child: child))),
     );
 
@@ -35,6 +59,15 @@ const _crossroads = JourneyOrbState(
   label: 'Choose',
   alert: true,
   semantics: 'Crossroads at Whispering Fork, choose your path',
+);
+
+const _bossRaid = JourneyOrbState(
+  kind: JourneyKind.bossRaid,
+  color: AppColors.red,
+  ring: JourneyRing.progress,
+  progress: .5,
+  label: 'Fight',
+  semantics: 'Boss fight, Forest Warden at 50% health',
 );
 
 void main() {
@@ -75,6 +108,21 @@ void main() {
     expect(find.text('!'), findsNothing);
     // The pulse loops forever; stop the tree before the test ends.
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('boss orb announces that it opens the battle', (tester) async {
+    await tester.pumpWidget(_app(
+      MapOrbButton(open: false, onTap: () {}),
+      overrides: [journeyOrbStateProvider.overrideWithValue(_bossRaid)],
+    ));
+    await tester.pump();
+
+    expect(
+      find.bySemanticsLabel(
+        'Boss fight, Forest Warden at 50% health. Open boss battle',
+      ),
+      findsOneWidget,
+    );
   });
 
   test('ring painter handles every ring type', () {

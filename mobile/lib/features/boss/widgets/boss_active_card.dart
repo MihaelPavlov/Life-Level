@@ -53,7 +53,7 @@ class BossActiveCard extends StatelessWidget {
     // World-zone bosses suppress the legacy 7-day expiry — backend returns
     // `timerExpiresAt: null` and `timerDays: 0`. Surface that as "no limit"
     // instead of the misleading "0d remaining" the legacy formula prints.
-    final hasTimer = remaining != null || boss.timerDays > 0;
+    final hasTimer = boss.hasTimeLimit;
     final timerText = remaining != null
         ? _fmtDuration(remaining)
         : (boss.timerDays > 0 ? '${boss.timerDays}d' : '∞');
@@ -141,14 +141,16 @@ class BossActiveCard extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${boss.regionDisplay} \u00B7 Lvl ${boss.levelRequirement}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
+                            if (boss.metadataLabel.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                boss.metadataLabel,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ),
@@ -423,7 +425,9 @@ class BossActiveCard extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              'Travel to ${boss.nodeName.isNotEmpty ? boss.nodeName : boss.regionDisplay} to fight',
+              boss.nodeName.isNotEmpty || boss.regionDisplay.isNotEmpty
+                  ? 'Travel to ${boss.nodeName.isNotEmpty ? boss.nodeName : boss.regionDisplay} to fight'
+                  : 'Travel to this boss zone to fight',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.orange,

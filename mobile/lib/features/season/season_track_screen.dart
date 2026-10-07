@@ -12,7 +12,7 @@ import 'models/season_models.dart';
 import 'providers/season_provider.dart';
 import 'widgets/season_legend.dart';
 import 'widgets/season_milestone_card.dart';
-import 'widgets/season_reward_sheet.dart';
+import 'widgets/season_claim_reveal.dart';
 import 'widgets/season_theme.dart';
 import 'widgets/season_tier_row.dart';
 
@@ -92,13 +92,19 @@ class _BodyState extends ConsumerState<_Body> {
     if (_claiming) return;
     setState(() => _claiming = true);
     try {
+      // The track as it was, so the reveal can show each tile's art and label.
+      final before = track;
       final rewards = await ref.read(seasonProvider.notifier).claimAvailable();
       final result = SeasonClaimResult.combined(rewards);
       ref.invalidate(characterProfileProvider);
       if (!context.mounted) return;
-      // Non-blocking bottom pop-up that auto-dismisses — collect several
-      // tiers in a row without tapping "Continue".
-      unawaited(showSeasonRewardSheet(context, result));
+      // Let the collected tiles burst on the track first, then reveal what
+      // was collected: one reward centred, 2–4 as cards, 5+ as a list.
+      await Future<void>.delayed(
+          AppMotion.duration(context, const Duration(milliseconds: 700)));
+      if (!context.mounted) return;
+      await showSeasonClaimReveal(context, results: rewards, before: before);
+      // The level-up celebration follows the reveal ("Continue to Level N").
       if (result.leveledUp && result.newLevel != null) {
         LevelUpNotifier.notify(result.newLevel!);
       }

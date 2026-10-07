@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
+import '../../activity/models/activity_models.dart';
 import '../../onboarding/widgets/activity_visuals.dart';
 import '../models/pending_models.dart';
 
@@ -53,7 +54,12 @@ class _ImportReviewSheetState extends State<ImportReviewSheet> {
     final rejected = widget.list.rejected;
     final chosen = _chosen;
     final xp = chosen.fold<int>(0, (a, w) => a + w.previewXp);
-    final km = chosen.fold<double>(0, (a, w) => a + (w.distanceKm ?? 0));
+    final adventureKm = chosen.fold<double>(
+      0,
+      (total, workout) =>
+          total +
+          previewAdventureDistanceKm(workout.activityType, workout.distanceKm),
+    );
     final sources = {
       for (final w in pending.isNotEmpty ? pending : widget.list.items)
         providerLabel(w.provider),
@@ -130,9 +136,11 @@ class _ImportReviewSheetState extends State<ImportReviewSheet> {
                 _Gain(AppIcons.rewardXpCrystals, '+$xp XP'),
                 for (final g in _statTotals(chosen))
                   _Gain(g.$1, '${g.$2} +${g.$3}'),
-                if (km > 0)
+                if (adventureKm > 0)
                   _Gain(
-                      AppIcons.mapDestination, '+${km.toStringAsFixed(1)} km'),
+                    AppIcons.mapDestination,
+                    '+${formatAdventureKm(adventureKm)} Adventure km',
+                  ),
               ],
             ),
           const SizedBox(height: 14),

@@ -266,7 +266,9 @@ class _ImportStepState extends State<ImportStep> {
               blendMode: BlendMode.dstIn,
               child: AnimatedList(
                 key: _listKey,
-                physics: const NeverScrollableScrollPhysics(),
+                physics: const ClampingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
                 initialItemCount: _rows.length,
                 itemBuilder: (_, i, anim) => SizeTransition(
                   sizeFactor:

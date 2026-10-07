@@ -25,7 +25,11 @@ import 'road_widgets.dart';
 ///   2050 ms  stage pieces turn green one after another
 ///   ~2500 ms chest wiggles, headline flashes — or, when the claim finished the
 ///            stage, "Stage N complete!" + gold pulse, then the chest popup
+///            (the chest is opened on the server while the pulse plays)
 ///   3000 ms  summary toast
+///
+/// The roads on screen are held ([_held]) for the whole sequence, so a server
+/// push mid-animation can't move the wallet, stepper or card ahead of it.
 class RewardRoadScreen extends ConsumerStatefulWidget {
   final String category;
   const RewardRoadScreen({super.key, required this.category});
@@ -45,6 +49,11 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
   /// Wallet shown in the header. Held back while rewards are in the air so
   /// the counters tick up when they land, not when the request returns.
   AchievementWallet? _wallet;
+
+  /// Roads shown while a claim or chest sequence plays. A server push can
+  /// refresh [achievementRoadsProvider] mid-animation; holding the snapshot
+  /// keeps the wallet, stepper and card in step until the sequence moves on.
+  AchievementRoadsData? _held;
   int? _selected;
   bool _busy = false;
   String? _completingTier;
@@ -87,6 +96,7 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
       _busy = true;
       _toast = null;
       _claiming.addAll(rows.map((a) => a.id));
+      _held = ref.read(achievementRoadsProvider).valueOrNull;
     });
     AppMotion.haptic(AppHaptic.light);
     try {
@@ -113,6 +123,9 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
             delay: Duration(milliseconds: 120 * i)));
       }
       final result = await request;
+      // Fetch the new road now; the held snapshot stays on screen until the
+      // rows have folded, so the refresh never cuts the animation short.
+      final reloading = notifier.reload();
       await Future.wait(flights);
       if (!mounted) return;
 
@@ -129,19 +142,30 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
           .map((c) => c.$2)
           .toList();
       final completing = finished.isNotEmpty ? finished.first : null;
-      await notifier.reload();
+      await reloading;
       notifier.refreshCharacter();
       if (!mounted) return;
+      // The fresh road and "Stage N complete!" land in the same frame, so the
+      // card never flashes "… is ready!" in between.
       setState(() {
         _claiming.clear();
         _folded.clear();
         _wallet = null; // back to the live balance
+        _held = completing != null
+            ? ref.read(achievementRoadsProvider).valueOrNull
+            : null;
         if (completing != null) {
           _completingTier = completing;
           final i = road.stages.indexWhere((s) => s.tier == completing);
           if (i >= 0) _selected = i;
         }
       });
+
+      // Open the chest on the server while the celebration plays, so the
+      // popup follows the gold pulse without waiting on the network.
+      final opening = completing == null
+          ? null
+          : (notifier.openStageChest(road.category, completing)..ignore());
 
       // Pieces pop green one by one (200 ms apart).
       await _wait(200 * rows.length + 250);
@@ -151,7 +175,8 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
         // "Stage N complete!", gold pulse ×2 and chest hops, then the popup.
         await _wait(1000);
         if (!mounted) return;
-        await _openChest(completing, alreadyCelebrating: true);
+        await _openChest(completing,
+            alreadyCelebrating: true, request: opening);
         return;
       }
       setState(() => _nudge++);
@@ -167,16 +192,19 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
           _busy = false;
           _claiming.clear();
           _folded.clear();
+          _held = null;
         });
       }
     }
   }
 
+  /// [request] is an open already sent by [_claim] during the celebration.
   Future<void> _openChest(String tier,
-      {bool alreadyCelebrating = false}) async {
+      {bool alreadyCelebrating = false,
+      Future<StageChestOpenResult>? request}) async {
     final notifier = ref.read(achievementRoadsProvider.notifier);
-    final road =
-        ref.read(achievementRoadsProvider).valueOrNull?.road(widget.category);
+    final live = ref.read(achievementRoadsProvider).valueOrNull;
+    final road = (_held ?? live)?.road(widget.category);
     final index = road?.stages.indexWhere((s) => s.tier == tier) ?? -1;
     if (road == null || index < 0) return;
 
@@ -184,12 +212,16 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
       _busy = true;
       _completingTier = tier;
       _selected = index;
+      _held ??= live;
     });
     if (!alreadyCelebrating) await _wait(1000);
     try {
-      final result = await notifier.openStageChest(road.category, tier);
+      final result =
+          await (request ?? notifier.openStageChest(road.category, tier));
       if (!mounted) return;
       setState(() => _chestAway = true);
+      // The header keeps the held balance while the popup is up; it counts
+      // up only once the coin and gem tiles have flown into it.
       await showStageChestPopup(context,
           result: result,
           stageNumber: index + 1,
@@ -197,7 +229,7 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
           gemTo: _gemAnchor);
       if (!mounted) return;
       // Counters count up, then the road moves on: stepper advances, the next
-      // stage's card slides in and its chest drops in.
+      // stage's card slides in and its chest drops in — all in one frame.
       setState(() => _wallet = result.wallet);
       await notifier.reload();
       notifier.refreshCharacter();
@@ -210,6 +242,7 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
         _selected = null; // follow the road to its new current stage
         _arrivedTier = next?.current?.tier;
         _wallet = null;
+        _held = null;
       });
       await _wait(500);
       if (!mounted) return;
@@ -228,6 +261,7 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
           _busy = false;
           _completingTier = null;
           _chestAway = false;
+          _held = null;
         });
       }
     }
@@ -236,7 +270,7 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(achievementRoadsProvider);
-    final data = async.valueOrNull;
+    final data = _held ?? async.valueOrNull;
     final road = data?.road(widget.category);
     final meta = RoadMeta.of(widget.category);
 
@@ -337,6 +371,9 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
             duration:
                 AppMotion.duration(context, const Duration(milliseconds: 500)),
             switchInCurve: const Cubic(.2, 1, .3, 1),
+            // The outgoing stage is dropped at once (no cross-fade), so the
+            // old and new content never draw on top of each other.
+            layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
             transitionBuilder: (child, anim) => SlideTransition(
               position: Tween(begin: const Offset(.14, 0), end: Offset.zero)
                   .animate(anim),
@@ -412,6 +449,9 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
             duration:
                 AppMotion.duration(context, const Duration(milliseconds: 500)),
             switchInCurve: const Cubic(.2, 1, .3, 1),
+            // The outgoing stage is dropped at once (no cross-fade), so the
+            // old and new content never draw on top of each other.
+            layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
             transitionBuilder: (child, anim) => SlideTransition(
               position: Tween(begin: const Offset(.14, 0), end: Offset.zero)
                   .animate(anim),

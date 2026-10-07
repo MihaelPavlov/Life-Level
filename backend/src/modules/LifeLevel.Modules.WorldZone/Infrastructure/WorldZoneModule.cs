@@ -21,6 +21,7 @@ public static class WorldZoneModule
         services.AddScoped<IWorldZoneDistancePort>(sp => sp.GetRequiredService<WorldZoneService>());
         services.AddScoped<IWorldDungeonActivityPort>(sp => sp.GetRequiredService<WorldDungeonService>());
         services.AddScoped<IWorldZoneCompletionPort, WorldZoneCompletionPortAdapter>();
+        services.AddScoped<IWorldZoneMetadataReadPort, WorldZoneMetadataReadPortAdapter>();
         services.AddScoped<IWorldBlockerCompletionPort, WorldBlockerCompletionPortAdapter>();
         services.AddScoped<IEventHandler<CharacterLeveledUpEvent>, LevelUpRegionAvailabilityHandler>();
         return services;

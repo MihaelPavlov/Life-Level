@@ -59,14 +59,16 @@ class BossLockedCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${boss.regionDisplay} \u00B7 Level ${boss.levelRequirement}',
-                        style: const TextStyle(
-                          color: Color(0xFF3d444d),
-                          fontSize: 11,
+                      if (boss.metadataLabel.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          boss.metadataLabel,
+                          style: const TextStyle(
+                            color: Color(0xFF3d444d),
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -76,7 +78,9 @@ class BossLockedCard extends StatelessWidget {
                     const Text('\uD83D\uDD12', style: TextStyle(fontSize: 20)),
                     const SizedBox(height: 4),
                     Text(
-                      'Lvl ${boss.levelRequirement}',
+                      boss.levelRequirement > 0
+                          ? 'Lvl ${boss.levelRequirement}'
+                          : 'Locked',
                       style: const TextStyle(
                         color: Color(0xFF586070),
                         fontSize: 10,
@@ -100,7 +104,9 @@ class BossLockedCard extends StatelessWidget {
                       style: TextStyle(color: Color(0xFF586070), fontSize: 10),
                     ),
                     Text(
-                      'Reach level ${boss.levelRequirement}',
+                      boss.levelRequirement > 0
+                          ? 'Reach level ${boss.levelRequirement}'
+                          : 'Requirements unavailable',
                       style: const TextStyle(
                           color: Color(0xFF586070), fontSize: 10),
                     ),

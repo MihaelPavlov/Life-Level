@@ -38,6 +38,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   var _scope = LeaderboardScope.global;
   var _metric = LeaderboardMetric.power;
   var _opening = false;
+  var _chestClaimed = false;
 
   (LeaderboardScope, LeaderboardMetric) get _key => (_scope, _metric);
 
@@ -53,6 +54,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     try {
       final result = await ref.read(leaderboardServiceProvider).openChest();
       if (!mounted) return;
+      setState(() => _chestClaimed = true);
       if (result.passes.isNotEmpty) {
         await showRewardRevealPopup(
           context,
@@ -187,7 +189,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               ],
             ),
           ),
-          if (data != null && data.chest.stack > 0)
+          if (data != null && data.chest.stack > 0 && !_chestClaimed)
             Positioned(
               right: 16,
               bottom: 96 + bottomInset,
@@ -204,6 +206,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   board: data,
                   avatarEmoji: profile?.avatarEmoji,
                   opening: _opening,
+                  chestClaimed: _chestClaimed,
                   onOpenChest: _openChest,
                 ),
               ),
@@ -317,12 +320,14 @@ class _YouRow extends StatelessWidget {
   final LeaderboardBoard board;
   final String? avatarEmoji;
   final bool opening;
+  final bool chestClaimed;
   final VoidCallback onOpenChest;
 
   const _YouRow({
     required this.board,
     required this.avatarEmoji,
     required this.opening,
+    required this.chestClaimed,
     required this.onOpenChest,
   });
 
@@ -377,7 +382,7 @@ class _YouRow extends StatelessWidget {
               ],
             ),
           ),
-          if (board.chest.stack > 0)
+          if (board.chest.stack > 0 && !chestClaimed)
             RankUpChestButton(
                 stack: board.chest.stack, busy: opening, onTap: onOpenChest),
         ],

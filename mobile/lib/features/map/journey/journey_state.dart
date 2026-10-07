@@ -633,6 +633,14 @@ final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
   );
 });
 
+/// The center orb only becomes a boss shortcut when its visible state is the
+/// boss raid. A route-focused orb must continue opening the Journey popover.
+String? bossIdForJourneyOrbAction(
+  JourneyOrbState state,
+  BossListItem? boss,
+) =>
+    state.kind == JourneyKind.bossRaid ? boss?.id : null;
+
 /// A live fight takes priority. An unstarted boss only takes over the orb
 /// when the player is actually standing at that boss's zone. Defeated fights
 /// are handled by the replay effect, not by the current-journey indicator.

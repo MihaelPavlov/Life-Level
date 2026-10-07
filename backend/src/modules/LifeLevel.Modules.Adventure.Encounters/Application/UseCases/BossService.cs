@@ -23,7 +23,8 @@ public class BossService(
     IServiceProvider services,
     IWorldZoneCompletionPort? worldZoneCompletion = null,
     IWorldBlockerCompletionPort? worldBlockerCompletion = null,
-    ICharacterCombatStatsReadPort? combatStats = null)
+    ICharacterCombatStatsReadPort? combatStats = null,
+    IWorldZoneMetadataReadPort? worldZoneMetadata = null)
 {
     public async Task<List<BossListItemDto>> GetAllBossesForUserAsync(Guid userId)
     {
@@ -36,6 +37,13 @@ public class BossService(
         var nodes = await db.Set<MapNode>()
             .Where(n => bossNodeIds.Contains(n.Id))
             .ToDictionaryAsync(n => n.Id);
+        var worldZoneIds = bosses
+            .Where(b => b.WorldZoneId.HasValue)
+            .Select(b => b.WorldZoneId!.Value)
+            .ToList();
+        var worldZones = worldZoneMetadata == null
+            ? new Dictionary<Guid, WorldZoneMetadata>()
+            : await worldZoneMetadata.GetMetadataAsync(worldZoneIds);
         var userStates = await db.Set<UserBossState>()
             .Where(s => s.UserId == userId)
             .ToDictionaryAsync(s => s.BossId);
@@ -72,6 +80,9 @@ public class BossService(
         {
             MapNode? node = null;
             if (boss.NodeId.HasValue) nodes.TryGetValue(boss.NodeId.Value, out node);
+            WorldZoneMetadata? worldZone = null;
+            if (boss.WorldZoneId.HasValue)
+                worldZones.TryGetValue(boss.WorldZoneId.Value, out worldZone);
             userStates.TryGetValue(boss.Id, out var state);
 
             // World-zone bosses: canFight is governed by WorldZone state, which
@@ -93,9 +104,9 @@ public class BossService(
                 RewardXp = boss.RewardXp,
                 TimerDays = boss.TimerDays,
                 IsMini = boss.IsMini,
-                Region = node?.Region.ToString() ?? string.Empty,
-                NodeName = node?.Name ?? string.Empty,
-                LevelRequirement = node?.LevelRequirement ?? 0,
+                Region = node?.Region.ToString() ?? worldZone?.RegionName ?? string.Empty,
+                NodeName = node?.Name ?? worldZone?.Name ?? string.Empty,
+                LevelRequirement = node?.LevelRequirement ?? worldZone?.LevelRequirement ?? 0,
                 WorldZoneId = boss.WorldZoneId,
                 TrailEncounterTemplateId = boss.TrailEncounterTemplateId,
                 CanFight = canFight,

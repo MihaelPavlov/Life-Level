@@ -46,4 +46,22 @@ void main() {
     expect(_boss(activated: true, expired: true).needsAttention, isFalse);
     expect(_boss(activated: true, defeated: true).needsAttention, isFalse);
   });
+
+  test('metadata omits invalid rollout fallback values', () {
+    final missing = BossListItem.fromJson({
+      'id': 'world-boss',
+      'name': 'Forest Warden',
+      'icon': '',
+      'maxHp': 1000,
+      'rewardXp': 100,
+      'timerDays': 0,
+      'region': '',
+      'levelRequirement': 0,
+    });
+
+    expect(missing.metadataLabel, isEmpty);
+    expect(missing.hasTimeLimit, isFalse);
+    expect(_boss().metadataLabel, 'Whispering Woods · Lvl 5');
+    expect(_boss().hasTimeLimit, isTrue);
+  });
 }

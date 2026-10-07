@@ -17,6 +17,14 @@ void main() {
     expect(ActivityType.climbing.adventureDistanceMultiplier, 0);
   });
 
+  test('string activity previews use Adventure km multipliers', () {
+    expect(previewAdventureDistanceKm('Walking', 5.1), 5.1);
+    expect(previewAdventureDistanceKm('Cycling', 11.8), 2.95);
+    expect(previewAdventureDistanceKm('Swimming', 2), 8);
+    expect(previewAdventureDistanceKm('Gym', 10), 0);
+    expect(previewAdventureDistanceKm('Unknown', 10), 0);
+  });
+
   test('manual result parses Adventure km and supports an older response', () {
     Map<String, dynamic> response([Map<String, dynamic> extra = const {}]) => {
           'activityId': 'activity-1',

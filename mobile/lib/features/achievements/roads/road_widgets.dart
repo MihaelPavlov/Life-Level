@@ -699,6 +699,16 @@ class _StageCardState extends State<StageCard> with TickerProviderStateMixin {
                     : t < .85
                         ? 6 * math.sin((t - .55) / .3 * math.pi)
                         : 0.0;
+        // …tilting from its base: −6° on the big hop, +4° on the small one.
+        final hopTilt = !ready || !_loop.isAnimating
+            ? 0.0
+            : t < .3
+                ? -6 * math.sin(t / .3 * math.pi / 2)
+                : t < .55
+                    ? -6 * math.cos((t - .3) / .25 * math.pi / 2)
+                    : t < .85
+                        ? 4 * math.sin((t - .55) / .3 * math.pi)
+                        : 0.0;
         // rrWiggle: rotate −9°, +8°, −5°, +3° over 0.7 s.
         final n = _nudge.value;
         final wiggling = _nudge.isAnimating;
@@ -771,7 +781,7 @@ class _StageCardState extends State<StageCard> with TickerProviderStateMixin {
                     offset:
                         _dropOffset(_drop.value) + Offset(0, -hop - 4 * flash),
                     child: Transform.rotate(
-                      angle: wiggle,
+                      angle: wiggle + hopTilt * math.pi / 180,
                       alignment: Alignment.bottomCenter,
                       child: FxAnchorTarget(
                         anchor: widget.chestAnchor,

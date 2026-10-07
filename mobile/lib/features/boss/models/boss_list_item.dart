@@ -87,6 +87,8 @@ class BossListItem {
     return diff.isNegative ? Duration.zero : diff;
   }
 
+  bool get hasTimeLimit => timerExpiresAt != null || timerDays > 0;
+
   String get regionDisplay {
     // "ForestOfEndurance" → "Forest of Endurance"
     return region.replaceAllMapped(
@@ -94,6 +96,13 @@ class BossListItem {
       (m) => '${m[1]} ${m[2]}',
     );
   }
+
+  /// Safe metadata for mixed mobile/backend rollout. Older API responses for
+  /// world-zone bosses can have an empty region and level zero.
+  String get metadataLabel => [
+        if (regionDisplay.trim().isNotEmpty) regionDisplay.trim(),
+        if (levelRequirement > 0) 'Lvl $levelRequirement',
+      ].join(' · ');
 
   factory BossListItem.fromJson(Map<String, dynamic> json) => BossListItem(
         id: json['id'],

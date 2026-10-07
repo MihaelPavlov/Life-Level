@@ -291,8 +291,11 @@ void main() {
     final selected = selectJourneyBoss([defeated, distant], world);
     expect(selected, isNull);
     expect(_resolve(world, boss: selected).kind, JourneyKind.dungeon);
-    expect(selectJourneyBoss([defeated, distant],
-        _world(zones: [_zone('old-boss', 'boss')], currentZoneId: 'old-boss')),
+    expect(
+        selectJourneyBoss(
+            [defeated, distant],
+            _world(
+                zones: [_zone('old-boss', 'boss')], currentZoneId: 'old-boss')),
         distant);
 
     final active = BossListItem.fromJson({
@@ -418,6 +421,16 @@ void main() {
     expect(s.secondaryProgress, 1);
     expect(s.secondaryColor, AppColors.green);
     expect(s.semantics, contains('you at 100%'));
+    expect(bossIdForJourneyOrbAction(s, boss), boss.id);
+
+    const routeState = JourneyOrbState(
+      kind: JourneyKind.traveling,
+      color: AppColors.blue,
+      ring: JourneyRing.progress,
+      label: '1.0 km',
+      semantics: 'Traveling',
+    );
+    expect(bossIdForJourneyOrbAction(routeState, boss), isNull);
   });
 
   test('a blocker fight splits the ring with the player HP', () {

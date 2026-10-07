@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,7 @@ import 'package:life_level/features/character/providers/character_provider.dart'
 import 'package:life_level/features/leaderboard/leaderboard_screen.dart';
 import 'package:life_level/features/leaderboard/models/leaderboard_models.dart';
 import 'package:life_level/features/leaderboard/providers/leaderboard_provider.dart';
+import 'package:life_level/features/leaderboard/services/leaderboard_service.dart';
 import 'package:life_level/features/leaderboard/widgets/leaderboard_widgets.dart';
 
 const _profile = CharacterProfile(
@@ -37,6 +40,24 @@ const _profile = CharacterProfile(
 class _Profile extends CharacterNotifier {
   @override
   Future<CharacterProfile> build() async => _profile;
+}
+
+class _DelayedRefreshLeaderboardService extends LeaderboardService {
+  var boardRequests = 0;
+  final refreshedBoard = Completer<LeaderboardBoard>();
+
+  @override
+  Future<LeaderboardBoard> getBoard(
+      LeaderboardScope scope, LeaderboardMetric metric) {
+    boardRequests++;
+    if (boardRequests > 1) return refreshedBoard.future;
+    return Future.value(LeaderboardBoard.fromJson(
+        _boardJson(scope: scope.name, metric: metric.name, stack: 3)));
+  }
+
+  @override
+  Future<LeaderboardChestOpened> openChest() async =>
+      const LeaderboardChestOpened(coins: 120, gems: 0, passes: []);
 }
 
 Map<String, dynamic> _entry(int rank, String name, double score,
@@ -156,6 +177,34 @@ void main() {
     expect(find.text('×3'), findsOneWidget);
     expect(find.text('▲ You climbed · 3 rewards stacked'), findsOneWidget);
     await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('claim hides the chest while the leaderboard refresh is pending',
+      (tester) async {
+    final service = _DelayedRefreshLeaderboardService();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        characterProfileProvider.overrideWith(_Profile.new),
+        leaderboardServiceProvider.overrideWithValue(service),
+      ],
+      child: const MaterialApp(home: LeaderboardScreen()),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    expect(find.byType(RankUpChestButton), findsOneWidget);
+    expect(find.text('▲ You climbed · 3 rewards stacked'), findsOneWidget);
+
+    await tester.tap(find.byType(RankUpChestButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(service.boardRequests, 2);
+    expect(find.byType(RankUpChestButton), findsNothing);
+    expect(find.text('▲ You climbed · 3 rewards stacked'), findsNothing);
+
+    service.refreshedBoard.complete(LeaderboardBoard.fromJson(_boardJson()));
+    await tester.pump();
   });
 
   testWidgets('switching scope and metric loads that board', (tester) async {

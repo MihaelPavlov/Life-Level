@@ -259,6 +259,27 @@ void main() {
       await tester.pumpAndSettle();
     });
 
+    testWidgets('totals normalized Adventure km instead of raw distance',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await open(
+          tester,
+          PendingWorkoutList(items: [
+            _w('walk', type: 'Walking', km: 5.1),
+            _w('cycle-a', type: 'Cycling', km: 11.8),
+            _w('gym', type: 'Gym', km: null),
+            _w('cycle-b', type: 'Cycling', km: 7.8),
+          ], pendingCount: 4));
+
+      expect(find.text('+10 Adventure km'), findsOneWidget);
+      expect(find.text('+24.7 km'), findsNothing);
+
+      await tester.tap(find.text('Later'));
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('Later closes without importing', (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3;

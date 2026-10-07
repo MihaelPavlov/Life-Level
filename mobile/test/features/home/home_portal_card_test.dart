@@ -208,6 +208,30 @@ void main() {
     expect(find.text('Open map →'), findsNothing);
   });
 
+  testWidgets('unlimited boss never renders zero days left', (tester) async {
+    final boss = BossListItem.fromJson({
+      'id': 'b1',
+      'name': 'Forest Warden',
+      'icon': '👹',
+      'maxHp': 1000,
+      'rewardXp': 500,
+      'timerDays': 0,
+      'canFight': true,
+      'activated': true,
+      'hpDealt': 200,
+    });
+    final zone = _zone(id: 'z1', type: 'entry', name: 'Forest Gate');
+
+    await tester.pumpWidget(_harness(
+      world: _world(zones: [zone], currentZoneId: 'z1'),
+      bosses: [boss],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('⚔️ BOSS RAID · ∞ NO LIMIT'), findsOneWidget);
+    expect(find.textContaining('0d LEFT'), findsNothing);
+  });
+
   testWidgets('shows a simultaneous chest action when world loads after boss',
       (tester) async {
     final chest = _zone(id: 'graveyard', type: 'chest', name: 'The Graveyard');

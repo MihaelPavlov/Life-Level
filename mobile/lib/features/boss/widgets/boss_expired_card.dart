@@ -79,7 +79,11 @@ class BossExpiredCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${boss.regionDisplay} \u00B7 ${boss.isMini ? "Mini Boss" : "Boss"}',
+                        [
+                          if (boss.regionDisplay.trim().isNotEmpty)
+                            boss.regionDisplay.trim(),
+                          boss.isMini ? 'Mini Boss' : 'Boss',
+                        ].join(' · '),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 11,

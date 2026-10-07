@@ -253,7 +253,11 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              '${boss.isMini ? "\u26A1 MINI BOSS" : "\u26A0\uFE0F ELITE BOSS"} \u00B7 ${boss.regionDisplay.toUpperCase()}',
+              [
+                boss.isMini ? '\u26A1 MINI BOSS' : '\u26A0\uFE0F ELITE BOSS',
+                if (boss.regionDisplay.trim().isNotEmpty)
+                  boss.regionDisplay.toUpperCase(),
+              ].join(' \u00B7 '),
               style: const TextStyle(
                 color: AppColors.red,
                 fontSize: 9,

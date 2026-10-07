@@ -32,6 +32,7 @@ import '../../features/home/home_screen.dart';
 import '../../features/home/providers/adventure_hub_status_provider.dart';
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/home/providers/world_progress_provider.dart';
+import '../../features/map/journey/journey_state.dart';
 import '../../features/rewards/rewards_screen.dart';
 import '../../features/gear/gear_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
@@ -305,21 +306,7 @@ class _MainShellState extends ConsumerState<MainShell>
     });
     _bossOverlaySub = BossOverlayNotifier.stream.listen((intent) {
       if (!mounted) return;
-      // Fresh-fetch the boss list so the just-spawned world-zone boss
-      // appears, then flip the existing shell overlay — same surface the
-      // ring-menu boss item opens. `intent.bossId` (when present) tells
-      // BossScreen to auto-open the battle view for that boss.
-      ref.invalidate(bossListProvider);
-      setState(() {
-        _journeyOpen = false;
-        _worldOpen = false;
-        _titlesOpen = false;
-        _bossOpen = true;
-        _guildOpen = false;
-        _seasonOpen = false;
-        _talentsOpen = false;
-        _pendingBossId = intent.bossId;
-      });
+      _openBossOverlay(intent.bossId);
     });
 
     // OAuth deep-link handling — runs for both cold starts and warm resumes.
@@ -855,6 +842,27 @@ class _MainShellState extends ConsumerState<MainShell>
     if (_journeyOpen) WorldZoneRefreshNotifier.notify();
   }
 
+  /// Opens the boss surface without leaving the Journey popover active under
+  /// it. Existing boss data stays visible while a fresh snapshot is fetched.
+  void _openBossOverlay([String? bossId]) {
+    final bossState = ref.read(bossListProvider);
+    setState(() {
+      _journeyOpen = false;
+      _worldOpen = false;
+      _titlesOpen = false;
+      _bossOpen = true;
+      _guildOpen = false;
+      _questsOpen = false;
+      _seasonOpen = false;
+      _talentsOpen = false;
+      _achievementsOpen = false;
+      _pendingBossId = bossId;
+    });
+    if (bossState.hasValue) {
+      unawaited(ref.read(bossListProvider.notifier).refresh());
+    }
+  }
+
   // ── guided unlocks ──────────────────────────────────────────────────────
   /// Nothing is on screen that an unlock ceremony would cover.
   bool _canShowUnlock() =>
@@ -1110,6 +1118,12 @@ class _MainShellState extends ConsumerState<MainShell>
     });
 
     final unlocks = ref.watch(unlocksSnapshotProvider);
+    final orbState = ref.watch(journeyOrbStateProvider);
+    final journeyBoss = selectJourneyBoss(
+      ref.watch(bossListProvider).valueOrNull ?? const [],
+      ref.watch(worldProgressProvider).valueOrNull,
+    );
+    final orbBossId = bossIdForJourneyOrbAction(orbState, journeyBoss);
 
     return UnlockCoordinator(
       canInterrupt: _canShowUnlock,
@@ -1221,6 +1235,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         _seasonOpen = false;
                         _talentsOpen = false;
                         _achievementsOpen = false;
+                        _pendingBossId = null;
                       });
                       if (_navIds[i] == 'home' || _navIds[i] == 'profile') {
                         ref.read(characterProfileProvider.notifier).refresh();
@@ -1235,15 +1250,18 @@ class _MainShellState extends ConsumerState<MainShell>
                 ),
 
                 // ── Map button (raised, mirrors the journey) ────────────────
-                Positioned(
-                  bottom: 34,
-                  left: w / 2 - kMapOrbSize / 2,
-                  child: MapOrbButton(
-                    key: _mapNavKey,
-                    open: _journeyOpen,
-                    onTap: _toggleJourney,
+                if (!_bossOpen)
+                  Positioned(
+                    bottom: 34,
+                    left: w / 2 - kMapOrbSize / 2,
+                    child: MapOrbButton(
+                      key: _mapNavKey,
+                      open: _journeyOpen,
+                      onTap: orbBossId != null
+                          ? () => _openBossOverlay(orbBossId)
+                          : _toggleJourney,
+                    ),
                   ),
-                ),
               ],
             ),
           );
@@ -1340,13 +1358,7 @@ class _MainShellState extends ConsumerState<MainShell>
       return;
     }
     if (id == 'boss') {
-      setState(() {
-        _bossOpen = true;
-        _guildOpen = false;
-        _questsOpen = false;
-        _seasonOpen = false;
-        _talentsOpen = false;
-      });
+      _openBossOverlay();
       return;
     }
     if (id == 'guild') {

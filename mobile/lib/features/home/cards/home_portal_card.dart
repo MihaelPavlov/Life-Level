@@ -497,8 +497,11 @@ class _BossRaidPortal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remaining = boss.timeRemaining;
-    final timer =
-        remaining != null ? _fmtDuration(remaining) : '${boss.timerDays}d';
+    final timerStatus = remaining != null
+        ? '${_fmtDuration(remaining)} LEFT'
+        : boss.timerDays > 0
+            ? '${boss.timerDays}d LEFT'
+            : '∞ NO LIMIT';
     final maxHp = boss.maxHp;
     double frac(int hp) => maxHp > 0 ? hp / maxHp : 0.0;
     return BossHitScope(
@@ -510,7 +513,7 @@ class _BossRaidPortal extends StatelessWidget {
       recoil: 8,
       builder: (context, hit, portraitKey) => _HeroShell(
         accent: AppColors.red,
-        label: '⚔️ BOSS RAID · $timer LEFT',
+        label: '⚔️ BOSS RAID · $timerStatus',
         labelColor: AppColors.red,
         title: boss.name,
         sub: 'Raid active. Every workout you log deals damage to ${boss.name}.',

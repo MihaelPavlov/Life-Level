@@ -12,7 +12,12 @@
           "package_name": "com.example.life_level"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "734427785844-rr0cj9hule1q14s3ffokesosll13t8gk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA60sMTUhoOpqQ-jsZfCXa2QE3SbL4e2Q0"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "734427785844-rr0cj9hule1q14s3ffokesosll13t8gk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,20 @@
           "package_name": "com.lifelevel.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "734427785844-cdajoa4gir0d6496mlffqrf1p9fctpqr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lifelevel.app",
+            "certificate_hash": "0ce6db3765231aa7f2825a9cc449fe52909e2574"
+          }
+        },
+        {
+          "client_id": "734427785844-rr0cj9hule1q14s3ffokesosll13t8gk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA60sMTUhoOpqQ-jsZfCXa2QE3SbL4e2Q0"
@@ -39,7 +62,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "734427785844-rr0cj9hule1q14s3ffokesosll13t8gk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

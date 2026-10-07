@@ -264,7 +264,22 @@ features/season/
     season_legend.dart
     season_milestone_card.dart
     season_theme.dart           // per-season accent (ember S1 / teal S2); pending=orange, ready=green universal
+    season_claim_reveal.dart    // full-screen reveal after collecting (see below)
 ```
+
+**Collect reveal** (design: artifact "Season Rewards Collect", claude.ai/artifact/H8nFjMuiJmT4WoNv6WP7af).
+Tapping any ready tile calls `claim-available`, which collects every ready tile. The tiles burst
+on the track, then `showSeasonClaimReveal` opens a full-screen reveal closed by **Continue**
+(it replaced the old auto-dismissing bottom sheet). Each claim result is joined with its tile
+from the pre-claim track for art, label and rarity:
+- **1 reward:** centred reveal with the art, name, rarity chip, and where it went
+  ("… added to your bag").
+- **2–4 rewards:** XP and Season XP totals plus a 2-column card grid.
+- **5+ rewards:** total XP (with level up), a highlighted new title, and compact rows grouped
+  by track.
+
+A level-up turns the button into "Continue to Level N" and plays the level-up overlay after
+the reveal.
 
 Palette from `core/constants/app_colors.dart`; reward art via `AppIconImage` / `ItemIconImage`
 against `AppIcons` keys.

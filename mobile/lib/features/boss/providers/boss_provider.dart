@@ -12,10 +12,13 @@ class BossListNotifier extends AsyncNotifier<List<BossListItem>> {
       ref.watch(bossPageServiceProvider).getAllBosses();
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
+    final previous = state;
+    state = const AsyncValue<List<BossListItem>>.loading()
+        .copyWithPrevious(previous);
+    final refreshed = await AsyncValue.guard(
       () => ref.read(bossPageServiceProvider).getAllBosses(),
     );
+    state = refreshed.hasError && previous.hasValue ? previous : refreshed;
   }
 }
 
