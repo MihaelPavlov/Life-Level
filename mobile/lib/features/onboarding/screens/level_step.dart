@@ -281,10 +281,14 @@ class _LevelStepState extends State<LevelStep> with TickerProviderStateMixin {
                   if ((import?.totalXp ?? 0) > 0)
                     _Gain(
                         icon: AppIcons.rewardXpCrystals,
+                        // The crystal art has more padding; scale it up to
+                        // match the Power icon's footprint.
+                        iconScale: 2.3,
                         text: '${fmtInt(import!.totalXp)} XP',
                         delay: 0),
                   _Gain(
                       icon: AppIcons.homePowerIcon,
+                      iconScale: 1.05,
                       text: '${fmtInt(profile.power)} Power',
                       delay: 110),
                   if (statPoints > 0)
@@ -352,15 +356,22 @@ String _noSkipTitle(double xpProgress) {
 
 class _Gain extends StatelessWidget {
   final String? icon;
+  final double iconScale;
   final String text;
   final int delay;
-  const _Gain({this.icon, required this.text, required this.delay});
+  const _Gain(
+      {this.icon,
+      this.iconScale = AppIconImage.defaultVisualScale,
+      required this.text,
+      required this.delay});
 
   @override
   Widget build(BuildContext context) {
     return Entrance.pop(
       delay: Duration(milliseconds: delay),
       child: Container(
+        // Same height for every chip, with or without an icon.
+        constraints: const BoxConstraints(minHeight: 46),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -371,7 +382,7 @@ class _Gain extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              AppIconImage(icon!, size: 32),
+              AppIconImage(icon!, size: 32, visualScale: iconScale),
               const SizedBox(width: 6),
             ],
             Text(text,
