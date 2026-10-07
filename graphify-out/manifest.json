@@ -6140,8 +6140,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/season_track_screen.dart": {
-    "mtime": 1790867911.9486494,
-    "ast_hash": "f26283f2038625585cf5bb69ac457340",
+    "mtime": 1791400517.2867415,
+    "ast_hash": "135cd66640217371a6bc482fe27b2005",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/services/season_service.dart": {
@@ -7650,8 +7650,8 @@
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Season Track and Founder Pass.md": {
-    "mtime": 1789159719.793926,
-    "ast_hash": "539e5a71ca3f1533d0cb43d40c6d1f07",
+    "mtime": 1791400575.134756,
+    "ast_hash": "60dee571c5750ec83148b1c152380c55",
     "semantic_hash": ""
   },
   "docs/obsidian/07 - Development/Plan - Trail Encounters Random + Admin.md": {
@@ -7720,8 +7720,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1791399889.8024833,
-    "ast_hash": "0edbfd87e32b5ae82bea1694c4fd7140",
+    "mtime": 1791400978.1412528,
+    "ast_hash": "cc10632df3381fc1cbf733d16ad45cb2",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -10909,11 +10909,6 @@
     "ast_hash": "7c2c8151a670f4db425c6f717b121323",
     "semantic_hash": ""
   },
-  "mobile/lib/features/season/widgets/season_reward_sheet.dart": {
-    "mtime": 1790612720.8703861,
-    "ast_hash": "56b6b33c6c389c921335d030387c6bf3",
-    "semantic_hash": ""
-  },
   "mobile/lib/features/shop/models/shop_models.dart": {
     "mtime": 1790087176.8102782,
     "ast_hash": "4cf228698a9db03dcf429a01273d06f3",
@@ -10982,11 +10977,6 @@
   "mobile/test/features/rewards/rewards_screen_test.dart": {
     "mtime": 1791003793.0413022,
     "ast_hash": "436706243d84aaa793f5b3d576d69cef",
-    "semantic_hash": ""
-  },
-  "mobile/test/features/season/season_reward_sheet_test.dart": {
-    "mtime": 1789159720.152928,
-    "ast_hash": "76e55a242beeba9211823908d25cd768",
     "semantic_hash": ""
   },
   "mobile/test/features/season/season_track_screen_test.dart": {
@@ -12070,8 +12060,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/import_step.dart": {
-    "mtime": 1791399889.8020978,
-    "ast_hash": "875fb287d1054834d102c08abe46f79c",
+    "mtime": 1791403417.4552596,
+    "ast_hash": "f56b70c8d608739b777af0e075af258a",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/level_step.dart": {
@@ -13590,8 +13580,18 @@
     "semantic_hash": ""
   },
   "mobile/test/features/onboarding/import_step_test.dart": {
-    "mtime": 1791389733.1587453,
-    "ast_hash": "f0da00a1ba01b8733fc6a808d1d81459",
+    "mtime": 1791403380.933388,
+    "ast_hash": "52529083100164a38e4cbfd444e9a672",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/season/widgets/season_claim_reveal.dart": {
+    "mtime": 1791400506.1147354,
+    "ast_hash": "511275cf865f39c3d9db420710804d4f",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/season/season_claim_reveal_test.dart": {
+    "mtime": 1791400546.9817526,
+    "ast_hash": "eec0f3e7f5732ab0e389994487854402",
     "semantic_hash": ""
   }
 }
