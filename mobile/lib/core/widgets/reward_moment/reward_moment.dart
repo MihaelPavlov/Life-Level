@@ -71,6 +71,13 @@ class RewardMoment {
   RewardMoment._();
 
   static OverlayEntry? _banner;
+  static int _blockingMomentCount = 0;
+
+  /// True while a card or takeover moment is covering the app.
+  ///
+  /// Guided tours and unlock ceremonies use this to wait rather than placing
+  /// their own overlays above level-ups and other blocking reward moments.
+  static bool get isBlockingMomentShowing => _blockingMomentCount > 0;
 
   /// Shows a moment and completes when it has closed.
   ///
@@ -125,36 +132,42 @@ class RewardMoment {
         : _showDialog(context, spec);
   }
 
-  static Future<void> _showDialog(BuildContext context, _Spec spec) {
+  static Future<void> _showDialog(BuildContext context, _Spec spec) async {
     final takeover = spec.size == RewardMomentSize.takeover;
-    return showGeneralDialog<void>(
-      context: context,
-      useRootNavigator: true,
-      barrierDismissible: !takeover,
-      barrierLabel: spec.title,
-      barrierColor:
-          takeover ? Colors.transparent : Colors.black.withValues(alpha: 0.72),
-      transitionDuration: AppMotion.duration(
-          context, const Duration(milliseconds: 240),
-          reduced: const Duration(milliseconds: 120)),
-      pageBuilder: (_, __, ___) => _MomentView(spec: spec),
-      transitionBuilder: (context, animation, _, child) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
-        );
-        final faded = FadeTransition(opacity: curved, child: child);
-        if (!AppMotion.isFull(context)) return faded;
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset(0, takeover ? .02 : .03),
-            end: Offset.zero,
-          ).animate(curved),
-          child: faded,
-        );
-      },
-    );
+    _blockingMomentCount++;
+    try {
+      await showGeneralDialog<void>(
+        context: context,
+        useRootNavigator: true,
+        barrierDismissible: !takeover,
+        barrierLabel: spec.title,
+        barrierColor: takeover
+            ? Colors.transparent
+            : Colors.black.withValues(alpha: 0.72),
+        transitionDuration: AppMotion.duration(
+            context, const Duration(milliseconds: 240),
+            reduced: const Duration(milliseconds: 120)),
+        pageBuilder: (_, __, ___) => _MomentView(spec: spec),
+        transitionBuilder: (context, animation, _, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          final faded = FadeTransition(opacity: curved, child: child);
+          if (!AppMotion.isFull(context)) return faded;
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, takeover ? .02 : .03),
+              end: Offset.zero,
+            ).animate(curved),
+            child: faded,
+          );
+        },
+      );
+    } finally {
+      _blockingMomentCount--;
+    }
   }
 
   static Future<void> _showBanner(

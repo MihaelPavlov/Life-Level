@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/main_shell.dart';
 import '../character/setup/setup_resume_service.dart';
 import '../onboarding/onboarding_flow.dart';
@@ -10,15 +12,21 @@ import 'services/auth_service.dart';
 
 Future<void> finishAuthentication(
     BuildContext context, AuthResult result) async {
+  // ProviderScope lives above the navigator, so its user-scoped caches survive
+  // route replacement. Clear them as part of the token swap; otherwise the new
+  // account can briefly render the previous player's wallet/unlock state and
+  // delay its first Home tour until a later refresh.
+  final container = ProviderScope.containerOf(context, listen: false);
   await ApiClient.saveToken(result.token);
+  invalidateUserScopedProvidersFromContainer(container);
   // A new Google or Apple player names their hero before the rest of setup.
   final firstStep =
       result.needsUsername ? SetupStep.username : SetupStep.welcome;
   if (result.isSetupComplete) {
     await SetupResumeService.instance.clear();
   } else {
-    await SetupResumeService.instance.save(
-        SetupResumeState(step: firstStep, ringItems: result.ringItems));
+    await SetupResumeService.instance
+        .save(SetupResumeState(step: firstStep, ringItems: result.ringItems));
   }
   if (!context.mounted) return;
   Navigator.pushAndRemoveUntil(

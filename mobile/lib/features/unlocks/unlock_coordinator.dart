@@ -7,6 +7,7 @@ import '../../core/motion/app_motion.dart';
 import '../../core/services/world_zone_refresh_notifier.dart';
 import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_icon_image.dart';
+import '../../core/widgets/reward_moment/reward_moment.dart';
 import 'models/unlock_catalog.dart';
 import 'models/unlock_models.dart';
 import 'providers/unlocks_provider.dart';
@@ -114,7 +115,10 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
   }
 
   /// Nothing else on screen: no level-up, overlay, sheet or running tour.
-  bool _free() => !FeatureTour.isRunning && widget.canInterrupt();
+  bool _free() =>
+      !FeatureTour.isRunning &&
+      !RewardMoment.isBlockingMomentShowing &&
+      widget.canInterrupt();
 
   /// One moment's unlocks (the server releases at most one level's worth),
   /// strictly one after the other: ceremony 1 of 2, its tour if Show me was
@@ -141,8 +145,7 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
       await _revealTarget(queue[i].key);
       if (!mounted) return;
       if (i > 0) {
-        await showUnlockBridge(context, queue[i],
-            remaining: queue.length - i);
+        await showUnlockBridge(context, queue[i], remaining: queue.length - i);
         if (!mounted) return;
       }
       await _ceremony(queue[i], queue, i);
@@ -157,13 +160,14 @@ class _UnlockCoordinatorState extends ConsumerState<UnlockCoordinator> {
     }
   }
 
-  Future<void> _ceremony(UnlockMeta meta, List<UnlockMeta> queue, int index) async {
+  Future<void> _ceremony(
+      UnlockMeta meta, List<UnlockMeta> queue, int index) async {
     final notifier = ref.read(unlocksProvider.notifier);
     unlockCeremonyShowing = true;
     bool showMe;
     try {
-      showMe = await showUnlockCeremony(context, meta,
-          queue: queue, index: index);
+      showMe =
+          await showUnlockCeremony(context, meta, queue: queue, index: index);
     } finally {
       unlockCeremonyShowing = false;
     }

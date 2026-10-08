@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/reward_moment/reward_moment.dart';
 import '../../character/providers/character_provider.dart';
 import '../models/unlock_catalog.dart';
 import '../providers/unlocks_provider.dart';
@@ -83,7 +84,9 @@ class _TourOnFirstVisitState extends ConsumerState<TourOnFirstVisit> {
 
   Future<void> _maybeRun() async {
     if (!mounted || _tried) return;
-    if (unlockCeremonyShowing || FeatureTour.isRunning) {
+    if (unlockCeremonyShowing ||
+        FeatureTour.isRunning ||
+        RewardMoment.isBlockingMomentShowing) {
       Future<void>.delayed(const Duration(milliseconds: 600), _maybeRun);
       return;
     }

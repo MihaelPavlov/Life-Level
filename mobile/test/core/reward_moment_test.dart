@@ -67,6 +67,7 @@ void main() {
           onPrimary: () => claimed = true,
         ),
       );
+      expect(RewardMoment.isBlockingMomentShowing, isTrue);
       expect(find.text('CHEST OPENED'), findsOneWidget);
       expect(find.text('Thornwood Cache'), findsOneWidget);
       // Values count up and settle on the real amounts.
@@ -77,6 +78,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Thornwood Cache'), findsNothing);
       expect(claimed, isTrue);
+      expect(RewardMoment.isBlockingMomentShowing, isFalse);
     });
 
     testWidgets('claimed rewards fly to a visible HUD target', (tester) async {
@@ -157,6 +159,7 @@ void main() {
         ),
         banner: true,
       );
+      expect(RewardMoment.isBlockingMomentShowing, isFalse);
       expect(find.text('Floor 2 of 3 cleared'), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
