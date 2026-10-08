@@ -67,10 +67,16 @@ class OnboardingController extends ChangeNotifier {
 
   /// Back from a step. Steps after the import can't undo it, so they return
   /// to the class choice at most.
+  /// "Log by hand" jumps from Connect straight to the class picker with
+  /// nothing imported, so that path can step back to pick a source again.
+  bool get canLeaveClassStep => source == null && _resume.importJson == null;
+
   void back() {
     switch (step) {
       case SetupStep.connect:
         goTo(SetupStep.welcome);
+      case SetupStep.classReveal:
+        if (canLeaveClassStep) goTo(SetupStep.connect);
       case SetupStep.avatar:
         goTo(SetupStep.classReveal);
       case SetupStep.map:
@@ -168,6 +174,11 @@ class OnboardingController extends ChangeNotifier {
 
   /// Saves class + avatar and ends onboarding.
   Future<void> completeSetup() async {
+    // The recommendation lives in memory only. After a reload that resumes
+    // past the Class step it's gone, though the chosen class id was saved.
+    if (recommendation == null && _resume.classId != null) {
+      await loadRecommendation();
+    }
     final cls = chosenClass;
     final avatar = avatarEmoji;
     if (cls == null || avatar == null) {

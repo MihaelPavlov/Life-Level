@@ -98,6 +98,7 @@ class _ClassStepState extends State<ClassStep> {
       key: _shaker,
       child: OnboardingScaffold(
         step: 3,
+        onBack: ctrl.canLeaveClassStep ? ctrl.back : null,
         glow: color,
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
         body: Stack(

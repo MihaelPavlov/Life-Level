@@ -46,7 +46,10 @@ class _Plan {
       reachIndex + 1 < trail.length ? trail[reachIndex + 1] : null;
   bool get blocked =>
       reachIndex > 0 &&
-      (target.isChest || target.isDungeon || target.isBoss || target.isCrossroads);
+      (target.isChest ||
+          target.isDungeon ||
+          target.isBoss ||
+          target.isCrossroads);
   double get left => banked - walkedKm;
 
   /// Km shown on the counters at fractional stop [progress].
@@ -84,8 +87,7 @@ class _Timeline {
     final start = <double>[0], arrive = <double>[0];
     var t = firstMove;
     for (var i = 1; i <= plan.reachIndex; i++) {
-      final move =
-          (600 + 400 * plan.trail[i].distanceKm).clamp(1000.0, 1800.0);
+      final move = (600 + 400 * plan.trail[i].distanceKm).clamp(1000.0, 1800.0);
       start.add(t);
       arrive.add(t + move);
       t += move + hold;
@@ -211,9 +213,9 @@ class _Cam {
         a.z + (b.z - a.z) * f - .15 * math.sin(math.pi * f),
       );
 
-  Matrix4 matrix(Offset focus) => Matrix4.translationValues(
-      focus.dx - z * c.dx, focus.dy - z * c.dy, 0)
-    ..multiply(Matrix4.diagonal3Values(z, z, 1));
+  Matrix4 matrix(Offset focus) =>
+      Matrix4.translationValues(focus.dx - z * c.dx, focus.dy - z * c.dy, 0)
+        ..multiply(Matrix4.diagonal3Values(z, z, 1));
 
   Offset project(Offset p, Offset focus) => focus + (p - c) * z;
 }
@@ -227,7 +229,7 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
   late final _pulse = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 1600));
   late final _exit = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 900));
+      vsync: this, duration: const Duration(milliseconds: 1000));
 
   _Plan? _plan;
   _Timeline? _tl;
@@ -337,7 +339,8 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
         }
       }
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('MapStep: saving the hero failed: $e\n$st');
       return false;
     }
   }
@@ -347,18 +350,19 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
     final ctrl = OnboardingScope.read(context);
     final motion = onboardingMotion(context);
     setState(() => _saving = true);
-    if (motion) {
-      _exit.animateTo(.5, duration: const Duration(milliseconds: 450));
-    }
+    // One uninterrupted zoom-and-fade while the save runs alongside it; if the
+    // save is slower, the screen simply holds on black until it lands.
+    final exit = motion ? _exit.forward(from: 0) : null;
     final ok = await _save();
     if (!mounted) return;
     if (!ok) {
+      _exit.stop();
       _exit.animateBack(0, duration: const Duration(milliseconds: 300));
       setState(() => _saving = false);
       AppToast.error(context, 'Couldn\'t save your hero. Try again.');
       return;
     }
-    if (motion) await _exit.animateTo(1);
+    if (exit != null) await exit;
     if (!mounted) return;
     final cls = ctrl.chosenClass;
     final devoted = ctrl.recommendation?.traitKey != null &&
@@ -386,8 +390,7 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
       backgroundColor: AppColors.background,
       body: LayoutBuilder(builder: (context, box) {
         final plan = _plan;
-        final stage =
-            _Stage(box.biggest, plan == null ? 1 : plan.trail.length);
+        final stage = _Stage(box.biggest, plan == null ? 1 : plan.trail.length);
         return AnimatedBuilder(
           animation: Listenable.merge([_t, _pulse, _exit]),
           builder: (context, _) {
@@ -395,12 +398,13 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
             final tl = _tl;
             final cam = _camera(stage, tl, ms);
             final ex = _ease(_exit.value);
-            final uiO = 1 - _cl(_exit.value * 2.5);
+            final uiO = 1 - _ease(_exit.value / .35);
             final exitTarget = plan == null
                 ? stage.focus
                 : cam.project(
                     plan.reachIndex > 0
-                        ? stage.points[math.min(plan.reachIndex, stage.count - 1)]
+                        ? stage
+                            .points[math.min(plan.reachIndex, stage.count - 1)]
                         : (stage.count > 1 ? stage.points[1] : stage.points[0]),
                     stage.focus);
             final ctaO = plan == null
@@ -435,7 +439,7 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
                 // Keep the header and panel readable while zoomed in.
                 IgnorePointer(
                   child: Opacity(
-                    opacity: _cl((cam.z - 1) / .5),
+                    opacity: _cl((cam.z - 1) / .5) * uiO,
                     child: const Column(
                       children: [
                         _Scrim(height: 240, top: true),
@@ -457,7 +461,8 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
                             left: 20,
                             top: pad.top + 12,
                             child: Opacity(
-                              opacity: plan == null ? 1 : _out((ms - 200) / 300),
+                              opacity:
+                                  plan == null ? 1 : _out((ms - 200) / 300),
                               child: OnboardingBackButton(onTap: ctrl.back),
                             ),
                           ),
@@ -492,10 +497,15 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
                                   opacity: ctaO,
                                   child: Transform.translate(
                                     offset: Offset(0, 12 * (1 - ctaO)),
-                                    child: _EnterButton(
-                                      busy: _saving,
-                                      pulse: _pulse.value,
-                                      onPressed: ctaO > .5 ? _enter : null,
+                                    // On exit the button swells and glows out
+                                    // with the UI instead of just shrinking.
+                                    child: Transform.scale(
+                                      scale: 1 + .06 * _out(_exit.value / .35),
+                                      child: _EnterButton(
+                                        busy: _saving && _exit.value == 0,
+                                        pulse: _pulse.value,
+                                        onPressed: ctaO > .5 ? _enter : null,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -519,12 +529,12 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
                 // Exit: fade to black.
                 IgnorePointer(
                   child: Opacity(
-                    opacity: _cl((_exit.value - .5) / .3),
+                    opacity: _ease((_exit.value - .5) / .35),
                     child: Container(
                       color: AppColors.background,
                       alignment: Alignment.center,
                       child: Opacity(
-                        opacity: _cl((_exit.value - .7) / .25),
+                        opacity: _out((_exit.value - .7) / .25),
                         child: const Text(
                           'ENTERING THE WORLD',
                           style: TextStyle(
@@ -553,8 +563,7 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
     final wide = _Cam(stage.focus, 1);
     final plan = _plan;
     if (tl == null || plan == null) return wide;
-    _Cam at(int i) =>
-        i == 0 ? wide : _Cam(stage.points[i], stage.zoomFor(i));
+    _Cam at(int i) => i == 0 ? wide : _Cam(stage.points[i], stage.zoomFor(i));
 
     if (tl.reach == 0) {
       if (stage.count < 2) return wide;
@@ -728,7 +737,9 @@ class _Scene extends StatelessWidget {
                 ?.position ??
             stage.points[i];
     var node = stage.nodeSize(i) + (stage.nodeSize(j) - stage.nodeSize(i)) * f;
-    if (i == tl.reach && plan.blocked) node *= 1 + .12 * _back(tl.arrival(i, ms));
+    if (i == tl.reach && plan.blocked) {
+      node *= 1 + .12 * _back(tl.arrival(i, ms));
+    }
     // 1 while resting on a stop, 0 halfway between two.
     final rest = 1 - math.sin(math.pi * f);
     final c = tip + Offset(node * .42, node * .42) * rest;
@@ -791,7 +802,10 @@ class _Scene extends StatelessWidget {
                   : AppColors.border;
       ringW = next ? 2 : 1.5;
       glow = next
-          ? [BoxShadow(color: AppColors.blue.withValues(alpha: .3), blurRadius: 20)]
+          ? [
+              BoxShadow(
+                  color: AppColors.blue.withValues(alpha: .3), blurRadius: 20)
+            ]
           : null;
       scale = 1;
     }
@@ -927,13 +941,52 @@ String? _stopIcon(_Plan plan, int i) {
         regionTheme: plan.region.theme, regionName: plan.region.name);
   }
   const byKeyword = <String, List<String>>{
-    AppIcons.zoneAshfieldPlains: ['camp', 'plain', 'field', 'meadow', 'valley', 'road', 'glade'],
-    AppIcons.zoneFinalApproach: ['forge', 'gate', 'approach', 'keep', 'fort', 'tower', 'hall', 'temple'],
-    AppIcons.zoneIronPeaks: ['peak', 'mountain', 'ridge', 'cliff', 'summit', 'pass', 'rock'],
+    AppIcons.zoneAshfieldPlains: [
+      'camp',
+      'plain',
+      'field',
+      'meadow',
+      'valley',
+      'road',
+      'glade'
+    ],
+    AppIcons.zoneFinalApproach: [
+      'forge',
+      'gate',
+      'approach',
+      'keep',
+      'fort',
+      'tower',
+      'hall',
+      'temple'
+    ],
+    AppIcons.zoneIronPeaks: [
+      'peak',
+      'mountain',
+      'ridge',
+      'cliff',
+      'summit',
+      'pass',
+      'rock'
+    ],
     AppIcons.zoneFrostboundPeaks: ['frost', 'ice', 'snow', 'glacier', 'tundra'],
-    AppIcons.zoneCoralCoast: ['coast', 'reef', 'shore', 'tide', 'current', 'bay'],
+    AppIcons.zoneCoralCoast: [
+      'coast',
+      'reef',
+      'shore',
+      'tide',
+      'current',
+      'bay'
+    ],
     AppIcons.zoneDesertOfTrials: ['desert', 'dune', 'sand', 'mirage'],
-    AppIcons.zoneThornwoodForest: ['pine', 'wood', 'forest', 'grove', 'tree', 'thorn'],
+    AppIcons.zoneThornwoodForest: [
+      'pine',
+      'wood',
+      'forest',
+      'grove',
+      'tree',
+      'thorn'
+    ],
   };
   final name = node.name.toLowerCase();
   String? icon;
@@ -1199,7 +1252,8 @@ class _AvatarDisc extends StatelessWidget {
   final String? asset;
   final double ring;
   final bool glow;
-  const _AvatarDisc({required this.asset, required this.ring, this.glow = false});
+  const _AvatarDisc(
+      {required this.asset, required this.ring, this.glow = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1341,7 +1395,11 @@ class _RoadPainter extends CustomPainter {
                 Colors.white,
                 const Color(0xFF7EE787),
                 AppColors.green.withValues(alpha: 0),
-              ], [0, .3, 1]),
+              ], [
+                0,
+                .3,
+                1
+              ]),
           );
         }
       }
@@ -1501,7 +1559,8 @@ class _ChapterHeader extends StatelessWidget {
   final _Plan plan;
   final _Timeline tl;
   final double ms;
-  const _ChapterHeader({required this.plan, required this.tl, required this.ms});
+  const _ChapterHeader(
+      {required this.plan, required this.tl, required this.ms});
 
   static String _roman(int n) {
     const r = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
@@ -1561,7 +1620,9 @@ class _ChapterHeader extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 letterSpacing: spacing,
                 color: AppColors.textPrimary,
-                shadows: const [Shadow(color: Color(0xCC000000), blurRadius: 18)],
+                shadows: const [
+                  Shadow(color: Color(0xCC000000), blurRadius: 18)
+                ],
               ),
             ),
           ),
@@ -1635,7 +1696,8 @@ class _JourneyPanel extends StatelessWidget {
     } else if (tl.reach > 0) {
       final t = plan.target;
       final left = plan.left;
-      final banked = left > .05 ? ' · ${left.toStringAsFixed(1)} km banked' : '';
+      final banked =
+          left > .05 ? ' · ${left.toStringAsFixed(1)} km banked' : '';
       caption =
           '${plan.walkedKm.toStringAsFixed(1)} km walked · ${tl.reach} of $legs stops$banked';
       if (plan.blocked) {
@@ -1653,8 +1715,7 @@ class _JourneyPanel extends StatelessWidget {
           accent = 'Choose your path.';
         }
       } else if (plan.next != null) {
-        final away =
-            (plan.next!.distanceKm - left).clamp(0.0, double.infinity);
+        final away = (plan.next!.distanceKm - left).clamp(0.0, double.infinity);
         lead = 'Next stop: ';
         accent = plan.next!.name;
         trailing = '${away.toStringAsFixed(1)} km';
