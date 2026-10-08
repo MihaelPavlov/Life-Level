@@ -12030,8 +12030,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/onboarding_controller.dart": {
-    "mtime": 1791300651.8868084,
-    "ast_hash": "be984c6a75d9c64e3b3e585f2e0fd06a",
+    "mtime": 1791478279.771967,
+    "ast_hash": "5d900ffa1fe27098156a1c73875253b1",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/onboarding_flow.dart": {
@@ -12050,8 +12050,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/class_step.dart": {
-    "mtime": 1790620906.1501439,
-    "ast_hash": "707bc85c51a3e220ffe72365939644f1",
+    "mtime": 1791478279.8011713,
+    "ast_hash": "5f90c86190e679a94a12921ccbe9c33a",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/connect_step.dart": {
@@ -12070,8 +12070,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/map_step.dart": {
-    "mtime": 1791476727.4415047,
-    "ast_hash": "f5731be9f977b2489e3c60ba3d8e6a05",
+    "mtime": 1791477771.6371105,
+    "ast_hash": "ef6a540777c6147c0634de341e8baec7",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/welcome_step.dart": {
