@@ -7720,8 +7720,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1791400978.1412528,
-    "ast_hash": "cc10632df3381fc1cbf733d16ad45cb2",
+    "mtime": 1791404723.1267598,
+    "ast_hash": "82730b6d90857dd3f3b43e5fc59c77f1",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -12015,8 +12015,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/reward_moment/reward_moment.dart": {
-    "mtime": 1790540561.0833993,
-    "ast_hash": "b3881a22bce7220e1eb2e543b156ea61",
+    "mtime": 1791462237.5318017,
+    "ast_hash": "9ac5e8cd5e4e1f776da0adc93097a488",
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/level_up_receipt.dart": {
@@ -12065,13 +12065,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/level_step.dart": {
-    "mtime": 1791235329.7080436,
-    "ast_hash": "15ee37282dde3fc5c1b14cbff98c3956",
+    "mtime": 1791407358.5460434,
+    "ast_hash": "147c790d428972c966ec991d37c7a77d",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/map_step.dart": {
-    "mtime": 1790620742.3614109,
-    "ast_hash": "3390cb63e24a6964bf2f5771f6ff898d",
+    "mtime": 1791476727.4415047,
+    "ast_hash": "f5731be9f977b2489e3c60ba3d8e6a05",
     "semantic_hash": ""
   },
   "mobile/lib/features/onboarding/screens/welcome_step.dart": {
@@ -12105,8 +12105,8 @@
     "semantic_hash": ""
   },
   "mobile/test/core/reward_moment_test.dart": {
-    "mtime": 1791094686.435462,
-    "ast_hash": "2ad52a31e60342d86899ee62745b1d38",
+    "mtime": 1791462245.6632948,
+    "ast_hash": "80c26e8efde87b720d258985e9c99490",
     "semantic_hash": ""
   },
   "mobile/test/features/gear/gear_stats_resource_info_test.dart": {
@@ -12820,13 +12820,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/unlocks/tour/unlock_tour_runner.dart": {
-    "mtime": 1791038125.4848635,
-    "ast_hash": "605086bb05aaeb8c5b05c1170e5cb1e4",
+    "mtime": 1791462237.6098063,
+    "ast_hash": "761ac123be685643c827b131af3211f2",
     "semantic_hash": ""
   },
   "mobile/lib/features/unlocks/unlock_coordinator.dart": {
-    "mtime": 1791094686.2806091,
-    "ast_hash": "d10708e8a666e8e4d0b8e95f45e2d956",
+    "mtime": 1791462251.79367,
+    "ast_hash": "8f79636e63093e8492aadd7b434f0e18",
     "semantic_hash": ""
   },
   "mobile/lib/features/unlocks/widgets/unlock_badges.dart": {
@@ -13320,8 +13320,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/auth/auth_flow.dart": {
-    "mtime": 1791235322.5032947,
-    "ast_hash": "bc8f1b8cab5f6a543d95c9b9b5d2f598",
+    "mtime": 1791461802.251239,
+    "ast_hash": "d19924cafeef9b1804dcfca497a75108",
     "semantic_hash": ""
   },
   "mobile/lib/features/auth/services/google_sign_in_coordinator.dart": {
