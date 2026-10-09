@@ -429,13 +429,17 @@ public class CharacterService(
     private static IReadOnlyList<T> Deserialize<T>(string json) =>
         JsonSerializer.Deserialize<List<T>>(json) ?? [];
 
-    public async Task SpendStatPointAsync(Guid userId, string stat)
+    public async Task SpendStatPointAsync(Guid userId, string stat, int? expectedAvailablePoints = null)
     {
         var character = await db.Set<CharacterEntity>().FirstOrDefaultAsync(c => c.UserId == userId)
             ?? throw new InvalidOperationException("Character not found.");
 
         if (character.AvailableStatPoints <= 0)
             throw new InvalidOperationException("No available stat points.");
+        if (expectedAvailablePoints is not null &&
+            character.AvailableStatPoints != expectedAvailablePoints)
+            throw new InvalidOperationException(
+                "Stat points changed on another device. Refresh and try again.");
 
         switch (stat.ToUpperInvariant())
         {

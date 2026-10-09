@@ -44,6 +44,13 @@ class RewardMilestone {
         isUnlocked: j['isUnlocked'] as bool? ?? false,
         isClaimed: j['isClaimed'] as bool? ?? false,
       );
+
+  RewardMilestone copyWith({bool? isClaimed}) => RewardMilestone(
+        threshold: threshold,
+        reward: reward,
+        isUnlocked: isUnlocked,
+        isClaimed: isClaimed ?? this.isClaimed,
+      );
 }
 
 class TaskRewardPeriod {
@@ -90,13 +97,24 @@ class TaskRewardPeriod {
 /// parsed; the caller re-fetches the reward center afterward for the
 /// authoritative period state, same as the single-milestone claim already did.
 class MilestoneClaimResult {
+  final String period;
   final int threshold;
   final MilestoneReward reward;
-  const MilestoneClaimResult({required this.threshold, required this.reward});
+  final TaskRewardPeriod updatedPeriod;
+  const MilestoneClaimResult({
+    required this.period,
+    required this.threshold,
+    required this.reward,
+    required this.updatedPeriod,
+  });
   factory MilestoneClaimResult.fromJson(Map<String, dynamic> j) =>
       MilestoneClaimResult(
+        period: j['period'] as String,
         threshold: (j['threshold'] as num).toInt(),
         reward: MilestoneReward.fromJson(j['reward'] as Map<String, dynamic>),
+        updatedPeriod: TaskRewardPeriod.fromJson(
+          j['updatedPeriod'] as Map<String, dynamic>,
+        ),
       );
 }
 

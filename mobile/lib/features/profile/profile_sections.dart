@@ -407,15 +407,12 @@ class _StatTileState extends ConsumerState<_StatTile>
                     border: Border.all(
                         color: AppColors.green.withValues(alpha: .5)),
                   ),
-                  child: _spending
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.green),
-                        )
-                      : const Icon(Icons.add_rounded,
-                          size: 20, color: AppColors.green),
+                  child: Icon(
+                    Icons.add_rounded,
+                    size: 20,
+                    color:
+                        AppColors.green.withValues(alpha: _spending ? .55 : 1),
+                  ),
                 ),
               ),
             ),

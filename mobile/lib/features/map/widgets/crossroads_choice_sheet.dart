@@ -44,10 +44,10 @@ class CrossroadsChoiceSheet extends StatefulWidget {
 }
 
 class _CrossroadsChoiceSheetState extends State<CrossroadsChoiceSheet> {
-  late String? _selectedId = widget.branches
-          .any((b) => b.id == widget.initialSelectedBranchId)
-      ? widget.initialSelectedBranchId
-      : widget.branches.firstOrNull?.id;
+  late String? _selectedId =
+      widget.branches.any((b) => b.id == widget.initialSelectedBranchId)
+          ? widget.initialSelectedBranchId
+          : widget.branches.firstOrNull?.id;
   bool _busy = false;
 
   Future<void> _choose(ZoneNode branch) async {
@@ -64,8 +64,7 @@ class _CrossroadsChoiceSheetState extends State<CrossroadsChoiceSheet> {
   Widget build(BuildContext context) {
     final already = widget.alreadyChosenBranchId != null;
     final branches = widget.branches;
-    final selected =
-        branches.where((b) => b.id == _selectedId).firstOrNull;
+    final selected = branches.where((b) => b.id == _selectedId).firstOrNull;
     final others = branches.where((b) => b.id != _selectedId).toList();
 
     return Container(
@@ -127,8 +126,7 @@ class _CrossroadsChoiceSheetState extends State<CrossroadsChoiceSheet> {
                               branches[i].id == widget.alreadyChosenBranchId,
                           isLocked: already &&
                               branches[i].id != widget.alreadyChosenBranchId,
-                          isSelected:
-                              !already && branches[i].id == _selectedId,
+                          isSelected: !already && branches[i].id == _selectedId,
                           // Before a choice: tapping only selects. After a
                           // choice: the locked sibling is inert, and the
                           // chosen card stays tappable (idempotent) — the
@@ -209,8 +207,7 @@ class _TakePathButton extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [AppColors.green, Color(0xFF2ea043)],
             ),
-            border:
-                Border.all(color: AppColors.green.withValues(alpha: 0.55)),
+            border: Border.all(color: AppColors.green.withValues(alpha: 0.55)),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -220,26 +217,17 @@ class _TakePathButton extends StatelessWidget {
             ],
           ),
           alignment: Alignment.center,
-          child: busy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                ),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
         ),
       ),
     );

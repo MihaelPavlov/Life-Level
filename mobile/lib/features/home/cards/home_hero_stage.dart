@@ -367,20 +367,6 @@ class _HeaderRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Flexible(
-                    child: Text(
-                      p?.username ?? '…',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 7, vertical: 2),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
@@ -58,16 +60,16 @@ class _GuildScreenState extends ConsumerState<GuildScreen> {
   }
 
   Future<void> _create() async {
-    await ref.read(guildProvider.notifier).create(
-          _nameCtrl.text,
-          _descCtrl.text,
-          _icon,
-        );
-    final state = ref.read(guildProvider);
-    state.whenOrNull(
-      data: (_) => _go('home'),
-      error: (e, _) => _showError(e),
-    );
+    try {
+      await ref.read(guildProvider.notifier).create(
+            _nameCtrl.text,
+            _descCtrl.text,
+            _icon,
+          );
+      if (mounted) _go('home');
+    } catch (error) {
+      _showError(error);
+    }
   }
 
   void _startEdit(GuildDetail guild) {
@@ -78,42 +80,48 @@ class _GuildScreenState extends ConsumerState<GuildScreen> {
   }
 
   Future<void> _saveEdit() async {
-    await ref.read(guildProvider.notifier).updateGuild(
-          _editNameCtrl.text,
-          _editDescCtrl.text,
-          _editIcon,
-        );
-    final state = ref.read(guildProvider);
-    state.whenOrNull(
-      data: (_) => _go('home'),
-      error: (e, _) => _showError(e),
-    );
+    try {
+      await ref.read(guildProvider.notifier).updateGuild(
+            _editNameCtrl.text,
+            _editDescCtrl.text,
+            _editIcon,
+          );
+      if (mounted) _go('home');
+    } catch (error) {
+      _showError(error);
+    }
   }
 
   Future<void> _join(String guildId) async {
-    await ref.read(guildProvider.notifier).join(guildId);
-    final state = ref.read(guildProvider);
-    state.whenOrNull(
-      data: (_) => _go('home'),
-      error: (e, _) => _showError(e),
-    );
+    try {
+      await ref.read(guildProvider.notifier).join(guildId);
+      if (mounted) _go('home');
+    } catch (error) {
+      _showError(error);
+    }
   }
 
   Future<void> _startRaid(String bossId) async {
-    await ref.read(guildProvider.notifier).startRaid(bossId);
-    final state = ref.read(guildProvider);
-    state.whenOrNull(
-      data: (_) => _go('raid'),
-      error: (e, _) => _showError(e),
-    );
+    try {
+      await ref.read(guildProvider.notifier).startRaid(bossId);
+      if (mounted) _go('raid');
+    } catch (error) {
+      _showError(error);
+    }
   }
 
   Future<void> _setRole(String guildId, String userId, String role) async {
-    await ref
-        .read(guildProvider.notifier)
-        .updateMemberRole(guildId, userId, role);
-    final state = ref.read(guildProvider);
-    state.whenOrNull(error: (e, _) => _showError(e));
+    try {
+      await ref
+          .read(guildProvider.notifier)
+          .updateMemberRole(guildId, userId, role);
+    } catch (error) {
+      _showError(error);
+    }
+  }
+
+  void _runAction(Future<void> Function() action) {
+    unawaited(action().catchError((Object error) => _showError(error)));
   }
 
   @override
@@ -206,8 +214,8 @@ class _GuildScreenState extends ConsumerState<GuildScreen> {
           key: const ValueKey('members'),
           guild: guild,
           onBack: () => _go('home'),
-          onKick: (userId) =>
-              ref.read(guildProvider.notifier).kick(guild.id, userId),
+          onKick: (userId) => _runAction(
+              () => ref.read(guildProvider.notifier).kick(guild.id, userId)),
           onRoleChanged: (userId, role) => _setRole(guild.id, userId, role),
         ),
       _ => GuildHomeView(
@@ -219,8 +227,10 @@ class _GuildScreenState extends ConsumerState<GuildScreen> {
           onHistory: () => _go('history'),
           onStartRaid: canStartRaid,
           onEdit: guild.canEditGuild ? () => _startEdit(guild) : null,
-          onLeave: () => ref.read(guildProvider.notifier).leave(),
-          onDelete: () => ref.read(guildProvider.notifier).delete(),
+          onLeave: () =>
+              _runAction(() => ref.read(guildProvider.notifier).leave()),
+          onDelete: () =>
+              _runAction(() => ref.read(guildProvider.notifier).delete()),
         ),
     };
   }

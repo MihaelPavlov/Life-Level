@@ -11,6 +11,7 @@ import '../session/invalidate_user_providers.dart';
 import '../session/invalidate_changed_areas.dart';
 import '../services/state_change_notifier.dart';
 import '../services/pending_welcome.dart';
+import '../services/client_experience_service.dart';
 import '../services/oauth_code_guard.dart';
 import '../services/boss_defeated_notifier.dart';
 import '../services/boss_overlay_notifier.dart';
@@ -31,11 +32,14 @@ import '../widgets/inventory_full_overlay.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/home/providers/adventure_hub_status_provider.dart';
 import '../../features/achievements/achievements_screen.dart';
+import '../../features/achievements/providers/achievements_provider.dart';
 import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/map/journey/journey_state.dart';
 import '../../features/rewards/rewards_screen.dart';
+import '../../features/rewards/providers/rewards_provider.dart';
 import '../../features/gear/gear_screen.dart';
 import '../../features/map/screens/world_hub_screen.dart';
+import '../../features/map/models/world_map_models.dart';
 import '../services/nav_tab_notifier.dart';
 import '../services/shell_overlay_notifier.dart';
 import '../services/world_map_notifier.dart';
@@ -44,11 +48,17 @@ import '../../features/integrations/providers/integrations_provider.dart';
 import '../../features/notifications/services/notifications_service.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/leaderboard/leaderboard_screen.dart';
+import '../../features/leaderboard/providers/leaderboard_provider.dart';
+import '../../features/leaderboard/models/leaderboard_models.dart';
+import '../../features/shop/providers/shop_provider.dart';
+import '../../features/talents/providers/talents_provider.dart';
+import '../../features/titles/providers/titles_provider.dart';
 import '../../features/modes/modes_screen.dart';
 import '../../features/modes/burn_chain/burn_chain_provider.dart';
 import '../../features/modes/treasure_delve/delve_provider.dart';
 import '../../features/titles/titles_ranks_screen.dart';
 import '../../features/season/season_track_screen.dart';
+import '../../features/season/providers/season_provider.dart';
 import '../../features/talents/talents_screen.dart';
 import '../../features/boss/screens/boss_screen.dart';
 import '../../features/guild/providers/guild_provider.dart';
@@ -69,9 +79,11 @@ import 'widgets/map_orb_button.dart';
 import 'widgets/shell_tab_bar.dart';
 import '../../features/activity/log_activity_screen.dart';
 import '../../features/map/screens/region_chests_screen.dart';
+import '../../features/map/providers/region_chest_provider.dart';
 import '../../features/sync/providers/pending_workouts_provider.dart';
 import '../../features/sync/pull_import_flow.dart';
 import '../../features/streak/widgets/streak_detail_sheet.dart';
+import '../../features/streak/providers/streak_provider.dart';
 import '../../features/unlocks/models/unlock_catalog.dart';
 import '../../features/unlocks/providers/unlocks_provider.dart';
 import '../../features/unlocks/tour/feature_tour.dart';
@@ -162,6 +174,7 @@ class _MainShellState extends ConsumerState<MainShell>
   @override
   void initState() {
     super.initState();
+    unawaited(_loadRolloutAndPrefetch());
     WidgetsBinding.instance.addObserver(this);
     Connectivity().checkConnectivity().then((results) {
       _wasOffline = results.every((r) => r == ConnectivityResult.none);
@@ -355,6 +368,65 @@ class _MainShellState extends ConsumerState<MainShell>
       _checkPendingGuildRaidExpiries();
       unawaited(_migrateSeenState());
     });
+  }
+
+  Future<void> _loadRolloutAndPrefetch() async {
+    await ClientExperienceService.instance.load();
+    if (!ClientExperienceService.instance
+        .enabled('persistentCache', fallback: false)) {
+      return;
+    }
+    Future<void> warm(Future<Object?> future) async {
+      try {
+        await future;
+      } catch (_) {
+        // Prefetch is best effort; the destination keeps its normal retry UI.
+      }
+    }
+
+    // Warm likely destinations together. The old six sequential batches
+    // allowed users to reach Shop, Talents, or Burn Chain before their turn.
+    final batches = <List<Future<Object?>>>[
+      [
+        ref.read(characterProfileProvider.future),
+        ref.read(worldProgressProvider.future),
+        ref.read(rewardCenterProvider.future),
+        ref.read(streakProvider.future),
+        ref.read(seasonProvider.future),
+        ref.read(currentRegionDetailProvider.future),
+        ref.read(shopProvider.future),
+        ref.read(talentsProvider.future),
+        ref.read(burnChainProvider.future),
+      ],
+      [
+        ref.read(equipmentProvider.future),
+        ref.read(achievementRoadsProvider.future),
+        ref.read(regionChestsProvider.future),
+        ref.read(guildProvider.future),
+        _prefetchActiveDungeon(),
+        ref.read(titlesProvider.future),
+        ref.read(leaderboardProvider(
+            (LeaderboardScope.global, LeaderboardMetric.power)).future),
+        ref.read(leaderboardChestProvider.future),
+      ],
+    ];
+    for (final batch in batches) {
+      await Future.wait([for (final future in batch) warm(future)]);
+      if (!mounted) return;
+    }
+  }
+
+  Future<Object?> _prefetchActiveDungeon() async {
+    final region = await ref.read(currentRegionDetailProvider.future);
+    if (region == null) return null;
+    final dungeon = region.nodes
+        .where((node) =>
+            node.isDungeon &&
+            (node.dungeonStatus == DungeonRunStatus.inProgress ||
+                node.status == ZoneNodeStatus.active))
+        .firstOrNull;
+    if (dungeon == null) return null;
+    return ref.read(dungeonStateProvider(dungeon.id).future);
   }
 
   void _handleDeepLink(Uri uri) {

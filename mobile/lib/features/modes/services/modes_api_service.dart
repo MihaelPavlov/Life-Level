@@ -45,17 +45,26 @@ class DelveApiStatus {
 
 class ModesApiService {
   Future<BurnChainApiState> burnStatus() async {
-    final result =
-        _burn((await ApiClient.instance.get('/modes/burn-chain')).data);
+    final result = _burn(
+        (await ApiClient.cachedGet('/modes/burn-chain', changedArea: 'modes'))
+            .data);
     await _clearLegacyModeState();
     return result;
   }
 
-  Future<BurnChainApiState> startBurn() async =>
-      _burn((await ApiClient.instance.post('/modes/burn-chain/start')).data);
+  Future<BurnChainApiState> startBurn({String? operationId}) async =>
+      _burn((await ApiClient.instance.post('/modes/burn-chain/start',
+              options: operationId == null
+                  ? null
+                  : ApiClient.mutationOptions(operationId)))
+          .data);
 
-  Future<BurnChainApiState> collectBurn() async =>
-      _burn((await ApiClient.instance.post('/modes/burn-chain/collect')).data);
+  Future<BurnChainApiState> collectBurn({String? operationId}) async =>
+      _burn((await ApiClient.instance.post('/modes/burn-chain/collect',
+              options: operationId == null
+                  ? null
+                  : ApiClient.mutationOptions(operationId)))
+          .data);
 
   Future<BurnChainApiState> acknowledgeBurn(int count) async =>
       _burn((await ApiClient.instance

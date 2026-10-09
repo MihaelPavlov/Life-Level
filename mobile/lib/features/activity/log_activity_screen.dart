@@ -2,22 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
-import '../../core/widgets/app_toast.dart';
-import '../../core/services/dungeon_floor_cleared_notifier.dart';
-import '../../core/services/guild_raid_victory_notifier.dart';
-import '../../core/services/level_up_notifier.dart';
-import '../../core/services/inventory_full_notifier.dart';
-import '../../core/services/world_zone_refresh_notifier.dart';
-import '../../core/session/invalidate_user_providers.dart';
-import '../boss/replay/home_boss_replay.dart';
+import '../../core/api/api_client.dart';
 import '../../core/widgets/app_icon_image.dart';
 import 'activity_result_sheet.dart';
 import 'models/activity_models.dart';
-import 'providers/activity_provider.dart';
-import '../map/widgets/encounter_intercept_sheet.dart';
 
 class LogActivityScreen extends ConsumerStatefulWidget {
-  const LogActivityScreen({super.key});
+  final LogActivityRequest? initialRequest;
+  const LogActivityScreen({super.key, this.initialRequest});
 
   @override
   ConsumerState<LogActivityScreen> createState() => _LogActivityScreenState();
@@ -29,6 +21,18 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
   double? _distanceKm;
   int? _calories;
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialRequest;
+    if (initial != null) {
+      _selectedType = initial.type;
+      _durationMinutes = initial.durationMinutes;
+      _distanceKm = initial.distanceKm;
+      _calories = initial.calories;
+    }
+  }
 
   // Activity types whose distance contributes to map movement / dungeon
   // floor targets. Swimming is included — backend already accepts
@@ -169,85 +173,27 @@ class _LogActivityScreenState extends ConsumerState<LogActivityScreen> {
   }
 
   Future<void> _submit() async {
+    if (_submitting) return;
     setState(() => _submitting = true);
-    try {
-      final request = LogActivityRequest(
-        type: _selectedType,
-        durationMinutes: _durationMinutes,
-        distanceKm: _distanceKm,
-        calories: _calories,
-      );
-      final result =
-          await ref.read(activityServiceProvider).logActivity(request);
-
-      invalidateUserScopedProviders(ref);
-
-      WorldZoneRefreshNotifier.notify();
-
-      // Fire level-up overlay if applicable
-      if (result.leveledUp && result.newLevel != null) {
-        LevelUpNotifier.notify(result.newLevel!,
-            unlocks: result.levelUpUnlocks);
-      }
-
-      // Fire inventory-full warning for each item that was blocked
-      for (final blocked in result.blockedItems) {
-        InventoryFullNotifier.notify(blocked);
-      }
-
-      // The boss exchange (hit, counterattack, kill or knock-out) replays on
-      // the Map button once Home is back on screen.
-      requestBossReplay();
-
-      for (final raid in result.guildRaidDefeats) {
-        GuildRaidVictoryNotifier.notify(raid);
-      }
-
-      // Dungeon floor credit → global toast + overlay refresh.
-      if (result.floorCreditResult != null) {
-        final credit = result.floorCreditResult!;
-        DungeonFloorClearedNotifier.notify(DungeonFloorClearedEvent(
-          dungeonName: credit.dungeonName,
-          clearedFloorOrdinal: credit.clearedFloorOrdinal,
-          totalFloors: credit.totalFloors,
-          runCompleted: credit.runCompleted,
-          bonusXpAwarded: credit.bonusXpAwarded,
-        ));
-      }
-
-      if (mounted) {
-        // Capture encounter before pop — widget unmounts during pop animation
-        // so checking `mounted` after any await is unreliable.
-        final encounter = result.activeEncounter;
-        Navigator.pop(context);
-        showAppBottomSheet(
-          context: context,
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
-          builder: (_) => ActivityResultSheet(result: result),
-        );
-        if (encounter != null) {
-          // Show encounter sheet on top of the result sheet synchronously so
-          // the context is still valid (before the pop animation disposes this widget).
-          showAppBottomSheet(
-            context: context,
-            backgroundColor: Colors.transparent,
-            isScrollControlled: true,
-            isDismissible: !encounter.isBlocker,
-            enableDrag: !encounter.isBlocker,
-            builder: (_) => EncounterInterceptSheet(
-              encounter: encounter,
-              destinationZoneName: 'your destination',
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      setState(() => _submitting = false);
-      if (mounted) {
-        AppToast.error(context, 'Failed to log activity: $e');
-      }
-    }
+    final request = LogActivityRequest(
+      type: _selectedType,
+      durationMinutes: _durationMinutes,
+      distanceKm: _distanceKm,
+      calories: _calories,
+    );
+    final operationId = ApiClient.newOperationId();
+    Navigator.pop(context);
+    showAppBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (_) => ActivitySubmissionSheet(
+        request: request,
+        operationId: operationId,
+      ),
+    );
   }
 }
 

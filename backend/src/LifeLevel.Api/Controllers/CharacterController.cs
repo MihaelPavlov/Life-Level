@@ -156,13 +156,17 @@ public class CharacterController(
     }
 
     [HttpPost("spend-stat")]
-    public async Task<IActionResult> SpendStat([FromBody] SpendStatRequest req)
+    public async Task<IActionResult> SpendStat(
+        [FromBody] SpendStatRequest req,
+        CancellationToken ct)
     {
         var userId = userContext.UserId;
         try
         {
-            await characterService.SpendStatPointAsync(userId, req.Stat);
-            return Ok();
+            await characterService.SpendStatPointAsync(
+                userId, req.Stat, req.ExpectedAvailablePoints);
+            var context = await BuildProfileContextAsync(userId, ct);
+            return Ok(await characterService.GetProfileAsync(userId, context));
         }
         catch (InvalidOperationException ex)
         {

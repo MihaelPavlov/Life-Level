@@ -12,6 +12,7 @@ import '../../core/motion/reward_fx.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/item_icon_image.dart';
 import '../../core/widgets/item_obtained_overlay.dart';
+import '../../core/api/api_client.dart';
 import '../character/providers/character_provider.dart';
 import '../items/models/item_models.dart';
 import '../items/providers/items_provider.dart';
@@ -28,6 +29,7 @@ class ShopScreen extends ConsumerStatefulWidget {
 
 class _ShopScreenState extends ConsumerState<ShopScreen> {
   bool busy = false;
+  String? openingChestKey;
   Timer? timer;
 
   /// Item id of the offer just bought — its tile plays the SOLD stamp.
@@ -74,7 +76,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   refresh: _refresh,
                   soldId: _soldId,
                   select: (o) => _offer(shop, o)),
-              _Chests(shop: shop, busy: busy, select: (c) => _chest(shop, c)),
+              _Chests(
+                  shop: shop,
+                  busy: busy,
+                  openingChestKey: openingChestKey,
+                  select: (c) => _chest(shop, c)),
               const _ComingSoon(
                   icon: '💎',
                   title: 'Gem Packs',
@@ -113,8 +119,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             currency: offer.currency,
             shop: shop));
     if (yes == true) {
+      final operationId = ApiClient.newOperationId();
       await _purchase(
-          () => ref.read(shopProvider.notifier).buyItem(offer.item.id),
+          () => ref
+              .read(shopProvider.notifier)
+              .buyItem(offer.item.id, operationId: operationId),
           soldItemId: offer.item.id);
     }
   }
@@ -132,8 +141,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             rarity: chest.rarity,
             detail: 'Contains one random unowned ${chest.rarity} gear item.'));
     if (yes == true) {
-      await _purchase(
-          () => ref.read(shopProvider.notifier).buyChest(chest.key));
+      final operationId = ApiClient.newOperationId();
+      setState(() => openingChestKey = chest.key);
+      try {
+        await _purchase(() => ref
+            .read(shopProvider.notifier)
+            .buyChest(chest.key, operationId: operationId));
+      } finally {
+        if (mounted) setState(() => openingChestKey = null);
+      }
     }
   }
 
@@ -141,6 +157,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       {String? soldItemId}) async {
     if (!mounted) return;
     setState(() => busy = true);
+    if (soldItemId != null) _soldId.value = soldItemId;
     try {
       final result = await action();
       ref.invalidate(inventoryProvider);
@@ -148,12 +165,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ref.invalidate(characterProfileProvider);
       ref.invalidate(talentsProvider);
       if (soldItemId != null && mounted && RewardFx.enabled(context)) {
-        // Let the SOLD stamp land before the reward overlay covers it.
-        _soldId.value = soldItemId;
-        await Future.delayed(const Duration(milliseconds: 900));
+        // Let the already-running SOLD stamp land before reward reveal.
+        await Future.delayed(const Duration(milliseconds: 300));
       }
       if (mounted) showItemObtainedOverlay(context, result.grantedItem);
     } catch (e) {
+      if (soldItemId != null) _soldId.value = null;
       if (mounted) AppToast.error(context, e.toString());
       await ref.read(shopProvider.notifier).reload();
     } finally {
@@ -546,8 +563,13 @@ class _Price extends StatelessWidget {
 class _Chests extends StatelessWidget {
   final ShopData shop;
   final bool busy;
+  final String? openingChestKey;
   final ValueChanged<ShopChest> select;
-  const _Chests({required this.shop, required this.busy, required this.select});
+  const _Chests(
+      {required this.shop,
+      required this.busy,
+      required this.openingChestKey,
+      required this.select});
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 26, 16, 0),
@@ -556,66 +578,112 @@ class _Chests extends StatelessWidget {
         const SizedBox(height: 12),
         ...shop.chests.map((c) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _Chest(c, busy, () => select(c))))
+            child: _Chest(c, busy, c.key == openingChestKey, () => select(c))))
       ]));
 }
 
-class _Chest extends StatelessWidget {
+class _Chest extends StatefulWidget {
   final ShopChest chest;
   final bool busy;
+  final bool opening;
   final VoidCallback tap;
-  const _Chest(this.chest, this.busy, this.tap);
+  const _Chest(this.chest, this.busy, this.opening, this.tap);
+
+  @override
+  State<_Chest> createState() => _ChestState();
+}
+
+class _ChestState extends State<_Chest> with SingleTickerProviderStateMixin {
+  late final AnimationController _openingController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 620),
+  );
+  late final Animation<double> _openingScale = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 1, end: .94), weight: 35),
+    TweenSequenceItem(tween: Tween(begin: .94, end: 1.015), weight: 35),
+    TweenSequenceItem(tween: Tween(begin: 1.015, end: 1), weight: 30),
+  ]).animate(CurvedAnimation(
+      parent: _openingController, curve: Curves.easeInOutCubic));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.opening) _openingController.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_Chest oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.opening && !oldWidget.opening) {
+      _openingController.repeat();
+    } else if (!widget.opening && oldWidget.opening) {
+      _openingController
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _openingController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final chest = widget.chest;
     final color = rarityColor(chest.rarity);
-    return Opacity(
-      opacity: chest.canPurchase ? 1 : .62,
-      child: Material(
-        color: const Color(0xFF161E2A),
-        borderRadius: BorderRadius.circular(15),
-        child: InkWell(
-          onTap: chest.canPurchase && !busy ? tap : null,
+    return ScaleTransition(
+      scale: _openingScale,
+      child: Opacity(
+        opacity: chest.canPurchase ? 1 : .62,
+        child: Material(
+          color: const Color(0xFF161E2A),
           borderRadius: BorderRadius.circular(15),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: color.withValues(alpha: .5))),
-            child: Row(children: [
-              Container(
-                  width: 58,
-                  height: 58,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                      gradient: RadialGradient(colors: [
-                        color.withValues(alpha: .28),
-                        color.withValues(alpha: .08),
-                      ]),
-                      borderRadius: BorderRadius.circular(13)),
-                  child: _ChestArt(rarity: chest.rarity, emojiSize: 31)),
-              const SizedBox(width: 11),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(chest.displayName,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14)),
-                    const SizedBox(height: 3),
-                    Text(
-                        '${chest.rarity} · ${chest.remainingItemCount} remaining',
-                        style: TextStyle(
-                            color: color,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700)),
-                  ])),
-              SizedBox(
-                  width: 102,
-                  child: _Price(chest.currency, chest.price,
-                      chest.canPurchase ? null : chest.unavailableReason)),
-            ]),
+          child: InkWell(
+            onTap: chest.canPurchase && !widget.busy ? widget.tap : null,
+            borderRadius: BorderRadius.circular(15),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: color.withValues(alpha: .5))),
+              child: Row(children: [
+                Container(
+                    width: 58,
+                    height: 58,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                        gradient: RadialGradient(colors: [
+                          color.withValues(alpha: .28),
+                          color.withValues(alpha: .08),
+                        ]),
+                        borderRadius: BorderRadius.circular(13)),
+                    child: _ChestArt(rarity: chest.rarity, emojiSize: 31)),
+                const SizedBox(width: 11),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(chest.displayName,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14)),
+                      const SizedBox(height: 3),
+                      Text(
+                          '${chest.rarity} · ${chest.remainingItemCount} remaining',
+                          style: TextStyle(
+                              color: color,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700)),
+                    ])),
+                SizedBox(
+                    width: 102,
+                    child: _Price(chest.currency, chest.price,
+                        chest.canPurchase ? null : chest.unavailableReason)),
+              ]),
+            ),
           ),
         ),
       ),

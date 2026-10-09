@@ -8,6 +8,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/api/api_client.dart';
+import '../../core/services/client_experience_service.dart';
 import '../character/providers/character_provider.dart';
 import 'models/talent_models.dart';
 import 'providers/talents_provider.dart';
@@ -34,7 +36,8 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
   // Draw feedback happens directly on this screen: the highlight jumps
   // from tile to tile until it lands on the drawn talent, then that talent
   // opens gently in the centre.
-  late final AnimationController _sweepCtrl = AnimationController(vsync: this);
+  late final AnimationController _sweepCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 900));
   late final AnimationController _revealCtrl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 800));
   late final Animation<double> _revealAnim =
@@ -121,8 +124,26 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
     if (talents.isEmpty) return;
     setState(() => _busy = true);
     var revealing = false;
+    final operationId = ApiClient.newOperationId();
+    final started = DateTime.now();
     try {
-      final result = await ref.read(talentsProvider.notifier).draw();
+      if (ClientExperienceService.instance.enabled('talents')) {
+        _startAnticipation(talents.length);
+        ClientExperienceService.instance.record(
+            name: 'presentation_started',
+            feature: 'talents',
+            outcome: 'draw',
+            operationId: operationId);
+      }
+      final result = await ref
+          .read(talentsProvider.notifier)
+          .draw(operationId: operationId);
+      ClientExperienceService.instance.record(
+          name: 'mutation_confirmed',
+          feature: 'talents',
+          outcome: 'draw',
+          durationMs: DateTime.now().difference(started).inMilliseconds,
+          operationId: operationId);
       if (!mounted) return;
       final targetIndex = talents.indexWhere((t) => t.key == result.talent.key);
       if (targetIndex != -1) {
@@ -169,6 +190,13 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
         revealing = true;
       }
     } catch (e) {
+      _sweepCtrl.stop();
+      ClientExperienceService.instance.record(
+          name: 'mutation_rolled_back',
+          feature: 'talents',
+          outcome: 'draw',
+          durationMs: DateTime.now().difference(started).inMilliseconds,
+          operationId: operationId);
       if (mounted) AppToast.error(context, e.toString());
     } finally {
       if (mounted) {
@@ -187,9 +215,28 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
     }
   }
 
+  void _startAnticipation(int length) {
+    if (length == 0) return;
+    final rng = math.Random();
+    final path = <int>[];
+    for (var i = 0; i < math.max(8, length); i++) {
+      var next = rng.nextInt(length);
+      if (length > 1 && path.isNotEmpty && next == path.last) {
+        next = (next + 1) % length;
+      }
+      path.add(next);
+    }
+    setState(() {
+      _sweepPath = path;
+      _sweepAnim = _sweepCtrl;
+    });
+    _sweepCtrl.repeat();
+  }
+
   /// "Spotlight" spin: the grid dims and a soft spotlight drifts over a
   /// fully random path of tiles, slows down, and settles on `targetIndex`.
   Future<void> _runSweep(int targetIndex, int length) async {
+    _sweepCtrl.stop();
     final rng = math.Random();
     final path = <int>[];
     if (length > 1) {
@@ -207,7 +254,10 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
       }
     }
     path.add(targetIndex);
-    _sweepCtrl.duration = const Duration(milliseconds: 3000);
+    // Anticipation has already been running during the request. Settle
+    // quickly once the authoritative target arrives instead of adding a
+    // second three-second wait after network latency.
+    _sweepCtrl.duration = const Duration(milliseconds: 900);
     setState(() {
       _sweepAnim = _sweepCtrl;
       _sweepPath = path;

@@ -154,7 +154,13 @@ class _Intro extends ConsumerWidget {
         const SizedBox(height: 12),
         ModeCta.burn(
           label: 'START 24H CHAIN',
-          onTap: () => ref.read(burnChainProvider.notifier).start(),
+          onTap: () async {
+            try {
+              await ref.read(burnChainProvider.notifier).start();
+            } catch (error) {
+              if (context.mounted) AppToast.error(context, error.toString());
+            }
+          },
         ),
         const SizedBox(height: 8),
         const Text(
@@ -605,15 +611,19 @@ class _Ended extends ConsumerWidget {
               ? 'Collect ${modeFmt(chain.totalCoins)} coins'
               : 'Close chain',
           onTap: () async {
-            await ref.read(burnChainProvider.notifier).collect();
-            if (context.mounted && chain.totalCoins > 0) {
-              AppToast.show(
-                context,
-                'Chain collected',
-                detail: chain.talentCrystals > 0
-                    ? '+${modeFmt(chain.totalCoins)} coins · +${chain.talentCrystals} Talent Crystal${chain.talentCrystals == 1 ? '' : 's'}'
-                    : '+${modeFmt(chain.totalCoins)} coins',
-              );
+            try {
+              await ref.read(burnChainProvider.notifier).collect();
+              if (context.mounted && chain.totalCoins > 0) {
+                AppToast.show(
+                  context,
+                  'Chain collected',
+                  detail: chain.talentCrystals > 0
+                      ? '+${modeFmt(chain.totalCoins)} coins · +${chain.talentCrystals} Talent Crystal${chain.talentCrystals == 1 ? '' : 's'}'
+                      : '+${modeFmt(chain.totalCoins)} coins',
+                );
+              }
+            } catch (error) {
+              if (context.mounted) AppToast.error(context, error.toString());
             }
           },
         ),

@@ -50,6 +50,7 @@ public partial class AppDbContext(
     ILogger<AppDbContext>? stateChangeLogger = null) : DbContext(options)
 {
     public DbSet<MaintenanceRun> MaintenanceRuns => Set<MaintenanceRun>();
+    public DbSet<IdempotencyReceipt> IdempotencyReceipts => Set<IdempotencyReceipt>();
     // Identity
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRingItem> UserRingItems => Set<UserRingItem>();
@@ -179,6 +180,15 @@ public partial class AppDbContext(
         {
             entity.HasKey(x => new { x.Name, x.CompletedForUtcDate });
             entity.Property(x => x.Name).HasMaxLength(80);
+        });
+        modelBuilder.Entity<IdempotencyReceipt>(entity =>
+        {
+            entity.ToTable("IdempotencyReceipts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Scope).HasMaxLength(300);
+            entity.Property(x => x.ContentType).HasMaxLength(200);
+            entity.HasIndex(x => new { x.UserId, x.Scope, x.OperationId }).IsUnique();
+            entity.HasIndex(x => x.ExpiresAt);
         });
         // ── Per-module EF configurations ──────────────────────────────────────────
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityModule).Assembly);

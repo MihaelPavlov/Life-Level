@@ -779,25 +779,17 @@ class _MilestoneNodeState extends State<_MilestoneNode>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (claiming)
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.blue),
-                        )
-                      else
-                        Opacity(
-                          opacity: milestone.isClaimed || claimable ? 1 : .45,
-                          child: AppIconImage(
-                            _rewardIcon(reward),
-                            size: 24,
-                            visualScale:
-                                _rewardIcon(reward) == AppIcons.rewardXpCrystals
-                                    ? 2.65
-                                    : 1.25,
-                          ),
+                      Opacity(
+                        opacity: milestone.isClaimed || claimable ? 1 : .45,
+                        child: AppIconImage(
+                          _rewardIcon(reward),
+                          size: 24,
+                          visualScale:
+                              _rewardIcon(reward) == AppIcons.rewardXpCrystals
+                                  ? 2.65
+                                  : 1.25,
                         ),
+                      ),
                       Positioned(
                         left: 2,
                         right: 2,
@@ -933,8 +925,7 @@ class _TaskRowState extends State<_TaskRow> with TickerProviderStateMixin {
     ..addListener(() => setState(() {}));
 
   // "The bar is the button": a finished, unclaimed task's progress bar turns
-  // into moving stripes that say TAP TO CLAIM. Drives the stripe scroll and,
-  // while the claim request runs, a light sweep along the bar.
+  // into moving stripes that say TAP TO CLAIM.
   late final AnimationController _stripes = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 900));
 
@@ -1040,7 +1031,7 @@ class _TaskRowState extends State<_TaskRow> with TickerProviderStateMixin {
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             if (ready)
-              _ClaimBar(stripes: _stripes, claiming: claiming)
+              _ClaimBar(stripes: _stripes)
             else
               ClipRRect(
                 borderRadius: BorderRadius.circular(5),
@@ -1365,11 +1356,9 @@ class _Spark extends StatelessWidget {
 
 /// Progress bar of a finished task, turned into its own claim button:
 /// taller, green, with diagonal stripes scrolling and a TAP TO CLAIM label.
-/// While the claim request runs a bright sweep loops along it.
 class _ClaimBar extends StatelessWidget {
   final Animation<double> stripes;
-  final bool claiming;
-  const _ClaimBar({required this.stripes, required this.claiming});
+  const _ClaimBar({required this.stripes});
 
   @override
   Widget build(BuildContext context) {
@@ -1390,29 +1379,15 @@ class _ClaimBar extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               CustomPaint(painter: _StripesPainter(stripes.value)),
-              if (claiming)
-                Align(
-                  alignment: Alignment(-1.4 + 2.8 * stripes.value, 0),
-                  child: Container(
-                    width: 60,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(colors: [
-                        Color(0x00FFFFFF),
-                        Color(0xCCFFFFFF),
-                        Color(0x00FFFFFF),
-                      ]),
-                    ),
-                  ),
-                ),
-              Center(
+              const Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AppIconImage(AppIcons.homeCoinIcon, size: 13),
-                    const SizedBox(width: 6),
+                    AppIconImage(AppIcons.homeCoinIcon, size: 13),
+                    SizedBox(width: 6),
                     Text(
-                      claiming ? 'CLAIMING…' : 'TAP TO CLAIM',
-                      style: const TextStyle(
+                      'TAP TO CLAIM',
+                      style: TextStyle(
                         color: Color(0xFF04140A),
                         fontSize: 10,
                         height: 1,

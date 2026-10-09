@@ -53,6 +53,26 @@ class AchievementDto {
   /// Unlocked but its reward not collected yet.
   bool get isReady => isUnlocked && !isClaimed;
 
+  AchievementDto copyWith({bool? isClaimed}) => AchievementDto(
+        id: id,
+        title: title,
+        description: description,
+        icon: icon,
+        category: category,
+        tier: tier,
+        tierColor: tierColor,
+        xpReward: xpReward,
+        targetValue: targetValue,
+        targetUnit: targetUnit,
+        currentValue: currentValue,
+        isUnlocked: isUnlocked,
+        unlockedAt: unlockedAt,
+        seenAt: seenAt,
+        coinReward: coinReward,
+        gemReward: gemReward,
+        isClaimed: isClaimed ?? this.isClaimed,
+      );
+
   factory AchievementDto.fromJson(Map<String, dynamic> json) {
     final tierStr = json['tier'] as String? ?? 'Common';
     return AchievementDto(
@@ -229,6 +249,136 @@ class AchievementRoadsData {
 
   AchievementRoad? road(String category) =>
       roads.where((r) => r.category == category).firstOrNull;
+
+  AchievementRoadsData claimLocally({
+    String? achievementId,
+    String? category,
+  }) {
+    var coins = 0;
+    var gems = 0;
+    var claimedCount = 0;
+    final nextRoads = <AchievementRoad>[];
+    for (final road in roads) {
+      if (category != null && road.category != category) {
+        nextRoads.add(road);
+        continue;
+      }
+      final stages = <AchievementStage>[];
+      var roadClaimed = road.claimed;
+      var roadReady = road.ready;
+      for (final stage in road.stages) {
+        final achievements = <AchievementDto>[];
+        var stageClaimed = stage.claimed;
+        var stageReady = stage.ready;
+        for (final achievement in stage.achievements) {
+          final shouldClaim = achievement.isReady &&
+              (achievementId == null || achievement.id == achievementId);
+          if (shouldClaim) {
+            achievements.add(achievement.copyWith(isClaimed: true));
+            coins += achievement.coinReward;
+            gems += achievement.gemReward;
+            claimedCount++;
+            stageClaimed++;
+            stageReady--;
+            roadClaimed++;
+            roadReady--;
+          } else {
+            achievements.add(achievement);
+          }
+        }
+        stages.add(AchievementStage(
+          tier: stage.tier,
+          chestKey: stage.chestKey,
+          chestName: stage.chestName,
+          chestItemRarity: stage.chestItemRarity,
+          chestCoins: stage.chestCoins,
+          chestGems: stage.chestGems,
+          total: stage.total,
+          unlocked: stage.unlocked,
+          claimed: stageClaimed,
+          ready: stageReady,
+          chestReady: !stage.chestOpened &&
+              stageClaimed == stage.total &&
+              stage.total > 0,
+          chestOpened: stage.chestOpened,
+          achievements: achievements,
+        ));
+      }
+      nextRoads.add(AchievementRoad(
+        category: road.category,
+        total: road.total,
+        claimed: roadClaimed,
+        ready: roadReady,
+        currentStage: road.currentStage,
+        stages: stages,
+      ));
+    }
+    return AchievementRoadsData(
+      wallet: AchievementWallet(
+          coins: wallet.coins + coins, gems: wallet.gems + gems),
+      readyCount: readyCount > claimedCount ? readyCount - claimedCount : 0,
+      chestsReady: nextRoads.fold(0,
+          (sum, road) => sum + road.stages.where((s) => s.chestReady).length),
+      roads: nextRoads,
+    );
+  }
+
+  AchievementRoadsData withWallet(AchievementWallet value) =>
+      AchievementRoadsData(
+        wallet: value,
+        readyCount: readyCount,
+        chestsReady: chestsReady,
+        roads: roads,
+      );
+
+  AchievementRoadsData openChestLocally(StageChestOpenResult result) {
+    final nextRoads = [
+      for (final road in roads)
+        road.category != result.category
+            ? road
+            : AchievementRoad(
+                category: road.category,
+                total: road.total,
+                claimed: road.claimed,
+                ready: road.ready,
+                currentStage: _nextStageIndex(road, result.tier),
+                stages: [
+                  for (final stage in road.stages)
+                    stage.tier != result.tier
+                        ? stage
+                        : AchievementStage(
+                            tier: stage.tier,
+                            chestKey: stage.chestKey,
+                            chestName: stage.chestName,
+                            chestItemRarity: stage.chestItemRarity,
+                            chestCoins: stage.chestCoins,
+                            chestGems: stage.chestGems,
+                            total: stage.total,
+                            unlocked: stage.unlocked,
+                            claimed: stage.claimed,
+                            ready: stage.ready,
+                            chestReady: false,
+                            chestOpened: true,
+                            achievements: stage.achievements,
+                          ),
+                ],
+              ),
+    ];
+    return AchievementRoadsData(
+      wallet: result.wallet,
+      readyCount: readyCount,
+      chestsReady: chestsReady > 0 ? chestsReady - 1 : 0,
+      roads: nextRoads,
+    );
+  }
+
+  static int _nextStageIndex(AchievementRoad road, String openedTier) {
+    final opened = road.stages.indexWhere((stage) => stage.tier == openedTier);
+    for (var i = opened + 1; i < road.stages.length; i++) {
+      if (!road.stages[i].chestOpened) return i;
+    }
+    return -1;
+  }
 
   factory AchievementRoadsData.fromJson(Map<String, dynamic> json) =>
       AchievementRoadsData(

@@ -49,6 +49,24 @@ class StreakData {
 
   bool get canUseShield =>
       shieldsAvailable > 0 && !shieldUsedToday && current > 0;
+
+  StreakData copyWith({
+    int? shieldsAvailable,
+    bool? shieldUsedToday,
+    int? pendingRewardCoins,
+    bool? canClaimDailyReward,
+  }) =>
+      StreakData(
+        current: current,
+        longest: longest,
+        shieldsAvailable: shieldsAvailable ?? this.shieldsAvailable,
+        shieldUsedToday: shieldUsedToday ?? this.shieldUsedToday,
+        lastActivityDate: lastActivityDate,
+        totalDaysActive: totalDaysActive,
+        pendingRewardCoins: pendingRewardCoins ?? this.pendingRewardCoins,
+        canClaimDailyReward: canClaimDailyReward ?? this.canClaimDailyReward,
+        nextRewardCoins: nextRewardCoins,
+      );
 }
 
 class ClaimStreakRewardResult {

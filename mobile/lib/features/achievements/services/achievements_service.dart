@@ -25,7 +25,10 @@ class AchievementsService {
   // ── Reward Roads ──────────────────────────────────────────────────────────
 
   Future<AchievementRoadsData> getRoads() async {
-    final res = await _dio.get('/achievements/roads');
+    final res = await ApiClient.cachedGet(
+      '/achievements/roads',
+      changedArea: 'achievements',
+    );
     return AchievementRoadsData.fromJson(res.data as Map<String, dynamic>);
   }
 

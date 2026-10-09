@@ -45,6 +45,15 @@ class SeasonRewardView {
       );
 
   bool get isClaimable => state == SeasonRewardState.ready;
+
+  SeasonRewardView copyWith({SeasonRewardState? state}) => SeasonRewardView(
+        type: type,
+        label: label,
+        iconKey: iconKey,
+        amount: amount,
+        rarity: rarity,
+        state: state ?? this.state,
+      );
 }
 
 class SeasonTier {
@@ -66,6 +75,19 @@ class SeasonTier {
         free: SeasonRewardView.fromJson(j['free'] as Map<String, dynamic>),
         founder:
             SeasonRewardView.fromJson(j['founder'] as Map<String, dynamic>),
+      );
+
+  SeasonTier markClaimed({String? track}) => SeasonTier(
+        tier: tier,
+        isMilestone: isMilestone,
+        free:
+            (track == null || track.toLowerCase() == 'free') && free.isClaimable
+                ? free.copyWith(state: SeasonRewardState.received)
+                : free,
+        founder: (track == null || track.toLowerCase() == 'founder') &&
+                founder.isClaimable
+            ? founder.copyWith(state: SeasonRewardState.received)
+            : founder,
       );
 }
 
@@ -167,6 +189,26 @@ class SeasonTrack {
 
   double get tierProgress =>
       xpPerTier <= 0 ? 0 : (xpIntoTier / xpPerTier).clamp(0.0, 1.0);
+
+  SeasonTrack markClaimsLocally({int? tier, String? track}) => SeasonTrack(
+        hasActiveSeason: hasActiveSeason,
+        season: season,
+        xpPerTier: xpPerTier,
+        tierCount: tierCount,
+        milestoneTier: milestoneTier,
+        seasonXp: seasonXp,
+        currentTier: currentTier,
+        xpIntoTier: xpIntoTier,
+        xpToNextTier: xpToNextTier,
+        hasFounderPass: hasFounderPass,
+        nextReward: nextReward,
+        tiers: [
+          for (final item in tiers)
+            tier == null || item.tier == tier
+                ? item.markClaimed(track: track)
+                : item,
+        ],
+      );
 }
 
 class SeasonClaimResult {

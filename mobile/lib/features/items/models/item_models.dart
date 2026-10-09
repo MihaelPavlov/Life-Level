@@ -76,6 +76,26 @@ class ItemDto {
         isEquipped: json['isEquipped'] as bool? ?? false,
         category: json['category'] as String? ?? 'Accessory',
       );
+
+  ItemDto copyWith({bool? isEquipped}) => ItemDto(
+        id: id,
+        name: name,
+        description: description,
+        icon: icon,
+        gearImageUrl: gearImageUrl,
+        inventoryIconUrl: inventoryIconUrl,
+        rarity: rarity,
+        slotType: slotType,
+        xpBonusPct: xpBonusPct,
+        strBonus: strBonus,
+        endBonus: endBonus,
+        agiBonus: agiBonus,
+        flxBonus: flxBonus,
+        staBonus: staBonus,
+        characterItemId: characterItemId,
+        isEquipped: isEquipped ?? this.isEquipped,
+        category: category,
+      );
 }
 
 class EquipmentSlotDto {
@@ -163,4 +183,43 @@ class CharacterEquipmentResponse {
 
   EquipmentSlotDto? slotFor(String slotType) =>
       slots.where((s) => s.slotType == slotType).firstOrNull;
+
+  CharacterEquipmentResponse equipLocally(ItemDto item, String slotType) {
+    final equipped = item.copyWith(isEquipped: true);
+    final nextSlots = [
+      for (final slot in slots)
+        slot.slotType == slotType
+            ? EquipmentSlotDto(slotType: slot.slotType, item: equipped)
+            : slot,
+    ];
+    return CharacterEquipmentResponse(
+      slots: nextSlots,
+      totalBonuses: _sumBonuses(nextSlots),
+    );
+  }
+
+  CharacterEquipmentResponse unequipLocally(String slotType) {
+    final nextSlots = [
+      for (final slot in slots)
+        slot.slotType == slotType
+            ? EquipmentSlotDto(slotType: slot.slotType)
+            : slot,
+    ];
+    return CharacterEquipmentResponse(
+      slots: nextSlots,
+      totalBonuses: _sumBonuses(nextSlots),
+    );
+  }
+
+  static GearBonusesDto _sumBonuses(List<EquipmentSlotDto> slots) {
+    final items = slots.map((slot) => slot.item).whereType<ItemDto>();
+    return GearBonusesDto(
+      xpBonusPct: items.fold(0, (sum, item) => sum + item.xpBonusPct),
+      strBonus: items.fold(0, (sum, item) => sum + item.strBonus),
+      endBonus: items.fold(0, (sum, item) => sum + item.endBonus),
+      agiBonus: items.fold(0, (sum, item) => sum + item.agiBonus),
+      flxBonus: items.fold(0, (sum, item) => sum + item.flxBonus),
+      staBonus: items.fold(0, (sum, item) => sum + item.staBonus),
+    );
+  }
 }

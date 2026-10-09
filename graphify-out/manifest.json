@@ -2640,8 +2640,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/CharacterController.cs": {
-    "mtime": 1790619287.1450977,
-    "ast_hash": "1656ebc7717a43c046c6c17394dc6610",
+    "mtime": 1791479632.8838477,
+    "ast_hash": "2f785d5315db6d891495dc3ec0aa2eb5",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/Controllers/ChestController.cs": {
@@ -3665,8 +3665,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Application/DTOs/SpendStatRequest.cs": {
-    "mtime": 1788511408.6456175,
-    "ast_hash": "daa1624dd8132e496ac3e6050a3a18f2",
+    "mtime": 1791479632.7188478,
+    "ast_hash": "b7f20c6297ecf41b33d2e626b44618ef",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Application/DTOs/TitleDtos.cs": {
@@ -3685,8 +3685,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Application/UseCases/CharacterService.cs": {
-    "mtime": 1791038125.480275,
-    "ast_hash": "bea1fdbfb52314d7ef3b4fb82568458a",
+    "mtime": 1791479632.8018477,
+    "ast_hash": "8494ab217764a4b0065825248eebf733",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Character/Application/UseCases/TitleGrantHandler.cs": {
@@ -5285,8 +5285,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/api/api_client.dart": {
-    "mtime": 1791003792.8503513,
-    "ast_hash": "d9d1e2f6174b6b68261d84a68405ba33",
+    "mtime": 1791479376.5815036,
+    "ast_hash": "44d34e217c19c5d284f5b6e9a8d34066",
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/app_colors.dart": {
@@ -5295,7 +5295,7 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/app_icons.dart": {
-    "mtime": 1790799272.688309,
+    "mtime": 1791479610.1878483,
     "ast_hash": "1292b53dd507283d095434501bb0a957",
     "semantic_hash": ""
   },
@@ -5480,7 +5480,7 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/widgets/level_up_overlay.dart": {
-    "mtime": 1791038125.4823322,
+    "mtime": 1791479610.1896896,
     "ast_hash": "6fb29b0464f03c3f2e4ca7087ec02ba9",
     "semantic_hash": ""
   },
@@ -5635,8 +5635,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/character_profile.dart": {
-    "mtime": 1790714641.9305537,
-    "ast_hash": "9f2c0053df4a040270569f0c9076bc2a",
+    "mtime": 1791479447.7076943,
+    "ast_hash": "d7b7c37a02f38a79faf6150c609704f2",
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/character_setup_result.dart": {
@@ -5650,13 +5650,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/character/providers/character_provider.dart": {
-    "mtime": 1790238237.635378,
-    "ast_hash": "ff6f7d36c7b8d35b6de71ca84130815d",
+    "mtime": 1791479645.7768455,
+    "ast_hash": "068e592b893b526ddcf79162aff568a9",
     "semantic_hash": ""
   },
   "mobile/lib/features/character/services/character_service.dart": {
-    "mtime": 1790619887.527547,
-    "ast_hash": "2594802013db32382def9db5b44557cf",
+    "mtime": 1791479632.9668477,
+    "ast_hash": "d6718d980af31aff46bc7983c5b1069b",
     "semantic_hash": ""
   },
   "mobile/lib/features/character/setup/setup_resume_service.dart": {
@@ -6065,8 +6065,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/quests/models/quest_models.dart": {
-    "mtime": 1790229040.6862845,
-    "ast_hash": "e2339bb0fe9c9c8216c4edab4701e646",
+    "mtime": 1791479376.690504,
+    "ast_hash": "e3374064289577f1958d9e87a0ef2096",
     "semantic_hash": ""
   },
   "mobile/lib/features/quests/providers/quest_provider.dart": {
@@ -6130,13 +6130,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/models/season_models.dart": {
-    "mtime": 1790239606.9576993,
-    "ast_hash": "f35ec1025668a4cb87915d1d079c177b",
+    "mtime": 1791479580.1098423,
+    "ast_hash": "4fd0ad6ff63cfae8beceb57c935ef362",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/providers/season_provider.dart": {
-    "mtime": 1790867911.8426487,
-    "ast_hash": "1c37b802612152f8d8d27e20bac0976e",
+    "mtime": 1791479580.1488423,
+    "ast_hash": "284ff61044ae48f9b1adaeb16f074333",
     "semantic_hash": ""
   },
   "mobile/lib/features/season/season_track_screen.dart": {
@@ -6175,13 +6175,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/streak/models/streak_models.dart": {
-    "mtime": 1790241860.868072,
-    "ast_hash": "b9552ac67922ab0b5bc3ecae01e38033",
+    "mtime": 1791479579.418842,
+    "ast_hash": "53b13bf354e9bf54d977993384709e9e",
     "semantic_hash": ""
   },
   "mobile/lib/features/streak/providers/streak_provider.dart": {
-    "mtime": 1791003792.9993124,
-    "ast_hash": "65a36d56d26f38558f97fe91d9e30a9c",
+    "mtime": 1791479539.0138195,
+    "ast_hash": "d60b110b5d42bbb98c855d2867104952",
     "semantic_hash": ""
   },
   "mobile/lib/features/streak/services/streak_service.dart": {
@@ -10875,8 +10875,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_hero_stage.dart": {
-    "mtime": 1791038125.4823322,
-    "ast_hash": "df75a37aaf5eac4f934a3a9744934a0a",
+    "mtime": 1791479365.9517045,
+    "ast_hash": "bc4363b24bc14f3ae6d3042fcb8680e4",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/providers/adventure_hub_status_provider.dart": {
@@ -10890,13 +10890,13 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/models/rewards_models.dart": {
-    "mtime": 1790714642.386552,
-    "ast_hash": "c37d87230ff3cffe5cd60fd0b6316cff",
+    "mtime": 1791479376.7735043,
+    "ast_hash": "40cf18bbaf639510332a1e79604f86e8",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/providers/rewards_provider.dart": {
-    "mtime": 1790714642.4885516,
-    "ast_hash": "11de0c246e515a0b4acde3420748dc38",
+    "mtime": 1791479447.6566942,
+    "ast_hash": "da712590d65b9be0d772b516b73be220",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/rewards_screen.dart": {
@@ -10905,8 +10905,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/services/rewards_service.dart": {
-    "mtime": 1790236940.154869,
-    "ast_hash": "7c2c8151a670f4db425c6f717b121323",
+    "mtime": 1791479376.8725047,
+    "ast_hash": "f532e1ee6df6811f4197bcecb621b3e0",
     "semantic_hash": ""
   },
   "mobile/lib/features/shop/models/shop_models.dart": {
@@ -13230,7 +13230,7 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/session/invalidate_changed_areas.dart": {
-    "mtime": 1791003792.851351,
+    "mtime": 1791479610.189303,
     "ast_hash": "adc6e87fb2e683822bdb9e2a7000488c",
     "semantic_hash": ""
   },
@@ -13585,13 +13585,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/season/widgets/season_claim_reveal.dart": {
-    "mtime": 1791400506.1147354,
+    "mtime": 1791479610.1896896,
     "ast_hash": "511275cf865f39c3d9db420710804d4f",
     "semantic_hash": ""
   },
   "mobile/test/features/season/season_claim_reveal_test.dart": {
     "mtime": 1791400546.9817526,
     "ast_hash": "eec0f3e7f5732ab0e389994487854402",
+    "semantic_hash": ""
+  },
+  "mobile/lib/core/state/optimistic_mutation.dart": {
+    "mtime": 1791479376.4825034,
+    "ast_hash": "6a6643c309f150e088a62fb7fea000e2",
     "semantic_hash": ""
   }
 }

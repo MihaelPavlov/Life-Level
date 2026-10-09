@@ -322,19 +322,10 @@ class _DailyRewardCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: busy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Claim Reward',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
+                  child: const Text(
+                    'Claim Reward',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
             ),
@@ -826,20 +817,10 @@ class _ShieldsCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: busy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      '🛡️ Use Shield',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                    ),
+              child: const Text(
+                '🛡️ Use Shield',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
             ),
           ),
         ],

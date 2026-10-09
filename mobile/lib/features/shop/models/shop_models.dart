@@ -4,6 +4,10 @@ class ShopWallet {
   final int coins;
   final int gems;
   const ShopWallet(this.coins, this.gems);
+  ShopWallet spend(String currency, int amount) => ShopWallet(
+        currency.toLowerCase() == 'coins' ? coins - amount : coins,
+        currency.toLowerCase() == 'gems' ? gems - amount : gems,
+      );
   factory ShopWallet.fromJson(Map<String, dynamic> json) => ShopWallet(
       (json['coins'] as num?)?.toInt() ?? 0,
       (json['gems'] as num?)?.toInt() ?? 0);
@@ -44,6 +48,13 @@ class ShopOffer {
       owned: json['owned'] as bool? ?? false,
       canPurchase: json['canPurchase'] as bool? ?? false,
       unavailableReason: json['unavailableReason'] as String?);
+  ShopOffer copyWith({bool? owned, bool? canPurchase}) => ShopOffer(
+      item: item,
+      currency: currency,
+      price: price,
+      owned: owned ?? this.owned,
+      canPurchase: canPurchase ?? this.canPurchase,
+      unavailableReason: unavailableReason);
 }
 
 class ShopChest {
@@ -73,6 +84,15 @@ class ShopChest {
       remainingItemCount: json['remainingItemCount'] as int? ?? 0,
       canPurchase: json['canPurchase'] as bool? ?? false,
       unavailableReason: json['unavailableReason'] as String?);
+  ShopChest copyWith({int? remainingItemCount, bool? canPurchase}) => ShopChest(
+      key: key,
+      displayName: displayName,
+      rarity: rarity,
+      currency: currency,
+      price: price,
+      remainingItemCount: remainingItemCount ?? this.remainingItemCount,
+      canPurchase: canPurchase ?? this.canPurchase,
+      unavailableReason: unavailableReason);
 }
 
 class ShopData {
@@ -103,6 +123,37 @@ class ShopData {
           .toList(),
       inventoryCount: json['inventoryCount'] as int? ?? 0,
       maxInventorySlots: json['maxInventorySlots'] as int? ?? 0);
+
+  ShopData purchaseItemLocally(ShopOffer offer) => ShopData(
+      wallet: wallet.spend(offer.currency, offer.price),
+      resetAtUtc: resetAtUtc,
+      refresh: refresh,
+      dailyOffers: [
+        for (final current in dailyOffers)
+          current.item.id == offer.item.id
+              ? current.copyWith(owned: true, canPurchase: false)
+              : current
+      ],
+      chests: chests,
+      inventoryCount: inventoryCount + 1,
+      maxInventorySlots: maxInventorySlots);
+
+  ShopData purchaseChestLocally(ShopChest chest) => ShopData(
+      wallet: wallet.spend(chest.currency, chest.price),
+      resetAtUtc: resetAtUtc,
+      refresh: refresh,
+      dailyOffers: dailyOffers,
+      chests: [
+        for (final current in chests)
+          current.key == chest.key
+              ? current.copyWith(
+                  remainingItemCount:
+                      (current.remainingItemCount - 1).clamp(0, 1 << 30),
+                  canPurchase: current.remainingItemCount > 1)
+              : current
+      ],
+      inventoryCount: inventoryCount + 1,
+      maxInventorySlots: maxInventorySlots);
 }
 
 class ShopPurchaseResult {

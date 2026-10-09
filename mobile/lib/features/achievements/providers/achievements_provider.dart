@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../character/providers/character_provider.dart';
 import '../models/achievement_models.dart';
 import '../services/achievements_service.dart';
+import '../../../core/state/optimistic_mutation.dart';
+import '../../../core/services/client_experience_service.dart';
 
 final _achievementsService = AchievementsService();
 
@@ -53,6 +55,7 @@ final achievementRoadsProvider =
 );
 
 class AchievementRoadsNotifier extends AsyncNotifier<AchievementRoadsData> {
+  final _mutation = OptimisticMutationController<AchievementRoadsData>();
   @override
   Future<AchievementRoadsData> build() => _achievementsService.getRoads();
 
@@ -62,14 +65,50 @@ class AchievementRoadsNotifier extends AsyncNotifier<AchievementRoadsData> {
     if (next.hasValue || !state.hasValue) state = next;
   }
 
-  Future<AchievementClaimResult> claim(String achievementId) =>
-      _achievementsService.claim(achievementId);
+  Future<AchievementClaimResult> claim(String achievementId) async {
+    if (!ClientExperienceService.instance.enabled('achievementsEquipment')) {
+      final result = await _achievementsService.claim(achievementId);
+      state = AsyncData(state.requireValue
+          .claimLocally(achievementId: achievementId)
+          .withWallet(result.wallet));
+      return result;
+    }
+    return _mutation.run(
+      current: state.requireValue,
+      optimistic: (value) => value.claimLocally(achievementId: achievementId),
+      request: () => _achievementsService.claim(achievementId),
+      reconcile: (predicted, result) => predicted.withWallet(result.wallet),
+      publish: (value) => state = AsyncData(value),
+      feature: 'achievementsEquipment',
+      action: 'claim_achievement',
+    );
+  }
 
-  Future<AchievementClaimResult> claimAll({String? category}) =>
-      _achievementsService.claimAll(category: category);
+  Future<AchievementClaimResult> claimAll({String? category}) async {
+    if (!ClientExperienceService.instance.enabled('achievementsEquipment')) {
+      final result = await _achievementsService.claimAll(category: category);
+      state = AsyncData(state.requireValue
+          .claimLocally(category: category)
+          .withWallet(result.wallet));
+      return result;
+    }
+    return _mutation.run(
+      current: state.requireValue,
+      optimistic: (value) => value.claimLocally(category: category),
+      request: () => _achievementsService.claimAll(category: category),
+      reconcile: (predicted, result) => predicted.withWallet(result.wallet),
+      publish: (value) => state = AsyncData(value),
+      feature: 'achievementsEquipment',
+      action: 'claim_achievements',
+    );
+  }
 
-  Future<StageChestOpenResult> openStageChest(String category, String tier) =>
-      _achievementsService.openStageChest(category, tier);
+  Future<StageChestOpenResult> openStageChest(
+      String category, String tier) async {
+    final result = await _achievementsService.openStageChest(category, tier);
+    state = AsyncData(state.requireValue.openChestLocally(result));
+    return result;
+  }
 
   /// Other screens (home coins, profile XP, gear) read the character profile.
   void refreshCharacter() => ref.invalidate(characterProfileProvider);

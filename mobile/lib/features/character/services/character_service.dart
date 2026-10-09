@@ -30,7 +30,10 @@ class CharacterService {
   }
 
   Future<CharacterProfile> getProfile() async {
-    final res = await _dio.get('/character/me');
+    final res = await ApiClient.cachedGet(
+      '/character/me',
+      changedArea: 'character',
+    );
     return CharacterProfile.fromJson(res.data as Map<String, dynamic>);
   }
 
@@ -54,8 +57,13 @@ class CharacterService {
     await _dio.post('/character/level-ups/$receiptId/acknowledge');
   }
 
-  Future<void> spendStatPoint(String stat) async {
-    await _dio.post('/character/spend-stat', data: {'stat': stat});
+  Future<CharacterProfile> spendStatPoint(
+      String stat, int expectedAvailablePoints) async {
+    final response = await _dio.post('/character/spend-stat', data: {
+      'stat': stat,
+      'expectedAvailablePoints': expectedAvailablePoints,
+    });
+    return CharacterProfile.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<List<AvatarOption>> getAvatars() async {

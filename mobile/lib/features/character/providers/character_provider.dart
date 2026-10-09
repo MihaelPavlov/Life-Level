@@ -3,9 +3,12 @@ import '../services/character_service.dart';
 import '../models/character_profile.dart';
 import '../models/xp_history_entry.dart';
 import '../../../core/services/level_up_notifier.dart';
+import '../../../core/state/optimistic_mutation.dart';
+import '../../../core/services/client_experience_service.dart';
 
 // ── CharacterNotifier ─────────────────────────────────────────────────────────
 class CharacterNotifier extends AsyncNotifier<CharacterProfile> {
+  final _mutation = OptimisticMutationController<CharacterProfile>();
   @override
   Future<CharacterProfile> build() => CharacterService().getProfile();
 
@@ -21,8 +24,29 @@ class CharacterNotifier extends AsyncNotifier<CharacterProfile> {
   }
 
   Future<void> spendStatPoint(String stat) async {
-    await CharacterService().spendStatPoint(stat);
-    await refresh();
+    final current = state.requireValue;
+    if (!ClientExperienceService.instance.enabled('stats')) {
+      state = AsyncData(await CharacterService()
+          .spendStatPoint(stat, current.availableStatPoints));
+      return;
+    }
+    await _mutation.run(
+      current: current,
+      optimistic: (profile) => profile.spendPointLocally(stat),
+      request: () =>
+          CharacterService().spendStatPoint(stat, current.availableStatPoints),
+      reconcile: (_, authoritative) => authoritative,
+      publish: (profile) => state = AsyncData(profile),
+      feature: 'stats',
+      action: 'spend_stat',
+    );
+  }
+
+  void adjustWalletLocally({int coins = 0, int talentCrystals = 0}) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(current.adjustWalletLocally(
+        coins: coins, talentCrystals: talentCrystals));
   }
 }
 

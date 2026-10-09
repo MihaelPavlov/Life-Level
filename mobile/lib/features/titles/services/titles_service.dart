@@ -5,7 +5,7 @@ class TitlesService {
   final _dio = ApiClient.instance;
 
   Future<TitlesAndRanksResponse> getTitlesAndRanks() async {
-    final res = await _dio.get('/titles');
+    final res = await ApiClient.cachedGet('/titles', changedArea: 'titles');
     return TitlesAndRanksResponse.fromJson(res.data as Map<String, dynamic>);
   }
 

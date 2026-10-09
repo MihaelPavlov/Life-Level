@@ -4,8 +4,13 @@ import '../models/activity_models.dart';
 class ActivityService {
   final _dio = ApiClient.instance;
 
-  Future<LogActivityResult> logActivity(LogActivityRequest request) async {
-    final res = await _dio.post('/activity/log', data: request.toJson());
+  Future<LogActivityResult> logActivity(LogActivityRequest request,
+      {String? operationId}) async {
+    final res = await _dio.post('/activity/log',
+        data: request.toJson(),
+        options: operationId == null
+            ? null
+            : ApiClient.mutationOptions(operationId));
     return LogActivityResult.fromJson(res.data as Map<String, dynamic>);
   }
 
@@ -22,8 +27,8 @@ class ActivityService {
   }
 
   Future<ActivityCalendar> getCalendar({int days = 364}) async {
-    final res = await _dio
-        .get('/activity/calendar', queryParameters: {'days': days});
+    final res =
+        await _dio.get('/activity/calendar', queryParameters: {'days': days});
     return ActivityCalendar.fromJson(res.data as Map<String, dynamic>);
   }
 }

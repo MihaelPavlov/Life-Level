@@ -311,6 +311,7 @@ if (!string.IsNullOrWhiteSpace(itemImageStoragePath))
     });
 }
 app.UseAuthentication();
+app.UseMiddleware<LifeLevel.Api.Infrastructure.IdempotencyMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GuildRaidHub>("/hubs/guild-raid");

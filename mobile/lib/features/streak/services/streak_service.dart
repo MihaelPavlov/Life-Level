@@ -7,7 +7,7 @@ class StreakService {
   final _dio = ApiClient.instance;
 
   Future<StreakData> getStreak() async {
-    final res = await _dio.get('/streak');
+    final res = await ApiClient.cachedGet('/streak', changedArea: 'streak');
     return StreakData.fromJson(res.data as Map<String, dynamic>);
   }
 

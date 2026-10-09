@@ -91,30 +91,63 @@ class _BodyState extends ConsumerState<_Body> {
   Future<void> _claim(BuildContext context) async {
     if (_claiming) return;
     setState(() => _claiming = true);
+    var revealOpen = false;
     try {
       // The track as it was, so the reveal can show each tile's art and label.
       final before = track;
-      final rewards = await ref.read(seasonProvider.notifier).claimAvailable();
+      final predicted = _predictedClaims(before);
+      final claimFuture = ref.read(seasonProvider.notifier).claimAvailable();
+      // The provider publishes its optimistic track synchronously before its
+      // first await. Start the catalog-backed reveal in the same frame; the
+      // authoritative response still owns reconciliation and level-ups.
+      revealOpen = predicted.isNotEmpty;
+      final revealFuture = showSeasonClaimReveal(
+        context,
+        results: predicted,
+        before: before,
+      ).whenComplete(() => revealOpen = false);
+      final rewards = await claimFuture;
       final result = SeasonClaimResult.combined(rewards);
       ref.invalidate(characterProfileProvider);
       if (!context.mounted) return;
-      // Let the collected tiles burst on the track first, then reveal what
-      // was collected: one reward centred, 2–4 as cards, 5+ as a list.
-      await Future<void>.delayed(
-          AppMotion.duration(context, const Duration(milliseconds: 700)));
-      if (!context.mounted) return;
-      await showSeasonClaimReveal(context, results: rewards, before: before);
+      await revealFuture;
       // The level-up celebration follows the reveal ("Continue to Level N").
       if (result.leveledUp && result.newLevel != null) {
         LevelUpNotifier.notify(result.newLevel!);
       }
     } catch (e) {
+      if (revealOpen && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (context.mounted) {
         AppToast.error(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _claiming = false);
     }
+  }
+
+  List<SeasonClaimResult> _predictedClaims(SeasonTrack value) => [
+        for (final tier in value.tiers) ...[
+          if (tier.free.isClaimable)
+            _predictedClaim(tier.tier, 'Free', tier.free),
+          if (tier.founder.isClaimable)
+            _predictedClaim(tier.tier, 'Founder', tier.founder),
+        ],
+      ];
+
+  SeasonClaimResult _predictedClaim(
+      int tier, String lane, SeasonRewardView reward) {
+    return SeasonClaimResult(
+      tier: tier,
+      track: lane,
+      label: reward.label,
+      xpAwarded: reward.type == 'Xp' ? reward.amount : 0,
+      leveledUp: false,
+      newLevel: null,
+      grantedItemName: reward.type == 'Item' ? reward.label : null,
+      grantedTitleKey: reward.type == 'Title' ? reward.iconKey : null,
+    );
   }
 
   @override

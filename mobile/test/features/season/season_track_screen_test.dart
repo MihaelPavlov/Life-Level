@@ -200,7 +200,7 @@ void main() {
     expect(find.textContaining('No season is running'), findsOneWidget);
   });
 
-  testWidgets('rapid reward taps send one claim and show collecting state',
+  testWidgets('rapid reward taps send one claim and reveal immediately',
       (tester) async {
     final notifier = _DelayedClaimSeasonNotifier(
       _track(
@@ -219,13 +219,17 @@ void main() {
     await tester.pumpWidget(_hostWithNotifier(notifier));
     await tester.pumpAndSettle();
 
-    final collect = find.text('Ready · tap to collect');
-    await tester.tap(collect);
+    final collect = find.ancestor(
+      of: find.text('Ready · tap to collect'),
+      matching: find.byType(InkWell),
+    );
     await tester.tap(collect);
     await tester.pump();
 
     expect(notifier.claimCalls, 1);
-    expect(find.text('Collecting…'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
 
     notifier.claimCompleter.complete(const [
       SeasonClaimResult(
@@ -240,7 +244,7 @@ void main() {
       ),
     ]);
     await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
+    expect(notifier.claimCalls, 1);
   });
 
   testWidgets('multi-claim animations do not update the viewport reentrantly',

@@ -197,15 +197,13 @@ class _SlotBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    ready && claiming
-                        ? 'Collecting…'
-                        : ready
-                            ? 'Ready · tap to collect'
-                            : pending
-                                ? 'In progress'
-                                : (rarityColor != null
-                                    ? (reward.rarity ?? '').toUpperCase()
-                                    : _typeCaption(reward.type)),
+                    ready
+                        ? 'Ready · tap to collect'
+                        : pending
+                            ? 'In progress'
+                            : (rarityColor != null
+                                ? (reward.rarity ?? '').toUpperCase()
+                                : _typeCaption(reward.type)),
                     style: TextStyle(
                       fontSize: 8.5,
                       letterSpacing: 0.5,
@@ -220,16 +218,7 @@ class _SlotBody extends StatelessWidget {
                 ],
               ),
             ),
-            if (ready && claiming)
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.green,
-                ),
-              )
-            else if (ready)
+            if (ready)
               Container(
                 width: 26,
                 height: 26,

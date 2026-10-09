@@ -123,9 +123,6 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
             delay: Duration(milliseconds: 120 * i)));
       }
       final result = await request;
-      // Fetch the new road now; the held snapshot stays on screen until the
-      // rows have folded, so the refresh never cuts the animation short.
-      final reloading = notifier.reload();
       await Future.wait(flights);
       if (!mounted) return;
 
@@ -142,7 +139,6 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
           .map((c) => c.$2)
           .toList();
       final completing = finished.isNotEmpty ? finished.first : null;
-      await reloading;
       notifier.refreshCharacter();
       if (!mounted) return;
       // The fresh road and "Stage N complete!" land in the same frame, so the
@@ -231,7 +227,6 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
       // Counters count up, then the road moves on: stepper advances, the next
       // stage's card slides in and its chest drops in — all in one frame.
       setState(() => _wallet = result.wallet);
-      await notifier.reload();
       notifier.refreshCharacter();
       if (!mounted) return;
       final next =

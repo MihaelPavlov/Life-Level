@@ -61,7 +61,6 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
       }
       if (!mounted) return;
       setState(() => _wallet = result.wallet);
-      await notifier.reload();
       notifier.refreshCharacter();
       if (!mounted) return;
       setState(() => _wallet = null);
@@ -87,7 +86,9 @@ class _RewardRoadsHubState extends ConsumerState<RewardRoadsHub> {
         ref.watch(adventureHubSeenMigrationProvider) is AsyncData<void> &&
             achievementsAsync is AsyncData<List<AchievementDto>>;
     final unseen = (seenReady ? achievementsAsync.valueOrNull : null)
-            ?.where((a) => a.isUnlocked && a.seenAt == null &&
+            ?.where((a) =>
+                a.isUnlocked &&
+                a.seenAt == null &&
                 !_seenInFlight.contains(a.id))
             .toList() ??
         const <AchievementDto>[];
@@ -288,9 +289,10 @@ class _NewAchievementsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(achievements.length == 1
-                  ? 'NEW ACHIEVEMENT'
-                  : '${achievements.length} NEW ACHIEVEMENTS',
+              Text(
+                  achievements.length == 1
+                      ? 'NEW ACHIEVEMENT'
+                      : '${achievements.length} NEW ACHIEVEMENTS',
                   style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,

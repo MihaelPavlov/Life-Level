@@ -134,14 +134,16 @@ class WorldZoneService {
   /// World hub data — list of regions + user + optional active journey.
   /// Backed by the rebuilt `GET /api/map/world` endpoint.
   Future<WorldMapData> getWorldMap() async {
-    final response = await ApiClient.instance.get('/map/world');
+    final response =
+        await ApiClient.cachedGet('/map/world', changedArea: 'world');
     return WorldMapData.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Region detail — region metadata + ordered node trail + edges.
   /// Backed by `GET /api/map/region/{id}`.
   Future<RegionDetail> getRegionDetail(String regionId) async {
-    final response = await ApiClient.instance.get('/map/region/$regionId');
+    final response = await ApiClient.cachedGet('/map/region/$regionId',
+        changedArea: 'world');
     return RegionDetail.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -149,15 +151,21 @@ class WorldZoneService {
   /// which still relies on edges/zones + user progress. New world-hub UI
   /// uses [getWorldMap] / [getRegionDetail] instead.
   Future<WorldFullData> getFullWorld() async {
-    final response = await ApiClient.instance.get('/world/full');
+    final response = await ApiClient.cachedGet(
+      '/world/full',
+      changedArea: 'world',
+    );
     return WorldFullData.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<SetDestinationResult> setDestination(String destinationZoneId) async {
+  Future<SetDestinationResult> setDestination(String destinationZoneId,
+      {String? operationId}) async {
     try {
       final response = await ApiClient.instance.put(
         '/world/destination',
         data: {'destinationZoneId': destinationZoneId},
+        options:
+            operationId == null ? null : ApiClient.mutationOptions(operationId),
       );
       final data = response.data;
       if (data is Map<String, dynamic>) {
@@ -215,8 +223,8 @@ class WorldZoneService {
 
   /// Fetch per-floor state for the dungeon overlay.
   Future<DungeonState> getDungeonState(String zoneId) async {
-    final response =
-        await ApiClient.instance.get('/world/dungeon/$zoneId/state');
+    final response = await ApiClient.cachedGet('/world/dungeon/$zoneId/state',
+        changedArea: 'world');
     return DungeonState.fromJson(response.data as Map<String, dynamic>);
   }
 

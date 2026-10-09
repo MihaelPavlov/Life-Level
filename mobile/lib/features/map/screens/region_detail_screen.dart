@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/services/client_experience_service.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
@@ -248,38 +249,101 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
             .pendingDistanceKm ??
         0.0;
 
+    final previousDestination = _activeDestinationZoneId;
+    final previousRegion = _region;
+    final previousTravel = _travel;
+    final operationId = ApiClient.newOperationId();
+    final optimistic = ClientExperienceService.instance.enabled('map');
+    final started = DateTime.now();
+    if (mounted && optimistic) {
+      Navigator.of(context).pop();
+      setState(() {
+        _activeDestinationZoneId = node.id;
+        if (fromZoneId != null && bankedKm > 0) {
+          _travel = TrailTravel(
+            id: ++_travelSeq,
+            fromZoneId: fromZoneId,
+            targetZoneId: node.id,
+            bankedKm: bankedKm,
+          );
+        }
+        if (node.branchOf != null && _region != null) {
+          _region = _region!.copyWith(pathChoices: {
+            ..._region!.pathChoices,
+            node.branchOf!: node.id,
+          });
+        }
+      });
+      ClientExperienceService.instance.record(
+          name: 'optimistic_applied',
+          feature: 'map',
+          outcome: 'set_destination',
+          operationId: operationId);
+    }
+
     SetDestinationResult result;
     try {
-      result = await _service.setDestination(node.id);
+      result = await _service.setDestination(node.id, operationId: operationId);
     } on PathAlreadyChosenException catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop(); // close whichever sheet is open
+      setState(() {
+        _activeDestinationZoneId = previousDestination;
+        _region = previousRegion;
+        _travel = previousTravel;
+      });
       AppToast.error(context, e.message);
+      _recordDestinationRollback(started, operationId);
       return;
     } on BranchRequiresCrossroadsArrivalException catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop();
+      setState(() {
+        _activeDestinationZoneId = previousDestination;
+        _region = previousRegion;
+        _travel = previousTravel;
+      });
       AppToast.warning(
         context,
         'Reach ${e.crossroadsName} first, then pick a path.',
         duration: const Duration(seconds: 3),
       );
+      _recordDestinationRollback(started, operationId);
       return;
     } on DioException catch (e) {
       if (!mounted) return;
+      setState(() {
+        _activeDestinationZoneId = previousDestination;
+        _region = previousRegion;
+        _travel = previousTravel;
+      });
       final msg = _humanizeSetDestinationError(e, node);
       AppToast.error(context, msg);
+      _recordDestinationRollback(started, operationId);
       return;
     } catch (e) {
       if (!mounted) return;
+      setState(() {
+        _activeDestinationZoneId = previousDestination;
+        _region = previousRegion;
+        _travel = previousTravel;
+      });
       AppToast.error(context, 'Failed to set destination: $e');
+      _recordDestinationRollback(started, operationId);
       return;
     }
     if (!mounted) return;
-    Navigator.of(context).pop(); // close the zone detail sheet
-    if (fromZoneId != null) {
+    if (!optimistic) Navigator.of(context).pop();
+    ClientExperienceService.instance.record(
+        name: 'mutation_confirmed',
+        feature: 'map',
+        outcome: 'set_destination',
+        durationMs: DateTime.now().difference(started).inMilliseconds,
+        operationId: operationId);
+    if (!optimistic && fromZoneId != null) {
       _pendingTravel = TrailTravel(
-          id: ++_travelSeq, fromZoneId: fromZoneId, bankedKm: bankedKm);
+          id: ++_travelSeq,
+          fromZoneId: fromZoneId,
+          targetZoneId: node.id,
+          bankedKm: bankedKm);
     }
     await _load();
     WorldZoneRefreshNotifier.notify();
@@ -308,6 +372,15 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
         duration: const Duration(seconds: 2),
       );
     }
+  }
+
+  void _recordDestinationRollback(DateTime started, String operationId) {
+    ClientExperienceService.instance.record(
+        name: 'mutation_rolled_back',
+        feature: 'map',
+        outcome: 'set_destination',
+        durationMs: DateTime.now().difference(started).inMilliseconds,
+        operationId: operationId);
   }
 
   /// Shows the encounter intercept modal and handles the outcome:

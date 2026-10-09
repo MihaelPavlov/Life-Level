@@ -6,15 +6,18 @@ class SeasonService {
   final _dio = ApiClient.instance;
 
   Future<SeasonTrack> getTrack() async {
-    final res = await _dio.get('/season');
+    final res = await ApiClient.cachedGet('/season', changedArea: 'season');
     return SeasonTrack.fromJson(res.data as Map<String, dynamic>);
   }
 
-  Future<SeasonClaimResult> claimTier(int tier, String track) async {
+  Future<SeasonClaimResult> claimTier(int tier, String track,
+      {String? operationId}) async {
     try {
       final res = await _dio.post(
         '/season/claim',
         data: {'tier': tier, 'track': track},
+        options:
+            operationId == null ? null : ApiClient.mutationOptions(operationId),
       );
       return SeasonClaimResult.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
@@ -26,9 +29,12 @@ class SeasonService {
     }
   }
 
-  Future<List<SeasonClaimResult>> claimAvailable() async {
+  Future<List<SeasonClaimResult>> claimAvailable({String? operationId}) async {
     try {
-      final res = await _dio.post('/season/claim-available');
+      final res = await _dio.post('/season/claim-available',
+          options: operationId == null
+              ? null
+              : ApiClient.mutationOptions(operationId));
       return (res.data as List)
           .map((e) => SeasonClaimResult.fromJson(e as Map<String, dynamic>))
           .toList();

@@ -6,13 +6,15 @@ class LeaderboardService {
 
   Future<LeaderboardBoard> getBoard(
       LeaderboardScope scope, LeaderboardMetric metric) async {
-    final res = await _dio.get('/leaderboard',
+    final res = await ApiClient.cachedGet('/leaderboard',
+        changedArea: 'leaderboard',
         queryParameters: {'scope': scope.name, 'metric': metric.name});
     return LeaderboardBoard.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<LeaderboardChest> getChest() async {
-    final res = await _dio.get('/leaderboard/chest');
+    final res = await ApiClient.cachedGet('/leaderboard/chest',
+        changedArea: 'leaderboard');
     return LeaderboardChest.fromJson(res.data as Map<String, dynamic>);
   }
 

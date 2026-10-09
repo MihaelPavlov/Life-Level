@@ -48,6 +48,22 @@ class TalentSummary {
       );
 
   bool get hasAny => ownedCount > 0;
+
+  TalentSummary adjustWallet({int coins = 0, int talentCrystals = 0}) =>
+      TalentSummary(
+        ownedCount: ownedCount,
+        catalogCount: catalogCount,
+        totalLevels: totalLevels,
+        coins: this.coins + coins,
+        gems: gems,
+        talentCrystals: this.talentCrystals + talentCrystals,
+        strBonus: strBonus,
+        endBonus: endBonus,
+        agiBonus: agiBonus,
+        flxBonus: flxBonus,
+        staBonus: staBonus,
+        effectLines: effectLines,
+      );
 }
 
 class CharacterProfile {
@@ -165,4 +181,77 @@ class CharacterProfile {
   }
 
   int get xpRemaining => xpForNextLevel - xp;
+
+  CharacterProfile adjustWalletLocally(
+          {int coins = 0, int talentCrystals = 0}) =>
+      CharacterProfile(
+        username: username,
+        avatarEmoji: avatarEmoji,
+        className: className,
+        classEmoji: classEmoji,
+        rank: rank,
+        level: level,
+        xp: xp,
+        xpForCurrentLevel: xpForCurrentLevel,
+        xpForNextLevel: xpForNextLevel,
+        strength: strength,
+        endurance: endurance,
+        agility: agility,
+        flexibility: flexibility,
+        stamina: stamina,
+        weeklyRuns: weeklyRuns,
+        weeklyDistanceKm: weeklyDistanceKm,
+        weeklyXpEarned: weeklyXpEarned,
+        currentStreak: currentStreak,
+        availableStatPoints: availableStatPoints,
+        gearBonuses: gearBonuses,
+        talents:
+            talents?.adjustWallet(coins: coins, talentCrystals: talentCrystals),
+        attack: attack,
+        defense: defense,
+        health: health,
+        power: power,
+        tutorialStep: tutorialStep,
+        tutorialTopicsSeen: tutorialTopicsSeen,
+        mapTutorialStep: mapTutorialStep,
+      );
+
+  CharacterProfile spendPointLocally(String stat) => CharacterProfile(
+        username: username,
+        avatarEmoji: avatarEmoji,
+        className: className,
+        classEmoji: classEmoji,
+        rank: rank,
+        level: level,
+        xp: xp,
+        xpForCurrentLevel: xpForCurrentLevel,
+        xpForNextLevel: xpForNextLevel,
+        strength: stat.toLowerCase() == 'str'
+            ? (strength + 5).clamp(0, 100)
+            : strength,
+        endurance: stat.toLowerCase() == 'end'
+            ? (endurance + 5).clamp(0, 100)
+            : endurance,
+        agility:
+            stat.toLowerCase() == 'agi' ? (agility + 5).clamp(0, 100) : agility,
+        flexibility: stat.toLowerCase() == 'flx'
+            ? (flexibility + 5).clamp(0, 100)
+            : flexibility,
+        stamina:
+            stat.toLowerCase() == 'sta' ? (stamina + 5).clamp(0, 100) : stamina,
+        weeklyRuns: weeklyRuns,
+        weeklyDistanceKm: weeklyDistanceKm,
+        weeklyXpEarned: weeklyXpEarned,
+        currentStreak: currentStreak,
+        availableStatPoints: availableStatPoints - 1,
+        gearBonuses: gearBonuses,
+        talents: talents,
+        attack: attack,
+        defense: defense,
+        health: health,
+        power: power,
+        tutorialStep: tutorialStep,
+        tutorialTopicsSeen: tutorialTopicsSeen,
+        mapTutorialStep: mapTutorialStep,
+      );
 }

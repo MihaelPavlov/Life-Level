@@ -24,11 +24,15 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
 
   Future<void> _spendPoint() async {
     setState(() => _spending = true);
+    final request = ref
+        .read(characterProfileProvider.notifier)
+        .spendStatPoint(widget.stat.key);
+    // The provider publishes the optimistic profile before its first await, so
+    // close the detail sheet immediately and let reconciliation happen behind
+    // the profile screen instead of holding the user on a loading control.
+    if (mounted) Navigator.pop(context);
     try {
-      await ref
-          .read(characterProfileProvider.notifier)
-          .spendStatPoint(widget.stat.key);
-      if (mounted) Navigator.pop(context);
+      await request;
     } catch (_) {
       if (mounted) setState(() => _spending = false);
     }
@@ -144,13 +148,10 @@ class _StatDetailSheetState extends ConsumerState<StatDetailSheet> {
                           ),
                         ],
                       ),
-                      child: _spending
-                          ? Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: widget.stat.color),
-                            )
-                          : Icon(Icons.add, size: 18, color: widget.stat.color),
+                      child: Icon(Icons.add,
+                          size: 18,
+                          color: widget.stat.color
+                              .withValues(alpha: _spending ? .55 : 1)),
                     ),
                   ),
                 ],

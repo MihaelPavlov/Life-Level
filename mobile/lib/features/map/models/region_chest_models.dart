@@ -97,6 +97,22 @@ class RegionChestsOverview {
               entry,
         ],
       );
+
+  RegionChestsOverview claimLocally(String regionId, DateTime at) {
+    final chest =
+        regions.where((entry) => entry.regionId == regionId).firstOrNull;
+    if (chest == null || chest.status != RegionChestStatus.ready) return this;
+    return RegionChestsOverview(
+      wallet: RegionChestWallet(
+        coins: wallet.coins + chest.coins,
+        gems: wallet.gems + chest.gems,
+      ),
+      regions: [
+        for (final entry in regions)
+          entry.regionId == regionId ? entry.claimed(at) : entry,
+      ],
+    );
+  }
 }
 
 class RegionChestClaimResult {

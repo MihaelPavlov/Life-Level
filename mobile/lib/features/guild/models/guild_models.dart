@@ -55,6 +55,31 @@ class GuildDetail {
             ? null
             : GuildRaid.fromJson(json['activeRaid'] as Map<String, dynamic>),
       );
+
+  GuildDetail copyWith({
+    String? name,
+    String? description,
+    String? icon,
+    int? memberCount,
+    List<GuildMember>? members,
+    GuildRaid? activeRaid,
+  }) =>
+      GuildDetail(
+        id: id,
+        name: name ?? this.name,
+        description: description ?? this.description,
+        icon: icon ?? this.icon,
+        memberCount: memberCount ?? this.memberCount,
+        maxMembers: maxMembers,
+        isOpen: isOpen,
+        isLeader: isLeader,
+        viewerRole: viewerRole,
+        canManageRaid: canManageRaid,
+        canManageMembers: canManageMembers,
+        canEditGuild: canEditGuild,
+        members: members ?? this.members,
+        activeRaid: activeRaid ?? this.activeRaid,
+      );
 }
 
 class GuildSearchItem {
@@ -116,6 +141,15 @@ class GuildMember {
         joinedAt: DateTime.tryParse(json['joinedAt'] as String? ?? '') ??
             DateTime.now().toUtc(),
         raidDamage: json['raidDamage'] as int? ?? 0,
+      );
+
+  GuildMember copyWith({String? role}) => GuildMember(
+        userId: userId,
+        username: username,
+        avatarEmoji: avatarEmoji,
+        role: role ?? this.role,
+        joinedAt: joinedAt,
+        raidDamage: raidDamage,
       );
 }
 

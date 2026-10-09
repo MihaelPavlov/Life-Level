@@ -6,13 +6,16 @@ class TalentsService {
   final _dio = ApiClient.instance;
 
   Future<TalentScreen> getScreen() async {
-    final res = await _dio.get('/talents');
+    final res = await ApiClient.cachedGet('/talents', changedArea: 'talents');
     return TalentScreen.fromJson(res.data as Map<String, dynamic>);
   }
 
-  Future<TalentDrawResult> draw() async {
+  Future<TalentDrawResult> draw({String? operationId}) async {
     try {
-      final res = await _dio.post('/talents/draw');
+      final res = await _dio.post('/talents/draw',
+          options: operationId == null
+              ? null
+              : ApiClient.mutationOptions(operationId));
       return TalentDrawResult.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       final message = _errorMessage(e);

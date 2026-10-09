@@ -144,6 +144,28 @@ class UserQuestProgress {
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
 
+  UserQuestProgress copyWith({bool? rewardClaimed}) => UserQuestProgress(
+        id: id,
+        questId: questId,
+        title: title,
+        description: description,
+        category: category,
+        progressMode: progressMode,
+        difficultyTier: difficultyTier,
+        requiredActivity: requiredActivity,
+        targetValue: targetValue,
+        currentValue: currentValue,
+        targetUnit: targetUnit,
+        rewardXp: rewardXp,
+        rewardCoins: rewardCoins,
+        rewardCrystals: rewardCrystals,
+        rewardPoints: rewardPoints,
+        isCompleted: isCompleted,
+        rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+        expiresAt: expiresAt,
+        completedAt: completedAt,
+      );
+
   factory UserQuestProgress.fromJson(Map<String, dynamic> json) =>
       UserQuestProgress(
         id: json['id'] as String,

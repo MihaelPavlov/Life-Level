@@ -31,8 +31,10 @@ ZoneNode _node(
     );
 
 final _fork = _node('fork', 'Twin Roads Fork', isCrossroads: true);
-final _valley = _node('valley', 'Valley Road', branchOf: 'fork', km: 8, xp: 450);
-final _ruined = _node('ruined', 'Ruined Pass', branchOf: 'fork', km: 5, xp: 700);
+final _valley =
+    _node('valley', 'Valley Road', branchOf: 'fork', km: 8, xp: 450);
+final _ruined =
+    _node('ruined', 'Ruined Pass', branchOf: 'fork', km: 5, xp: 700);
 
 Widget _harness({
   String? alreadyChosen,
@@ -95,8 +97,8 @@ void main() {
 
     await tester.tap(find.text('Take Valley Road →'));
     await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.tap(find.byType(CircularProgressIndicator));
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.tap(find.text('Take Valley Road →'));
     await tester.pump();
     expect(calls, 1);
 

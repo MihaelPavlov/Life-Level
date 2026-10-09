@@ -7,7 +7,8 @@ import '../models/guild_models.dart';
 
 class GuildService {
   Future<GuildDetail?> mine() async {
-    final response = await ApiClient.instance.get('/guild/mine');
+    final response =
+        await ApiClient.cachedGet('/guild/mine', changedArea: 'guild');
     final data = _decode(response.data);
     if (data == null || data == 'null' || data == '') return null;
     if (data is! Map<String, dynamic>) {

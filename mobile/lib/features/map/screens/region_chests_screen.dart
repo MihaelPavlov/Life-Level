@@ -619,7 +619,7 @@ class _RegionBanner extends StatelessWidget {
 /// Reward tiles for the focused region. When the chest is ready, tapping
 /// plays "lid pop + light beam": the tiles shake, each tile's lid flips
 /// open over a warm glow, and a beam with sparkles rises out of it.
-/// The backend claim completes before the success animation begins.
+/// The opening begins immediately while the backend confirms the reward.
 class _RewardsPanel extends StatefulWidget {
   final RegionCard region;
   final RegionChestEntry chest;
@@ -651,9 +651,10 @@ class _RewardsPanelState extends State<_RewardsPanel>
         _open.isAnimating) {
       return;
     }
-    final result = await widget.onClaim();
-    if (result == null || !mounted) return;
+    final request = widget.onClaim();
     if (!RewardFx.enabled(context)) {
+      final result = await request;
+      if (result == null || !mounted) return;
       await _showReward(result);
       return;
     }
@@ -672,7 +673,8 @@ class _RewardsPanelState extends State<_RewardsPanel>
       });
     }
     await Future.delayed(const Duration(milliseconds: 900));
-    if (mounted) await _showReward(result);
+    final result = await request;
+    if (result != null && mounted) await _showReward(result);
   }
 
   Future<void> _showReward(RegionChestClaimResult result) =>

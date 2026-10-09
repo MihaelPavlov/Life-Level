@@ -15,8 +15,8 @@ class TalentsNotifier extends AsyncNotifier<TalentScreen> {
   // unlocked/leveled talent would flash into view early and spoil the
   // reveal. The caller (TalentsScreen) invalidates this provider itself,
   // once the sweep has landed.
-  Future<TalentDrawResult> draw() async {
-    return ref.read(talentsServiceProvider).draw();
+  Future<TalentDrawResult> draw({String? operationId}) async {
+    return ref.read(talentsServiceProvider).draw(operationId: operationId);
   }
 
   Future<void> refresh() async {

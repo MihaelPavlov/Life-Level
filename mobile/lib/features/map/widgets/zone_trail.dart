@@ -16,10 +16,14 @@ import 'zone_node_tile.dart';
 class TrailTravel {
   final int id;
   final String fromZoneId;
+  final String? targetZoneId;
   final double bankedKm;
   final Completer<void> done = Completer<void>();
   TrailTravel(
-      {required this.id, required this.fromZoneId, required this.bankedKm});
+      {required this.id,
+      required this.fromZoneId,
+      this.targetZoneId,
+      required this.bankedKm});
 }
 
 /// Duolingo-style vertical trail of zone bubbles connected by status-coloured
@@ -242,6 +246,14 @@ class _ZoneTrailState extends State<ZoneTrail> with TickerProviderStateMixin {
   void didUpdateWidget(ZoneTrail old) {
     super.didUpdateWidget(old);
     final travel = widget.travel;
+    if (travel == null && old.travel != null && _travelReq == old.travel) {
+      _travelCtrl.stop();
+      _travelPending = false;
+      _travelReq = null;
+      _travelArriveId = null;
+      if (!old.travel!.done.isCompleted) old.travel!.done.complete();
+      return;
+    }
     if (travel != null && travel.id != old.travel?.id) {
       if (RewardFx.enabled(context)) {
         // Hide the walker at its new spot until the walk starts next frame
@@ -383,8 +395,9 @@ class _ZoneTrailState extends State<ZoneTrail> with TickerProviderStateMixin {
     var km = 0.0;
     if (layouts != null && width != null) {
       final idx = {for (final (i, n) in nodes.indexed) n.id: i};
-      final activeIdx =
-          nodes.indexWhere((n) => n.status == ZoneNodeStatus.active);
+      final activeIdx = t.targetZoneId == null
+          ? nodes.indexWhere((n) => n.status == ZoneNodeStatus.active)
+          : nodes.indexWhere((n) => n.id == t.targetZoneId);
       final route = activeIdx < 0 || !idx.containsKey(t.fromZoneId)
           ? null
           : _route(t.fromZoneId, nodes[activeIdx].id);
@@ -400,7 +413,10 @@ class _ZoneTrailState extends State<ZoneTrail> with TickerProviderStateMixin {
         final j = journey;
         final nextIdx =
             nodes.indexWhere((n) => n.status == ZoneNodeStatus.next);
-        if (j != null && j.distanceTotalKm > 0 && nextIdx >= 0) {
+        if (t.targetZoneId == null &&
+            j != null &&
+            j.distanceTotalKm > 0 &&
+            nextIdx >= 0) {
           _sampleEdge(pts, c(activeIdx), c(nextIdx),
               (j.distanceTravelledKm / j.distanceTotalKm).clamp(0.0, 1.0));
           km += j.distanceTravelledKm;
@@ -416,6 +432,35 @@ class _ZoneTrailState extends State<ZoneTrail> with TickerProviderStateMixin {
       setState(() => _travelPending = false);
       if (!t.done.isCompleted) t.done.complete();
       return;
+    }
+    // A provisional trip can start before the server returns. If the banked
+    // distance cannot reach the selected node, animate only the affordable
+    // part of the route and leave the authoritative refresh to place the
+    // walker at the exact persisted position.
+    if (t.targetZoneId != null && t.bankedKm < km) {
+      final fraction = (t.bankedKm / km).clamp(0.0, 1.0);
+      final segmentLengths = <double>[0];
+      for (var i = 1; i < pts.length; i++) {
+        segmentLengths
+            .add(segmentLengths.last + (pts[i] - pts[i - 1]).distance);
+      }
+      final targetLength = segmentLengths.last * fraction;
+      var end = 1;
+      while (
+          end < segmentLengths.length && segmentLengths[end] < targetLength) {
+        end++;
+      }
+      end = math.max(1, math.min(end, pts.length - 1));
+      final startLength = segmentLengths[end - 1];
+      final span = segmentLengths[end] - startLength;
+      final local = span <= 0 ? 0.0 : (targetLength - startLength) / span;
+      pts = [
+        ...pts.take(end),
+        Offset.lerp(pts[end - 1], pts[end], local.clamp(0.0, 1.0))!,
+      ];
+      _travelArriveId = null;
+      _travelLeftKm = km - t.bankedKm;
+      km = t.bankedKm;
     }
     final cum = <double>[0];
     for (var i = 1; i < pts.length; i++) {

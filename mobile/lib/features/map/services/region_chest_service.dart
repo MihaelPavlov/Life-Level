@@ -5,7 +5,10 @@ class RegionChestService {
   final _dio = ApiClient.instance;
 
   Future<RegionChestsOverview> getOverview() async {
-    final response = await _dio.get('/world/region-chests');
+    final response = await ApiClient.cachedGet(
+      '/world/region-chests',
+      changedArea: 'chests',
+    );
     return RegionChestsOverview.fromJson(response.data as Map<String, dynamic>);
   }
 

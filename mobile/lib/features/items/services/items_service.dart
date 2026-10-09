@@ -5,7 +5,10 @@ class ItemsService {
   final _dio = ApiClient.instance;
 
   Future<CharacterEquipmentResponse> getEquipment() async {
-    final res = await _dio.get('/items/equipment');
+    final res = await ApiClient.cachedGet(
+      '/items/equipment',
+      changedArea: 'inventory',
+    );
     return CharacterEquipmentResponse.fromJson(
         res.data as Map<String, dynamic>);
   }
@@ -29,7 +32,10 @@ class ItemsService {
   }
 
   Future<InventoryResponse> getInventory() async {
-    final res = await _dio.get('/items/inventory');
+    final res = await ApiClient.cachedGet(
+      '/items/inventory',
+      changedArea: 'inventory',
+    );
     return InventoryResponse.fromJson(res.data as Map<String, dynamic>);
   }
 }

@@ -6,14 +6,19 @@ class RewardsService {
   final _dio = ApiClient.instance;
 
   Future<RewardCenterData> getRewardCenter() async {
-    final res = await _dio.get('/rewards');
+    final res = await ApiClient.cachedGet(
+      '/rewards',
+      changedArea: 'rewards',
+    );
     return RewardCenterData.fromJson(res.data as Map<String, dynamic>);
   }
 
-  Future<void> claimMilestone(String period, int threshold) async {
+  Future<MilestoneClaimResult> claimMilestone(
+      String period, int threshold) async {
     try {
-      await _dio
+      final res = await _dio
           .post('/rewards/milestones/${period.toLowerCase()}/$threshold/claim');
+      return MilestoneClaimResult.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw RewardsException(_errorMessage(e));
     }

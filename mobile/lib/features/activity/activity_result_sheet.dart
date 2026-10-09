@@ -1,6 +1,200 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/motion/app_motion.dart';
+import '../../core/services/dungeon_floor_cleared_notifier.dart';
+import '../../core/services/guild_raid_victory_notifier.dart';
+import '../../core/services/inventory_full_notifier.dart';
+import '../../core/services/level_up_notifier.dart';
+import '../../core/services/world_zone_refresh_notifier.dart';
+import '../../core/session/invalidate_user_providers.dart';
+import '../../core/services/client_experience_service.dart';
+import '../boss/replay/home_boss_replay.dart';
+import '../map/widgets/encounter_intercept_sheet.dart';
 import 'models/activity_models.dart';
+import 'providers/activity_provider.dart';
+import 'log_activity_screen.dart';
+
+class ActivitySubmissionSheet extends ConsumerStatefulWidget {
+  final LogActivityRequest request;
+  final String operationId;
+  const ActivitySubmissionSheet({
+    super.key,
+    required this.request,
+    required this.operationId,
+  });
+
+  @override
+  ConsumerState<ActivitySubmissionSheet> createState() =>
+      _ActivitySubmissionSheetState();
+}
+
+class _ActivitySubmissionSheetState
+    extends ConsumerState<ActivitySubmissionSheet> {
+  LogActivityResult? _result;
+  Object? _error;
+  bool _submitting = false;
+  bool _effectsApplied = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _submit();
+  }
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final started = DateTime.now();
+    ClientExperienceService.instance.record(
+        name: 'presentation_started',
+        feature: 'activity',
+        outcome: 'log_activity',
+        operationId: widget.operationId);
+    try {
+      final result = await ref
+          .read(activityServiceProvider)
+          .logActivity(widget.request, operationId: widget.operationId);
+      if (!mounted) return;
+      _applyEffects(result);
+      setState(() {
+        _result = result;
+        _submitting = false;
+      });
+      ClientExperienceService.instance.record(
+          name: 'mutation_confirmed',
+          feature: 'activity',
+          outcome: 'log_activity',
+          durationMs: DateTime.now().difference(started).inMilliseconds,
+          operationId: widget.operationId);
+      final encounter = result.activeEncounter;
+      if (encounter != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          showAppBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            isDismissible: !encounter.isBlocker,
+            enableDrag: !encounter.isBlocker,
+            builder: (_) => EncounterInterceptSheet(
+              encounter: encounter,
+              destinationZoneName: 'your destination',
+            ),
+          );
+        });
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error;
+        _submitting = false;
+      });
+      ClientExperienceService.instance.record(
+          name: 'mutation_rolled_back',
+          feature: 'activity',
+          outcome: 'log_activity',
+          durationMs: DateTime.now().difference(started).inMilliseconds,
+          operationId: widget.operationId);
+    }
+  }
+
+  void _applyEffects(LogActivityResult result) {
+    if (_effectsApplied) return;
+    _effectsApplied = true;
+    invalidateUserScopedProviders(ref);
+    WorldZoneRefreshNotifier.notify();
+    if (result.leveledUp && result.newLevel != null) {
+      LevelUpNotifier.notify(result.newLevel!, unlocks: result.levelUpUnlocks);
+    }
+    for (final blocked in result.blockedItems) {
+      InventoryFullNotifier.notify(blocked);
+    }
+    requestBossReplay();
+    for (final raid in result.guildRaidDefeats) {
+      GuildRaidVictoryNotifier.notify(raid);
+    }
+    final credit = result.floorCreditResult;
+    if (credit != null) {
+      DungeonFloorClearedNotifier.notify(DungeonFloorClearedEvent(
+        dungeonName: credit.dungeonName,
+        clearedFloorOrdinal: credit.clearedFloorOrdinal,
+        totalFloors: credit.totalFloors,
+        runCompleted: credit.runCompleted,
+        bonusXpAwarded: credit.bonusXpAwarded,
+      ));
+    }
+  }
+
+  void _edit() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.push(AppRoute(
+      builder: (_) => LogActivityScreen(initialRequest: widget.request),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_result != null) return ActivityResultSheet(result: _result!);
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_error == null ? Icons.auto_awesome : Icons.cloud_off_rounded,
+                color: _error == null ? AppColors.orange : AppColors.red,
+                size: 44),
+            const SizedBox(height: 16),
+            Text(
+                _error == null
+                    ? 'Finishing your workout…'
+                    : 'Could not save workout',
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Text(
+              _error == null
+                  ? 'Calculating XP, quests, and adventure progress.'
+                  : 'Your activity details are preserved.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 22),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _edit,
+                    child: const Text('Edit Activity'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _submitting ? null : _submit,
+                    child: const Text('Retry'),
+                  ),
+                ),
+              ]),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class ActivityResultSheet extends StatefulWidget {
   final LogActivityResult result;
