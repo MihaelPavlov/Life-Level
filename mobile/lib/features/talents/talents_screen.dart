@@ -9,6 +9,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/widgets/app_icon_image.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/api/api_client.dart';
+import '../../core/api/api_failure.dart';
 import '../../core/services/client_experience_service.dart';
 import '../character/providers/character_provider.dart';
 import 'models/talent_models.dart';
@@ -197,7 +198,12 @@ class _TalentsScreenState extends ConsumerState<TalentsScreen>
           outcome: 'draw',
           durationMs: DateTime.now().difference(started).inMilliseconds,
           operationId: operationId);
-      if (mounted) AppToast.error(context, e.toString());
+      if (mounted) {
+        AppToast.error(
+            context,
+            playerErrorMessage(e,
+                fallback: 'Could not draw a talent card. Please try again.'));
+      }
     } finally {
       if (mounted) {
         setState(() {

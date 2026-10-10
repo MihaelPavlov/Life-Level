@@ -20,4 +20,5 @@ public record UnlockFacts(
     bool BossSeen,
     DateTime? CharacterCreatedAt = null,
     int TitlesEarned = 0,
-    bool RankReached = false);
+    bool RankReached = false,
+    bool HasCompletedRegion = false);

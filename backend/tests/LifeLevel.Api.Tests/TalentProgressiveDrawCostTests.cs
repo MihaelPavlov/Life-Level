@@ -3,6 +3,7 @@ using LifeLevel.Modules.Talents.Application.UseCases;
 using LifeLevel.Modules.Talents.Domain;
 using LifeLevel.Modules.Talents.Domain.Entities;
 using LifeLevel.Modules.Talents.Domain.Enums;
+using LifeLevel.SharedKernel.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace LifeLevel.Api.Tests;
@@ -92,7 +93,9 @@ public class TalentProgressiveDrawCostTests
         db.Add(Wallet(userId, 299, 1));
         await db.SaveChangesAsync();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => new TalentService(db).DrawAsync(userId));
+        var failure = await Assert.ThrowsAsync<DomainException>(
+            () => new TalentService(db).DrawAsync(userId));
+        Assert.Equal("insufficient_currency", failure.Code);
         var screen = await new TalentService(db).GetScreenAsync(userId);
 
         Assert.Equal(0, screen.DrawCount);
@@ -111,7 +114,9 @@ public class TalentProgressiveDrawCostTests
         db.Add(Wallet(userId, 1_000, 10));
         await db.SaveChangesAsync();
 
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => new TalentService(db).DrawAsync(userId));
+        var error = await Assert.ThrowsAsync<DomainException>(
+            () => new TalentService(db).DrawAsync(userId));
+        Assert.Equal("talent_collection_complete", error.Code);
         var wallet = await db.Set<UserTalentWallet>().SingleAsync();
 
         Assert.Equal("Your talent collection is complete.", error.Message);

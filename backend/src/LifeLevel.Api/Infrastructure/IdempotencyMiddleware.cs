@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Data;
 using LifeLevel.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,10 @@ public sealed class IdempotencyMiddleware(RequestDelegate next)
     public const string Header = "Idempotency-Key";
     public const string ReplayedHeader = "Idempotency-Replayed";
 
-    public async Task InvokeAsync(HttpContext context, AppDbContext db)
+    public async Task InvokeAsync(
+        HttpContext context,
+        AppDbContext db,
+        ILogger<IdempotencyMiddleware> logger)
     {
         if (!IsMutation(context.Request.Method) ||
             context.User.Identity?.IsAuthenticated != true ||
@@ -23,7 +27,10 @@ public sealed class IdempotencyMiddleware(RequestDelegate next)
         }
 
         var scope = $"{context.Request.Method}:{context.Request.Path.Value}";
-        await using var transaction = await db.Database.BeginTransactionAsync(context.RequestAborted);
+        var isolation = context.GetEndpoint()?.Metadata.GetMetadata<MutationIsolationAttribute>()
+            ?.IsolationLevel ?? IsolationLevel.ReadCommitted;
+        await using var transaction = await db.Database.BeginTransactionAsync(
+            isolation, context.RequestAborted);
         var lockKey = AdvisoryLockKey(userId, scope, operationId);
         await db.Database.ExecuteSqlInterpolatedAsync(
             $"SELECT pg_advisory_xact_lock({lockKey})", context.RequestAborted);
@@ -34,6 +41,9 @@ public sealed class IdempotencyMiddleware(RequestDelegate next)
                 context.RequestAborted);
         if (existing is not null)
         {
+            logger.LogDebug(
+                "Replaying idempotent mutation. OperationId={OperationId} Scope={Scope}",
+                operationId, scope);
             await Replay(context, existing);
             await transaction.CommitAsync(context.RequestAborted);
             return;
@@ -59,7 +69,15 @@ public sealed class IdempotencyMiddleware(RequestDelegate next)
                 });
                 await db.SaveChangesAsync(context.RequestAborted);
             }
-            await transaction.CommitAsync(context.RequestAborted);
+            if (context.Response.StatusCode < 500)
+                await transaction.CommitAsync(context.RequestAborted);
+            else
+            {
+                logger.LogWarning(
+                    "Rolling back failed mutation. OperationId={OperationId} Scope={Scope} Status={StatusCode}",
+                    operationId, scope, context.Response.StatusCode);
+                await transaction.RollbackAsync(context.RequestAborted);
+            }
             context.Response.Body = originalBody;
             buffer.Position = 0;
             await buffer.CopyToAsync(originalBody, context.RequestAborted);

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_failure.dart';
 import '../../integrations/models/integration_models.dart';
 import '../models/onboarding_models.dart';
 
@@ -48,9 +49,10 @@ class OnboardingService {
   }
 
   static String _responseMessage(DioException error) {
-    final data = error.response?.data;
-    if (data is Map && data['error'] is String) return data['error'] as String;
-    return 'Could not reach the workout provider. Check your connection and try again.';
+    return ApiFailure.from(error,
+            fallback:
+                'Could not reach the workout provider. Check your connection and try again.')
+        .message;
   }
 
   Future<ClassRecommendation> getRecommendation() async {

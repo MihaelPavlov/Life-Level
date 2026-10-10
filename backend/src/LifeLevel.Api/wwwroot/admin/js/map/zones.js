@@ -56,7 +56,7 @@
       row.innerHTML = `
         <div class="tier">T${z.tier}</div>
         <div class="main">
-          <span class="emoji">${escapeHtml(z.emoji || '•')}</span>
+          ${bossListVisualHtml(z, tName)}
           <span>
             <div class="name">${escapeHtml(z.name)} <span class="badge badge-${tName}">${tName}</span></div>
             <div class="meta">${metaBits.join(' · ')}</div>
@@ -177,6 +177,49 @@
     const timerTxt = suppress ? 'no timeout' : (timer > 0 ? timer + '-day timer' : 'no timeout (0 days)');
     const el = document.getElementById('bossPreview');
     if (el) el.innerHTML = `Chapter ${chapter} · HP <b>${hp}</b> · Armor <b>${armor}</b> · Counterattack <b>${counterattack}</b> · <b>${xp}</b> XP · ${timerTxt}`;
+    updateBossArtPreview();
+  }
+
+  const FOREST_WARDEN_ART = 'assets/Bosses/boss_forest_warden.svg';
+
+  function bossVisual(name, emoji) {
+    if (String(name || '').trim().toLowerCase() === 'forest warden') {
+      return { assetPath: FOREST_WARDEN_ART, emoji: '' };
+    }
+    return { assetPath: '', emoji: String(emoji || '').trim() || '👹' };
+  }
+
+  function bossArtUrl(assetPath) {
+    return `http://${location.hostname || 'localhost'}:5000/assets/${assetPath}`;
+  }
+
+  function bossListVisualHtml(zone, typeName) {
+    const emoji = escapeHtml(zone.emoji || '•');
+    if (typeName !== 'Boss') return `<span class="emoji">${emoji}</span>`;
+    const visual = bossVisual(zone.name, zone.emoji);
+    if (!visual.assetPath) return `<span class="emoji">${escapeHtml(visual.emoji)}</span>`;
+    return `<img class="boss-zone-thumb" src="${escapeHtml(bossArtUrl(visual.assetPath))}" alt="${escapeHtml(zone.name)}" loading="lazy"><span class="emoji" hidden>${emoji}</span>`;
+  }
+
+  function updateBossArtPreview() {
+    const name = document.getElementById('zoneNameInput').value.trim();
+    const emoji = document.getElementById('zoneEmojiInput').value.trim() || '👹';
+    const visual = bossVisual(name, emoji);
+    const preview = document.getElementById('bossArtPreview');
+    const path = document.getElementById('bossArtPath');
+    if (!preview || !path) return;
+
+    if (!visual.assetPath) {
+      path.textContent = `Current game value · ${visual.emoji} (emoji)`;
+      preview.innerHTML = `<span class="boss-art-fallback">${escapeHtml(visual.emoji)}</span>`;
+      preview.setAttribute('aria-label', name ? `${name} fallback icon` : 'Boss fallback icon');
+      return;
+    }
+
+    path.textContent = `Current game value · ${visual.assetPath}`;
+    const imageUrl = bossArtUrl(visual.assetPath);
+    preview.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(name || 'Boss')}">`;
+    preview.setAttribute('aria-label', `${name || 'Boss'} image`);
   }
 
   function currentRegionChapter() {
@@ -283,5 +326,11 @@
 
   function escapeHtml(s) { return (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-  window.MapAdminZones = { load, clear, openNew, save, updateTypeVisibility };
+  window.MapAdminZones = {
+    load,
+    clear,
+    openNew,
+    save,
+    updateTypeVisibility,
+  };
 })();

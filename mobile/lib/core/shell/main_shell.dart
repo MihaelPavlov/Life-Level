@@ -34,7 +34,6 @@ import '../../features/home/providers/adventure_hub_status_provider.dart';
 import '../../features/achievements/achievements_screen.dart';
 import '../../features/achievements/providers/achievements_provider.dart';
 import '../../features/home/providers/world_progress_provider.dart';
-import '../../features/map/journey/journey_state.dart';
 import '../../features/rewards/rewards_screen.dart';
 import '../../features/rewards/providers/rewards_provider.dart';
 import '../../features/gear/gear_screen.dart';
@@ -88,6 +87,8 @@ import '../../features/unlocks/models/unlock_catalog.dart';
 import '../../features/unlocks/providers/unlocks_provider.dart';
 import '../../features/unlocks/tour/feature_tour.dart';
 import '../../features/unlocks/tour/unlock_tour_runner.dart';
+import 'boot/boot_loader.dart';
+import 'boot/boot_readiness.dart';
 import '../../features/unlocks/unlock_coordinator.dart';
 import '../../features/unlocks/widgets/unlock_badges.dart';
 
@@ -95,7 +96,17 @@ import '../../features/unlocks/widgets/unlock_badges.dart';
 class MainShell extends ConsumerStatefulWidget {
   final List<String>? initialRingIds;
   final List<String>? initialNavIds;
-  const MainShell({super.key, this.initialRingIds, this.initialNavIds});
+
+  /// Cover Home with the boot loader until its data has loaded. Set after
+  /// login and after setup, not on a signed-in cold start.
+  final bool showBootLoader;
+
+  const MainShell({
+    super.key,
+    this.initialRingIds,
+    this.initialNavIds,
+    this.showBootLoader = false,
+  });
   @override
   ConsumerState<MainShell> createState() => _MainShellState();
 }
@@ -103,6 +114,8 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   int _tabIndex = 0;
+  late bool _booting = widget.showBootLoader;
+  String? _welcomeAfterBoot;
   bool _journeyOpen = false;
   bool _worldOpen = false;
   ValueChanged<ZonePick>? _pendingOnZoneSelected;
@@ -294,6 +307,7 @@ class _MainShellState extends ConsumerState<MainShell>
       ref.invalidate(currentRegionDetailProvider);
       ref.invalidate(dungeonStateProvider);
       ref.invalidate(bossListProvider);
+      ref.invalidate(regionChestsProvider);
     });
     _inventoryFullSub = InventoryFullNotifier.stream.listen((item) {
       if (mounted) {
@@ -351,11 +365,12 @@ class _MainShellState extends ConsumerState<MainShell>
     // Greeting handed over by onboarding (first landing on Home).
     final welcome = PendingWelcome.take();
     if (welcome != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        AppToast.success(context, welcome,
-            duration: const Duration(seconds: 4));
-      });
+      if (_booting) {
+        _welcomeAfterBoot = welcome;
+      } else {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _showWelcome(welcome));
+      }
     }
 
     // FCM push notifications: request permission, fetch+register token,
@@ -632,6 +647,7 @@ class _MainShellState extends ConsumerState<MainShell>
   /// Home is on screen with nothing covering it.
   bool _canPlayBossReplay() =>
       mounted &&
+      !bootLoaderShowing &&
       (ModalRoute.of(context)?.isCurrent ?? true) &&
       !_checkingLevelUps &&
       !_journeyOpen &&
@@ -693,10 +709,24 @@ class _MainShellState extends ConsumerState<MainShell>
     _checkPendingLevelUps();
   }
 
+  void _showWelcome(String welcome) {
+    if (!mounted) return;
+    AppToast.success(context, welcome, duration: const Duration(seconds: 4));
+  }
+
+  void _finishBoot() {
+    if (!mounted) return;
+    setState(() => _booting = false);
+    final welcome = _welcomeAfterBoot;
+    _welcomeAfterBoot = null;
+    if (welcome != null) _showWelcome(welcome);
+  }
+
   Future<void> _checkPendingLevelUps() async {
     if (!mounted || _checkingLevelUps) return;
     final onHome = _navIds[_tabIndex.clamp(0, _navIds.length - 1)] == 'home';
-    if (_bossReplayFetching ||
+    if (bootLoaderShowing ||
+        _bossReplayFetching ||
         homeBossReplayRunning ||
         (_bossReplayWaiting && onHome) ||
         unlockCeremonyShowing ||
@@ -939,6 +969,7 @@ class _MainShellState extends ConsumerState<MainShell>
   /// Nothing is on screen that an unlock ceremony would cover.
   bool _canShowUnlock() =>
       mounted &&
+      !bootLoaderShowing &&
       (ModalRoute.of(context)?.isCurrent ?? true) &&
       !_checkingLevelUps &&
       !_journeyOpen &&
@@ -1190,12 +1221,6 @@ class _MainShellState extends ConsumerState<MainShell>
     });
 
     final unlocks = ref.watch(unlocksSnapshotProvider);
-    final orbState = ref.watch(journeyOrbStateProvider);
-    final journeyBoss = selectJourneyBoss(
-      ref.watch(bossListProvider).valueOrNull ?? const [],
-      ref.watch(worldProgressProvider).valueOrNull,
-    );
-    final orbBossId = bossIdForJourneyOrbAction(orbState, journeyBoss);
 
     return UnlockCoordinator(
       canInterrupt: _canShowUnlock,
@@ -1322,17 +1347,21 @@ class _MainShellState extends ConsumerState<MainShell>
                 ),
 
                 // ── Map button (raised, mirrors the journey) ────────────────
-                if (!_bossOpen)
-                  Positioned(
-                    bottom: 34,
-                    left: w / 2 - kMapOrbSize / 2,
-                    child: MapOrbButton(
-                      key: _mapNavKey,
-                      open: _journeyOpen,
-                      onTap: orbBossId != null
-                          ? () => _openBossOverlay(orbBossId)
-                          : _toggleJourney,
-                    ),
+                // Always opens the journey card; bosses have their own entry.
+                Positioned(
+                  bottom: 34,
+                  left: w / 2 - kMapOrbSize / 2,
+                  child: MapOrbButton(
+                    key: _mapNavKey,
+                    open: _journeyOpen,
+                    onTap: _toggleJourney,
+                  ),
+                ),
+
+                // ── boot loader: covers Home until its data has loaded ──────
+                if (_booting)
+                  Positioned.fill(
+                    child: BootLoaderOverlay(onFinished: _finishBoot),
                   ),
               ],
             ),

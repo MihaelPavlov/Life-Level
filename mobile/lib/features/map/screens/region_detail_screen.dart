@@ -6,6 +6,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/services/client_experience_service.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/api/api_failure.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
@@ -132,7 +133,7 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = playerErrorMessage(e, fallback: 'Could not load this region.');
         _loading = false;
       });
     }

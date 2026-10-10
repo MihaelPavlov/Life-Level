@@ -5,6 +5,9 @@
 class AppIcons {
   AppIcons._();
 
+  /// App icon / brand mark (boot loader).
+  static const String appLogo = 'assets/images/logo.png';
+
   // ── Navigation ──────────────────────────────────────────────────────────────
   static const String navHome = 'assets/icons/nav_home.png';
   static const String navMap = 'assets/icons/nav_map.png';
@@ -326,6 +329,8 @@ class AppIcons {
   static const String regionChestsBackground =
       'assets/Regions/region_chests_background.png';
   static const String regionChestsHubIcon = 'assets/icons/region_chests.png';
+  static const String regionChestsOpened =
+      'assets/icons/region_chests_opened.png';
 
   /// Region display name → its painted banner asset. All 15 chapters have
   /// real art (see `docs` art-direction sheet for the generation prompts).

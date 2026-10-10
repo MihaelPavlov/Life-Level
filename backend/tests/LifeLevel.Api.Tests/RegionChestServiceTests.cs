@@ -106,6 +106,20 @@ public class RegionChestServiceTests
     }
 
     [Fact]
+    public async Task FirstCompletedRegion_PaysTheExistingFirstChestReward()
+    {
+        await using var db = CreateDb(nameof(FirstCompletedRegion_PaysTheExistingFirstChestReward));
+        var setup = await SeedAsync(db, 1, defeated: true);
+        var wallet = new RegionChestWallet();
+
+        var result = await new RegionChestService(db, wallet, wallet, new RegionChestLevel(1))
+            .ClaimAsync(setup.UserId, setup.Region.Id);
+
+        Assert.Equal(150, result.Coins);
+        Assert.Equal(20, result.Gems);
+    }
+
+    [Fact]
     public async Task UnresolvedBoss_CannotBeClaimed()
     {
         await using var db = CreateDb(nameof(UnresolvedBoss_CannotBeClaimed));

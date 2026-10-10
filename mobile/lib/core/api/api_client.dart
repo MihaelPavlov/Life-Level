@@ -52,7 +52,11 @@ class ApiClient {
       },
       onError: (error, handler) async {
         final isAuthRequest = error.requestOptions.path.startsWith('/auth/');
-        if (error.response?.statusCode == 401 && !isAuthRequest) {
+        // Already logged out (a request that left without a token, or the
+        // logout's own background calls): Login is on screen, don't push it
+        // again.
+        final loggedIn = await getToken() != null;
+        if (error.response?.statusCode == 401 && !isAuthRequest && loggedIn) {
           await _storage.delete(key: 'jwt_token');
           navigatorKey.currentState?.pushAndRemoveUntil(
             AppRoute(

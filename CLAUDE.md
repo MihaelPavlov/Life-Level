@@ -213,6 +213,8 @@ Owns the navigation container, the tab bar with the raised Map button, and globa
 | `widgets/journey_popover.dart` | The journey card (`HomePortalCard`) shown above the Map button when it is tapped. |
 | `shell_anchors.dart` | Shared `FxAnchor`s (hero, avatar, Map button) that reward effects fly between. |
 | `shell_constants.dart` | Layout constants (`kNavBarH = 82`) and nav colour tokens. |
+| `boot/boot_readiness.dart` | `bootReadinessProvider`: folds the providers Home renders into 4 checklist rows (profile · map & journey · quests & streak · rewards & unlocks); `retryBootStep`; the global `bootLoaderShowing` flag that level-ups, unlock ceremonies, tours and boss replays wait on. |
+| `boot/boot_loader.dart` | `BootLoaderOverlay` (design F): logo in a progress ring + checklist over Home after login/setup (`MainShell(showBootLoader: true)`); lifts only when all rows have data (min 0.8 s), "Try again" after 8 s or on error, "Continue anyway" after 20 s. |
 
 ### `features/home/` — Home Screen
 

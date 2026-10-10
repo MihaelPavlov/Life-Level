@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/widgets/app_toast.dart';
 import 'auth_flow.dart';
 import 'services/auth_service.dart';
 import 'register_screen.dart';
@@ -10,7 +11,10 @@ import 'widgets/google_sign_in_button.dart';
 import 'widgets/sign_in_orb.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  /// Shows a "Signed out" toast on arrival (after a logout).
+  final bool signedOut;
+
+  const LoginScreen({super.key, this.signedOut = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -24,6 +28,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.signedOut) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) AppToast.success(context, 'Signed out');
+      });
+    }
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;

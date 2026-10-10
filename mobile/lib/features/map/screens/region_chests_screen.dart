@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/api/api_failure.dart';
 import '../../../core/constants/app_icons.dart';
 import 'dart:math' as math;
 
@@ -15,7 +16,6 @@ import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../../core/widgets/currency_chip.dart';
 import '../../character/providers/character_provider.dart';
-import '../../rewards/widgets/task_reward_popup.dart';
 import '../../shop/shop_screen.dart';
 import '../models/region_chest_models.dart';
 import '../models/world_map_models.dart';
@@ -52,7 +52,15 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
 
   /// The region on screen in the last build, so a claim can pin it.
   int _shownIndex = 0;
+  /// Set from the tap until the loot lands (or the claim fails).
   String? _claimingRegionId;
+
+  /// The wallet the chips show while loot is in the air: the claim updates
+  /// the real one at once, but the chips should only tick up when it lands.
+  RegionChestWallet? _heldWallet;
+  int _chipPulse = 0;
+  final _gemChip = FxAnchor();
+  final _coinChip = FxAnchor();
 
   @override
   void initState() {
@@ -84,7 +92,8 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error =
+            playerErrorMessage(e, fallback: 'Could not load region chests.');
         _loading = false;
       });
     }
@@ -96,6 +105,7 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
     }
     setState(() {
       _claimingRegionId = chest.regionId;
+      _heldWallet = ref.read(regionChestsProvider).valueOrNull?.wallet;
       // The default focus follows the first *ready* chest. Once this one is
       // claimed it would jump to another region and tear down the panel that
       // plays the opening, so keep the claimed region on screen.
@@ -108,18 +118,31 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
       return result;
     } catch (_) {
       if (mounted) {
+        setState(() {
+          _heldWallet = null;
+          _claimingRegionId = null;
+        });
         AppToast.error(context, 'Could not claim the chest. Try again.');
       }
       return null;
-    } finally {
-      if (mounted) setState(() => _claimingRegionId = null);
     }
+  }
+
+  void _lootLanded() {
+    if (!mounted) return;
+    setState(() {
+      // The opening is over once the loot is in the wallet.
+      _claimingRegionId = null;
+      _heldWallet = null;
+      _chipPulse++;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final chestsAsync = ref.watch(regionChestsProvider);
     final overview = chestsAsync.valueOrNull;
+    final wallet = _heldWallet ?? overview?.wallet;
 
     return TourOnFirstVisit(
       unlockKey: UnlockKeys.chests,
@@ -134,7 +157,9 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                       child: CircularProgressIndicator(color: AppColors.blue))
                   : _error != null || chestsAsync.hasError
                       ? ApiErrorState(
-                          message: _error ?? chestsAsync.error.toString(),
+                          message: _error ??
+                              playerErrorMessage(chestsAsync.error,
+                                  fallback: 'Could not load region chests.'),
                           onRetry: _load)
                       : _buildContent(_data!, overview),
             ),
@@ -154,13 +179,25 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _currencyChip(context,
-                            iconAsset: AppIcons.homeGemIcon,
-                            value: _fmt(overview?.wallet.gems ?? 0)),
+                        FxAnchorTarget(
+                          anchor: _gemChip,
+                          child: _Pulse(
+                            trigger: _chipPulse,
+                            child: _currencyChip(context,
+                                iconAsset: AppIcons.homeGemIcon,
+                                value: _fmt(wallet?.gems ?? 0)),
+                          ),
+                        ),
                         const SizedBox(width: 10),
-                        _currencyChip(context,
-                            iconAsset: AppIcons.homeCoinIcon,
-                            value: _fmt(overview?.wallet.coins ?? 0)),
+                        FxAnchorTarget(
+                          anchor: _coinChip,
+                          child: _Pulse(
+                            trigger: _chipPulse,
+                            child: _currencyChip(context,
+                                iconAsset: AppIcons.homeCoinIcon,
+                                value: _fmt(wallet?.coins ?? 0)),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -226,7 +263,7 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
           const titleHeight = titleWidth / (1537 / 327);
           const regionNameHeight = 20.0;
           const rewardsTopPad = 8.0;
-          const rewardsHeight = 124.0;
+          const rewardsHeight = _kStageHeight + 8 + 48;
           const captionTopPad = 10.0;
           const captionHeight = 18.0;
           const captionBottomPad = 16.0;
@@ -355,12 +392,14 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                         const EdgeInsets.fromLTRB(28, rewardsTopPad, 28, 0),
                     child: TourTarget(
                       id: TourIds.chestsRewards,
-                      child: _RewardsPanel(
+                      child: _ChestStage(
                         key: ValueKey(focused.name),
                         region: focused,
                         chest: chest,
-                        claiming: _claimingRegionId == chest.regionId,
                         onClaim: () => _claim(chest),
+                        gemChip: _gemChip,
+                        coinChip: _coinChip,
+                        onLootLanded: _lootLanded,
                       ),
                     ),
                   ),
@@ -368,7 +407,9 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
                     padding: const EdgeInsets.fromLTRB(
                         28, captionTopPad, 28, captionBottomPad),
                     child: Text(
-                      _claimCaption(focused, chest),
+                      _claimingRegionId == chest.regionId
+                          ? 'Opening the chest…'
+                          : _claimCaption(focused, chest),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                           fontSize: 12.5,
@@ -394,19 +435,6 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
     };
   }
 }
-
-int _tierIndexFor(int chapterIndex) =>
-    ((chapterIndex - 1) / 3).floor().clamp(0, 4);
-
-// Illustrative reward-slot tint per chest tier. Tier 0 was green (rarityColor's
-// "common") — now purple per request; the rest are unchanged.
-const _tierColors = [
-  Color(0xFFa371f7), // tier 0 (chapters 1-3) — was green, now purple
-  Color(0xFF8b949e), // tier 1 (chapters 4-6) — uncommon/grey
-  Color(0xFF4f9eff), // tier 2 (chapters 7-9) — rare/blue
-  Color(0xFFa371f7), // tier 3 (chapters 10-12) — epic/purple
-  Color(0xFFf5a623), // tier 4 (chapters 13-15) — legendary/gold
-];
 
 void _openShop(BuildContext context) {
   Navigator.of(context).push(AppRoute(builder: (_) => const ShopScreen()));
@@ -614,265 +642,519 @@ class _RegionBanner extends StatelessWidget {
   }
 }
 
-// ── Rewards panel ────────────────────────────────────────────────────────────
+// ── Chest stage ──────────────────────────────────────────────────────────────
 
-/// Reward tiles for the focused region. When the chest is ready, tapping
-/// plays "lid pop + light beam": the tiles shake, each tile's lid flips
-/// open over a warm glow, and a beam with sparkles rises out of it.
-/// The opening begins immediately while the backend confirms the reward.
-class _RewardsPanel extends StatefulWidget {
+enum _ChestPhase { idle, waiting, opening, opened }
+
+/// The focused region's chest (design: Rewards canvas, "K2 · One big
+/// chest"). A ready chest bobs; tapping it (or "Open chest") sends the claim
+/// and shakes the chest while the server answers. Only a confirmed claim
+/// opens it: the lid pops, the coins and crystals rise out as two tiles and
+/// fly into the wallet chips. A failed claim leaves the chest shut.
+class _ChestStage extends StatefulWidget {
   final RegionCard region;
   final RegionChestEntry chest;
-  final bool claiming;
   final Future<RegionChestClaimResult?> Function() onClaim;
-  const _RewardsPanel(
-      {super.key,
-      required this.region,
-      required this.chest,
-      required this.claiming,
-      required this.onClaim});
+
+  /// Where the loot lands, and what to call once it has.
+  final FxAnchor gemChip;
+  final FxAnchor coinChip;
+  final VoidCallback onLootLanded;
+
+  const _ChestStage({
+    super.key,
+    required this.region,
+    required this.chest,
+    required this.onClaim,
+    required this.gemChip,
+    required this.coinChip,
+    required this.onLootLanded,
+  });
 
   @override
-  State<_RewardsPanel> createState() => _RewardsPanelState();
+  State<_ChestStage> createState() => _ChestStageState();
 }
 
-class _RewardsPanelState extends State<_RewardsPanel>
-    with SingleTickerProviderStateMixin {
+// Opening timeline (ms): the lid pops at 0, the tiles rise out, hold, then
+// take off for the chips.
+const _kPopMs = 380.0;
+const _kRiseStart = 150.0;
+const _kRiseMs = 520.0;
+const _kFlyAt = 1100.0;
+const _kOpenMs = 1150.0;
+const _kChestSize = 150.0;
+const _kStageHeight = 156.0;
+
+class _ChestStageState extends State<_ChestStage>
+    with TickerProviderStateMixin {
+  /// Drives the idle bob and the waiting shake.
+  late final AnimationController _loop = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 2400))
+    ..addListener(_tick);
   late final AnimationController _open = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1100))
-    ..addListener(() => setState(() {}));
-  final _slotKeys = [GlobalKey(), GlobalKey()];
+      vsync: this, duration: Duration(milliseconds: _kOpenMs.round()))
+    ..addListener(_tick);
+  final _tileKeys = [GlobalKey(), GlobalKey()];
+  _ChestPhase _phase = _ChestPhase.idle;
+  RegionChestClaimResult? _result;
+  bool _lootPending = false;
+  bool _precached = false;
 
-  RegionCard get region => widget.region;
+  RegionChestEntry get chest => widget.chest;
 
-  Future<void> _tap() async {
-    if (widget.chest.status != RegionChestStatus.ready ||
-        widget.claiming ||
-        _open.isAnimating) {
-      return;
-    }
-    final request = widget.onClaim();
-    if (!RewardFx.enabled(context)) {
-      final result = await request;
-      if (result == null || !mounted) return;
-      await _showReward(result);
-      return;
-    }
-    _open.forward(from: 0);
-    AppMotion.haptic(AppHaptic.light);
-    await Future.delayed(const Duration(milliseconds: 450));
-    if (!mounted) return;
-    for (final (i, key) in _slotKeys.indexed) {
-      final r = RewardFx.rectOf(key);
-      if (r == null) continue;
-      Future.delayed(Duration(milliseconds: i * 200), () {
-        if (!mounted) return;
-        RewardFx.beam(context, r.topCenter + const Offset(0, 8),
-            width: 80, height: 240);
-        RewardFx.sparkles(context, r.topCenter, count: 10, spread: 26);
-      });
-    }
-    await Future.delayed(const Duration(milliseconds: 900));
-    final result = await request;
-    if (result != null && mounted) await _showReward(result);
+  bool get _ready => chest.status == RegionChestStatus.ready;
+
+  /// Opened art once this panel has opened it, or for a chest claimed
+  /// before. While waiting the optimistic state already says "claimed", so
+  /// the phase wins.
+  bool get _showOpen =>
+      _phase == _ChestPhase.opening ||
+      _phase == _ChestPhase.opened ||
+      (_phase == _ChestPhase.idle &&
+          chest.status == RegionChestStatus.claimed);
+
+  void _tick() => setState(() {});
+
+  @override
+  void initState() {
+    super.initState();
+    _loop.repeat();
   }
 
-  Future<void> _showReward(RegionChestClaimResult result) =>
-      showRewardRevealPopup(
-        context,
-        items: [
-          RewardRevealItem(
-              asset: AppIcons.homeCoinIcon,
-              label: '×${result.coins}',
-              color: AppColors.orange),
-          RewardRevealItem(
-              asset: AppIcons.homeGemIcon,
-              label: '×${result.gems}',
-              color: AppColors.purple),
-        ],
-        subtitle: 'Region chest claimed',
-        heroAsset: AppIcons.rewardChestBurst,
-      );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_precached) return;
+    _precached = true;
+    // Decode the opened art up front so the swap never shows a blank frame.
+    precacheImage(
+        const AssetImage(AppIcons.regionChestsOpened), context);
+  }
 
   @override
   void dispose() {
+    // Leaving mid-flight (back, or focusing another region): let the
+    // wallet catch up anyway.
+    if (_lootPending) widget.onLootLanded();
+    _loop.dispose();
     _open.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final ms = _open.value * 1100;
-    double shake(int i) {
-      final p = ((ms - i * 80) / 450).clamp(0.0, 1.0);
-      return p <= 0 || p >= 1 ? 0 : math.sin(p * math.pi * 6) * 4 * (1 - p);
+  Future<void> _tapOpen() async {
+    if (!_ready || _phase != _ChestPhase.idle) return;
+    setState(() => _phase = _ChestPhase.waiting);
+    AppMotion.haptic(AppHaptic.light);
+    // Shake for at least a moment, even when the answer is instant.
+    final answers = await Future.wait<Object?>([
+      widget.onClaim(),
+      Future<void>.delayed(const Duration(milliseconds: 520)),
+    ]);
+    if (!mounted) return;
+    final result = answers.first as RegionChestClaimResult?;
+    if (result == null) {
+      // The claim failed (the screen shows the error). Nothing opened.
+      setState(() => _phase = _ChestPhase.idle);
+      return;
     }
+    _result = result;
+    _lootPending = true;
+    if (!RewardFx.enabled(context)) {
+      setState(() => _phase = _ChestPhase.opened);
+      _landLoot();
+      return;
+    }
+    setState(() => _phase = _ChestPhase.opening);
+    AppMotion.haptic(AppHaptic.medium);
+    _burstFx();
+    await _open.forward(from: 0);
+    if (!mounted) return;
+    setState(() => _phase = _ChestPhase.opened);
+  }
 
-    double lid(int i) => _open.isAnimating || _open.value == 1
-        ? Curves.easeOutBack
-            .transform(((ms - 450 - i * 200) / 380).clamp(0.0, 1.0))
-        : 0;
-    final tier = _tierIndexFor(region.chapterIndex);
-    final coins = widget.chest.coins;
-    final gems = widget.chest.gems;
-    final tierColor = _tierColors[tier];
+  void _burstFx() {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final at = box.localToGlobal(Offset(box.size.width / 2, _kStageHeight / 2));
+    RewardFx.burst(context, at, const Color(0xFF8FD3FF),
+        count: 14, distance: 90);
+    RewardFx.sparkles(context, at,
+        count: 10, spread: 50, color: const Color(0xFFBFE6FF));
+  }
 
-    return GestureDetector(
-      onTap: _tap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.black.withValues(alpha: 0.35),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+  /// Fired as the tiles reach their hold: they take off for the chips.
+  bool _flown = false;
+  void _maybeFly() {
+    if (_flown || _open.value * _kOpenMs < _kFlyAt) return;
+    _flown = true;
+    final result = _result!;
+    final from = [for (final k in _tileKeys) RewardFx.centerOf(k)];
+    final targets = [widget.gemChip.rect, widget.coinChip.rect];
+    final assets = [AppIcons.homeGemIcon, AppIcons.homeCoinIcon];
+    final amounts = [result.gems, result.coins];
+    final flights = <Future<void>>[];
+    for (var i = 0; i < 2; i++) {
+      final start = from[i];
+      final target = targets[i];
+      if (start == null || amounts[i] <= 0) continue;
+      // Aim at the chip's icon (its left end).
+      final to = target == null
+          ? Offset(start.dx, -24)
+          : Offset(target.left + 16, target.center.dy);
+      flights.add(RewardFx.fly(
+        context,
+        child: Image.asset(assets[i], width: 34, height: 34),
+        from: start,
+        to: to,
+        lift: -40,
+        sideways: i == 0 ? -30 : 30,
+        endScale: .5,
+        duration: const Duration(milliseconds: 560),
+        delay: Duration(milliseconds: i * 100),
+      ).then((_) {
+        if (target != null && mounted) {
+          RewardFx.burst(context, to,
+              i == 0 ? AppColors.purple : AppColors.orange,
+              count: 8, distance: 22);
+        }
+      }));
+    }
+    Future.wait(flights).then((_) {
+      AppMotion.haptic(AppHaptic.light);
+      _landLoot();
+    });
+  }
+
+  void _landLoot() {
+    if (!_lootPending) return;
+    _lootPending = false;
+    widget.onLootLanded();
+  }
+
+  double _p(double start, double len, [Curve curve = Curves.easeOutCubic]) =>
+      curve.transform(((_open.value * _kOpenMs - start) / len).clamp(0.0, 1.0));
+
+  // ── pieces ────────────────────────────────────────────────────────────────
+
+  Widget _chestArt() {
+    final t = _loop.value * 2 * math.pi;
+    var dy = 0.0, angle = 0.0, scale = 1.0;
+    final motion = RewardFx.enabled(context);
+    if (motion && _phase == _ChestPhase.idle && _ready) {
+      dy = math.sin(t) * 4;
+    } else if (motion && _phase == _ChestPhase.waiting) {
+      angle = math.sin(t * 9) * 6 * math.pi / 180;
+      scale = .98;
+    } else if (_phase == _ChestPhase.opening) {
+      final pop = _p(0, _kPopMs, Curves.easeOutBack);
+      scale = 1.18 - .18 * pop;
+    }
+    final dim = !_ready && !_showOpen;
+    Widget art = Image.asset(
+      _showOpen ? AppIcons.regionChestsOpened : AppIcons.regionChestsHubIcon,
+      width: _kChestSize,
+      height: _kChestSize,
+      fit: BoxFit.contain,
+      cacheWidth: 480,
+      gaplessPlayback: true,
+    );
+    if (dim) {
+      art = Opacity(
+        opacity: .5,
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.matrix([
+            .4, .4, .2, 0, 0, //
+            .3, .4, .3, 0, 0, //
+            .3, .3, .5, 0, 0, //
+            0, 0, 0, 1, 0,
+          ]),
+          child: art,
         ),
-        child: Column(
-          children: [
-            Text(
-                widget.chest.status == RegionChestStatus.claimed
-                    ? 'Claimed'
-                    : widget.claiming
-                        ? 'Opening…'
-                        : 'Rewards',
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white)),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Transform.rotate(
-                  key: _slotKeys[0],
-                  angle: shake(0) * math.pi / 180,
-                  child: _RewardSlot(
-                      iconAsset: AppIcons.homeGemIcon,
-                      qty: gems,
-                      tierColor: tierColor,
-                      lidOpen: lid(0)),
-                ),
-                const SizedBox(width: 14),
-                Transform.rotate(
-                  key: _slotKeys[1],
-                  angle: shake(1) * math.pi / 180,
-                  child: _RewardSlot(
-                      iconAsset: AppIcons.homeCoinIcon,
-                      qty: coins,
-                      tierColor: tierColor,
-                      lidOpen: lid(1)),
-                ),
-              ],
-            ),
-          ],
-        ),
+      );
+    } else if (_phase == _ChestPhase.idle && _showOpen) {
+      art = Opacity(opacity: .75, child: art); // claimed earlier
+    }
+    return Transform.translate(
+      offset: Offset(0, dy),
+      child: Transform.rotate(
+        angle: angle,
+        alignment: const Alignment(0, .7),
+        child: Transform.scale(scale: scale, child: art),
       ),
     );
   }
-}
 
-class _RewardSlot extends StatelessWidget {
-  final String iconAsset;
-  final int qty;
-  final Color tierColor;
-
-  /// 0 = closed, 1 = lid flipped open (glow showing underneath).
-  final double lidOpen;
-  const _RewardSlot(
-      {required this.iconAsset,
-      required this.qty,
-      required this.tierColor,
-      this.lidOpen = 0});
-
-  @override
-  Widget build(BuildContext context) {
-    final tile = _tile();
-    if (lidOpen <= 0) return tile;
-    return SizedBox(
-      width: 72,
-      height: 72,
+  Widget _halo() {
+    final on = switch (_phase) {
+      _ChestPhase.opening => _p(0, 300),
+      _ChestPhase.opened => 1.0,
+      _ => 0.0,
+    };
+    final flash = _phase == _ChestPhase.opening
+        ? math.sin(math.pi * _p(0, 420, Curves.linear))
+        : 0.0;
+    if (on <= 0 && flash <= 0) return const SizedBox.shrink();
+    return IgnorePointer(
       child: Stack(
+        alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          // Warm glow revealed as the lid lifts.
-          Positioned.fill(
-            child: Opacity(
-              opacity: lidOpen.clamp(0.0, 1.0),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: const RadialGradient(colors: [
-                    Color(0xFFFFF6D0),
-                    Color(0xFFFFCF5A),
-                    Color(0x00FFA11C),
-                  ], stops: [
-                    0,
-                    .45,
-                    1
-                  ]),
-                ),
+          Opacity(
+            opacity: on * .9,
+            child: Container(
+              width: 260,
+              height: 260,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(colors: [
+                  Color(0x806EC8FF),
+                  Color(0x294F9EFF),
+                  Color(0x004F9EFF),
+                ], stops: [0, .45, .7]),
               ),
             ),
           ),
-          // Bottom of the tile stays put, a little brighter.
-          ClipRect(
-            clipper: const _BandClipper(top: 30),
-            child: ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                  Colors.white.withValues(alpha: .25 * lidOpen),
-                  BlendMode.plus),
-              child: tile,
+          if (flash > 0)
+            Opacity(
+              opacity: flash,
+              child: Transform.scale(
+                scale: .5 + flash,
+                child: Container(
+                  width: 240,
+                  height: 240,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      Color(0xF2E6F8FF),
+                      Color(0x666EC8FF),
+                      Color(0x006EC8FF),
+                    ], stops: [0, .35, .65]),
+                  ),
+                ),
+              ),
             ),
-          ),
-          // Lid: the top band flips back on its top edge.
-          Transform(
-            alignment: Alignment.topCenter,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, .004)
-              ..rotateX(-1.9 * lidOpen)
-              ..translate(0.0, -4 * lidOpen),
-            child:
-                ClipRect(clipper: const _BandClipper(bottom: 30), child: tile),
-          ),
         ],
       ),
     );
   }
 
-  Widget _tile() {
+  /// The two loot tiles: rise out of the chest, hold, then hand over to
+  /// the flying icons.
+  Widget _tiles() {
+    if (_phase != _ChestPhase.opening || _result == null) {
+      return const SizedBox.shrink();
+    }
+    if (_open.value * _kOpenMs >= _kFlyAt) return const SizedBox.shrink();
+    final result = _result!;
+    final tiles = [
+      (AppIcons.homeGemIcon, result.gems, AppColors.purple, -52.0),
+      (AppIcons.homeCoinIcon, result.coins, AppColors.orange, 52.0),
+    ];
+    return IgnorePointer(
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          for (var i = 0; i < 2; i++)
+            Builder(builder: (_) {
+              final (asset, qty, color, x) = tiles[i];
+              final p = _p(_kRiseStart + i * 90, _kRiseMs, Curves.easeOutBack);
+              final fade = _p(_kRiseStart + i * 90, 160);
+              return Transform.translate(
+                offset: Offset(x * p, 20 - 128 * p),
+                child: Opacity(
+                  opacity: fade,
+                  child: Transform.scale(
+                    scale: .3 + .7 * p.clamp(0.0, 1.1),
+                    child: _LootTile(
+                        key: _tileKeys[i],
+                        asset: asset,
+                        qty: qty,
+                        color: color),
+                  ),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _rewardPreview({required bool faded}) {
+    Widget item(String asset, int qty) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(asset, width: 18, height: 18),
+            const SizedBox(width: 4),
+            Text('×$qty',
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white)),
+          ],
+        );
+    return Opacity(
+      opacity: faded ? .45 : 1,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          item(AppIcons.homeGemIcon, chest.gems),
+          const SizedBox(width: 12),
+          item(AppIcons.homeCoinIcon, chest.coins),
+        ],
+      ),
+    );
+  }
+
+  Widget _action() {
+    final claimed = _showOpen;
+    final waiting = _phase == _ChestPhase.waiting;
+    final Widget label;
+    if (waiting) {
+      label = const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: Color(0xFF1A0F00)),
+          ),
+          SizedBox(width: 8),
+          Text('Opening…'),
+        ],
+      );
+    } else if (claimed) {
+      label = const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_rounded, size: 18),
+          SizedBox(width: 6),
+          Text('Claimed'),
+        ],
+      );
+    } else if (_ready) {
+      label = const Text('Open chest');
+    } else {
+      label = const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_rounded, size: 16),
+          SizedBox(width: 6),
+          Text('Locked'),
+        ],
+      );
+    }
+    final active = _ready && _phase == _ChestPhase.idle;
+    return FilledButton(
+      onPressed: active ? _tapOpen : null,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.orange,
+        foregroundColor: const Color(0xFF1A0F00),
+        disabledBackgroundColor: waiting
+            ? AppColors.orange
+            : Colors.white.withValues(alpha: .10),
+        disabledForegroundColor:
+            waiting ? const Color(0xFF1A0F00) : const Color(0xFFc9d1d9),
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+      ),
+      child: label,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_phase == _ChestPhase.opening) _maybeFly();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: _kStageHeight,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              _halo(),
+              Semantics(
+                button: _ready && _phase == _ChestPhase.idle,
+                label: _ready ? 'Open the region chest' : 'Region chest',
+                child: GestureDetector(
+                  onTap: _tapOpen,
+                  child: _chestArt(),
+                ),
+              ),
+              _tiles(),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _rewardPreview(faded: _showOpen),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            _action(),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _LootTile extends StatelessWidget {
+  final String asset;
+  final int qty;
+  final Color color;
+  const _LootTile(
+      {super.key, required this.asset, required this.qty, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 72,
       height: 72,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color, width: 3),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color.lerp(tierColor, Colors.black, 0.5)!,
-            Color.lerp(tierColor, Colors.black, 0.75)!
+            Color.lerp(color, Colors.black, .45)!,
+            Color.lerp(color, Colors.black, .78)!,
           ],
         ),
-        border: Border.all(color: tierColor, width: 3),
+        boxShadow: const [
+          BoxShadow(color: Color(0x59000000), offset: Offset(0, 6)),
+        ],
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Image.asset(iconAsset, width: 34, height: 34, fit: BoxFit.contain),
+          Image.asset(asset, width: 38, height: 38, fit: BoxFit.contain),
           Positioned(
-            right: 4,
-            bottom: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                color: const Color(0xFF1a0f38),
-                border: Border.all(color: tierColor),
+            left: 0,
+            right: 0,
+            bottom: 3,
+            child: Text(
+              '×$qty',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                shadows: [Shadow(color: Color(0xE6030710), blurRadius: 3)],
               ),
-              child: Text('×$qty',
-                  style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFeee2ff))),
             ),
           ),
         ],
@@ -881,16 +1163,22 @@ class _RewardSlot extends StatelessWidget {
   }
 }
 
-/// Keeps only a horizontal band of the child: y < [bottom] or y >= [top].
-class _BandClipper extends CustomClipper<Rect> {
-  final double? top, bottom;
-  const _BandClipper({this.top, this.bottom});
+/// Pops its child each time [trigger] changes (a chip receiving loot).
+class _Pulse extends StatelessWidget {
+  final int trigger;
+  final Widget child;
+  const _Pulse({required this.trigger, required this.child});
 
   @override
-  Rect getClip(Size size) => bottom != null
-      ? Rect.fromLTRB(0, 0, size.width, bottom!)
-      : Rect.fromLTRB(0, top!, size.width, size.height);
-
-  @override
-  bool shouldReclip(_BandClipper old) => old.top != top || old.bottom != bottom;
+  Widget build(BuildContext context) {
+    if (trigger == 0) return child;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(trigger),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 320),
+      builder: (_, t, c) =>
+          Transform.scale(scale: 1 + .18 * math.sin(math.pi * t), child: c),
+      child: child,
+    );
+  }
 }

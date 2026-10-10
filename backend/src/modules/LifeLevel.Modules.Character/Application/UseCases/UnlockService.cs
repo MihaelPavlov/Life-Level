@@ -24,12 +24,19 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, IRewardCurr
     public static readonly DateTime BackFillBefore = new(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc);
 
     /// <summary>
-    /// A feature opens when the player has reached its <paramref name="Tier"/> level and done its
-    /// action (<paramref name="Action"/>). Each tier holds at most two features.
+    /// Most features open when the player reaches their <paramref name="Tier"/> and performs their
+    /// <paramref name="Action"/>. Milestone features can ignore the level and pacing gates while
+    /// retaining their tier as display/order metadata.
     /// </summary>
-    public sealed record Definition(string Key, int Tier, Func<UnlockFacts, bool> Action)
+    public sealed record Definition(
+        string Key,
+        int Tier,
+        Func<UnlockFacts, bool> Action,
+        bool RequiresTierLevel = true,
+        bool ReleaseImmediately = false)
     {
-        public bool IsMet(UnlockFacts f) => f.Level >= Tier && Action(f);
+        public bool IsMet(UnlockFacts f) =>
+            (!RequiresTierLevel || f.Level >= Tier) && Action(f);
     }
 
     /// <summary>The path, in the order the player meets it (tier, then catalog order).</summary>
@@ -41,7 +48,8 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, IRewardCurr
         new("gear", 2, f => f.ItemCount >= 1),
         new("talents", 3, _ => true),
         new("shields", 3, f => f.LongestStreak >= 3),
-        new("chests", 4, f => f.ZonesReached >= 2),
+        new("chests", 4, f => f.HasCompletedRegion,
+            RequiresTierLevel: false, ReleaseImmediately: true),
         new("bosses", 4, f => f.BossSeen),
         new("ranks", 5, f => f.RankReached || f.TitlesEarned >= 1),
         new("leaderboard", 6, _ => true),
@@ -70,7 +78,12 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, IRewardCurr
         var now = DateTime.UtcNow;
 
         var candidates = Catalog.Where(d => d.IsMet(f) && rows.All(r => r.Key != d.Key)).ToList();
-        if (!backFill) candidates = Releasable(candidates, rows, f);
+        if (!backFill)
+        {
+            var immediate = candidates.Where(d => d.ReleaseImmediately);
+            var paced = Releasable(candidates.Where(d => !d.ReleaseImmediately).ToList(), rows, f);
+            candidates = Catalog.Where(d => immediate.Contains(d) || paced.Contains(d)).ToList();
+        }
 
         var added = false;
         foreach (var def in candidates)

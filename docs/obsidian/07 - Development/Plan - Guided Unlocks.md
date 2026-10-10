@@ -19,7 +19,7 @@ Home bubbles, the outro and the 8-step Map tutorial.
 | 1 | `achievements` | ≥ 1 activity logged | Hub tile | Continue card → All roads → Claim all |
 | 2 | `map` | Distance travelled on the world map > 0 | Map button (raised orb) | orb (tap) → journey card → View on map |
 | 3 | `gear` | ≥ 1 item owned | Gear tab + Home mount/weapon cards | slots → combat stats → tap the item |
-| 4 | `chests` | Reached a zone beyond the start (≥ 2 zones unlocked) | Hub tile | region banner → rewards → next region |
+| 4 | `chests` | First region completed (region boss defeated or expired); no level gate | Hub tile | region banner → rewards → next region |
 | 5 | `talents` | Level ≥ 3 | Hub tile | crystals → grid → Card Draw |
 | 6 | `shields` | Longest streak ≥ 3 | Streak shields | streak header → shields → Claim reward |
 | 7 | `bosses` | A boss spawned for the user | Hub tile | boss card → HP + my damage → Enter Battle |
@@ -31,7 +31,7 @@ Home bubbles, the outro and the 8-step Map tutorial.
 
 ## Backend
 - **Entity** `CharacterUnlock` (Character module): `Id, UserId, Key, UnlockedAt, SeenAt?, TouredAt?`. Unique `(UserId, Key)`.
-- **Facts port** `IUnlockFactsReadPort` (SharedKernel) → `UnlockFacts(ActivityCount, HasTravelled, ItemCount, ZonesReached, Level, LongestStreak, BossSeen, OnboardingDone)`.
+- **Facts port** `IUnlockFactsReadPort` (SharedKernel) → `UnlockFacts(ActivityCount, HasTravelled, ItemCount, ZonesReached, Level, LongestStreak, BossSeen, HasCompletedRegion, OnboardingDone)`.
   Adapter `UnlockFactsReadAdapter` in `LifeLevel.Api/Infrastructure/Persistence` queries `AppDbContext` (same pattern as `TaskEligibilityReadAdapter`).
 - **Service** `UnlockService` (Character module): `GetAsync` evaluates the catalog, inserts rows for newly met conditions and returns the list.
   **Back-fill:** the first evaluation for a user marks everything already met as seen + toured (silent), except `home` for a user with no activities.
@@ -83,3 +83,8 @@ Home bubbles, the outro and the 8-step Map tutorial.
 - **Home tour is 2 stops (hero → Adventure Hub).** The stop on the Log workout button was removed from the app and the design, because that button is temporary (`kAlwaysShowLogWorkout`). The pull-to-import hint moved into the hero stop.
 - **Copy:** the design was synced to the app's tour copy, which is the source of truth (Map step 3 is the journey's action button, not "View on map").
 - **Back-fill for keys added later:** left as is (see above).
+
+## Changed 2026-10-09: Region Chests milestone
+- Region Chests no longer require Level 4 or reaching a second zone. They unlock as soon as the first region boss is defeated or expires, matching the existing map-completion and chest-ready rules.
+- This milestone bypasses workout/tier pacing, while its ceremony still waits for blocking reward overlays to finish. Existing unlock rows are grandfathered.
+- The sequence tier remains 4 for ordering, but mobile level-up and next-unlock UI treat Region Chests as action-only and never advertise them as a Level 4 reward.

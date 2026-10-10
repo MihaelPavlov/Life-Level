@@ -372,7 +372,8 @@ class _MapStepState extends State<MapStep> with TickerProviderStateMixin {
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: motion ? 450 : 0),
-        pageBuilder: (_, __, ___) => MainShell(initialRingIds: ctrl.ringItems),
+        pageBuilder: (_, __, ___) =>
+            MainShell(initialRingIds: ctrl.ringItems, showBootLoader: true),
         transitionsBuilder: (_, a, __, child) =>
             FadeTransition(opacity: a, child: child),
       ),

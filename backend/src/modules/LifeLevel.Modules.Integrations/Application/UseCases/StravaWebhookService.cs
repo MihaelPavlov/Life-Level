@@ -8,6 +8,7 @@ using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Application.Mappers;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using LifeLevel.SharedKernel.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -138,7 +139,9 @@ public class StravaWebhookService(
 
         var (activities, error) = await FetchRecentAsync(userId, days: 30, ct);
         if (error is not null)
-            throw new InvalidOperationException(error);
+            throw new DomainException("strava_sync_failed",
+                "Could not sync Strava right now. Try again shortly.",
+                DomainErrorKind.UpstreamUnavailable);
 
         foreach (var activity in activities)
             await pending.EnqueueAsync(userId, activity, ct);

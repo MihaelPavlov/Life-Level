@@ -210,7 +210,9 @@ class AppToast {
 
   static final _rawError = RegExp(
     r'(DioException|SocketException|HttpException|TimeoutException|'
-    r'FormatException|PlatformException|\[bad response\]|\[connection)',
+    r'FormatException|PlatformException|Npgsql|EntityFramework|DbContext|'
+    r'SqlState|connection is already in a transaction|stack trace|'
+    r'\[bad response\]|\[connection)',
     caseSensitive: false,
   );
 

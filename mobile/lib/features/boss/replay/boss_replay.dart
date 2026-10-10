@@ -126,7 +126,7 @@ class BossReplayFinder {
     BossSeenStore? store,
     DateTime? now,
   }) async {
-  final seenStore = store ?? BossSeenStore.instance;
+    final seenStore = store ?? BossSeenStore.instance;
     final serverCursors = store == null
         ? await SeenStateClient().bossCursors()
         : const <String, DateTime>{};
@@ -143,17 +143,28 @@ class BossReplayFinder {
       BossSeenRecord? authoritative;
       final serverAt = serverCursors[boss.id];
       if (serverAt != null) {
-        final turn = history.where((h) => h.turnId != null &&
-            h.loggedAt.toUtc().isAtSameMomentAs(serverAt)).firstOrNull;
+        final turn = history
+            .where((h) =>
+                h.turnId != null &&
+                h.loggedAt.toUtc().isAtSameMomentAs(serverAt))
+            .firstOrNull;
         if (turn != null) {
-          authoritative = BossSeenRecord(turnAt: turn.loggedAt,
-              bossHp: turn.bossHpAfter, youHp: turn.playerHpAfter);
+          authoritative = BossSeenRecord(
+              turnAt: turn.loggedAt,
+              bossHp: turn.bossHpAfter,
+              youHp: turn.playerHpAfter);
         }
       } else if (store == null) {
         final old = seenStore[boss.id];
-        final matching = old == null ? null : history.where((h) =>
-            h.turnId != null && h.loggedAt.isAtSameMomentAs(old.turnAt) &&
-            h.bossHpAfter == old.bossHp && h.playerHpAfter == old.youHp).firstOrNull;
+        final matching = old == null
+            ? null
+            : history
+                .where((h) =>
+                    h.turnId != null &&
+                    h.loggedAt.isAtSameMomentAs(old.turnAt) &&
+                    h.bossHpAfter == old.bossHp &&
+                    h.playerHpAfter == old.youHp)
+                .firstOrNull;
         if (matching != null) {
           await SeenStateClient().markBossTurn(boss.id, matching.turnId!);
           authoritative = old;
@@ -218,7 +229,8 @@ class BossReplayFinder {
   }
 
   /// Everything in [replay] has been shown.
-  static Future<void> markSeen(BossReplay replay, {BossSeenStore? store}) async {
+  static Future<void> markSeen(BossReplay replay,
+      {BossSeenStore? store}) async {
     (store ?? BossSeenStore.instance).put(
       replay.boss.id,
       BossSeenRecord(

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_failure.dart';
 import '../models/talent_models.dart';
 
 class TalentsService {
@@ -18,19 +19,13 @@ class TalentsService {
               : ApiClient.mutationOptions(operationId));
       return TalentDrawResult.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      final message = _errorMessage(e);
+      final failure = ApiFailure.from(e,
+          fallback: 'Could not draw a talent card. Please try again.');
       if (e.response?.statusCode == 409) {
-        throw TalentInsufficientFundsException(message);
+        throw TalentInsufficientFundsException(failure.message);
       }
-      throw TalentException(message);
+      throw TalentException(failure.message);
     }
-  }
-
-  String _errorMessage(DioException e) {
-    final data = e.response?.data;
-    if (data is Map && data['error'] is String) return data['error'] as String;
-    if (data is String && data.trim().isNotEmpty) return data;
-    return 'Something went wrong. Please try again.';
   }
 }
 

@@ -16,19 +16,6 @@ public class RegionChestsController(RegionChestService chests, IUserContext user
     public Task<RegionChestsDto> Get(CancellationToken ct) => chests.GetAsync(user.UserId, ct);
 
     [HttpPost("{regionId:guid}/claim")]
-    public async Task<IActionResult> Claim(Guid regionId, CancellationToken ct)
-    {
-        try
-        {
-            return Ok(await chests.ClaimAsync(user.UserId, regionId, ct));
-        }
-        catch (RegionChestException ex) when (ex.Code == "region_not_found")
-        {
-            return NotFound(new { code = ex.Code, message = ex.Message });
-        }
-        catch (RegionChestException ex)
-        {
-            return Conflict(new { code = ex.Code, message = ex.Message });
-        }
-    }
+    public async Task<IActionResult> Claim(Guid regionId, CancellationToken ct) =>
+        Ok(await chests.ClaimAsync(user.UserId, regionId, ct));
 }

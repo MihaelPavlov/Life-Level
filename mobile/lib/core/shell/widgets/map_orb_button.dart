@@ -176,7 +176,7 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
       label: locked
           ? 'Map, locked'
           : s.kind == JourneyKind.bossRaid
-              ? '${s.semantics}. Open boss battle'
+              ? 'Map. ${s.semantics}'
               : 'Map. ${s.semantics}${secondZone == null ? '' : routeFocused ? '. Also boss raid' : '. Also ${secondZone.name}'}',
       child: FxAnchorTarget(
         anchor: ShellAnchors.mapOrb,

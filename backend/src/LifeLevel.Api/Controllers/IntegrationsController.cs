@@ -5,6 +5,7 @@ using LifeLevel.SharedKernel.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LifeLevel.SharedKernel.Abstractions;
 
 namespace LifeLevel.Api.Controllers;
 
@@ -96,19 +97,17 @@ public class IntegrationsController(
             var status = await stravaOAuth.ConnectAsync(userId, req, ct);
             return Ok(status);
         }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(ex.Message);
-        }
-        catch (HttpRequestException ex)
-        {
-            return BadRequest($"Strava token exchange failed: {ex.Message}");
-        }
         catch (DbUpdateException)
         {
             // Concurrent insert race — connection already saved by a parallel request
             var status = await stravaOAuth.GetStatusAsync(userId, ct);
             return Ok(status);
+        }
+        catch (HttpRequestException)
+        {
+            throw new DomainException("strava_unavailable",
+                "Could not connect to Strava. Try again shortly.",
+                DomainErrorKind.UpstreamUnavailable);
         }
     }
 
@@ -138,11 +137,9 @@ public class IntegrationsController(
         }
         catch (HttpRequestException)
         {
-            return StatusCode(502, new { error = "Could not reach Strava. Try again shortly." });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return StatusCode(502, new { error = ex.Message });
+            throw new DomainException("strava_sync_failed",
+                "Could not reach Strava. Try again shortly.",
+                DomainErrorKind.UpstreamUnavailable);
         }
     }
 
@@ -171,7 +168,7 @@ public class IntegrationsController(
                 errors.AddRange(result.Errors);
             }
         }
-        catch (Exception ex) { errors.Add($"Strava: {ex.Message}"); }
+        catch (Exception) { errors.Add("Strava could not sync right now. Try again shortly."); }
 
         // Garmin — add here when SyncRecentAsync is implemented
 
@@ -228,9 +225,11 @@ public class IntegrationsController(
             var status = await garminOAuth.ConnectAsync(userContext.UserId, req, ct);
             return Ok(status);
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
-            return BadRequest($"Garmin token exchange failed: {ex.Message}");
+            throw new DomainException("garmin_unavailable",
+                "Could not connect to Garmin. Try again shortly.",
+                DomainErrorKind.UpstreamUnavailable);
         }
     }
 

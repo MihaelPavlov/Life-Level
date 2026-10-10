@@ -13,6 +13,7 @@ import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/item_icon_image.dart';
 import '../../core/widgets/item_obtained_overlay.dart';
 import '../../core/api/api_client.dart';
+import '../../core/api/api_failure.dart';
 import '../character/providers/character_provider.dart';
 import '../items/models/item_models.dart';
 import '../items/providers/items_provider.dart';
@@ -60,7 +61,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => ListView(children: [
               _Error(
-                  message: e.toString(),
+                  message: playerErrorMessage(e,
+                      fallback: 'Could not load the shop.'),
                   retry: ref.read(shopProvider.notifier).reload)
             ]),
             data: (shop) => ListView(padding: EdgeInsets.zero, children: [
@@ -101,7 +103,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     await ref.read(shopProvider.notifier).refreshOffers();
     if (mounted) {
       final s = ref.read(shopProvider);
-      if (s.hasError) AppToast.error(context, s.error.toString());
+      if (s.hasError) {
+        AppToast.error(
+            context,
+            playerErrorMessage(s.error,
+                fallback: 'Could not refresh the shop.'));
+      }
       setState(() => busy = false);
     }
   }
@@ -171,7 +178,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       if (mounted) showItemObtainedOverlay(context, result.grantedItem);
     } catch (e) {
       if (soldItemId != null) _soldId.value = null;
-      if (mounted) AppToast.error(context, e.toString());
+      if (mounted) {
+        AppToast.error(
+            context,
+            playerErrorMessage(e,
+                fallback: 'The purchase could not be completed.'));
+      }
       await ref.read(shopProvider.notifier).reload();
     } finally {
       if (mounted) setState(() => busy = false);

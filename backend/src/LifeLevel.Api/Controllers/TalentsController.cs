@@ -18,16 +18,9 @@ public class TalentsController(TalentService talents, IStreakShieldPort streakSh
     [HttpPost("draw")]
     public async Task<IActionResult> Draw()
     {
-        try
-        {
-            var result = await talents.DrawAsync(userContext.UserId);
-            await GrantShieldsAsync(result.ShieldsGranted);
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
+        var result = await talents.DrawAsync(userContext.UserId);
+        await GrantShieldsAsync(result.ShieldsGranted);
+        return Ok(result);
     }
 
     private async Task GrantShieldsAsync(int count)

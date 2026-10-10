@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/dungeon_floor_cleared_notifier.dart';
+import 'dungeon_conquered_takeover.dart';
 import 'reward_moment/reward_moment.dart';
 
 /// Fired whenever `DungeonFloorClearedNotifier` emits an event.
 ///
 ///  • A single floor → a banner that doesn't block play (floors are
 ///    frequent), with the floor progress strip.
-///  • The whole run → a full-screen takeover with the bonus XP.
+///  • The whole run → the portal-ring takeover with the bonus XP
+///    (`dungeon_conquered_takeover.dart`).
 void showDungeonFloorClearedOverlay(
   BuildContext context,
   DungeonFloorClearedEvent event,
@@ -33,19 +35,10 @@ void showDungeonFloorClearedOverlay(
     return;
   }
 
-  RewardMoment.show(
+  showDungeonConqueredTakeover(
     context,
-    size: RewardMomentSize.takeover,
-    accent: AppColors.orange,
-    hero: const RewardEmoji('🏆'),
-    label: 'Dungeon conquered',
-    title: '${event.dungeonName} cleared',
-    subtitle: 'You beat all $total trials.',
-    details: RewardMomentProgress(
-        done: total, total: total, color: AppColors.orange),
-    rewards: [
-      if (event.bonusXpAwarded > 0)
-        RewardLine.xp(event.bonusXpAwarded, label: 'Bonus XP'),
-    ],
+    dungeonName: event.dungeonName,
+    totalFloors: total,
+    bonusXp: event.bonusXpAwarded,
   );
 }

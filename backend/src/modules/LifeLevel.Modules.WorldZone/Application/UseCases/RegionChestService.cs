@@ -57,6 +57,7 @@ public class RegionChestService(
             throw new RegionChestException("not_ready", "Resolve the region boss before claiming this chest.");
 
         await using var tx = db.Database.IsRelational()
+            && db.Database.CurrentTransaction is null
             ? await db.Database.BeginTransactionAsync(ct)
             : null;
         var reward = RewardFor(region.ChapterIndex);

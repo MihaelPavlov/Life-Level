@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_failure.dart';
 import '../models/streak_models.dart';
 
 class StreakService {
@@ -23,11 +24,9 @@ class StreakService {
         response.data as Map<String, dynamic>,
       );
     } on DioException catch (error) {
-      final data = error.response?.data;
-      if (data is Map && data['error'] is String) {
-        throw StreakException(data['error'] as String);
-      }
-      throw const StreakException('Could not claim streak reward.');
+      throw StreakException(
+          ApiFailure.from(error, fallback: 'Could not claim streak reward.')
+              .message);
     }
   }
 }

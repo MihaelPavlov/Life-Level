@@ -1,3 +1,5 @@
+using LifeLevel.SharedKernel.Abstractions;
+
 namespace LifeLevel.Modules.Achievements.Application.DTOs;
 
 public record AchievementDto(
@@ -81,7 +83,5 @@ public record StageChestOpenResult(
     int Gems,
     AchievementWalletDto Wallet);
 
-public class AchievementException(string code, string message) : InvalidOperationException(message)
-{
-    public string Code { get; } = code;
-}
+public class AchievementException(string code, string message) :
+    DomainException(code, message, DomainErrorKind.Conflict);

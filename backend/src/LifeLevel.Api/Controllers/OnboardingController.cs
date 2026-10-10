@@ -14,41 +14,14 @@ public class OnboardingController(OnboardingImportService onboardingImport, IUse
 {
     /// <summary>GET /api/onboarding/preview?source=strava — how many workouts the import will find.</summary>
     [HttpGet("preview")]
-    public async Task<IActionResult> Preview([FromQuery] string source, CancellationToken ct)
-    {
-        try
-        {
-            return Ok(await onboardingImport.PreviewAsync(userContext.UserId, source, ct));
-        }
-        catch (OnboardingImportService.StravaFetchException ex)
-        {
-            return StatusCode(502, new { error = ex.Message });
-        }
-    }
+    public async Task<IActionResult> Preview([FromQuery] string source, CancellationToken ct) =>
+        Ok(await onboardingImport.PreviewAsync(userContext.UserId, source, ct));
 
     /// <summary>
     /// POST /api/onboarding/import — imports the last 30 days at half XP and
     /// awards it as one batch. 409 once character setup is complete.
     /// </summary>
     [HttpPost("import")]
-    public async Task<IActionResult> Import([FromBody] OnboardingImportRequest request, CancellationToken ct)
-    {
-        try
-        {
-            var result = await onboardingImport.ImportAsync(userContext.UserId, request, ct);
-            return Ok(result);
-        }
-        catch (OnboardingImportService.SetupAlreadyCompleteException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-        catch (OnboardingImportService.StravaFetchException ex)
-        {
-            return StatusCode(502, new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-    }
+    public async Task<IActionResult> Import([FromBody] OnboardingImportRequest request, CancellationToken ct) =>
+        Ok(await onboardingImport.ImportAsync(userContext.UserId, request, ct));
 }

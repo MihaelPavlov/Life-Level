@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/services/level_up_notifier.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/api/api_failure.dart';
 import '../character/providers/character_provider.dart';
 import 'buy_founder_pass_screen.dart';
 import 'models/season_models.dart';
@@ -120,7 +121,8 @@ class _BodyState extends ConsumerState<_Body> {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (context.mounted) {
-        AppToast.error(context, e.toString());
+        AppToast.error(context,
+            playerErrorMessage(e, fallback: 'Could not claim this reward.'));
       }
     } finally {
       if (mounted) setState(() => _claiming = false);

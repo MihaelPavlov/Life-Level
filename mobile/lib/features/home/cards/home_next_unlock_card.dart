@@ -27,25 +27,26 @@ class HomeNextUnlockCard extends ConsumerWidget {
     if (next == null) return const SizedBox.shrink();
 
     final level = profile.level, xp = profile.xp;
-    final ready = next.first.tier <= level;
+    final ready = next.any(
+      (m) => m.requiredLevel == null || m.requiredLevel! <= level,
+    );
     final names = next.map((m) => m.name).join(' & ');
     final String eyebrow, sub;
     double? progress;
     if (ready) {
       eyebrow = next.first.tier == 1 ? 'YOUR FIRST UNLOCK' : 'NEXT UNLOCK';
       final needs = {
-        for (final m in next)
-          // Level-only features (and Achievements) are waiting for a workout:
-          // one level's features open per workout.
-          m.need.startsWith('Reach Level') || m.key == UnlockKeys.achievements
-              ? 'Opens after your next workout'
-              : m.need,
+        for (final m in next) _remainingNeed(m, level),
       };
       sub = needs.join(' · ');
     } else {
-      final target = xpAtLevelStart(next.first.tier);
+      final targetLevel = next
+          .map((m) => m.requiredLevel)
+          .whereType<int>()
+          .reduce((a, b) => a < b ? a : b);
+      final target = xpAtLevelStart(targetLevel);
       final from = xpAtLevelStart(level);
-      eyebrow = 'NEXT UNLOCK · LEVEL ${next.first.tier}';
+      eyebrow = 'NEXT UNLOCK · LEVEL $targetLevel';
       sub = '${_fmt(target - xp)} XP to go';
       progress = ((xp - from) / (target - from)).clamp(.04, 1.0);
     }
@@ -67,7 +68,8 @@ class HomeNextUnlockCard extends ConsumerWidget {
               child: Stack(
                 children: [
                   for (var i = 0; i < next.length; i++)
-                    Positioned(left: i * 30.0, child: _LockedIcon(next[i].icon)),
+                    Positioned(
+                        left: i * 30.0, child: _LockedIcon(next[i].icon)),
                 ],
               ),
             ),
@@ -124,6 +126,19 @@ class HomeNextUnlockCard extends ConsumerWidget {
       b.write(s[i]);
     }
     return b.toString();
+  }
+
+  static String _remainingNeed(UnlockMeta meta, int currentLevel) {
+    final requiredLevel = meta.requiredLevel;
+    if (requiredLevel != null && currentLevel < requiredLevel) {
+      if (meta.need.startsWith('Reach Level')) return meta.need;
+      return 'Reach Level $requiredLevel and ${meta.need[0].toLowerCase()}${meta.need.substring(1)}';
+    }
+    if (meta.need.startsWith('Reach Level') ||
+        meta.key == UnlockKeys.achievements) {
+      return 'Opens after your next workout';
+    }
+    return meta.need;
   }
 }
 

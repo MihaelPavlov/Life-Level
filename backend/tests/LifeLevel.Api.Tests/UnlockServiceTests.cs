@@ -159,6 +159,61 @@ public class UnlockServiceTests
         Assert.Equal(unlocked, def.IsMet(did));
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public void RegionChests_OpenOnlyAfterARegionIsCompleted_AtAnyLevel(
+        bool completed, bool unlocked)
+    {
+        var def = UnlockService.Catalog.Single(d => d.Key == "chests");
+
+        Assert.Equal(unlocked, def.IsMet(NewPlayer with
+        {
+            Level = 1,
+            ZonesReached = 20,
+            HasCompletedRegion = completed,
+        }));
+    }
+
+    [Fact]
+    public async Task CompletedRegion_UnlocksChestsImmediately_DespitePendingPacedUnlock()
+    {
+        await using var db = CreateDb();
+        var facts = new FixedFacts(NewPlayer);
+        var service = new UnlockService(db, facts, new RecordingCoins());
+        var userId = Guid.NewGuid();
+        await service.GetAsync(userId);
+
+        facts.Value = NewPlayer with { ActivityCount = 1, HasDistance = true };
+        await service.GetAsync(userId); // Map is unlocked but its ceremony is still unseen.
+
+        facts.Value = facts.Value with { HasCompletedRegion = true };
+        var list = (await service.GetAsync(userId)).Unlocks;
+
+        Assert.True(list.Single(u => u.Key == "map").Unlocked);
+        Assert.False(list.Single(u => u.Key == "map").Seen);
+        Assert.True(list.Single(u => u.Key == "chests").Unlocked);
+        Assert.False(list.Single(u => u.Key == "chests").Seen);
+    }
+
+    [Fact]
+    public async Task ExistingRegionChestUnlock_IsNeverRevoked()
+    {
+        await using var db = CreateDb();
+        var userId = Guid.NewGuid();
+        db.Set<CharacterUnlock>().Add(new CharacterUnlock
+        {
+            Id = Guid.NewGuid(), UserId = userId, Key = "chests",
+            UnlockedAt = DateTime.UtcNow, SeenAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+        var service = new UnlockService(db, new FixedFacts(NewPlayer), new RecordingCoins());
+
+        var list = (await service.GetAsync(userId)).Unlocks;
+
+        Assert.True(list.Single(u => u.Key == "chests").Unlocked);
+    }
+
     [Fact]
     public async Task ExistingPlayer_IsBackFilledSilently()
     {
@@ -167,6 +222,7 @@ public class UnlockServiceTests
         {
             ActivityCount = 40, HasDistance = true, ItemCount = 6, ZonesReached = 9,
             Level = 12, LongestStreak = 8, BossSeen = true, RankReached = true,
+            HasCompletedRegion = true,
         };
         var service = new UnlockService(db, new FixedFacts(veteran), new RecordingCoins());
 

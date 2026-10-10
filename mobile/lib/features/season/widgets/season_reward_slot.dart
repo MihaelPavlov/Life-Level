@@ -66,7 +66,7 @@ class _SeasonRewardSlotState extends State<SeasonRewardSlot>
               child: Opacity(
                 opacity: t < .5 ? 1 : 1 - (t - .5) / .5,
                 child: Transform.scale(
-                  scale: scale,
+                  scale: scale * seasonIconVisualScale(widget.reward.iconKey),
                   child: Image.asset(
                     seasonIconAsset(widget.reward.iconKey),
                     width: 32,

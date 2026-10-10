@@ -4,6 +4,7 @@ using LifeLevel.Modules.Integrations.Application;
 using LifeLevel.Modules.Integrations.Application.UseCases;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using LifeLevel.SharedKernel.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Net;
 
@@ -49,7 +50,9 @@ public class StravaOAuthServiceTests
         }
         else
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => service.ConnectAsync(userId, request));
+            var error = await Assert.ThrowsAsync<DomainException>(
+                () => service.ConnectAsync(userId, request));
+            Assert.Equal("strava_activity_access_required", error.Code);
             Assert.Empty(db.StravaConnections);
         }
     }

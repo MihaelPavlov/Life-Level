@@ -117,6 +117,7 @@ Future<void> playHomeBossReplay(BuildContext context, BossReplay replay,
   _running = true;
   final store = BossSeenStore.instance;
   final id = replay.boss.id;
+  store.playingBossId = id;
   try {
     store.update(id, bossHp: replay.startBossHp, youHp: replay.startYouHp);
     final motion = RewardFx.enabled(context);
@@ -173,6 +174,7 @@ Future<void> playHomeBossReplay(BuildContext context, BossReplay replay,
     }
   } finally {
     bossOrbFx.value = null;
+    store.playingBossId = null;
     _running = false;
   }
 }

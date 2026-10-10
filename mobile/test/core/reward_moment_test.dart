@@ -224,10 +224,37 @@ void main() {
                   totalFloors: 3,
                   runCompleted: true,
                   bonusXpAwarded: 450)));
-      expect(find.text('Sunken Crypt cleared'), findsOneWidget);
+      expect(RewardMoment.isBlockingMomentShowing, isTrue);
+      expect(find.text('DUNGEON CONQUERED'), findsOneWidget);
+      expect(find.text('Sunken Crypt'), findsOneWidget);
+      expect(find.text('3 of 3 trials cleared'), findsOneWidget);
       expect(find.text('+450'), findsOneWidget);
       await claimAndClose(tester, 'Claim');
-      expect(find.text('Sunken Crypt cleared'), findsNothing);
+      expect(find.text('Sunken Crypt'), findsNothing);
+      expect(RewardMoment.isBlockingMomentShowing, isFalse);
+    });
+
+    testWidgets('dungeon takeover: a tap mid-reveal skips to the end',
+        (tester) async {
+      await _open(
+          tester,
+          (c) => showDungeonFloorClearedOverlay(
+              c,
+              const DungeonFloorClearedEvent(
+                  dungeonName: 'Sunken Crypt',
+                  clearedFloorOrdinal: 5,
+                  totalFloors: 5,
+                  runCompleted: true,
+                  bonusXpAwarded: 1200)),
+          banner: true); // stop pumping while the ring is still drawing
+      await tester.tapAt(const Offset(195, 120));
+      await tester.pump();
+      expect(find.text('+1,200'), findsOneWidget);
+      expect(find.text('5 of 5 trials cleared'), findsOneWidget);
+      // Still open: the skip doesn't claim.
+      expect(find.text('Claim'), findsOneWidget);
+      await claimAndClose(tester, 'Claim');
+      expect(find.text('Sunken Crypt'), findsNothing);
     });
 
     testWidgets('map chest uses the task reward opening', (tester) async {

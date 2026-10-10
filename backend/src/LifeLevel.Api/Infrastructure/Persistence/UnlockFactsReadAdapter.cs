@@ -35,6 +35,15 @@ public sealed class UnlockFactsReadAdapter(AppDbContext db) : IUnlockFactsReadPo
             .Where(s => s.UserId == userId).Select(s => (int?)s.Longest).FirstOrDefaultAsync(ct) ?? 0;
         var bossSeen = await db.Set<UserBossState>().AsNoTracking()
             .AnyAsync(b => b.UserId == userId, ct);
+        var hasCompletedRegion = await (
+            from zone in db.Set<WorldZone>().AsNoTracking()
+            join boss in db.Set<Boss>().AsNoTracking() on zone.Id equals boss.WorldZoneId
+            join state in db.Set<UserBossState>().AsNoTracking() on boss.Id equals state.BossId
+            where zone.Region.World.IsActive &&
+                  state.UserId == userId &&
+                  (state.IsDefeated || state.IsExpired)
+            select zone.RegionId)
+            .AnyAsync(ct);
         // The tutorial's Novice Adventurer title is handed out, not reached, so it doesn't count.
         var tutorialTitleId = TitleCatalog.KeyToId[TutorialStepRewards.NoviceTitleKey];
         var titlesEarned = await db.Set<CharacterTitle>().AsNoTracking()
@@ -44,6 +53,6 @@ public sealed class UnlockFactsReadAdapter(AppDbContext db) : IUnlockFactsReadPo
         return new UnlockFacts(
             character.IsSetupComplete, activityCount, hasDistance, itemCount,
             zonesReached, character.Level, longestStreak, bossSeen, character.CreatedAt,
-            titlesEarned, rankReached);
+            titlesEarned, rankReached, hasCompletedRegion);
     }
 }

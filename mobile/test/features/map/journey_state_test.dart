@@ -310,6 +310,75 @@ void main() {
     expect(selectJourneyBoss([defeated, distant, active], world), active);
   });
 
+  group('a kill the player has not watched yet', () {
+    final now = DateTime.utc(2026, 10, 9, 12);
+    final world = _world(
+      zones: [_zone('warden', 'boss'), _zone('next', 'standard')],
+      currentZoneId: 'warden',
+    );
+    BossListItem killed({DateTime? at}) => BossListItem.fromJson({
+          'id': 'warden',
+          'name': 'Forest Warden',
+          'icon': '',
+          'maxHp': 1000,
+          'rewardXp': 100,
+          'timerDays': 7,
+          'activated': true,
+          'isDefeated': true,
+          'hpDealt': 1000,
+          'worldZoneId': 'warden',
+          'defeatedAt': (at ?? now.subtract(const Duration(minutes: 2)))
+              .toIso8601String(),
+        });
+    BossSeenRecord seenAt(int bossHp) =>
+        BossSeenRecord(turnAt: now, bossHp: bossHp, youHp: 80);
+
+    test('keeps its fight on the Map button until the replay shows it', () {
+      final boss = killed();
+      final selected = selectJourneyBoss([boss], world,
+          seenOf: (_) => seenAt(500), now: now);
+      expect(selected, boss);
+      final s = resolveJourneyOrb(
+        activeBoss: selected,
+        bossSeen: seenAt(500),
+        worldAsync: AsyncData(world),
+        region: null,
+        dungeonState: null,
+        xpProgress: 0,
+      );
+      expect(s.kind, JourneyKind.bossRaid);
+      expect(s.progress, closeTo(.5, .001));
+    });
+
+    test('moves on once the kill was watched', () {
+      expect(
+          selectJourneyBoss([killed()], world,
+              seenOf: (_) => seenAt(0), now: now),
+          isNull);
+    });
+
+    test('moves on when the fight was never seen in progress', () {
+      expect(
+          selectJourneyBoss([killed()], world, seenOf: (_) => null, now: now),
+          isNull);
+    });
+
+    test('moves on after the replay window', () {
+      final old = killed(at: now.subtract(const Duration(hours: 25)));
+      expect(
+          selectJourneyBoss([old], world, seenOf: (_) => seenAt(500), now: now),
+          isNull);
+    });
+
+    test('the boss being replayed stays up even after its HP reaches 0', () {
+      final boss = killed();
+      expect(
+          selectJourneyBoss([boss], world,
+              seenOf: (_) => seenAt(0), playingBossId: 'warden', now: now),
+          boss);
+    });
+  });
+
   test('standing on a finished zone suggests the next one', () {
     final world = _world(
       zones: [_zone('camp', 'standard'), _zone('next', 'standard', tier: 2)],
@@ -421,16 +490,6 @@ void main() {
     expect(s.secondaryProgress, 1);
     expect(s.secondaryColor, AppColors.green);
     expect(s.semantics, contains('you at 100%'));
-    expect(bossIdForJourneyOrbAction(s, boss), boss.id);
-
-    const routeState = JourneyOrbState(
-      kind: JourneyKind.traveling,
-      color: AppColors.blue,
-      ring: JourneyRing.progress,
-      label: '1.0 km',
-      semantics: 'Traveling',
-    );
-    expect(bossIdForJourneyOrbAction(routeState, boss), isNull);
   });
 
   test('a blocker fight splits the ring with the player HP', () {

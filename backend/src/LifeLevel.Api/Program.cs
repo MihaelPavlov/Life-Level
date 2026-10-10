@@ -119,7 +119,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
     o.KnownProxies.Clear();
     o.ForwardLimit = 1;
 });
-builder.Services.AddControllers(options => options.Filters.Add<ModeRuleExceptionFilter>())
+builder.Services.AddExceptionHandler<UnhandledExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ApiExceptionFilter>();
+        options.Filters.Add<ApiErrorEnvelopeFilter>();
+    })
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -311,6 +317,9 @@ if (!string.IsNullOrWhiteSpace(itemImageStoragePath))
     });
 }
 app.UseAuthentication();
+// Must wrap idempotency so unexpected exceptions unwind and roll back before
+// the generic response is written.
+app.UseExceptionHandler();
 app.UseMiddleware<LifeLevel.Api.Infrastructure.IdempotencyMiddleware>();
 app.UseAuthorization();
 app.MapControllers();

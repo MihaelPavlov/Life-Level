@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_failure.dart';
 import '../models/leaderboard_models.dart';
 
 class LeaderboardService {
@@ -19,7 +22,12 @@ class LeaderboardService {
   }
 
   Future<LeaderboardChestOpened> openChest() async {
-    final res = await _dio.post('/leaderboard/chest/open');
-    return LeaderboardChestOpened.fromJson(res.data as Map<String, dynamic>);
+    try {
+      final res = await _dio.post('/leaderboard/chest/open');
+      return LeaderboardChestOpened.fromJson(res.data as Map<String, dynamic>);
+    } on DioException catch (error) {
+      throw ApiFailure.from(error,
+          fallback: 'Could not open the leaderboard chest.');
+    }
   }
 }

@@ -1,6 +1,7 @@
 using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Abstractions;
 
 namespace LifeLevel.Modules.Integrations.Application.UseCases;
 
@@ -23,8 +24,11 @@ public class OnboardingImportService(
     public const string SourceStrava = "strava";
     public const string SourceHealth = "health";
 
-    public class SetupAlreadyCompleteException() : InvalidOperationException("History import is only available during onboarding.");
-    public class StravaFetchException(string message) : InvalidOperationException(message);
+    public class SetupAlreadyCompleteException() : DomainException(
+        "setup_already_complete", "History import is only available during onboarding.");
+    public class StravaFetchException() : DomainException(
+        "strava_sync_failed", "Could not reach Strava. Try again shortly.",
+        DomainErrorKind.UpstreamUnavailable);
 
     public async Task<OnboardingPreviewResult> PreviewAsync(Guid userId, string source, CancellationToken ct = default)
     {
@@ -32,7 +36,7 @@ public class OnboardingImportService(
             return new OnboardingPreviewResult(source, 0, 0, ["Preview is only needed for server-side sources."]);
 
         var (activities, error) = await strava.FetchRecentAsync(userId, WindowDays, ct);
-        if (error is not null) throw new StravaFetchException(error);
+        if (error is not null) throw new StravaFetchException();
         return new OnboardingPreviewResult(
             SourceStrava,
             activities.Count(a => a.DurationMinutes > 0 && a.RecordingMethod != ActivityRecordingMethod.Manual),
@@ -43,7 +47,8 @@ public class OnboardingImportService(
     public async Task<OnboardingImportResult> ImportAsync(Guid userId, OnboardingImportRequest request, CancellationToken ct = default)
     {
         var info = await characterInfo.GetByUserIdAsync(userId, ct);
-        if (info is null) throw new InvalidOperationException("Character not found.");
+        if (info is null) throw new DomainException(
+            "character_not_found", "Character not found.", DomainErrorKind.NotFound);
         if (info.IsSetupComplete) throw new SetupAlreadyCompleteException();
 
         var windowEnd = DateTime.UtcNow;
@@ -56,7 +61,7 @@ public class OnboardingImportService(
         {
             source = SourceStrava;
             var (fetched, error) = await strava.FetchRecentAsync(userId, WindowDays, ct);
-            if (error is not null) throw new StravaFetchException(error);
+            if (error is not null) throw new StravaFetchException();
             activities = fetched;
         }
         else

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/api/api_failure.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/widgets/app_toast.dart';
@@ -158,7 +159,12 @@ class _Intro extends ConsumerWidget {
             try {
               await ref.read(burnChainProvider.notifier).start();
             } catch (error) {
-              if (context.mounted) AppToast.error(context, error.toString());
+              if (context.mounted) {
+                AppToast.error(
+                    context,
+                    playerErrorMessage(error,
+                        fallback: 'Could not start Burn Chain.'));
+              }
             }
           },
         ),
@@ -623,7 +629,12 @@ class _Ended extends ConsumerWidget {
                 );
               }
             } catch (error) {
-              if (context.mounted) AppToast.error(context, error.toString());
+              if (context.mounted) {
+                AppToast.error(
+                    context,
+                    playerErrorMessage(error,
+                        fallback: 'Could not collect Burn Chain rewards.'));
+              }
             }
           },
         ),

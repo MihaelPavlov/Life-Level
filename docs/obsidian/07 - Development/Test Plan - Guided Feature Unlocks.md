@@ -20,7 +20,7 @@ The current tour inventory contains 38 stops: Home has 2 stops and every other f
 | 1 | Achievements | Log first workout | Continue -> Roads -> Claim All |
 | 2 | Map | Log first distance | Map orb -> Journey card -> Dynamic journey action |
 | 3 | Gear | Own first item | Slots -> Combat stats -> First item |
-| 4 | Region Chests | Reach second zone | Current region -> Rewards -> Next region |
+| 4 | Region Chests | Complete first region (boss defeated or expired) | Current region -> Rewards -> Next region |
 | 5 | Talents | Reach Level 3 | Crystals -> Grid -> Card Draw |
 | 6 | Streak Shields | Reach three-day longest streak | Streak -> Shields -> Claim reward |
 | 7 | Bosses | Spawn first personal boss | Boss card -> HP/damage -> Enter Battle |
@@ -36,7 +36,7 @@ The current tour inventory contains 38 stops: Home has 2 stops and every other f
 
 - Test every trigger immediately below and at its threshold.
 - Test both Titles & Ranks conditions independently.
-- Verify `UnlockFactsReadAdapter` derives activity, distance, items, zones, level, streak, boss, title and rank facts from persisted state.
+- Verify `UnlockFactsReadAdapter` derives activity, distance, items, zones, level, streak, boss, completed-region, title and rank facts from persisted state.
 - Assert the exact 13-key catalog order and API order.
 - Verify new players receive ceremonies while eligible legacy accounts are silently backfilled.
 - Verify seen/toured idempotency, 25 XP once, authorization, concurrent reads and unknown or locked-key rejection.
@@ -55,6 +55,7 @@ The current tour inventory contains 38 stops: Home has 2 stops and every other f
 - Start immediately before multiple thresholds, submit one real workout and verify all affected providers refresh.
 - Confirm level-up, boss-result, activity-result and other reward overlays finish before unlock ceremonies begin.
 - Confirm multiple unlocks queue in catalog order without duplication.
+- Confirm completing a region unlocks Region Chests immediately even when workout pacing has not reached sequence tier 4; its ceremony still waits until blocking overlays close.
 - Reload and verify seen ceremonies do not replay while untoured features retain NEW.
 
 ### Focused flow assertions
@@ -99,6 +100,7 @@ The current tour inventory contains 38 stops: Home has 2 stops and every other f
 ## Acceptance criteria
 
 - All 13 triggers unlock only at the intended gameplay threshold.
+- Region Chests never appear as a Level 4 reward or XP countdown and existing unlocked accounts remain grandfathered.
 - Every current tour step points to a visible and correct widget.
 - Workout-driven refresh discovers all newly eligible features.
 - Ceremony order follows the backend catalog.
@@ -115,4 +117,3 @@ The current tour inventory contains 38 stops: Home has 2 stops and every other f
 - Newly added feature-unlock coverage such as Leaderboard belongs to the existing chain; Workout is not a fourteenth unlock.
 - The app implementation is the source of truth: Home has two stops and Map's final stop targets the dynamic journey action.
 - Full Show Me coverage applies to every feature; secondary branches use representative route categories.
-

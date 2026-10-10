@@ -132,6 +132,51 @@ class RewardMoment {
         : _showDialog(context, spec);
   }
 
+  /// Shows a bespoke full-screen moment (one that doesn't fit the standard
+  /// card / takeover layout) and completes when it has closed. Counts as a
+  /// blocking moment, so tours and unlock ceremonies wait for it.
+  static Future<void> showCustomTakeover(
+    BuildContext context, {
+    required String barrierLabel,
+    required WidgetBuilder builder,
+  }) async {
+    _blockingMomentCount++;
+    try {
+      await showGeneralDialog<void>(
+        context: context,
+        useRootNavigator: true,
+        barrierDismissible: false,
+        barrierLabel: barrierLabel,
+        barrierColor: Colors.transparent,
+        transitionDuration: AppMotion.duration(
+            context, const Duration(milliseconds: 240),
+            reduced: const Duration(milliseconds: 120)),
+        pageBuilder: (context, __, ___) => builder(context),
+        transitionBuilder: (context, animation, _, child) => FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          ),
+          child: child,
+        ),
+      );
+    } finally {
+      _blockingMomentCount--;
+    }
+  }
+
+  /// Flies each of [rewards] from its origin into its HUD element, the same
+  /// claim effect the standard moments use. [fxContext] must outlive the
+  /// moment (use the root navigator's context).
+  static Future<void> flyToHud(
+    BuildContext fxContext,
+    List<RewardLine> rewards,
+    List<Offset?> origins,
+    Color accent,
+  ) =>
+      _flyRewards(fxContext, rewards, origins, accent);
+
   static Future<void> _showDialog(BuildContext context, _Spec spec) async {
     final takeover = spec.size == RewardMomentSize.takeover;
     _blockingMomentCount++;

@@ -110,7 +110,8 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('boss orb announces that it opens the battle', (tester) async {
+  testWidgets('boss orb reads as the Map button, not a battle shortcut',
+      (tester) async {
     await tester.pumpWidget(_app(
       MapOrbButton(open: false, onTap: () {}),
       overrides: [journeyOrbStateProvider.overrideWithValue(_bossRaid)],
@@ -119,7 +120,7 @@ void main() {
 
     expect(
       find.bySemanticsLabel(
-        'Boss fight, Forest Warden at 50% health. Open boss battle',
+        'Map. Boss fight, Forest Warden at 50% health',
       ),
       findsOneWidget,
     );

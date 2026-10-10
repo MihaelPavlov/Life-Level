@@ -159,6 +159,15 @@
   .zone-row .tier { color: var(--text2); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
   .zone-row .main  { display: flex; align-items: center; gap: 10px; }
   .zone-row .main .emoji { font-size: 20px; }
+  .zone-row .main .boss-zone-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    flex: none;
+    border: 1px solid rgba(248,81,73,.35);
+    border-radius: 7px;
+    background: var(--bg2);
+  }
   .zone-row .main .name  { font-weight: 700; }
   .zone-row .main .meta  { color: var(--text2); font-size: 11px; }
   .zone-row .actions { display: flex; gap: 6px; }
@@ -220,6 +229,37 @@
   .type-panel h4 { font-size: 12px; color: var(--blue); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
   .type-hint { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 10px; }
   .type-hint b { color: var(--text); font-weight: 600; }
+  .boss-art-card {
+    display: grid;
+    grid-template-columns: 156px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(248,81,73,.4);
+    border-radius: var(--radius);
+    background: radial-gradient(circle at 78px 52px, rgba(248,81,73,.16), transparent 72%), var(--bg2);
+  }
+  .boss-art-frame {
+    width: 156px;
+    height: 156px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(248,81,73,.45);
+    border-radius: 10px;
+    background: linear-gradient(145deg, #161b22, #090c10);
+  }
+  .boss-art-frame img { width: 100%; height: 100%; object-fit: contain; }
+  .boss-art-fallback { font-size: 64px; line-height: 1; }
+  .boss-art-copy { min-width: 0; }
+  .boss-art-copy strong { display: block; margin-bottom: 6px; font-size: 13px; }
+  .boss-art-path { color: var(--text2); font: 11px/1.45 monospace; overflow-wrap: anywhere; }
+  .boss-art-note { color: var(--text2); font-size: 11px; line-height: 1.45; margin-top: 8px; }
+  @media (max-width: 620px) {
+    .boss-art-card { grid-template-columns: 1fr; }
+    .boss-art-frame { width: 100%; height: 210px; }
+  }
 
   /* Floors table (inside zone modal) */
   .floors-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
@@ -563,6 +603,14 @@
     <div class="type-panel" id="typeBossPanel">
       <h4>Boss zone</h4>
       <p class="type-hint"><b>Name + Emoji</b> above = boss display. Leave combat fields blank to use the chapter balance model.</p>
+      <div class="boss-art-card">
+        <div id="bossArtPreview" class="boss-art-frame" role="img" aria-label="Boss image preview"><span class="boss-art-fallback">👹</span></div>
+        <div class="boss-art-copy">
+          <strong>Current in-game image</strong>
+          <div id="bossArtPath" class="boss-art-path">No boss image selected</div>
+          <div class="boss-art-note">Mirrors the game runtime: Forest Warden uses its SVG asset; every other boss currently uses the zone emoji.</div>
+        </div>
+      </div>
       <div class="form-grid-2">
         <div class="form-row">
           <label>Max HP (blank = generated)</label>

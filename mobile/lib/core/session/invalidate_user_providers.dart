@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../features/boss/replay/boss_seen_store.dart';
 import '../../features/auth/services/google_sign_in_coordinator.dart';
@@ -132,25 +134,71 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(delveRunProvider);
 }
 
-/// Clears the JWT, routes to LoginScreen, and invalidates user-scoped providers.
-/// Used by both the Profile logout tile and every ApiErrorState's Logout button.
-/// Captures the root ProviderContainer before navigating so the invalidation
-/// survives the caller widget being unmounted mid-transition.
+bool _logoutInFlight = false;
+
+/// Logs out instantly (design: Logout Flow Redesign canvas, "L1 · Instant
+/// out"). Used by both the Profile logout tile and every ApiErrorState's
+/// Logout button.
+///
+/// Only the local token is cleared before Login opens; the push-token
+/// unregister, Google sign-out and boss-seen reset finish in the background
+/// with a timeout and never block or surface errors. User-scoped providers
+/// are invalidated once the old screens have gone, so nothing re-fetches
+/// without a token on the way out.
 Future<void> performLogout(BuildContext context) async {
+  if (_logoutInFlight) return;
+  _logoutInFlight = true;
   final container = ProviderScope.containerOf(context, listen: false);
   final navigator = Navigator.of(context, rootNavigator: true);
   final fcmToken = NotificationsService.instance.cachedToken;
-  if (fcmToken != null) {
-    await NotificationsService.instance.unregister(fcmToken);
+  // Grab the JWT first: the unregister call still has to be signed.
+  final jwt = await ApiClient.getToken();
+  try {
+    await ApiClient.clearToken();
+  } catch (_) {
+    // Local storage trouble must not keep the player logged in on screen.
   }
-  await ApiClient.clearToken();
-  await GoogleSignInCoordinator.instance.signOut();
-  await BossSeenStore.instance.clear();
-  navigator.pushAndRemoveUntil(
-    AppRoute(builder: (_) => const LoginScreen(), style: AppRouteStyle.fade),
-    (_) => false,
+
+  final route = AppRoute<void>(
+    builder: (_) => const LoginScreen(signedOut: true),
+    style: AppRouteStyle.fade,
   );
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    invalidateUserScopedProvidersFromContainer(container);
-  });
+  navigator.pushAndRemoveUntil(route, (_) => false);
+
+  var invalidated = false;
+  void invalidateOnce() {
+    if (invalidated) return;
+    invalidated = true;
+    // One more frame so the removed routes have been disposed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      invalidateUserScopedProvidersFromContainer(container);
+      _logoutInFlight = false;
+    });
+  }
+
+  final animation = route.animation;
+  if (animation == null || animation.isCompleted) {
+    invalidateOnce();
+  } else {
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) invalidateOnce();
+    });
+    // Safety net if the transition is interrupted.
+    Future<void>.delayed(const Duration(seconds: 2), invalidateOnce);
+  }
+
+  unawaited(_finishLogoutInBackground(fcmToken: fcmToken, jwt: jwt));
+}
+
+Future<void> _finishLogoutInBackground(
+    {required String? fcmToken, required String? jwt}) async {
+  const limit = Duration(seconds: 5);
+  Future<void> capped(Future<void> work) =>
+      work.timeout(limit, onTimeout: () {}).catchError((Object _) {});
+  await Future.wait([
+    if (fcmToken != null && jwt != null)
+      capped(NotificationsService.instance.unregister(fcmToken, authToken: jwt)),
+    capped(GoogleSignInCoordinator.instance.signOut()),
+    capped(BossSeenStore.instance.clear()),
+  ]);
 }

@@ -192,6 +192,10 @@ bool isNonActionableHere({
       };
 }
 
+/// How long an unwatched kill keeps its fight on the Map button; matches the
+/// window in which `BossReplayFinder` still replays a kill.
+const unwatchedKillWindow = Duration(hours: 24);
+
 String formatJourneyDuration(Duration d) {
   if (d.inDays > 0) return '${d.inDays}d ${d.inHours % 24}h';
   if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes % 60}m';
@@ -613,7 +617,8 @@ final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
   final region = ref.watch(currentRegionDetailProvider).valueOrNull;
   final world = worldAsync.valueOrNull;
   final zone = world == null ? null : pickPortalZone(world);
-  final activeBoss = selectJourneyBoss(bosses, world);
+  final activeBoss = selectJourneyBoss(bosses, world,
+      seenOf: (id) => seen[id], playingBossId: seen.playingBossId);
   final dungeonState = zone != null && zone.type == 'dungeon'
       ? ref.watch(dungeonStateProvider(zone.id)).valueOrNull
       : null;
@@ -633,21 +638,40 @@ final journeyOrbStateProvider = Provider.autoDispose<JourneyOrbState>((ref) {
   );
 });
 
-/// The center orb only becomes a boss shortcut when its visible state is the
-/// boss raid. A route-focused orb must continue opening the Journey popover.
-String? bossIdForJourneyOrbAction(
-  JourneyOrbState state,
-  BossListItem? boss,
-) =>
-    state.kind == JourneyKind.bossRaid ? boss?.id : null;
-
 /// A live fight takes priority. An unstarted boss only takes over the orb
-/// when the player is actually standing at that boss's zone. Defeated fights
-/// are handled by the replay effect, not by the current-journey indicator.
+/// when the player is actually standing at that boss's zone.
+///
+/// A kill the player hasn't watched yet keeps its fight on the orb: the data
+/// already says defeated, but the rings still show the last values seen, so
+/// the Home replay can drain them and shatter them on the finisher. That
+/// covers the boss whose replay is playing ([playingBossId]) and a recent kill
+/// whose seen record still has HP left. A kill with no record (never seen in
+/// progress) or one already watched falls through to the next journey state.
 BossListItem? selectJourneyBoss(
-    List<BossListItem> bosses, WorldFullData? world) {
+  List<BossListItem> bosses,
+  WorldFullData? world, {
+  BossSeenRecord? Function(String bossId)? seenOf,
+  String? playingBossId,
+  DateTime? now,
+}) {
+  if (playingBossId != null) {
+    final playing = bosses.where((b) => b.id == playingBossId).firstOrNull;
+    if (playing != null) return playing;
+  }
   final active = bosses.where((boss) => boss.isActive).firstOrNull;
-  if (active != null || world == null) return active;
+  if (active != null) return active;
+  if (seenOf != null) {
+    final clock = now ?? DateTime.now();
+    final unwatched = bosses.where((boss) {
+      final at = boss.defeatedAt;
+      if (!boss.isDefeated || at == null) return false;
+      if (clock.difference(at.toLocal()) >= unwatchedKillWindow) return false;
+      final seen = seenOf(boss.id);
+      return seen != null && seen.bossHp > 0;
+    }).firstOrNull;
+    if (unwatched != null) return unwatched;
+  }
+  if (world == null) return null;
 
   final currentZoneId = world.userProgress.currentZoneId;
   final standingZone =

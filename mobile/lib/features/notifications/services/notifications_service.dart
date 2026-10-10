@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' show Platform;
+import 'package:dio/dio.dart' show Options;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -167,11 +168,19 @@ class NotificationsService {
 
   /// POST /notifications/unregister-token. Call on logout so the server stops
   /// targeting this device.
-  Future<void> unregister(String token) async {
+  ///
+  /// [authToken] signs the request explicitly: logout clears the stored JWT
+  /// before this runs in the background.
+  Future<void> unregister(String token, {String? authToken}) async {
     try {
       final body = UnregisterTokenRequest(token: token).toJson();
-      await ApiClient.instance
-          .post('/notifications/unregister-token', data: body);
+      await ApiClient.instance.post(
+        '/notifications/unregister-token',
+        data: body,
+        options: authToken == null
+            ? null
+            : Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
     } catch (e) {
       debugPrint('[NotificationsService] unregister failed: $e');
     }

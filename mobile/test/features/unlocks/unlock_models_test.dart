@@ -72,16 +72,29 @@ void main() {
     }
   });
 
-  test('levels match the server path, at most two features each', () {
+  test('sequence tiers match server while chests are not level-gated', () {
     // Server: UnlockService.Catalog.
     const tiers = {
-      'home': 1, 'map': 1, 'achievements': 2, 'gear': 2, 'talents': 3,
-      'shields': 3, 'chests': 4, 'bosses': 4, 'ranks': 5, 'leaderboard': 6,
-      'guild': 8, 'modes': 10, 'delve': 15,
+      'home': 1,
+      'map': 1,
+      'achievements': 2,
+      'gear': 2,
+      'talents': 3,
+      'shields': 3,
+      'chests': 4,
+      'bosses': 4,
+      'ranks': 5,
+      'leaderboard': 6,
+      'guild': 8,
+      'modes': 10,
+      'delve': 15,
     };
     expect({for (final m in kUnlockCatalog.values) m.key: m.tier}, tiers);
+    expect(kUnlockCatalog[UnlockKeys.chests]!.requiredLevel, isNull);
+    expect(unlocksAtLevel(4).map((m) => m.key), ['bosses']);
     for (final t in tiers.values.toSet()) {
-      expect(unlocksAtLevel(t).length, lessThanOrEqualTo(2), reason: 'level $t');
+      expect(unlocksAtLevel(t).length, lessThanOrEqualTo(2),
+          reason: 'level $t');
     }
     expect(unlocksBetweenLevels(6, 10).map((m) => m.key), ['guild', 'modes']);
   });

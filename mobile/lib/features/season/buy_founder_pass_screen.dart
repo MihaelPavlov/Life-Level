@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/api/api_failure.dart';
 import 'models/season_models.dart';
 import 'providers/season_provider.dart';
 import 'widgets/season_theme.dart';
@@ -27,7 +28,10 @@ class _BuyFounderPassScreenState extends ConsumerState<BuyFounderPassScreen> {
           icon: Icons.lock_open_rounded);
       Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) AppToast.error(context, e.toString());
+      if (mounted) {
+        AppToast.error(context,
+            playerErrorMessage(e, fallback: 'Could not activate the pass.'));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

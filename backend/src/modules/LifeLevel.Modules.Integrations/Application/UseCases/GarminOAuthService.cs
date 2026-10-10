@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using LifeLevel.SharedKernel.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace LifeLevel.Modules.Integrations.Application.UseCases;
@@ -41,7 +42,8 @@ public class GarminOAuthService(
         var tokenResp = await http.PostAsync(TokenUrl, new FormUrlEncodedContent(formData), ct);
         tokenResp.EnsureSuccessStatusCode();
         var token = await tokenResp.Content.ReadFromJsonAsync<GarminTokenResponseDto>(cancellationToken: ct)
-                    ?? throw new InvalidOperationException("Empty token response from Garmin.");
+                    ?? throw new DomainException("garmin_unavailable",
+                        "Garmin connection is temporarily unavailable.", DomainErrorKind.UpstreamUnavailable);
 
         // Fetch profile to get user ID and display name
         using var profileReq = new HttpRequestMessage(HttpMethod.Get, "https://connect.garmin.com/userprofile-service/userprofile");
@@ -49,7 +51,8 @@ public class GarminOAuthService(
         var profileResp = await http.SendAsync(profileReq, ct);
         profileResp.EnsureSuccessStatusCode();
         var profile = await profileResp.Content.ReadFromJsonAsync<GarminProfileDto>(cancellationToken: ct)
-                      ?? throw new InvalidOperationException("Empty profile response from Garmin.");
+                      ?? throw new DomainException("garmin_unavailable",
+                          "Garmin connection is temporarily unavailable.", DomainErrorKind.UpstreamUnavailable);
 
         var conn = await db.Set<GarminConnection>()
             .FirstOrDefaultAsync(g => g.UserId == userId, ct);

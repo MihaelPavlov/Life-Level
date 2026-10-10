@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/api_failure.dart';
 import '../../boss/replay/home_boss_replay.dart';
 import '../../../core/session/invalidate_user_providers.dart';
 import '../models/integration_models.dart';
@@ -102,14 +103,12 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
       );
       return null;
     } on DioException catch (e) {
-      final data = e.response?.data;
-      if (data is String && data.isNotEmpty) return data;
-      if (data is Map && data['error'] is String) {
-        return data['error'] as String;
-      }
-      return 'Could not connect to Strava. Try again.';
+      return ApiFailure.from(e,
+              fallback: 'Could not connect to Strava. Try again.')
+          .message;
     } catch (e) {
-      return e.toString();
+      return playerErrorMessage(e,
+          fallback: 'Could not connect to Strava. Try again.');
     }
   }
 

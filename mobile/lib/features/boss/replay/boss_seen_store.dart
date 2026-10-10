@@ -75,6 +75,18 @@ class BossSeenStore extends ChangeNotifier {
 
   BossSeenRecord? operator [](String bossId) => _records[bossId];
 
+  String? _playingBossId;
+
+  /// The boss whose exchange is playing on the Map button right now. The
+  /// button keeps that fight's rings up until the replay (and a kill's
+  /// Boss slain screen) has finished.
+  String? get playingBossId => _playingBossId;
+  set playingBossId(String? id) {
+    if (_playingBossId == id) return;
+    _playingBossId = id;
+    notifyListeners();
+  }
+
   /// Saves [rec] for [bossId] and redraws everything that shows it.
   void put(String bossId, BossSeenRecord rec) {
     final old = _records[bossId];
@@ -117,6 +129,7 @@ class BossSeenStore extends ChangeNotifier {
   void resetForTest() {
     _records.clear();
     _prefs = null;
+    _playingBossId = null;
   }
 }
 

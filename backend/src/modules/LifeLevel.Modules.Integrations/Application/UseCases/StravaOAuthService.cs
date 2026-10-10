@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using LifeLevel.SharedKernel.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace LifeLevel.Modules.Integrations.Application.UseCases;
@@ -32,8 +33,9 @@ public class StravaOAuthService(
             _opts.ClientId.StartsWith('<') ||
             _opts.ClientSecret.StartsWith('<'))
         {
-            throw new InvalidOperationException(
-                "Strava credentials are not configured on the local backend.");
+            throw new DomainException("strava_unavailable",
+                "Strava connection is temporarily unavailable.",
+                DomainErrorKind.UpstreamUnavailable);
         }
 
         var form = new Dictionary<string, string>
@@ -51,12 +53,14 @@ public class StravaOAuthService(
         response.EnsureSuccessStatusCode();
 
         var token = await response.Content.ReadFromJsonAsync<StravaTokenResponseDto>(cancellationToken: ct)
-            ?? throw new InvalidOperationException("Empty token response from Strava");
+            ?? throw new DomainException("strava_unavailable",
+                "Strava connection is temporarily unavailable.", DomainErrorKind.UpstreamUnavailable);
 
         if (string.IsNullOrWhiteSpace(token.Scope) ||
             !token.Scope.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries)
                 .Contains("activity:read_all", StringComparer.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Strava workout access was not granted. Reconnect and allow activity access.");
+            throw new DomainException("strava_activity_access_required",
+                "Reconnect Strava and allow workout access.", DomainErrorKind.Validation);
 
         // Look up by Strava athlete ID first so that if this athlete was previously
         // linked to a different LifeLevel account, we take ownership rather than
@@ -134,7 +138,8 @@ public class StravaOAuthService(
         response.EnsureSuccessStatusCode();
 
         var token = await response.Content.ReadFromJsonAsync<StravaRefreshResponseDto>(cancellationToken: ct)
-            ?? throw new InvalidOperationException("Empty refresh response from Strava");
+            ?? throw new DomainException("strava_unavailable",
+                "Strava connection is temporarily unavailable.", DomainErrorKind.UpstreamUnavailable);
 
         conn.AccessToken = token.AccessToken;
         conn.RefreshToken = token.RefreshToken;

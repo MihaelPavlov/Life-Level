@@ -1,3 +1,5 @@
+using System.Data;
+using LifeLevel.Api.Infrastructure;
 using LifeLevel.Modules.Modes.Application.DTOs;
 using LifeLevel.Modules.Modes.Application.UseCases;
 using LifeLevel.SharedKernel.Contracts;
@@ -18,9 +20,11 @@ public class ModesController(ModesService modes, IUserContext user) : Controller
     public Task<BurnChainDto> BurnStatus(CancellationToken ct) => modes.GetBurnChainAsync(user.UserId, ct);
 
     [HttpPost("burn-chain/start")]
+    [MutationIsolation(IsolationLevel.Serializable)]
     public Task<BurnChainDto> StartBurn(CancellationToken ct) => modes.StartBurnChainAsync(user.UserId, ct);
 
     [HttpPost("burn-chain/collect")]
+    [MutationIsolation(IsolationLevel.Serializable)]
     public Task<BurnChainDto> CollectBurn(CancellationToken ct) => modes.CollectBurnChainAsync(user.UserId, ct);
 
     [HttpPost("burn-chain/acknowledge-links/{count:int}")]
@@ -32,6 +36,7 @@ public class ModesController(ModesService modes, IUserContext user) : Controller
         modes.GetTreasureDelveAsync(user.UserId, ct);
 
     [HttpPost("treasure-delve/runs")]
+    [MutationIsolation(IsolationLevel.Serializable)]
     public Task<DelveRunDto> StartDelve(CancellationToken ct) => modes.StartDelveAsync(user.UserId, ct);
 
     [HttpPost("treasure-delve/runs/{runId:guid}/choose")]
@@ -39,12 +44,14 @@ public class ModesController(ModesService modes, IUserContext user) : Controller
         modes.ChooseDelvePathAsync(user.UserId, runId, request.Path, ct);
 
     [HttpPost("treasure-delve/runs/{runId:guid}/attempt")]
+    [MutationIsolation(IsolationLevel.Serializable)]
     public Task<DelveRunDto> Attempt(Guid runId, CancellationToken ct) => modes.AttemptDelveAsync(user.UserId, runId, ct);
 
     [HttpPost("treasure-delve/runs/{runId:guid}/continue")]
     public Task<DelveRunDto> Continue(Guid runId, CancellationToken ct) => modes.ContinueDelveAsync(user.UserId, runId, ct);
 
     [HttpPost("treasure-delve/runs/{runId:guid}/bank")]
+    [MutationIsolation(IsolationLevel.Serializable)]
     public Task<DelveRunDto> Bank(Guid runId, CancellationToken ct) => modes.BankDelveAsync(user.UserId, runId, ct);
 
     [HttpPost("treasure-delve/runs/{runId:guid}/acknowledge")]

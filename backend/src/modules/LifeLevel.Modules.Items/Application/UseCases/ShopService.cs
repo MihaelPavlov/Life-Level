@@ -201,7 +201,9 @@ public class ShopService(
         ?? throw new ShopException("character_not_found", "Create a character before using the shop.");
 
     private async Task<IDbContextTransaction?> BeginTransactionAsync(CancellationToken ct) =>
-        db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(ct) : null;
+        db.Database.IsRelational() && db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(ct)
+            : null;
 
     private static List<Guid> GlobalRotation(List<Item> catalog, DateTime day)
     {

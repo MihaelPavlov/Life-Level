@@ -305,11 +305,12 @@ public class ImportFirstOnboardingTests
 
         var preview = await Assert.ThrowsAsync<OnboardingImportService.StravaFetchException>(
             () => service.PreviewAsync(userId, "strava"));
-        Assert.Contains("403", preview.Message);
-        Assert.Contains("activity:read_all missing", preview.Message);
+        Assert.Equal("strava_sync_failed", preview.Code);
+        Assert.DoesNotContain("403", preview.Message);
+        Assert.DoesNotContain("activity:read_all missing", preview.Message);
         var import = await Assert.ThrowsAsync<OnboardingImportService.StravaFetchException>(
             () => service.ImportAsync(userId, new OnboardingImportRequest { Source = "strava" }));
-        Assert.Contains("403", import.Message);
+        Assert.Equal("strava_sync_failed", import.Code);
         Assert.Equal(0, xp.Calls);
     }
 

@@ -1,3 +1,5 @@
+using LifeLevel.SharedKernel.Abstractions;
+
 namespace LifeLevel.Modules.Modes.Application.DTOs;
 
 public record ModeWalletDto(long Coins, int Gems, int TalentCrystals);
@@ -37,7 +39,5 @@ public record ModesOverviewDto(ModeWalletDto Wallet, BurnChainDto BurnChain, Tre
 
 public record ChooseDelvePathRequest(string Path);
 
-public class ModeRuleException(string code, string message) : InvalidOperationException(message)
-{
-    public string Code { get; } = code;
-}
+public class ModeRuleException(string code, string message) :
+    DomainException(code, message, DomainErrorKind.Conflict);

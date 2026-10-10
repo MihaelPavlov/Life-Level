@@ -34,6 +34,15 @@ String seasonIconAsset(String key) {
   return 'assets/icons/$key.png';
 }
 
+/// The XP crystals art fills only about a third of its canvas, so it reads
+/// tiny next to other rewards. Same correction the rewards screen uses.
+const kSeasonXpCrystalsScale = 2.4;
+
+double seasonIconVisualScale(String key) =>
+    seasonIconAsset(key) == 'assets/icons/reward_xp_crystals.png'
+        ? kSeasonXpCrystalsScale
+        : 1;
+
 /// Keeps the real reward artwork visible in every season state. Locked
 /// rewards use a small corner badge instead of replacing/covering the asset.
 class SeasonRewardAsset extends StatelessWidget {
@@ -58,15 +67,18 @@ class SeasonRewardAsset extends StatelessWidget {
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
-            Image.asset(
-              seasonIconAsset(iconKey),
-              width: size,
-              height: size,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  fallback ??
-                  Icon(Icons.card_giftcard_rounded,
-                      size: size * .8, color: AppColors.textMuted),
+            Transform.scale(
+              scale: seasonIconVisualScale(iconKey),
+              child: Image.asset(
+                seasonIconAsset(iconKey),
+                width: size,
+                height: size,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) =>
+                    fallback ??
+                    Icon(Icons.card_giftcard_rounded,
+                        size: size * .8, color: AppColors.textMuted),
+              ),
             ),
             if (locked)
               Positioned(

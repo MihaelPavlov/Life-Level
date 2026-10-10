@@ -33,7 +33,7 @@ Future<void> finishAuthentication(
     context,
     AppRoute(
       builder: (_) => result.isSetupComplete
-          ? MainShell(initialRingIds: result.ringItems)
+          ? MainShell(initialRingIds: result.ringItems, showBootLoader: true)
           : OnboardingFlow(
               initial: SetupResumeState(
                   step: firstStep, ringItems: result.ringItems),

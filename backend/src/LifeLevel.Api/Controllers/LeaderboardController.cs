@@ -1,3 +1,5 @@
+using System.Data;
+using LifeLevel.Api.Infrastructure;
 using LifeLevel.Modules.Leaderboard.Application.DTOs;
 using LifeLevel.Modules.Leaderboard.Application.UseCases;
 using LifeLevel.SharedKernel.Contracts;
@@ -29,6 +31,7 @@ public class LeaderboardController(LeaderboardService leaderboard, IUserContext 
         leaderboard.GetChestStatusAsync(user.UserId, ct);
 
     [HttpPost("chest/open")]
+    [MutationIsolation(IsolationLevel.Serializable)]
     public Task<LeaderboardChestOpenedDto> OpenChest(CancellationToken ct) =>
         leaderboard.OpenChestAsync(user.UserId, ct);
 }

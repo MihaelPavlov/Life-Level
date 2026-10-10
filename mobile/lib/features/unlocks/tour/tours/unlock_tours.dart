@@ -197,7 +197,8 @@ List<TourStep> tourStepsFor(String key) => switch (key) {
             icon: AppIcons.regionChestsHubIcon,
             eyebrow: 'ONE CHEST PER REGION',
             title: 'Clear the region, claim the chest',
-            body: 'Every zone you reach counts toward **this region’s chest**.',
+            body:
+                'Defeat the region boss, or reach the end of its fight, to make **this chest ready**.',
             pad: 4,
             radius: 20,
           ),
@@ -213,7 +214,8 @@ List<TourStep> tourStepsFor(String key) => switch (key) {
             icon: AppIcons.mapDestination,
             eyebrow: 'WHAT’S NEXT',
             title: 'The next region waits',
-            body: 'Clear this one to open the next region.',
+            body:
+                'Continue your journey and clear another region for its chest.',
             tapLabel: 'TAP THE NEXT REGION',
             pad: 4,
             radius: 16,

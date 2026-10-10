@@ -35,6 +35,7 @@ class _FakeWorld extends WorldZoneService {
 
 class _FakeChests extends RegionChestService {
   int claims = 0;
+  bool fail = false;
 
   @override
   Future<RegionChestsOverview> getOverview() async =>
@@ -61,6 +62,7 @@ class _FakeChests extends RegionChestService {
   @override
   Future<RegionChestClaimResult> claim(String regionId) async {
     claims++;
+    if (fail) throw Exception('offline');
     return RegionChestClaimResult.fromJson({
       'regionId': regionId,
       'coins': 150,
@@ -72,39 +74,77 @@ class _FakeChests extends RegionChestService {
   }
 }
 
+Future<void> _pumpScreen(WidgetTester tester, _FakeChests chests) async {
+  tester.view.physicalSize = const Size(390, 844) * 3;
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(ProviderScope(
+    overrides: [regionChestServiceProvider.overrideWithValue(chests)],
+    child: MaterialApp(home: RegionChestsScreen(worldService: _FakeWorld())),
+  ));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
 void main() {
   testWidgets(
-      'claiming keeps the claimed region on screen and shows the reward reveal',
-      (tester) async {
+      'opening the chest keeps the region on screen and lands the loot in '
+      'the wallet chips', (tester) async {
     final chests = _FakeChests();
-    await tester.pumpWidget(ProviderScope(
-      overrides: [regionChestServiceProvider.overrideWithValue(chests)],
-      child: MaterialApp(home: RegionChestsScreen(worldService: _FakeWorld())),
-    ));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await _pumpScreen(tester, chests);
 
     // The ready chest takes focus first.
     expect(find.text('Forest of Endurance'), findsOneWidget);
     expect(find.text('Region boss resolved — chest ready'), findsOneWidget);
+    expect(find.text('1,250'), findsOneWidget);
 
-    await tester.tap(find.text('Rewards'));
+    await tester.tap(find.text('Open chest'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(chests.claims, 1);
 
-    // Before the fix the focus jumped to Ocean of Balance here, tearing down
-    // the panel mid-claim: no lid opening and no reveal.
+    // Waiting on the server: the focus stays put and the wallet chips
+    // haven't jumped ahead of the loot.
     expect(find.text('Forest of Endurance'), findsOneWidget);
-    expect(find.text('Region chest claimed'), findsOneWidget);
-    expect(find.text('Opening…'), findsNothing);
+    expect(find.text('Opening…'), findsOneWidget);
+    expect(find.text('Opening the chest…'), findsOneWidget);
+    expect(find.text('1,250'), findsOneWidget);
 
-    // Lids open, beams rise, then the reward reveal pops up.
-    for (var i = 0; i < 50; i++) {
+    // Confirmed: the chest opens and the loot rises out of it.
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('×150'), findsWidgets);
+    expect(find.text('×20'), findsWidgets);
+
+    // The loot flies into the chips, which then show the new balance.
+    for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(find.text('You got loot!'), findsWidgets);
-    expect(find.text('×150'), findsWidgets);
-    expect(find.text('Tap to close'), findsOneWidget);
+    expect(find.text('1,400'), findsOneWidget);
+    expect(find.text('38'), findsOneWidget);
+    expect(find.text('Claimed'), findsOneWidget);
+    expect(find.text('Region chest claimed'), findsOneWidget);
+    // No second reveal popup any more.
+    expect(find.text('You got loot!'), findsNothing);
+    // Still the same region.
+    expect(find.text('Forest of Endurance'), findsOneWidget);
+  });
+
+  testWidgets('a failed claim leaves the chest shut and ready',
+      (tester) async {
+    final chests = _FakeChests()..fail = true;
+    await _pumpScreen(tester, chests);
+
+    await tester.tap(find.text('Open chest'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(chests.claims, 1);
+    expect(find.text('Open chest'), findsOneWidget);
+    expect(find.text('Claimed'), findsNothing);
+    expect(find.text('Region boss resolved — chest ready'), findsOneWidget);
+    expect(find.text('1,250'), findsOneWidget);
+    // Let the error toast time out.
+    await tester.pump(const Duration(seconds: 5));
   });
 }

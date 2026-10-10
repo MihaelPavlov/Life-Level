@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/api/api_failure.dart';
 import '../../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
@@ -71,7 +72,7 @@ class _DungeonFloorsSheetState extends State<DungeonFloorsSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = playerErrorMessage(e, fallback: 'Could not load the dungeon.');
         _loading = false;
       });
     }

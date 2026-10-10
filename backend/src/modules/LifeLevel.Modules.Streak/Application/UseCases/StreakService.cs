@@ -161,6 +161,7 @@ public class StreakService(
         // Lock the streak until the wallet credit and claim state commit. Two
         // requests from different devices must not read the same pending coins.
         await using var transaction = db.Database.IsRelational()
+            && db.Database.CurrentTransaction is null
             ? await db.Database.BeginTransactionAsync(ct)
             : null;
         var streak = db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL"

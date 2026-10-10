@@ -400,7 +400,7 @@ public class ModesService(
 
     private async Task<IDbContextTransaction?> BeginTransactionAsync(CancellationToken ct)
     {
-        if (!db.Database.IsRelational()) return null;
+        if (!db.Database.IsRelational() || db.Database.CurrentTransaction is not null) return null;
         return await db.Database.BeginTransactionAsync(
             System.Data.IsolationLevel.Serializable, ct);
     }

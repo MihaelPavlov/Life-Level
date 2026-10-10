@@ -3,6 +3,7 @@ using LifeLevel.Modules.Talents.Domain;
 using LifeLevel.Modules.Talents.Domain.Entities;
 using LifeLevel.Modules.Talents.Domain.Enums;
 using LifeLevel.SharedKernel.Ports;
+using LifeLevel.SharedKernel.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
@@ -134,11 +135,13 @@ public class TalentService(DbContext db, IUserStateChangePort? stateChanges = nu
         if (charges <= 0) return false;
 
         IDbContextTransaction? transaction = null;
-        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true
+            && db.Database.CurrentTransaction is null)
             transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
         await using var transactionScope = transaction;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        if (transaction != null)
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true
+            && db.Database.CurrentTransaction is not null)
         {
             await db.Database.ExecuteSqlInterpolatedAsync(
                 $"SELECT 1 FROM \"UserTalentWallets\" WHERE \"UserId\" = {userId} FOR UPDATE", ct);
@@ -165,7 +168,7 @@ public class TalentService(DbContext db, IUserStateChangePort? stateChanges = nu
     {
         if (amount <= 0) return;
         var wallet = await GetOrCreateWalletAsync(userId, ct);
-        if (db.Database.IsRelational())
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
         {
             await db.Set<UserTalentWallet>().Where(x => x.UserId == userId)
                 .ExecuteUpdateAsync(setters => setters
@@ -319,7 +322,7 @@ public class TalentService(DbContext db, IUserStateChangePort? stateChanges = nu
     private async Task<TalentDrawResult> DrawInternalAsync(Guid userId, CancellationToken ct)
     {
         IDbContextTransaction? transaction = null;
-        if (db.Database.IsRelational())
+        if (db.Database.IsRelational() && db.Database.CurrentTransaction is null)
             transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
         await using var transactionScope = transaction;
 
@@ -347,15 +350,15 @@ public class TalentService(DbContext db, IUserStateChangePort? stateChanges = nu
         var maxTalentPoints = catalog.Sum(t => Math.Max(0, t.MaxLevel));
 
         if (catalog.Count == 0)
-            throw new InvalidOperationException("No talent cards are currently available.");
+            throw new DomainException("talents_unavailable", "No talent cards are currently available.");
         if (maxTalentPoints > 0 && talentPoints >= maxTalentPoints)
-            throw new InvalidOperationException("Your talent collection is complete.");
+            throw new DomainException("talent_collection_complete", "Your talent collection is complete.");
 
         var drawCount = await db.Set<TalentDrawEntry>().CountAsync(x => x.UserId == userId, ct);
         var drawCrystalCost = TalentEconomy.DrawCrystalCost(drawCount);
         var drawCoinCost = TalentEconomy.DrawCoinCost(drawCount);
         if (wallet.TalentCrystals < drawCrystalCost || wallet.Coins < drawCoinCost)
-            throw new InvalidOperationException(
+            throw new DomainException("insufficient_currency",
                 $"Not enough currency. This draw costs {drawCoinCost} Coins and {drawCrystalCost} Crystals.");
 
         wallet.TalentCrystals -= drawCrystalCost;

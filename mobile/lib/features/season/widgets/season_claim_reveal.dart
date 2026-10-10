@@ -260,7 +260,8 @@ class _SeasonClaimRevealState extends State<SeasonClaimReveal>
         onPressed: () => Navigator.of(context).pop(),
         style: FilledButton.styleFrom(
           backgroundColor: up ? AppColors.orange : AppColors.blue,
-          foregroundColor: up ? const Color(0xFF1A1002) : const Color(0xFF04101F),
+          foregroundColor:
+              up ? const Color(0xFF1A1002) : const Color(0xFF04101F),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
@@ -401,8 +402,8 @@ class _SeasonClaimRevealState extends State<SeasonClaimReveal>
           ),
           for (var i = 0; i < 8; i++)
             Positioned.fill(
-              child: ray(i * math.pi / 4, i.isEven ? 34 : 26,
-                  i.isEven ? .55 : .35),
+              child: ray(
+                  i * math.pi / 4, i.isEven ? 34 : 26, i.isEven ? .55 : .35),
             ),
           Container(
             width: 132,
@@ -411,11 +412,9 @@ class _SeasonClaimRevealState extends State<SeasonClaimReveal>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF0E151E),
-              border:
-                  Border.all(color: accent.withValues(alpha: .6), width: 2),
+              border: Border.all(color: accent.withValues(alpha: .6), width: 2),
               boxShadow: [
-                BoxShadow(
-                    color: accent.withValues(alpha: .35), blurRadius: 40),
+                BoxShadow(color: accent.withValues(alpha: .35), blurRadius: 40),
               ],
             ),
             child: SeasonRewardAsset(iconKey: r.iconKey, size: 92),
@@ -449,8 +448,8 @@ class _SeasonClaimRevealState extends State<SeasonClaimReveal>
                 children: [
                   if (xp > 0)
                     Expanded(
-                        child: _total('XP', '+$xp', AppColors.green,
-                            'to your level')),
+                        child: _total(
+                            'XP', '+$xp', AppColors.green, 'to your level')),
                   if (xp > 0 && sxp > 0) const SizedBox(width: 10),
                   if (sxp > 0)
                     Expanded(
@@ -468,8 +467,7 @@ class _SeasonClaimRevealState extends State<SeasonClaimReveal>
             runSpacing: 10,
             children: [
               for (final (i, r) in rewards.indexed)
-                SizedBox(
-                    width: w, child: _in(_card(r), start: 250, order: i)),
+                SizedBox(width: w, child: _in(_card(r), start: 250, order: i)),
             ],
           );
         }),
