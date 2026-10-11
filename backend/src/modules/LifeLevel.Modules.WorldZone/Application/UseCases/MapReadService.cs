@@ -407,6 +407,9 @@ public class MapReadService(
 
         string status;
         if (userLevel < region.LevelRequirement)
+            // Stays locked below its level even after the user has been moved
+            // into it (beating the previous region's boss): it can't be
+            // entered until the level is reached.
             status = "locked";
         else if (bossResolved)
             // Beating the region's boss completes the region regardless of

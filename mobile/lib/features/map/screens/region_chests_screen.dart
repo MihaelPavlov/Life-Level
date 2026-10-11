@@ -223,12 +223,19 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
     });
     final activeFocused =
         regions.indexWhere((r) => r.status == RegionStatus.active);
+    // The server reports a region the player already stands in as locked
+    // while their level is below its requirement, so with no active region
+    // fall back to the first one not completed yet (the frontier).
+    final frontier =
+        regions.indexWhere((r) => r.status != RegionStatus.completed);
     final focusedIndex = (_focusedIndex ??
             (defaultFocused >= 0
                 ? defaultFocused
                 : activeFocused >= 0
                     ? activeFocused
-                    : 0))
+                    : frontier >= 0
+                        ? frontier
+                        : regions.length - 1))
         .clamp(0, regions.length - 1);
     _shownIndex = focusedIndex;
     final focused = regions[focusedIndex];

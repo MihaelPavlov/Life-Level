@@ -1,0 +1,4012 @@
+{
+  "android/app/build.gradle.kts": {
+    "mtime": 1791003792.8413537,
+    "ast_hash": "41f052e49f038d1d12d111cfd54654aa",
+    "semantic_hash": ""
+  },
+  "android/app/google-services.json": {
+    "mtime": 1791399889.797748,
+    "ast_hash": "e9fa38940964232e6cc776072fd87612",
+    "semantic_hash": ""
+  },
+  "android/app/google-services.local.json": {
+    "mtime": 1788511409.8238416,
+    "ast_hash": "e9ebcd14425e0079033d06e0e2eacb72",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/kotlin/com/lifelevel/app/MainActivity.kt": {
+    "mtime": 1788511409.8241801,
+    "ast_hash": "33ca1e3e3c08e7315c6368cbdf5b9e80",
+    "semantic_hash": ""
+  },
+  "android/build.gradle.kts": {
+    "mtime": 1788511409.824465,
+    "ast_hash": "699579880a795350891cafc998a3ec79",
+    "semantic_hash": ""
+  },
+  "android/settings.gradle.kts": {
+    "mtime": 1791003792.8423536,
+    "ast_hash": "151a44fbf43c41c042f274492b5666a2",
+    "semantic_hash": ""
+  },
+  "firebase.json": {
+    "mtime": 1788511416.5543482,
+    "ast_hash": "0d2a5fd977853f9468fbbb6cb641ad3c",
+    "semantic_hash": ""
+  },
+  "ios/Runner/AppDelegate.swift": {
+    "mtime": 1788511416.5564983,
+    "ast_hash": "303ca46dbd58544be7b816861d70a27c",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1788511416.5566607,
+    "ast_hash": "c3cdf9688b604d14f2e76a8287e16167",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "770f4f65e02ca2fc57f46f4f4148d15d",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Runner-Bridging-Header.h": {
+    "mtime": 1788511416.5597966,
+    "ast_hash": "e07862ac930ed4d8479185d52c6cc66d",
+    "semantic_hash": ""
+  },
+  "ios/RunnerTests/RunnerTests.swift": {
+    "mtime": 1788511416.5597966,
+    "ast_hash": "a225a382d14d7b16b6f602a5c1d49331",
+    "semantic_hash": ""
+  },
+  "lib/core/api/api_client.dart": {
+    "mtime": 1791578821.0015204,
+    "ast_hash": "9c643c1f6b9baa5723ed807cf8f23023",
+    "semantic_hash": ""
+  },
+  "lib/core/api/api_failure.dart": {
+    "mtime": 1791535265.384388,
+    "ast_hash": "1addbe1aaefd277aaff4edbd81c7ce7f",
+    "semantic_hash": ""
+  },
+  "lib/core/constants/app_colors.dart": {
+    "mtime": 1788511416.5601208,
+    "ast_hash": "baccb6e098145be37a2dea71e81efce8",
+    "semantic_hash": ""
+  },
+  "lib/core/constants/app_icons.dart": {
+    "mtime": 1791650350.5318208,
+    "ast_hash": "dc974bd0f33187778c5d87e38fd35c17",
+    "semantic_hash": ""
+  },
+  "lib/core/constants/avatar_icons.dart": {
+    "mtime": 1788511416.5603213,
+    "ast_hash": "be1063400b1aea4ccc8dea1a0df1e168",
+    "semantic_hash": ""
+  },
+  "lib/core/constants/class_icons.dart": {
+    "mtime": 1790619855.5124238,
+    "ast_hash": "6f5b28ae0008f7f42169644a8cbc8bbb",
+    "semantic_hash": ""
+  },
+  "lib/core/constants/item_icons.dart": {
+    "mtime": 1789413477.6603732,
+    "ast_hash": "46d7fecda196b8451302da42c6b61851",
+    "semantic_hash": ""
+  },
+  "lib/core/constants/title_rank_icons.dart": {
+    "mtime": 1788511416.5603213,
+    "ast_hash": "b9fb92b83cf8fa433a09c38b6399dfdb",
+    "semantic_hash": ""
+  },
+  "lib/core/motion/app_motion.dart": {
+    "mtime": 1790864280.674147,
+    "ast_hash": "57f74f5cb8c1785e2301eeeac13f302e",
+    "semantic_hash": ""
+  },
+  "lib/core/motion/motion_widgets.dart": {
+    "mtime": 1790533403.546162,
+    "ast_hash": "f23e707dd46269a85861af7bffcee2fe",
+    "semantic_hash": ""
+  },
+  "lib/core/motion/reward_fx.dart": {
+    "mtime": 1790342614.142917,
+    "ast_hash": "81d0f7d3e443b5a3ca66ffc55ba78f3a",
+    "semantic_hash": ""
+  },
+  "lib/core/services/boss_defeated_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "d1c5c8d874ee694213cf0a59ad48f2a5",
+    "semantic_hash": ""
+  },
+  "lib/core/services/boss_overlay_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "9a2db70f0eb7d85b082c5c04e0fbf617",
+    "semantic_hash": ""
+  },
+  "lib/core/services/client_experience_service.dart": {
+    "mtime": 1791526802.97746,
+    "ast_hash": "21d36e7c2d2c3f48fdd95093028c3923",
+    "semantic_hash": ""
+  },
+  "lib/core/services/deep_link_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "c58c93d91cc50a9e6a759b729fba199a",
+    "semantic_hash": ""
+  },
+  "lib/core/services/dungeon_floor_cleared_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "371d66e7ce00bd911a61bb408a05e1b5",
+    "semantic_hash": ""
+  },
+  "lib/core/services/guild_raid_victory_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "53afcd78b900ad5b86c3dfcaa2cba0ab",
+    "semantic_hash": ""
+  },
+  "lib/core/services/inventory_full_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "ecf1a04618b924552715c609754af722",
+    "semantic_hash": ""
+  },
+  "lib/core/services/item_obtained_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "632d9c7bb9b0b1a5bf38fb88286c4b02",
+    "semantic_hash": ""
+  },
+  "lib/core/services/level_up_notifier.dart": {
+    "mtime": 1790541496.3963094,
+    "ast_hash": "b0608923349dbdee90ee18d6db3fd3ef",
+    "semantic_hash": ""
+  },
+  "lib/core/services/nav_tab_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "ecb8b334404e5c53165e92e1107a5039",
+    "semantic_hash": ""
+  },
+  "lib/core/services/notification_banner_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "eb5c2cccde97a2f3a13d279ab15dbf37",
+    "semantic_hash": ""
+  },
+  "lib/core/services/oauth_code_guard.dart": {
+    "mtime": 1790619780.5465524,
+    "ast_hash": "488329d15e82e56c43e9c25f6f686f33",
+    "semantic_hash": ""
+  },
+  "lib/core/services/pending_welcome.dart": {
+    "mtime": 1790620653.7163682,
+    "ast_hash": "d7f7d12e130ae2ace6f688758fe1d088",
+    "semantic_hash": ""
+  },
+  "lib/core/services/seen_state_client.dart": {
+    "mtime": 1791003792.851351,
+    "ast_hash": "44c9ca543e1e9fd5e834f93da778a1a5",
+    "semantic_hash": ""
+  },
+  "lib/core/services/shell_overlay_notifier.dart": {
+    "mtime": 1790023042.3988466,
+    "ast_hash": "24fa26788742912642ab67924f88a5b8",
+    "semantic_hash": ""
+  },
+  "lib/core/services/state_change_notifier.dart": {
+    "mtime": 1791003792.851351,
+    "ast_hash": "015ddbff34aa57d928e425e1f784a267",
+    "semantic_hash": ""
+  },
+  "lib/core/services/world_map_notifier.dart": {
+    "mtime": 1790535244.3104599,
+    "ast_hash": "5c56c1dee293eb21146d9fb3ba28f999",
+    "semantic_hash": ""
+  },
+  "lib/core/services/world_zone_refresh_notifier.dart": {
+    "mtime": 1788511416.560348,
+    "ast_hash": "59cdc0e3bd21bba4aaf8f15053d982e9",
+    "semantic_hash": ""
+  },
+  "lib/core/session/invalidate_changed_areas.dart": {
+    "mtime": 1791479610.189303,
+    "ast_hash": "adc6e87fb2e683822bdb9e2a7000488c",
+    "semantic_hash": ""
+  },
+  "lib/core/session/invalidate_user_providers.dart": {
+    "mtime": 1791578820.8952608,
+    "ast_hash": "47ad8a325835a5369f1dd8e3af655140",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/boot/boot_loader.dart": {
+    "mtime": 1791531856.368735,
+    "ast_hash": "00173095d5341c90a1050d035c7792f0",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/boot/boot_readiness.dart": {
+    "mtime": 1791578067.759375,
+    "ast_hash": "5d4700ecfd6f1be463e74edf24c632f5",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/main_shell.dart": {
+    "mtime": 1791539021.474152,
+    "ast_hash": "6698d659d2dc48204882d848379e78f5",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/shell_anchors.dart": {
+    "mtime": 1790670160.0181718,
+    "ast_hash": "576131b06212d889d53906c570655459",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/shell_constants.dart": {
+    "mtime": 1790238236.7593825,
+    "ast_hash": "05ff98f3824ca75f18ddeb0662090a3d",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/shell_models.dart": {
+    "mtime": 1790057314.099775,
+    "ast_hash": "2a06dab4911d3559cfa2f9f2c17aadd9",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/widgets/boss_fab.dart": {
+    "mtime": 1790238236.8103824,
+    "ast_hash": "bb138d065bde274c072bb3eae554384e",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/widgets/bottom_nav_bar.dart": {
+    "mtime": 1790238236.8233821,
+    "ast_hash": "b24f6f24aa9c480c2e0c6d4c0cb21624",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/widgets/journey_popover.dart": {
+    "mtime": 1790798005.36084,
+    "ast_hash": "4aaf701dbcc665c0ee3ac78c40deced5",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/widgets/map_orb_button.dart": {
+    "mtime": 1791654580.0255961,
+    "ast_hash": "f9affcca67f8ee496bd90d5a9506701e",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/widgets/ring_item_tile.dart": {
+    "mtime": 1790238236.8283823,
+    "ast_hash": "a9ccebf72bbf1f0fcfa4f2d5c0ca652f",
+    "semantic_hash": ""
+  },
+  "lib/core/shell/widgets/shell_tab_bar.dart": {
+    "mtime": 1790797612.5306327,
+    "ast_hash": "7c65f77625255d31c1ef049a87ac7654",
+    "semantic_hash": ""
+  },
+  "lib/core/state/optimistic_mutation.dart": {
+    "mtime": 1791481613.3192813,
+    "ast_hash": "386783fe4e2ed3bfb40452df0a895d28",
+    "semantic_hash": ""
+  },
+  "lib/core/theme/app_theme.dart": {
+    "mtime": 1790237873.395301,
+    "ast_hash": "6b9dc39f46dd0aac4a71014611aee17a",
+    "semantic_hash": ""
+  },
+  "lib/core/utils/compact_count.dart": {
+    "mtime": 1791003792.852351,
+    "ast_hash": "e48f37f91ae754fe21477d46cd88f097",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/api_error_state.dart": {
+    "mtime": 1790238236.889382,
+    "ast_hash": "9775bce07d219400b35a75269bc27a8c",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/app_icon_image.dart": {
+    "mtime": 1788511416.562443,
+    "ast_hash": "73541b7e4729c1f784bf4ed1c89ea72d",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/app_toast.dart": {
+    "mtime": 1791539021.4747598,
+    "ast_hash": "7953e026a8ce57c8c479ee9222051359",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/boss_defeated_overlay.dart": {
+    "mtime": 1790540530.1477797,
+    "ast_hash": "cb02a6ac12b4fd20b291faf46fa9e4ec",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/chest_opened_overlay.dart": {
+    "mtime": 1791148370.9740887,
+    "ast_hash": "c16ae3ebc382932d23df75dd1339a091",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/currency_chip.dart": {
+    "mtime": 1791003792.8963394,
+    "ast_hash": "5af703a2edb683ef2eb2f388c97e5383",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/customize_ring_sheet.dart": {
+    "mtime": 1790238237.0083811,
+    "ast_hash": "8a076761224c341067f98079cf2ec2d3",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/dungeon_conquered_takeover.dart": {
+    "mtime": 1791570976.486362,
+    "ast_hash": "4681c4798f34f274705430fe9245f00e",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/dungeon_floor_cleared_overlay.dart": {
+    "mtime": 1791570948.0593567,
+    "ast_hash": "71bfb20450281f110f8f766037729e9e",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/guild_raid_expired_overlay.dart": {
+    "mtime": 1790540530.4607763,
+    "ast_hash": "2113b1792dd70094fba695da4b53aedf",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/guild_raid_victory_overlay.dart": {
+    "mtime": 1790540532.1587582,
+    "ast_hash": "c929718d6d6f25f3f9fd3c88cd964583",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/inventory_full_overlay.dart": {
+    "mtime": 1790540530.6037748,
+    "ast_hash": "283f3ce7e98f7be0646fca4bb96ac9b4",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/item_icon_image.dart": {
+    "mtime": 1789413477.6613731,
+    "ast_hash": "3f03e369c1f7424f86da184dd9700cee",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/item_obtained_overlay.dart": {
+    "mtime": 1790540530.7417734,
+    "ast_hash": "04d5dbc8cdc46ccbe4b3099eac94d20e",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/level_up_overlay.dart": {
+    "mtime": 1791479610.1896896,
+    "ast_hash": "6fb29b0464f03c3f2e4ca7087ec02ba9",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/main_shell.dart": {
+    "mtime": 1788511416.562443,
+    "ast_hash": "11f1cf1cec4a8f47f4987060c3f9ef94",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/resource_info_dialog.dart": {
+    "mtime": 1790536932.673454,
+    "ast_hash": "f5518a91eb983a963753b603925880b0",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/reward_moment/reward_hud.dart": {
+    "mtime": 1790540289.6196232,
+    "ast_hash": "373c75b2a6445f7b51a6e05c0be8e32f",
+    "semantic_hash": ""
+  },
+  "lib/core/widgets/reward_moment/reward_moment.dart": {
+    "mtime": 1791570892.4838598,
+    "ast_hash": "646b902e839fe26a2cc10a11b69e2635",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/achievements_screen.dart": {
+    "mtime": 1790543052.4351733,
+    "ast_hash": "1d3d878952e773fe39b1c25dcd6b3b5a",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/models/achievement_models.dart": {
+    "mtime": 1791481509.92532,
+    "ast_hash": "df52521cecfb12e76d53aba60ef4dfd1",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/providers/achievements_provider.dart": {
+    "mtime": 1791481849.0346904,
+    "ast_hash": "e0e7aa1fad3b3e24e33928c045a039a1",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/roads/reward_road_screen.dart": {
+    "mtime": 1791481466.551334,
+    "ast_hash": "93f9d9a28d9d1fb7c226ac5785ce1afc",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/roads/reward_roads_hub.dart": {
+    "mtime": 1791481510.0913198,
+    "ast_hash": "d4379f05ef8bbb8f01195f83d103f920",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/roads/road_fx.dart": {
+    "mtime": 1791146879.9429371,
+    "ast_hash": "60c7ab4362892595b4cc364beed47794",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/roads/road_meta.dart": {
+    "mtime": 1790371520.0075107,
+    "ast_hash": "9fca65524e94e003457d0cf58db7d031",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/roads/road_widgets.dart": {
+    "mtime": 1791399889.7989557,
+    "ast_hash": "3b3723df553a953f0c6b88aa46b2261a",
+    "semantic_hash": ""
+  },
+  "lib/features/achievements/services/achievements_service.dart": {
+    "mtime": 1791481708.6192403,
+    "ast_hash": "313841c4a671cb4d6d1f05ad2b154dea",
+    "semantic_hash": ""
+  },
+  "lib/features/activity/activity_result_sheet.dart": {
+    "mtime": 1791525348.0634882,
+    "ast_hash": "4cde89565a982a94efe8eb8e770063c6",
+    "semantic_hash": ""
+  },
+  "lib/features/activity/log_activity_screen.dart": {
+    "mtime": 1791525256.8230345,
+    "ast_hash": "5b68eeccdc2c86f0d330470e51237e28",
+    "semantic_hash": ""
+  },
+  "lib/features/activity/models/activity_models.dart": {
+    "mtime": 1791399889.7993314,
+    "ast_hash": "21da7fe2b5722e73974b18a1cc78aba8",
+    "semantic_hash": ""
+  },
+  "lib/features/activity/providers/activity_provider.dart": {
+    "mtime": 1790801408.7594993,
+    "ast_hash": "26b17c0d56075eca1c41091e7173bb65",
+    "semantic_hash": ""
+  },
+  "lib/features/activity/screens/recent_activities_screen.dart": {
+    "mtime": 1790238237.3353794,
+    "ast_hash": "4e2aacab536104fe8b6bdd9d911d4f4b",
+    "semantic_hash": ""
+  },
+  "lib/features/activity/services/activity_service.dart": {
+    "mtime": 1791525210.9468193,
+    "ast_hash": "9d0507f43bacc4becc35bc7bf5e626b0",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/auth_flow.dart": {
+    "mtime": 1791539021.4749963,
+    "ast_hash": "d996fc2d76b26241058a8fcb02402406",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/login_screen.dart": {
+    "mtime": 1791578782.557721,
+    "ast_hash": "620c48397c98729edffdecfc2f937dfb",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/models/account_models.dart": {
+    "mtime": 1791209444.6264422,
+    "ast_hash": "c9daaae2dd89147a320ebf0c98424eb9",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/register_screen.dart": {
+    "mtime": 1791233240.4416783,
+    "ast_hash": "41e9266d3d94ffbcc9abc636a4ef872f",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/services/apple_sign_in_coordinator.dart": {
+    "mtime": 1791233847.8488991,
+    "ast_hash": "e3ff341671b6249a853cab8e74cc8d0c",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/services/auth_service.dart": {
+    "mtime": 1791235322.5028963,
+    "ast_hash": "1a61c97926099fc29fbcb049f6b2e4cb",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/services/google_sign_in_coordinator.dart": {
+    "mtime": 1791211172.4386022,
+    "ast_hash": "f5455b914af70ed2ed74f250cd029d30",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/widgets/apple_sign_in_button.dart": {
+    "mtime": 1791233847.849115,
+    "ast_hash": "2c91f13f1b8245b5f9bec81feca70155",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/widgets/google_sign_in_button.dart": {
+    "mtime": 1791233828.1651907,
+    "ast_hash": "ad11da82f72e8a7331cb0394f7bd4fb9",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/widgets/google_web_button.dart": {
+    "mtime": 1791233205.8300912,
+    "ast_hash": "4b0943f26b796d41b7210018d75236dd",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/widgets/google_web_button_stub.dart": {
+    "mtime": 1791209444.3454447,
+    "ast_hash": "ad0a141b206fa7368d8d05e0d04eef36",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/widgets/provider_logos.dart": {
+    "mtime": 1791233847.8486066,
+    "ast_hash": "934ccae6f5082e5c58e962eed1d405a5",
+    "semantic_hash": ""
+  },
+  "lib/features/auth/widgets/sign_in_orb.dart": {
+    "mtime": 1791233196.0053155,
+    "ast_hash": "3840ea3d16a125cfad58626d34a6760a",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/models/boss_damage_history.dart": {
+    "mtime": 1790864186.911857,
+    "ast_hash": "5ec18ceaf0527a68e382cd488dbc62ae",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/models/boss_list_item.dart": {
+    "mtime": 1791662887.8918858,
+    "ast_hash": "1300d0b747ba43eb5137b28dc418714a",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/providers/boss_provider.dart": {
+    "mtime": 1791399889.7997148,
+    "ast_hash": "bb3c300956d80dc53c7a387b1d121662",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/replay/boss_replay.dart": {
+    "mtime": 1791548567.2915246,
+    "ast_hash": "59a205845aafc3be7c65ac4bb78c972f",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/replay/boss_seen_store.dart": {
+    "mtime": 1791548542.688384,
+    "ast_hash": "2bd59b69c920d9d7599d1ea9d07f9261",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/replay/boss_slain_takeover.dart": {
+    "mtime": 1791662888.3808792,
+    "ast_hash": "840c45bb8acf96e68644c5c4cd97af5f",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/replay/home_boss_replay.dart": {
+    "mtime": 1791548542.7223358,
+    "ast_hash": "f6a9c875f3e0b0511c71548364f50d90",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/screens/boss_battle_screen.dart": {
+    "mtime": 1791696885.6994338,
+    "ast_hash": "580ba9c25a4dce557774d575a4b77442",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/screens/boss_screen.dart": {
+    "mtime": 1791003792.9413276,
+    "ast_hash": "add33feba17c92bfbfd6aa654406aacf",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/services/boss_page_service.dart": {
+    "mtime": 1790880621.9739738,
+    "ast_hash": "aebac98072e1378299085e7caab5b0b3",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_active_card.dart": {
+    "mtime": 1791662887.9688847,
+    "ast_hash": "b4ef991c8c67f7211b9bcda49b720b9f",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_damage_hint.dart": {
+    "mtime": 1790238237.5543783,
+    "ast_hash": "25bbda0aff221ccce8e8bf6416dbe1f6",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_damage_hit_row.dart": {
+    "mtime": 1791666869.693459,
+    "ast_hash": "18bcbe9ad94a5dc8f3fed7ac32613162",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_defeated_card.dart": {
+    "mtime": 1791662888.0448837,
+    "ast_hash": "d83f300af83966ef5bc5b13fb24989bc",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_duel_arena.dart": {
+    "mtime": 1791696826.4772925,
+    "ast_hash": "800cd35f4028f838ccd739ae0d34e55a",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_expired_card.dart": {
+    "mtime": 1791662888.1148827,
+    "ast_hash": "a8cc9926a11f317c9e6743d935793372",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_hit_fx.dart": {
+    "mtime": 1790864596.5866995,
+    "ast_hash": "4c118dc9fb176ba0e6d5848df4700006",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_hp_bar.dart": {
+    "mtime": 1790322488.4726167,
+    "ast_hash": "11d1cec9035689501e819bfe9d6779bc",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_icon.dart": {
+    "mtime": 1788511416.5660763,
+    "ast_hash": "1edf67c0b6fdb83ac76de6fdbf1339b1",
+    "semantic_hash": ""
+  },
+  "lib/features/boss/widgets/boss_locked_card.dart": {
+    "mtime": 1791662888.2058816,
+    "ast_hash": "b8d8ac8c5599a571d61409bb7f7d312c",
+    "semantic_hash": ""
+  },
+  "lib/features/character/models/avatar_option.dart": {
+    "mtime": 1788511416.5669222,
+    "ast_hash": "054b4e3353eec1c2ed0e4c82574026df",
+    "semantic_hash": ""
+  },
+  "lib/features/character/models/character_class.dart": {
+    "mtime": 1790619855.5126953,
+    "ast_hash": "a23a1118366f03cf0efa61890c4c5505",
+    "semantic_hash": ""
+  },
+  "lib/features/character/models/character_profile.dart": {
+    "mtime": 1791525750.3218343,
+    "ast_hash": "e50fc7746774fa89de407b8f7924286c",
+    "semantic_hash": ""
+  },
+  "lib/features/character/models/character_setup_result.dart": {
+    "mtime": 1788511416.5669904,
+    "ast_hash": "9375a12b1b41f5dba021749679eb540d",
+    "semantic_hash": ""
+  },
+  "lib/features/character/models/level_up_receipt.dart": {
+    "mtime": 1790714939.3122988,
+    "ast_hash": "12d964e1a62eacda3276d089e028d7b6",
+    "semantic_hash": ""
+  },
+  "lib/features/character/models/xp_history_entry.dart": {
+    "mtime": 1788511416.5669904,
+    "ast_hash": "98c8db1f03559a293d0c5e520829985c",
+    "semantic_hash": ""
+  },
+  "lib/features/character/providers/character_provider.dart": {
+    "mtime": 1791525740.9179876,
+    "ast_hash": "a29af4257b759540cdceed5e315865d9",
+    "semantic_hash": ""
+  },
+  "lib/features/character/services/character_service.dart": {
+    "mtime": 1791481708.2972405,
+    "ast_hash": "13bd3caef8e072c81a2886f2483efbe7",
+    "semantic_hash": ""
+  },
+  "lib/features/character/setup/setup_resume_service.dart": {
+    "mtime": 1791235322.5022852,
+    "ast_hash": "15479cc35024b1ddefa9de0c5cbe4b84",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/gear_paperdoll_assets.dart": {
+    "mtime": 1789413477.6613731,
+    "ast_hash": "60af24b89da61c857e35ba25a2cde17b",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/gear_screen.dart": {
+    "mtime": 1790797828.9948866,
+    "ast_hash": "dd57bf80f9fd31763bd6309813a2e3dd",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/widgets/gear_hex_slots.dart": {
+    "mtime": 1790314057.2880368,
+    "ast_hash": "3abdf7f6f58c3216a1057b4bc14299b4",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/widgets/gear_inventory_grid.dart": {
+    "mtime": 1790797834.9356768,
+    "ast_hash": "f14e4fdeb98dc7d32f72746fc9bf4548",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/widgets/gear_outfit_mount_row.dart": {
+    "mtime": 1790541979.3183472,
+    "ast_hash": "e4d57c2e4dd089a78fc88f0503e613dd",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/widgets/gear_paperdoll.dart": {
+    "mtime": 1789413477.6613731,
+    "ast_hash": "3c573e0548c7dd184290edaa6f2566e7",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/widgets/gear_slot_detail_sheet.dart": {
+    "mtime": 1791003792.9963133,
+    "ast_hash": "d1b9c33cd33e9714bfa18aaf529bc0a2",
+    "semantic_hash": ""
+  },
+  "lib/features/gear/widgets/gear_stats_row.dart": {
+    "mtime": 1790536932.7534535,
+    "ast_hash": "ac2417fe673cdca762e3c570658b10d5",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/models/guild_models.dart": {
+    "mtime": 1791481552.7783046,
+    "ast_hash": "ec3fafb9819e3a2147f362664d0fdf9b",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/providers/guild_provider.dart": {
+    "mtime": 1791481849.365679,
+    "ast_hash": "e78eb34a6b05db8365836bbc99fe9072",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/screens/guild_find_views.dart": {
+    "mtime": 1790797959.1134396,
+    "ast_hash": "561ac53242bc23bae814785070198c09",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/screens/guild_home_view.dart": {
+    "mtime": 1790238490.558845,
+    "ast_hash": "57e1426d034916ae19ea3890398991ea",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/screens/guild_members_view.dart": {
+    "mtime": 1790238490.3518505,
+    "ast_hash": "8013946ae89d7bebe9795479ca74bc82",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/screens/guild_raid_view.dart": {
+    "mtime": 1790323467.9403973,
+    "ast_hash": "d52cbf4bbc10bedbdb17c1605e577113",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/screens/guild_screen.dart": {
+    "mtime": 1791481570.797298,
+    "ast_hash": "88b638877d79f71fda9f244648a91af8",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/services/guild_realtime_service.dart": {
+    "mtime": 1791003792.9963133,
+    "ast_hash": "cc321efc043f322a080283b08fbc3297",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/services/guild_service.dart": {
+    "mtime": 1791481708.9682403,
+    "ast_hash": "cb86c99c206a822b3f0fde7611b97c43",
+    "semantic_hash": ""
+  },
+  "lib/features/guild/widgets/guild_widgets.dart": {
+    "mtime": 1790238031.9784794,
+    "ast_hash": "0f2a2e58d04b747bc2293b385528af29",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_adventure_hub.dart": {
+    "mtime": 1791147002.8177872,
+    "ast_hash": "391fc256115c330fa4e59a2896d36710",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_happening_now.dart": {
+    "mtime": 1790799272.7153096,
+    "ast_hash": "8670c2b29470850b5b35fbe543a90a68",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_hero_stage.dart": {
+    "mtime": 1791479365.9517045,
+    "ast_hash": "bc4363b24bc14f3ae6d3042fcb8680e4",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_log_workout_cta.dart": {
+    "mtime": 1790238194.1836133,
+    "ast_hash": "19b272a32e5e3a821a4c755e13d46791",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_next_unlock_card.dart": {
+    "mtime": 1791539021.4751716,
+    "ast_hash": "4945c290b6236d6be4b12e027f2a5887",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_portal_card.dart": {
+    "mtime": 1791710934.5195036,
+    "ast_hash": "217cc8f767840f30476056586368ff64",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_recent_activities_card.dart": {
+    "mtime": 1790238238.114375,
+    "ast_hash": "dab92647206ec352b0f8859dd53e7111",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_seasonal_event_row.dart": {
+    "mtime": 1790238238.118375,
+    "ast_hash": "768ab546b8b82f38c93f17c2cf08da7d",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/home_xp_storm_banner.dart": {
+    "mtime": 1788511416.568727,
+    "ast_hash": "3186909cf4dc248b32e02f044e839c63",
+    "semantic_hash": ""
+  },
+  "lib/features/home/cards/portal_idle.dart": {
+    "mtime": 1790364481.3568795,
+    "ast_hash": "dd202d40a7e5b62b789d5856c7df3e26",
+    "semantic_hash": ""
+  },
+  "lib/features/home/home_screen.dart": {
+    "mtime": 1791038125.4835494,
+    "ast_hash": "007d6886569c349d3f803625b23f323c",
+    "semantic_hash": ""
+  },
+  "lib/features/home/providers/adventure_hub_status_provider.dart": {
+    "mtime": 1791094686.0974157,
+    "ast_hash": "48f0c8ddf9c388f5025e18c018881106",
+    "semantic_hash": ""
+  },
+  "lib/features/home/providers/world_progress_provider.dart": {
+    "mtime": 1788511416.568727,
+    "ast_hash": "98b158312c9dac166b1f5ac932ac68e4",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_avatar_ring.dart": {
+    "mtime": 1791295208.5014362,
+    "ast_hash": "44a5a9b5861a9d66d3cc47bc2c3ed502",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_badge.dart": {
+    "mtime": 1788511416.5697312,
+    "ast_hash": "a74492e34f067431aa5326dcad52c970",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_card.dart": {
+    "mtime": 1788511416.5697312,
+    "ast_hash": "85dcd98049359f53ccaa8c21beb4fc24",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_hero_button.dart": {
+    "mtime": 1790798006.9254472,
+    "ast_hash": "d4a3c0244dfe118af2e5eb3749d102da",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_palette.dart": {
+    "mtime": 1790238238.1813748,
+    "ast_hash": "8bc8fb2fed7acda21544562d48cf559a",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_progress_bar.dart": {
+    "mtime": 1790533403.5475848,
+    "ast_hash": "95ef3de4cf64e2faf4184b9c9812100e",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_quest_item.dart": {
+    "mtime": 1790238238.1873748,
+    "ast_hash": "d655512e93d9820d4152a04359379de3",
+    "semantic_hash": ""
+  },
+  "lib/features/home/widgets/home_section_title.dart": {
+    "mtime": 1790238238.1893747,
+    "ast_hash": "88248f0621b938330d977974abe25b68",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/mappers/activity_type_mapper.dart": {
+    "mtime": 1790238238.2023747,
+    "ast_hash": "07f7102f3f35500c174b297bdd11d238",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/models/integration_models.dart": {
+    "mtime": 1791301038.8993313,
+    "ast_hash": "eb5cf8304c02ecd8ea1a2ee27a2362b9",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/providers/integrations_provider.dart": {
+    "mtime": 1791539021.4751716,
+    "ast_hash": "2bcedc3c76db728d61b21c3ecc231547",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/screens/integrations_screen.dart": {
+    "mtime": 1791300890.7266657,
+    "ast_hash": "2a5f425391df512832e766a39377410d",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/services/garmin_service.dart": {
+    "mtime": 1790238238.2713742,
+    "ast_hash": "781a4b47937d37779ed20c060f22e6e1",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/services/health_sync_service.dart": {
+    "mtime": 1791301254.9753807,
+    "ast_hash": "f691555be5d1d772d50f34c9a0c42f85",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/services/strava_service.dart": {
+    "mtime": 1791123972.0337057,
+    "ast_hash": "47f7a2a623f4aba9e653434a2003323c",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/widgets/integration_tile.dart": {
+    "mtime": 1788511416.571097,
+    "ast_hash": "b7b1ef8a9b481b14f0201749ff6a517c",
+    "semantic_hash": ""
+  },
+  "lib/features/integrations/widgets/sync_status_banner.dart": {
+    "mtime": 1788511416.5713336,
+    "ast_hash": "a38b021a87943ff6f9bbd94f5d2be300",
+    "semantic_hash": ""
+  },
+  "lib/features/items/models/item_models.dart": {
+    "mtime": 1791481444.2303405,
+    "ast_hash": "7d4ce7538fc140512f59e935a485f182",
+    "semantic_hash": ""
+  },
+  "lib/features/items/providers/items_provider.dart": {
+    "mtime": 1791481849.4576757,
+    "ast_hash": "8820fd4fb64efa975a2df902b712791a",
+    "semantic_hash": ""
+  },
+  "lib/features/items/services/items_service.dart": {
+    "mtime": 1791481708.6962402,
+    "ast_hash": "9cfac73f0e1cb0dac729c21bb3ea55ea",
+    "semantic_hash": ""
+  },
+  "lib/features/leaderboard/leaderboard_screen.dart": {
+    "mtime": 1791399889.8015404,
+    "ast_hash": "96fba6e4f06fd1cbb9608fc78d4ff681",
+    "semantic_hash": ""
+  },
+  "lib/features/leaderboard/models/leaderboard_models.dart": {
+    "mtime": 1790755839.9089432,
+    "ast_hash": "a52faf3d5ae41b8b3766d915f79cd9c7",
+    "semantic_hash": ""
+  },
+  "lib/features/leaderboard/providers/leaderboard_provider.dart": {
+    "mtime": 1790755661.9404862,
+    "ast_hash": "5818238d9a67f93e9c38eb2cfd7b3aa2",
+    "semantic_hash": ""
+  },
+  "lib/features/leaderboard/services/leaderboard_service.dart": {
+    "mtime": 1791539021.4754949,
+    "ast_hash": "476d44cbe8c8c63e9f9fc58b51821546",
+    "semantic_hash": ""
+  },
+  "lib/features/leaderboard/widgets/leaderboard_widgets.dart": {
+    "mtime": 1790756194.1665173,
+    "ast_hash": "ef0e8bfe6f206b2084e18df41ff73142",
+    "semantic_hash": ""
+  },
+  "lib/features/map/journey/journey_state.dart": {
+    "mtime": 1791650350.7648191,
+    "ast_hash": "58072d94858b4e2e4d68173a25d5626f",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/boss_models.dart": {
+    "mtime": 1788511416.5721426,
+    "ast_hash": "a92438b37b804d4859260d9b72393bef",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/chest_models.dart": {
+    "mtime": 1788511416.5722113,
+    "ast_hash": "8752499ab53bc9ab742a3cbe70feea88",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/crossroads_models.dart": {
+    "mtime": 1788511416.5722113,
+    "ast_hash": "e38a409d9a797ce6eef95293fe3e4f47",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/dungeon_models.dart": {
+    "mtime": 1788511416.5722113,
+    "ast_hash": "e6c0ff3f5d0b632430d13e3edfa1287b",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/encounter_models.dart": {
+    "mtime": 1790238238.3653738,
+    "ast_hash": "58a7efeb67e0256a4b2d242c1877d90d",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/region_chest_models.dart": {
+    "mtime": 1791481493.4743252,
+    "ast_hash": "d692138d0050130b58d861fc47ef2d34",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/world_map_models.dart": {
+    "mtime": 1790016566.229203,
+    "ast_hash": "1aa98c086b2170253acd959cb5329b53",
+    "semantic_hash": ""
+  },
+  "lib/features/map/models/world_zone_models.dart": {
+    "mtime": 1790238238.3933737,
+    "ast_hash": "5e239266f04f84e8143e0dd5424db27a",
+    "semantic_hash": ""
+  },
+  "lib/features/map/providers/region_chest_provider.dart": {
+    "mtime": 1791481630.0532744,
+    "ast_hash": "11ccd746e536cdad72b1abcb9d862f85",
+    "semantic_hash": ""
+  },
+  "lib/features/map/screens/region_chests_screen.dart": {
+    "mtime": 1791711102.0720906,
+    "ast_hash": "a5f6c2bb875887e2994947c963a44990",
+    "semantic_hash": ""
+  },
+  "lib/features/map/screens/region_detail_screen.dart": {
+    "mtime": 1791662888.4598782,
+    "ast_hash": "1a353ea421f5a2e1233070f305a28e9e",
+    "semantic_hash": ""
+  },
+  "lib/features/map/screens/world_hub_screen.dart": {
+    "mtime": 1791539021.4886374,
+    "ast_hash": "51ef89303cc65945e730c36cd742640a",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/boss_service.dart": {
+    "mtime": 1790238238.4803731,
+    "ast_hash": "c35276afd4f931fc7d56f71c5432f5fe",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/chest_service.dart": {
+    "mtime": 1788511416.5731235,
+    "ast_hash": "c14b11bcfdf7d0e49f5a379b1708ed2a",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/crossroads_service.dart": {
+    "mtime": 1790238238.4833732,
+    "ast_hash": "126532e193e70f116971b2ba92439999",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/dungeon_service.dart": {
+    "mtime": 1790238238.4853733,
+    "ast_hash": "bffd6b82b9a3e5f2621dbaa65e5b4048",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/region_chest_service.dart": {
+    "mtime": 1791539021.4887598,
+    "ast_hash": "db75a4f09c2c39381e013599fa383473",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/world_map_selection.dart": {
+    "mtime": 1788511416.5731235,
+    "ast_hash": "f32dbae5e37c0e0c8d4db55084e411f9",
+    "semantic_hash": ""
+  },
+  "lib/features/map/services/world_zone_service.dart": {
+    "mtime": 1791525211.0368178,
+    "ast_hash": "4aa2015a3c35e4e1c55e6b275bdb6d14",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/active_journey_banner.dart": {
+    "mtime": 1788511416.5731235,
+    "ast_hash": "7800e95dce3bf275d7928f0eee4cb475",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/crossroads_choice_sheet.dart": {
+    "mtime": 1791481510.2943196,
+    "ast_hash": "df9db41ddd2759406b5b409f0e166e82",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/dungeon_floors_sheet.dart": {
+    "mtime": 1791539021.4890525,
+    "ast_hash": "359b0b7a73bad5c6945b4693bf4589b4",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/encounter_blocker_sheet.dart": {
+    "mtime": 1790799272.7181015,
+    "ast_hash": "439550965ee3a51c5d911f0d4774c578",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/encounter_intercept_sheet.dart": {
+    "mtime": 1790238238.5713727,
+    "ast_hash": "4ad442c1d46b07dbfaa4605eeb5b8da1",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/encounter_merchant_sheet.dart": {
+    "mtime": 1790238238.5813727,
+    "ast_hash": "ec8c24a30d05deec3fd7364f7e336b39",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/encounter_story_sheet.dart": {
+    "mtime": 1790238238.5873725,
+    "ast_hash": "b5f662729c5c27c44d7910504f22b498",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/map_icon_resolver.dart": {
+    "mtime": 1791650350.65382,
+    "ast_hash": "c571963439847967034e34e15603e3e9",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/region_hero_card.dart": {
+    "mtime": 1790890604.8416195,
+    "ast_hash": "91866ced19bbe42e1a379a6b9fcaa84b",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/region_status_chip.dart": {
+    "mtime": 1790018715.2370775,
+    "ast_hash": "2091c3121fb24ea0fe9713e3ab1b7259",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/world_map_theme.dart": {
+    "mtime": 1790890611.8026974,
+    "ast_hash": "c47fc873c3e49edcaf3da83322954355",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/zone_detail_sheet.dart": {
+    "mtime": 1791481493.7303252,
+    "ast_hash": "f9aa175a5951baf2210265ff0dc7ef38",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/zone_node_tile.dart": {
+    "mtime": 1791665877.6477728,
+    "ast_hash": "07486829fdfec8835b6ec1bc4717f948",
+    "semantic_hash": ""
+  },
+  "lib/features/map/widgets/zone_trail.dart": {
+    "mtime": 1791526846.8741355,
+    "ast_hash": "8fee25d49238350c74ba9ed5dfb16daa",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/burn_chain/burn_chain_provider.dart": {
+    "mtime": 1791525750.4528322,
+    "ast_hash": "368818b8503c30f2c1af05fc6bbad7cd",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/burn_chain/burn_chain_rules.dart": {
+    "mtime": 1790749480.4602606,
+    "ast_hash": "fdca512226547d861a40fb550658bca5",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/burn_chain/burn_chain_screen.dart": {
+    "mtime": 1791539021.4892914,
+    "ast_hash": "f74be58a8745cac09291d4cbf173a990",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/modes_screen.dart": {
+    "mtime": 1790797958.6434493,
+    "ast_hash": "3a2086d51f24ea0c7b7fb940554fed3b",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/services/modes_api_service.dart": {
+    "mtime": 1791525210.9288197,
+    "ast_hash": "208067ccd7505f4d66aae1dc4e6d5e6a",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/treasure_delve/delve_engine.dart": {
+    "mtime": 1790749733.125093,
+    "ast_hash": "59e4c0a40ee2dba63da26de6b4157de3",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/treasure_delve/delve_provider.dart": {
+    "mtime": 1790751214.8104248,
+    "ast_hash": "60383d432a214bc0294fb059f6a42417",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/treasure_delve/delve_run_screen.dart": {
+    "mtime": 1790749683.8835194,
+    "ast_hash": "3e664fcf902c588048956f0fd42c3607",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/treasure_delve/treasure_delve_screen.dart": {
+    "mtime": 1790799272.7187855,
+    "ast_hash": "3fd839952cd074854e36b4359c9172f0",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/widgets/mode_banner.dart": {
+    "mtime": 1790797958.986442,
+    "ast_hash": "e6f6386e5433d013732cd89daa3e6902",
+    "semantic_hash": ""
+  },
+  "lib/features/modes/widgets/mode_ui.dart": {
+    "mtime": 1790712159.4141517,
+    "ast_hash": "50d0bb59db166eced0d030e901cf7a06",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/models/notification_list_models.dart": {
+    "mtime": 1790057063.6497672,
+    "ast_hash": "09729a50c2e59e74005e33aecdfba3cd",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/models/notification_models.dart": {
+    "mtime": 1788511416.5747027,
+    "ast_hash": "cb43408e233c22e0b23ace80ac20c0c1",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/models/notification_preferences.dart": {
+    "mtime": 1788511416.5747027,
+    "ast_hash": "d827ffcd0f72bd8b8b5d9e30622c2c3d",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/providers/notification_list_provider.dart": {
+    "mtime": 1788511416.5747027,
+    "ast_hash": "d0cd50cec9d5bc0f7a3bea1b66a6c1a0",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/providers/notifications_provider.dart": {
+    "mtime": 1788511416.574871,
+    "ast_hash": "1dac807e0acd9dae4c3fca036192ffcb",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/services/notification_list_service.dart": {
+    "mtime": 1788511416.574871,
+    "ast_hash": "16a6173ed324f9c97aa0a725c85e26b4",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/services/notification_preferences_service.dart": {
+    "mtime": 1788511416.5750113,
+    "ast_hash": "f4a76e18480321df36094fa146044746",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/services/notifications_service.dart": {
+    "mtime": 1791578808.3155894,
+    "ast_hash": "c6930a5b2adff5aa14d7b08963b94c46",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/widgets/notification_row.dart": {
+    "mtime": 1788511416.5750113,
+    "ast_hash": "f4a4255636c9e6a2508096a9c08889be",
+    "semantic_hash": ""
+  },
+  "lib/features/notifications/widgets/notifications_sheet.dart": {
+    "mtime": 1790238238.7683716,
+    "ast_hash": "abb5114aabb5ade520f936014ae18162",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/models/onboarding_models.dart": {
+    "mtime": 1791300651.8108091,
+    "ast_hash": "34281b385c8e36b2869f3e3f30d39b79",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/onboarding_controller.dart": {
+    "mtime": 1791478279.771967,
+    "ast_hash": "5d900ffa1fe27098156a1c73875253b1",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/onboarding_flow.dart": {
+    "mtime": 1791235371.197064,
+    "ast_hash": "35f8486b1edd60d2f28db44ed428327d",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/analyze_step.dart": {
+    "mtime": 1790620342.326708,
+    "ast_hash": "1789f6a1ac2927628237bffa0bdde192",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/avatar_step.dart": {
+    "mtime": 1790620643.0134099,
+    "ast_hash": "3cf4327d586b7435807ec3791ebd9c63",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/class_step.dart": {
+    "mtime": 1791478279.8011713,
+    "ast_hash": "5f90c86190e679a94a12921ccbe9c33a",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/connect_step.dart": {
+    "mtime": 1791301090.721864,
+    "ast_hash": "73ea74fff77fcd6e37bcdafb141ebbf3",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/import_step.dart": {
+    "mtime": 1791403417.4552596,
+    "ast_hash": "f56b70c8d608739b777af0e075af258a",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/level_step.dart": {
+    "mtime": 1791407358.5460434,
+    "ast_hash": "147c790d428972c966ec991d37c7a77d",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/map_step.dart": {
+    "mtime": 1791539021.4897597,
+    "ast_hash": "fefdd0153697e38651910c429f0b9d3e",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/username_step.dart": {
+    "mtime": 1791235451.1830916,
+    "ast_hash": "28c3b3ca56ad15d3a8b81d1248b1c576",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/screens/welcome_step.dart": {
+    "mtime": 1790620111.7791452,
+    "ast_hash": "ab6ab1df909b88f941f69203e850f99f",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/services/onboarding_service.dart": {
+    "mtime": 1791539021.4897597,
+    "ast_hash": "c8fa9dc2d985b6112ce2cf69ed996f90",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/widgets/activity_visuals.dart": {
+    "mtime": 1790620227.19493,
+    "ast_hash": "74ab776433c65b785a60a0b665fcbf6e",
+    "semantic_hash": ""
+  },
+  "lib/features/onboarding/widgets/onboarding_ui.dart": {
+    "mtime": 1791235416.4846396,
+    "ast_hash": "b36344e905655a07a165392b1242f0c2",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/account_settings_screen.dart": {
+    "mtime": 1791209649.5685558,
+    "ast_hash": "d1a32e4800eb61a00dd309192be73f93",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/edit_avatar_screen.dart": {
+    "mtime": 1790541979.333608,
+    "ast_hash": "1e642c7879590720f13ac26d7007be2c",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/notification_preferences_screen.dart": {
+    "mtime": 1790541979.33475,
+    "ast_hash": "427ac50d28206ef7c7f1fbd0f7e5a4b9",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/profile_screen.dart": {
+    "mtime": 1791300118.5845237,
+    "ast_hash": "2fb087fcf91d55e5e8008d7b7f94a95d",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/profile_sections.dart": {
+    "mtime": 1791480503.2418888,
+    "ast_hash": "0541c5ad65e6eaf4166882ee44d48379",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/profile_stat_metadata.dart": {
+    "mtime": 1790801597.7585175,
+    "ast_hash": "eee38f01707e3ac7aea76243d897e93e",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/profile_widgets.dart": {
+    "mtime": 1790238238.8233714,
+    "ast_hash": "87018df239f181432536e9052c3f0e14",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/stat_detail_sheet.dart": {
+    "mtime": 1791480502.9498882,
+    "ast_hash": "f24c2ad3240e7a8fb05588dd79b91c2a",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/tabs/admin_tab.dart": {
+    "mtime": 1790801597.7176497,
+    "ast_hash": "5cc5f5d9c4124b053f91636cd14460b3",
+    "semantic_hash": ""
+  },
+  "lib/features/profile/xp_history_sheet.dart": {
+    "mtime": 1788511416.5770063,
+    "ast_hash": "0f3af2030470766e65dfdf9d5f472c9b",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/models/quest_models.dart": {
+    "mtime": 1791479376.690504,
+    "ast_hash": "e3374064289577f1958d9e87a0ef2096",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/providers/quest_provider.dart": {
+    "mtime": 1788511416.5772505,
+    "ast_hash": "1f59f9f067944b0bb06313ae4c9e2617",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/quests_screen.dart": {
+    "mtime": 1790020678.064026,
+    "ast_hash": "cb1bca8b0f897a54b873ae2a909d5e5b",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/services/quest_service.dart": {
+    "mtime": 1788511416.5772505,
+    "ast_hash": "6145fabe808d601d32671ca06adc942d",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/tabs/daily_quests_tab.dart": {
+    "mtime": 1788511416.577348,
+    "ast_hash": "549b9aa550981a0dd8313347e4d5b1a5",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/tabs/special_quests_tab.dart": {
+    "mtime": 1788511416.577348,
+    "ast_hash": "9510bee9b96bcafd337e1f51be9e1fe6",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/tabs/weekly_quests_tab.dart": {
+    "mtime": 1790238238.9543705,
+    "ast_hash": "29dedb2e33e832a4ccc96629f8091c98",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/widgets/daily_bonus_banner.dart": {
+    "mtime": 1790238238.9693706,
+    "ast_hash": "6243f608d2a02744b29bd35933560911",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/widgets/quest_card.dart": {
+    "mtime": 1790238238.9743705,
+    "ast_hash": "05204afff5ebeb640b18e07e3f961fdc",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/widgets/quest_empty_state.dart": {
+    "mtime": 1788511416.577879,
+    "ast_hash": "1c73054a5908ddff7b8c0985d2552525",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/widgets/quest_error_state.dart": {
+    "mtime": 1790238238.9783704,
+    "ast_hash": "ba4d5f1c0a84d7c8a8f1549c000397e5",
+    "semantic_hash": ""
+  },
+  "lib/features/quests/widgets/quest_shimmer.dart": {
+    "mtime": 1790238238.9823704,
+    "ast_hash": "e51fd5ce6d707e89bab5f41a6b448318",
+    "semantic_hash": ""
+  },
+  "lib/features/rewards/models/rewards_models.dart": {
+    "mtime": 1791479376.7735043,
+    "ast_hash": "40cf18bbaf639510332a1e79604f86e8",
+    "semantic_hash": ""
+  },
+  "lib/features/rewards/providers/rewards_provider.dart": {
+    "mtime": 1791481849.8136632,
+    "ast_hash": "b93134c508a2cc27f5231fe3cab582ab",
+    "semantic_hash": ""
+  },
+  "lib/features/rewards/rewards_screen.dart": {
+    "mtime": 1791480530.7939386,
+    "ast_hash": "fd54e05986464e592e9afe4e5d8c7916",
+    "semantic_hash": ""
+  },
+  "lib/features/rewards/services/rewards_service.dart": {
+    "mtime": 1791481708.3762405,
+    "ast_hash": "17794dc82f012d2bf3b200f352344fab",
+    "semantic_hash": ""
+  },
+  "lib/features/rewards/widgets/task_reward_popup.dart": {
+    "mtime": 1790533423.256924,
+    "ast_hash": "4ad3eb9d24ed2e21de1c9f5ebb609e89",
+    "semantic_hash": ""
+  },
+  "lib/features/season/buy_founder_pass_screen.dart": {
+    "mtime": 1791539021.4902837,
+    "ast_hash": "eaf075780099f62560fe08ec84a7cb0e",
+    "semantic_hash": ""
+  },
+  "lib/features/season/models/season_models.dart": {
+    "mtime": 1791479580.1098423,
+    "ast_hash": "4fd0ad6ff63cfae8beceb57c935ef362",
+    "semantic_hash": ""
+  },
+  "lib/features/season/providers/season_provider.dart": {
+    "mtime": 1791525211.142816,
+    "ast_hash": "edb45de9237566ceb9e2b12f6338b44e",
+    "semantic_hash": ""
+  },
+  "lib/features/season/season_track_screen.dart": {
+    "mtime": 1791539021.490508,
+    "ast_hash": "6d2be538c0c568cda23497d9a2d441e0",
+    "semantic_hash": ""
+  },
+  "lib/features/season/services/season_service.dart": {
+    "mtime": 1791525211.1248162,
+    "ast_hash": "57511068a5e10bb59a7cd1f88e924d96",
+    "semantic_hash": ""
+  },
+  "lib/features/season/widgets/season_claim_reveal.dart": {
+    "mtime": 1791539021.4907596,
+    "ast_hash": "53d448515139a0b7acddf83f1ff0875f",
+    "semantic_hash": ""
+  },
+  "lib/features/season/widgets/season_legend.dart": {
+    "mtime": 1789159720.1509283,
+    "ast_hash": "a2348f00ffd6bde988c6f4693bd7e828",
+    "semantic_hash": ""
+  },
+  "lib/features/season/widgets/season_milestone_card.dart": {
+    "mtime": 1790337762.2130234,
+    "ast_hash": "0165ddc6f26ce2af8483b9ec8c28b230",
+    "semantic_hash": ""
+  },
+  "lib/features/season/widgets/season_reward_slot.dart": {
+    "mtime": 1791539021.491,
+    "ast_hash": "f1522047b3966d7831d59fee9093971e",
+    "semantic_hash": ""
+  },
+  "lib/features/season/widgets/season_theme.dart": {
+    "mtime": 1791539021.491,
+    "ast_hash": "2f650fbaedeb1578cd7e074c48e2b846",
+    "semantic_hash": ""
+  },
+  "lib/features/season/widgets/season_tier_row.dart": {
+    "mtime": 1790884356.83296,
+    "ast_hash": "87d3e769c7ed9042b37e5c39fdaf9158",
+    "semantic_hash": ""
+  },
+  "lib/features/shop/models/shop_models.dart": {
+    "mtime": 1791525015.5162299,
+    "ast_hash": "8a08dba1caadab9c2033b927c80b4752",
+    "semantic_hash": ""
+  },
+  "lib/features/shop/providers/shop_provider.dart": {
+    "mtime": 1791525331.6217656,
+    "ast_hash": "de3f1177d80bb232e40e6fc911b891d1",
+    "semantic_hash": ""
+  },
+  "lib/features/shop/services/shop_service.dart": {
+    "mtime": 1791539021.491,
+    "ast_hash": "061bbc9dc2e128b7865dafc45e377c4d",
+    "semantic_hash": ""
+  },
+  "lib/features/shop/shop_screen.dart": {
+    "mtime": 1791539021.4915562,
+    "ast_hash": "406dcca5b3fc1d9714d84323ea33aa97",
+    "semantic_hash": ""
+  },
+  "lib/features/streak/models/streak_models.dart": {
+    "mtime": 1791479579.418842,
+    "ast_hash": "53b13bf354e9bf54d977993384709e9e",
+    "semantic_hash": ""
+  },
+  "lib/features/streak/providers/streak_provider.dart": {
+    "mtime": 1791481629.8012745,
+    "ast_hash": "d356d94b81db9c84eecdb27390f016cd",
+    "semantic_hash": ""
+  },
+  "lib/features/streak/services/streak_service.dart": {
+    "mtime": 1791539021.4917598,
+    "ast_hash": "d38618eccc1b24d3eaad8beabd3bc900",
+    "semantic_hash": ""
+  },
+  "lib/features/streak/widgets/streak_detail_sheet.dart": {
+    "mtime": 1791481413.0543492,
+    "ast_hash": "66477784d271a93b78722727be2d26f2",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/models/pending_models.dart": {
+    "mtime": 1791300890.7646654,
+    "ast_hash": "0b3046f73b430f2f7350f560a6c47546",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/providers/pending_workouts_provider.dart": {
+    "mtime": 1791710934.5210955,
+    "ast_hash": "23b1f0f1dfcaf00e081f7bf9c66cbc09",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/pull_import_flow.dart": {
+    "mtime": 1791710934.5214202,
+    "ast_hash": "0268014ad0fb723e4a2684bbbab1fe11",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/services/pending_workouts_service.dart": {
+    "mtime": 1791710934.5216637,
+    "ast_hash": "5c24254bacda4c22239e9ccfc235c418",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/widgets/import_review_sheet.dart": {
+    "mtime": 1791399889.8023288,
+    "ast_hash": "0baa4f7266a3729f3358cabea29e5f05",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/widgets/pull_to_import.dart": {
+    "mtime": 1790671667.406681,
+    "ast_hash": "1e164104a0082c244d47c01e73b51564",
+    "semantic_hash": ""
+  },
+  "lib/features/sync/widgets/sync_status_pill.dart": {
+    "mtime": 1790671667.421681,
+    "ast_hash": "d4fbf5a02d2f0a93bb3863a0fcbc2ffc",
+    "semantic_hash": ""
+  },
+  "lib/features/talents/models/talent_models.dart": {
+    "mtime": 1790714642.0185533,
+    "ast_hash": "79c690945779621a5593def47ca3a6f4",
+    "semantic_hash": ""
+  },
+  "lib/features/talents/providers/talents_provider.dart": {
+    "mtime": 1791525210.676824,
+    "ast_hash": "7b9bfc838ce5dca272cfd1fc32799b3f",
+    "semantic_hash": ""
+  },
+  "lib/features/talents/services/talents_service.dart": {
+    "mtime": 1791539021.4917598,
+    "ast_hash": "7ea89ccd2075004ffb6368673148d748",
+    "semantic_hash": ""
+  },
+  "lib/features/talents/talents_screen.dart": {
+    "mtime": 1791539021.4922717,
+    "ast_hash": "d147a85d7a3e95740aff5226695c1d91",
+    "semantic_hash": ""
+  },
+  "lib/features/talents/widgets/talent_info_sheet.dart": {
+    "mtime": 1790340430.33853,
+    "ast_hash": "14ec0a4278f07a293b0ef97bc1807aaa",
+    "semantic_hash": ""
+  },
+  "lib/features/talents/widgets/talent_theme.dart": {
+    "mtime": 1789413477.985373,
+    "ast_hash": "6d5d26d2d7677202a7f4ae023c955824",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/models/title_models.dart": {
+    "mtime": 1791003792.9993124,
+    "ast_hash": "90888164e040e9bedcfc9e8e5523e63c",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/providers/titles_provider.dart": {
+    "mtime": 1790238239.4613678,
+    "ast_hash": "afe2670a0919ede350db9494bf05247d",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/services/titles_service.dart": {
+    "mtime": 1791524998.6325307,
+    "ast_hash": "6a2fb25e0de7921398aec94be165db70",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/titles_ranks_screen.dart": {
+    "mtime": 1791094686.2554612,
+    "ast_hash": "bb1806b350b7dcfe567f7acfc653d9e4",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/widgets/rank_ladder_widget.dart": {
+    "mtime": 1790238239.4963677,
+    "ast_hash": "b9876decd4bcc03a6d9068d66d6c3ee1",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/widgets/title_equip_flight.dart": {
+    "mtime": 1790533353.8057063,
+    "ast_hash": "36e3cd2e30d9337a02599297a7b700be",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/widgets/title_list_item.dart": {
+    "mtime": 1791094686.2564611,
+    "ast_hash": "afe22b555680479260a4985b13b008cb",
+    "semantic_hash": ""
+  },
+  "lib/features/titles/widgets/titles_profile_header.dart": {
+    "mtime": 1790533403.5484574,
+    "ast_hash": "fe6e97e4b64a7b94c9d3cb2c15710b46",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/models/unlock_catalog.dart": {
+    "mtime": 1791539021.492676,
+    "ast_hash": "120e8c51044c3b27c12d137c7c00342a",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/models/unlock_models.dart": {
+    "mtime": 1790797112.2580214,
+    "ast_hash": "4722e4cd50698b30c384cc592799f04d",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/providers/unlocks_provider.dart": {
+    "mtime": 1791038125.4839818,
+    "ast_hash": "2e29dacacbeb81dbcb00493780412993",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/screens/explored_features_screen.dart": {
+    "mtime": 1790798124.1070154,
+    "ast_hash": "6cdb1ddea34e777ee70b1ae8adcfb3f6",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/services/unlocks_service.dart": {
+    "mtime": 1791038125.4841316,
+    "ast_hash": "97aa72ea7cbb05cde717061ed0e9cc4d",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/tour/feature_tour.dart": {
+    "mtime": 1791038125.4843764,
+    "ast_hash": "029c3cc290b28e35ca36d6eb1e0e3954",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/tour/tour_bubble_tail.dart": {
+    "mtime": 1790797318.0327466,
+    "ast_hash": "7be67bc10f49d6f5bd204ed27fac4f13",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/tour/tour_step.dart": {
+    "mtime": 1790797227.692623,
+    "ast_hash": "4892ec77510462a232258fdc06b51bd9",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/tour/tour_target.dart": {
+    "mtime": 1790797227.5396261,
+    "ast_hash": "4c71a127458e6da169f30d7a80b2937a",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/tour/tours/unlock_tours.dart": {
+    "mtime": 1791539021.4929335,
+    "ast_hash": "503ebc606e116034dd63e7f4c2780281",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/tour/unlock_tour_runner.dart": {
+    "mtime": 1791539021.4929335,
+    "ast_hash": "ec6c1a99c4132b9e67ac6f3b62ebd2ec",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/unlock_coordinator.dart": {
+    "mtime": 1791462251.79367,
+    "ast_hash": "8f79636e63093e8492aadd7b434f0e18",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/widgets/unlock_badges.dart": {
+    "mtime": 1790797420.696615,
+    "ast_hash": "2fb8a1bc875f21752cfd899575697b63",
+    "semantic_hash": ""
+  },
+  "lib/features/unlocks/widgets/unlock_ceremony.dart": {
+    "mtime": 1791094686.2984614,
+    "ast_hash": "b9f0416b4710babe2b0bf6a8acdee93e",
+    "semantic_hash": ""
+  },
+  "lib/main.dart": {
+    "mtime": 1790864542.1862566,
+    "ast_hash": "9f83e47b90909cd7609609c87956e930",
+    "semantic_hash": ""
+  },
+  "test/core/api/api_failure_test.dart": {
+    "mtime": 1791534833.095943,
+    "ast_hash": "e004c3bf902f69ed5ddacb4192c3ed82",
+    "semantic_hash": ""
+  },
+  "test/core/app_toast_test.dart": {
+    "mtime": 1790881188.3957589,
+    "ast_hash": "690e3fa75af02a6c0f71dc8d76252411",
+    "semantic_hash": ""
+  },
+  "test/core/compact_count_test.dart": {
+    "mtime": 1791003793.0393026,
+    "ast_hash": "54e40534d0a150cbb939ef4b22f40154",
+    "semantic_hash": ""
+  },
+  "test/core/motion/app_motion_test.dart": {
+    "mtime": 1790238346.2887838,
+    "ast_hash": "a550d90e66a940a469775e35218e567a",
+    "semantic_hash": ""
+  },
+  "test/core/optimistic_mutation_test.dart": {
+    "mtime": 1791479570.7858386,
+    "ast_hash": "b53a5e0e0a3b2d978134f1a1496a6a0b",
+    "semantic_hash": ""
+  },
+  "test/core/reward_moment_test.dart": {
+    "mtime": 1791571004.3641086,
+    "ast_hash": "8b280a044c9d07f695b12e3be8e601d1",
+    "semantic_hash": ""
+  },
+  "test/core/session/perform_logout_test.dart": {
+    "mtime": 1791578856.3823137,
+    "ast_hash": "3b8859c9c8b742cd85dc0f32f7459e12",
+    "semantic_hash": ""
+  },
+  "test/core/shell/boot_loader_test.dart": {
+    "mtime": 1791578076.4102008,
+    "ast_hash": "b18dc3694ace6f23c1ac192fc8fe8e75",
+    "semantic_hash": ""
+  },
+  "test/core/shell/journey_popover_test.dart": {
+    "mtime": 1790673088.0254583,
+    "ast_hash": "6bfc20870a3fa6c75257d9be0416752e",
+    "semantic_hash": ""
+  },
+  "test/core/shell/map_orb_and_tab_bar_test.dart": {
+    "mtime": 1791539031.2847564,
+    "ast_hash": "627af10662b595eb2f433ec7089163f9",
+    "semantic_hash": ""
+  },
+  "test/features/achievements/reward_roads_test.dart": {
+    "mtime": 1791094686.436462,
+    "ast_hash": "12f543619490b7a091b4357e38777c87",
+    "semantic_hash": ""
+  },
+  "test/features/activity/adventure_distance_test.dart": {
+    "mtime": 1791399889.8028421,
+    "ast_hash": "3f8fd6f4ba269286e85e583fd70d6cf3",
+    "semantic_hash": ""
+  },
+  "test/features/boss/boss_battle_view_test.dart": {
+    "mtime": 1791667217.817695,
+    "ast_hash": "a9948795f505f1068d34578dd80f21f4",
+    "semantic_hash": ""
+  },
+  "test/features/boss/boss_hit_fx_test.dart": {
+    "mtime": 1790799272.7393103,
+    "ast_hash": "36091061532ecddef76c06e6cf2198c6",
+    "semantic_hash": ""
+  },
+  "test/features/boss/boss_list_item_test.dart": {
+    "mtime": 1791399889.8029819,
+    "ast_hash": "3ecb90abebbae24b20a412463847333f",
+    "semantic_hash": ""
+  },
+  "test/features/boss/boss_replay_test.dart": {
+    "mtime": 1790864776.267714,
+    "ast_hash": "f0fe8d4cffa2b9bb9503801402cb73f1",
+    "semantic_hash": ""
+  },
+  "test/features/gear/equipment_provider_test.dart": {
+    "mtime": 1791003793.0403023,
+    "ast_hash": "c1000a586901ea1aadb74c7c4cfe3296",
+    "semantic_hash": ""
+  },
+  "test/features/gear/gear_stats_resource_info_test.dart": {
+    "mtime": 1790536508.557857,
+    "ast_hash": "0b28f7bde566611c95d674b9fc735d03",
+    "semantic_hash": ""
+  },
+  "test/features/home/home_adventure_hub_test.dart": {
+    "mtime": 1791147007.3066487,
+    "ast_hash": "c59586fb71e08440d6a0cb637a0261fe",
+    "semantic_hash": ""
+  },
+  "test/features/home/home_hero_stage_navigation_test.dart": {
+    "mtime": 1791003793.0403023,
+    "ast_hash": "17abc8c4e34f7e061ff647d480a9362c",
+    "semantic_hash": ""
+  },
+  "test/features/home/home_portal_card_test.dart": {
+    "mtime": 1791399889.803194,
+    "ast_hash": "c18519bc8c756fafcb08aeb884f2226f",
+    "semantic_hash": ""
+  },
+  "test/features/integrations/strava_service_test.dart": {
+    "mtime": 1790627696.3583102,
+    "ast_hash": "58abde4bfce0d1de064929f8c54b264e",
+    "semantic_hash": ""
+  },
+  "test/features/leaderboard/leaderboard_screen_test.dart": {
+    "mtime": 1791399889.803427,
+    "ast_hash": "5c1f445b8853cc7ebb1c2bf8152f4b11",
+    "semantic_hash": ""
+  },
+  "test/features/map/crossroads_choice_sheet_test.dart": {
+    "mtime": 1791526741.3628888,
+    "ast_hash": "ff6faa40bdaf9242c03d09b69dc0f26c",
+    "semantic_hash": ""
+  },
+  "test/features/map/journey_state_test.dart": {
+    "mtime": 1791548562.1276853,
+    "ast_hash": "60ad7174dcf5c454355cf07825042653",
+    "semantic_hash": ""
+  },
+  "test/features/map/region_artwork_assets_test.dart": {
+    "mtime": 1791003793.0403023,
+    "ast_hash": "95b4124105b2ac5bbec358674e70f2fc",
+    "semantic_hash": ""
+  },
+  "test/features/map/region_chest_models_test.dart": {
+    "mtime": 1790919835.6895072,
+    "ast_hash": "d69ae48df0ff10b854ff5b05760cbff7",
+    "semantic_hash": ""
+  },
+  "test/features/map/region_chests_screen_test.dart": {
+    "mtime": 1791698098.2502086,
+    "ast_hash": "518aeb0f95d15e803e4e11cf8924920b",
+    "semantic_hash": ""
+  },
+  "test/features/map/zone_detail_sheet_test.dart": {
+    "mtime": 1790607964.4377623,
+    "ast_hash": "e2aa42f1e5000a98cd73ad981dfc83e4",
+    "semantic_hash": ""
+  },
+  "test/features/map/zone_node_boss_reveal_test.dart": {
+    "mtime": 1791666064.9586782,
+    "ast_hash": "65dfc6790f5693cd641c6d49278a2140",
+    "semantic_hash": ""
+  },
+  "test/features/modes/burn_chain_rules_test.dart": {
+    "mtime": 1790714733.9082046,
+    "ast_hash": "0ae197ffce12c1d9db236dfc1fb55532",
+    "semantic_hash": ""
+  },
+  "test/features/modes/delve_engine_test.dart": {
+    "mtime": 1790711861.0250094,
+    "ast_hash": "043b592d8894dcfc698b42a72d20e3df",
+    "semantic_hash": ""
+  },
+  "test/features/modes/modes_screens_test.dart": {
+    "mtime": 1790714915.0274134,
+    "ast_hash": "d121cdc0150fc8352dd53c1d07db4413",
+    "semantic_hash": ""
+  },
+  "test/features/onboarding/class_step_test.dart": {
+    "mtime": 1790799272.7403102,
+    "ast_hash": "3db37d467462199598d4b17551660df6",
+    "semantic_hash": ""
+  },
+  "test/features/onboarding/import_step_test.dart": {
+    "mtime": 1791403380.933388,
+    "ast_hash": "52529083100164a38e4cbfd444e9a672",
+    "semantic_hash": ""
+  },
+  "test/features/onboarding/username_step_test.dart": {
+    "mtime": 1791235492.509209,
+    "ast_hash": "af18c0b335a8796bca02b1556c5c8ba2",
+    "semantic_hash": ""
+  },
+  "test/features/profile/profile_sections_test.dart": {
+    "mtime": 1790801720.6186063,
+    "ast_hash": "a5ca1f112e34296cb0c3558209c35f9c",
+    "semantic_hash": ""
+  },
+  "test/features/rewards/reward_task_order_test.dart": {
+    "mtime": 1790337797.6076128,
+    "ast_hash": "66f79530c9e74a05ed4a75bcad208dee",
+    "semantic_hash": ""
+  },
+  "test/features/rewards/rewards_models_test.dart": {
+    "mtime": 1790714673.9494367,
+    "ast_hash": "d5d50415c888deaa8133ce978550c16c",
+    "semantic_hash": ""
+  },
+  "test/features/rewards/rewards_screen_test.dart": {
+    "mtime": 1791003793.0413022,
+    "ast_hash": "436706243d84aaa793f5b3d576d69cef",
+    "semantic_hash": ""
+  },
+  "test/features/season/season_claim_reveal_test.dart": {
+    "mtime": 1791400546.9817526,
+    "ast_hash": "eec0f3e7f5732ab0e389994487854402",
+    "semantic_hash": ""
+  },
+  "test/features/season/season_reward_asset_test.dart": {
+    "mtime": 1790337797.6906118,
+    "ast_hash": "747a13be6070793123accaae2402a75d",
+    "semantic_hash": ""
+  },
+  "test/features/season/season_track_screen_test.dart": {
+    "mtime": 1791526729.3779683,
+    "ast_hash": "a6802410f57fad719fbd2dbc9a90898a",
+    "semantic_hash": ""
+  },
+  "test/features/streak/streak_claim_provider_test.dart": {
+    "mtime": 1791003793.0413022,
+    "ast_hash": "6a138aa889904392e1d1d5df12076718",
+    "semantic_hash": ""
+  },
+  "test/features/streak/streak_models_test.dart": {
+    "mtime": 1790242072.7272809,
+    "ast_hash": "9b97bd66e59c4ead1d7e26786445f125",
+    "semantic_hash": ""
+  },
+  "test/features/sync/pull_to_import_test.dart": {
+    "mtime": 1791710934.522011,
+    "ast_hash": "20ea19755c7fbf123098429080b3bce3",
+    "semantic_hash": ""
+  },
+  "test/features/talents/talent_models_test.dart": {
+    "mtime": 1790340677.0434847,
+    "ast_hash": "5a40a02159835ba2aeb465dbc0c2f6f1",
+    "semantic_hash": ""
+  },
+  "test/features/titles/title_equip_flight_test.dart": {
+    "mtime": 1791094686.5894625,
+    "ast_hash": "f7f57d1e6ce9a72b62339d9b5b0609de",
+    "semantic_hash": ""
+  },
+  "test/features/unlocks/adventure_hub_lock_test.dart": {
+    "mtime": 1791038125.4855134,
+    "ast_hash": "ca3d76a0a1c19bb467a9b138c0ac4b07",
+    "semantic_hash": ""
+  },
+  "test/features/unlocks/feature_tour_test.dart": {
+    "mtime": 1790798644.1762228,
+    "ast_hash": "f7e1930e9f591a2600a39aab414c7198",
+    "semantic_hash": ""
+  },
+  "test/features/unlocks/unlock_coordinator_test.dart": {
+    "mtime": 1791094686.5894625,
+    "ast_hash": "461d4b8ceed05ef6668922bad7d149f6",
+    "semantic_hash": ""
+  },
+  "test/features/unlocks/unlock_models_test.dart": {
+    "mtime": 1791539021.4936924,
+    "ast_hash": "f0c17ba5d94b03713fa1a256d659457f",
+    "semantic_hash": ""
+  },
+  "test/helpers/unlocks_overrides.dart": {
+    "mtime": 1790798374.1008275,
+    "ast_hash": "5f5e77aacce9bbe3ee33f10c7fd091c5",
+    "semantic_hash": ""
+  },
+  "test/visual/app_screen_goldens_test.dart": {
+    "mtime": 1791235523.2851145,
+    "ast_hash": "14cdaa93db8ba6de9b8cebf7a5eaa0bc",
+    "semantic_hash": ""
+  },
+  "test/visual/leaderboard_showcase_test.dart": {
+    "mtime": 1790756229.730563,
+    "ast_hash": "90071ac69ae0b900b1e68432c96710ba",
+    "semantic_hash": ""
+  },
+  "test/visual/pull_import_showcase_test.dart": {
+    "mtime": 1790799272.7430587,
+    "ast_hash": "65384b6cc330fc8a7de90a36d111b835",
+    "semantic_hash": ""
+  },
+  "web/manifest.json": {
+    "mtime": 1788511416.587974,
+    "ast_hash": "c7953a65fd181a8453f560f12b2d1dae",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1788511409.8234987,
+    "ast_hash": "44d06440e2013e2bdac5b4967729c930",
+    "semantic_hash": ""
+  },
+  "analysis_options.yaml": {
+    "mtime": 1788513921.5028825,
+    "ast_hash": "be4b078e1022d3a457690c54dd76aa16",
+    "semantic_hash": ""
+  },
+  "devtools_options.yaml": {
+    "mtime": 1788511416.5543482,
+    "ast_hash": "d1ff5187b1b67653e7357395895e8449",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": {
+    "mtime": 1788511416.5595224,
+    "ast_hash": "e175e436acacf76c814d83532d0b662c",
+    "semantic_hash": ""
+  },
+  "pubspec.yaml": {
+    "mtime": 1791699690.7537909,
+    "ast_hash": "7ce72ec31cc7373705aa06489d215e4d",
+    "semantic_hash": ""
+  },
+  "web/auth.html": {
+    "mtime": 1790627629.8910022,
+    "ast_hash": "2c6037b8278783b06c265cb40090f233",
+    "semantic_hash": ""
+  },
+  "web/index.html": {
+    "mtime": 1788511416.587974,
+    "ast_hash": "2643df971dfe888c68d725aa97f9f17e",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/mipmap-hdpi/ic_launcher.png": {
+    "mtime": 1788511409.824355,
+    "ast_hash": "b79412eed893085f5156c7a90d7e88c9",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/mipmap-mdpi/ic_launcher.png": {
+    "mtime": 1788511409.824465,
+    "ast_hash": "783c2dc875b4150e2bbd70a02519be43",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
+    "mtime": 1788511409.824465,
+    "ast_hash": "dd320abc04e99109466abc0f298aae2e",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
+    "mtime": 1788511409.824465,
+    "ast_hash": "307d7d43e442665414f4ca59ca0e8b70",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
+    "mtime": 1788511409.824465,
+    "ast_hash": "6b838c022aef2eddfa54a68a39fff75e",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_abyssal_maw.png": {
+    "mtime": 1791645031.509469,
+    "ast_hash": "ae2aa9bedca7cd09636a3d0ba22bdfb5",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_bramble_lord.png": {
+    "mtime": 1791645184.9319482,
+    "ast_hash": "aee0180cb6760a616e87436d5fc53e4d",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_cinder_archon.png": {
+    "mtime": 1791645111.6826756,
+    "ast_hash": "d7a20a909a7e48eed1c87841d529b9f8",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_deepfrost_wyrm.png": {
+    "mtime": 1791645102.9867618,
+    "ast_hash": "629ae18b91c5c13201cdc73b4aa6dfae",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_dune_pharaoh.png": {
+    "mtime": 1791645192.0648773,
+    "ast_hash": "10733f13fb83b53736e68bcdded821d0",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_forest_warden.png": {
+    "mtime": 1791483632.2350175,
+    "ast_hash": "5f14e3ffb59c284b4c91e627ce2c0f23",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_hoarfrost_queen.png": {
+    "mtime": 1791645198.6588116,
+    "ast_hash": "cbc134e4ec3caf6919cc7be6c46e5a27",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_molten_king.png": {
+    "mtime": 1791645208.0717177,
+    "ast_hash": "3dcbc5fc6256600c4974dd514ee7dad1",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_pearl_leviathan.png": {
+    "mtime": 1791645174.7190497,
+    "ast_hash": "b92f155e996799fb55654906a8254c23",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_sand_kaiser.png": {
+    "mtime": 1791645054.3072438,
+    "ast_hash": "f3d9b0c0a072dd75e9268fbaef7f7488",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_stone_titan.png": {
+    "mtime": 1791645216.3036358,
+    "ast_hash": "40c7f0be7583cfe975030a8cae9f827a",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_storm_sovereign.png": {
+    "mtime": 1791645143.0813642,
+    "ast_hash": "56f9d406b100cc6250b9e3c21dbeadae",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_thornwarden.png": {
+    "mtime": 1791645039.0483947,
+    "ast_hash": "3dbabc7642e695c413d11762a0169187",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_tide_sovereign.png": {
+    "mtime": 1791645222.313576,
+    "ast_hash": "be620947f1302d48ee3918a7c6235541",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/boss_worldflame.png": {
+    "mtime": 1791644860.020154,
+    "ast_hash": "36968619c07b8b7ac5ea6e50890e12b5",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_abyssal_maw_icon.png": {
+    "mtime": 1791662712.0632336,
+    "ast_hash": "383a13628d9b7a8a5f7eaa63e7c425a7",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_bramble_lord_icon.png": {
+    "mtime": 1791662715.3161898,
+    "ast_hash": "19f4e289c475a967f1431699ec0261dd",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_cinder_archon_icon.png": {
+    "mtime": 1791662718.7411437,
+    "ast_hash": "46a6dee7a6d463c386076eff28aa4d6e",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_deepfrost_wyrm_icon.png": {
+    "mtime": 1791662722.5290928,
+    "ast_hash": "2b8ebc6a09b545df501be6420772cd76",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_dune_pharaoh_icon.png": {
+    "mtime": 1791662725.560052,
+    "ast_hash": "e87bb931290fc98001a628a646d7586c",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_forest_warden_icon.png": {
+    "mtime": 1791662708.5112817,
+    "ast_hash": "d4215be7cf23efb919d5fcd27e8b0496",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_hoarfrost_queen_icon.png": {
+    "mtime": 1791662729.2560022,
+    "ast_hash": "602ff0ced1f08c52afcf1595b0265bcc",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_molten_king_icon.png": {
+    "mtime": 1791662732.1799629,
+    "ast_hash": "e5b088c082c9484f66798bcf6c77b2de",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_pearl_leviathan_icon.png": {
+    "mtime": 1791662736.0119112,
+    "ast_hash": "fd3829a50e2d31859eab4c74c169268e",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_sand_kaiser_icon.png": {
+    "mtime": 1791662738.7338746,
+    "ast_hash": "11fd281b9bcd7ca5ed002b3ae46d3e0e",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_stone_titan_icon.png": {
+    "mtime": 1791662700.5023897,
+    "ast_hash": "2bc5c12e933f813be5a8dce869210cd0",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_storm_sovereign_icon.png": {
+    "mtime": 1791662741.7828336,
+    "ast_hash": "dbebf1fbb5bfc89b5ffb73f79b4b31ca",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_thornwarden_icon.png": {
+    "mtime": 1791662744.7747934,
+    "ast_hash": "6c730c86192edfc9521014ae79fceab5",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_tide_sovereign_icon.png": {
+    "mtime": 1791662747.9747505,
+    "ast_hash": "79e6689679afb9d72560c158cd37f2f3",
+    "semantic_hash": ""
+  },
+  "assets/Bosses/icons/boss_worldflame_icon.png": {
+    "mtime": 1791662752.5516891,
+    "ast_hash": "a03bf03a9342afa4ec154c11dff55998",
+    "semantic_hash": ""
+  },
+  "assets/Classes/archer_icon.png": {
+    "mtime": 1788511409.8394647,
+    "ast_hash": "9b2ebb653be93d187bd9ea09617addf7",
+    "semantic_hash": ""
+  },
+  "assets/Classes/icon_setup_unfinished.png": {
+    "mtime": 1788511409.8434646,
+    "ast_hash": "721fa2c5a846cd04044e6906f7c54750",
+    "semantic_hash": ""
+  },
+  "assets/Classes/mystic_icon.png": {
+    "mtime": 1788511409.8464644,
+    "ast_hash": "83ed67b5ee49512c97800285ace8e4b1",
+    "semantic_hash": ""
+  },
+  "assets/Classes/sentinel_icon.png": {
+    "mtime": 1788511409.8494644,
+    "ast_hash": "a9f90386bd91201c91de157a750466dc",
+    "semantic_hash": ""
+  },
+  "assets/Classes/warrior_icon.png": {
+    "mtime": 1788511409.8514645,
+    "ast_hash": "d659d3e5a02952b316807b4b9f8cf2de",
+    "semantic_hash": ""
+  },
+  "assets/Gear/equipment_background.png": {
+    "mtime": 1789243997.961598,
+    "ast_hash": "c67d86d586111a36ad46ed30a06b2a30",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_chest_alpine_cable_sweater.png": {
+    "mtime": 1789413477.6283731,
+    "ast_hash": "e3e08577adf4db4b1a41dc2092d897ed",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_chest_ascenders_climbing_rig.png": {
+    "mtime": 1789413477.629373,
+    "ast_hash": "62fe48c0fda65ee21cb01cdb3803e13c",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_chest_tactical_raid_hoodie.png": {
+    "mtime": 1789413477.6313732,
+    "ast_hash": "3d1b20305553a2efda23088b35789bc3",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_chest_timber_flannel_shirt.png": {
+    "mtime": 1789413477.6333733,
+    "ast_hash": "ea33a194860bd6bc75a6bb60335efc19",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_chest_vanguard_puffer_jacket.png": {
+    "mtime": 1789413477.635373,
+    "ast_hash": "0d4df7772204be697f2aad1c6d9793a4",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_chest_wanderers_poncho.png": {
+    "mtime": 1789413477.6373732,
+    "ast_hash": "237c3c39f278f50798244fd706e60179",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_legs_crimson_trail_shorts.png": {
+    "mtime": 1789413477.6373732,
+    "ast_hash": "5e913f1f0c2d3ed41969b2cb5ab6ae74",
+    "semantic_hash": ""
+  },
+  "assets/Gear/layer_legs_shadow_joggers.png": {
+    "mtime": 1789413477.639373,
+    "ast_hash": "da9a8b1c64bff30d32ddfedadf1daab3",
+    "semantic_hash": ""
+  },
+  "assets/Gear/mount_icon.png": {
+    "mtime": 1789243997.969598,
+    "ast_hash": "0faeb5c4cd346a699824909ec7b3c35b",
+    "semantic_hash": ""
+  },
+  "assets/Gear/outfit_icon.png": {
+    "mtime": 1789243997.9775984,
+    "ast_hash": "8a85ecf994bc4b9732a9cfbc254f5b65",
+    "semantic_hash": ""
+  },
+  "assets/Guild/guild_find_hero.jpg": {
+    "mtime": 1790198186.4687886,
+    "ast_hash": "30273b78fbff4acb4dca8d19ed0e23f5",
+    "semantic_hash": ""
+  },
+  "assets/Guild/guild_hall_hero.jpg": {
+    "mtime": 1790198186.4667885,
+    "ast_hash": "c107729beeea2fbed1dfe88ee19c61c7",
+    "semantic_hash": ""
+  },
+  "assets/Home/base_render.png": {
+    "mtime": 1789160615.0705104,
+    "ast_hash": "5d73c30dc314c3be7661e235766e64f7",
+    "semantic_hash": ""
+  },
+  "assets/Home/base_render_v2.png": {
+    "mtime": 1789413477.6413732,
+    "ast_hash": "990ebb83eb03f1474e2f05482bb167e1",
+    "semantic_hash": ""
+  },
+  "assets/Home/coin_icon.png": {
+    "mtime": 1789190720.9774358,
+    "ast_hash": "8b40300ff6d943fc92230b460aa5d758",
+    "semantic_hash": ""
+  },
+  "assets/Home/gem_icon.png": {
+    "mtime": 1789190721.0424364,
+    "ast_hash": "8836af379168b1c1ee45625b122b86c4",
+    "semantic_hash": ""
+  },
+  "assets/Home/journal_icon.png": {
+    "mtime": 1789243998.0386004,
+    "ast_hash": "28151a42743c50b1b7e8a1d8ca376aa0",
+    "semantic_hash": ""
+  },
+  "assets/Home/mount_icon.png": {
+    "mtime": 1789160615.0709317,
+    "ast_hash": "c00ca6f8f5ddede6d4e78a75243c4e56",
+    "semantic_hash": ""
+  },
+  "assets/Home/mount_render.png": {
+    "mtime": 1789160615.0707104,
+    "ast_hash": "04e0c181e43c7d09e112ccc998649412",
+    "semantic_hash": ""
+  },
+  "assets/Home/power_icon.png": {
+    "mtime": 1789212568.516842,
+    "ast_hash": "be7b3529de6c24cf7a905e7398a4df10",
+    "semantic_hash": ""
+  },
+  "assets/Home/scene_bg.jpg": {
+    "mtime": 1789209792.5053868,
+    "ast_hash": "43c38e70bd17090bd4b011b22053eaed",
+    "semantic_hash": ""
+  },
+  "assets/Home/steps_icon.png": {
+    "mtime": 1789190721.113437,
+    "ast_hash": "867c1bbd2725abc39d588b34a7810414",
+    "semantic_hash": ""
+  },
+  "assets/Home/sword_icon.png": {
+    "mtime": 1789167677.10608,
+    "ast_hash": "860364a57d16fc98d8ee07ad298253dc",
+    "semantic_hash": ""
+  },
+  "assets/Home/sword_render.png": {
+    "mtime": 1789160615.0708272,
+    "ast_hash": "4010b8051b385d1859c76865ed7db815",
+    "semantic_hash": ""
+  },
+  "assets/Items/ba38312c-8546-4a45-8fe1-434e4dacd357.png": {
+    "mtime": 1789159720.1489282,
+    "ast_hash": "0f369692a8c203dccff6140de91b55fd",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_aero_race_cap.png": {
+    "mtime": 1788511409.8524644,
+    "ast_hash": "0b409d4d521e451813035e9a08025976",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_alpine_cable_sweater.png": {
+    "mtime": 1789413477.642373,
+    "ast_hash": "22dd668966773cfcda51fb96f3688517",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_apex_gps_pro.png": {
+    "mtime": 1788511409.8524644,
+    "ast_hash": "0f5f5f09cd6694e28f75a285dc41a0b5",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_ascenders_climbing_rig.png": {
+    "mtime": 1789413477.6433733,
+    "ast_hash": "a56d42614ce3152bc5e63810c55be1d8",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_aura_stone.png": {
+    "mtime": 1788511409.8554645,
+    "ast_hash": "f196267ad4c0ffee2b1f11be092c0a58",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_basic_step_counter.png": {
+    "mtime": 1788511409.8584642,
+    "ast_hash": "7b2befa862b63f7b22b4d151997eb2a5",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_boss_scroll.png": {
+    "mtime": 1788511409.8594642,
+    "ast_hash": "517ebfd8a4dd76b60aeedefb02b028fd",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_carbon_x3.png": {
+    "mtime": 1788511409.8604643,
+    "ast_hash": "239636cfb5df69bb5ef01b246dc60b49",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_champion_gloves.png": {
+    "mtime": 1788511409.8604643,
+    "ast_hash": "d814c5c50af82110663042e703369693",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_climbing_chalk_bag.png": {
+    "mtime": 1788511409.8614643,
+    "ast_hash": "6221617187d8b06d37a1f784a243475c",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_compression_shirt.png": {
+    "mtime": 1788511409.8644643,
+    "ast_hash": "9e0e0d121779a8b51eaea0d17d7504d6",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_crimson_trail_shorts.png": {
+    "mtime": 1789413477.6433733,
+    "ast_hash": "0db3beec73dc406c746c2e3c8a432961",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_cryo_jersey.png": {
+    "mtime": 1788511409.8654642,
+    "ast_hash": "747a39a9dda437ba62ba983cd4179177",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_default_accessory.png": {
+    "mtime": 1789413477.645373,
+    "ast_hash": "ce886fe1644be730a64f91aa24d21844",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_default_chest.png": {
+    "mtime": 1789413477.6473732,
+    "ast_hash": "932ac424e0eaf2fcbd99dd90e769966a",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_default_feet.png": {
+    "mtime": 1789413477.649373,
+    "ast_hash": "9b122d68db143c89f22415eb5e10fdd8",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_default_hands.png": {
+    "mtime": 1789413477.6503732,
+    "ast_hash": "8621e3c8a0a0a87307a134b168f18f79",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_default_legs.png": {
+    "mtime": 1789413477.652373,
+    "ast_hash": "2b55e71ef18a068dfcb963c8906934c6",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_elite_windbreaker.png": {
+    "mtime": 1788511409.868464,
+    "ast_hash": "7b833bce53b2d19360a55376181e3099",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_energy_gel.png": {
+    "mtime": 1788511410.1034598,
+    "ast_hash": "723913ddcdc9ccaeb4c3077451dd6661",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_gravity_boots.png": {
+    "mtime": 1788511410.9804435,
+    "ast_hash": "876f4c268221b0da17f2bb1cb2ad1923",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_grip_wraps.png": {
+    "mtime": 1788511411.4874344,
+    "ast_hash": "6bd75ce5af055b58739eae96679c6d9d",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_iron_headband.png": {
+    "mtime": 1788511411.4894345,
+    "ast_hash": "c546d95a0e2b63a9275206ed3539027f",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_kt_tape_roll.png": {
+    "mtime": 1788511413.280403,
+    "ast_hash": "7358dd49478cac4f20cc73b3905d8fa9",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_phoenix_elixir.png": {
+    "mtime": 1788511413.2834027,
+    "ast_hash": "7da44148161e839d80bd721707567061",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_pulse_wristband.png": {
+    "mtime": 1788511413.2844028,
+    "ast_hash": "e717e0aaa9410203b709ceedc0aa2230",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_recovery_slides.png": {
+    "mtime": 1788511413.3064024,
+    "ast_hash": "ce8da4df97cd4731457d6ab3038ba6e0",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_resistance_band_set.png": {
+    "mtime": 1788511413.3134022,
+    "ast_hash": "82674a373c25fe4f7d9435344dbf7a13",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_shadow_joggers.png": {
+    "mtime": 1789413477.6533732,
+    "ast_hash": "da9a8b1c64bff30d32ddfedadf1daab3",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_speed_spikes.png": {
+    "mtime": 1788511413.3194022,
+    "ast_hash": "378bf56f9ff28cc7285eb539d9c3149a",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_sport_buds.png": {
+    "mtime": 1788511413.321402,
+    "ast_hash": "b07cdb495efd7bc782254dd29e926b70",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_storm_jacket.png": {
+    "mtime": 1788511413.322402,
+    "ast_hash": "0b9c8e243eba13e33f69c7d3357e1894",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_strava_sync_badge.png": {
+    "mtime": 1788511413.328402,
+    "ast_hash": "a8ce0e2d0e354c84d54f543df9d44366",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_streak_shield.png": {
+    "mtime": 1788511413.3354018,
+    "ast_hash": "d7fb7188ba5ba8f6175cb41de12bf2e3",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_tactical_raid_hoodie.png": {
+    "mtime": 1789413477.6543732,
+    "ast_hash": "63c6c33d98e8f4ee7dcc95bc887fdb22",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_timber_flannel_shirt.png": {
+    "mtime": 1789413477.656373,
+    "ast_hash": "8ec1f1bdfc1ceb5246082a51f07cf2db",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_trail_runner_x5.png": {
+    "mtime": 1788511413.336402,
+    "ast_hash": "6e8d495e6c3da33ae9494c1ff3ceebe9",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_vanguard_puffer_jacket.png": {
+    "mtime": 1789413477.658373,
+    "ast_hash": "c7a5683dc29f2c85b88c48ea61aaf3b1",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_wanderers_poncho.png": {
+    "mtime": 1789413477.6603732,
+    "ast_hash": "1c9b6d849c580f1b69f496b9a6a835ea",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_xp_booster.png": {
+    "mtime": 1788511414.1933873,
+    "ast_hash": "83cfa18336c3f7688506863796600f22",
+    "semantic_hash": ""
+  },
+  "assets/Items/item_zone_compass.png": {
+    "mtime": 1788511414.2383864,
+    "ast_hash": "182e4bdd9fb89f436260a8e2656b2b68",
+    "semantic_hash": ""
+  },
+  "assets/Leaderboard/hero_podium.png": {
+    "mtime": 1790755633.3027346,
+    "ast_hash": "f01a7db03f8050985f7c862b5fce0c02",
+    "semantic_hash": ""
+  },
+  "assets/Modes/banner_burn_chain.jpg": {
+    "mtime": 1790711285.5018857,
+    "ast_hash": "f6905deb2e2b23a28115c46baf9f5c33",
+    "semantic_hash": ""
+  },
+  "assets/Modes/banner_treasure_delve.jpg": {
+    "mtime": 1790711285.5051699,
+    "ast_hash": "47be42d7e7f762e7dd7e55c0cab5832e",
+    "semantic_hash": ""
+  },
+  "assets/Regions/abyssal_trench.png": {
+    "mtime": 1790140861.0602324,
+    "ast_hash": "b07914878f2a83f887244eb141826dd4",
+    "semantic_hash": ""
+  },
+  "assets/Regions/apex_caldera.png": {
+    "mtime": 1790140861.9672813,
+    "ast_hash": "fb3029a4ff991470be71cc49a6fd0195",
+    "semantic_hash": ""
+  },
+  "assets/Regions/ashen_caldera.png": {
+    "mtime": 1790140862.86933,
+    "ast_hash": "63c6c7cfc1e26453d526581d9c0539ed",
+    "semantic_hash": ""
+  },
+  "assets/Regions/emberfall_crater.png": {
+    "mtime": 1790140863.8723834,
+    "ast_hash": "0779d27239255d6dcc81e2db56ac3d71",
+    "semantic_hash": ""
+  },
+  "assets/Regions/forest_of_endurance.png": {
+    "mtime": 1790140865.0274446,
+    "ast_hash": "0b3f1b5b5f294925c09d8d97a1373ff3",
+    "semantic_hash": ""
+  },
+  "assets/Regions/frostspire_tundra.png": {
+    "mtime": 1790140865.8764892,
+    "ast_hash": "eb76c1fccdc2bcc1a1b8fcbde492b009",
+    "semantic_hash": ""
+  },
+  "assets/Regions/glacier_abyss.png": {
+    "mtime": 1790140866.7475348,
+    "ast_hash": "2f8c585bdb6d80d59cfb84940c221456",
+    "semantic_hash": ""
+  },
+  "assets/Regions/mirage_wastes.png": {
+    "mtime": 1790140867.6175797,
+    "ast_hash": "0a84633e5f4694e99445eaf4ca4f164c",
+    "semantic_hash": ""
+  },
+  "assets/Regions/moonlit_reef.png": {
+    "mtime": 1790140868.4916248,
+    "ast_hash": "d2f47141fc65ec5b876d0e34e0da5145",
+    "semantic_hash": ""
+  },
+  "assets/Regions/mountains_of_strength.png": {
+    "mtime": 1790140869.3806705,
+    "ast_hash": "016f2aecb80fcf887aae36331139b594",
+    "semantic_hash": ""
+  },
+  "assets/Regions/ocean_of_balance.png": {
+    "mtime": 1790140870.291717,
+    "ast_hash": "99a70ab2ada98ab958c6b9ddfb47681c",
+    "semantic_hash": ""
+  },
+  "assets/Regions/region_chests_background.png": {
+    "mtime": 1790112366.0893185,
+    "ast_hash": "5e28ad5f680dff8071ddaebd5f676509",
+    "semantic_hash": ""
+  },
+  "assets/Regions/region_chests_title_banner.png": {
+    "mtime": 1790146915.8933032,
+    "ast_hash": "94c399dccf1eed2af600e2f1a111acab",
+    "semantic_hash": ""
+  },
+  "assets/Regions/shadewood_deep.png": {
+    "mtime": 1790140871.1467605,
+    "ast_hash": "40218734f77578b769da456aa2e5109b",
+    "semantic_hash": ""
+  },
+  "assets/Regions/sunscorch_dunes.png": {
+    "mtime": 1790140872.0928082,
+    "ast_hash": "10026fc4b0a897ec1c6282f9b8f7f755",
+    "semantic_hash": ""
+  },
+  "assets/Regions/thunderpeak_range.png": {
+    "mtime": 1790140872.9748526,
+    "ast_hash": "bc870c26ad7c304c7ab3c63d56bd475f",
+    "semantic_hash": ""
+  },
+  "assets/Regions/verdant_spine.png": {
+    "mtime": 1790140873.7988937,
+    "ast_hash": "58b50360fd29e141f6a1acd0f6fe8fdc",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/abyssal_trench_background.png": {
+    "mtime": 1790890581.9043596,
+    "ast_hash": "f809445bcea2a61ed03e49d8c95d2e3d",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/abyssal_trench_banner.png": {
+    "mtime": 1790890581.8983595,
+    "ast_hash": "45f86ad87cd25829c7eca50798e78038",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/apex_caldera_background.png": {
+    "mtime": 1790890581.9153597,
+    "ast_hash": "27d147d43b90abe7be7c750671e45d19",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/apex_caldera_banner.png": {
+    "mtime": 1790890581.9094858,
+    "ast_hash": "23f78500ce5b1ed86ee28108aef74f80",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/ashen_caldera_background.png": {
+    "mtime": 1790890581.8026922,
+    "ast_hash": "c42b3420df8fde9a7fcca131162ed123",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/ashen_caldera_banner.png": {
+    "mtime": 1790890581.7988868,
+    "ast_hash": "14f5f261292af81b1c0995a0513d9642",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/emberfall_crater_background.png": {
+    "mtime": 1790890581.8613591,
+    "ast_hash": "e6af3ad52cb02bf5676c641c6b5c7ac7",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/emberfall_crater_banner.png": {
+    "mtime": 1790890581.855359,
+    "ast_hash": "1c6ea70f24da4afb93177d3efbd1bf36",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/forest_of_endurance_background.png": {
+    "mtime": 1790890581.7773583,
+    "ast_hash": "7b778071c759a85ea09382d04db55a8d",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/forest_of_endurance_banner.png": {
+    "mtime": 1790890581.7714555,
+    "ast_hash": "72a0a5d833734129f86611caa5f0602c",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/frostspire_tundra_background.png": {
+    "mtime": 1790890581.8113587,
+    "ast_hash": "ed4b5f28ddef39ac57fb7045f08b7ef1",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/frostspire_tundra_banner.png": {
+    "mtime": 1790890581.8074005,
+    "ast_hash": "8a992f923e6900f071f402b8cf93e236",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/glacier_abyss_background.png": {
+    "mtime": 1790890581.871505,
+    "ast_hash": "60c085d6edae826499f8a3155d17dc4a",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/glacier_abyss_banner.png": {
+    "mtime": 1790890581.8667157,
+    "ast_hash": "757ea14390dabeee5a28b98045338dc6",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/mirage_wastes_background.png": {
+    "mtime": 1790890581.8813593,
+    "ast_hash": "5f2c4c9e79946c011a12591e6b4cc584",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/mirage_wastes_banner.png": {
+    "mtime": 1790890581.8757944,
+    "ast_hash": "7d24ecc2214e8da3b5f6a5205da44938",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/moonlit_reef_background.png": {
+    "mtime": 1790890581.8385072,
+    "ast_hash": "0d01c17f481fa37fbbf9bddf9fa64cdc",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/moonlit_reef_banner.png": {
+    "mtime": 1790890581.8333588,
+    "ast_hash": "ea4822a02366dc195b5db5221c308d94",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/mountains_of_strength_background.png": {
+    "mtime": 1790890581.7953584,
+    "ast_hash": "d46b910a32d908ad03b00a8c771ec311",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/mountains_of_strength_banner.png": {
+    "mtime": 1790890581.7913585,
+    "ast_hash": "197c5054ddd1cc5f6370f3fb6df241d3",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/ocean_of_balance_background.png": {
+    "mtime": 1790890581.785879,
+    "ast_hash": "54f84fa3397e1b8f8cde50edd09b1a0d",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/ocean_of_balance_banner.png": {
+    "mtime": 1790890581.7823606,
+    "ast_hash": "e98ffafdf41690e98a2b5c426f66f9dc",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/shadewood_deep_background.png": {
+    "mtime": 1790890581.828359,
+    "ast_hash": "ee40f0d7dd45eef6e4ee413c196d3cf6",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/shadewood_deep_banner.png": {
+    "mtime": 1790890581.8227634,
+    "ast_hash": "3f44ac09698c6bd573971e3cadb40258",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/sunscorch_dunes_background.png": {
+    "mtime": 1790890581.8193586,
+    "ast_hash": "97c27a2cc0fc529978af964b7126148b",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/sunscorch_dunes_banner.png": {
+    "mtime": 1790890581.8155413,
+    "ast_hash": "63fdfe04d35e71571660d81f4e96d38b",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/thunderpeak_range_background.png": {
+    "mtime": 1790890581.849359,
+    "ast_hash": "2065cbf6b8158a7aad0be11572288e08",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/thunderpeak_range_banner.png": {
+    "mtime": 1790890581.8436642,
+    "ast_hash": "46adefe8fec811dbd5b40368b975e30d",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/verdant_spine_background.png": {
+    "mtime": 1790890581.8923595,
+    "ast_hash": "0b80d60730f33dbe307aeb86be505780",
+    "semantic_hash": ""
+  },
+  "assets/Regions/world/verdant_spine_banner.png": {
+    "mtime": 1790890581.8863595,
+    "ast_hash": "05a8eb8d9bc8965d316ca5711a21bf3c",
+    "semantic_hash": ""
+  },
+  "assets/Shop/bg_moonlit_mountains.png": {
+    "mtime": 1790061178.445181,
+    "ast_hash": "f1bf2f468d475e60fc1d53d2412ab79e",
+    "semantic_hash": ""
+  },
+  "assets/Shop/chest_common.png": {
+    "mtime": 1790366809.052085,
+    "ast_hash": "0918637575ee26c56b4fb912a8e76fb5",
+    "semantic_hash": ""
+  },
+  "assets/Shop/chest_common_opened.png": {
+    "mtime": 1791575177.7541134,
+    "ast_hash": "742c4a6d6e629ad15e34bd889e4d0a8c",
+    "semantic_hash": ""
+  },
+  "assets/Shop/chest_legendary.png": {
+    "mtime": 1790366809.4190829,
+    "ast_hash": "bf13e00bbba3e9236e4b839b847aa991",
+    "semantic_hash": ""
+  },
+  "assets/Shop/chest_legendary_opened.png": {
+    "mtime": 1791575503.947365,
+    "ast_hash": "af46b961ed1564c652808e1a6db4f790",
+    "semantic_hash": ""
+  },
+  "assets/Shop/chest_rare.png": {
+    "mtime": 1790366809.239084,
+    "ast_hash": "6dc2a2d88045e0218fa1163f97208427",
+    "semantic_hash": ""
+  },
+  "assets/Shop/chest_rare_opened.png": {
+    "mtime": 1791575328.1397548,
+    "ast_hash": "7ccbaf12e8078bbe97f924984e604b09",
+    "semantic_hash": ""
+  },
+  "assets/Talents/boss_instinct.png": {
+    "mtime": 1789413477.971373,
+    "ast_hash": "a3fdb4cc272ee43c2037d70d86665389",
+    "semantic_hash": ""
+  },
+  "assets/Talents/deep_lungs.png": {
+    "mtime": 1789413477.972373,
+    "ast_hash": "a11eb6182debb58326d14e2edb09dccc",
+    "semantic_hash": ""
+  },
+  "assets/Talents/direct_hit.png": {
+    "mtime": 1789413477.972373,
+    "ast_hash": "285b6b19ce11fafed323397f4a63b343",
+    "semantic_hash": ""
+  },
+  "assets/Talents/fair_exchange.png": {
+    "mtime": 1789413477.9733732,
+    "ast_hash": "d6f05f71275ae849c9b4d4db07e84804",
+    "semantic_hash": ""
+  },
+  "assets/Talents/fast_twitch.png": {
+    "mtime": 1789413477.9733732,
+    "ast_hash": "af01dbfe5c774d040d6002d3f170a311",
+    "semantic_hash": ""
+  },
+  "assets/Talents/focused_training.png": {
+    "mtime": 1789413477.974373,
+    "ast_hash": "d2a63fe98f14fee617722a7184d6a953",
+    "semantic_hash": ""
+  },
+  "assets/Talents/iron_discipline.png": {
+    "mtime": 1789413477.975373,
+    "ast_hash": "f219c06afe9d99d20c85baa7e64837b9",
+    "semantic_hash": ""
+  },
+  "assets/Talents/iron_grip.png": {
+    "mtime": 1789413477.975373,
+    "ast_hash": "07d48bde74f0f87d348e85e56fab4054",
+    "semantic_hash": ""
+  },
+  "assets/Talents/loose_joints.png": {
+    "mtime": 1789413477.9763732,
+    "ast_hash": "521d75bc635416bf133b3f2d6f5fa73e",
+    "semantic_hash": ""
+  },
+  "assets/Talents/morning_momentum.png": {
+    "mtime": 1789413477.9763732,
+    "ast_hash": "c6083b7c7080c1938203070604aeb156",
+    "semantic_hash": ""
+  },
+  "assets/Talents/quest_zeal.png": {
+    "mtime": 1789413477.9773731,
+    "ast_hash": "bf31bfcbef38206b31345bdfb0cea2ce",
+    "semantic_hash": ""
+  },
+  "assets/Talents/runners_high.png": {
+    "mtime": 1789413477.978373,
+    "ast_hash": "2c9ba36c3bfa42c650bf21452fb6f161",
+    "semantic_hash": ""
+  },
+  "assets/Talents/second_engine.png": {
+    "mtime": 1789413477.978373,
+    "ast_hash": "c1e6e46177d0f7955555db49822e0146",
+    "semantic_hash": ""
+  },
+  "assets/Talents/second_wind.png": {
+    "mtime": 1789413477.9793732,
+    "ast_hash": "8e80fdbb1abfddbe95c9c2644f02b46e",
+    "semantic_hash": ""
+  },
+  "assets/Talents/shield_craft.png": {
+    "mtime": 1789413477.9793732,
+    "ast_hash": "ac2897d390c6aabeb8f3a36a311185e4",
+    "semantic_hash": ""
+  },
+  "assets/Talents/steel_resolve.png": {
+    "mtime": 1789413477.9803731,
+    "ast_hash": "f5e3890c3ea6f573021b68a5e4e81f18",
+    "semantic_hash": ""
+  },
+  "assets/Talents/talent_crystal.png": {
+    "mtime": 1789413477.981373,
+    "ast_hash": "bead936f8931cfd0ac81b8619a9402c6",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/rank_champion.png": {
+    "mtime": 1788511414.4123836,
+    "ast_hash": "a76db2a43785e74155562008bd94c038",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/rank_legend.png": {
+    "mtime": 1788511414.4143834,
+    "ast_hash": "e6e0b2356e37f531e277bdf2c4a54588",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/rank_novice.png": {
+    "mtime": 1788511414.4153833,
+    "ast_hash": "78b3a4a90dcb7e53e849af6e9a2afbec",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/rank_veteran.png": {
+    "mtime": 1788511414.4213834,
+    "ast_hash": "abca8de1a7f5c35740f7873a0abd2e6a",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/rank_warrior.png": {
+    "mtime": 1788511414.4263833,
+    "ast_hash": "417e60240cb7be6b237b83d245f2ee7e",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_5am_club.png": {
+    "mtime": 1788511414.4313831,
+    "ast_hash": "0085d8adaf0854912af1251ab99c3652",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_champion.png": {
+    "mtime": 1788511414.4333832,
+    "ast_hash": "dcf18248510856609ebb6400449b3170",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_marathoner.png": {
+    "mtime": 1788511414.4333832,
+    "ast_hash": "d2de9247bd3463bc1b91d344765edebd",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_novice_adventurer.png": {
+    "mtime": 1788511414.439383,
+    "ast_hash": "0ee3d2182947d76303ba64768b02e19b",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_raid_veteran.png": {
+    "mtime": 1788511414.4453828,
+    "ast_hash": "0fd266f71c35d5da5d04bd46c501cfe6",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_streak_master.png": {
+    "mtime": 1788511414.446383,
+    "ast_hash": "1fd048d742b4ad88fb4059f3511c3e6e",
+    "semantic_hash": ""
+  },
+  "assets/Titles&Ranks/title_unstoppable.png": {
+    "mtime": 1788511414.447383,
+    "ast_hash": "c8166847b402e5b702826296f9cbe8e5",
+    "semantic_hash": ""
+  },
+  "assets/auth/apple_logo.svg": {
+    "mtime": 1791233148.3241923,
+    "ast_hash": "dae49fca931cbd033fc9926a9b5edc3b",
+    "semantic_hash": ""
+  },
+  "assets/auth/google_g.svg": {
+    "mtime": 1791233141.867541,
+    "ast_hash": "090ecfee6cca9cb965c03f1fb37c28f4",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_climbing.png": {
+    "mtime": 1788511414.4533827,
+    "ast_hash": "e9a51d38114fd4e15ff3d45ac7be59f9",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_cycling.png": {
+    "mtime": 1788511414.4563828,
+    "ast_hash": "13307132613796527f2c9e9f999a10f6",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_gym.png": {
+    "mtime": 1788511414.4573827,
+    "ast_hash": "e6224a06c09e03ca97ad376cdfd5733a",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_hiit.png": {
+    "mtime": 1788511414.4603827,
+    "ast_hash": "28a9d47c51540b3a218f5bdc262d910a",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_hiking.png": {
+    "mtime": 1788511414.4623826,
+    "ast_hash": "c4e1feacd8c23251f07e5f7ca0ed6e10",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_mobility.png": {
+    "mtime": 1788511414.4653826,
+    "ast_hash": "cceb8293f3c8832ad718abe39e1d61c4",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_mtb_cycling.png": {
+    "mtime": 1788511414.4673827,
+    "ast_hash": "60e804dad3e056e308bd1390109da601",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_rock_climbing.png": {
+    "mtime": 1788511414.4703825,
+    "ast_hash": "148e59ebb4b6d7fe8c8072c42b604750",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_running.png": {
+    "mtime": 1788511414.4723825,
+    "ast_hash": "7c53b002862a8b672e1e5a3789e64f52",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_stretching.png": {
+    "mtime": 1788511414.4743824,
+    "ast_hash": "7d9fd1849f5befeb87b3693f32794fe5",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_swimming.png": {
+    "mtime": 1788511414.4753823,
+    "ast_hash": "c5f9c1cf3fc3f990da9622261aedefdc",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_weightlifting.png": {
+    "mtime": 1788511414.4783823,
+    "ast_hash": "3dc8261f8342ef1c4c033771b861badc",
+    "semantic_hash": ""
+  },
+  "assets/icons/activity_yoga.png": {
+    "mtime": 1788511414.4813824,
+    "ast_hash": "ef2b79c340ef18ebdedc3fc7585251bf",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_archer.png": {
+    "mtime": 1788511414.4843824,
+    "ast_hash": "4431e78d8e7f5042350d71ea7bdc4da8",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_crown.png": {
+    "mtime": 1788511414.4853823,
+    "ast_hash": "3896a56d80551a19ddaefe4196ebd144",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_diamond.png": {
+    "mtime": 1788511414.4873822,
+    "ast_hash": "da87ad25188ae97fe4bae7a193470e2e",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_elf.png": {
+    "mtime": 1788511414.4893823,
+    "ast_hash": "b6b0066e9ed21a3c7f9cd16b37868443",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_fox.png": {
+    "mtime": 1788511414.4913821,
+    "ast_hash": "24008827624446bd2806a2ded4855bf2",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_lightning.png": {
+    "mtime": 1788511414.4933822,
+    "ast_hash": "0cef3a6eaa0d362c9ce165fcaaceef69",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_monk.png": {
+    "mtime": 1788511414.496382,
+    "ast_hash": "ef6adc82e6677675a000569661284b35",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_moon.png": {
+    "mtime": 1788511414.499382,
+    "ast_hash": "6c09e5c1b093c8fa02628fedebffce0c",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_mystic.png": {
+    "mtime": 1788511414.503382,
+    "ast_hash": "6e9e7bc657a8bac621379857e137fdf9",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_ninja.png": {
+    "mtime": 1788511414.5053818,
+    "ast_hash": "3de1ce3de7d3fb9a0ee11b98137f070b",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_paladin.png": {
+    "mtime": 1788511414.5093818,
+    "ast_hash": "d11c125550ae94d3f8c9a1b1bb66ecfd",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_star.png": {
+    "mtime": 1788511414.5123818,
+    "ast_hash": "1466d8166e848f069e0abfa9b160f7a0",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_superhero.png": {
+    "mtime": 1788511414.514382,
+    "ast_hash": "b3e000eeacb7bf226cfeb79a33b27d58",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_warrior.png": {
+    "mtime": 1788511414.5173817,
+    "ast_hash": "7a6766bca0a18daf01aab789c58ae90d",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_wizard.png": {
+    "mtime": 1788511414.5193818,
+    "ast_hash": "5a3b3aae7cb6407c6b16f2f933087d2d",
+    "semantic_hash": ""
+  },
+  "assets/icons/avatar_wolf.png": {
+    "mtime": 1788511414.5213816,
+    "ast_hash": "c54f871a8c8819330e381666f2401cb0",
+    "semantic_hash": ""
+  },
+  "assets/icons/daily_points_badge.png": {
+    "mtime": 1790056633.4718287,
+    "ast_hash": "3d99fdc458d2e4e6280ea8a3ab401f39",
+    "semantic_hash": ""
+  },
+  "assets/icons/icon_first_quest.png": {
+    "mtime": 1788511414.5253816,
+    "ast_hash": "fa04f949721d44abd38fd159f30e2e19",
+    "semantic_hash": ""
+  },
+  "assets/icons/map_current_location.png": {
+    "mtime": 1788511414.5283816,
+    "ast_hash": "9819dd785f4f414b0b8f10c722da705e",
+    "semantic_hash": ""
+  },
+  "assets/icons/map_destination.png": {
+    "mtime": 1788511414.5313814,
+    "ast_hash": "20f87efe429e8d6d36b7672ea2524a72",
+    "semantic_hash": ""
+  },
+  "assets/icons/map_xp_reward.png": {
+    "mtime": 1788511414.5333815,
+    "ast_hash": "d86fded44ae61a791035731ad4b2a2c3",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_gear.png": {
+    "mtime": 1789243998.0456007,
+    "ast_hash": "a387294025357a7167a61ea52785ba76",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_home.png": {
+    "mtime": 1788511414.5363815,
+    "ast_hash": "9e7b05b538f7214e8310f2067b86c10b",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_map.png": {
+    "mtime": 1788511414.5373814,
+    "ast_hash": "55c2e7423c432aacc6a60ded7da929da",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_mode.png": {
+    "mtime": 1790706967.0612798,
+    "ast_hash": "272c47051c767c33f8b083b891f9597b",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_profile.png": {
+    "mtime": 1788511414.5393813,
+    "ast_hash": "f4d9c0ddbaf7ef04f10d22c2c0800788",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_quests.png": {
+    "mtime": 1788511414.5423813,
+    "ast_hash": "0a313aa81898ef00196507953d209c36",
+    "semantic_hash": ""
+  },
+  "assets/icons/nav_stats.png": {
+    "mtime": 1788511414.5443814,
+    "ast_hash": "33fa206ea45ac71ab963d8d4afe33903",
+    "semantic_hash": ""
+  },
+  "assets/icons/quest_calories.png": {
+    "mtime": 1788511414.5453813,
+    "ast_hash": "a4a969aa3751e1f2aa4f3e68102e697b",
+    "semantic_hash": ""
+  },
+  "assets/icons/quest_daily_login.png": {
+    "mtime": 1788511414.5493813,
+    "ast_hash": "8eddde0a95c3095e1b4d75177f217044",
+    "semantic_hash": ""
+  },
+  "assets/icons/quest_distance.png": {
+    "mtime": 1788511414.552381,
+    "ast_hash": "3de5caf5767f4c05006a78de39496e98",
+    "semantic_hash": ""
+  },
+  "assets/icons/quest_duration.png": {
+    "mtime": 1788511414.555381,
+    "ast_hash": "51e0b8ab68532fc23e326d578751ca77",
+    "semantic_hash": ""
+  },
+  "assets/icons/quest_general.png": {
+    "mtime": 1788511414.5573812,
+    "ast_hash": "06f44706e4e12eedca6a48732bde09a6",
+    "semantic_hash": ""
+  },
+  "assets/icons/quest_workout_count.png": {
+    "mtime": 1788511414.559381,
+    "ast_hash": "8b0cc59bdc75346bc1743060828845b8",
+    "semantic_hash": ""
+  },
+  "assets/icons/region_chests.png": {
+    "mtime": 1790191910.234856,
+    "ast_hash": "be9503617dd15b2bb37dad378aa1ee3e",
+    "semantic_hash": ""
+  },
+  "assets/icons/region_chests_opened.png": {
+    "mtime": 1791574525.680211,
+    "ast_hash": "9d4b6dedb1b97934f59fada604fb154e",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_chest_burst.png": {
+    "mtime": 1790342928.8697722,
+    "ast_hash": "548b474bfe0c5d366109ec5e7b2c8c66",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_daily_bonus.png": {
+    "mtime": 1788511414.562381,
+    "ast_hash": "c2b287b26f994aa38eaab623790cf19b",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_grant_item.png": {
+    "mtime": 1788511414.566381,
+    "ast_hash": "cd3b5cd0a94d35351df1573bd176569c",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_streak_fire.png": {
+    "mtime": 1788511414.5693808,
+    "ast_hash": "a46f43c9d69d6b5d22d547af7d4e9c8b",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_streak_shield.png": {
+    "mtime": 1788511414.7663774,
+    "ast_hash": "62e24ffd2cc1920f4718ceb591d2a5dc",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_treasure_chest.png": {
+    "mtime": 1788511414.7703774,
+    "ast_hash": "3fea5e82c653706b0ed69e32f2189b1c",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_xp_crystals.png": {
+    "mtime": 1790287852.8672025,
+    "ast_hash": "ba9edbf335e810731eac3445f42525d4",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_xp_sparkle.png": {
+    "mtime": 1788511414.7743773,
+    "ast_hash": "b26620981a8ee22ac936cad21b90421f",
+    "semantic_hash": ""
+  },
+  "assets/icons/reward_xp_storm.png": {
+    "mtime": 1788511414.7763774,
+    "ast_hash": "dfea5e1463177108c41421edb7bb627b",
+    "semantic_hash": ""
+  },
+  "assets/icons/ring_battle.png": {
+    "mtime": 1788511414.7783773,
+    "ast_hash": "aa8ad3fa450b846bf1453e7423ab7102",
+    "semantic_hash": ""
+  },
+  "assets/icons/ring_boss.png": {
+    "mtime": 1788511414.7813773,
+    "ast_hash": "0af7eb2374252dcdb4e1d63d930aa877",
+    "semantic_hash": ""
+  },
+  "assets/icons/ring_guild.png": {
+    "mtime": 1788511414.7853773,
+    "ast_hash": "af9c49b23b356c3b512cf6da7287d514",
+    "semantic_hash": ""
+  },
+  "assets/icons/ring_leaderboard.png": {
+    "mtime": 1788511414.788377,
+    "ast_hash": "f0013dc4ace35e20fe12495d20f34690",
+    "semantic_hash": ""
+  },
+  "assets/icons/ring_titles.png": {
+    "mtime": 1788511414.792377,
+    "ast_hash": "122cc4b227322319eae2bb0aa7200e64",
+    "semantic_hash": ""
+  },
+  "assets/icons/ring_world.png": {
+    "mtime": 1788511414.794377,
+    "ast_hash": "4b553bcc5b02c29c8a0f1883e62e5986",
+    "semantic_hash": ""
+  },
+  "assets/icons/season_adventure_hub.png": {
+    "mtime": 1790192335.0768611,
+    "ast_hash": "8f7d67d43122d84485b0fb9733539365",
+    "semantic_hash": ""
+  },
+  "assets/icons/stat_agility.png": {
+    "mtime": 1788511414.798377,
+    "ast_hash": "7948f75117e6b49126c43d3f2f182268",
+    "semantic_hash": ""
+  },
+  "assets/icons/stat_endurance.png": {
+    "mtime": 1788511414.801377,
+    "ast_hash": "8d27fa4ec6e18f5fa49f23c0501b8bc5",
+    "semantic_hash": ""
+  },
+  "assets/icons/stat_flexibility.png": {
+    "mtime": 1788511414.8263764,
+    "ast_hash": "9c8b6ae373db60da1360f8a2155b96c5",
+    "semantic_hash": ""
+  },
+  "assets/icons/stat_stamina.png": {
+    "mtime": 1788511414.9583743,
+    "ast_hash": "d703e82b4838153c56cb21892bb3d75e",
+    "semantic_hash": ""
+  },
+  "assets/icons/stat_strength.png": {
+    "mtime": 1788511415.3153684,
+    "ast_hash": "dc56719bd170c89a04c53a65e314a1c4",
+    "semantic_hash": ""
+  },
+  "assets/icons/ui_new_item.png": {
+    "mtime": 1788511415.3493679,
+    "ast_hash": "d733dda49e5f8d927cfb5089fe72e813",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_ashfield_plains.png": {
+    "mtime": 1788511415.3543677,
+    "ast_hash": "738674ab4bf218509775ccbccc20a94a",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_coral_coast.png": {
+    "mtime": 1788511415.3583677,
+    "ast_hash": "5a702cc02b1f644ad92277fa09c7b019",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_desert_of_trials.png": {
+    "mtime": 1788511415.3613677,
+    "ast_hash": "09e87d0e1dd7f6dfc860e5dfa6a73614",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_final_approach.png": {
+    "mtime": 1788511415.3673675,
+    "ast_hash": "2a77f4eb36295d677532e05e2ac3728c",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_first_fork.png": {
+    "mtime": 1788511415.3723674,
+    "ast_hash": "d986b89ed12891a54077d6880560f922",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_frostbound_peaks.png": {
+    "mtime": 1788511415.3773675,
+    "ast_hash": "1cb93d112760e5ff7f3c07240219c478",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_iron_peaks.png": {
+    "mtime": 1788511415.3823674,
+    "ast_hash": "a2ff633c4058dab61bc83c53c8d5a8f6",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_the_convergence.png": {
+    "mtime": 1788511415.3853672,
+    "ast_hash": "d6af9c55e40c1e971b92bfeca4a48f91",
+    "semantic_hash": ""
+  },
+  "assets/icons/zone_thornwood_forest.png": {
+    "mtime": 1788511415.389367,
+    "ast_hash": "cfd4d0b8cc544a206c8c80ac8da91968",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_climbing.png": {
+    "mtime": 1788511415.3913672,
+    "ast_hash": "730e1c0d949eee0e92b5551b75f900bd",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_cycling.png": {
+    "mtime": 1788511415.393367,
+    "ast_hash": "d1769a80d169e12a992d3706d844ea43",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_gym.png": {
+    "mtime": 1788511415.3953671,
+    "ast_hash": "a022be027279900d5b0f1045439fda06",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_hiit.png": {
+    "mtime": 1788511415.398367,
+    "ast_hash": "c160ae1133ef242ea159fd53c4965c6c",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_hiking.png": {
+    "mtime": 1788511415.400367,
+    "ast_hash": "5d988d59fb0071f5d6c14c626dfe9e2a",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_mobility.png": {
+    "mtime": 1788511415.4023669,
+    "ast_hash": "6bb89d49bb0115f629ea2f56dbc823f5",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_mtb_cycling.png": {
+    "mtime": 1788511415.405367,
+    "ast_hash": "bb67ab7719a977e8bc8350f16cafb6e6",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_rock_climbing.png": {
+    "mtime": 1788511415.408367,
+    "ast_hash": "f039dc1e8fdeef2b622af97356d792eb",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_running.png": {
+    "mtime": 1788511415.411367,
+    "ast_hash": "a678e2d7e457feb0dca0f6a5958de556",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_stretching.png": {
+    "mtime": 1788511415.6843624,
+    "ast_hash": "86012017288fc6605efd7a8f8c8d4ddd",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_swimming.png": {
+    "mtime": 1788511415.6943622,
+    "ast_hash": "2320b00939554afbe270ceb5e2342abe",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_weightlifting.png": {
+    "mtime": 1788511415.9743576,
+    "ast_hash": "e91c47b475a8e89fbb72e565096c9ae7",
+    "semantic_hash": ""
+  },
+  "assets/iconsactivity_yoga.png": {
+    "mtime": 1788511415.9803574,
+    "ast_hash": "1e138354a825cd641a40fb7dfcc5a1c4",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_archer.png": {
+    "mtime": 1788511416.0383565,
+    "ast_hash": "b7570d240994ab0af69f7f4b3839ba82",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_crown.png": {
+    "mtime": 1788511416.0413566,
+    "ast_hash": "4e249706987350d982c16a21ee68c494",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_diamond.png": {
+    "mtime": 1788511416.0453565,
+    "ast_hash": "9ce74805f961f3228b183da4bcf22ca9",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_elf.png": {
+    "mtime": 1788511416.0493565,
+    "ast_hash": "2ba3779d2e730b241f3d9f318e1dc523",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_fox.png": {
+    "mtime": 1788511416.0533564,
+    "ast_hash": "88445eebedfbd2fb9ce9f4797aaef039",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_lightning.png": {
+    "mtime": 1788511416.057356,
+    "ast_hash": "30bffc8ce3f25f232042989988a1556e",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_monk.png": {
+    "mtime": 1788511416.0603561,
+    "ast_hash": "04e41daa70b766d084829b014f5f8401",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_moon.png": {
+    "mtime": 1788511416.064356,
+    "ast_hash": "2d921439ef85aa8b4139fcf8e86cf434",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_mystic.png": {
+    "mtime": 1788511416.067356,
+    "ast_hash": "c413518a5258c11207119f37424bce9d",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_ninja.png": {
+    "mtime": 1788511416.071356,
+    "ast_hash": "c1493804dfbaa45a31de7f63c972f3c4",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_paladin.png": {
+    "mtime": 1788511416.075356,
+    "ast_hash": "de5b77376c98e567cc36df2e40dc19cd",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_star.png": {
+    "mtime": 1788511416.079356,
+    "ast_hash": "f57ffb2b9a53c3493354618b4df56f6f",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_superhero.png": {
+    "mtime": 1788511416.0823557,
+    "ast_hash": "5a17ec182280f4b827e62e231dc56ea2",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_warrior.png": {
+    "mtime": 1788511416.0843558,
+    "ast_hash": "64aa9cda94c893553f97460948a3bd54",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_wizard.png": {
+    "mtime": 1788511416.0863557,
+    "ast_hash": "dbce28573fa2798e0f4e4e7c3f27127d",
+    "semantic_hash": ""
+  },
+  "assets/iconsavatar_wolf.png": {
+    "mtime": 1788511416.0893557,
+    "ast_hash": "5c7dcf9d3c6e4b8ceba9a0b3a7f281a8",
+    "semantic_hash": ""
+  },
+  "assets/iconsmap_current_location.png": {
+    "mtime": 1788511416.0913558,
+    "ast_hash": "3b882398067ba4211dabeffa9d3a923a",
+    "semantic_hash": ""
+  },
+  "assets/iconsmap_destination.png": {
+    "mtime": 1788511416.0933557,
+    "ast_hash": "b28edf409be4a0ac7308ad5e7d3b2401",
+    "semantic_hash": ""
+  },
+  "assets/iconsmap_xp_reward.png": {
+    "mtime": 1788511416.0953555,
+    "ast_hash": "5caed01128608ed451d75c5f51d8be54",
+    "semantic_hash": ""
+  },
+  "assets/iconsnav_home.png": {
+    "mtime": 1788511416.0973556,
+    "ast_hash": "c302f7b8992a749efdcdcca93add52b6",
+    "semantic_hash": ""
+  },
+  "assets/iconsnav_map.png": {
+    "mtime": 1788511416.0993555,
+    "ast_hash": "45f6d8ba67f077994fe8f16ff012e5b6",
+    "semantic_hash": ""
+  },
+  "assets/iconsnav_profile.png": {
+    "mtime": 1788511416.1013556,
+    "ast_hash": "706703103eaceb35ee87694172b15a62",
+    "semantic_hash": ""
+  },
+  "assets/iconsnav_quests.png": {
+    "mtime": 1788511416.1033554,
+    "ast_hash": "98231fdaa82822cc4264fb27103fb853",
+    "semantic_hash": ""
+  },
+  "assets/iconsnav_stats.png": {
+    "mtime": 1788511416.1053555,
+    "ast_hash": "da5c98a091e8808f8f32617b567ca3f0",
+    "semantic_hash": ""
+  },
+  "assets/iconsquest_calories.png": {
+    "mtime": 1788511416.1073554,
+    "ast_hash": "44e74193452db73276bdea0198930ad0",
+    "semantic_hash": ""
+  },
+  "assets/iconsquest_daily_login.png": {
+    "mtime": 1788511416.1093554,
+    "ast_hash": "51df0088af760dd05eb64f644016b682",
+    "semantic_hash": ""
+  },
+  "assets/iconsquest_distance.png": {
+    "mtime": 1788511416.1113553,
+    "ast_hash": "6f53f17c7834712c24786339b3b09584",
+    "semantic_hash": ""
+  },
+  "assets/iconsquest_duration.png": {
+    "mtime": 1788511416.1133554,
+    "ast_hash": "7904e19fe8b245a02540ed0bbcbc8dd8",
+    "semantic_hash": ""
+  },
+  "assets/iconsquest_general.png": {
+    "mtime": 1788511416.1153553,
+    "ast_hash": "53573198593a86452d563102cf0f551d",
+    "semantic_hash": ""
+  },
+  "assets/iconsquest_workout_count.png": {
+    "mtime": 1788511416.1183553,
+    "ast_hash": "03c7404b578e0ee2a2f4c5738a4afa8c",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_daily_bonus.png": {
+    "mtime": 1788511416.1203551,
+    "ast_hash": "bfdee0c492d71b8582efc69cc7b37db6",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_grant_item.png": {
+    "mtime": 1788511416.1223552,
+    "ast_hash": "cf172a35fd17692be926c8acc7d589aa",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_streak_fire.png": {
+    "mtime": 1788511416.1233552,
+    "ast_hash": "558ee8140e5a704d701d321d9ea7d496",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_streak_shield.png": {
+    "mtime": 1788511416.1253552,
+    "ast_hash": "8da01cba4ab482a4bdab16e20ccf3c75",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_treasure_chest.png": {
+    "mtime": 1788511416.127355,
+    "ast_hash": "92d11710451dd154d71b4f1288eac442",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_xp_sparkle.png": {
+    "mtime": 1788511416.1293552,
+    "ast_hash": "4e0305a8d249cb088eb773a36d41ef3c",
+    "semantic_hash": ""
+  },
+  "assets/iconsreward_xp_storm.png": {
+    "mtime": 1788511416.131355,
+    "ast_hash": "fc70e966b99408022d45c1f0e0974c28",
+    "semantic_hash": ""
+  },
+  "assets/iconsring_battle.png": {
+    "mtime": 1788511416.133355,
+    "ast_hash": "06ed72e921f95a848d343052479da971",
+    "semantic_hash": ""
+  },
+  "assets/iconsring_boss.png": {
+    "mtime": 1788511416.136355,
+    "ast_hash": "b3b8172a5f5de702d42d579194191a55",
+    "semantic_hash": ""
+  },
+  "assets/iconsring_guild.png": {
+    "mtime": 1788511416.2703528,
+    "ast_hash": "e50bacf3c9bef3d9c60e318e6dbf5f36",
+    "semantic_hash": ""
+  },
+  "assets/iconsring_leaderboard.png": {
+    "mtime": 1788511416.4893494,
+    "ast_hash": "a0660b560d30f016985ac1ba39c1373a",
+    "semantic_hash": ""
+  },
+  "assets/iconsring_titles.png": {
+    "mtime": 1788511416.4933493,
+    "ast_hash": "0ddafddb579d379bd9c39a3005db035b",
+    "semantic_hash": ""
+  },
+  "assets/iconsring_world.png": {
+    "mtime": 1788511416.496349,
+    "ast_hash": "42be74c58cf09b9fa84f33bb0505ba83",
+    "semantic_hash": ""
+  },
+  "assets/iconsstat_agility.png": {
+    "mtime": 1788511416.500349,
+    "ast_hash": "5a1e3645a9ec08b885275f6dd2156fe3",
+    "semantic_hash": ""
+  },
+  "assets/iconsstat_endurance.png": {
+    "mtime": 1788511416.503349,
+    "ast_hash": "864330438d7df43704f47aca91291106",
+    "semantic_hash": ""
+  },
+  "assets/iconsstat_flexibility.png": {
+    "mtime": 1788511416.507349,
+    "ast_hash": "63eecc78f621ff9dbe3d24d84f62d001",
+    "semantic_hash": ""
+  },
+  "assets/iconsstat_stamina.png": {
+    "mtime": 1788511416.511349,
+    "ast_hash": "217de3f3119bf8f574167dcebfbf15f3",
+    "semantic_hash": ""
+  },
+  "assets/iconsstat_strength.png": {
+    "mtime": 1788511416.514349,
+    "ast_hash": "0045a4d5a8841e4b0e5ca1a490d69097",
+    "semantic_hash": ""
+  },
+  "assets/iconsui_new_item.png": {
+    "mtime": 1788511416.518349,
+    "ast_hash": "603d2da9f2b548823a6fdf2b068a25d6",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_ashfield_plains.png": {
+    "mtime": 1788511416.5223489,
+    "ast_hash": "177c4fd978d2574e1b833caf5b7d1661",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_coral_coast.png": {
+    "mtime": 1788511416.5253487,
+    "ast_hash": "42533c9f6987d66fdc24f0253e29c692",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_desert_of_trials.png": {
+    "mtime": 1788511416.5293486,
+    "ast_hash": "a25e85b87491f1941d0185b1cb2caa8a",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_final_approach.png": {
+    "mtime": 1788511416.5333486,
+    "ast_hash": "adbd1b1db66b0cac5b97e17dfe0a0126",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_first_fork.png": {
+    "mtime": 1788511416.5373485,
+    "ast_hash": "c7ff5df31b14530148eb2bf010601944",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_frostbound_peaks.png": {
+    "mtime": 1788511416.5403485,
+    "ast_hash": "ba1203ec371314739d1b52ef467ea2d4",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_iron_peaks.png": {
+    "mtime": 1788511416.5433483,
+    "ast_hash": "40e7df7dabbf719adca33323c10c65e8",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_the_convergence.png": {
+    "mtime": 1788511416.5453484,
+    "ast_hash": "d45e27210ecfaf5450e81470b17f49c6",
+    "semantic_hash": ""
+  },
+  "assets/iconszone_thornwood_forest.png": {
+    "mtime": 1788511416.5473483,
+    "ast_hash": "7f89653d968952e7430fe2edd685bf2b",
+    "semantic_hash": ""
+  },
+  "assets/images/forest_region_banner.png": {
+    "mtime": 1790013197.9218743,
+    "ast_hash": "72a0a5d833734129f86611caa5f0602c",
+    "semantic_hash": ""
+  },
+  "assets/images/forest_region_trail_background.png": {
+    "mtime": 1790013197.923882,
+    "ast_hash": "7b778071c759a85ea09382d04db55a8d",
+    "semantic_hash": ""
+  },
+  "assets/images/logo.png": {
+    "mtime": 1788511416.5513482,
+    "ast_hash": "fe43618ebba058ffd2515ca644d7df16",
+    "semantic_hash": ""
+  },
+  "assets/menu_icon.png": {
+    "mtime": 1788511416.5543482,
+    "ast_hash": "c9370af0a1128c7b608245e399b6a6eb",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png": {
+    "mtime": 1788511416.5573483,
+    "ast_hash": "aa00beb5aa01a9c7cec2d53cc250ff37",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png": {
+    "mtime": 1788511416.5573483,
+    "ast_hash": "a75853184be3078c3bbaf82f43d4f800",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "32b9b39e747173f0f4f9cfb36016a82c",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "ddd46e93668f3bed267587594b46cd9f",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "a8a446d0fcd2b601ee3d0459350e531e",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "39c04b14d1de247dde093370290d37d1",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "9875489964670ec178f81d4fee7e136c",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "32b9b39e747173f0f4f9cfb36016a82c",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "b5b352e91e67749932866afee1967cfb",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "dae95d5c3a527b328f7c3f170a6c16d5",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "dae95d5c3a527b328f7c3f170a6c16d5",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "cdd328f1078f4e9742ba987e746b5eb5",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "8077c051d1f3c4e7ec750dabdf2d0f0b",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "90bc68f230d28aa6bee151508499024a",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png": {
+    "mtime": 1788511416.5583482,
+    "ast_hash": "146decde68a828abfe657da9825b4afd",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png": {
+    "mtime": 1788511416.5595224,
+    "ast_hash": "978c1bee49d7ad5fc1a4d81099b13e18",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png": {
+    "mtime": 1788511416.5595224,
+    "ast_hash": "978c1bee49d7ad5fc1a4d81099b13e18",
+    "semantic_hash": ""
+  },
+  "ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png": {
+    "mtime": 1788511416.5595224,
+    "ast_hash": "978c1bee49d7ad5fc1a4d81099b13e18",
+    "semantic_hash": ""
+  },
+  "store-assets/app-icon-512.png": {
+    "mtime": 1788511416.5803478,
+    "ast_hash": "49a1562f81f6ec2b7336b9c49e538755",
+    "semantic_hash": ""
+  },
+  "store-assets/feature-graphic-1024x500.png": {
+    "mtime": 1788511416.581518,
+    "ast_hash": "31595c84da7727cd678c52afbb91fc90",
+    "semantic_hash": ""
+  },
+  "store-assets/logo.png": {
+    "mtime": 1788511416.581518,
+    "ast_hash": "49a1562f81f6ec2b7336b9c49e538755",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/avatar_selection_screen_isolatedDiff.png": {
+    "mtime": 1790578802.616989,
+    "ast_hash": "461eaf447a73083288866909ea6ddcd6",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/avatar_selection_screen_maskedDiff.png": {
+    "mtime": 1790578802.3449924,
+    "ast_hash": "0fdb09f47f60a115fc3c942ab3f8427c",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/avatar_selection_screen_masterImage.png": {
+    "mtime": 1790578801.295006,
+    "ast_hash": "835c63cd6a2b1c36214543db927ab273",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/avatar_selection_screen_testImage.png": {
+    "mtime": 1790578801.8749986,
+    "ast_hash": "cc763f6c9a760ddaccb1673d17a72421",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/login_screen_isolatedDiff.png": {
+    "mtime": 1791233882.7955723,
+    "ast_hash": "d5acfe04b18b7918904bb7896584abb9",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/login_screen_maskedDiff.png": {
+    "mtime": 1791233882.558579,
+    "ast_hash": "86a4cbcd13791431f0f01a631298df44",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/login_screen_masterImage.png": {
+    "mtime": 1791233882.2125888,
+    "ast_hash": "33035783db7e406f417bbab3efc6909a",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/login_screen_testImage.png": {
+    "mtime": 1791233882.3905838,
+    "ast_hash": "7cd387ab21ec06f306d5fa8608612ea2",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/register_screen_isolatedDiff.png": {
+    "mtime": 1791233275.7192016,
+    "ast_hash": "8694db765f614914320549e6a6835a2a",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/register_screen_maskedDiff.png": {
+    "mtime": 1791233275.5342085,
+    "ast_hash": "ff67d29e44737b243ef5db1aa35d6726",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/register_screen_masterImage.png": {
+    "mtime": 1791233275.1882217,
+    "ast_hash": "b6b262aadfa1413940101eb12b68af40",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/register_screen_testImage.png": {
+    "mtime": 1791233275.364215,
+    "ast_hash": "62c997a4718d121073f11905ba3ef475",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/welcome_setup_screen_isolatedDiff.png": {
+    "mtime": 1790578797.389056,
+    "ast_hash": "31235a37ce03e9c2aef42c8f87960812",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/welcome_setup_screen_maskedDiff.png": {
+    "mtime": 1790578797.1420593,
+    "ast_hash": "983a62ef4b408388e41d607efe5e4bd9",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/welcome_setup_screen_masterImage.png": {
+    "mtime": 1790578795.753077,
+    "ast_hash": "3334a59f0ed5e77f7e231c5685f2ad75",
+    "semantic_hash": ""
+  },
+  "test/visual/failures/welcome_setup_screen_testImage.png": {
+    "mtime": 1790578796.615066,
+    "ast_hash": "5c0c08e1513df056474bfa7ac1102049",
+    "semantic_hash": ""
+  },
+  "test/visual/goldens/login_screen.png": {
+    "mtime": 1791233891.363328,
+    "ast_hash": "7cd387ab21ec06f306d5fa8608612ea2",
+    "semantic_hash": ""
+  },
+  "test/visual/goldens/onboarding_username.png": {
+    "mtime": 1791235537.6004448,
+    "ast_hash": "acace8898d782d6ed2b6a5856dd3ad14",
+    "semantic_hash": ""
+  },
+  "test/visual/goldens/onboarding_welcome.png": {
+    "mtime": 1791233892.5702937,
+    "ast_hash": "c8029b4c69d422ee1061337c66ce71e6",
+    "semantic_hash": ""
+  },
+  "test/visual/goldens/register_screen.png": {
+    "mtime": 1791233891.8953128,
+    "ast_hash": "62c997a4718d121073f11905ba3ef475",
+    "semantic_hash": ""
+  },
+  "web/favicon.png": {
+    "mtime": 1788511416.5873477,
+    "ast_hash": "5dcef449791fa27946b3d35ad8803796",
+    "semantic_hash": ""
+  },
+  "web/icons/Icon-192.png": {
+    "mtime": 1788511416.5877733,
+    "ast_hash": "ac9a721a12bbc803b44f645561ecb1e1",
+    "semantic_hash": ""
+  },
+  "web/icons/Icon-512.png": {
+    "mtime": 1788511416.587974,
+    "ast_hash": "96e752610906ba2a93c65f8abe1645f1",
+    "semantic_hash": ""
+  },
+  "web/icons/Icon-maskable-192.png": {
+    "mtime": 1788511416.587974,
+    "ast_hash": "c457ef57daa1d16f64b27b786ec2ea3c",
+    "semantic_hash": ""
+  },
+  "web/icons/Icon-maskable-512.png": {
+    "mtime": 1788511416.587974,
+    "ast_hash": "301a7604d45b3e739efc881eb04896ea",
+    "semantic_hash": ""
+  }
+}

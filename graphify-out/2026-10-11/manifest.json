@@ -4585,8 +4585,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/MapReadService.cs": {
-    "mtime": 1790016550.2641642,
-    "ast_hash": "4ea3d490019836f0100e4f5a32670ca6",
+    "mtime": 1791711674.0370567,
+    "ast_hash": "b7ca73fd956083a2654eeea2ee317089",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/TrailEncounterHelper.cs": {
@@ -5175,8 +5175,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/WorldZoneServiceTests.cs": {
-    "mtime": 1791296985.7374494,
-    "ast_hash": "3cf62609d3afad70a7f1fd8a6aa211df",
+    "mtime": 1791711700.5031424,
+    "ast_hash": "2d38703ea43d74013063c2a7fa5f0e8d",
     "semantic_hash": ""
   },
   "design-mockup/canvas-command-center/canvas.json": {
@@ -5370,8 +5370,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/services/world_map_notifier.dart": {
-    "mtime": 1790535244.3104599,
-    "ast_hash": "5c56c1dee293eb21146d9fb3ba28f999",
+    "mtime": 1791717648.0375693,
+    "ast_hash": "d6699adc4e1da57beae45957fa013c4a",
     "semantic_hash": ""
   },
   "mobile/lib/core/services/world_zone_refresh_notifier.dart": {
@@ -5385,8 +5385,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/main_shell.dart": {
-    "mtime": 1791539021.474152,
-    "ast_hash": "6698d659d2dc48204882d848379e78f5",
+    "mtime": 1791717667.3626516,
+    "ast_hash": "320ba1cf486776bbd31d5b8e6062dd94",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/shell_constants.dart": {
@@ -5570,8 +5570,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_battle_screen.dart": {
-    "mtime": 1791667120.1475568,
-    "ast_hash": "94416ddf24aabc9de780837b2e7ee93c",
+    "mtime": 1791696885.6994338,
+    "ast_hash": "580ba9c25a4dce557774d575a4b77442",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_screen.dart": {
@@ -5695,8 +5695,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_portal_card.dart": {
-    "mtime": 1791663249.2133331,
-    "ast_hash": "4a4713b5b000d31a2f4f86aa8db68c09",
+    "mtime": 1791718674.3399355,
+    "ast_hash": "c881a14ce83f009a56ebe940f683d8cd",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_recent_activities_card.dart": {
@@ -5865,8 +5865,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/world_hub_screen.dart": {
-    "mtime": 1791539021.4886374,
-    "ast_hash": "51ef89303cc65945e730c36cd742640a",
+    "mtime": 1791717651.336822,
+    "ast_hash": "d5ee85bf3dcbb86192ed73d7b60c25e7",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/services/boss_service.dart": {
@@ -6625,8 +6625,8 @@
     "semantic_hash": ""
   },
   ".codex/skills/lifelevel-flutter-ui/SKILL.md": {
-    "mtime": 1791644875.1290064,
-    "ast_hash": "bf02b13c0a30b5db1b2b497e6e51b623",
+    "mtime": 1791699690.8517895,
+    "ast_hash": "159c20f1113be6f424b4563b03d0bdb0",
     "semantic_hash": ""
   },
   ".codex/skills/lifelevel-game-engine/SKILL.md": {
@@ -7720,8 +7720,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1791650531.1675375,
-    "ast_hash": "839a326cdd3c8cc8d667a510b840b75f",
+    "mtime": 1791699690.7537909,
+    "ast_hash": "7ce72ec31cc7373705aa06489d215e4d",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -10860,8 +10860,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_chests_screen.dart": {
-    "mtime": 1791576303.1447814,
-    "ast_hash": "957a5bf1ba4b1b74f84ae62310c63455",
+    "mtime": 1791711102.0720906,
+    "ast_hash": "a5f6c2bb875887e2994947c963a44990",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/models/rewards_models.dart": {
@@ -12280,18 +12280,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/providers/pending_workouts_provider.dart": {
-    "mtime": 1791300890.8296647,
-    "ast_hash": "99960aa123001473a781a2af7b56bcf0",
+    "mtime": 1791710934.5210955,
+    "ast_hash": "23b1f0f1dfcaf00e081f7bf9c66cbc09",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/pull_import_flow.dart": {
-    "mtime": 1791300750.5569248,
-    "ast_hash": "b57d683edf4c2fe8862689b1f36b36bb",
+    "mtime": 1791710934.5214202,
+    "ast_hash": "0268014ad0fb723e4a2684bbbab1fe11",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/services/pending_workouts_service.dart": {
-    "mtime": 1791300890.7896652,
-    "ast_hash": "9113b6104da3ad5e9bbb410a2c22c42e",
+    "mtime": 1791710934.5216637,
+    "ast_hash": "5c24254bacda4c22239e9ccfc235c418",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/widgets/import_review_sheet.dart": {
@@ -12325,8 +12325,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/sync/pull_to_import_test.dart": {
-    "mtime": 1791399889.80387,
-    "ast_hash": "02e3b3d7989ca37ae4ef4cad7d23ba2f",
+    "mtime": 1791710934.522011,
+    "ast_hash": "20ea19755c7fbf123098429080b3bce3",
     "semantic_hash": ""
   },
   "mobile/test/visual/pull_import_showcase_test.dart": {
@@ -12950,8 +12950,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/map/region_chests_screen_test.dart": {
-    "mtime": 1791576259.1689847,
-    "ast_hash": "30e2628e970e501eb0175083b99282a2",
+    "mtime": 1791698098.2502086,
+    "ast_hash": "518aeb0f95d15e803e4e11cf8924920b",
     "semantic_hash": ""
   },
   "mobile/assets/Regions/world/abyssal_trench_background.png": {
@@ -13855,8 +13855,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_duel_arena.dart": {
-    "mtime": 1791666836.694841,
-    "ast_hash": "34c0dd475ae4da4ffcafdcc10eeb88fc",
+    "mtime": 1791696826.4772925,
+    "ast_hash": "800cd35f4028f838ccd739ae0d34e55a",
     "semantic_hash": ""
   },
   "mobile/test/features/boss/boss_battle_view_test.dart": {

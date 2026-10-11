@@ -12,6 +12,8 @@ class StravaStageException implements Exception {
 }
 
 class PendingWorkoutsService {
+  static const importTimeout = Duration(seconds: 90);
+
   Future<PendingWorkoutList> list() async {
     final res = await ApiClient.instance.get('/integrations/pending');
     return PendingWorkoutList.fromJson(res.data as Map<String, dynamic>);
@@ -44,6 +46,13 @@ class PendingWorkoutsService {
     final res = await ApiClient.instance.post(
       '/integrations/pending/import',
       data: {'ids': ids},
+      // Importing runs the complete XP, stats, quest, map, and boss pipeline
+      // once per workout. Keep the global API timeout short, but give this
+      // intentionally heavier batch operation enough time on production.
+      options: Options(
+        sendTimeout: importTimeout,
+        receiveTimeout: importTimeout,
+      ),
     );
     return ImportPendingResult.fromJson(res.data as Map<String, dynamic>);
   }

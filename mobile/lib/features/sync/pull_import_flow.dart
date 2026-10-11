@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/api/api_failure.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/motion/reward_fx.dart';
 import '../../core/shell/shell_anchors.dart';
@@ -84,12 +85,15 @@ Future<void> runPullImportFlow(BuildContext context, WidgetRef ref,
   final ImportPendingResult result;
   try {
     result = await notifier.import(choice.ids);
-  } catch (_) {
+  } catch (error) {
+    final reconciled = await notifier.reconcileAfterImportFailure();
     if (!context.mounted) return;
     AppToast.error(
       context,
       'Import failed',
-      detail: 'Nothing was lost. Pull down to try again.',
+      detail: reconciled
+          ? '${playerErrorMessage(error)} Your workout queue was refreshed.'
+          : '${playerErrorMessage(error)} Pull down to refresh and try again.',
     );
     return;
   }

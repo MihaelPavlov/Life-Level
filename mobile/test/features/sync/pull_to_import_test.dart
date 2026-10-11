@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:life_level/features/integrations/models/integration_models.dart';
+import 'package:life_level/core/api/api_failure.dart';
 import 'package:life_level/features/sync/models/pending_models.dart';
 import 'package:life_level/features/sync/pull_import_flow.dart';
 import 'package:life_level/features/sync/providers/pending_workouts_provider.dart';
@@ -40,6 +41,8 @@ class _FakeService extends PendingWorkoutsService {
   List<String>? importedIds;
   bool fail = false;
   bool failStrava = false;
+  Object? importFailure;
+  PendingWorkoutList? listAfterFailedImport;
   int stravaRefreshes = 0;
   List<String>? acknowledgedIds;
   _FakeService(this.next);
@@ -67,6 +70,10 @@ class _FakeService extends PendingWorkoutsService {
   @override
   Future<ImportPendingResult> import(List<String> ids) async {
     importedIds = ids;
+    if (importFailure case final failure?) {
+      next = listAfterFailedImport ?? next;
+      throw failure;
+    }
     return ImportPendingResult(
       imported: [
         for (final id in ids)
@@ -201,6 +208,37 @@ void main() {
       expect(state.list.items.map((w) => w.id), ['b']);
       expect(state.importing, isFalse);
       expect(refreshed, 1);
+    });
+
+    test('failed import reconciliation reflects server-side partial progress',
+        () async {
+      final service = _FakeService(
+        PendingWorkoutList(items: [_w('a'), _w('b')], pendingCount: 2),
+      )
+        ..importFailure = const ApiFailure(
+          code: 'timeout',
+          message: 'The request took too long. Please try again.',
+        )
+        ..listAfterFailedImport =
+            PendingWorkoutList(items: [_w('b')], pendingCount: 1);
+      final c = ProviderContainer(overrides: [
+        pendingWorkoutsServiceProvider.overrideWithValue(service),
+        localWorkoutReaderProvider.overrideWithValue(_FakeReader(const [])),
+      ]);
+      addTearDown(c.dispose);
+      await c.read(pendingWorkoutsProvider.notifier).check();
+
+      await expectLater(
+        c.read(pendingWorkoutsProvider.notifier).import(['a', 'b']),
+        throwsA(isA<ApiFailure>()),
+      );
+      final reconciled = await c
+          .read(pendingWorkoutsProvider.notifier)
+          .reconcileAfterImportFailure();
+
+      expect(reconciled, isTrue);
+      expect(c.read(pendingWorkoutsProvider).pendingCount, 1);
+      expect(c.read(pendingWorkoutsProvider).list.items.single.id, 'b');
     });
   });
 
@@ -491,6 +529,35 @@ void main() {
       await toastFrames(tester);
       expect(service.importedIds, isNull);
       expect(find.text('Saved for later'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('timed-out import refreshes the queue and explains the failure',
+        (tester) async {
+      final (c, service, _) = await host(
+        tester,
+        PendingWorkoutList(items: [_w('a'), _w('b')], pendingCount: 2),
+      );
+      service
+        ..importFailure = const ApiFailure(
+          code: 'timeout',
+          message: 'The request took too long. Please try again.',
+        )
+        ..listAfterFailedImport =
+            PendingWorkoutList(items: [_w('b')], pendingCount: 1);
+
+      await tester.tap(find.text('pull'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Import 2 · +328 XP'));
+      await toastFrames(tester);
+
+      expect(find.text('Import failed'), findsOneWidget);
+      expect(
+        find.text(
+            'The request took too long. Please try again. Your workout queue was refreshed.'),
+        findsOneWidget,
+      );
+      expect(c.read(pendingWorkoutsProvider).pendingCount, 1);
       await tester.pump(const Duration(seconds: 5));
     });
   });

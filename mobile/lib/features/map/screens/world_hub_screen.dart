@@ -23,6 +23,7 @@ class WorldHubScreen extends ConsumerStatefulWidget {
     this.autoOpenActiveRegion = false,
     this.initialRegionId,
     this.initialZoneId,
+    this.scrollToRegionId,
   });
 
   /// Provided when the shell opens this as an overlay so the screen can show
@@ -37,6 +38,9 @@ class WorldHubScreen extends ConsumerStatefulWidget {
   final String? initialRegionId;
   final String? initialZoneId;
 
+  /// Stays on the region list and scrolls this region into view.
+  final String? scrollToRegionId;
+
   @override
   ConsumerState<WorldHubScreen> createState() => WorldHubScreenState();
 }
@@ -50,6 +54,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   bool _loading = true;
   String? _error;
   bool _hasScrolledToCurrentRegion = false;
+  String? _lockedTargetId;
 
   // Inline region navigation so the shell's bottom nav bar stays visible.
   // Always starts at the hub list — tapping a region card opens RegionDetailScreen.
@@ -84,6 +89,15 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
       setState(() {
         _data = data;
         _loading = false;
+        // A level-locked region can't be entered, even when a card links
+        // straight to it (the player may already stand in it): stay on the
+        // list, scrolled to it.
+        final target =
+            data.regions.where((r) => r.id == _openRegionId).firstOrNull;
+        if (target?.status == RegionStatus.locked) {
+          _openRegionId = null;
+          _lockedTargetId = target!.id;
+        }
         if (widget.autoOpenActiveRegion && _openRegionId == null) {
           for (final region in data.regions) {
             if (region.status == RegionStatus.active) {
@@ -107,8 +121,11 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   void _scrollToCurrentRegion(WorldMapData data) {
     if (_hasScrolledToCurrentRegion) return;
 
-    RegionCard? target;
-    for (final region in data.regions) {
+    final scrollId = widget.scrollToRegionId ?? _lockedTargetId;
+    RegionCard? target = scrollId == null
+        ? null
+        : data.regions.where((r) => r.id == scrollId).firstOrNull;
+    for (final region in target == null ? data.regions : const <RegionCard>[]) {
       if (region.status == RegionStatus.active) {
         target = region;
         break;

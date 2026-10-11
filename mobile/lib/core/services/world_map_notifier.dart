@@ -9,11 +9,15 @@ class WorldMapOpenRequest {
   final bool autoOpenActiveRegion;
   final String? regionId;
   final String? zoneId;
+
+  /// Opens the region list (not a region) scrolled to this region.
+  final String? scrollToRegionId;
   const WorldMapOpenRequest({
     this.onZoneSelected,
     this.autoOpenActiveRegion = false,
     this.regionId,
     this.zoneId,
+    this.scrollToRegionId,
   });
 }
 
@@ -29,11 +33,13 @@ class WorldMapNotifier {
     bool autoOpenActiveRegion = false,
     String? regionId,
     String? zoneId,
+    String? scrollToRegionId,
   }) =>
       _controller.add(WorldMapOpenRequest(
         onZoneSelected: onZoneSelected,
         autoOpenActiveRegion: autoOpenActiveRegion,
         regionId: regionId,
         zoneId: zoneId,
+        scrollToRegionId: scrollToRegionId,
       ));
 }

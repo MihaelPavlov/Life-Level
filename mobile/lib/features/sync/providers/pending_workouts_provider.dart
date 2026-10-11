@@ -161,6 +161,26 @@ class PendingWorkoutsNotifier extends Notifier<PendingWorkoutsState> {
     }
   }
 
+  /// Re-read the server queue after an import request fails or times out.
+  ///
+  /// The backend commits workouts one at a time, so a request can time out
+  /// after some selected workouts were safely imported. Reconciliation keeps
+  /// the client from presenting those completed workouts as still pending.
+  Future<bool> reconcileAfterImportFailure() async {
+    try {
+      final list = await ref.read(pendingWorkoutsServiceProvider).list();
+      state = state.copyWith(
+        list: list,
+        lastCheckedAt: DateTime.now(),
+        checking: false,
+        importing: false,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> acknowledgeRejected(List<String> ids) async {
     if (ids.isEmpty) return;
     await ref.read(pendingWorkoutsServiceProvider).acknowledgeRejected(ids);

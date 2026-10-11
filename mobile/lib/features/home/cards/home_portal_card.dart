@@ -269,6 +269,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
           regionChip: regionChip,
           regionId: regionId,
           onSync: onSync,
+          journey: _BossJourney.from(world, region),
         );
       }
     }
@@ -415,7 +416,10 @@ class _BossJourney {
 /// under the boss, so the region map is one tap away during a fight.
 class _BossJourneyRow extends StatelessWidget {
   final _BossJourney journey;
-  const _BossJourneyRow({required this.journey});
+
+  /// Defaults to opening the journey's region and zone.
+  final VoidCallback? onTap;
+  const _BossJourneyRow({required this.journey, this.onTap});
 
   static const _teal = Color(0xFF38D9C8);
 
@@ -426,7 +430,8 @@ class _BossJourneyRow extends StatelessWidget {
       label: 'Open the map of ${journey.regionName}',
       child: AppPressable(
         haptic: AppHaptic.selection,
-        onTap: () => _openWorldDestination(journey.regionId, journey.zoneId),
+        onTap: onTap ??
+            () => _openWorldDestination(journey.regionId, journey.zoneId),
         child: Container(
           padding: const EdgeInsets.fromLTRB(10, 9, 12, 9),
           decoration: BoxDecoration(
@@ -1546,12 +1551,14 @@ class _NextZoneHintPortal extends StatelessWidget {
   final String? regionChip;
   final String? regionId;
   final VoidCallback? onSync;
+  final _BossJourney? journey;
   const _NextZoneHintPortal({
     required this.zone,
     required this.world,
     required this.regionChip,
     required this.regionId,
     required this.onSync,
+    this.journey,
   });
 
   @override
@@ -1679,6 +1686,17 @@ class _NextZoneHintPortal extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Wrap(spacing: 6, runSpacing: 6, children: pills),
+        // The way on is level-locked, but the world map stays one tap away:
+        // it opens on the region list, scrolled to where the player is.
+        if (levelGated && journey != null) ...[
+          const SizedBox(height: 12),
+          _BossJourneyRow(
+            journey: journey!,
+            onTap: () => WorldMapNotifier.open(
+              scrollToRegionId: journey!.regionId ?? regionId,
+            ),
+          ),
+        ],
         const SizedBox(height: 14),
         Row(
           children: [

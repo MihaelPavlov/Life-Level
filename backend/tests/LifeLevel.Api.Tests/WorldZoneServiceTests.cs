@@ -166,6 +166,49 @@ public class WorldZoneServiceTests
         Assert.Equal("completed", forestSummary.Status);
     }
 
+    [Fact]
+    public async Task GetWorldMap_CurrentRegionBelowLevelStaysLocked()
+    {
+        var db = CreateDb(nameof(GetWorldMap_CurrentRegionBelowLevelStaysLocked));
+        var (world, caldera) = SeedWorld(db, "Under level world", levelReq: 25);
+        var frost = new Region
+        {
+            Id = Guid.NewGuid(), WorldId = world.Id, Name = "Frost", Emoji = "❄",
+            Theme = RegionTheme.Frost, ChapterIndex = 2, LevelRequirement = 25,
+            Lore = "Next region", BossName = "Hoarfrost",
+        };
+        db.Regions.Add(frost);
+        var entry = new WorldZoneEntity
+        {
+            Id = Guid.NewGuid(), RegionId = caldera.Id, Name = "Caldera Gate",
+            Type = WorldZoneType.Entry, IsStartZone = true,
+        };
+        db.WorldZones.Add(entry);
+
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            Id = userId, Username = "under", Email = "under@test.com", PasswordHash = "x",
+        });
+        db.Characters.Add(new Character { Id = Guid.NewGuid(), UserId = userId, Level = 19 });
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(), UserId = userId, WorldId = world.Id,
+            CurrentZoneId = entry.Id, CurrentRegionId = caldera.Id,
+        };
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = userId, WorldZoneId = entry.Id, UserWorldProgressId = progress.Id,
+        });
+        await db.SaveChangesAsync();
+
+        var map = await CreateMapReadService(db).GetWorldMapAsync(userId);
+
+        Assert.Equal("locked", map.Regions.Single(r => r.Id == caldera.Id).Status);
+        Assert.Equal("locked", map.Regions.Single(r => r.Id == frost.Id).Status);
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Test 1: GetFullWorldAsync returns all zones with correct user state
     // ──────────────────────────────────────────────────────────────────────────

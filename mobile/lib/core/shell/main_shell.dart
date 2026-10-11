@@ -133,6 +133,7 @@ class _MainShellState extends ConsumerState<MainShell>
   String? _pendingBossId;
   bool _worldAutoOpenActive = false;
   String? _worldTargetRegionId;
+  String? _worldScrollRegionId;
   String? _worldTargetZoneId;
   bool _checkingPendingGuildVictories = false;
   bool _checkingPendingGuildExpiries = false;
@@ -250,6 +251,7 @@ class _MainShellState extends ConsumerState<MainShell>
           _worldOpen = true;
           _worldAutoOpenActive = false;
           _worldTargetRegionId = null;
+          _worldScrollRegionId = null;
           _worldTargetZoneId = null;
           _titlesOpen = false;
           _bossOpen = false;
@@ -290,6 +292,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _worldAutoOpenActive = event.autoOpenActiveRegion;
         _worldTargetRegionId = event.regionId;
         _worldTargetZoneId = event.zoneId;
+        _worldScrollRegionId = event.scrollToRegionId;
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
@@ -992,6 +995,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _journeyOpen = false;
     _worldOpen = false;
     _worldAutoOpenActive = false;
+    _worldScrollRegionId = null;
     _titlesOpen = false;
     _bossOpen = false;
     _guildOpen = false;
@@ -1133,15 +1137,18 @@ class _MainShellState extends ConsumerState<MainShell>
       return WorldHubScreen(
         key: ValueKey(
           'world_$_worldAutoOpenActive'
-          '_${_worldTargetRegionId ?? ''}_${_worldTargetZoneId ?? ''}',
+          '_${_worldTargetRegionId ?? ''}_${_worldTargetZoneId ?? ''}'
+          '_${_worldScrollRegionId ?? ''}',
         ),
         autoOpenActiveRegion: _worldAutoOpenActive,
         initialRegionId: _worldTargetRegionId,
         initialZoneId: _worldTargetZoneId,
+        scrollToRegionId: _worldScrollRegionId,
         onClose: () => setState(() {
           _worldOpen = false;
           _worldAutoOpenActive = false;
           _worldTargetRegionId = null;
+          _worldScrollRegionId = null;
           _worldTargetZoneId = null;
           _pendingOnZoneSelected = null;
         }),
@@ -1400,6 +1407,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _achievementsOpen = true;
         _worldOpen = false;
         _worldAutoOpenActive = false;
+        _worldScrollRegionId = null;
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
@@ -1417,6 +1425,7 @@ class _MainShellState extends ConsumerState<MainShell>
         _pendingOnZoneSelected = null;
         _worldOpen = true;
         _worldAutoOpenActive = false;
+        _worldScrollRegionId = null;
         _titlesOpen = false;
         _bossOpen = false;
         _guildOpen = false;
