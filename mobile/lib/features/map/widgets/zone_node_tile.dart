@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
+import '../../../core/motion/app_motion.dart';
 import '../models/world_map_models.dart';
 import 'map_icon_resolver.dart';
 import 'world_map_theme.dart';
@@ -61,25 +63,61 @@ class _ZoneNodeBubbleState extends State<ZoneNodeBubble>
   Widget build(BuildContext context) {
     final node = widget.node;
     final accent = _bubbleAccent(node);
-    final sub = _subLabel(node, widget.journey, widget.nextRegionName);
+    // The region boss stays hidden (a silhouette in a normal circle) until you
+    // stand on its zone; then the full boss art steps out of the circle.
+    final bossArt = node.isBoss ? AppIcons.bossAssetForName(node.name) : null;
+    final bossRevealed = bossArt != null &&
+        (node.status == ZoneNodeStatus.active ||
+            node.status == ZoneNodeStatus.completed);
+    final bossHidden = node.isBoss && !bossRevealed;
+    final sub = bossHidden
+        ? 'Region boss · reach him to reveal'
+        : _subLabel(node, widget.journey, widget.nextRegionName);
     final subColor = _subColor(node);
+
+    final Widget figure = bossRevealed
+        ? _RevealedBoss(key: const ValueKey('boss-art'), asset: bossArt, pulse: _pulse)
+        : _Circle(
+            key: const ValueKey('circle'),
+            node: node,
+            pulse: _pulse,
+            accent: accent,
+            regionTheme: widget.regionTheme,
+            regionName: widget.regionName,
+            hiddenBoss: bossHidden,
+          );
 
     final bubble = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _Circle(
-          node: node,
-          pulse: _pulse,
-          accent: accent,
-          regionTheme: widget.regionTheme,
-          regionName: widget.regionName,
+        AnimatedSwitcher(
+          duration: AppMotion.duration(
+              context, const Duration(milliseconds: 600),
+              reduced: Duration.zero),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          // The art grows up out of the circle's base.
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: animation,
+              alignment: Alignment.bottomCenter,
+              child: child,
+            ),
+          ),
+          layoutBuilder: (current, previous) => Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [...previous, if (current != null) current],
+          ),
+          child: figure,
         ),
         const SizedBox(height: 6),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 130),
           child: Text(
-            node.name,
+            bossHidden ? '???' : node.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -116,7 +154,11 @@ class _ZoneNodeBubbleState extends State<ZoneNodeBubble>
             alignment: Alignment.topCenter,
             children: [
               bubble,
-              const Positioned(top: -10, child: _YouAreHereBadge()),
+              Positioned(
+                // Above the boss's head when the full art is showing.
+                top: bossRevealed ? -_RevealedBoss.overhang - 14 : -10,
+                child: const _YouAreHereBadge(),
+              ),
             ],
           )
         : bubble;
@@ -137,12 +179,18 @@ class _Circle extends StatelessWidget {
   final Color accent;
   final RegionTheme? regionTheme;
   final String? regionName;
+
+  /// The region boss before you reach it: its art as a dark silhouette, a
+  /// dimmer ring and a lock badge.
+  final bool hiddenBoss;
   const _Circle({
+    super.key,
     required this.node,
     required this.pulse,
     required this.accent,
     required this.regionTheme,
     required this.regionName,
+    this.hiddenBoss = false,
   });
 
   @override
@@ -156,7 +204,7 @@ class _Circle extends StatelessWidget {
       regionTheme: regionTheme,
       regionName: regionName,
     );
-    final nodeIcon = MapIconOrEmoji(
+    Widget nodeIcon = MapIconOrEmoji(
       asset: iconAsset,
       emoji: node.emoji,
       size: _iconSize(node),
@@ -172,6 +220,20 @@ class _Circle extends StatelessWidget {
                   : 1.45,
       visualOffset: node.isBoss ? const Offset(-0.75, -1.5) : Offset.zero,
     );
+    if (hiddenBoss) {
+      // Greyscale and nearly black: you can tell something big waits there,
+      // not what.
+      nodeIcon = ColorFiltered(
+        colorFilter: const ColorFilter.matrix([
+          .07, .07, .07, 0, 0, //
+          .06, .06, .06, 0, 0, //
+          .06, .06, .06, 0, 0, //
+          0, 0, 0, 1, 0,
+        ]),
+        child: nodeIcon,
+      );
+    }
+    final ringColor = hiddenBoss ? accent.withOpacity(0.55) : accent;
 
     Widget circle = Container(
       width: size,
@@ -185,9 +247,9 @@ class _Circle extends StatelessWidget {
         ),
         shape: node.isCrossroads ? BoxShape.rectangle : BoxShape.circle,
         borderRadius: node.isCrossroads ? BorderRadius.circular(12) : null,
-        border: Border.all(color: accent, width: borderWidth),
+        border: Border.all(color: ringColor, width: borderWidth),
       ),
-      child: isCompleted
+      child: isCompleted && !node.isBoss
           ? Icon(Icons.check_rounded, size: _emojiSize(node) + 4, color: accent)
           : node.isCrossroads
               ? null
@@ -201,6 +263,30 @@ class _Circle extends StatelessWidget {
         circle,
         nodeIcon,
       ]);
+    }
+
+    if (hiddenBoss) {
+      circle = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          circle,
+          Positioned(
+            right: -4,
+            bottom: -2,
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A0A0C),
+                shape: BoxShape.circle,
+                border: Border.all(color: accent.withOpacity(0.75), width: 1.5),
+              ),
+              child: Icon(Icons.lock_rounded,
+                  size: 12, color: accent.withOpacity(0.9)),
+            ),
+          ),
+        ],
+      );
     }
 
     // Dim locked bubbles so the trail focus stays on the unlocked chain.
@@ -259,6 +345,71 @@ class _Circle extends StatelessWidget {
     if (n.status == ZoneNodeStatus.locked) return 22;
     if (n.status == ZoneNodeStatus.completed) return 24;
     return 28;
+  }
+}
+
+/// The region boss once you stand on its zone (or have beaten it): the full
+/// boss art standing on a glowing red ground ring. It keeps a node-sized base
+/// so the trail row doesn't grow; the art rises above it into the space
+/// between rows.
+class _RevealedBoss extends StatelessWidget {
+  final String asset;
+  final AnimationController pulse;
+  const _RevealedBoss({super.key, required this.asset, required this.pulse});
+
+  static const double base = 72;
+  static const double artSize = 168;
+
+  /// How far the art reaches above the base.
+  static const double overhang = artSize - base - 6;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: base,
+      height: base,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          // Ground ring under his feet, breathing with the node pulse.
+          Positioned(
+            bottom: -10,
+            child: AnimatedBuilder(
+              animation: pulse,
+              builder: (_, __) {
+                final t = pulse.value;
+                return Container(
+                  width: 150,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.elliptical(75, 17)),
+                    border: Border.all(
+                        color: AppColors.red.withOpacity(0.45 + 0.2 * t),
+                        width: 1.5),
+                    gradient: RadialGradient(colors: [
+                      AppColors.red.withOpacity(0.55 + 0.2 * t),
+                      AppColors.red.withOpacity(0.12),
+                      AppColors.red.withOpacity(0),
+                    ], stops: const [0, .55, 1]),
+                  ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            bottom: -6,
+            child: Image.asset(
+              asset,
+              width: artSize,
+              height: artSize,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

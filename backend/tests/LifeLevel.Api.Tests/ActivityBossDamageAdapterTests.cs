@@ -60,7 +60,7 @@ public class ActivityBossDamageAdapterTests
         {
             Id = bossId,
             Name = "Forest Warden",
-            Icon = "assets/Bosses/boss_forest_warden.svg",
+            Icon = "assets/Bosses/boss_forest_warden.png",
             MaxHp = 1000,
             RewardXp = 500,
             WorldZoneId = Guid.NewGuid(),
@@ -97,7 +97,7 @@ public class ActivityBossDamageAdapterTests
         {
             Id = bossId,
             Name = "Forest Warden",
-            Icon = "assets/Bosses/boss_forest_warden.svg",
+            Icon = "assets/Bosses/boss_forest_warden.png",
             MaxHp = 1000,
             RewardXp = 500,
             WorldZoneId = Guid.NewGuid(),

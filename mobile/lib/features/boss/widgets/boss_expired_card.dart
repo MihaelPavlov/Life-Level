@@ -40,7 +40,7 @@ class BossExpiredCard extends StatelessWidget {
                       ),
                       alignment: Alignment.center,
                       child: BossIcon(
-                        icon: boss.icon,
+                        icon: boss.displayIcon,
                         size: 48,
                         emojiSize: 26,
                         opacity: 0.5,

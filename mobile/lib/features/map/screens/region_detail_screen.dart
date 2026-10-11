@@ -1277,7 +1277,8 @@ class _Summary extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _Tile(
-              iconAsset: AppIcons.ringBoss,
+              iconAsset: AppIcons.bossMapIconForName(region.bossName) ??
+                  AppIcons.ringBoss,
               label: 'Boss',
               value: _bossLabel(region),
               valueColor: _bossColor(region),

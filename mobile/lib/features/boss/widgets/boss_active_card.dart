@@ -108,7 +108,7 @@ class BossActiveCard extends StatelessWidget {
                         ),
                         alignment: Alignment.center,
                         child: BossIcon(
-                          icon: boss.icon,
+                          icon: boss.displayIcon,
                           size: 76,
                           emojiSize: 42,
                           visualScale: 1.15,

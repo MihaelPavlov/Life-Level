@@ -34,7 +34,77 @@ class AppIcons {
   static const String ringWorld = 'assets/icons/ring_world.png';
 
   // Bosses
-  static const String bossForestWarden = 'assets/Bosses/boss_forest_warden.svg';
+  static const String bossForestWarden = 'assets/Bosses/boss_forest_warden.png';
+  static const String bossTideSovereign =
+      'assets/Bosses/boss_tide_sovereign.png';
+  static const String bossStoneTitan =
+      'assets/Bosses/boss_stone_titan.png';
+  static const String bossMoltenKing =
+      'assets/Bosses/boss_molten_king.png';
+  static const String bossHoarfrostQueen =
+      'assets/Bosses/boss_hoarfrost_queen.png';
+  static const String bossDunePharaoh =
+      'assets/Bosses/boss_dune_pharaoh.png';
+  static const String bossBrambleLord =
+      'assets/Bosses/boss_bramble_lord.png';
+  static const String bossPearlLeviathan =
+      'assets/Bosses/boss_pearl_leviathan.png';
+  static const String bossStormSovereign =
+      'assets/Bosses/boss_storm_sovereign.png';
+  static const String bossCinderArchon =
+      'assets/Bosses/boss_cinder_archon.png';
+  static const String bossDeepfrostWyrm =
+      'assets/Bosses/boss_deepfrost_wyrm.png';
+  static const String bossSandKaiser =
+      'assets/Bosses/boss_sand_kaiser.png';
+  static const String bossThornwarden =
+      'assets/Bosses/boss_thornwarden.png';
+  static const String bossMawOfTheDeep =
+      'assets/Bosses/boss_abyssal_maw.png';
+  static const String bossWorldflame =
+      'assets/Bosses/boss_worldflame.png';
+
+  static const Map<String, String> bossByName = {
+    'forest warden': bossForestWarden,
+    'tide sovereign': bossTideSovereign,
+    'stone titan': bossStoneTitan,
+    'molten king': bossMoltenKing,
+    'hoarfrost queen': bossHoarfrostQueen,
+    'dune pharaoh': bossDunePharaoh,
+    'bramble lord': bossBrambleLord,
+    'pearl leviathan': bossPearlLeviathan,
+    'storm sovereign': bossStormSovereign,
+    'cinder archon': bossCinderArchon,
+    'deepfrost wyrm': bossDeepfrostWyrm,
+    'sand kaiser': bossSandKaiser,
+    'thornwarden': bossThornwarden,
+    'maw of the deep': bossMawOfTheDeep,
+    'worldflame': bossWorldflame,
+  };
+
+  static String? bossAssetForName(String name) =>
+      bossByName[name.trim().toLowerCase()];
+
+  static const Map<String, String> bossMapIconByName = {
+    'forest warden': 'assets/Bosses/icons/boss_forest_warden_icon.png',
+    'tide sovereign': 'assets/Bosses/icons/boss_tide_sovereign_icon.png',
+    'stone titan': 'assets/Bosses/icons/boss_stone_titan_icon.png',
+    'molten king': 'assets/Bosses/icons/boss_molten_king_icon.png',
+    'hoarfrost queen': 'assets/Bosses/icons/boss_hoarfrost_queen_icon.png',
+    'dune pharaoh': 'assets/Bosses/icons/boss_dune_pharaoh_icon.png',
+    'bramble lord': 'assets/Bosses/icons/boss_bramble_lord_icon.png',
+    'pearl leviathan': 'assets/Bosses/icons/boss_pearl_leviathan_icon.png',
+    'storm sovereign': 'assets/Bosses/icons/boss_storm_sovereign_icon.png',
+    'cinder archon': 'assets/Bosses/icons/boss_cinder_archon_icon.png',
+    'deepfrost wyrm': 'assets/Bosses/icons/boss_deepfrost_wyrm_icon.png',
+    'sand kaiser': 'assets/Bosses/icons/boss_sand_kaiser_icon.png',
+    'thornwarden': 'assets/Bosses/icons/boss_thornwarden_icon.png',
+    'maw of the deep': 'assets/Bosses/icons/boss_abyssal_maw_icon.png',
+    'worldflame': 'assets/Bosses/icons/boss_worldflame_icon.png',
+  };
+
+  static String? bossMapIconForName(String name) =>
+      bossMapIconByName[name.trim().toLowerCase()];
 
   // Titles & Ranks
   static const String rankChampion = 'assets/Titles&Ranks/rank_champion.png';

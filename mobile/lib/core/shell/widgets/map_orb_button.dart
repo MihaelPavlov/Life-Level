@@ -326,20 +326,33 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
-                                  width: 30,
-                                  height: 30,
+                                  width: s.kind == JourneyKind.bossRaid ||
+                                          s.kind == JourneyKind.bossZone
+                                      ? 38
+                                      : 30,
+                                  height: s.kind == JourneyKind.bossRaid ||
+                                          s.kind == JourneyKind.bossZone
+                                      ? 38
+                                      : 30,
                                   child: s.iconAsset != null
                                       ? Center(
                                           child: AppIconImage(s.iconAsset!,
                                               // The Wayfarer chest art fills
                                               // its frame; keep it a touch
                                               // smaller than other icons.
-                                              size:
-                                                  s.kind == JourneyKind.chest ||
+                                              size: s.kind ==
+                                                          JourneyKind.chest ||
+                                                      s.kind ==
+                                                          JourneyKind
+                                                              .chestOpened
+                                                  ? 25
+                                                  : s.kind ==
+                                                              JourneyKind
+                                                                  .bossRaid ||
                                                           s.kind ==
                                                               JourneyKind
-                                                                  .chestOpened
-                                                      ? 25
+                                                                  .bossZone
+                                                      ? 38
                                                       : 30))
                                       : Icon(s.icon,
                                           size: 24, color: Colors.white),

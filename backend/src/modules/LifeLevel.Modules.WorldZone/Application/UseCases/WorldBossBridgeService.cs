@@ -21,7 +21,25 @@ namespace LifeLevel.Modules.WorldZone.Application.UseCases;
 /// </summary>
 public class WorldBossBridgeService(DbContext db, IBossSpawnPort bossSpawn)
 {
-    private const string ForestWardenIcon = "assets/Bosses/boss_forest_warden.svg";
+    private static readonly IReadOnlyDictionary<string, string> BossIcons =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Forest Warden"] = "assets/Bosses/boss_forest_warden.png",
+            ["Tide Sovereign"] = "assets/Bosses/boss_tide_sovereign.png",
+            ["Stone Titan"] = "assets/Bosses/boss_stone_titan.png",
+            ["Molten King"] = "assets/Bosses/boss_molten_king.png",
+            ["Hoarfrost Queen"] = "assets/Bosses/boss_hoarfrost_queen.png",
+            ["Dune Pharaoh"] = "assets/Bosses/boss_dune_pharaoh.png",
+            ["Bramble Lord"] = "assets/Bosses/boss_bramble_lord.png",
+            ["Pearl Leviathan"] = "assets/Bosses/boss_pearl_leviathan.png",
+            ["Storm Sovereign"] = "assets/Bosses/boss_storm_sovereign.png",
+            ["Cinder Archon"] = "assets/Bosses/boss_cinder_archon.png",
+            ["Deepfrost Wyrm"] = "assets/Bosses/boss_deepfrost_wyrm.png",
+            ["Sand Kaiser"] = "assets/Bosses/boss_sand_kaiser.png",
+            ["Thornwarden"] = "assets/Bosses/boss_thornwarden.png",
+            ["Maw of the Deep"] = "assets/Bosses/boss_abyssal_maw.png",
+            ["Worldflame"] = "assets/Bosses/boss_worldflame.png",
+        };
 
     /// <summary>
     /// Ensure a legacy Boss row exists for <paramref name="worldZoneId"/>
@@ -136,9 +154,7 @@ public class WorldBossBridgeService(DbContext db, IBossSpawnPort bossSpawn)
     }
 
     private static string GetBossIcon(WorldZoneEntity zone)
-        => string.Equals(zone.Name, "Forest Warden", StringComparison.OrdinalIgnoreCase)
-            ? ForestWardenIcon
-            : zone.Emoji;
+        => BossIcons.TryGetValue(zone.Name, out var icon) ? icon : zone.Emoji;
 
     public async Task<Guid> EnsureTrailBlockerSpawnedAsync(
         Guid userId,

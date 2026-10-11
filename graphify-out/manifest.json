@@ -3310,8 +3310,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/js/map/app.js": {
-    "mtime": 1790279790.8882089,
-    "ast_hash": "fefa56f871f121bd2c5bdc9692719f5e",
+    "mtime": 1791581658.1915455,
+    "ast_hash": "99013114da5cd8fd2fe689c53157f130",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/js/map/edges.js": {
@@ -3335,8 +3335,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/js/map/zones.js": {
-    "mtime": 1790279790.958207,
-    "ast_hash": "6bd0c419ded536a91fce8d5f87766e56",
+    "mtime": 1791650350.9748178,
+    "ast_hash": "8cfb82ca4a5c284dbad1c3ee6655ffd9",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.Achievements/.codex/tmp/backend-build/LifeLevel.Modules.Achievements.deps.json": {
@@ -4595,8 +4595,8 @@
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/WorldBossBridgeService.cs": {
-    "mtime": 1790279704.6286564,
-    "ast_hash": "d3b92070706aabd9be18f804f4347673",
+    "mtime": 1791646350.8016186,
+    "ast_hash": "40c558b357b3066175482211f1a69c83",
     "semantic_hash": ""
   },
   "backend/src/modules/LifeLevel.Modules.WorldZone/Application/UseCases/WorldChestService.cs": {
@@ -5080,8 +5080,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/ActivityBossDamageAdapterTests.cs": {
-    "mtime": 1788511408.668838,
-    "ast_hash": "f54beb7e648a3ebbd6c2d928056b36b9",
+    "mtime": 1791645670.6630816,
+    "ast_hash": "3d4a9f90aeaac917f98ab3fcd53d41a3",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/ActivityServiceExternalItemGrantTests.cs": {
@@ -5105,8 +5105,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/GuildServiceTests.cs": {
-    "mtime": 1788511408.6689143,
-    "ast_hash": "8265606af6dae23b10739b6cef421681",
+    "mtime": 1791645670.519083,
+    "ast_hash": "2f5b7c5f2ae707e77626cd7eaf8c6d56",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/HealthSyncServiceTests.cs": {
@@ -5160,8 +5160,8 @@
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/WorldBossBridgeServiceTests.cs": {
-    "mtime": 1791399889.7973726,
-    "ast_hash": "eca45dc01141782b9ff366c6c0d35dbf",
+    "mtime": 1791645670.5940824,
+    "ast_hash": "1935f1a08b4f7fe0b40e88be622beb5b",
     "semantic_hash": ""
   },
   "backend/tests/LifeLevel.Api.Tests/WorldChestServiceTests.cs": {
@@ -5295,8 +5295,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/app_icons.dart": {
-    "mtime": 1791576148.5415976,
-    "ast_hash": "7eb27c5151b687e0fdfb85f55a01b0dc",
+    "mtime": 1791650350.5318208,
+    "ast_hash": "dc974bd0f33187778c5d87e38fd35c17",
     "semantic_hash": ""
   },
   "mobile/lib/core/constants/avatar_icons.dart": {
@@ -5560,8 +5560,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/models/boss_list_item.dart": {
-    "mtime": 1791399889.799555,
-    "ast_hash": "f9ef40e4a1a8499a9d8325a0b178f5f4",
+    "mtime": 1791662887.8918858,
+    "ast_hash": "1300d0b747ba43eb5137b28dc418714a",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/providers/boss_provider.dart": {
@@ -5570,8 +5570,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_battle_screen.dart": {
-    "mtime": 1791399889.799938,
-    "ast_hash": "229e07b7bf55d5d8bf5703d7135d4194",
+    "mtime": 1791696885.6994338,
+    "ast_hash": "580ba9c25a4dce557774d575a4b77442",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/screens/boss_screen.dart": {
@@ -5585,8 +5585,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_active_card.dart": {
-    "mtime": 1791399889.8002346,
-    "ast_hash": "6193dee52f6b22a8c5a5509b12e61e99",
+    "mtime": 1791662887.9688847,
+    "ast_hash": "b4ef991c8c67f7211b9bcda49b720b9f",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_damage_hint.dart": {
@@ -5595,18 +5595,18 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_damage_hit_row.dart": {
-    "mtime": 1790280688.2411993,
-    "ast_hash": "c4cd251f01ce6403346a7a0cbd608811",
+    "mtime": 1791666869.693459,
+    "ast_hash": "18bcbe9ad94a5dc8f3fed7ac32613162",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_defeated_card.dart": {
-    "mtime": 1791399889.8004158,
-    "ast_hash": "504626ec4fa905e9882cae094c6cd3f8",
+    "mtime": 1791662888.0448837,
+    "ast_hash": "d83f300af83966ef5bc5b13fb24989bc",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_expired_card.dart": {
-    "mtime": 1791399889.8005965,
-    "ast_hash": "97548ec68d02a73d3a3c64deeb0967a7",
+    "mtime": 1791662888.1148827,
+    "ast_hash": "a8cc9926a11f317c9e6743d935793372",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_hp_bar.dart": {
@@ -5620,8 +5620,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/widgets/boss_locked_card.dart": {
-    "mtime": 1791399889.8007486,
-    "ast_hash": "9f76b944e073e54ec7f56f62e848538d",
+    "mtime": 1791662888.2058816,
+    "ast_hash": "b8d8ac8c5599a571d61409bb7f7d312c",
     "semantic_hash": ""
   },
   "mobile/lib/features/character/models/avatar_option.dart": {
@@ -5695,8 +5695,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_portal_card.dart": {
-    "mtime": 1791399889.8009968,
-    "ast_hash": "3696ae4240dcbd0fa7508ba5af024ad5",
+    "mtime": 1791663249.2133331,
+    "ast_hash": "4a4713b5b000d31a2f4f86aa8db68c09",
     "semantic_hash": ""
   },
   "mobile/lib/features/home/cards/home_recent_activities_card.dart": {
@@ -5860,8 +5860,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_detail_screen.dart": {
-    "mtime": 1791539021.4882026,
-    "ast_hash": "241342c5e9399a2c1aad84b136d44fda",
+    "mtime": 1791662888.4598782,
+    "ast_hash": "1a353ea421f5a2e1233070f305a28e9e",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/world_hub_screen.dart": {
@@ -5935,8 +5935,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/map_icon_resolver.dart": {
-    "mtime": 1791149355.9913337,
-    "ast_hash": "48f737c87ede1a008487ee339fc760c1",
+    "mtime": 1791650350.65382,
+    "ast_hash": "c571963439847967034e34e15603e3e9",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/region_hero_card.dart": {
@@ -5960,8 +5960,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_node_tile.dart": {
-    "mtime": 1791150515.0256073,
-    "ast_hash": "f26bc9ac1366e3ccb637b28a5b086fee",
+    "mtime": 1791665877.6477728,
+    "ast_hash": "07486829fdfec8835b6ec1bc4717f948",
     "semantic_hash": ""
   },
   "mobile/lib/features/map/widgets/zone_trail.dart": {
@@ -6625,8 +6625,8 @@
     "semantic_hash": ""
   },
   ".codex/skills/lifelevel-flutter-ui/SKILL.md": {
-    "mtime": 1788511407.8637204,
-    "ast_hash": "160f62f244ac26d0ad2d309254231066",
+    "mtime": 1791644875.1290064,
+    "ast_hash": "bf02b13c0a30b5db1b2b497e6e51b623",
     "semantic_hash": ""
   },
   ".codex/skills/lifelevel-game-engine/SKILL.md": {
@@ -6670,7 +6670,7 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/index.html": {
-    "mtime": 1789413477.5823731,
+    "mtime": 1791581657.9965475,
     "ast_hash": "80554bebad18d3931989e7d45767ed4d",
     "semantic_hash": ""
   },
@@ -6680,8 +6680,8 @@
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/map.html": {
-    "mtime": 1790279790.812211,
-    "ast_hash": "ee8d52aacaddce18194699968e3cf64a",
+    "mtime": 1791650351.0688171,
+    "ast_hash": "be911e8824680d4b70417edc4646e73d",
     "semantic_hash": ""
   },
   "backend/src/LifeLevel.Api/wwwroot/admin/rank-thresholds.html": {
@@ -7720,8 +7720,8 @@
     "semantic_hash": ""
   },
   "mobile/pubspec.yaml": {
-    "mtime": 1791539021.4929335,
-    "ast_hash": "2297cb1065a6de4a9edfb9bc3fb10c5f",
+    "mtime": 1791650531.1675375,
+    "ast_hash": "839a326cdd3c8cc8d667a510b840b75f",
     "semantic_hash": ""
   },
   "mobile/web/index.html": {
@@ -9282,11 +9282,6 @@
   "mobile/assets/Bosses/boss_forest_warden.png": {
     "mtime": 1791483632.2350175,
     "ast_hash": "5f14e3ffb59c284b4c91e627ce2c0f23",
-    "semantic_hash": ""
-  },
-  "mobile/assets/Bosses/boss_forest_warden.svg": {
-    "mtime": 1788511409.8374646,
-    "ast_hash": "ec86b41d4b5b40631c8e4e88b3611499",
     "semantic_hash": ""
   },
   "mobile/assets/Classes/archer_icon.png": {
@@ -10865,8 +10860,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/screens/region_chests_screen.dart": {
-    "mtime": 1791576303.1447814,
-    "ast_hash": "957a5bf1ba4b1b74f84ae62310c63455",
+    "mtime": 1791698098.188212,
+    "ast_hash": "79c18a105e26b95d184b79f6fab2dc23",
     "semantic_hash": ""
   },
   "mobile/lib/features/rewards/models/rewards_models.dart": {
@@ -12260,8 +12255,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/widgets/map_orb_button.dart": {
-    "mtime": 1791539021.4745038,
-    "ast_hash": "67d3a3d14e70c3b2f0eecef21ea29853",
+    "mtime": 1791654580.0255961,
+    "ast_hash": "f9affcca67f8ee496bd90d5a9506701e",
     "semantic_hash": ""
   },
   "mobile/lib/core/shell/widgets/shell_tab_bar.dart": {
@@ -12275,8 +12270,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/map/journey/journey_state.dart": {
-    "mtime": 1791548542.7236013,
-    "ast_hash": "2fc2c282ead08ebd9259979580b3acf8",
+    "mtime": 1791650350.7648191,
+    "ast_hash": "58072d94858b4e2e4d68173a25d5626f",
     "semantic_hash": ""
   },
   "mobile/lib/features/sync/models/pending_models.dart": {
@@ -12860,8 +12855,8 @@
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/replay/boss_slain_takeover.dart": {
-    "mtime": 1790864471.1249378,
-    "ast_hash": "089e8db6a413f0a5732eec9a30ffdbf5",
+    "mtime": 1791662888.3808792,
+    "ast_hash": "840c45bb8acf96e68644c5c4cd97af5f",
     "semantic_hash": ""
   },
   "mobile/lib/features/boss/replay/home_boss_replay.dart": {
@@ -12955,8 +12950,8 @@
     "semantic_hash": ""
   },
   "mobile/test/features/map/region_chests_screen_test.dart": {
-    "mtime": 1791576259.1689847,
-    "ast_hash": "30e2628e970e501eb0175083b99282a2",
+    "mtime": 1791698098.2502086,
+    "ast_hash": "518aeb0f95d15e803e4e11cf8924920b",
     "semantic_hash": ""
   },
   "mobile/assets/Regions/world/abyssal_trench_background.png": {
@@ -13707,6 +13702,166 @@
   "mobile/test/core/session/perform_logout_test.dart": {
     "mtime": 1791578856.3823137,
     "ast_hash": "3b8859c9c8b742cd85dc0f32f7459e12",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/map/zone_node_boss_reveal_test.dart": {
+    "mtime": 1791666064.9586782,
+    "ast_hash": "65dfc6790f5693cd641c6d49278a2140",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_abyssal_maw.png": {
+    "mtime": 1791645031.509469,
+    "ast_hash": "ae2aa9bedca7cd09636a3d0ba22bdfb5",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_bramble_lord.png": {
+    "mtime": 1791645184.9319482,
+    "ast_hash": "aee0180cb6760a616e87436d5fc53e4d",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_cinder_archon.png": {
+    "mtime": 1791645111.6826756,
+    "ast_hash": "d7a20a909a7e48eed1c87841d529b9f8",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_deepfrost_wyrm.png": {
+    "mtime": 1791645102.9867618,
+    "ast_hash": "629ae18b91c5c13201cdc73b4aa6dfae",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_dune_pharaoh.png": {
+    "mtime": 1791645192.0648773,
+    "ast_hash": "10733f13fb83b53736e68bcdded821d0",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_hoarfrost_queen.png": {
+    "mtime": 1791645198.6588116,
+    "ast_hash": "cbc134e4ec3caf6919cc7be6c46e5a27",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_molten_king.png": {
+    "mtime": 1791645208.0717177,
+    "ast_hash": "3dcbc5fc6256600c4974dd514ee7dad1",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_pearl_leviathan.png": {
+    "mtime": 1791645174.7190497,
+    "ast_hash": "b92f155e996799fb55654906a8254c23",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_sand_kaiser.png": {
+    "mtime": 1791645054.3072438,
+    "ast_hash": "f3d9b0c0a072dd75e9268fbaef7f7488",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_stone_titan.png": {
+    "mtime": 1791645216.3036358,
+    "ast_hash": "40c7f0be7583cfe975030a8cae9f827a",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_storm_sovereign.png": {
+    "mtime": 1791645143.0813642,
+    "ast_hash": "56f9d406b100cc6250b9e3c21dbeadae",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_thornwarden.png": {
+    "mtime": 1791645039.0483947,
+    "ast_hash": "3dbabc7642e695c413d11762a0169187",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_tide_sovereign.png": {
+    "mtime": 1791645222.313576,
+    "ast_hash": "be620947f1302d48ee3918a7c6235541",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/boss_worldflame.png": {
+    "mtime": 1791644860.020154,
+    "ast_hash": "36968619c07b8b7ac5ea6e50890e12b5",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_abyssal_maw_icon.png": {
+    "mtime": 1791662712.0632336,
+    "ast_hash": "383a13628d9b7a8a5f7eaa63e7c425a7",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_bramble_lord_icon.png": {
+    "mtime": 1791662715.3161898,
+    "ast_hash": "19f4e289c475a967f1431699ec0261dd",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_cinder_archon_icon.png": {
+    "mtime": 1791662718.7411437,
+    "ast_hash": "46a6dee7a6d463c386076eff28aa4d6e",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_deepfrost_wyrm_icon.png": {
+    "mtime": 1791662722.5290928,
+    "ast_hash": "2b8ebc6a09b545df501be6420772cd76",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_dune_pharaoh_icon.png": {
+    "mtime": 1791662725.560052,
+    "ast_hash": "e87bb931290fc98001a628a646d7586c",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_forest_warden_icon.png": {
+    "mtime": 1791662708.5112817,
+    "ast_hash": "d4215be7cf23efb919d5fcd27e8b0496",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_hoarfrost_queen_icon.png": {
+    "mtime": 1791662729.2560022,
+    "ast_hash": "602ff0ced1f08c52afcf1595b0265bcc",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_molten_king_icon.png": {
+    "mtime": 1791662732.1799629,
+    "ast_hash": "e5b088c082c9484f66798bcf6c77b2de",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_pearl_leviathan_icon.png": {
+    "mtime": 1791662736.0119112,
+    "ast_hash": "fd3829a50e2d31859eab4c74c169268e",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_sand_kaiser_icon.png": {
+    "mtime": 1791662738.7338746,
+    "ast_hash": "11fd281b9bcd7ca5ed002b3ae46d3e0e",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_stone_titan_icon.png": {
+    "mtime": 1791662700.5023897,
+    "ast_hash": "2bc5c12e933f813be5a8dce869210cd0",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_storm_sovereign_icon.png": {
+    "mtime": 1791662741.7828336,
+    "ast_hash": "dbebf1fbb5bfc89b5ffb73f79b4b31ca",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_thornwarden_icon.png": {
+    "mtime": 1791662744.7747934,
+    "ast_hash": "6c730c86192edfc9521014ae79fceab5",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_tide_sovereign_icon.png": {
+    "mtime": 1791662747.9747505,
+    "ast_hash": "79e6689679afb9d72560c158cd37f2f3",
+    "semantic_hash": ""
+  },
+  "mobile/assets/Bosses/icons/boss_worldflame_icon.png": {
+    "mtime": 1791662752.5516891,
+    "ast_hash": "a03bf03a9342afa4ec154c11dff55998",
+    "semantic_hash": ""
+  },
+  "mobile/lib/features/boss/widgets/boss_duel_arena.dart": {
+    "mtime": 1791696826.4772925,
+    "ast_hash": "800cd35f4028f838ccd739ae0d34e55a",
+    "semantic_hash": ""
+  },
+  "mobile/test/features/boss/boss_battle_view_test.dart": {
+    "mtime": 1791667217.817695,
+    "ast_hash": "a9948795f505f1068d34578dd80f21f4",
     "semantic_hash": ""
   }
 }

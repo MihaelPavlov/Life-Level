@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../models/boss_list_item.dart';
+import 'boss_icon.dart';
 
 class BossLockedCard extends StatelessWidget {
   final BossListItem boss;
@@ -40,8 +41,11 @@ class BossLockedCard extends StatelessWidget {
                     ),
                     child: Opacity(
                       opacity: 0.6,
-                      child:
-                          Text(boss.icon, style: const TextStyle(fontSize: 26)),
+                      child: BossIcon(
+                        icon: boss.displayIcon,
+                        size: 32,
+                        emojiSize: 26,
+                      ),
                     ),
                   ),
                 ),

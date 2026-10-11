@@ -388,7 +388,8 @@ JourneyOrbState resolveJourneyOrb({
         color: _grey,
         ring: JourneyRing.progress,
         progress: frac.clamp(0.0, 1.0),
-        iconAsset: AppIcons.ringBoss,
+        iconAsset:
+            AppIcons.bossMapIconForName(boss.name) ?? AppIcons.ringBoss,
         label: 'Recovering',
         secondaryProgress: 0,
         secondaryColor: _grey,
@@ -402,7 +403,7 @@ JourneyOrbState resolveJourneyOrb({
       color: AppColors.red,
       ring: JourneyRing.progress,
       progress: frac.clamp(0.0, 1.0),
-      iconAsset: AppIcons.ringBoss,
+      iconAsset: AppIcons.bossMapIconForName(boss.name) ?? AppIcons.ringBoss,
       label: timer,
       secondaryProgress: youFrac,
       secondaryColor: youFrac == null ? null : playerHpColor(youFrac),
@@ -549,7 +550,8 @@ JourneyOrbState resolveJourneyOrb({
         color: AppColors.red,
         ring: JourneyRing.progress,
         progress: 1,
-        iconAsset: AppIcons.ringBoss,
+        iconAsset:
+            AppIcons.bossMapIconForName(picked.name) ?? AppIcons.ringBoss,
         label: 'Boss',
         semantics: 'Boss zone ${picked.name}, ready for the raid',
       );

@@ -1839,7 +1839,7 @@ class _BossPortalIcon extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: BossIcon(
-        icon: boss.icon,
+        icon: boss.displayIcon,
         size: 60,
         emojiSize: 34,
         visualScale: 1.15,

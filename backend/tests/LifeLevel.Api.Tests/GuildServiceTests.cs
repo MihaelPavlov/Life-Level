@@ -492,7 +492,7 @@ public class GuildServiceTests
         {
             Id = bossId,
             Name = name,
-            Icon = "assets/Bosses/boss_forest_warden.svg",
+            Icon = "assets/Bosses/boss_forest_warden.png",
             MaxHp = maxHp,
             RewardXp = rewardXp,
             TimerDays = 7,

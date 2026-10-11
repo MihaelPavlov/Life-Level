@@ -59,3 +59,15 @@ flutter test
 ```
 
 For focused UI work, add or run targeted widget tests under `mobile/test/` when the behavior is user-facing or regression-prone.
+
+## Release AAB
+
+When the user asks to build or rebuild the Life-Level AAB, build the release bundle from `mobile/` with both production compile-time defines:
+
+```bash
+flutter build appbundle --release \
+  --dart-define=API_BASE_URL=https://life-level-api-latest-1779363121.onrender.com/api \
+  --dart-define=GOOGLE_SERVER_CLIENT_ID=734427785844-rr0cj9hule1q14s3ffokesosll13t8gk.apps.googleusercontent.com
+```
+
+The Google value is the web/server OAuth client ID, not the Android OAuth client ID. After the build succeeds, report the app version and verify `build/app/outputs/bundle/release/app-release.aab` with its size and SHA-256 checksum.

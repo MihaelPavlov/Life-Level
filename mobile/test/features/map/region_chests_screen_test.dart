@@ -95,10 +95,10 @@ void main() {
 
     // The ready chest takes focus first.
     expect(find.text('Forest of Endurance'), findsOneWidget);
-    expect(find.text('Region boss resolved — chest ready'), findsOneWidget);
+    expect(find.text('Chest ready · tap it to open'), findsOneWidget);
     expect(find.text('1,250'), findsOneWidget);
 
-    await tester.tap(find.text('Open chest'));
+    await tester.tap(find.bySemanticsLabel('Open the region chest'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(chests.claims, 1);
@@ -106,7 +106,6 @@ void main() {
     // Waiting on the server: the focus stays put and the wallet chips
     // haven't jumped ahead of the loot.
     expect(find.text('Forest of Endurance'), findsOneWidget);
-    expect(find.text('Opening…'), findsOneWidget);
     expect(find.text('Opening the chest…'), findsOneWidget);
     expect(find.text('1,250'), findsOneWidget);
 
@@ -122,7 +121,8 @@ void main() {
     }
     expect(find.text('1,400'), findsOneWidget);
     expect(find.text('38'), findsOneWidget);
-    expect(find.text('Claimed'), findsOneWidget);
+    // No reward row or button under the chest any more.
+    expect(find.text('Claimed'), findsNothing);
     expect(find.text('Region chest claimed'), findsOneWidget);
     // No second reveal popup any more.
     expect(find.text('You got loot!'), findsNothing);
@@ -130,19 +130,17 @@ void main() {
     expect(find.text('Forest of Endurance'), findsOneWidget);
   });
 
-  testWidgets('a failed claim leaves the chest shut and ready',
-      (tester) async {
+  testWidgets('a failed claim leaves the chest shut and ready', (tester) async {
     final chests = _FakeChests()..fail = true;
     await _pumpScreen(tester, chests);
 
-    await tester.tap(find.text('Open chest'));
+    await tester.tap(find.bySemanticsLabel('Open the region chest'));
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(chests.claims, 1);
-    expect(find.text('Open chest'), findsOneWidget);
-    expect(find.text('Claimed'), findsNothing);
-    expect(find.text('Region boss resolved — chest ready'), findsOneWidget);
+    expect(find.bySemanticsLabel('Open the region chest'), findsOneWidget);
+    expect(find.text('Chest ready · tap it to open'), findsOneWidget);
     expect(find.text('1,250'), findsOneWidget);
     // Let the error toast time out.
     await tester.pump(const Duration(seconds: 5));

@@ -52,6 +52,7 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
 
   /// The region on screen in the last build, so a claim can pin it.
   int _shownIndex = 0;
+
   /// Set from the tap until the loot lands (or the claim fails).
   String? _claimingRegionId;
 
@@ -428,7 +429,7 @@ class _RegionChestsScreenState extends ConsumerState<RegionChestsScreen> {
 
   String _claimCaption(RegionCard region, RegionChestEntry chest) {
     return switch (chest.status) {
-      RegionChestStatus.ready => 'Region boss resolved — chest ready',
+      RegionChestStatus.ready => 'Chest ready · tap it to open',
       RegionChestStatus.claimed => 'Region chest claimed',
       RegionChestStatus.locked => 'Reach ${region.name} to unlock',
       RegionChestStatus.inProgress => 'Resolve ${region.bossName} to claim',
@@ -647,7 +648,8 @@ class _RegionBanner extends StatelessWidget {
 enum _ChestPhase { idle, waiting, opening, opened }
 
 /// The focused region's chest (design: Rewards canvas, "K2 · One big
-/// chest"). A ready chest bobs; tapping it (or "Open chest") sends the claim
+/// chest"). A ready chest hops and wiggles every few seconds; tapping it
+/// sends the claim
 /// and shakes the chest while the server answers. Only a confirmed claim
 /// opens it: the lid pops, the coins and crystals rise out as two tiles and
 /// fly into the wallet chips. A failed claim leaves the chest shut.
@@ -710,8 +712,7 @@ class _ChestStageState extends State<_ChestStage>
   bool get _showOpen =>
       _phase == _ChestPhase.opening ||
       _phase == _ChestPhase.opened ||
-      (_phase == _ChestPhase.idle &&
-          chest.status == RegionChestStatus.claimed);
+      (_phase == _ChestPhase.idle && chest.status == RegionChestStatus.claimed);
 
   void _tick() => setState(() {});
 
@@ -727,8 +728,7 @@ class _ChestStageState extends State<_ChestStage>
     if (_precached) return;
     _precached = true;
     // Decode the opened art up front so the swap never shows a blank frame.
-    precacheImage(
-        const AssetImage(AppIcons.regionChestsOpened), context);
+    precacheImage(const AssetImage(AppIcons.regionChestsOpened), context);
   }
 
   @override
@@ -813,8 +813,8 @@ class _ChestStageState extends State<_ChestStage>
         delay: Duration(milliseconds: i * 100),
       ).then((_) {
         if (target != null && mounted) {
-          RewardFx.burst(context, to,
-              i == 0 ? AppColors.purple : AppColors.orange,
+          RewardFx.burst(
+              context, to, i == 0 ? AppColors.purple : AppColors.orange,
               count: 8, distance: 22);
         }
       }));
@@ -841,7 +841,17 @@ class _ChestStageState extends State<_ChestStage>
     var dy = 0.0, angle = 0.0, scale = 1.0;
     final motion = RewardFx.enabled(context);
     if (motion && _phase == _ChestPhase.idle && _ready) {
-      dy = math.sin(t) * 4;
+      // Ready: a hop and wiggle at the start of every loop, so the eye goes
+      // to it, then a gentle bob until the next one.
+      final u = _loop.value;
+      if (u < .3) {
+        final w = u / .3;
+        dy = -math.sin(math.pi * w) * 12;
+        angle = math.sin(w * math.pi * 5) * 8 * (1 - w) * math.pi / 180;
+        scale = 1 + .06 * math.sin(math.pi * w);
+      } else {
+        dy = math.sin(t) * 3;
+      }
     } else if (motion && _phase == _ChestPhase.waiting) {
       angle = math.sin(t * 9) * 6 * math.pi / 180;
       scale = .98;
@@ -910,7 +920,11 @@ class _ChestStageState extends State<_ChestStage>
                   Color(0x806EC8FF),
                   Color(0x294F9EFF),
                   Color(0x004F9EFF),
-                ], stops: [0, .45, .7]),
+                ], stops: [
+                  0,
+                  .45,
+                  .7
+                ]),
               ),
             ),
           ),
@@ -928,7 +942,11 @@ class _ChestStageState extends State<_ChestStage>
                       Color(0xF2E6F8FF),
                       Color(0x666EC8FF),
                       Color(0x006EC8FF),
-                    ], stops: [0, .35, .65]),
+                    ], stops: [
+                      0,
+                      .35,
+                      .65
+                    ]),
                   ),
                 ),
               ),
@@ -980,91 +998,6 @@ class _ChestStageState extends State<_ChestStage>
     );
   }
 
-  Widget _rewardPreview({required bool faded}) {
-    Widget item(String asset, int qty) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(asset, width: 18, height: 18),
-            const SizedBox(width: 4),
-            Text('×$qty',
-                style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white)),
-          ],
-        );
-    return Opacity(
-      opacity: faded ? .45 : 1,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          item(AppIcons.homeGemIcon, chest.gems),
-          const SizedBox(width: 12),
-          item(AppIcons.homeCoinIcon, chest.coins),
-        ],
-      ),
-    );
-  }
-
-  Widget _action() {
-    final claimed = _showOpen;
-    final waiting = _phase == _ChestPhase.waiting;
-    final Widget label;
-    if (waiting) {
-      label = const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(
-                strokeWidth: 2, color: Color(0xFF1A0F00)),
-          ),
-          SizedBox(width: 8),
-          Text('Opening…'),
-        ],
-      );
-    } else if (claimed) {
-      label = const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.check_rounded, size: 18),
-          SizedBox(width: 6),
-          Text('Claimed'),
-        ],
-      );
-    } else if (_ready) {
-      label = const Text('Open chest');
-    } else {
-      label = const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.lock_rounded, size: 16),
-          SizedBox(width: 6),
-          Text('Locked'),
-        ],
-      );
-    }
-    final active = _ready && _phase == _ChestPhase.idle;
-    return FilledButton(
-      onPressed: active ? _tapOpen : null,
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.orange,
-        foregroundColor: const Color(0xFF1A0F00),
-        disabledBackgroundColor: waiting
-            ? AppColors.orange
-            : Colors.white.withValues(alpha: .10),
-        disabledForegroundColor:
-            waiting ? const Color(0xFF1A0F00) : const Color(0xFFc9d1d9),
-        minimumSize: const Size(0, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-      ),
-      child: label,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_phase == _ChestPhase.opening) _maybeFly();
@@ -1089,22 +1022,6 @@ class _ChestStageState extends State<_ChestStage>
               _tiles(),
             ],
           ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: _rewardPreview(faded: _showOpen),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            _action(),
-          ],
         ),
       ],
     );

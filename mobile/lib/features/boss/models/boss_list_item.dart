@@ -1,3 +1,5 @@
+import '../../../core/constants/app_icons.dart';
+
 class BossListItem {
   final String id;
   final String name;
@@ -76,6 +78,10 @@ class BossListItem {
       canFight && !activated && !isDefeated && !isExpired;
 
   bool get needsAttention => isActive || isReadyToFight;
+
+  /// Compact, boss-specific artwork for lists, battle headers and overlays.
+  /// Custom bosses keep using the icon supplied by the backend.
+  String get displayIcon => AppIcons.bossMapIconForName(name) ?? icon;
 
   int get hpRemaining => maxHp - hpDealt;
 

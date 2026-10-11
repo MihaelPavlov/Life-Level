@@ -215,7 +215,7 @@ public class WorldBossBridgeServiceTests
         Assert.True(boss.SuppressExpiry);
         Assert.Null(boss.NodeId);
         Assert.Equal(fx.ForestBoss.Name, boss.Name);
-        Assert.Equal("assets/Bosses/boss_forest_warden.svg", boss.Icon);
+        Assert.Equal("assets/Bosses/boss_forest_warden.png", boss.Icon);
         Assert.Equal(fx.ForestBoss.XpReward, boss.RewardXp);
         var balance = LifeLevel.SharedKernel.Calculators.BossBalanceCalculator.ForChapter(1, 1);
         Assert.Equal(balance.MaxHp, boss.MaxHp);

@@ -120,7 +120,9 @@ class _BossSlainState extends State<_BossSlain> with TickerProviderStateMixin {
                                   0, 0, 0, 1, 0,
                                 ]),
                                 child: BossIcon(
-                                    icon: b.icon, size: 112, emojiSize: 64),
+                                    icon: b.displayIcon,
+                                    size: 112,
+                                    emojiSize: 64),
                               ),
                               Positioned.fill(
                                 child: CustomPaint(

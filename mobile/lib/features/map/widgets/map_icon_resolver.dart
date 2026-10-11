@@ -58,10 +58,9 @@ String? zoneNodeIconAsset(
     // The basic Wayfarer chest, same art as a Reward Road's first stage.
     return AppIcons.shopChestCommon;
   }
-  if (node.isBoss && _hasAny(key, ['forest warden'])) {
-    return AppIcons.bossForestWarden;
+  if (node.isBoss) {
+    return AppIcons.bossMapIconForName(node.name) ?? AppIcons.ringBoss;
   }
-  if (node.isBoss) return AppIcons.ringBoss;
   if (node.isCrossroads || _hasAny(key, ['fork', 'crossroads'])) {
     return AppIcons.zoneFirstFork;
   }

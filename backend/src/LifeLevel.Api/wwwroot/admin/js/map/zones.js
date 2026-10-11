@@ -180,12 +180,27 @@
     updateBossArtPreview();
   }
 
-  const FOREST_WARDEN_ART = 'assets/Bosses/boss_forest_warden.svg';
+  const BOSS_ART = Object.freeze({
+    'forest warden': 'assets/Bosses/icons/boss_forest_warden_icon.png',
+    'tide sovereign': 'assets/Bosses/icons/boss_tide_sovereign_icon.png',
+    'stone titan': 'assets/Bosses/icons/boss_stone_titan_icon.png',
+    'molten king': 'assets/Bosses/icons/boss_molten_king_icon.png',
+    'hoarfrost queen': 'assets/Bosses/icons/boss_hoarfrost_queen_icon.png',
+    'dune pharaoh': 'assets/Bosses/icons/boss_dune_pharaoh_icon.png',
+    'bramble lord': 'assets/Bosses/icons/boss_bramble_lord_icon.png',
+    'pearl leviathan': 'assets/Bosses/icons/boss_pearl_leviathan_icon.png',
+    'storm sovereign': 'assets/Bosses/icons/boss_storm_sovereign_icon.png',
+    'cinder archon': 'assets/Bosses/icons/boss_cinder_archon_icon.png',
+    'deepfrost wyrm': 'assets/Bosses/icons/boss_deepfrost_wyrm_icon.png',
+    'sand kaiser': 'assets/Bosses/icons/boss_sand_kaiser_icon.png',
+    'thornwarden': 'assets/Bosses/icons/boss_thornwarden_icon.png',
+    'maw of the deep': 'assets/Bosses/icons/boss_abyssal_maw_icon.png',
+    'worldflame': 'assets/Bosses/icons/boss_worldflame_icon.png',
+  });
 
   function bossVisual(name, emoji) {
-    if (String(name || '').trim().toLowerCase() === 'forest warden') {
-      return { assetPath: FOREST_WARDEN_ART, emoji: '' };
-    }
+    const assetPath = BOSS_ART[String(name || '').trim().toLowerCase()];
+    if (assetPath) return { assetPath, emoji: '' };
     return { assetPath: '', emoji: String(emoji || '').trim() || '👹' };
   }
 
