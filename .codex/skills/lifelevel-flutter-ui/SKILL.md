@@ -64,6 +64,8 @@ For focused UI work, add or run targeted widget tests under `mobile/test/` when 
 
 When the user asks to build or rebuild the Life-Level AAB, build the release bundle from `mobile/` with both production compile-time defines:
 
+For ordinary version bumps, keep the semantic app version unchanged and increment only the Android/iOS build number after `+`. For example, `1.0.2+31` becomes `1.0.2+32`, then `1.0.2+33`. Change `1.0.2` only when the user explicitly requests a semantic version change.
+
 ```bash
 flutter build appbundle --release \
   --dart-define=API_BASE_URL=https://life-level-api-latest-1779363121.onrender.com/api \
