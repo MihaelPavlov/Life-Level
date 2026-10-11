@@ -5,6 +5,7 @@ using LifeLevel.Modules.Integrations.Application.UseCases;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using LifeLevel.SharedKernel.Abstractions;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.Extensions.Options;
 using System.Net;
 
@@ -27,9 +28,31 @@ public class StravaOAuthServiceTests
         return new AppDbContext(options);
     }
 
-    private static StravaOAuthService CreateService(AppDbContext db, HttpClient? http = null)
+    private static StravaOAuthService CreateService(
+        AppDbContext db,
+        HttpClient? http = null,
+        IItemRewardGrantPort? itemRewards = null)
     {
-        return new StravaOAuthService(db, http ?? new HttpClient(), Options.Create(TestOptions));
+        return new StravaOAuthService(
+            db, http ?? new HttpClient(), Options.Create(TestOptions), itemRewards);
+    }
+
+    [Fact]
+    public async Task ConnectAsync_GrantsStravaBadge_ForOnboardingGearUnlock()
+    {
+        await using var db = CreateDb(Guid.NewGuid().ToString());
+        using var http = new HttpClient(new TokenHandler("activity:read_all"));
+        var rewards = new RecordingItemRewards();
+        var service = CreateService(db, http, rewards);
+        var userId = Guid.NewGuid();
+
+        await service.ConnectAsync(userId,
+            new("code", "lifelevel://oauth/strava"));
+
+        Assert.Equal(userId, rewards.UserId);
+        Assert.Equal(
+            new Guid("10000000-0000-0000-0000-000000000011"),
+            rewards.ItemId);
     }
 
     [Theory]
@@ -66,6 +89,20 @@ public class StravaOAuthServiceTests
                     {"access_token":"token","refresh_token":"refresh","expires_at":1791017821,"athlete":{"id":123,"firstname":"Test","lastname":"Athlete"},"scope":"{{scope}}"}
                     """),
             });
+    }
+
+    private sealed class RecordingItemRewards : IItemRewardGrantPort
+    {
+        public Guid? UserId { get; private set; }
+        public Guid? ItemId { get; private set; }
+
+        public Task<string?> GrantAsync(
+            Guid userId, Guid itemId, CancellationToken ct = default)
+        {
+            UserId = userId;
+            ItemId = itemId;
+            return Task.FromResult<string?>("Strava Sync Badge");
+        }
     }
 
     // ── GetStatusAsync ───────────────────────────────────────────────────────

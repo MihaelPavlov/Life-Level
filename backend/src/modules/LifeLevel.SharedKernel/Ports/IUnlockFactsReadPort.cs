@@ -21,4 +21,5 @@ public record UnlockFacts(
     DateTime? CharacterCreatedAt = null,
     int TitlesEarned = 0,
     bool RankReached = false,
-    bool HasCompletedRegion = false);
+    bool HasCompletedRegion = false,
+    int HistoryImportLevel = 0);

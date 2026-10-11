@@ -49,10 +49,17 @@ public sealed class UnlockFactsReadAdapter(AppDbContext db) : IUnlockFactsReadPo
         var titlesEarned = await db.Set<CharacterTitle>().AsNoTracking()
             .CountAsync(t => t.CharacterId == character.Id && t.TitleId != tutorialTitleId, ct);
         var rankReached = !string.IsNullOrEmpty(character.Rank) && character.Rank != "Novice";
+        // A registration-history import can jump several levels in one award. Keep the
+        // level reached by that one-time import so guided unlocks can catch up without
+        // removing the normal one-tier-per-workout pacing for later levels.
+        var historyImportLevel = await db.Set<LevelUpReceipt>().AsNoTracking()
+            .Where(r => r.UserId == userId && r.Source == "HistoryImport")
+            .Select(r => (int?)r.NewLevel)
+            .MaxAsync(ct) ?? 0;
 
         return new UnlockFacts(
             character.IsSetupComplete, activityCount, hasDistance, itemCount,
             zonesReached, character.Level, longestStreak, bossSeen, character.CreatedAt,
-            titlesEarned, rankReached, hasCompletedRegion);
+            titlesEarned, rankReached, hasCompletedRegion, historyImportLevel);
     }
 }

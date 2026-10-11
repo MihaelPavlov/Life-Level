@@ -4,6 +4,7 @@ using LifeLevel.Modules.Integrations.Application.DTOs;
 using LifeLevel.Modules.Integrations.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using LifeLevel.SharedKernel.Abstractions;
+using LifeLevel.SharedKernel.Ports;
 using Microsoft.Extensions.Options;
 
 namespace LifeLevel.Modules.Integrations.Application.UseCases;
@@ -11,8 +12,11 @@ namespace LifeLevel.Modules.Integrations.Application.UseCases;
 public class StravaOAuthService(
     DbContext db,
     HttpClient http,
-    IOptions<StravaOptions> opts)
+    IOptions<StravaOptions> opts,
+    IItemRewardGrantPort? itemRewards = null)
 {
+    private static readonly Guid StravaSyncBadgeId =
+        new("10000000-0000-0000-0000-000000000011");
     private readonly StravaOptions _opts = opts.Value;
 
     public async Task<StravaStatusDto> GetStatusAsync(Guid userId, CancellationToken ct = default)
@@ -95,6 +99,10 @@ public class StravaOAuthService(
         existing.IsActive = true;
 
         await db.SaveChangesAsync(ct);
+        // This catalog reward is part of connecting Strava, including during
+        // registration onboarding. The grant is idempotent, so reconnects are safe.
+        if (itemRewards is not null)
+            await itemRewards.GrantAsync(userId, StravaSyncBadgeId, ct);
         return new StravaStatusDto(true, existing.AthleteName, existing.StravaAthleteId, existing.ConnectedAt);
     }
 

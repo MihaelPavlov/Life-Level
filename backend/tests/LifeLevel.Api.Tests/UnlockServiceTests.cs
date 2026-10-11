@@ -151,12 +151,25 @@ public class UnlockServiceTests
     [InlineData("gear", 2, true)]
     [InlineData("shields", 2, false)]
     [InlineData("chests", 3, false)]
-    [InlineData("bosses", 4, true)]
     public void ActionsWaitForTheirLevel(string key, int level, bool unlocked)
     {
         var def = UnlockService.Catalog.Single(d => d.Key == key);
         var did = NewPlayer with { ItemCount = 1, LongestStreak = 5, ZonesReached = 3, BossSeen = true, Level = level };
         Assert.Equal(unlocked, def.IsMet(did));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public void Bosses_OpenOnFirstBossSeen_AtAnyLevel(bool bossSeen, bool unlocked)
+    {
+        var def = UnlockService.Catalog.Single(d => d.Key == "bosses");
+
+        Assert.Equal(unlocked, def.IsMet(NewPlayer with
+        {
+            Level = 1,
+            BossSeen = bossSeen,
+        }));
     }
 
     [Theory]
@@ -194,6 +207,27 @@ public class UnlockServiceTests
         Assert.False(list.Single(u => u.Key == "map").Seen);
         Assert.True(list.Single(u => u.Key == "chests").Unlocked);
         Assert.False(list.Single(u => u.Key == "chests").Seen);
+    }
+
+    [Fact]
+    public async Task FirstBossSeen_UnlocksBossesImmediately_DespiteLevelAndPendingPacedUnlock()
+    {
+        await using var db = CreateDb();
+        var facts = new FixedFacts(NewPlayer);
+        var service = new UnlockService(db, facts, new RecordingCoins());
+        var userId = Guid.NewGuid();
+        await service.GetAsync(userId);
+
+        facts.Value = NewPlayer with { ActivityCount = 1, HasDistance = true };
+        await service.GetAsync(userId); // Map ceremony is still unseen.
+
+        facts.Value = facts.Value with { BossSeen = true, Level = 1 };
+        var list = (await service.GetAsync(userId)).Unlocks;
+
+        Assert.True(list.Single(u => u.Key == "map").Unlocked);
+        Assert.False(list.Single(u => u.Key == "map").Seen);
+        Assert.True(list.Single(u => u.Key == "bosses").Unlocked);
+        Assert.False(list.Single(u => u.Key == "bosses").Seen);
     }
 
     [Fact]
@@ -237,20 +271,46 @@ public class UnlockServiceTests
     }
 
     [Fact]
-    public async Task NewPlayerWithImportedHistory_GetsTierOneFirst()
+    public async Task NewPlayerWithImportedHistory_GetsEveryEarnedFeatureForSequentialTutorials()
     {
         await using var db = CreateDb();
         var imported = NewPlayer with
         {
-            ActivityCount = 12, HasDistance = true, Level = 3,
+            ActivityCount = 12, HasDistance = true, ItemCount = 1, Level = 3,
+            HistoryImportLevel = 3,
             CharacterCreatedAt = UnlockService.BackFillBefore.AddDays(1),
         };
         var service = new UnlockService(db, new FixedFacts(imported), new RecordingCoins());
 
         var list = (await service.GetAsync(Guid.NewGuid())).Unlocks;
 
-        Assert.Equal(["home", "map"], list.Where(u => u.Unlocked).Select(u => u.Key));
+        Assert.Equal(
+            ["home", "map", "achievements", "gear", "talents"],
+            list.Where(u => u.Unlocked).Select(u => u.Key));
         Assert.All(list.Where(u => u.Unlocked), u => Assert.False(u.Seen || u.Toured, u.Key));
+    }
+
+    [Fact]
+    public async Task ImportedHeadStart_DoesNotRemovePacingForLaterLevels()
+    {
+        await using var db = CreateDb();
+        var facts = new FixedFacts(NewPlayer with
+        {
+            ActivityCount = 12, HasDistance = true, Level = 3,
+            HistoryImportLevel = 3,
+            CharacterCreatedAt = UnlockService.BackFillBefore.AddDays(1),
+        });
+        var service = new UnlockService(db, facts, new RecordingCoins());
+        var userId = Guid.NewGuid();
+
+        await service.GetAsync(userId);
+        foreach (var key in new[] { "home", "map", "achievements", "talents" })
+            await service.MarkSeenAsync(userId, key);
+
+        facts.Value = facts.Value with { Level = 6 };
+        var list = (await service.GetAsync(userId)).Unlocks;
+
+        Assert.False(list.Single(u => u.Key == "leaderboard").Unlocked);
     }
 
     [Fact]

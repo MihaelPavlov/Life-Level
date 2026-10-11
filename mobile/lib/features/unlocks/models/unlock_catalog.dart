@@ -175,9 +175,8 @@ const kUnlockCatalog = <String, UnlockMeta>{
         'Your boss fights live in the Adventure Hub. Every workout deals damage.',
     perkIcon: AppIcons.ringBoss,
     perk: 'A boss is waiting for you',
-    lockedHint: 'Reach Level 4 and a boss zone to unlock',
+    lockedHint: 'Reach your first boss zone to unlock',
     tier: 4,
-    requiredLevel: 4,
     need: 'Meet a boss',
   ),
   UnlockKeys.ranks: UnlockMeta(

@@ -72,7 +72,9 @@ void main() {
     }
   });
 
-  test('sequence tiers match server while chests are not level-gated', () {
+  test(
+      'sequence tiers match server while milestone unlocks are not level-gated',
+      () {
     // Server: UnlockService.Catalog.
     const tiers = {
       'home': 1,
@@ -91,7 +93,8 @@ void main() {
     };
     expect({for (final m in kUnlockCatalog.values) m.key: m.tier}, tiers);
     expect(kUnlockCatalog[UnlockKeys.chests]!.requiredLevel, isNull);
-    expect(unlocksAtLevel(4).map((m) => m.key), ['bosses']);
+    expect(kUnlockCatalog[UnlockKeys.bosses]!.requiredLevel, isNull);
+    expect(unlocksAtLevel(4), isEmpty);
     for (final t in tiers.values.toSet()) {
       expect(unlocksAtLevel(t).length, lessThanOrEqualTo(2),
           reason: 'level $t');

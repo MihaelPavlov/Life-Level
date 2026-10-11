@@ -50,7 +50,10 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, IRewardCurr
         new("shields", 3, f => f.LongestStreak >= 3),
         new("chests", 4, f => f.HasCompletedRegion,
             RequiresTierLevel: false, ReleaseImmediately: true),
-        new("bosses", 4, f => f.BossSeen),
+        // Meeting the first boss is the milestone. Do not make the player
+        // level up or log another workout after physically reaching it.
+        new("bosses", 4, f => f.BossSeen,
+            RequiresTierLevel: false, ReleaseImmediately: true),
         new("ranks", 5, f => f.RankReached || f.TitlesEarned >= 1),
         new("leaderboard", 6, _ => true),
         new("guild", 8, _ => true),
@@ -80,9 +83,19 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, IRewardCurr
         var candidates = Catalog.Where(d => d.IsMet(f) && rows.All(r => r.Key != d.Key)).ToList();
         if (!backFill)
         {
+            // Registration history is awarded as one multi-level XP event. Release every
+            // feature earned inside that imported level range together so the phone can
+            // play their ceremonies/tours sequentially. Features reached after onboarding
+            // still use the normal paced path below.
+            var imported = candidates.Where(d =>
+                d.RequiresTierLevel &&
+                f.HistoryImportLevel > 0 &&
+                d.Tier <= f.HistoryImportLevel);
             var immediate = candidates.Where(d => d.ReleaseImmediately);
-            var paced = Releasable(candidates.Where(d => !d.ReleaseImmediately).ToList(), rows, f);
-            candidates = Catalog.Where(d => immediate.Contains(d) || paced.Contains(d)).ToList();
+            var paced = Releasable(candidates.Where(d =>
+                !d.ReleaseImmediately && !imported.Contains(d)).ToList(), rows, f);
+            candidates = Catalog.Where(d =>
+                imported.Contains(d) || immediate.Contains(d) || paced.Contains(d)).ToList();
         }
 
         var added = false;
