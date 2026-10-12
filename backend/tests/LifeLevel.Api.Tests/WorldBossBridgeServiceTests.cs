@@ -271,7 +271,7 @@ public class WorldBossBridgeServiceTests
 
         Assert.Equal(oldHp / 2, boss.MaxHp);
         Assert.Equal(oldHp / 2, state.MaxHpSnapshot);
-        Assert.Equal(oldHp / 8, state.HpDealt);
+        Assert.Equal((int)Math.Round((oldHp / 2) * (oldHp / 4.0) / oldHp), state.HpDealt);
 
         // An explicit per-zone HP override is authoritative on subsequent
         // bridge reads; the chapter formula does not replace it.

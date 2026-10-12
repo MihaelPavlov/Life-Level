@@ -47,8 +47,8 @@ public static class BossBalanceCalculator
         // for a full week of workouts. Later chapters remain endurance fights.
         var targetTurns = chapter switch
         {
-            1 => 4,
-            2 or 3 => 5,
+            1 or 2 => 3,
+            3 => 5,
             4 => 6,
             <= 10 => 10,
             _ => 12,

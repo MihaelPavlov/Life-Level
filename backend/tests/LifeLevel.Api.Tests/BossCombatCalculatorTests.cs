@@ -21,8 +21,8 @@ public class BossCombatCalculatorTests
     }
 
     [Theory]
-    [InlineData(1, 1, 4, 8)]
-    [InlineData(2, 8, 5, 8)]
+    [InlineData(1, 1, 3, 8)]
+    [InlineData(2, 8, 3, 8)]
     [InlineData(3, 15, 5, 8)]
     [InlineData(4, 25, 6, 8)]
     [InlineData(5, 32, 10, 7)]
@@ -54,8 +54,8 @@ public class BossCombatCalculatorTests
     }
 
     [Theory]
-    [InlineData(1, 1, 912)]
-    [InlineData(2, 8, 1240)]
+    [InlineData(1, 1, 684)]
+    [InlineData(2, 8, 744)]
     [InlineData(3, 15, 1325)]
     [InlineData(4, 25, 1740)]
     public void EarlyChapterHp_MatchesExistingWorldBackfillValues(
