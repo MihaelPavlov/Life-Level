@@ -48,6 +48,7 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
     duration: const Duration(milliseconds: 120),
   );
   JourneyKind? _lastKind;
+  JourneyOrbState? _lastReady;
   Timer? _countdown;
 
   @override
@@ -103,7 +104,15 @@ class _MapOrbButtonState extends ConsumerState<MapOrbButton>
 
   @override
   Widget build(BuildContext context) {
-    final live = ref.watch(journeyOrbStateProvider);
+    final current = ref.watch(journeyOrbStateProvider);
+    if (current.kind != JourneyKind.error &&
+        current.kind != JourneyKind.loading) {
+      _lastReady = current;
+    }
+    final live = (current.kind == JourneyKind.error ||
+            current.kind == JourneyKind.loading)
+        ? (_lastReady ?? current)
+        : current;
     final world = ref.watch(worldProgressProvider).valueOrNull;
     final activeBoss = ref
         .watch(bossListProvider)

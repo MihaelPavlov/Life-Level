@@ -18,9 +18,11 @@ class AppIcons {
   static const String navMode = 'assets/icons/nav_mode.png';
 
   // ── Game Modes (Mode tab banners) ─────────────────────────────────────────
-  static const String modeBurnChainBanner = 'assets/Modes/banner_burn_chain.jpg';
+  static const String modeBurnChainBanner =
+      'assets/Modes/banner_burn_chain.jpg';
   static const String modeTreasureDelveBanner =
       'assets/Modes/banner_treasure_delve.jpg';
+
   /// Hero render cropped to the character, so it centres exactly on a
   /// leaderboard pedestal (243x600, feet on the bottom edge).
   static const String leaderboardHero = 'assets/Leaderboard/hero_podium.png';
@@ -37,32 +39,23 @@ class AppIcons {
   static const String bossForestWarden = 'assets/Bosses/boss_forest_warden.png';
   static const String bossTideSovereign =
       'assets/Bosses/boss_tide_sovereign.png';
-  static const String bossStoneTitan =
-      'assets/Bosses/boss_stone_titan.png';
-  static const String bossMoltenKing =
-      'assets/Bosses/boss_molten_king.png';
+  static const String bossStoneTitan = 'assets/Bosses/boss_stone_titan.png';
+  static const String bossMoltenKing = 'assets/Bosses/boss_molten_king.png';
   static const String bossHoarfrostQueen =
       'assets/Bosses/boss_hoarfrost_queen.png';
-  static const String bossDunePharaoh =
-      'assets/Bosses/boss_dune_pharaoh.png';
-  static const String bossBrambleLord =
-      'assets/Bosses/boss_bramble_lord.png';
+  static const String bossDunePharaoh = 'assets/Bosses/boss_dune_pharaoh.png';
+  static const String bossBrambleLord = 'assets/Bosses/boss_bramble_lord.png';
   static const String bossPearlLeviathan =
       'assets/Bosses/boss_pearl_leviathan.png';
   static const String bossStormSovereign =
       'assets/Bosses/boss_storm_sovereign.png';
-  static const String bossCinderArchon =
-      'assets/Bosses/boss_cinder_archon.png';
+  static const String bossCinderArchon = 'assets/Bosses/boss_cinder_archon.png';
   static const String bossDeepfrostWyrm =
       'assets/Bosses/boss_deepfrost_wyrm.png';
-  static const String bossSandKaiser =
-      'assets/Bosses/boss_sand_kaiser.png';
-  static const String bossThornwarden =
-      'assets/Bosses/boss_thornwarden.png';
-  static const String bossMawOfTheDeep =
-      'assets/Bosses/boss_abyssal_maw.png';
-  static const String bossWorldflame =
-      'assets/Bosses/boss_worldflame.png';
+  static const String bossSandKaiser = 'assets/Bosses/boss_sand_kaiser.png';
+  static const String bossThornwarden = 'assets/Bosses/boss_thornwarden.png';
+  static const String bossMawOfTheDeep = 'assets/Bosses/boss_abyssal_maw.png';
+  static const String bossWorldflame = 'assets/Bosses/boss_worldflame.png';
 
   static const Map<String, String> bossByName = {
     'forest warden': bossForestWarden,
@@ -326,6 +319,8 @@ class AppIcons {
   static const String homeSwordRender = 'assets/Home/sword_render.png';
   static const String homeMountIcon = 'assets/Home/mount_icon.png';
   static const String homeSwordIcon = 'assets/Home/sword_icon.png';
+  static const String homeEmptyMountIcon = 'assets/Home/home_mount_empty.png';
+  static const String homeEmptyWeaponIcon = 'assets/Home/home_weapon_empty.png';
   static const String homeCoinIcon = 'assets/Home/coin_icon.png';
   static const String homeGemIcon = 'assets/Home/gem_icon.png';
   static const String homeStepsIcon = 'assets/Home/steps_icon.png';

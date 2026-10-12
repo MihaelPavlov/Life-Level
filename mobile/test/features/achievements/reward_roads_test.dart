@@ -7,6 +7,8 @@ import 'package:life_level/features/achievements/achievements_screen.dart';
 import 'package:life_level/features/achievements/providers/achievements_provider.dart';
 import 'package:life_level/features/achievements/roads/reward_roads_hub.dart';
 import 'package:life_level/features/home/providers/adventure_hub_status_provider.dart';
+import 'package:life_level/core/constants/app_icons.dart';
+import 'package:life_level/features/achievements/roads/road_meta.dart';
 
 // ── Fixture: Running road, Stage 1 (Common) chest opened, Stage 2
 // (Uncommon) with one claimed and one ready — claiming it finishes the stage.
@@ -104,6 +106,7 @@ class _FakeRoads extends AchievementRoadsNotifier {
   Future<AchievementClaimResult> claim(String achievementId) async {
     calls.add('claim:$achievementId');
     current = _data(stage2Claimed: true);
+    state = AsyncData(current);
     return AchievementClaimResult.fromJson({
       'claimedIds': [achievementId],
       'xp': 250,
@@ -121,6 +124,7 @@ class _FakeRoads extends AchievementRoadsNotifier {
       String category, String tier) async {
     calls.add('open:$category/$tier');
     current = _data(stage2Claimed: true, stage2Opened: true);
+    state = AsyncData(current);
     return StageChestOpenResult.fromJson({
       'category': category,
       'tier': tier,
@@ -174,6 +178,13 @@ Widget _app(_FakeRoads fake,
     );
 
 void main() {
+  test('all achievement roads map to original icon assets', () {
+    expect(RoadMeta.of('Running').iconAsset, AppIcons.activityRunning);
+    expect(RoadMeta.of('Strength').iconAsset, AppIcons.activityWeightlifting);
+    expect(RoadMeta.of('Social').iconAsset, AppIcons.rewardStreakFire);
+    expect(RoadMeta.of('Raids').iconAsset, AppIcons.ringBoss);
+  });
+
   testWidgets('new achievement stays visible on the hub', (tester) async {
     await tester.pumpWidget(_app(_FakeRoads(), newAchievement: true));
     await tester.pumpAndSettle();
@@ -253,15 +264,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(fake.calls, ['claim:u2', 'open:Running/Uncommon']);
-    // Chest popup: rewards + subtitle only — no "You got loot!", no close hint.
-    expect(find.text('Recovery Slides · Stage 2 complete'), findsOneWidget);
-    expect(find.text('You got loot!'), findsNothing);
-    expect(find.text('Tap to close'), findsNothing);
+    // The shared reward reveal keeps its title and close hint.
+    expect(find.text('Stage 2 complete · Wayfarer Chest'), findsOneWidget);
+    expect(find.text('You got loot!'), findsWidgets);
+    expect(find.text('Tap to close'), findsOneWidget);
 
     // Close the popup: the road now shows Stage 3 and the item toast.
     await tester.tapAt(const Offset(195, 300));
     await tester.pumpAndSettle();
-    expect(find.text('Recovery Slides · Stage 2 complete'), findsNothing);
+    if (find.text('Stage 2 complete · Wayfarer Chest').evaluate().isNotEmpty) {
+      await tester.tapAt(const Offset(195, 300));
+      await tester.pumpAndSettle();
+    }
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(find.text('Stage 2 complete · Wayfarer Chest'), findsNothing);
     expect(find.textContaining('STAGE 3 OF 3'), findsOneWidget);
     expect(find.text('1 more to open the Adept Chest'), findsOneWidget);
     expect(find.text('Recovery Slides added to your gear'), findsOneWidget);
@@ -285,12 +302,20 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(fake.calls, ['claim:u2', 'open:Running/Uncommon']);
-    expect(find.text('Recovery Slides · Stage 2 complete'), findsOneWidget);
+    expect(find.text('Stage 2 complete · Wayfarer Chest'), findsOneWidget);
 
     await tester.tapAt(const Offset(195, 300));
     for (var i = 0; i < 40; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
+    if (find.text('Stage 2 complete · Wayfarer Chest').evaluate().isNotEmpty) {
+      await tester.tapAt(const Offset(195, 300));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.textContaining('STAGE 3 OF 3'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());

@@ -287,13 +287,18 @@ class _RewardRoadScreenState extends ConsumerState<RewardRoadScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                       Expanded(
-                        child: Text('${meta.emoji} ${meta.name}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary)),
+                        child: Row(children: [
+                          Image.asset(meta.iconAsset, width: 28, height: 28),
+                          const SizedBox(width: 8),
+                          Expanded(
+                              child: Text(meta.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary))),
+                        ]),
                       ),
                       if (data != null)
                         RoadWallet(

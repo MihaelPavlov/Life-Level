@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../models/achievement_models.dart';
 
 /// Display data for a road (achievement category).
 class RoadMeta {
   final String name;
-  final String emoji;
+  final String iconAsset;
   final Color color;
-  const RoadMeta(this.name, this.emoji, this.color);
+  const RoadMeta(this.name, this.iconAsset, this.color);
 
   static RoadMeta of(String category) => switch (category) {
-        'Running' => const RoadMeta('Running', '🏃', AppColors.blue),
-        'Strength' => const RoadMeta('Strength', '🏋️', AppColors.red),
+        'Running' =>
+          const RoadMeta('Running', AppIcons.activityRunning, AppColors.blue),
+        'Strength' => const RoadMeta(
+            'Strength', AppIcons.activityWeightlifting, AppColors.red),
         // The Social category holds the streak achievements.
-        'Social' => const RoadMeta('Streaks', '🔥', AppColors.orange),
-        'Raids' => const RoadMeta('Raids', '⚔️', AppColors.purple),
-        _ => RoadMeta(category, '🏅', AppColors.textSecondary),
+        'Social' => const RoadMeta(
+            'Streaks', AppIcons.rewardStreakFire, AppColors.orange),
+        'Raids' => const RoadMeta('Raids', AppIcons.ringBoss, AppColors.purple),
+        _ =>
+          RoadMeta(category, AppIcons.rewardGrantItem, AppColors.textSecondary),
       };
 }
 

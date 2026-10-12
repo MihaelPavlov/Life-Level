@@ -251,6 +251,37 @@ public class WorldBossBridgeServiceTests
     }
 
     [Fact]
+    public async Task EnsureSpawned_RebalancePreservesUnfinishedProgressAndCustomZoneHp()
+    {
+        var db = CreateDb(nameof(EnsureSpawned_RebalancePreservesUnfinishedProgressAndCustomZoneHp));
+        var fx = await SeedBossWorldAsync(db, "rebalance_progress");
+        var bridge = CreateBridge(db);
+        var bossId = await bridge.EnsureSpawnedAsync(fx.UserId, fx.ForestBoss.Id);
+        var boss = await db.Bosses.SingleAsync(b => b.Id == bossId);
+        var state = await db.UserBossStates.SingleAsync(s => s.BossId == bossId);
+        var oldHp = boss.MaxHp;
+
+        state.MaxHpSnapshot = oldHp;
+        state.HpDealt = oldHp / 4;
+        state.StartedAt = DateTime.UtcNow;
+        fx.ForestBoss.BossMaxHp = oldHp / 2;
+        await db.SaveChangesAsync();
+
+        await bridge.EnsureSpawnedAsync(fx.UserId, fx.ForestBoss.Id);
+
+        Assert.Equal(oldHp / 2, boss.MaxHp);
+        Assert.Equal(oldHp / 2, state.MaxHpSnapshot);
+        Assert.Equal(oldHp / 8, state.HpDealt);
+
+        // An explicit per-zone HP override is authoritative on subsequent
+        // bridge reads; the chapter formula does not replace it.
+        fx.ForestBoss.BossMaxHp = 777;
+        await db.SaveChangesAsync();
+        await bridge.EnsureSpawnedAsync(fx.UserId, fx.ForestBoss.Id);
+        Assert.Equal(777, boss.MaxHp);
+    }
+
+    [Fact]
     public async Task GetBosses_UnstartedSpawnedBoss_ShowsFullPlayerHp()
     {
         var db = CreateDb(nameof(GetBosses_UnstartedSpawnedBoss_ShowsFullPlayerHp));

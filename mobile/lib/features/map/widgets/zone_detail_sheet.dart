@@ -739,11 +739,11 @@ class _DestinationCtaButtonState extends State<_DestinationCtaButton> {
   @override
   Widget build(BuildContext context) {
     return _CtaButton(
-      label: widget.label,
+      label: _submitting ? 'Setting destination…' : widget.label,
       color: widget.color,
       onTap: _submitting ? null : _submit,
       disabled: _submitting || widget.onPressed == null,
-      loading: false,
+      loading: _submitting,
     );
   }
 }

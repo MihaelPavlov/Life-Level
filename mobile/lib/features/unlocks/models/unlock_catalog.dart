@@ -160,9 +160,8 @@ const kUnlockCatalog = <String, UnlockMeta>{
     line: 'A shield saves your streak on a day you can’t train.',
     perkIcon: AppIcons.rewardStreakShield,
     perk: 'First shield at day 7',
-    lockedHint: 'Reach Level 3 and keep a 3-day streak to unlock',
+    lockedHint: 'Keep a 3-day streak to unlock',
     tier: 3,
-    requiredLevel: 3,
     need: 'Keep a 3-day streak',
   ),
   UnlockKeys.bosses: UnlockMeta(

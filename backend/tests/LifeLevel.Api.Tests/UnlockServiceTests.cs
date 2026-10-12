@@ -69,22 +69,25 @@ public class UnlockServiceTests
         await service.GetAsync(userId);
         await service.MarkSeenAsync(userId, "map");
 
-        // One big workout: Level 3 with an item and a 3-day streak qualifies tiers 2 and 3.
+        // Shields unlock as soon as the streak reaches three days; the
+        // level-gated talents feature still follows normal pacing.
         facts.Value = NewPlayer with { ActivityCount = 2, HasDistance = true, ItemCount = 1, Level = 3, LongestStreak = 3 };
         var list = (await service.GetAsync(userId)).Unlocks;
-        Assert.Equal(["home", "map", "achievements", "gear"], list.Where(u => u.Unlocked).Select(u => u.Key));
+        Assert.Equal(["home", "map", "achievements", "gear", "shields"], list.Where(u => u.Unlocked).Select(u => u.Key));
 
         // Ceremonies still unseen: nothing else is released.
         await service.MarkSeenAsync(userId, "achievements");
         list = (await service.GetAsync(userId)).Unlocks;
         Assert.False(list.Single(u => u.Key == "talents").Unlocked);
 
-        // Queue empty, but no new workout yet: tier 3 waits.
+        // Once the queue is seen, the already open shield tier releases its
+        // partner Talent unlock without another workout.
         await service.MarkSeenAsync(userId, "gear");
+        await service.MarkSeenAsync(userId, "shields");
         list = (await service.GetAsync(userId)).Unlocks;
-        Assert.False(list.Single(u => u.Key == "talents").Unlocked);
+        Assert.True(list.Single(u => u.Key == "talents").Unlocked);
 
-        // The next workout opens tier 3, both features together.
+        // More workouts do not create another shield unlock.
         facts.Value = facts.Value with { ActivityCount = 3 };
         list = (await service.GetAsync(userId)).Unlocks;
         Assert.True(list.Single(u => u.Key == "talents").Unlocked);
@@ -149,13 +152,22 @@ public class UnlockServiceTests
     [Theory]
     [InlineData("gear", 1, false)]
     [InlineData("gear", 2, true)]
-    [InlineData("shields", 2, false)]
+    [InlineData("shields", 2, true)]
     [InlineData("chests", 3, false)]
     public void ActionsWaitForTheirLevel(string key, int level, bool unlocked)
     {
         var def = UnlockService.Catalog.Single(d => d.Key == key);
         var did = NewPlayer with { ItemCount = 1, LongestStreak = 5, ZonesReached = 3, BossSeen = true, Level = level };
         Assert.Equal(unlocked, def.IsMet(did));
+    }
+
+    [Fact]
+    public void Shields_RequireOnlyThreeDayStreak()
+    {
+        var def = UnlockService.Catalog.Single(d => d.Key == "shields");
+        Assert.False(def.IsMet(NewPlayer with { LongestStreak = 2 }));
+        Assert.True(def.IsMet(NewPlayer with { Level = 1, LongestStreak = 3 }));
+        Assert.True(def.ReleaseImmediately);
     }
 
     [Theory]

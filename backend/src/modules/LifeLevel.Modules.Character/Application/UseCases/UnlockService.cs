@@ -47,7 +47,8 @@ public class UnlockService(DbContext db, IUnlockFactsReadPort facts, IRewardCurr
         new("achievements", 2, f => f.ActivityCount >= 1),
         new("gear", 2, f => f.ItemCount >= 1),
         new("talents", 3, _ => true),
-        new("shields", 3, f => f.LongestStreak >= 3),
+        new("shields", 3, f => f.LongestStreak >= 3,
+            RequiresTierLevel: false, ReleaseImmediately: true),
         new("chests", 4, f => f.HasCompletedRegion,
             RequiresTierLevel: false, ReleaseImmediately: true),
         // Meeting the first boss is the milestone. Do not make the player

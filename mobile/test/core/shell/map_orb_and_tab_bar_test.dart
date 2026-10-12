@@ -70,6 +70,14 @@ const _bossRaid = JourneyOrbState(
   semantics: 'Boss fight, Forest Warden at 50% health',
 );
 
+const _retry = JourneyOrbState(
+  kind: JourneyKind.error,
+  color: AppColors.textSecondary,
+  ring: JourneyRing.dashed,
+  label: 'Retry',
+  semantics: 'Map could not load, tap to retry',
+);
+
 void main() {
   testWidgets('map button shows the journey label and taps through',
       (tester) async {
@@ -88,6 +96,30 @@ void main() {
     await tester.tap(find.byType(MapOrbButton));
     await tester.pump(const Duration(milliseconds: 200));
     expect(taps, 1);
+  });
+
+  testWidgets(
+      'map button keeps last journey during a transient refresh failure',
+      (tester) async {
+    final state = StateProvider<JourneyOrbState>((ref) => _traveling);
+    await tester.pumpWidget(_app(MapOrbButton(open: false, onTap: () {}),
+        overrides: [
+          journeyOrbStateProvider.overrideWith((ref) => ref.watch(state))
+        ]));
+    await tester.pump();
+    final container =
+        ProviderScope.containerOf(tester.element(find.byType(MapOrbButton)));
+    expect(find.text('1.4 km'), findsOneWidget);
+
+    container.read(state.notifier).state = _retry;
+    await tester.pump();
+    expect(find.text('1.4 km'), findsOneWidget);
+    expect(find.text('Retry'), findsNothing);
+
+    container.read(state.notifier).state = _crossroads;
+    await tester.pump();
+    expect(find.text('Choose'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('an "act now" state shows the dot, hidden while open',

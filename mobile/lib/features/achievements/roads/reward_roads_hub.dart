@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/motion/reward_fx.dart';
 import '../../../core/widgets/app_toast.dart';
@@ -451,12 +452,19 @@ class _ContinueCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            '${meta.emoji} ${meta.name} · Stage ${road.currentStage + 1} of ${road.stages.length}',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: c)),
+                        Row(children: [
+                          AppIconImage(meta.iconAsset, size: 18),
+                          const SizedBox(width: 6),
+                          Expanded(
+                              child: Text(
+                                  '${meta.name} · Stage ${road.currentStage + 1} of ${road.stages.length}',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: c),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis)),
+                        ]),
                         const SizedBox(height: 4),
                         Text(stageHeadline(s),
                             style: TextStyle(
@@ -540,8 +548,7 @@ class _RoadTile extends StatelessWidget {
                       color: meta.color.withValues(alpha: .16),
                       borderRadius: BorderRadius.circular(11),
                     ),
-                    child: Text(meta.emoji,
-                        style: const TextStyle(fontSize: 19, height: 1)),
+                    child: AppIconImage(meta.iconAsset, size: 25),
                   ),
                   const Spacer(),
                   if (badge != null)

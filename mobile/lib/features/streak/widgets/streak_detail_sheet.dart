@@ -282,7 +282,7 @@ class _DailyRewardCard extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Text('🪙', style: TextStyle(fontSize: 18)),
+              AppIconImage(AppIcons.homeCoinIcon, size: 18),
               SizedBox(width: 8),
               Text(
                 'DAILY STREAK REWARD',
@@ -424,7 +424,7 @@ class _HeaderState extends State<_Header> with SingleTickerProviderStateMixin {
                   : null,
             ),
             child: const Center(
-              child: Text('🔥', style: TextStyle(fontSize: 22)),
+              child: AppIconImage(AppIcons.rewardStreakFire, size: 25),
             ),
           ),
         ),
@@ -759,7 +759,7 @@ class _ShieldsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('🛡️', style: TextStyle(fontSize: 16)),
+              const AppIconImage(AppIcons.rewardStreakShield, size: 18),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -817,9 +817,15 @@ class _ShieldsCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text(
-                '🛡️ Use Shield',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppIconImage(AppIcons.rewardStreakShield, size: 18),
+                  SizedBox(width: 7),
+                  Text('Use Shield',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                ],
               ),
             ),
           ),

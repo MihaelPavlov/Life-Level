@@ -246,6 +246,52 @@ public class WorldDungeonServiceTests
     // ────────────────────────────────────────────────────────────────────────
 
     [Fact]
+    public async Task CreditActivity_AtDungeonWithMatchingFloor1_AutoEntersAndCreditsSameWorkout()
+    {
+        var db = CreateDb(nameof(CreditActivity_AtDungeonWithMatchingFloor1_AutoEntersAndCreditsSameWorkout));
+        var setup = await SeedDungeonAsync(db, "auto_enter");
+        var service = new WorldDungeonService(db, new DungeonXpPort());
+
+        var result = await service.CreditActivityAsync(
+            setup.UserId, ActivityType.Running, distanceKm: 1.5, durationMinutes: 15);
+
+        Assert.Null(result); // Floor 1 has progress but is not yet clear.
+        var run = await db.UserWorldDungeonStates.SingleAsync(s => s.UserId == setup.UserId);
+        Assert.Equal(DungeonRunStatus.InProgress, run.Status);
+        var floor = await db.UserWorldDungeonFloorStates.SingleAsync(s =>
+            s.UserId == setup.UserId && s.FloorId == setup.Floors[0].Id);
+        Assert.Equal(1.5, floor.ProgressValue, precision: 2);
+        Assert.Equal(DungeonFloorStatus.Active, floor.Status);
+    }
+
+    [Fact]
+    public async Task CreditActivity_AtDungeonWithWrongType_DoesNotAutoEnter()
+    {
+        var db = CreateDb(nameof(CreditActivity_AtDungeonWithWrongType_DoesNotAutoEnter));
+        var setup = await SeedDungeonAsync(db, "auto_wrong_type");
+        var service = new WorldDungeonService(db, new DungeonXpPort());
+
+        await service.CreditActivityAsync(setup.UserId, ActivityType.Gym, 0, 30);
+
+        Assert.Empty(await db.UserWorldDungeonStates.Where(s => s.UserId == setup.UserId).ToListAsync());
+        Assert.Empty(await db.UserWorldDungeonFloorStates.Where(s => s.UserId == setup.UserId).ToListAsync());
+    }
+
+    [Fact]
+    public async Task CreditActivity_AwayFromDungeon_DoesNotAutoEnter()
+    {
+        var db = CreateDb(nameof(CreditActivity_AwayFromDungeon_DoesNotAutoEnter));
+        var setup = await SeedDungeonAsync(db, "auto_away");
+        setup.Progress.CurrentZoneId = setup.EntryZone.Id;
+        await db.SaveChangesAsync();
+        var service = new WorldDungeonService(db, new DungeonXpPort());
+
+        await service.CreditActivityAsync(setup.UserId, ActivityType.Running, 3, 30);
+
+        Assert.Empty(await db.UserWorldDungeonStates.Where(s => s.UserId == setup.UserId).ToListAsync());
+    }
+
+    [Fact]
     public async Task CreditActivity_MatchingType_AccumulatesProgress()
     {
         var db = CreateDb(nameof(CreditActivity_MatchingType_AccumulatesProgress));

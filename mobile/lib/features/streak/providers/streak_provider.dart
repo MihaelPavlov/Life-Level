@@ -51,15 +51,15 @@ class StreakNotifier extends AsyncNotifier<StreakData> {
 
   Future<ClaimStreakRewardResult> claimReward() async {
     final current = state.requireValue;
-    if (!ClientExperienceService.instance.enabled('streakSeason')) {
-      final result = await ref.read(streakServiceProvider).claimReward();
-      state = AsyncData(current.copyWith(
-        pendingRewardCoins: 0,
-        canClaimDailyReward: false,
-      ));
-      return result;
-    }
     try {
+      if (!ClientExperienceService.instance.enabled('streakSeason')) {
+        final result = await ref.read(streakServiceProvider).claimReward();
+        state = AsyncData(current.copyWith(
+          pendingRewardCoins: 0,
+          canClaimDailyReward: false,
+        ));
+        return result;
+      }
       return await _mutation.run(
         current: current,
         optimistic: (value) => value.copyWith(

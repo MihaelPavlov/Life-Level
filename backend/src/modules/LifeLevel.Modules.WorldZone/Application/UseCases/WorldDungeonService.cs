@@ -213,7 +213,35 @@ public class WorldDungeonService(DbContext db, ICharacterXpPort characterXp)
     {
         var runState = await db.Set<UserWorldDungeonState>()
             .FirstOrDefaultAsync(s => s.UserId == userId && s.Status == DungeonRunStatus.InProgress, ct);
-        if (runState == null) return null;
+        if (runState == null)
+        {
+            // Movement is applied before dungeon credit in ActivityService. A
+            // workout that arrives at a dungeon can therefore start Floor 1
+            // and count towards it without requiring a separate Enter tap.
+            var currentZoneId = await db.Set<UserWorldProgressEntity>()
+                .Where(p => p.UserId == userId)
+                .Select(p => p.CurrentZoneId)
+                .FirstOrDefaultAsync(ct);
+            if (currentZoneId == Guid.Empty) return null;
+
+            var zone = await db.Set<WorldZoneEntity>().FindAsync([currentZoneId], ct);
+            if (zone?.Type != WorldZoneType.Dungeon) return null;
+
+            var firstFloor = await db.Set<WorldZoneDungeonFloor>()
+                .Where(f => f.WorldZoneId == currentZoneId)
+                .OrderBy(f => f.Ordinal)
+                .FirstOrDefaultAsync(ct);
+            if (firstFloor == null || firstFloor.ActivityType != type) return null;
+
+            var existing = await db.Set<UserWorldDungeonState>()
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.WorldZoneId == currentZoneId, ct);
+            if (existing != null && existing.Status != DungeonRunStatus.NotEntered) return null;
+
+            await EnterAsync(userId, currentZoneId, ct);
+            runState = await db.Set<UserWorldDungeonState>()
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.WorldZoneId == currentZoneId, ct);
+            if (runState == null) return null;
+        }
 
         var activeFloor = await db.Set<WorldZoneDungeonFloor>()
             .FirstOrDefaultAsync(f =>

@@ -145,6 +145,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
   late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
   bool _wasOffline = false;
+  DateTime? _backgroundedAt;
   StreamSubscription<Uri>? _deepLinkSub;
   bool _oauthCallbackHandled = false;
 
@@ -635,9 +636,20 @@ class _MainShellState extends ConsumerState<MainShell>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _backgroundedAt ??= DateTime.now();
+      return;
+    }
     if (state == AppLifecycleState.resumed) {
+      final backgroundedAt = _backgroundedAt;
+      _backgroundedAt = null;
       _triggerForegroundHealthSync();
-      _invalidateAllProviders();
+      if (backgroundedAt == null ||
+          DateTime.now().difference(backgroundedAt) >=
+              const Duration(minutes: 1)) {
+        _invalidateAllProviders();
+      }
       unawaited(_startGuildRealtime());
       _checkPendingGuildRaidVictories();
       _checkPendingGuildRaidExpiries();

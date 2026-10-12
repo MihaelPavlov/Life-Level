@@ -868,7 +868,8 @@ class AchievementBadge extends StatelessWidget {
             color: a.isUnlocked ? c : c.withValues(alpha: .55),
             width: a.isUnlocked ? 2 : 1.5),
       ),
-      child: Text(a.icon, style: TextStyle(fontSize: size * .45, height: 1)),
+      child: Image.asset(RoadMeta.of(a.category).iconAsset,
+          width: size * .7, height: size * .7, fit: BoxFit.contain),
     );
   }
 }

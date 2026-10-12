@@ -1,4 +1,5 @@
 using LifeLevel.SharedKernel.Calculators;
+using LifeLevel.Api.Infrastructure.Persistence;
 
 namespace LifeLevel.Api.Tests;
 
@@ -20,7 +21,10 @@ public class BossCombatCalculatorTests
     }
 
     [Theory]
-    [InlineData(1, 1, 8, 8)]
+    [InlineData(1, 1, 4, 8)]
+    [InlineData(2, 8, 5, 8)]
+    [InlineData(3, 15, 5, 8)]
+    [InlineData(4, 25, 6, 8)]
     [InlineData(5, 32, 10, 7)]
     [InlineData(11, 68, 12, 6)]
     [InlineData(15, 85, 12, 6)]
@@ -35,5 +39,29 @@ public class BossCombatCalculatorTests
         Assert.True(BossCombatCalculator.ApplyMitigation(
             profile.CounterattackDamage, profile.ExpectedPlayerDefense) * hits
             >= profile.ExpectedPlayerHealth);
+    }
+
+    [Fact]
+    public void SeededForestWarden_HasNoDeadline()
+    {
+        var forestWarden = Assert.Single(WorldSeedData.CreateZones(),
+            zone => zone.Name == "Forest Warden");
+
+        Assert.Equal(0, forestWarden.BossTimerDays);
+        Assert.True(forestWarden.BossSuppressExpiry);
+        Assert.Equal(BossBalanceCalculator.ForChapter(1, 1).MaxHp,
+            forestWarden.BossMaxHp);
+    }
+
+    [Theory]
+    [InlineData(1, 1, 912)]
+    [InlineData(2, 8, 1240)]
+    [InlineData(3, 15, 1325)]
+    [InlineData(4, 25, 1740)]
+    public void EarlyChapterHp_MatchesExistingWorldBackfillValues(
+        int chapter, int level, int expectedHp)
+    {
+        Assert.Equal(expectedHp,
+            BossBalanceCalculator.ForChapter(chapter, level).MaxHp);
     }
 }

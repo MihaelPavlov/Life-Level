@@ -6,8 +6,8 @@ import '../../../core/constants/class_icons.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/motion/reward_fx.dart';
-import '../../../core/shell/shell_anchors.dart';
 import '../../../core/services/nav_tab_notifier.dart';
+import '../../../core/shell/shell_anchors.dart';
 import '../../../core/widgets/currency_chip.dart';
 import '../../../core/utils/compact_count.dart';
 import '../../../core/widgets/resource_info_dialog.dart';
@@ -27,15 +27,14 @@ import '../providers/world_progress_provider.dart';
 import '../widgets/home_avatar_ring.dart';
 
 /// Painted hero panel: header (avatar/name/XP/currency chips) + night-forest
-/// scene + character flanked by MOUNT / WEAPON mini-cards + POWER/Run/Shields
+/// scene + character flanked by empty mount / weapon slots + POWER/Run/Shields
 /// — all painted over ONE continuous background image that runs from the
 /// very top of the screen down through the character, instead of the header
 /// sitting on a flat page background above a separate bordered card.
 ///
 /// The character uses the same equipment-aware paper doll as the Gear screen.
-/// Mount/Weapon mini-card art remains static because those concepts are not
-/// represented in the domain yet. Run/Shields and the header currencies are
-/// wired to real data.
+/// Mount and weapon are empty placeholders until those concepts have inventory
+/// support. Run/Shields and the header currencies are wired to real data.
 class HomeHeroStage extends ConsumerWidget {
   final CharacterProfile? profile;
   const HomeHeroStage({super.key, this.profile});
@@ -63,9 +62,7 @@ class HomeHeroStage extends ConsumerWidget {
         0.0;
     final shields =
         ref.watch(streakProvider).valueOrNull?.shieldsAvailable ?? 0;
-    // Mount and weapon stay "?" until the first item (Gear unlock); the
-    // Shields chip stays dim until a 3-day streak (Shields unlock).
-    final gearOpen = ref.watch(isUnlockedProvider(UnlockKeys.gear));
+    // Shields stays dim until its streak milestone unlocks.
     final shieldsOpen = ref.watch(isUnlockedProvider(UnlockKeys.shields));
     final equipment = ref.watch(equipmentProvider).valueOrNull;
     final totalSteps =
@@ -176,15 +173,9 @@ class HomeHeroStage extends ConsumerWidget {
                                   child: _MiniCard(
                                     key: const ValueKey('home-mount-button'),
                                     size: px(72),
-                                    semanticsLabel: gearOpen
-                                        ? 'Open gear from mount'
-                                        : 'Mount, locked',
-                                    unknown: !gearOpen,
-                                    onTap: gearOpen
-                                        ? () => NavTabNotifier.switchTo('gear')
-                                        : () => showLockedHint(
-                                            context, UnlockKeys.gear),
-                                    icon: Image.asset(AppIcons.homeMountIcon,
+                                    semanticsLabel: 'Mount not equipped',
+                                    icon: Image.asset(
+                                        AppIcons.homeEmptyMountIcon,
                                         fit: BoxFit.contain),
                                   ),
                                 ),
@@ -196,15 +187,9 @@ class HomeHeroStage extends ConsumerWidget {
                                   child: _MiniCard(
                                     key: const ValueKey('home-weapon-button'),
                                     size: px(72),
-                                    semanticsLabel: gearOpen
-                                        ? 'Open gear from weapon'
-                                        : 'Weapon, locked',
-                                    unknown: !gearOpen,
-                                    onTap: gearOpen
-                                        ? () => NavTabNotifier.switchTo('gear')
-                                        : () => showLockedHint(
-                                            context, UnlockKeys.gear),
-                                    icon: Image.asset(AppIcons.homeSwordIcon,
+                                    semanticsLabel: 'Weapon not equipped',
+                                    icon: Image.asset(
+                                        AppIcons.homeEmptyWeaponIcon,
                                         fit: BoxFit.contain),
                                   ),
                                 ),
@@ -498,28 +483,19 @@ class _MiniCard extends StatelessWidget {
   final double size;
   final Widget icon;
   final String semanticsLabel;
-  final VoidCallback onTap;
-
-  /// Shows a "?" instead of [icon] until the slot unlocks.
-  final bool unknown;
 
   const _MiniCard({
     super.key,
     required this.size,
     required this.icon,
     required this.semanticsLabel,
-    required this.onTap,
-    this.unknown = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      button: true,
       label: semanticsLabel,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
+      child: ExcludeSemantics(
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -528,54 +504,39 @@ class _MiniCard extends StatelessWidget {
               height: size,
               padding: EdgeInsets.all(size * 0.14),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.4),
-                border: Border.all(color: const Color(0xFF7DB6FF), width: 1.2),
+                color: Colors.black.withValues(alpha: 0.55),
+                border: Border.all(color: const Color(0xFF6D7781), width: 1.2),
                 borderRadius: BorderRadius.circular(size * 0.16),
               ),
-              child: AnimatedSwitcher(
-                duration: AppMotion.duration(
-                    context, const Duration(milliseconds: 450)),
-                switchInCurve: Curves.easeOutBack,
-                transitionBuilder: (child, a) =>
-                    ScaleTransition(scale: a, child: child),
-                child: unknown
-                    ? Center(
-                        key: const ValueKey('unknown'),
-                        child: Text(
-                          '?',
-                          style: TextStyle(
-                            fontSize: size * .44,
-                            fontWeight: FontWeight.w900,
-                            height: 1,
-                            color: const Color(0xFF7DB6FF),
-                            shadows: const [
-                              Shadow(color: Color(0x737DB6FF), blurRadius: 12),
-                            ],
-                          ),
-                        ),
-                      )
-                    : KeyedSubtree(key: const ValueKey('icon'), child: icon),
-              ),
-            ),
-            if (!unknown)
-              // Decorative swap affordance — matches the reference art; no
-              // render-swap feature exists yet, so it's non-interactive.
-              Positioned(
-                top: -size * 0.14,
-                right: -size * 0.14,
-                child: Container(
-                  width: size * 0.32,
-                  height: size * 0.32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF0c1420),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                  ),
-                  child: Icon(Icons.autorenew,
-                      size: size * 0.18, color: Colors.white70),
+              child: Opacity(
+                opacity: 0.55,
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.matrix([
+                    0.2126,
+                    0.7152,
+                    0.0722,
+                    0,
+                    0,
+                    0.2126,
+                    0.7152,
+                    0.0722,
+                    0,
+                    0,
+                    0.2126,
+                    0.7152,
+                    0.0722,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                  ]),
+                  child: icon,
                 ),
               ),
+            ),
           ],
         ),
       ),

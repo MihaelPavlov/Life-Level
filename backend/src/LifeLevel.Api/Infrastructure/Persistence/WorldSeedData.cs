@@ -109,8 +109,7 @@ public static class WorldSeedData
             new("Valley Road",       "🌾", WorldZoneType.Standard,   8.0, 450,  "Easy route — scenic + longer.",  BranchOfName: "Twin Roads Fork"),
             new("Ruined Pass",       "🏚️", WorldZoneType.Standard,   5.0, 700,  "Shortcut — punishing but rich.", BranchOfName: "Twin Roads Fork"),
             new("Hollow Thicket",    "🍂", WorldZoneType.Standard,   4.5, 520,  "A shadowed thicket where wild things roam."),
-            new("Forest Warden",     "🐺", WorldZoneType.Boss,       6.0, 1200, "The Warden stands between you and the Mountains.",
-                BossTimerDays: 2, BossSuppressExpiry: false),
+            new("Forest Warden",     "🐺", WorldZoneType.Boss,       6.0, 1200, "The Warden stands between you and the Mountains."),
         ],
         [new RegionPin("+10% END", "region bonus"), new RegionPin("Starter", "")]);
 

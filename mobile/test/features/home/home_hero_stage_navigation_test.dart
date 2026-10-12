@@ -58,7 +58,7 @@ class _EquippedChest extends EquipmentNotifier {
 }
 
 void main() {
-  testWidgets('hero profile and gear artwork switch to the expected tabs',
+  testWidgets('hero empty slots do not navigate; profile still opens',
       (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
@@ -102,7 +102,26 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('home-weapon-button')));
     await tester.pump();
 
-    expect(tabs, ['profile', 'gear', 'gear']);
+    expect(tabs, ['profile']);
+    expect(find.bySemanticsLabel('Mount not equipped'), findsOneWidget);
+    expect(find.bySemanticsLabel('Weapon not equipped'), findsOneWidget);
+    for (final key in ['home-mount-button', 'home-weapon-button']) {
+      final slot = find.byKey(ValueKey(key));
+      final dimmedArt = find.descendant(
+        of: slot,
+        matching: find.byType(Opacity),
+      );
+      expect(tester.widget<Opacity>(dimmedArt).opacity, 0.55);
+      expect(
+        find.descendant(of: slot, matching: find.byType(ColorFiltered)),
+        findsOneWidget,
+      );
+      final card = tester.widget<Container>(
+        find.descendant(of: slot, matching: find.byType(Container)).first,
+      );
+      final border = (card.decoration! as BoxDecoration).border! as Border;
+      expect(border.top.color, const Color(0xFF6D7781));
+    }
 
     await tester.tap(find.byKey(const ValueKey('home-banked-distance-button')));
     await tester.pump();

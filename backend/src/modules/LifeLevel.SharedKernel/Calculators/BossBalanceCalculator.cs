@@ -43,7 +43,16 @@ public static class BossBalanceCalculator
         var multiplier = CombatStatsCalculator.CalculateDamageMultiplier(power);
 
         var armor = 10 + 5 * (chapter - 1);
-        var targetTurns = chapter <= 4 ? 8 : chapter <= 10 ? 10 : 12;
+        // The first four chapter bosses teach the fight loop without asking
+        // for a full week of workouts. Later chapters remain endurance fights.
+        var targetTurns = chapter switch
+        {
+            1 => 4,
+            2 or 3 => 5,
+            4 => 6,
+            <= 10 => 10,
+            _ => 12,
+        };
         var targetHits = chapter <= 4 ? 8 : chapter <= 10 ? 7 : 6;
         var modifiedHit = BossCombatCalculator.ApplyPlayerModifiers(
             MedianRawWorkoutDamage, multiplier, 0);
