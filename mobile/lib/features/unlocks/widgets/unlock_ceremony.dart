@@ -253,47 +253,45 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: AnimatedBuilder(
                 animation: Listenable.merge([_seq, _spin]),
-                builder: (context, _) => Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (widget.queue.length > 1) ...[
-                      _queueCounter(),
-                      const SizedBox(height: 28),
-                    ],
-                    const Text('NEW FEATURE UNLOCKED',
-                        style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.4,
-                            color: AppColors.orange)),
-                    const SizedBox(height: 14),
-                    _orb(),
-                    const SizedBox(height: 6),
-                    _reveal(
-                        0,
-                        Text(m.name,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textPrimary))),
-                    const SizedBox(height: 8),
-                    _reveal(
-                        1,
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 300),
-                          child: Text(m.line,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  height: 1.5,
-                                  color: AppColors.textSecondary)),
-                        )),
-                    const SizedBox(height: 12),
-                    _reveal(2, _perk()),
-                    const SizedBox(height: 22),
-                    _reveal(3, _buttons()),
-                  ],
+                // Centred when it fits, scrolls on short screens.
+                builder: (context, _) => LayoutBuilder(
+                  builder: (context, box) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: box.maxHeight),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.queue.length > 1) ...[
+                            _queueCounter(),
+                            const SizedBox(height: 28),
+                          ],
+                          const Text('NEW FEATURE UNLOCKED',
+                              style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2.4,
+                                  color: AppColors.orange)),
+                          const SizedBox(height: 14),
+                          _orb(),
+                          const SizedBox(height: 6),
+                          _reveal(
+                              0,
+                              Text(m.name,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.textPrimary))),
+                          const SizedBox(height: 8),
+                          _reveal(1, _line()),
+                          const SizedBox(height: 12),
+                          _reveal(2, _perk()),
+                          const SizedBox(height: 22),
+                          _reveal(3, _buttons()),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -419,7 +417,8 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
                       borderRadius: BorderRadius.circular(1)),
                 ),
               Transform.scale(
-                scale: i == widget.index ? 1 + .25 * math.sin(pop * math.pi) : 1,
+                scale:
+                    i == widget.index ? 1 + .25 * math.sin(pop * math.pi) : 1,
                 child: _queueTile(q[i], i),
               ),
             ],
@@ -481,6 +480,33 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
     );
   }
 
+  /// What the feature is for, with its key words bold in the feature colour.
+  Widget _line() {
+    final at = m.line.indexOf(m.lineHighlight);
+    final end = at + m.lineHighlight.length;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 310),
+      child: Text.rich(
+        TextSpan(children: [
+          if (at > 0) TextSpan(text: m.line.substring(0, at)),
+          if (at >= 0)
+            TextSpan(
+                text: m.lineHighlight,
+                style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color.lerp(m.color, Colors.white, .35))),
+          TextSpan(text: at >= 0 ? m.line.substring(end) : m.line),
+        ]),
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+            fontSize: 16,
+            height: 1.45,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary),
+      ),
+    );
+  }
+
   Widget _perk() => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
@@ -535,11 +561,22 @@ class _UnlockCeremonyState extends State<UnlockCeremony>
             onPressed:
                 _seq.value < .7 ? null : () => Navigator.of(context).pop(false),
             style: TextButton.styleFrom(
-                foregroundColor: AppColors.textSecondary,
+                foregroundColor: m.color,
+                disabledForegroundColor: m.color,
                 minimumSize: const Size.fromHeight(44)),
+            // A black outline around the letters keeps it readable on the
+            // blurred background.
             child: Text(_laterLabel,
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    shadows: [
+                      Shadow(color: Colors.black, offset: Offset(-1, -1)),
+                      Shadow(color: Colors.black, offset: Offset(1, -1)),
+                      Shadow(color: Colors.black, offset: Offset(-1, 1)),
+                      Shadow(color: Colors.black, offset: Offset(1, 1)),
+                      Shadow(color: Colors.black, blurRadius: 6),
+                    ])),
           ),
         ],
       );

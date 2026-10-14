@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +32,14 @@ class _FakeUnlocks extends UnlocksNotifier {
         state.value!.update(key, (u) => u.copyWith(seen: true, toured: true)));
     return 25;
   }
+}
+
+class _DelayedUnlocks extends UnlocksNotifier {
+  _DelayedUnlocks(this.result);
+  final Completer<UnlocksSnapshot> result;
+
+  @override
+  Future<UnlocksSnapshot> build() => result.future;
 }
 
 UnlockState _u(String key, int order,
@@ -68,6 +78,32 @@ Future<({List<String> seen, List<String> opened})> _mount(
 }
 
 void main() {
+  testWidgets('a late unlock response still starts the Home tour',
+      (tester) async {
+    final result = Completer<UnlocksSnapshot>();
+    final opened = <String>[];
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        unlocksProvider.overrideWith(() => _DelayedUnlocks(result)),
+      ],
+      child: MaterialApp(
+        home: UnlockCoordinator(
+          canInterrupt: () => true,
+          prepareCeremony: (_) async {},
+          openFeature: (key) async => opened.add(key),
+          child: const Scaffold(body: SizedBox.expand()),
+        ),
+      ),
+    ));
+    await _pumpFor(tester, 300);
+    expect(opened, isEmpty);
+
+    result
+        .complete(UnlocksSnapshot([_u('home', 0, seen: false, toured: false)]));
+    await _pumpFor(tester, 1800);
+    expect(opened, ['home']);
+  });
+
   testWidgets(
       'reveals an offscreen Hub icon before showing the blurred ceremony',
       (tester) async {
@@ -178,6 +214,9 @@ void main() {
     await _pumpFor(tester, 4000);
     expect(find.text('UNLOCK 2 OF 2'), findsOneWidget);
     expect(find.text('Gear'), findsOneWidget);
+    // The ceremony scrolls on the short test screen.
+    await tester.ensureVisible(find.text('Later · tour runs on first visit'));
+    await tester.pump();
     await tester.tap(find.text('Later · tour runs on first visit'));
     await _pumpFor(tester, 1500);
     expect(r.seen, ['achievements', 'gear']);

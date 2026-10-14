@@ -33,6 +33,9 @@ class UnlockMeta {
 
   /// One sentence: what the feature is for.
   final String line;
+
+  /// The words of [line] drawn bold in the feature colour.
+  final String lineHighlight;
   final String perkIcon;
   final String perk;
 
@@ -55,6 +58,7 @@ class UnlockMeta {
     required this.color,
     required this.slot,
     required this.line,
+    required this.lineHighlight,
     required this.perkIcon,
     required this.perk,
     required this.lockedHint,
@@ -72,6 +76,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     color: AppColors.blue,
     slot: UnlockSlot.none,
     line: 'Your hero, your workouts and everything that opens next.',
+    lineHighlight: 'everything that opens next',
     perkIcon: AppIcons.navHome,
     perk: 'Home',
     lockedHint: 'Finish setup',
@@ -86,6 +91,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     color: AppColors.orange,
     slot: UnlockSlot.hub,
     line: 'Badges for everything you do. Your first one is already waiting.',
+    lineHighlight: 'Your first one is already waiting.',
     perkIcon: AppIcons.rankChampion,
     perk: 'Your first badge is ready to claim',
     lockedHint: 'Reach Level 2 to unlock',
@@ -101,6 +107,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.orb,
     line:
         'Every km you run lands in your bank first. Spend it on the map to travel.',
+    lineHighlight: 'Spend it on the map to travel.',
     perkIcon: AppIcons.mapCurrentLocation,
     perk: 'Your first km are banked',
     lockedHint: 'Log a workout with distance to unlock the Map',
@@ -116,6 +123,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.nav,
     line:
         'Items you find make your hero stronger. Your mount and weapon slots open too.',
+    lineHighlight: 'make your hero stronger',
     perkIcon: AppIcons.itemCarbonX3,
     perk: 'Your first item is in your bag',
     lockedHint: 'Reach Level 2 and find an item to unlock Gear',
@@ -131,6 +139,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.hub,
     line:
         'Every completed region leaves a chest. Resolve its boss to claim it.',
+    lineHighlight: 'leaves a chest',
     perkIcon: AppIcons.rewardTreasureChest,
     perk: 'Your first cleared region reward is ready',
     lockedHint: 'Complete your first region to unlock',
@@ -144,6 +153,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     color: AppColors.purple,
     slot: UnlockSlot.hub,
     line: 'Spend crystals on talent cards that boost how you earn XP.',
+    lineHighlight: 'boost how you earn XP',
     perkIcon: AppIcons.talentCrystalIcon,
     perk: 'Crystals come with every level',
     lockedHint: 'Reach Level 3 to unlock',
@@ -158,6 +168,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     color: AppColors.orange,
     slot: UnlockSlot.chip,
     line: 'A shield saves your streak on a day you can’t train.',
+    lineHighlight: 'saves your streak',
     perkIcon: AppIcons.rewardStreakShield,
     perk: 'First shield at day 7',
     lockedHint: 'Keep a 3-day streak to unlock',
@@ -172,6 +183,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.hub,
     line:
         'Your boss fights live in the Adventure Hub. Every workout deals damage.',
+    lineHighlight: 'Every workout deals damage.',
     perkIcon: AppIcons.ringBoss,
     perk: 'A boss is waiting for you',
     lockedHint: 'Reach your first boss zone to unlock',
@@ -186,6 +198,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.hub,
     line:
         'Ranks climb as you beat bosses. Titles you earn go next to your name.',
+    lineHighlight: 'Titles you earn go next to your name.',
     perkIcon: AppIcons.rankChampion,
     perk: 'Your first rank is in',
     lockedHint: 'Reach Level 5 and beat a boss or earn a title to unlock',
@@ -200,6 +213,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     color: AppColors.blue,
     slot: UnlockSlot.hub,
     line: 'Team up for guild raids. Everyone’s workouts hit the same boss.',
+    lineHighlight: 'Everyone’s workouts hit the same boss.',
     perkIcon: AppIcons.ringGuild,
     perk: 'Up to 5 members per guild',
     lockedHint: 'Reach Level 8 to unlock',
@@ -215,6 +229,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.hub,
     line:
         'See where you stand. Every player you pass adds to your rank-up chest.',
+    lineHighlight: 'Every player you pass adds to your rank-up chest.',
     perkIcon: AppIcons.ringLeaderboard,
     perk: 'Global, region and guild boards',
     lockedHint: 'Reach Level 6 to unlock',
@@ -230,6 +245,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.nav,
     line:
         'Short game modes that turn your workouts into extra coins. Burn Chain is first.',
+    lineHighlight: 'extra coins',
     perkIcon: AppIcons.rewardStreakFire,
     perk: 'Burn Chain · beat your last burn for ×2',
     lockedHint: 'Reach Level 10 to unlock Modes',
@@ -245,6 +261,7 @@ const kUnlockCatalog = <String, UnlockMeta>{
     slot: UnlockSlot.mode,
     line:
         'Five-chamber vault runs. Your stats decide which paths are safe to take.',
+    lineHighlight: 'Your stats decide',
     perkIcon: AppIcons.itemEnergyGel,
     perk: 'Workouts earn runs',
     lockedHint: 'Unlocks at Level 15',

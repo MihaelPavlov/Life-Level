@@ -1419,11 +1419,12 @@ class _RoadPainter extends CustomPainter {
 
 // ── Enter button ─────────────────────────────────────────────────────────────
 
-/// Gilded call to action that matches the chapter header: gold rim, warm dark
-/// face, serif label between two diamonds, a breathing glow and a light sweep.
+/// Solid gold call to action in the app's main-button shape: dark label and
+/// arrow, a breathing glow and a light sweep across the face.
 class _EnterButton extends StatelessWidget {
   static const _gold = Color(0xFFF5A623);
-  static const _goldLight = Color(0xFFFFD98A);
+  static const _goldLight = Color(0xFFFFE8AA);
+  static const _ink = Color(0xFF1A1205);
 
   final bool busy;
   final double pulse;
@@ -1438,19 +1439,6 @@ class _EnterButton extends StatelessWidget {
     final breathe = .5 + .5 * math.sin(pulse * 2 * math.pi);
     // One sweep across the face early in each pulse cycle.
     final sweep = _cl(pulse / .45);
-    Widget diamond() => Transform.rotate(
-          angle: math.pi / 4,
-          child: Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: _gold,
-              boxShadow: [
-                BoxShadow(color: _gold.withValues(alpha: .6), blurRadius: 6)
-              ],
-            ),
-          ),
-        );
 
     return Semantics(
       button: true,
@@ -1461,91 +1449,71 @@ class _EnterButton extends StatelessWidget {
         haptic: AppHaptic.medium,
         pressedScale: .97,
         child: Container(
-          height: 58,
-          padding: const EdgeInsets.all(1.5),
+          height: 56,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [_goldLight, _gold, Color(0xFF9A6312)],
-            ),
+            color: _gold,
+            borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: _gold.withValues(alpha: .16 + .14 * breathe),
+                color: _gold.withValues(alpha: .25 + .15 * breathe),
                 blurRadius: 18 + 10 * breathe,
-                offset: const Offset(0, 6),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14.5),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2A2214), Color(0xFF15110A)],
+            borderRadius: BorderRadius.circular(14),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Thin highlight along the top edge.
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: 1,
+                  child: ColoredBox(color: _goldLight.withValues(alpha: .7)),
                 ),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Thin highlight along the top edge.
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    height: 1,
-                    child: ColoredBox(color: _goldLight.withValues(alpha: .35)),
-                  ),
-                  if (enabled && sweep > 0 && sweep < 1)
-                    Positioned.fill(
-                      child: FractionalTranslation(
-                        translation: Offset(-1.1 + 2.2 * sweep, 0),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              _goldLight.withValues(alpha: 0),
-                              _goldLight.withValues(alpha: .22),
-                              _goldLight.withValues(alpha: 0),
-                            ]),
-                          ),
+                if (enabled && sweep > 0 && sweep < 1)
+                  Positioned.fill(
+                    child: FractionalTranslation(
+                      translation: Offset(-1.1 + 2.2 * sweep, 0),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [
+                            Colors.white.withValues(alpha: 0),
+                            Colors.white.withValues(alpha: .35),
+                            Colors.white.withValues(alpha: 0),
+                          ]),
                         ),
                       ),
                     ),
-                  if (busy)
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2.4, color: _goldLight),
-                    )
-                  else
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        diamond(),
-                        const SizedBox(width: 14),
-                        const Text(
-                          'ENTER THE WORLD',
-                          style: TextStyle(
-                            fontFamily: 'serif',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 3,
-                            color: _goldLight,
-                            shadows: [
-                              Shadow(color: Color(0x99F5A623), blurRadius: 10)
-                            ],
-                          ),
+                  ),
+                if (busy)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.4, color: _ink),
+                  )
+                else
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'ENTER THE WORLD',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2,
+                          color: _ink,
                         ),
-                        const SizedBox(width: 14),
-                        diamond(),
-                      ],
-                    ),
-                ],
-              ),
+                      ),
+                      SizedBox(width: 10),
+                      Icon(Icons.arrow_forward_rounded, size: 20, color: _ink),
+                    ],
+                  ),
+              ],
             ),
           ),
         ),

@@ -340,7 +340,8 @@ class _HubTile extends StatelessWidget {
                   if (locked)
                     const Positioned(top: 6, right: 4, child: LockBadge()),
                   if (fresh && !locked)
-                    const Positioned(top: 2, right: -2, child: NewPill()),
+                    // Top-left, so it doesn't sit under the alert badge.
+                    const Positioned(top: 2, left: -2, child: NewPill()),
                   Positioned(
                     top: 4,
                     right: 2,
