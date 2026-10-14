@@ -6,10 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' hide ActivityType;
 import 'package:geolocator_apple/geolocator_apple.dart' as apple;
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_failure.dart';
 import '../models/activity_models.dart';
 
 final workoutTrackerProvider = ChangeNotifierProvider<WorkoutTracker>((ref) {
@@ -32,6 +34,7 @@ class TrackedWorkout {
   double? lastLongitude;
   double? lastAccuracy;
   DateTime? lastFixAt;
+  DateTime? distanceAnchorAt;
 
   TrackedWorkout({
     required this.id,
@@ -47,6 +50,7 @@ class TrackedWorkout {
     this.lastLongitude,
     this.lastAccuracy,
     this.lastFixAt,
+    this.distanceAnchorAt,
   });
 
   bool get isRunning => resumedAt != null;
@@ -81,6 +85,7 @@ class TrackedWorkout {
         'lastLongitude': lastLongitude,
         'lastAccuracy': lastAccuracy,
         'lastFixAt': lastFixAt?.toIso8601String(),
+        'distanceAnchorAt': distanceAnchorAt?.toIso8601String(),
       };
 
   Map<String, dynamic> toApiJson() => {
@@ -114,7 +119,68 @@ class TrackedWorkout {
         lastFixAt: json['lastFixAt'] == null
             ? null
             : DateTime.parse(json['lastFixAt'] as String).toUtc(),
+        distanceAnchorAt: json['distanceAnchorAt'] == null
+            ? (json['lastFixAt'] == null
+                ? null
+                : DateTime.parse(json['lastFixAt'] as String).toUtc())
+            : DateTime.parse(json['distanceAnchorAt'] as String).toUtc(),
       );
+
+  /// Count a fix for GPS coverage, but keep the distance anchor until motion
+  /// exceeds GPS uncertainty. Frequent short strides then accumulate.
+  bool recordPosition(Position fix) {
+    if (!isRunning ||
+        !usesGps ||
+        fix.isMocked ||
+        fix.accuracy > 35 ||
+        fix.accuracy < 0) {
+      return false;
+    }
+    final at = fix.timestamp.toUtc();
+    if (at.isBefore(resumedAt!)) return false;
+    final previousAt = lastFixAt;
+    if (previousAt != null && !at.isAfter(previousAt)) return false;
+    final fixGapSeconds = previousAt == null
+        ? 0.0
+        : at.difference(previousAt).inMilliseconds / 1000.0;
+    if (fixGapSeconds > 0 && fixGapSeconds <= 60) {
+      gpsCoveredSeconds += fixGapSeconds.round();
+    }
+
+    var resetAnchor = lastLatitude == null ||
+        lastLongitude == null ||
+        distanceAnchorAt == null ||
+        fixGapSeconds > 60;
+    if (!resetAnchor) {
+      final anchorSeconds =
+          at.difference(distanceAnchorAt!).inMilliseconds / 1000.0;
+      final meters = Geolocator.distanceBetween(
+          lastLatitude!, lastLongitude!, fix.latitude, fix.longitude);
+      final maxSpeed = type == ActivityType.cycling
+          ? 20.0
+          : type == ActivityType.running
+              ? 9.0
+              : 4.5;
+      final noiseFloor = (lastAccuracy ?? fix.accuracy) > fix.accuracy
+          ? lastAccuracy!
+          : fix.accuracy;
+      if (anchorSeconds > 0 && meters / anchorSeconds > maxSpeed) {
+        resetAnchor = true;
+      } else if (meters >= (noiseFloor * 1.2).clamp(5.0, 40.0)) {
+        distanceMeters += meters;
+        resetAnchor = true;
+      }
+    }
+    if (resetAnchor) {
+      lastLatitude = fix.latitude;
+      lastLongitude = fix.longitude;
+      lastAccuracy = fix.accuracy;
+      distanceAnchorAt = at;
+    }
+    lastFixAt = at;
+    gpsSamples++;
+    return true;
+  }
 }
 
 class TrackedWorkoutResult {
@@ -142,9 +208,11 @@ class WorkoutTracker extends ChangeNotifier {
   bool ready = false;
   bool submitting = false;
   bool gpsAvailable = false;
+  String? gpsMessage;
   String? error;
   StreamSubscription<Position>? _positions;
   final List<TrackedWorkout> _pending = [];
+  List<TrackedWorkout> get pendingSessions => List.unmodifiable(_pending);
   Future<void> _activeWrite = Future<void>.value();
 
   WorkoutTracker() {
@@ -217,6 +285,7 @@ class WorkoutTracker extends ChangeNotifier {
     session.lastLongitude = null;
     session.lastAccuracy = null;
     session.lastFixAt = null;
+    session.distanceAnchorAt = null;
     await _stopGps();
     await _saveActive();
     notifyListeners();
@@ -230,6 +299,7 @@ class WorkoutTracker extends ChangeNotifier {
     session.lastLongitude = null;
     session.lastAccuracy = null;
     session.lastFixAt = null;
+    session.distanceAnchorAt = null;
     await _saveActive();
     notifyListeners();
     if (session.usesGps) await _startGps();
@@ -245,6 +315,7 @@ class WorkoutTracker extends ChangeNotifier {
     session.lastLongitude = null;
     session.lastAccuracy = null;
     session.lastFixAt = null;
+    session.distanceAnchorAt = null;
     _pending.add(session);
     current = null;
     await _saveActive();
@@ -280,8 +351,12 @@ class WorkoutTracker extends ChangeNotifier {
       await _savePending();
       error = null;
       return result;
-    } catch (_) {
-      error = 'Workout saved on this phone. It will sync when online.';
+    } catch (failure) {
+      final reason = ApiFailure.from(failure,
+          fallback: 'Could not sync this workout. Try again later.');
+      error = failure is DioException && failure.response == null
+          ? 'Workout saved on this phone. It will sync when online.'
+          : 'Workout saved on this phone. Sync failed: ${reason.message}';
       return null;
     } finally {
       submitting = false;
@@ -291,8 +366,13 @@ class WorkoutTracker extends ChangeNotifier {
 
   Future<void> _startGps() async {
     if (kIsWeb) return;
+    gpsAvailable = false;
+    gpsMessage = 'Waiting for an accurate GPS signal…';
+    notifyListeners();
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
+        gpsMessage = 'Phone location is off. Turn it on to measure distance.';
+        notifyListeners();
         return;
       }
       var permission = await Geolocator.checkPermission();
@@ -301,10 +381,14 @@ class WorkoutTracker extends ChangeNotifier {
       }
       if (permission != LocationPermission.always &&
           permission != LocationPermission.whileInUse) {
+        gpsMessage = 'Allow location access to measure outdoor distance.';
+        notifyListeners();
         return;
       }
       if (await Geolocator.getLocationAccuracy() ==
           LocationAccuracyStatus.reduced) {
+        gpsMessage = 'Enable precise location to measure outdoor distance.';
+        notifyListeners();
         return;
       }
       final LocationSettings settings;
@@ -328,65 +412,28 @@ class WorkoutTracker extends ChangeNotifier {
           showBackgroundLocationIndicator: true,
         );
       }
-      gpsAvailable = true;
       _positions =
           Geolocator.getPositionStream(locationSettings: settings).listen(
         _onPosition,
         onError: (_) {
           gpsAvailable = false;
+          gpsMessage = 'GPS stopped. Check your phone location settings.';
           notifyListeners();
         },
       );
       notifyListeners();
     } catch (_) {
       gpsAvailable = false;
+      gpsMessage = 'GPS could not start. Check your phone location settings.';
       notifyListeners();
     }
   }
 
   void _onPosition(Position fix) {
     final session = current;
-    if (session == null ||
-        !session.isRunning ||
-        !session.usesGps ||
-        fix.isMocked ||
-        fix.accuracy > 35 ||
-        fix.accuracy < 0) {
-      return;
-    }
-    final at = fix.timestamp.toUtc();
-    if (at.isBefore(session.resumedAt!)) return;
-    final previousAt = session.lastFixAt;
-    if (previousAt != null && !at.isAfter(previousAt)) return;
-    if (session.lastLatitude != null &&
-        session.lastLongitude != null &&
-        previousAt != null) {
-      final seconds = at.difference(previousAt).inMilliseconds / 1000.0;
-      if (seconds > 0 && seconds <= 60) {
-        session.gpsCoveredSeconds += seconds.round();
-      }
-      final meters = Geolocator.distanceBetween(session.lastLatitude!,
-          session.lastLongitude!, fix.latitude, fix.longitude);
-      final maxSpeed = session.type == ActivityType.cycling
-          ? 20.0
-          : session.type == ActivityType.running
-              ? 9.0
-              : 4.5;
-      final noiseFloor = (session.lastAccuracy ?? fix.accuracy) > fix.accuracy
-          ? session.lastAccuracy!
-          : fix.accuracy;
-      if (seconds > 0 &&
-          seconds <= 60 &&
-          meters >= (noiseFloor * 1.2).clamp(5.0, 40.0) &&
-          meters / seconds <= maxSpeed) {
-        session.distanceMeters += meters;
-      }
-    }
-    session.lastLatitude = fix.latitude;
-    session.lastLongitude = fix.longitude;
-    session.lastAccuracy = fix.accuracy;
-    session.lastFixAt = at;
-    session.gpsSamples++;
+    if (session == null || !session.recordPosition(fix)) return;
+    gpsAvailable = true;
+    gpsMessage = null;
     unawaited(_saveActive().catchError((_) {
       error = 'Could not save GPS progress on this phone.';
       notifyListeners();
@@ -398,6 +445,7 @@ class WorkoutTracker extends ChangeNotifier {
     await _positions?.cancel();
     _positions = null;
     gpsAvailable = false;
+    gpsMessage = null;
   }
 
   Future<void> _saveActive() {

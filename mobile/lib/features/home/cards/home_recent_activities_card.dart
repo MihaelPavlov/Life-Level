@@ -7,6 +7,7 @@ import '../../../core/widgets/app_icon_image.dart';
 import '../../activity/models/activity_models.dart';
 import '../../activity/providers/activity_provider.dart';
 import '../../activity/tracking/tracked_session_models.dart';
+import '../../activity/tracking/workout_tracker.dart';
 
 /// Shows the full activity-history sheet — the "workout journal". Used by
 /// the Adventure Hub's Journal tile.
@@ -112,9 +113,12 @@ class _ActivityRow extends StatelessWidget {
 
   String _subLine() {
     final parts = ['${activity.durationMinutes} min'];
-    if (activity.distanceKm > 0)
+    if (activity.distanceKm > 0) {
       parts.add('${activity.distanceKm.toStringAsFixed(1)} km');
-    if (activity.calories > 0) parts.add('${activity.calories} kcal');
+    }
+    if (activity.calories > 0) {
+      parts.add('${activity.calories} kcal');
+    }
     return parts.join(' · ');
   }
 
@@ -139,6 +143,62 @@ class _AllActivitiesSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(activityHistoryProvider);
     final sessionsAsync = ref.watch(trackedSessionsProvider);
+    final tracker = ref.watch(workoutTrackerProvider);
+    final history = historyAsync.valueOrNull ?? const <ActivityHistoryDto>[];
+    final remoteSessions =
+        sessionsAsync.valueOrNull ?? const <TrackedSessionDto>[];
+    final remoteIds =
+        remoteSessions.map((session) => session.sessionId).toSet();
+    final pending = tracker.pendingSessions
+        .where((session) => !remoteIds.contains(session.id))
+        .toList();
+    final entries = <({DateTime at, Widget child})>[
+      for (final session in pending)
+        (
+          at: session.endedAt ?? session.startedAt,
+          child: ListTile(
+            onTap: tracker.retryPending,
+            leading:
+                Text(session.type.emoji, style: const TextStyle(fontSize: 26)),
+            title: Text(session.type.displayName,
+                style: const TextStyle(color: AppColors.textPrimary)),
+            subtitle: Text(
+              '${(session.accumulatedSeconds / 60).ceil()} min · '
+              '${(session.distanceMeters / 1000).toStringAsFixed(2)} km · '
+              'Saved on phone',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            trailing: const Tooltip(
+              message: 'Tap to retry sync',
+              child: Icon(Icons.cloud_upload_outlined, color: AppColors.blue),
+            ),
+          ),
+        ),
+      for (final session in remoteSessions)
+        if (session.rewardedActivityId == null)
+          (
+            at: session.endedAt,
+            child: ListTile(
+              leading: Text(session.type.emoji,
+                  style: const TextStyle(fontSize: 26)),
+              title: Text(session.type.displayName,
+                  style: const TextStyle(color: AppColors.textPrimary)),
+              subtitle: Text(
+                '${(session.activeSeconds / 60).ceil()} min · '
+                '${(session.distanceMeters / 1000).toStringAsFixed(2)} km · '
+                '${session.endedAt.toLocal().day}/${session.endedAt.toLocal().month}',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              trailing: const Text('No rewards',
+                  style: TextStyle(color: AppColors.textSecondary)),
+            ),
+          ),
+      for (final activity in history)
+        (
+          at: activity.loggedAt,
+          child: _ActivityRow(activity: activity, isLast: true),
+        ),
+    ]..sort((a, b) => b.at.compareTo(a.at));
 
     return Container(
       margin: const EdgeInsets.only(top: 80),
@@ -173,84 +233,42 @@ class _AllActivitiesSheet extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Failed to load activities.',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () => ref.invalidate(activityHistoryProvider),
-                      child: const Text('Retry',
-                          style: TextStyle(
-                              color: AppColors.blue,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                ),
-              ),
-              data: (history) {
-                if (history.isEmpty && sessionsAsync.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (history.isEmpty && sessionsAsync.hasError) {
-                  return Center(
-                    child: TextButton(
-                      onPressed: () => ref.invalidate(trackedSessionsProvider),
-                      child: const Text('Could not load tracked sessions. Retry'),
-                    ),
-                  );
-                }
-                final sessions = sessionsAsync.valueOrNull
-                        ?.where((session) => session.rewardedActivityId == null)
-                        .toList() ??
-                    const <TrackedSessionDto>[];
-                if (history.isEmpty && sessions.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No activities yet. Start your first workout!',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: sessions.length + history.length,
-                  separatorBuilder: (_, __) => Divider(
-                    height: 1,
-                    color: AppColors.border.withValues(alpha: 0.5),
-                  ),
-                  itemBuilder: (_, i) {
-                    if (i < sessions.length) {
-                      final session = sessions[i];
-                      return ListTile(
-                        leading: Text(session.type.emoji,
-                            style: const TextStyle(fontSize: 26)),
-                        title: Text(session.type.displayName,
-                            style: const TextStyle(color: AppColors.textPrimary)),
-                        subtitle: Text(
-                          '${(session.activeSeconds / 60).ceil()} min · '
-                          '${session.endedAt.toLocal().day}/${session.endedAt.toLocal().month}',
-                          style: const TextStyle(color: AppColors.textSecondary),
-                        ),
-                        trailing: const Text('No rewards',
-                            style: TextStyle(color: AppColors.textSecondary)),
-                      );
-                    }
-                    return _ActivityRow(
-                      activity: history[i - sessions.length],
-                      isLast: i == sessions.length + history.length - 1,
-                    );
-                  },
-                );
-              },
+          if (pending.isNotEmpty && tracker.error != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Text(tracker.error!,
+                  style: const TextStyle(color: AppColors.textSecondary)),
             ),
+          Expanded(
+            child: entries.isNotEmpty
+                ? ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: entries.length,
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: AppColors.border.withValues(alpha: 0.5),
+                    ),
+                    itemBuilder: (_, i) => entries[i].child,
+                  )
+                : historyAsync.isLoading || sessionsAsync.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : historyAsync.hasError || sessionsAsync.hasError
+                        ? Center(
+                            child: TextButton(
+                              onPressed: () {
+                                ref.invalidate(activityHistoryProvider);
+                                ref.invalidate(trackedSessionsProvider);
+                              },
+                              child: const Text(
+                                  'Could not load activities. Retry'),
+                            ),
+                          )
+                        : const Center(
+                            child: Text(
+                              'No activities yet. Start your first workout!',
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                          ),
           ),
         ],
       ),

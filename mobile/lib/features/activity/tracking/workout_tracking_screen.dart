@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../integrations/providers/integrations_provider.dart';
+import '../../home/cards/home_recent_activities_card.dart';
 import '../../map/widgets/encounter_intercept_sheet.dart';
 import '../activity_result_sheet.dart';
 import '../models/activity_models.dart';
@@ -25,6 +26,8 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
   Timer? _ticker;
   bool _busy = false;
   String? _message;
+  TrackedWorkout? _finishedWorkout;
+  TrackedWorkoutResult? _finishedResult;
 
   @override
   void initState() {
@@ -50,6 +53,10 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
     final session = tracker.current;
     final active = session?.isRunning ?? false;
     final seconds = session?.activeSeconds ?? 0;
+    final gpsFresh = tracker.gpsAvailable &&
+        session?.lastFixAt != null &&
+        DateTime.now().toUtc().difference(session!.lastFixAt!) <
+            const Duration(seconds: 30);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -64,6 +71,10 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
             if (!tracker.ready)
               const Center(child: CircularProgressIndicator())
             else if (session == null) ...[
+              if (_finishedWorkout != null) ...[
+                _finishedCard(tracker),
+                const SizedBox(height: 24),
+              ],
               const Text('Choose your activity',
                   style: TextStyle(
                     color: AppColors.textPrimary,
@@ -105,6 +116,9 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
                       : () async {
                           setState(() => _busy = true);
                           try {
+                            _finishedWorkout = null;
+                            _finishedResult = null;
+                            _message = null;
                             await tracker.start(_selected);
                           } catch (e) {
                             if (mounted) {
@@ -149,13 +163,14 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: AppColors.textSecondary, fontSize: 12)),
-                if (active && !tracker.gpsAvailable)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 10),
+                if (active && !gpsFresh)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
                     child: Text(
-                        'GPS unavailable. You can finish and save this session without rewards.',
+                        tracker.gpsMessage ??
+                            'GPS signal lost. Distance is not being measured.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.textSecondary)),
+                        style: const TextStyle(color: AppColors.textSecondary)),
                   ),
               ],
               const SizedBox(height: 28),
@@ -185,11 +200,9 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
                           if (!context.mounted) return;
                           setState(() {
                             _busy = false;
-                            _message = result == null
-                                ? 'Workout saved on this phone. It will sync when online.'
-                                : result.gpsMeasured
-                                    ? 'Workout saved. Game progress updated.'
-                                    : 'Session saved without game rewards.';
+                            _finishedWorkout = session;
+                            _finishedResult = result;
+                            _message = null;
                           });
                           if (result?.reward != null) {
                             applyActivityResultEffects(ref, result!.reward!);
@@ -230,7 +243,7 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: AppColors.textSecondary)),
               ),
-            if (tracker.error != null)
+            if (tracker.error != null && _finishedWorkout == null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(tracker.error!,
@@ -255,6 +268,71 @@ class _WorkoutTrackingScreenState extends ConsumerState<WorkoutTrackingScreen> {
               backgroundColor: AppColors.blue, foregroundColor: Colors.white),
         ),
       );
+
+  Widget _finishedCard(WorkoutTracker tracker) {
+    final workout = _finishedWorkout!;
+    final pending = tracker.pendingSessions.any((s) => s.id == workout.id);
+    final status = pending
+        ? 'Saved on this phone · waiting to sync'
+        : _finishedResult?.gpsMeasured == true
+            ? 'Saved to Journal · game progress updated'
+            : 'Saved to Journal · no game rewards';
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.blue.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${workout.type.displayName} finished',
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(
+            '${_clock(workout.accumulatedSeconds)}'
+            '${workout.usesGps ? ' · ${(workout.distanceMeters / 1000).toStringAsFixed(2)} km' : ''}',
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(status, style: const TextStyle(color: AppColors.textSecondary)),
+          if (!pending &&
+              workout.usesGps &&
+              _finishedResult?.gpsMeasured == false) ...[
+            const SizedBox(height: 6),
+            const Text(
+              'Game progress needs at least 2 minutes, 100 m, and accurate GPS for half the workout.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+          ],
+          if (pending && tracker.error != null) ...[
+            const SizedBox(height: 6),
+            Text(tracker.error!,
+                style: const TextStyle(color: AppColors.textSecondary)),
+          ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton(
+                onPressed: () => showActivityJournalSheet(context),
+                child: const Text('View in Journal'),
+              ),
+              if (pending)
+                TextButton(
+                  onPressed: tracker.retryPending,
+                  child: const Text('Retry sync'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   String _clock(int seconds) {
     final h = seconds ~/ 3600;
