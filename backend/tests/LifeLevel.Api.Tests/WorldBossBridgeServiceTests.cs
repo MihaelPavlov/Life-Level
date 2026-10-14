@@ -47,6 +47,12 @@ file sealed class BridgeCharacterLevelReadPort(DbContext db) : ICharacterLevelRe
             .FirstOrDefaultAsync(ct);
 }
 
+file sealed class BridgeUsernameReadPort : IUserReadPort
+{
+    public Task<string?> GetUsernameAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult<string?>("Tester");
+}
+
 file sealed class BridgeMapNodeCountPort : IMapNodeCountPort
 {
     public Task<Dictionary<Guid, int>> GetNodeCountsByZoneIdsAsync(IEnumerable<Guid> zoneIds, CancellationToken ct = default)
@@ -195,6 +201,34 @@ public class WorldBossBridgeServiceTests
         WorldZoneEntity ForestEntry,
         WorldZoneEntity ForestBoss,
         WorldZoneEntity OceanEntry);
+
+    [Fact]
+    public async Task BossPositionRead_ReportsOnlyCurrentBossZoneAndArrivalTime()
+    {
+        var db = CreateDb(nameof(BossPositionRead_ReportsOnlyCurrentBossZoneAndArrivalTime));
+        var fx = await SeedBossWorldAsync(db, "boss_position");
+        var progress = new UserWorldProgressEntity
+        {
+            Id = Guid.NewGuid(), UserId = fx.UserId, WorldId = fx.World.Id,
+            CurrentZoneId = fx.ForestBoss.Id, CurrentRegionId = fx.ForestRegion.Id,
+        };
+        var arrivedAt = DateTime.UtcNow.AddMinutes(-5);
+        db.UserWorldProgresses.Add(progress);
+        db.UserZoneUnlocks.Add(new UserZoneUnlockEntity
+        {
+            UserId = fx.UserId, WorldZoneId = fx.ForestBoss.Id,
+            UserWorldProgressId = progress.Id, UnlockedAt = arrivedAt,
+        });
+        await db.SaveChangesAsync();
+
+        var reader = new WorldBossPositionReadPortAdapter(db);
+        Assert.Equal(new WorldBossPosition(fx.ForestBoss.Id, arrivedAt),
+            await reader.GetCurrentBossZoneAsync(fx.UserId));
+
+        progress.CurrentEdgeId = db.WorldZoneEdges.Single(e => e.FromZoneId == fx.ForestBoss.Id).Id;
+        await db.SaveChangesAsync();
+        Assert.Null(await reader.GetCurrentBossZoneAsync(fx.UserId));
+    }
 
     // ──────────────────────────────────────────────────────────────────────
     // Test 1: First-time spawn inserts Boss + UserBossState
@@ -378,6 +412,15 @@ public class WorldBossBridgeServiceTests
         var boss = await db.Bosses.FirstOrDefaultAsync(b => b.WorldZoneId == fx.ForestBoss.Id);
         Assert.NotNull(boss);
         Assert.True(await db.UserBossStates.AnyAsync(s => s.UserId == fx.UserId && s.BossId == boss!.Id));
+
+        // Arrival also has to leave both Map read endpoints usable.
+        var mapRead = new MapReadService(db, new BridgeCharacterLevelReadPort(db),
+            new BridgeUsernameReadPort(), new BossDefeatAdapter(db));
+        var detail = await mapRead.GetRegionDetailAsync(fx.UserId, fx.ForestRegion.Id);
+        var overview = await mapRead.GetWorldMapAsync(fx.UserId);
+        Assert.NotNull(detail);
+        Assert.Contains(detail!.Nodes, node => node.Id == fx.ForestBoss.Id && node.Status == "active");
+        Assert.Contains(overview.Regions, region => region.Id == fx.ForestRegion.Id);
     }
 
     // ──────────────────────────────────────────────────────────────────────

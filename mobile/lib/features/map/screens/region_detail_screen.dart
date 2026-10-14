@@ -7,6 +7,7 @@ import '../../../core/services/client_experience_service.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/api/api_failure.dart';
+import '../../../core/api/retry_map_read.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/app_toast.dart';
 import '../../character/providers/character_provider.dart';
 import '../../home/providers/world_progress_provider.dart';
 import '../models/world_map_models.dart';
+import '../providers/world_zone_service_provider.dart';
 import '../services/world_zone_service.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
 import '../../../core/widgets/chest_opened_overlay.dart';
@@ -52,7 +54,7 @@ class RegionDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
-  final _service = WorldZoneService();
+  late final WorldZoneService _service;
   late final StreamSubscription<void> _refreshSub;
 
   // Attached to the active zone bubble inside ZoneTrail so we can call
@@ -82,11 +84,18 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
   bool _destinationRequestInFlight = false;
   bool _chestRequestInFlight = false;
   String? _error;
+  int _loadVersion = 0;
   bool _initialZoneHandled = false;
 
   @override
   void initState() {
     super.initState();
+    _service = ref.read(worldZoneServiceProvider);
+    final container = ProviderScope.containerOf(context, listen: false);
+    if (container.exists(currentRegionDetailProvider)) {
+      final cached = container.read(currentRegionDetailProvider).valueOrNull;
+      if (cached?.id == widget.regionId) _region = cached;
+    }
     _refreshSub = WorldZoneRefreshNotifier.stream.listen((_) => _load());
     _load();
   }
@@ -99,44 +108,65 @@ class _RegionDetailScreenState extends ConsumerState<RegionDetailScreen> {
 
   Future<void> _load() async {
     if (!mounted) return;
+    final version = ++_loadVersion;
     setState(() {
       _loading = _region == null;
       _error = null;
     });
     try {
-      // Region detail + world map in parallel — the latter gives us the
-      // active journey that the detail endpoint doesn't include.
-      final results = await Future.wait([
-        _service.getRegionDetail(widget.regionId),
-        _service.getWorldMap(),
-      ]);
-      final region = results[0] as RegionDetail;
-      final world = results[1] as WorldMapData;
-      if (!mounted) return;
+      final region =
+          await retryMapRead(() => _service.getRegionDetail(widget.regionId));
+      if (!mounted || version != _loadVersion) return;
       setState(() {
         _region = region;
-        _activeJourney = world.activeJourney;
         if (_pendingTravel != null) {
           _travel = _pendingTravel;
           _pendingTravel = null;
         }
-        _activeDestinationZoneId = _findDestinationZoneId(region, world);
-        _nextRegionName = _findNextRegionName(region, world);
-        _userLevel = world.user.level;
         _loading = false;
       });
+      // The world overview enriches the trail but is not required to show it.
+      // A failed companion read must never replace a healthy region with Retry.
+      unawaited(_loadWorldDetails(region, version));
       // Once the trail has laid out, snap the viewport to the active zone so
       // the user always lands on their current position.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_openInitialZone(region)) _scrollToActiveZone();
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || version != _loadVersion) return;
+      _logRegionFailure('detail', e);
       setState(() {
-        _error = playerErrorMessage(e, fallback: 'Could not load this region.');
+        if (_region == null) {
+          _error =
+              playerErrorMessage(e, fallback: 'Could not load this region.');
+        }
         _loading = false;
       });
     }
+  }
+
+  Future<void> _loadWorldDetails(RegionDetail region, int version) async {
+    try {
+      final world = await retryMapRead(() => _service.getWorldMap());
+      if (!mounted || version != _loadVersion) return;
+      setState(() {
+        _activeJourney = world.activeJourney;
+        _activeDestinationZoneId = _findDestinationZoneId(region, world);
+        _nextRegionName = _findNextRegionName(region, world);
+        _userLevel = world.user.level;
+      });
+    } catch (e) {
+      _logRegionFailure('overview', e);
+    }
+  }
+
+  void _logRegionFailure(String source, Object error) {
+    final response = error is DioException ? error.response : null;
+    final data = response?.data;
+    final traceId = data is Map ? data['traceId'] : null;
+    debugPrint('Region ${widget.regionId} $source failed: '
+        'status=${response?.statusCode} traceId=$traceId error=$error');
   }
 
   void _scrollToActiveZone() {

@@ -388,8 +388,7 @@ JourneyOrbState resolveJourneyOrb({
         color: _grey,
         ring: JourneyRing.progress,
         progress: frac.clamp(0.0, 1.0),
-        iconAsset:
-            AppIcons.bossMapIconForName(boss.name) ?? AppIcons.ringBoss,
+        iconAsset: AppIcons.bossMapIconForName(boss.name) ?? AppIcons.ringBoss,
         label: 'Recovering',
         secondaryProgress: 0,
         secondaryColor: _grey,
@@ -413,7 +412,7 @@ JourneyOrbState resolveJourneyOrb({
     );
   }
 
-  if (worldAsync.hasError) {
+  if (worldAsync.hasError && !worldAsync.isLoading && !worldAsync.hasValue) {
     return const JourneyOrbState(
       kind: JourneyKind.error,
       color: _grey,

@@ -65,7 +65,16 @@ class GuildRealtimeService {
       connection.on('StateChanged', (args) {
         final json = _firstMap(args);
         final areas = json?['areas'];
-        if (areas is List) StateChangeNotifier.notify(areas.map((e) => '$e'));
+        if (areas is! List) return;
+        final changed = areas.map((e) => '$e').toList();
+        unawaited(() async {
+          try {
+            await ApiClient.invalidateForExternalChange(changed);
+          } catch (_) {
+            // Still refresh in-memory state if persistent storage fails.
+          }
+          StateChangeNotifier.notify(changed);
+        }());
       });
       connection.onreconnected(({connectionId}) async {
         _retryAttempt = 0;
@@ -75,8 +84,11 @@ class GuildRealtimeService {
         onReconnected();
       });
       connection.onclose(({error}) {
-        _scheduleRetry(onStarted: onStarted, onHpUpdated: onHpUpdated,
-            onDefeated: onDefeated, onExpired: onExpired,
+        _scheduleRetry(
+            onStarted: onStarted,
+            onHpUpdated: onHpUpdated,
+            onDefeated: onDefeated,
+            onExpired: onExpired,
             onReconnected: onReconnected);
       });
 
@@ -86,9 +98,14 @@ class GuildRealtimeService {
     } catch (_) {
       final failed = _connection;
       _connection = null;
-      try { await failed?.stop(); } catch (_) {}
-      _scheduleRetry(onStarted: onStarted, onHpUpdated: onHpUpdated,
-          onDefeated: onDefeated, onExpired: onExpired,
+      try {
+        await failed?.stop();
+      } catch (_) {}
+      _scheduleRetry(
+          onStarted: onStarted,
+          onHpUpdated: onHpUpdated,
+          onDefeated: onDefeated,
+          onExpired: onExpired,
           onReconnected: onReconnected);
     } finally {
       _starting = false;
@@ -108,8 +125,11 @@ class GuildRealtimeService {
     if (_retryAttempt < 6) _retryAttempt++;
     _retry = Timer(Duration(seconds: seconds), () {
       if (!_stopped) {
-        start(onStarted: onStarted, onHpUpdated: onHpUpdated,
-            onDefeated: onDefeated, onExpired: onExpired,
+        start(
+            onStarted: onStarted,
+            onHpUpdated: onHpUpdated,
+            onDefeated: onDefeated,
+            onExpired: onExpired,
             onReconnected: onReconnected);
       }
     });

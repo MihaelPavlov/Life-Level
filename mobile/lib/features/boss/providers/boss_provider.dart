@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/retry_map_read.dart';
 import '../models/boss_damage_history.dart';
 import '../services/boss_page_service.dart';
 import '../models/boss_list_item.dart';
@@ -9,14 +10,15 @@ final bossPageServiceProvider =
 class BossListNotifier extends AsyncNotifier<List<BossListItem>> {
   @override
   Future<List<BossListItem>> build() =>
-      ref.watch(bossPageServiceProvider).getAllBosses();
+      retryMapRead(() => ref.watch(bossPageServiceProvider).getAllBosses());
 
   Future<void> refresh() async {
     final previous = state;
     state = const AsyncValue<List<BossListItem>>.loading()
         .copyWithPrevious(previous);
     final refreshed = await AsyncValue.guard(
-      () => ref.read(bossPageServiceProvider).getAllBosses(),
+      () =>
+          retryMapRead(() => ref.read(bossPageServiceProvider).getAllBosses()),
     );
     state = refreshed.hasError && previous.hasValue ? previous : refreshed;
   }

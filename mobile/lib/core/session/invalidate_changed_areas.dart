@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/world_zone_refresh_notifier.dart';
 
 import '../../features/achievements/providers/achievements_provider.dart';
 import '../../features/activity/providers/activity_provider.dart';
@@ -6,11 +7,9 @@ import '../../features/boss/providers/boss_provider.dart';
 import '../../features/character/providers/character_provider.dart';
 import '../../features/guild/providers/guild_provider.dart';
 import '../../features/home/providers/adventure_hub_status_provider.dart';
-import '../../features/home/providers/world_progress_provider.dart';
 import '../../features/items/providers/items_provider.dart';
 import '../../features/leaderboard/providers/leaderboard_provider.dart';
 import '../../features/notifications/providers/notification_list_provider.dart';
-import '../../features/map/providers/region_chest_provider.dart';
 import '../../features/modes/burn_chain/burn_chain_provider.dart';
 import '../../features/modes/treasure_delve/delve_provider.dart';
 import '../../features/quests/providers/quest_provider.dart';
@@ -24,7 +23,8 @@ import 'invalidate_user_providers.dart';
 
 void invalidateChangedAreas(WidgetRef ref, Set<String> areas) {
   if (areas.contains('all')) {
-    invalidateUserScopedProviders(ref);
+    invalidateUserScopedProviders(ref, includeWorld: false);
+    WorldZoneRefreshNotifier.notify();
     return;
   }
   bool has(String area) => areas.contains(area);
@@ -47,12 +47,11 @@ void invalidateChangedAreas(WidgetRef ref, Set<String> areas) {
     ref.read(equipmentProvider.notifier).refresh();
   }
   if (has('world') || has('chests')) {
-    ref.invalidate(worldProgressProvider);
-    ref.invalidate(currentRegionDetailProvider);
-    ref.invalidate(dungeonStateProvider);
-    ref.invalidate(regionChestsProvider);
+    WorldZoneRefreshNotifier.notify();
   }
-  if (has('bosses')) ref.invalidate(bossListProvider);
+  if (has('bosses') && !has('world') && !has('chests')) {
+    ref.invalidate(bossListProvider);
+  }
   if (has('quests')) {
     ref.invalidate(dailyQuestsProvider);
     ref.invalidate(weeklyQuestsProvider);
@@ -78,8 +77,18 @@ void invalidateChangedAreas(WidgetRef ref, Set<String> areas) {
     ref.invalidate(delveRunProvider);
   }
   if (areas.any((area) => const {
-        'character', 'achievements', 'titles', 'world', 'chests', 'bosses',
-        'quests', 'rewards', 'streak', 'leaderboardChest', 'season', 'talents'
+        'character',
+        'achievements',
+        'titles',
+        'world',
+        'chests',
+        'bosses',
+        'quests',
+        'rewards',
+        'streak',
+        'leaderboardChest',
+        'season',
+        'talents'
       }.contains(area))) {
     ref.invalidate(adventureHubSignalsProvider);
   }

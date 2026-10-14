@@ -27,6 +27,8 @@ class ApiClient {
   static const _cachePrefix = 'lifelevel.response_cache.v1';
   static Future<void>? _pendingFullCacheClear;
   static final Map<String, Future<void>> _pendingAreaInvalidations = {};
+  static final Map<String, int> _cacheGenerations = {};
+  static int _fullCacheGeneration = 0;
 
   static Dio _createDio() {
     final dio = Dio(BaseOptions(
@@ -113,31 +115,54 @@ class ApiClient {
       return _dio.get(path, queryParameters: queryParameters);
     }
     await _waitForInvalidation(changedArea);
+    final generation = _cacheGenerations[changedArea] ?? 0;
+    final fullGeneration = _fullCacheGeneration;
     final prefs = await SharedPreferences.getInstance();
     final key = await _cacheKey(path, queryParameters);
+    if (!_cacheIsCurrent(changedArea, generation, fullGeneration)) {
+      return cachedGet(path,
+          changedArea: changedArea, queryParameters: queryParameters);
+    }
     final raw = prefs.getString(key);
     if (raw != null) {
       try {
         final envelope = jsonDecode(raw) as Map<String, dynamic>;
-        final savedAt = DateTime.parse(envelope['savedAt'] as String);
-        final age = DateTime.now().toUtc().difference(savedAt);
-        if (age < const Duration(hours: 24)) {
-          if (age >= const Duration(minutes: 5)) {
-            unawaited(_refreshCache(
-                prefs, key, path, changedArea, queryParameters, raw));
+        final stale = (envelope['generation'] is num &&
+                envelope['generation'] != generation) ||
+            (envelope['fullGeneration'] is num &&
+                envelope['fullGeneration'] != fullGeneration);
+        if (stale) {
+          await prefs.remove(key);
+        } else {
+          final savedAt = DateTime.parse(envelope['savedAt'] as String);
+          final age = DateTime.now().toUtc().difference(savedAt);
+          if (age < const Duration(hours: 24)) {
+            if (!_cacheIsCurrent(changedArea, generation, fullGeneration)) {
+              return cachedGet(path,
+                  changedArea: changedArea, queryParameters: queryParameters);
+            }
+            if (age >= const Duration(minutes: 5)) {
+              unawaited(_refreshCache(prefs, key, path, changedArea,
+                  queryParameters, raw, generation, fullGeneration));
+            }
+            return Response<dynamic>(
+              data: envelope['data'],
+              statusCode: 200,
+              requestOptions: RequestOptions(path: path),
+            );
           }
-          return Response<dynamic>(
-            data: envelope['data'],
-            statusCode: 200,
-            requestOptions: RequestOptions(path: path),
-          );
         }
       } catch (_) {
         await prefs.remove(key);
       }
     }
     final response = await _dio.get(path, queryParameters: queryParameters);
-    await _writeCache(prefs, key, response.data, changedArea);
+    if (!_cacheIsCurrent(changedArea, generation, fullGeneration)) {
+      return cachedGet(path,
+          changedArea: changedArea, queryParameters: queryParameters);
+    }
+    await _writeCache(
+        prefs, key, response.data, changedArea, generation, fullGeneration);
     return response;
   }
 
@@ -148,10 +173,14 @@ class ApiClient {
     String changedArea,
     Map<String, dynamic>? queryParameters,
     String previous,
+    int generation,
+    int fullGeneration,
   ) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
-      await _writeCache(prefs, key, response.data, changedArea);
+      if (!_cacheIsCurrent(changedArea, generation, fullGeneration)) return;
+      await _writeCache(
+          prefs, key, response.data, changedArea, generation, fullGeneration);
       final oldData = (jsonDecode(previous) as Map<String, dynamic>)['data'];
       if (jsonEncode(oldData) != jsonEncode(response.data)) {
         StateChangeNotifier.notify([changedArea]);
@@ -161,14 +190,21 @@ class ApiClient {
     }
   }
 
-  static Future<void> _writeCache(SharedPreferences prefs, String key,
-          Object? data, String changedArea) =>
+  static Future<void> _writeCache(
+          SharedPreferences prefs,
+          String key,
+          Object? data,
+          String changedArea,
+          int generation,
+          int fullGeneration) =>
       prefs.setString(
         key,
         jsonEncode({
           'savedAt': DateTime.now().toUtc().toIso8601String(),
           'data': data,
           'changedArea': changedArea,
+          'generation': generation,
+          'fullGeneration': fullGeneration,
         }),
       );
 
@@ -178,6 +214,9 @@ class ApiClient {
         .where((area) => area.isNotEmpty)
         .toSet();
     if (wanted.isEmpty) return;
+    for (final area in wanted) {
+      _cacheGenerations[area] = (_cacheGenerations[area] ?? 0) + 1;
+    }
     final prefs = await SharedPreferences.getInstance();
     final sample = await _cacheKey('', null);
     final userPrefix = sample.substring(0, sample.lastIndexOf('.') + 1);
@@ -198,6 +237,26 @@ class ApiClient {
       }
     }
     await Future.wait(removals);
+  }
+
+  static bool _cacheIsCurrent(
+          String area, int generation, int fullGeneration) =>
+      (_cacheGenerations[area] ?? 0) == generation &&
+      _fullCacheGeneration == fullGeneration;
+
+  /// Realtime hints have no HTTP response interceptor to clear cached GETs.
+  /// Invalidate before providers react to the hint.
+  static Future<void> invalidateForExternalChange(
+      Iterable<String> areas) async {
+    final wanted = areas
+        .map((area) => area.trim())
+        .where((area) => area.isNotEmpty)
+        .toSet();
+    if (wanted.contains('all')) {
+      await clearCurrentUserCache();
+    } else {
+      await invalidateCacheAreas(wanted);
+    }
   }
 
   static void _scheduleFullCacheClear() {
@@ -260,6 +319,7 @@ class ApiClient {
   }
 
   static Future<void> clearCurrentUserCache() async {
+    _fullCacheGeneration++;
     final prefs = await SharedPreferences.getInstance();
     final sample = await _cacheKey('', null);
     final userPrefix = sample.substring(0, sample.lastIndexOf('.') + 1);

@@ -143,7 +143,8 @@ public class BossService(
         .ToList();
     }
 
-    public async Task<UserBossState> ActivateFightAsync(Guid userId, Guid bossId)
+    public async Task<UserBossState> ActivateFightAsync(
+        Guid userId, Guid bossId, DateTime? startedAt = null)
     {
         var boss = await db.Set<Boss>().FindAsync(bossId)
             ?? throw new InvalidOperationException("Boss not found.");
@@ -175,7 +176,7 @@ public class BossService(
                 throw new InvalidOperationException("Boss is already defeated.");
             if (existing.IsExpired)
                 throw new InvalidOperationException("Fight has expired. Use debug reset to try again.");
-            await TargetAndInitializeAsync(userId, existing, boss);
+            await TargetAndInitializeAsync(userId, existing, boss, startedAt);
             await db.SaveChangesAsync();
             return existing;
         }
@@ -189,7 +190,7 @@ public class BossService(
             HpDealt = 0,
             IsDefeated = false,
             IsExpired = false,
-            StartedAt = DateTime.UtcNow,
+            StartedAt = startedAt ?? DateTime.UtcNow,
             IsTargeted = true,
             MaxHpSnapshot = boss.MaxHp,
             ArmorSnapshot = boss.Armor,
@@ -521,14 +522,16 @@ public class BossService(
         return state;
     }
 
-    private async Task TargetAndInitializeAsync(Guid userId, UserBossState state, Boss boss)
+    private async Task TargetAndInitializeAsync(
+        Guid userId, UserBossState state, Boss boss, DateTime? startedAt = null)
     {
-        await db.Set<UserBossState>()
+        var otherTargets = await db.Set<UserBossState>()
             .Where(s => s.UserId == userId && s.Id != state.Id && s.IsTargeted)
-            .ExecuteUpdateAsync(x => x.SetProperty(s => s.IsTargeted, false));
+            .ToListAsync();
+        foreach (var other in otherTargets) other.IsTargeted = false;
 
         state.IsTargeted = true;
-        state.StartedAt ??= DateTime.UtcNow;
+        state.StartedAt ??= startedAt ?? DateTime.UtcNow;
         if (state.CombatVersion < BossCombatCalculator.CombatVersion)
         {
             state.MaxHpSnapshot = boss.MaxHp;

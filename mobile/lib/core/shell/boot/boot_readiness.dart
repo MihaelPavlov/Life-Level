@@ -46,8 +46,7 @@ class BootReadiness {
 ///
 /// A provider that is reloading keeps its previous error (Riverpod's
 /// copyWithPrevious), e.g. the 401s from fetches made between logout and
-/// the next login. Those must read as loading, or the row flashes a red "!"
-/// before turning green.
+/// the next login. Those must read as loading while the retry runs.
 BootStepState foldBootStep(List<AsyncValue<Object?>> sources) {
   if (sources.any((s) => s.hasError && !s.hasValue && !s.isLoading)) {
     return BootStepState.failed;
@@ -99,7 +98,9 @@ void retryBootStep(WidgetRef ref, BootStep step) {
       ref.invalidate(dailyQuestsProvider);
       ref.invalidate(seasonProvider);
     case BootStep.rewards:
-      ref.read(unlocksProvider.notifier).refresh();
+      // Invalidation moves an initial error into loading. refresh() retains
+      // the error until its request finishes, which hides retry progress.
+      ref.invalidate(unlocksProvider);
       ref.invalidate(adventureHubSignalsProvider);
   }
 }

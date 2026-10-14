@@ -65,11 +65,13 @@ void invalidateProgressProviders(Ref ref) {
 
 // Call on logout, app resume, and offline→online transitions so we never
 // serve the previous session's values after the auth token changes.
-void invalidateUserScopedProviders(WidgetRef ref) {
+void invalidateUserScopedProviders(WidgetRef ref, {bool includeWorld = true}) {
   ref.invalidate(characterProfileProvider);
-  ref.invalidate(worldProgressProvider);
-  ref.invalidate(currentRegionDetailProvider);
-  ref.invalidate(dungeonStateProvider);
+  if (includeWorld) {
+    ref.invalidate(worldProgressProvider);
+    ref.invalidate(currentRegionDetailProvider);
+    ref.invalidate(dungeonStateProvider);
+  }
   ref.invalidate(dailyQuestsProvider);
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
@@ -83,7 +85,7 @@ void invalidateUserScopedProviders(WidgetRef ref) {
   ref.invalidate(leaderboardChestProvider);
   ref.invalidate(leaderboardProvider);
   ref.invalidate(notificationListProvider);
-  ref.invalidate(regionChestsProvider);
+  if (includeWorld) ref.invalidate(regionChestsProvider);
   ref.invalidate(guildProvider);
   ref.invalidate(seasonProvider);
   ref.invalidate(talentsProvider);
@@ -197,7 +199,8 @@ Future<void> _finishLogoutInBackground(
       work.timeout(limit, onTimeout: () {}).catchError((Object _) {});
   await Future.wait([
     if (fcmToken != null && jwt != null)
-      capped(NotificationsService.instance.unregister(fcmToken, authToken: jwt)),
+      capped(
+          NotificationsService.instance.unregister(fcmToken, authToken: jwt)),
     capped(GoogleSignInCoordinator.instance.signOut()),
     capped(BossSeenStore.instance.clear()),
   ]);

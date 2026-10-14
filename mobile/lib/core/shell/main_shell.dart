@@ -157,6 +157,7 @@ class _MainShellState extends ConsumerState<MainShell>
   late final StreamSubscription<LevelUpEvent> _levelUpSub;
   late final StreamSubscription<Set<String>> _stateChangeSub;
   Timer? _stateChangeDebounce;
+  Timer? _bootFollowupRetry;
   final Set<String> _queuedAreas = {};
   late final StreamSubscription<ItemDto> _itemObtainedSub;
   late final StreamSubscription<String> _navTabSub;
@@ -308,7 +309,6 @@ class _MainShellState extends ConsumerState<MainShell>
     _worldRefreshSub = WorldZoneRefreshNotifier.stream.listen((_) {
       if (!mounted) return;
       ref.invalidate(worldProgressProvider);
-      ref.invalidate(currentRegionDetailProvider);
       ref.invalidate(dungeonStateProvider);
       ref.invalidate(bossListProvider);
       ref.invalidate(regionChestsProvider);
@@ -330,8 +330,6 @@ class _MainShellState extends ConsumerState<MainShell>
     });
     _bossDefeatedSub = BossDefeatedNotifier.stream.listen((info) {
       if (!mounted) return;
-      ref.invalidate(bossListProvider);
-      ref.invalidate(worldProgressProvider);
       WorldZoneRefreshNotifier.notify();
       showBossDefeatedOverlay(context, info);
     });
@@ -614,6 +612,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _levelUpSub.cancel();
     _stateChangeSub.cancel();
     _stateChangeDebounce?.cancel();
+    _bootFollowupRetry?.cancel();
     _bossReplaySub?.cancel();
     _itemObtainedSub.cancel();
     _dungeonFloorSub.cancel();
@@ -731,6 +730,17 @@ class _MainShellState extends ConsumerState<MainShell>
 
   void _finishBoot() {
     if (!mounted) return;
+    final readiness = ref.read(bootReadinessProvider);
+    if (!readiness.allDone) {
+      _bootFollowupRetry?.cancel();
+      _bootFollowupRetry = Timer(const Duration(seconds: 30), () {
+        if (!mounted) return;
+        final current = ref.read(bootReadinessProvider);
+        for (final step in BootStep.values) {
+          if (current[step] != BootStepState.done) retryBootStep(ref, step);
+        }
+      });
+    }
     setState(() => _booting = false);
     final welcome = _welcomeAfterBoot;
     _welcomeAfterBoot = null;

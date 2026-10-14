@@ -31,15 +31,12 @@ public record ActivityBossDamageResult(
 }
 
 /// <summary>
-/// Cross-module hook: when an activity is logged in the Activity module,
-/// this port distributes "automatic" damage to every active boss the user
-/// is fighting. Implemented in <c>LifeLevel.Modules.Adventure.Encounters</c>
-/// so ActivityService doesn't take a hard dep on the Boss entity.
+/// Cross-module hook for one workout turn against the targeted personal boss.
 ///
 /// Damage is computed from the activity shape (type + duration + distance +
 /// calories) via the existing <c>BossService.CalculateDamageFromActivity</c>
-/// formula. A single workout damages every non-defeated boss the user has
-/// an active <c>UserBossState</c> for.
+/// formula. The optional position was captured before the workout moved the
+/// player and can start an unstarted world-zone boss if no fight is active.
 ///
 /// Returns the bosses (if any) that were killed by this single damage tick,
 /// so the activity-log response can carry a "you defeated X" payload.
@@ -55,5 +52,7 @@ public interface IActivityBossDamagePort
         double distanceKm,
         int calories,
         DateTime activityLoggedAt,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        WorldBossPosition? bossPositionAtStart = null,
+        bool allowAutomaticStart = true);
 }

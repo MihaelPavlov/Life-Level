@@ -1,5 +1,4 @@
 import '../../unlocks/tour/tours/unlock_tours.dart';
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -7,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/services/boss_overlay_notifier.dart';
-import '../../../core/services/dungeon_floor_cleared_notifier.dart';
 import '../../../core/services/world_map_notifier.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/app_toast.dart';
@@ -51,8 +49,6 @@ class HomePortalCard extends ConsumerStatefulWidget {
 }
 
 class _HomePortalCardState extends ConsumerState<HomePortalCard> {
-  late final StreamSubscription<DungeonFloorClearedEvent> _floorClearedSub;
-  late final StreamSubscription<void> _worldRefreshSub;
   // Branch zone id currently being committed via a SetDestination call —
   // surfaced to the crossroads variant so the row dims while in flight.
   String? _pickingBranchId;
@@ -136,35 +132,6 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    // After a workout clears a dungeon floor, the active floor advances —
-    // invalidate the dungeon state cache so the home portal swaps in the
-    // next floor's name + target. We also refresh world progress in case
-    // the floor completion triggers a region/zone advance.
-    _floorClearedSub = DungeonFloorClearedNotifier.stream.listen((_) {
-      if (!mounted) return;
-      ref.invalidate(dungeonStateProvider);
-      ref.invalidate(worldProgressProvider);
-      ref.invalidate(currentRegionDetailProvider);
-    });
-    // Generic world-refresh signal (logged workouts, set-destination, etc.).
-    _worldRefreshSub = WorldZoneRefreshNotifier.stream.listen((_) {
-      if (!mounted) return;
-      ref.invalidate(dungeonStateProvider);
-      ref.invalidate(worldProgressProvider);
-      ref.invalidate(currentRegionDetailProvider);
-    });
-  }
-
-  @override
-  void dispose() {
-    _floorClearedSub.cancel();
-    _worldRefreshSub.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final ref = this.ref;
     final onSync = widget.onSync;
@@ -205,7 +172,7 @@ class _HomePortalCardState extends ConsumerState<HomePortalCard> {
     }
 
     final worldAsync = ref.watch(worldProgressProvider);
-    if (worldAsync.hasError) {
+    if (worldAsync.hasError && !worldAsync.isLoading && !worldAsync.hasValue) {
       return _PortalErrorCard(
         message: worldAsync.error.toString(),
         onRetry: () => ref.invalidate(worldProgressProvider),

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/api/api_failure.dart';
-import '../../../core/services/dungeon_floor_cleared_notifier.dart';
+import '../../../core/api/retry_map_read.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../models/world_map_models.dart';
@@ -34,45 +34,48 @@ class DungeonFloorsSheet extends StatefulWidget {
 
 class _DungeonFloorsSheetState extends State<DungeonFloorsSheet> {
   final _service = WorldZoneService();
-  late final StreamSubscription<DungeonFloorClearedEvent> _floorSub;
   late final StreamSubscription<void> _refreshSub;
 
   DungeonState? _state;
   bool _loading = true;
   String? _error;
+  int _loadVersion = 0;
 
   @override
   void initState() {
     super.initState();
-    _floorSub = DungeonFloorClearedNotifier.stream.listen((_) => _load());
     _refreshSub = WorldZoneRefreshNotifier.stream.listen((_) => _load());
     _load();
   }
 
   @override
   void dispose() {
-    _floorSub.cancel();
     _refreshSub.cancel();
     super.dispose();
   }
 
   Future<void> _load() async {
     if (!mounted) return;
+    final version = ++_loadVersion;
     setState(() {
       _loading = _state == null;
       _error = null;
     });
     try {
-      final state = await _service.getDungeonState(widget.zoneId);
-      if (!mounted) return;
+      final state =
+          await retryMapRead(() => _service.getDungeonState(widget.zoneId));
+      if (!mounted || version != _loadVersion) return;
       setState(() {
         _state = state;
         _loading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || version != _loadVersion) return;
       setState(() {
-        _error = playerErrorMessage(e, fallback: 'Could not load the dungeon.');
+        if (_state == null) {
+          _error =
+              playerErrorMessage(e, fallback: 'Could not load the dungeon.');
+        }
         _loading = false;
       });
     }

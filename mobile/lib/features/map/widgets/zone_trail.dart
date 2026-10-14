@@ -189,6 +189,16 @@ class _ZoneTrailState extends State<ZoneTrail> with TickerProviderStateMixin {
   int _hops = 1, _lastHop = 0;
   bool get _hopping => _hop.isAnimating;
 
+  @override
+  void initState() {
+    super.initState();
+    // These late controllers are also disposed unconditionally. Initialize
+    // them while the element is active, including for an empty region trail.
+    _travelCtrl.value;
+    _hop.value;
+    _fog.value;
+  }
+
   double get _hopT {
     final v = _hop.value * _hops;
     final seg = v.floor().clamp(0, _hops - 1);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/api/api_failure.dart';
+import '../../../core/api/retry_map_read.dart';
 import '../../../core/services/world_zone_refresh_notifier.dart';
 import '../../../core/widgets/api_error_state.dart';
 import '../../../core/widgets/app_toast.dart';
@@ -53,6 +54,7 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
   WorldMapData? _data;
   bool _loading = true;
   String? _error;
+  int _loadVersion = 0;
   bool _hasScrolledToCurrentRegion = false;
   String? _lockedTargetId;
 
@@ -79,13 +81,14 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
 
   Future<void> _load() async {
     if (!mounted) return;
+    final version = ++_loadVersion;
     setState(() {
       _loading = _data == null;
       _error = null;
     });
     try {
-      final data = await _service.getWorldMap();
-      if (!mounted) return;
+      final data = await retryMapRead(() => _service.getWorldMap());
+      if (!mounted || version != _loadVersion) return;
       setState(() {
         _data = data;
         _loading = false;
@@ -109,10 +112,12 @@ class WorldHubScreenState extends ConsumerState<WorldHubScreen> {
       });
       _scrollToCurrentRegion(data);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || version != _loadVersion) return;
       setState(() {
-        _error =
-            playerErrorMessage(e, fallback: 'Could not load the world map.');
+        if (_data == null) {
+          _error =
+              playerErrorMessage(e, fallback: 'Could not load the world map.');
+        }
         _loading = false;
       });
     }

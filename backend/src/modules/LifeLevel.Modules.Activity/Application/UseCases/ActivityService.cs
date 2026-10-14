@@ -28,7 +28,8 @@ public class ActivityService(
     IActivityBossDamagePort? activityBossDamage = null,
     IGuildRaidActivityPort? guildRaidActivity = null,
     ITalentBonusReadPort? talentBonus = null,
-    ICharacterClassBonusReadPort? classBonus = null)
+    ICharacterClassBonusReadPort? classBonus = null,
+    IWorldBossPositionReadPort? worldBossPosition = null)
     : IActivityStatsReadPort, IActivityLogPort, IActivityExternalIdReadPort, IActivityHistoryReadPort, IActivityMixReadPort, IActivityGainPreviewPort
 {
     public ActivityGainPreview Preview(ActivityType type, int durationMinutes, double? distanceKm, int? calories)
@@ -48,6 +49,21 @@ public class ActivityService(
 
     /// <summary>Extra XP on the devoted activity type while the trait holds.</summary>
     public const double DevotionXpBonus = 0.10;
+
+    private async Task<WorldBossPosition?> GetBossPositionAtStartAsync(
+        Guid userId, CancellationToken ct = default)
+    {
+        if (worldBossPosition == null) return null;
+        try
+        {
+            return await worldBossPosition.GetCurrentBossZoneAsync(userId, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not read boss position before activity for user {UserId}", userId);
+            return null;
+        }
+    }
     // LL-035: the "log your first activity" tutorial step gate. We advance the character
     // from step 4 → 5 only when the user actually logs a real activity (port-driven).
     private const int TutorialActivityGateStep = 4;
@@ -125,6 +141,7 @@ public class ActivityService(
             $"{request.Type} workout · {request.DurationMinutes} min", xp);
 
         SharedKernel.DTOs.ActiveEncounterPortDto? activeEncounter = null;
+        var bossPositionAtStart = await GetBossPositionAtStartAsync(userId);
         var adventureDistanceKm = AdventureDistanceCalculator.Calculate(request.Type, request.DistanceKm);
         if (adventureDistanceKm > 0)
         {
@@ -166,7 +183,8 @@ public class ActivityService(
                     request.DurationMinutes,
                     request.DistanceKm ?? 0,
                     request.Calories ?? 0,
-                    activity.LoggedAt);
+                    activity.LoggedAt,
+                    bossPositionAtStart: bossPositionAtStart);
             }
             catch (Exception ex)
             {
@@ -307,6 +325,7 @@ public class ActivityService(
         var xpResult = await characterXp.AwardXpAsync(userId, "Activity", GetActivityEmoji(type),
             $"{type} workout · {durationMinutes} min", xp);
         var adventureDistanceKm = AdventureDistanceCalculator.Calculate(type, distanceKm);
+        var bossPositionAtStart = await GetBossPositionAtStartAsync(userId, ct);
         if (adventureDistanceKm > 0)
         {
             logger.LogInformation(
@@ -329,7 +348,9 @@ public class ActivityService(
                     distanceKm ?? 0,
                     calories ?? 0,
                     activity.LoggedAt,
-                    ct);
+                    ct,
+                    bossPositionAtStart,
+                    allowAutomaticStart: activity.LoggedAt >= DateTime.UtcNow.AddHours(-24));
             }
             catch (Exception ex)
             {

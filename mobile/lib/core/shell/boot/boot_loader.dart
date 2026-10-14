@@ -14,19 +14,21 @@ import 'boot_readiness.dart';
 /// has really loaded, so the player never sees half-built state.
 class BootLoaderOverlay extends ConsumerStatefulWidget {
   final VoidCallback onFinished;
+  final void Function(WidgetRef ref, BootStep step)? retryStep;
 
   /// Shortest time on screen, so a fast load doesn't flash.
   final Duration minDuration;
 
-  /// When "Taking longer than usual · Try again" appears.
+  /// When the slower-load message appears, before actions become available.
   final Duration slowAfter;
 
-  /// When "Continue anyway" appears, so a flaky endpoint can't trap the player.
+  /// When Retry and Continue appear for a request that has not resolved.
   final Duration escapeAfter;
 
   const BootLoaderOverlay({
     super.key,
     required this.onFinished,
+    this.retryStep,
     this.minDuration = const Duration(milliseconds: 800),
     this.slowAfter = const Duration(seconds: 8),
     this.escapeAfter = const Duration(seconds: 20),
@@ -43,6 +45,10 @@ class _BootLoaderOverlayState extends ConsumerState<BootLoaderOverlay>
   late final _exit = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 350));
   final _timers = <Timer>[];
+  final _retryTimers = <BootStep, Timer>{};
+  final _retryAttempts = <BootStep, int>{};
+  final _awaitingRetryLoad = <BootStep>{};
+  static const _maxAutomaticRetries = 3;
   bool _minElapsed = false;
   bool _slow = false;
   bool _canEscape = false;
@@ -74,6 +80,9 @@ class _BootLoaderOverlayState extends ConsumerState<BootLoaderOverlay>
     for (final t in _timers) {
       t.cancel();
     }
+    for (final t in _retryTimers.values) {
+      t.cancel();
+    }
     _pulse.dispose();
     _exit.dispose();
     bootLoaderShowing = false;
@@ -88,6 +97,10 @@ class _BootLoaderOverlayState extends ConsumerState<BootLoaderOverlay>
   Future<void> _finish({bool hold = true}) async {
     if (_finishing) return;
     _finishing = true;
+    for (final t in _retryTimers.values) {
+      t.cancel();
+    }
+    _retryTimers.clear();
     _set(() => _ready = true);
     final motion = AppMotion.allowsDecorativeMotion(context);
     if (hold) {
@@ -101,20 +114,72 @@ class _BootLoaderOverlayState extends ConsumerState<BootLoaderOverlay>
   }
 
   void _retry(BootReadiness r) {
+    for (final t in _retryTimers.values) {
+      t.cancel();
+    }
+    _retryTimers.clear();
+    _retryAttempts.clear();
     for (final step in BootStep.values) {
-      if (r[step] != BootStepState.done) retryBootStep(ref, step);
+      if (r[step] != BootStepState.done) {
+        _awaitingRetryLoad.add(step);
+        _retryStep(step);
+      }
     }
     _set(() => _slow = false);
-    _timers.add(Timer(widget.slowAfter, () => _set(() => _slow = true)));
+  }
+
+  void _retryStep(BootStep step) =>
+      (widget.retryStep ?? retryBootStep)(ref, step);
+
+  void _scheduleAutomaticRetries(BootReadiness readiness) {
+    if (_finishing) return;
+    for (final step in BootStep.values) {
+      switch (readiness[step]) {
+        case BootStepState.done:
+          _retryTimers.remove(step)?.cancel();
+          _retryAttempts.remove(step);
+          _awaitingRetryLoad.remove(step);
+        case BootStepState.loading:
+          _awaitingRetryLoad.remove(step);
+        case BootStepState.failed:
+          if (_awaitingRetryLoad.contains(step) ||
+              _retryTimers.containsKey(step) ||
+              (_retryAttempts[step] ?? 0) >= _maxAutomaticRetries) {
+            continue;
+          }
+          final attempt = _retryAttempts[step] ?? 0;
+          final delay = Duration(seconds: 1 << attempt);
+          _retryTimers[step] = Timer(delay, () {
+            _retryTimers.remove(step);
+            if (!mounted ||
+                _finishing ||
+                ref.read(bootReadinessProvider)[step] != BootStepState.failed) {
+              return;
+            }
+            _retryAttempts[step] = attempt + 1;
+            _awaitingRetryLoad.add(step);
+            _retryStep(step);
+          });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final r = ref.watch(bootReadinessProvider);
+    _scheduleAutomaticRetries(r);
     if (r.allDone && _minElapsed && !_finishing) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _finish());
     }
-    final trouble = !r.allDone && (_slow || r.anyFailed);
+    final exhausted = BootStep.values.any((step) =>
+        r[step] == BootStepState.failed &&
+        (_retryAttempts[step] ?? 0) >= _maxAutomaticRetries);
+    final trouble = !r.allDone && (_slow || exhausted || _canEscape);
+    final retryCycleActive = _retryAttempts.isNotEmpty ||
+        _retryTimers.isNotEmpty ||
+        _awaitingRetryLoad.isNotEmpty;
+    final showRetry = exhausted || (_canEscape && !retryCycleActive);
+    final showContinue = exhausted || _canEscape;
 
     // Opaque: swallows taps meant for Home underneath, while the loader's
     // own buttons still work.
@@ -201,7 +266,7 @@ class _BootLoaderOverlayState extends ConsumerState<BootLoaderOverlay>
                               child: Column(
                                 children: [
                                   Text(
-                                    r.anyFailed
+                                    exhausted
                                         ? 'Something didn\'t load.'
                                         : 'Taking longer than usual.',
                                     style: const TextStyle(
@@ -211,32 +276,34 @@ class _BootLoaderOverlayState extends ConsumerState<BootLoaderOverlay>
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  OutlinedButton.icon(
-                                    onPressed: () => _retry(r),
-                                    icon: const Icon(Icons.refresh_rounded,
-                                        size: 18),
-                                    label: const Text('Try again'),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: const Color(0xFF8CC0FF),
-                                      backgroundColor:
-                                          AppColors.blue.withValues(alpha: .12),
-                                      side: BorderSide(
-                                          color: AppColors.blue
-                                              .withValues(alpha: .5)),
-                                      minimumSize: const Size(0, 44),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800),
+                                  if (showRetry)
+                                    OutlinedButton.icon(
+                                      onPressed: () => _retry(r),
+                                      icon: const Icon(Icons.refresh_rounded,
+                                          size: 18),
+                                      label: const Text('Try again'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor:
+                                            const Color(0xFF8CC0FF),
+                                        backgroundColor: AppColors.blue
+                                            .withValues(alpha: .12),
+                                        side: BorderSide(
+                                            color: AppColors.blue
+                                                .withValues(alpha: .5)),
+                                        minimumSize: const Size(0, 44),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        textStyle: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800),
+                                      ),
                                     ),
-                                  ),
-                                  if (_canEscape)
+                                  if (showContinue)
                                     TextButton(
                                       onPressed: () => _finish(hold: false),
                                       child: const Text(
-                                        'Continue anyway',
+                                        'Continue',
                                         style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w700,
@@ -406,7 +473,6 @@ class _StepRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final done = state == BootStepState.done;
-    final failed = state == BootStepState.failed;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 11),
       decoration: BoxDecoration(
@@ -430,17 +496,12 @@ class _StepRow extends StatelessWidget {
                       key: ValueKey('done'),
                       color: AppColors.green,
                       icon: Icons.check_rounded)
-                  : failed
-                      ? const _Badge(
-                          key: ValueKey('failed'),
-                          color: AppColors.red,
-                          icon: Icons.priority_high_rounded)
-                      : const CircularProgressIndicator(
-                          key: ValueKey('loading'),
-                          strokeWidth: 2,
-                          color: AppColors.blue,
-                          backgroundColor: Color(0x404F9EFF),
-                        ),
+                  : const CircularProgressIndicator(
+                      key: ValueKey('loading'),
+                      strokeWidth: 2,
+                      color: AppColors.blue,
+                      backgroundColor: Color(0x404F9EFF),
+                    ),
             ),
           ),
           const SizedBox(width: 14),
@@ -450,9 +511,7 @@ class _StepRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: done || failed
-                    ? AppColors.textPrimary
-                    : const Color(0xFF6E7681),
+                color: done ? AppColors.textPrimary : const Color(0xFF6E7681),
               ),
               child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),

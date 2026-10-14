@@ -101,6 +101,50 @@ void main() {
     expect(err.label, 'Retry');
   });
 
+  test('refresh after an error stays loading until the read finishes', () {
+    final refreshing = const AsyncValue<WorldFullData>.loading()
+        .copyWithPrevious(const AsyncValue.error('offline', StackTrace.empty));
+    final state = resolveJourneyOrb(
+      activeBoss: null,
+      worldAsync: refreshing,
+      region: null,
+      dungeonState: null,
+      xpProgress: 0,
+    );
+    expect(state.kind, JourneyKind.loading);
+    expect(state.label, isNot('Retry'));
+  });
+
+  test('refresh keeps the last confirmed journey visible', () {
+    final world = _world(
+      zones: [_zone('a', 'standard'), _zone('b', 'crossroads', tier: 2)],
+      edges: [
+        {
+          'id': 'e1',
+          'fromZoneId': 'a',
+          'toZoneId': 'b',
+          'distanceKm': 4.0,
+          'isBidirectional': true,
+        },
+      ],
+      currentZoneId: 'a',
+      destinationZoneId: 'b',
+      currentEdgeId: 'e1',
+      travelled: 2.6,
+    );
+    final refreshing = const AsyncValue<WorldFullData>.loading()
+        .copyWithPrevious(AsyncValue.data(world));
+    final state = resolveJourneyOrb(
+      activeBoss: null,
+      worldAsync: refreshing,
+      region: null,
+      dungeonState: null,
+      xpProgress: 0,
+    );
+    expect(state.kind, JourneyKind.traveling);
+    expect(state.label, '1.4 km');
+  });
+
   test('traveling fills the ring with km and counts down', () {
     final s = _resolve(_world(
       zones: [_zone('a', 'standard'), _zone('b', 'crossroads', tier: 2)],

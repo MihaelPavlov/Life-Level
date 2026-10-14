@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/retry_map_read.dart';
 import '../../map/models/world_map_models.dart';
 import '../../map/models/world_zone_models.dart';
 import '../../map/services/world_zone_service.dart';
@@ -7,7 +8,7 @@ import '../../map/services/world_zone_service.dart';
 /// overview (zones, edges, user progress, character level) via the legacy
 /// `/world/full` endpoint that already powers the zone-level map.
 final worldProgressProvider = FutureProvider.autoDispose<WorldFullData>(
-  (ref) => WorldZoneService().getFullWorld(),
+  (ref) => retryMapRead(() => WorldZoneService().getFullWorld()),
 );
 
 /// Rich detail for the region the player's current zone belongs to. Used by
@@ -18,7 +19,7 @@ final currentRegionDetailProvider =
   final world = await ref.watch(worldProgressProvider.future);
   final regionId = world.userProgress.currentRegionId;
   if (regionId == null || regionId.isEmpty) return null;
-  return WorldZoneService().getRegionDetail(regionId);
+  return retryMapRead(() => WorldZoneService().getRegionDetail(regionId));
 });
 
 /// Per-floor state for a dungeon zone. Lets the home portal render the active
@@ -28,6 +29,6 @@ final dungeonStateProvider =
     FutureProvider.autoDispose.family<DungeonState?, String>(
   (ref, zoneId) async {
     if (zoneId.isEmpty) return null;
-    return WorldZoneService().getDungeonState(zoneId);
+    return retryMapRead(() => WorldZoneService().getDungeonState(zoneId));
   },
 );

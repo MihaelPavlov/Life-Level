@@ -105,7 +105,7 @@ class _ActivitySubmissionSheetState
   void _applyEffects(LogActivityResult result) {
     if (_effectsApplied) return;
     _effectsApplied = true;
-    invalidateUserScopedProviders(ref);
+    invalidateUserScopedProviders(ref, includeWorld: false);
     WorldZoneRefreshNotifier.notify();
     if (result.leveledUp && result.newLevel != null) {
       LevelUpNotifier.notify(result.newLevel!, unlocks: result.levelUpUnlocks);

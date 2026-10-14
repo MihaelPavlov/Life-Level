@@ -296,7 +296,9 @@ class _TourLayerState extends State<_TourLayer>
         if (c.exploredName != null)
           Center(
               child: _ExploredCard(
-                  name: c.exploredName!, coins: c.exploredCoins, color: c.color)),
+                  name: c.exploredName!,
+                  coins: c.exploredCoins,
+                  color: c.color)),
       ],
     );
   }

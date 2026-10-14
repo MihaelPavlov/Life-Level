@@ -32,7 +32,9 @@ public class ActivityBossDamageAdapter(
         double distanceKm,
         int calories,
         DateTime activityLoggedAt,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        WorldBossPosition? bossPositionAtStart = null,
+        bool allowAutomaticStart = true)
     {
         var log = logger ?? NullLogger<ActivityBossDamageAdapter>.Instance;
         var v2Enabled = !bool.TryParse(
@@ -66,6 +68,33 @@ public class ActivityBossDamageAdapter(
                 state.ArmorSnapshot = state.Boss.Armor;
                 state.CounterattackDamageSnapshot = state.Boss.CounterattackDamage;
                 state.CombatVersion = BossCombatCalculator.CombatVersion;
+            }
+        }
+
+        if (state is null)
+        {
+            // A workout older than the current targeted fight must not switch
+            // targets or backdate a newly reached boss encounter.
+            var laterTargetExists = await db.Set<UserBossState>()
+                .AnyAsync(s => s.UserId == userId && s.IsTargeted &&
+                               !s.IsDefeated && !s.IsExpired &&
+                               s.StartedAt.HasValue && s.StartedAt.Value > activityLoggedAt, ct);
+            if (laterTargetExists) return ActivityBossDamageResult.Empty;
+
+            if (allowAutomaticStart && bossPositionAtStart != null &&
+                activityLoggedAt >= bossPositionAtStart.ArrivedAt)
+            {
+                var waitingBoss = await db.Set<UserBossState>()
+                    .Include(s => s.Boss)
+                    .FirstOrDefaultAsync(s => s.UserId == userId &&
+                        s.Boss.WorldZoneId == bossPositionAtStart.ZoneId &&
+                        !s.IsDefeated && !s.IsExpired && !s.StartedAt.HasValue, ct);
+                if (waitingBoss != null)
+                {
+                    await bossService.ActivateFightAsync(userId, waitingBoss.BossId, activityLoggedAt);
+                    state = await stateQuery.Where(s => s.IsTargeted)
+                        .FirstOrDefaultAsync(ct);
+                }
             }
         }
 
