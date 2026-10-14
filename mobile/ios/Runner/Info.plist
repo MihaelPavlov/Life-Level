@@ -48,7 +48,12 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>location</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Life-Level uses your location during an outdoor workout to measure distance and pace.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Life-Level continues measuring your outdoor workout while the phone is locked.</string>
 
 	<!-- HealthKit usage descriptions (required for health package) -->
 	<key>NSHealthShareUsageDescription</key>

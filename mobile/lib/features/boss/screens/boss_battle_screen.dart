@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/motion/reward_fx.dart';
-import '../../activity/log_activity_screen.dart';
+import '../../activity/tracking/workout_tracking_screen.dart';
+import '../../integrations/providers/integrations_provider.dart';
+import '../../sync/pull_import_flow.dart';
 import '../models/boss_list_item.dart';
 import '../providers/boss_provider.dart';
 import '../widgets/boss_damage_hit_row.dart';
@@ -774,6 +776,9 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
   }
 
   Widget _buildCtas(BuildContext context) {
+    final integration = ref.watch(integrationSyncProvider);
+    final connected = integration.isHealthConnected ||
+        integration.isStravaConnected || integration.isGarminConnected;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: DecoratedBox(
@@ -794,11 +799,13 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(13),
-            onTap: () => _openLogWorkout(context),
-            child: const Padding(
+            onTap: () => connected
+                ? runPullImportFlow(context, ref).then((_) => _refreshBattleData())
+                : _openLogWorkout(context),
+            child: Padding(
               padding: EdgeInsets.symmetric(vertical: 14),
               child: Text(
-                '\u26A1 Log Workout',
+                connected ? '\u26A1 Sync workouts' : '\u26A1 Track workout',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -827,9 +834,14 @@ class _BossBattleViewState extends ConsumerState<BossBattleView>
   }
 
   Future<void> _openLogWorkout(BuildContext context) async {
+    final integration = ref.read(integrationSyncProvider);
+    if (!integration.statusLoaded || integration.isHealthConnected ||
+        integration.isStravaConnected || integration.isGarminConnected) {
+      return;
+    }
     await Navigator.of(context).push(
       AppRoute<void>(
-        builder: (_) => const LogActivityScreen(),
+        builder: (_) => const WorkoutTrackingScreen(),
       ),
     );
     if (!mounted) return;

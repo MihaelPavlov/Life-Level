@@ -9,7 +9,8 @@ import '../../../core/api/api_failure.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../../core/widgets/app_toast.dart';
-import '../../activity/log_activity_screen.dart';
+import '../../activity/tracking/workout_tracking_screen.dart';
+import '../../integrations/providers/integrations_provider.dart';
 import '../../activity/models/activity_models.dart';
 import '../widgets/mode_ui.dart';
 import 'burn_chain_provider.dart';
@@ -285,12 +286,15 @@ class _Live extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ModeCta.blue(
-          label: 'Log workout',
+        if (ref.watch(integrationSyncProvider).statusLoaded &&
+            !ref.watch(integrationSyncProvider).isHealthConnected &&
+            !ref.watch(integrationSyncProvider).isStravaConnected &&
+            !ref.watch(integrationSyncProvider).isGarminConnected) ModeCta.blue(
+          label: 'Track workout',
           icon: Icons.add_rounded,
           onTap: () async {
             await Navigator.push(
-                context, AppRoute(builder: (_) => const LogActivityScreen()));
+                context, AppRoute(builder: (_) => const WorkoutTrackingScreen()));
             await ref.read(burnChainProvider.notifier).refresh();
           },
         ),

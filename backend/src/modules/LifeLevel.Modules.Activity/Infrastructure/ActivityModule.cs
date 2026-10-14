@@ -9,6 +9,7 @@ public static class ActivityModule
     public static IServiceCollection AddActivityModule(this IServiceCollection services)
     {
         services.AddScoped<ActivityService>();
+        services.AddScoped<TrackedSessionService>();
         services.AddScoped<IActivityStatsReadPort>(sp => sp.GetRequiredService<ActivityService>());
         services.AddScoped<IActivityLogPort>(sp => sp.GetRequiredService<ActivityService>());
         services.AddScoped<IActivityExternalIdReadPort>(sp => sp.GetRequiredService<ActivityService>());

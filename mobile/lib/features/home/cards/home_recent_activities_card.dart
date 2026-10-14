@@ -6,6 +6,7 @@ import '../../../core/motion/app_motion.dart';
 import '../../../core/widgets/app_icon_image.dart';
 import '../../activity/models/activity_models.dart';
 import '../../activity/providers/activity_provider.dart';
+import '../../activity/tracking/tracked_session_models.dart';
 
 /// Shows the full activity-history sheet — the "workout journal". Used by
 /// the Adventure Hub's Journal tile.
@@ -137,6 +138,7 @@ class _AllActivitiesSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(activityHistoryProvider);
+    final sessionsAsync = ref.watch(trackedSessionsProvider);
 
     return Container(
       margin: const EdgeInsets.only(top: 80),
@@ -194,25 +196,58 @@ class _AllActivitiesSheet extends ConsumerWidget {
                 ),
               ),
               data: (history) {
-                if (history.isEmpty) {
+                if (history.isEmpty && sessionsAsync.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (history.isEmpty && sessionsAsync.hasError) {
+                  return Center(
+                    child: TextButton(
+                      onPressed: () => ref.invalidate(trackedSessionsProvider),
+                      child: const Text('Could not load tracked sessions. Retry'),
+                    ),
+                  );
+                }
+                final sessions = sessionsAsync.valueOrNull
+                        ?.where((session) => session.rewardedActivityId == null)
+                        .toList() ??
+                    const <TrackedSessionDto>[];
+                if (history.isEmpty && sessions.isEmpty) {
                   return const Center(
                     child: Text(
-                      'No activities yet. Log your first workout!',
+                      'No activities yet. Start your first workout!',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                   );
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: history.length,
+                  itemCount: sessions.length + history.length,
                   separatorBuilder: (_, __) => Divider(
                     height: 1,
                     color: AppColors.border.withValues(alpha: 0.5),
                   ),
-                  itemBuilder: (_, i) => _ActivityRow(
-                    activity: history[i],
-                    isLast: i == history.length - 1,
-                  ),
+                  itemBuilder: (_, i) {
+                    if (i < sessions.length) {
+                      final session = sessions[i];
+                      return ListTile(
+                        leading: Text(session.type.emoji,
+                            style: const TextStyle(fontSize: 26)),
+                        title: Text(session.type.displayName,
+                            style: const TextStyle(color: AppColors.textPrimary)),
+                        subtitle: Text(
+                          '${(session.activeSeconds / 60).ceil()} min · '
+                          '${session.endedAt.toLocal().day}/${session.endedAt.toLocal().month}',
+                          style: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                        trailing: const Text('No rewards',
+                            style: TextStyle(color: AppColors.textSecondary)),
+                      );
+                    }
+                    return _ActivityRow(
+                      activity: history[i - sessions.length],
+                      isLast: i == sessions.length + history.length - 1,
+                    );
+                  },
                 );
               },
             ),

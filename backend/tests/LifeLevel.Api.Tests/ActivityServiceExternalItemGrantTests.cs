@@ -1,6 +1,7 @@
 using LifeLevel.Api.Infrastructure.Persistence;
 using LifeLevel.Modules.Activity.Application.UseCases;
 using ActivityEntity = LifeLevel.Modules.Activity.Domain.Entities.Activity;
+using LifeLevel.Modules.Activity.Domain.Entities;
 using LifeLevel.SharedKernel.DTOs;
 using LifeLevel.SharedKernel.Enums;
 using LifeLevel.SharedKernel.Events;
@@ -12,6 +13,40 @@ namespace LifeLevel.Api.Tests;
 
 public class ActivityServiceExternalItemGrantTests
 {
+    [Fact]
+    public async Task ImportOfPhoneTrackedWorkoutDoesNotRewardTwice()
+    {
+        var userId = Guid.NewGuid();
+        var characterId = Guid.NewGuid();
+        var existingActivityId = Guid.NewGuid();
+        var startedAt = DateTime.UtcNow.AddMinutes(-30);
+        await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        db.Activities.Add(new ActivityEntity
+        {
+            Id = existingActivityId, CharacterId = characterId,
+            Type = ActivityType.Running, DurationMinutes = 30, DistanceKm = 5,
+        });
+        db.TrackedSessions.Add(new TrackedSession
+        {
+            Id = Guid.NewGuid(), UserId = userId, CharacterId = characterId,
+            Type = ActivityType.Running, StartedAtUtc = startedAt,
+            EndedAtUtc = startedAt.AddMinutes(30), ActiveSeconds = 1800,
+            DistanceMeters = 5000, GpsSampleCount = 100, GpsMeasured = true,
+            RewardedActivityId = existingActivityId,
+        });
+        await db.SaveChangesAsync();
+        var service = CreateService(db, characterId, new CapturingLevelUpItemGrantPort());
+
+        var result = await service.LogExternalActivityAsync(userId,
+            ActivityType.Running, 30, 5, null, null,
+            "strava:same-run", startedAt);
+
+        Assert.Equal(existingActivityId, result.ActivityId);
+        Assert.Equal(0, result.XpGained);
+        Assert.Single(db.Activities);
+    }
+
     [Fact]
     public async Task GetSummaryAsync_SumsOnlyTheUsersActivitySteps()
     {

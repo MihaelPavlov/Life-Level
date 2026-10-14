@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ActivityEntity = LifeLevel.Modules.Activity.Domain.Entities.Activity;
 using LifeLevel.Modules.Activity.Domain;
+using LifeLevel.Modules.Activity.Domain.Entities;
 
 namespace LifeLevel.Modules.Activity.Application.UseCases;
 
@@ -273,6 +274,26 @@ public class ActivityService(
     {
         var characterId = await characterIdRead.GetCharacterIdAsync(userId, ct)
             ?? throw new InvalidOperationException("Character not found.");
+
+        // A player may connect a wearable after finishing a phone-tracked
+        // outdoor workout. Link the import to the activity already rewarded
+        // instead of awarding XP and map/boss progress twice.
+        if (!externalId.Contains(":steps:", StringComparison.Ordinal))
+        {
+            var possibleMatches = await db.Set<TrackedSession>().AsNoTracking()
+                .Where(s => s.UserId == userId && s.Type == type &&
+                    s.RewardedActivityId != null &&
+                    s.StartedAtUtc >= performedAt.AddMinutes(-5) &&
+                    s.StartedAtUtc <= performedAt.AddMinutes(5))
+                .ToListAsync(ct);
+            var match = possibleMatches.FirstOrDefault(s =>
+                Math.Abs(s.ActiveSeconds - durationMinutes * 60) <= 600 &&
+                (!distanceKm.HasValue || distanceKm <= 0 ||
+                    Math.Abs(s.DistanceMeters / 1000.0 - distanceKm.Value) <=
+                    Math.Max(0.25, distanceKm.Value * 0.2)));
+            if (match?.RewardedActivityId is Guid rewardedActivityId)
+                return new ActivityLogPortResult(rewardedActivityId, 0, 0);
+        }
 
         var req = new LogActivityRequest
         {

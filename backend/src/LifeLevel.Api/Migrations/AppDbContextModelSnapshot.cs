@@ -273,6 +273,55 @@ namespace LifeLevel.Api.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.TrackedSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ActiveSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("DistanceMeters")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("EndedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("GpsMeasured")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("GpsSampleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("RewardedActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("UserId", "EndedAtUtc");
+
+                    b.ToTable("TrackedSessions");
+                });
+
             modelBuilder.Entity("LifeLevel.Modules.Adventure.Dungeons.Domain.Entities.Crossroads", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4598,6 +4647,15 @@ namespace LifeLevel.Api.Migrations
                 });
 
             modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.Activity", b =>
+                {
+                    b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeLevel.Modules.Activity.Domain.Entities.TrackedSession", b =>
                 {
                     b.HasOne("LifeLevel.Modules.Character.Domain.Entities.Character", null)
                         .WithMany()

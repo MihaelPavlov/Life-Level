@@ -54,6 +54,7 @@ class IntegrationSyncNotifier extends Notifier<IntegrationSyncState> {
     }
 
     state = state.copyWith(
+      statusLoaded: true,
       isHealthConnected: granted,
       lastSyncAt: lastSync,
       isStravaConnected: stravaStatus.isConnected,

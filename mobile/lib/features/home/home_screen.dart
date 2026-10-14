@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
+import '../activity/tracking/workout_tracker.dart';
 import '../sync/providers/pending_workouts_provider.dart';
 import '../sync/pull_import_flow.dart';
 import '../sync/widgets/pull_to_import.dart';
@@ -20,10 +21,6 @@ import 'cards/home_xp_storm_banner.dart';
 /// The journey (the old map card) lives behind the Map button in the tab
 /// bar. Syncing is a pull: drag Home down to check the pending-workout queue
 /// and import what came in (see `features/sync/`).
-/// TESTING: keep "Log workout" pinned at the bottom of Home even when a
-/// tracker is connected. Set to false to show it only without an integration.
-const kAlwaysShowLogWorkout = true;
-
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -62,7 +59,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hasIntegration = integrations.isHealthConnected ||
         integrations.isStravaConnected ||
         integrations.isGarminConnected;
-    final showLogWorkout = kAlwaysShowLogWorkout || !hasIntegration;
+    final showTracker = ref.watch(workoutTrackerProvider).current != null ||
+        (integrations.statusLoaded && !hasIntegration);
     final topPad = MediaQuery.of(context).padding.top;
 
     // XP Storm & Seasonal event are scaffold-only — they render nothing
@@ -84,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               physics: PullToImport.physics,
               // Clear the raised Map button (and the "Log workout" CTA
               // when it shows).
-              padding: EdgeInsets.only(bottom: showLogWorkout ? 110 : 48),
+              padding: EdgeInsets.only(bottom: showTracker ? 164 : 110),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -118,16 +116,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          // Without a tracker, logging by hand is the way in (and always
-          // while testing, see kAlwaysShowLogWorkout).
-          if (showLogWorkout)
-            // Lifted so the raised Map button doesn't cover it.
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 22,
-              child: HomeLogWorkoutCta(),
-            ),
+          // Keep the test logging shortcut available while manual users can
+          // also start the live tracker.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 22,
+            child: HomeLogWorkoutCta(showTracker: showTracker),
+          ),
         ],
       ),
     );

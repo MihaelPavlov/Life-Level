@@ -15,6 +15,31 @@ import 'models/activity_models.dart';
 import 'providers/activity_provider.dart';
 import 'log_activity_screen.dart';
 
+void applyActivityResultEffects(WidgetRef ref, LogActivityResult result) {
+  invalidateUserScopedProviders(ref, includeWorld: false);
+  WorldZoneRefreshNotifier.notify();
+  if (result.leveledUp && result.newLevel != null) {
+    LevelUpNotifier.notify(result.newLevel!, unlocks: result.levelUpUnlocks);
+  }
+  for (final blocked in result.blockedItems) {
+    InventoryFullNotifier.notify(blocked);
+  }
+  requestBossReplay();
+  for (final raid in result.guildRaidDefeats) {
+    GuildRaidVictoryNotifier.notify(raid);
+  }
+  final credit = result.floorCreditResult;
+  if (credit != null) {
+    DungeonFloorClearedNotifier.notify(DungeonFloorClearedEvent(
+      dungeonName: credit.dungeonName,
+      clearedFloorOrdinal: credit.clearedFloorOrdinal,
+      totalFloors: credit.totalFloors,
+      runCompleted: credit.runCompleted,
+      bonusXpAwarded: credit.bonusXpAwarded,
+    ));
+  }
+}
+
 class ActivitySubmissionSheet extends ConsumerStatefulWidget {
   final LogActivityRequest request;
   final String operationId;
@@ -105,28 +130,7 @@ class _ActivitySubmissionSheetState
   void _applyEffects(LogActivityResult result) {
     if (_effectsApplied) return;
     _effectsApplied = true;
-    invalidateUserScopedProviders(ref, includeWorld: false);
-    WorldZoneRefreshNotifier.notify();
-    if (result.leveledUp && result.newLevel != null) {
-      LevelUpNotifier.notify(result.newLevel!, unlocks: result.levelUpUnlocks);
-    }
-    for (final blocked in result.blockedItems) {
-      InventoryFullNotifier.notify(blocked);
-    }
-    requestBossReplay();
-    for (final raid in result.guildRaidDefeats) {
-      GuildRaidVictoryNotifier.notify(raid);
-    }
-    final credit = result.floorCreditResult;
-    if (credit != null) {
-      DungeonFloorClearedNotifier.notify(DungeonFloorClearedEvent(
-        dungeonName: credit.dungeonName,
-        clearedFloorOrdinal: credit.clearedFloorOrdinal,
-        totalFloors: credit.totalFloors,
-        runCompleted: credit.runCompleted,
-        bonusXpAwarded: credit.bonusXpAwarded,
-      ));
-    }
+    applyActivityResultEffects(ref, result);
   }
 
   void _edit() {

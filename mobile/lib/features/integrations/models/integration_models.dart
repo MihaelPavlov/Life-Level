@@ -124,6 +124,7 @@ String _formatAdventureKm(double value) =>
     value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
 
 class IntegrationSyncState {
+  final bool statusLoaded;
   final bool isHealthConnected;
   final bool isSyncing;
   final DateTime? lastSyncAt;
@@ -134,6 +135,7 @@ class IntegrationSyncState {
   final String? garminDisplayName;
 
   const IntegrationSyncState({
+    this.statusLoaded = false,
     required this.isHealthConnected,
     required this.isSyncing,
     this.lastSyncAt,
@@ -145,6 +147,7 @@ class IntegrationSyncState {
   });
 
   IntegrationSyncState copyWith({
+    bool? statusLoaded,
     bool? isHealthConnected,
     bool? isSyncing,
     DateTime? lastSyncAt,
@@ -157,6 +160,7 @@ class IntegrationSyncState {
     bool clearGarminDisplayName = false,
   }) =>
       IntegrationSyncState(
+        statusLoaded: statusLoaded ?? this.statusLoaded,
         isHealthConnected: isHealthConnected ?? this.isHealthConnected,
         isSyncing: isSyncing ?? this.isSyncing,
         lastSyncAt: lastSyncAt ?? this.lastSyncAt,

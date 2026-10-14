@@ -7,6 +7,7 @@ import '../../core/session/invalidate_user_providers.dart';
 import '../../core/widgets/main_shell.dart';
 import '../character/setup/setup_resume_service.dart';
 import '../onboarding/onboarding_flow.dart';
+import '../integrations/providers/integrations_provider.dart';
 import 'services/apple_sign_in_coordinator.dart';
 import 'services/auth_service.dart';
 
@@ -18,6 +19,7 @@ Future<void> finishAuthentication(
   // delay its first Home tour until a later refresh.
   final container = ProviderScope.containerOf(context, listen: false);
   await ApiClient.saveToken(result.token);
+  container.invalidate(integrationSyncProvider);
   invalidateUserScopedProvidersFromContainer(container);
   // A new Google or Apple player names their hero before the rest of setup.
   final firstStep =

@@ -11,8 +11,21 @@ namespace LifeLevel.Api.Controllers;
 [Authorize]
 public class ActivityController(
     ActivityService activityService,
+    TrackedSessionService trackedSessions,
     IUserContext userContext) : ControllerBase
 {
+    [HttpPost("tracked-sessions")]
+    public async Task<ActionResult<TrackedSessionDto>> FinishTrackedSession(
+        [FromBody] FinishTrackedSessionRequest request, CancellationToken ct)
+    {
+        try { return Ok(await trackedSessions.FinishAsync(userContext.UserId, request, ct)); }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+    }
+
+    [HttpGet("tracked-sessions")]
+    public async Task<ActionResult<IReadOnlyList<TrackedSessionDto>>> GetTrackedSessions(CancellationToken ct) =>
+        Ok(await trackedSessions.GetHistoryAsync(userContext.UserId, ct));
+
     [HttpPost("log")]
     public async Task<IActionResult> Log([FromBody] LogActivityRequest req, CancellationToken ct)
     {

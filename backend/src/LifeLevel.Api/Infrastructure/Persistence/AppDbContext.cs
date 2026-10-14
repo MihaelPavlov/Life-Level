@@ -70,6 +70,7 @@ public partial class AppDbContext(
 
     // Activity
     public DbSet<Activity> Activities => Set<Activity>();
+    public DbSet<TrackedSession> TrackedSessions => Set<TrackedSession>();
 
     // Quest
     public DbSet<Quest> Quests => Set<Quest>();
@@ -224,6 +225,10 @@ public partial class AppDbContext(
             .HasOne<Character>()
             .WithMany()
             .HasForeignKey(a => a.CharacterId);
+        modelBuilder.Entity<TrackedSession>()
+            .HasOne<Character>()
+            .WithMany()
+            .HasForeignKey(x => x.CharacterId);
 
         // Activity: partial unique index on (CharacterId, ExternalId) for deduplication
         modelBuilder.Entity<Activity>()

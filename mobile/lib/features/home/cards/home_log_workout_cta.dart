@@ -1,70 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../activity/log_activity_screen.dart';
+import '../../activity/tracking/workout_tracking_screen.dart';
+import '../../activity/tracking/workout_tracker.dart';
 
 /// Pinned primary CTA that sits just above the bottom nav.
 /// Matches `.home3-cta` in home-v3.html.
 ///
 /// This is rendered inside the HomeScreen stack, not as a shell-level widget,
 /// so it only shows on the Home tab.
-class HomeLogWorkoutCta extends StatelessWidget {
-  const HomeLogWorkoutCta({super.key});
+class HomeLogWorkoutCta extends ConsumerWidget {
+  const HomeLogWorkoutCta({super.key, required this.showTracker});
+
+  final bool showTracker;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasSession = ref.watch(workoutTrackerProvider).current != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: GestureDetector(
-        onTap: () => Navigator.of(context).push(
-          AppRoute<void>(
-            builder: (_) => const LogActivityScreen(),
-          ),
-        ),
-        child: Container(
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.blue, AppColors.purple],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showTracker) ...[
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(AppRoute<void>(
+                  builder: (_) => const WorkoutTrackingScreen(),
+                )),
+                icon: const Icon(Icons.timer_outlined),
+                label: Text(hasSession ? 'Continue workout' : 'Track workout'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.blue,
+                  backgroundColor: AppColors.background,
+                  side: const BorderSide(color: AppColors.blue),
+                ),
+              ),
             ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.blue.withValues(alpha: 0.3),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ],
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-          ),
-          alignment: Alignment.center,
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '\uFF0B',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                  height: 1,
+            const SizedBox(height: 8),
+          ],
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(AppRoute<void>(
+              builder: (_) => const LogActivityScreen(),
+            )),
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.blue, AppColors.purple],
                 ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.blue.withValues(alpha: 0.3),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
-              SizedBox(width: 8),
-              Text(
-                'Log workout',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.4,
-                  color: Colors.white,
-                ),
+              alignment: Alignment.center,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '\uFF0B',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Log workout',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

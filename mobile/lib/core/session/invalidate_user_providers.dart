@@ -8,6 +8,7 @@ import '../motion/app_motion.dart';
 import '../api/api_client.dart';
 import '../../features/achievements/providers/achievements_provider.dart';
 import '../../features/activity/providers/activity_provider.dart';
+import '../../features/activity/tracking/workout_tracker.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/boss/providers/boss_provider.dart';
 import '../../features/character/providers/character_provider.dart';
@@ -40,6 +41,7 @@ void invalidateProgressProviders(Ref ref) {
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
   ref.invalidate(activityHistoryProvider);
+  ref.invalidate(trackedSessionsProvider);
   ref.invalidate(activitySummaryProvider);
   ref.invalidate(activityCalendarProvider);
   ref.invalidate(streakProvider);
@@ -76,6 +78,7 @@ void invalidateUserScopedProviders(WidgetRef ref, {bool includeWorld = true}) {
   ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(rewardCenterProvider);
   ref.invalidate(activityHistoryProvider);
+  ref.invalidate(trackedSessionsProvider);
   ref.invalidate(activitySummaryProvider);
   ref.invalidate(activityCalendarProvider);
   ref.invalidate(streakProvider);
@@ -105,6 +108,8 @@ void invalidateUserScopedProviders(WidgetRef ref, {bool includeWorld = true}) {
 // ProviderContainer always outlives route transitions, so invalidating
 // through it is safe from post-frame callbacks after navigation.
 void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
+  container.invalidate(workoutTrackerProvider);
+  container.invalidate(trackedSessionsProvider);
   container.invalidate(characterProfileProvider);
   container.invalidate(worldProgressProvider);
   container.invalidate(currentRegionDetailProvider);
@@ -113,6 +118,7 @@ void invalidateUserScopedProvidersFromContainer(ProviderContainer container) {
   container.invalidate(weeklyQuestsProvider);
   container.invalidate(rewardCenterProvider);
   container.invalidate(activityHistoryProvider);
+  container.invalidate(trackedSessionsProvider);
   container.invalidate(activitySummaryProvider);
   container.invalidate(activityCalendarProvider);
   container.invalidate(streakProvider);

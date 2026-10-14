@@ -1,8 +1,17 @@
 import '../../../core/api/api_client.dart';
 import '../models/activity_models.dart';
+import '../tracking/tracked_session_models.dart';
 
 class ActivityService {
   final _dio = ApiClient.instance;
+
+  Future<List<TrackedSessionDto>> getTrackedSessions() async {
+    final res = await _dio.get('/activity/tracked-sessions');
+    return (res.data as List<dynamic>)
+        .map((item) =>
+            TrackedSessionDto.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
 
   Future<LogActivityResult> logActivity(LogActivityRequest request,
       {String? operationId}) async {

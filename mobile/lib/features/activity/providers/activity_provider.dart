@@ -9,6 +9,9 @@ final activityHistoryProvider = FutureProvider<List<ActivityHistoryDto>>(
   (ref) => ref.read(activityServiceProvider).getHistory(),
 );
 
+final trackedSessionsProvider = FutureProvider(
+    (ref) => ref.read(activityServiceProvider).getTrackedSessions());
+
 final activitySummaryProvider = FutureProvider<ActivitySummary>(
   (ref) => ref.read(activityServiceProvider).getSummary(),
 );

@@ -76,7 +76,8 @@ import 'shell_constants.dart';
 import 'widgets/journey_popover.dart';
 import 'widgets/map_orb_button.dart';
 import 'widgets/shell_tab_bar.dart';
-import '../../features/activity/log_activity_screen.dart';
+import '../../features/activity/tracking/workout_tracking_screen.dart';
+import '../../features/activity/tracking/workout_tracker.dart';
 import '../../features/map/screens/region_chests_screen.dart';
 import '../../features/map/providers/region_chest_provider.dart';
 import '../../features/sync/providers/pending_workouts_provider.dart';
@@ -198,6 +199,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
       final isOnline = results.any((r) => r != ConnectivityResult.none);
       if (_wasOffline && isOnline) {
+        unawaited(ref.read(workoutTrackerProvider).retryPending());
         _invalidateAllProviders();
         unawaited(_startGuildRealtime());
         _checkPendingGuildRaidVictories();
@@ -641,6 +643,7 @@ class _MainShellState extends ConsumerState<MainShell>
       return;
     }
     if (state == AppLifecycleState.resumed) {
+      unawaited(ref.read(workoutTrackerProvider).retryPending());
       final backgroundedAt = _backgroundedAt;
       _backgroundedAt = null;
       _triggerForegroundHealthSync();
@@ -1417,8 +1420,12 @@ class _MainShellState extends ConsumerState<MainShell>
       return;
     }
     if (id == 'log') {
-      Navigator.push(
-          context, AppRoute(builder: (_) => const LogActivityScreen()));
+      final integration = ref.read(integrationSyncProvider);
+      if (integration.statusLoaded && !integration.isHealthConnected &&
+          !integration.isStravaConnected && !integration.isGarminConnected) {
+        Navigator.push(context,
+            AppRoute(builder: (_) => const WorkoutTrackingScreen()));
+      }
       return;
     }
     if (id != 'achievements' && _achievementsOpen) {
