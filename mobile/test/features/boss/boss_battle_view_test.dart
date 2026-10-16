@@ -100,7 +100,8 @@ void main() {
     expect(find.text('−240 HP'), findsOneWidget);
     expect(find.text('−198 HP'), findsNothing);
 
-    await tester.scrollUntilVisible(find.textContaining('Log Workout'), 300);
+    await tester.scrollUntilVisible(find.textContaining('Log workout'), 300);
+    expect(find.textContaining('Track workout'), findsNothing);
     expect(find.text('Full damage history · 5 hits'), findsOneWidget);
     // The old separate History button is gone.
     expect(find.textContaining('📋'), findsNothing);

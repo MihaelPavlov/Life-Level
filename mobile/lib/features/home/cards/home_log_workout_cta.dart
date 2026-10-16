@@ -5,6 +5,7 @@ import '../../../core/motion/app_motion.dart';
 import '../../activity/log_activity_screen.dart';
 import '../../activity/tracking/workout_tracking_screen.dart';
 import '../../activity/tracking/workout_tracker.dart';
+import '../../activity/tracking/workout_tracking_feature.dart';
 
 /// Pinned primary CTA that sits just above the bottom nav.
 /// Matches `.home3-cta` in home-v3.html.
@@ -18,13 +19,15 @@ class HomeLogWorkoutCta extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasSession = ref.watch(workoutTrackerProvider).current != null;
+    final trackerVisible = workoutTrackingEnabled && showTracker;
+    final hasSession =
+        trackerVisible && ref.watch(workoutTrackerProvider).current != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showTracker) ...[
+          if (trackerVisible) ...[
             SizedBox(
               width: double.infinity,
               height: 46,

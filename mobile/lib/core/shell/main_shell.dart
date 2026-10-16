@@ -77,7 +77,9 @@ import 'widgets/journey_popover.dart';
 import 'widgets/map_orb_button.dart';
 import 'widgets/shell_tab_bar.dart';
 import '../../features/activity/tracking/workout_tracking_screen.dart';
+import '../../features/activity/tracking/workout_tracking_feature.dart';
 import '../../features/activity/tracking/workout_tracker.dart';
+import '../../features/activity/log_activity_screen.dart';
 import '../../features/map/screens/region_chests_screen.dart';
 import '../../features/map/providers/region_chest_provider.dart';
 import '../../features/sync/providers/pending_workouts_provider.dart';
@@ -1421,10 +1423,15 @@ class _MainShellState extends ConsumerState<MainShell>
     }
     if (id == 'log') {
       final integration = ref.read(integrationSyncProvider);
-      if (integration.statusLoaded && !integration.isHealthConnected &&
-          !integration.isStravaConnected && !integration.isGarminConnected) {
-        Navigator.push(context,
-            AppRoute(builder: (_) => const WorkoutTrackingScreen()));
+      if (!workoutTrackingEnabled) {
+        Navigator.push(
+            context, AppRoute(builder: (_) => const LogActivityScreen()));
+      } else if (integration.statusLoaded &&
+          !integration.isHealthConnected &&
+          !integration.isStravaConnected &&
+          !integration.isGarminConnected) {
+        Navigator.push(
+            context, AppRoute(builder: (_) => const WorkoutTrackingScreen()));
       }
       return;
     }

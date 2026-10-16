@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../character/providers/character_provider.dart';
 import '../integrations/providers/integrations_provider.dart';
 import '../activity/tracking/workout_tracker.dart';
+import '../activity/tracking/workout_tracking_feature.dart';
 import '../sync/providers/pending_workouts_provider.dart';
 import '../sync/pull_import_flow.dart';
 import '../sync/widgets/pull_to_import.dart';
@@ -59,8 +60,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hasIntegration = integrations.isHealthConnected ||
         integrations.isStravaConnected ||
         integrations.isGarminConnected;
-    final showTracker = ref.watch(workoutTrackerProvider).current != null ||
-        (integrations.statusLoaded && !hasIntegration);
+    final showTracker = workoutTrackingEnabled &&
+        (ref.watch(workoutTrackerProvider).current != null ||
+            (integrations.statusLoaded && !hasIntegration));
     final topPad = MediaQuery.of(context).padding.top;
 
     // XP Storm & Seasonal event are scaffold-only — they render nothing
@@ -116,8 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          // Keep the test logging shortcut available while manual users can
-          // also start the live tracker.
+          // Keep the manual logging shortcut available.
           Positioned(
             left: 0,
             right: 0,
